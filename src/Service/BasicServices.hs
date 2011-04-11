@@ -48,7 +48,7 @@ derivation mcfg state =
  
    rec i acc st = 
       case onefirst st of
-         Left _         -> return (reverse acc)
+         Left _         -> Right (reverse acc)
          Right (r, _, next)
             | i <= 0    -> Left msg
             | otherwise -> rec (i-1) ((r, stateContext next) : acc) next

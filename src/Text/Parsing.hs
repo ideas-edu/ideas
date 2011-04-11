@@ -50,9 +50,11 @@ ranges xs = choice [ a <..> b | (a, b) <- xs ]
 signFloat :: P.TokenParser () -> Parser Double
 signFloat l = option id (negate <$ char '-') <*> P.float l
 
+-- return in local function f needed for backwards compatibility
 stopOn :: [String] -> Parser String
 stopOn ys = rec
  where
-   stop = choice (map (try . string) ys)
+   stop = choice (map f ys)
+   f x  = try (string x >> return ' ')
    rec  =  (:) <$ notFollowedBy stop <*> anyChar <*> rec
        <|> return []

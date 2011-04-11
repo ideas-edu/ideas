@@ -20,15 +20,13 @@ module Text.JSON
    , jsonRPC, JSON_RPC_Handler, propEncoding
    ) where
 
-import Control.Arrow
-import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as P
-import Text.ParserCombinators.Parsec.Language
 import qualified Text.UTF8 as UTF8
 import Data.List (intersperse)
 import Data.Maybe
 import Control.Monad.Error
 import Test.QuickCheck
+import Text.Parsing
 
 data JSON 
    = Number  Number        -- integer, real, or floating point
@@ -145,33 +143,26 @@ instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
 -- Parser
 
 parseJSON :: String -> Either String JSON
-parseJSON = left show . runParser start () ""
+parseJSON = parseSimple json
  where
-   start = (P.whiteSpace lexer) >> json >>= \a -> eof >> return a
-
    json :: Parser JSON
    json = choice 
-      [ P.reserved lexer "null"  >> return Null
-      , P.reserved lexer "true"  >> return (Boolean True)
-      , P.reserved lexer "false" >> return (Boolean False)
-      , try (liftM (Number . D) (P.float lexer))
-      , liftM (Number . I) (P.integer lexer)
-      , liftM (String . fromMaybe [] . UTF8.decodeM) (P.stringLiteral lexer)
-      , liftM Array  (P.brackets lexer (sepBy json (P.comma lexer)))
-      , liftM Object (P.braces lexer (sepBy keyValue (P.comma lexer)))
+      [ Null          <$ P.reserved lexer "null"  
+      , Boolean True  <$ P.reserved lexer "true" 
+      , Boolean False <$ P.reserved lexer "false" 
+      , try (Number . D <$> P.float lexer)
+      , Number . I <$> P.integer lexer
+      , String . fromMaybe [] . UTF8.decodeM <$> P.stringLiteral lexer
+      , Array  <$> P.brackets lexer (sepBy json (P.comma lexer))
+      , Object <$> P.braces lexer (sepBy keyValue (P.comma lexer))
       ]
  
    keyValue :: Parser (String, JSON)
-   keyValue = do 
-      s <- P.stringLiteral lexer
-      _ <- P.colon lexer
-      a <- json
-      return (s, a)
+   keyValue = (,) <$> P.stringLiteral lexer <* P.colon lexer <*> json
 
    lexer :: P.TokenParser a
    lexer = P.makeTokenParser $ emptyDef 
-      { reservedNames   = ["true", "false", "null"]
-      }
+      { reservedNames = ["true", "false", "null"] }
 
 --------------------------------------------------------
 -- JSON-RPC

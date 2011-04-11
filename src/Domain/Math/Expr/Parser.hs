@@ -17,89 +17,67 @@ module Domain.Math.Expr.Parser
    , parseExprTuple
    ) where
 
-import Prelude hiding ((^))
-import Domain.Math.Expr.Symbols
-import Domain.Math.Data.Relation
-import Control.Arrow
-import Control.Monad
+import Common.Algebra.Boolean (BoolValue, Boolean(..))
 import Common.Classes
-import Common.Algebra.Boolean (BoolValue)
 import Common.Id
 import Common.Rewriting
-import Data.Monoid
-import Domain.Math.Expr.Data
-import Domain.Math.Data.OrList
-import Text.ParserCombinators.Parsec.Language
-import Text.ParserCombinators.Parsec.Token (TokenParser)
-import qualified Text.ParserCombinators.Parsec.Token as P
-import Text.ParserCombinators.Parsec.Prim
-import Text.ParserCombinators.Parsec.Combinator
-import Text.ParserCombinators.Parsec.Expr
-import Text.ParserCombinators.Parsec.Char
-import Domain.Logic.Formula (Logic)
-import qualified Domain.Logic.Formula as Logic
 import Common.Transformation
+import Control.Monad
+import Data.Monoid
+import Domain.Logic.Formula (Logic)
+import Domain.Math.Data.OrList
+import Domain.Math.Data.Relation
+import Domain.Math.Expr.Data
+import Domain.Math.Expr.Symbols
+import Prelude hiding ((^))
+import Text.Parsing
 import Test.QuickCheck (arbitrary)
-
-parseWith :: Parser a -> String -> Either String a
-parseWith p = left show . runParser start () ""
- where
-   start = (P.whiteSpace lexer) >> p >>= \a -> eof >> return a
+import qualified Text.ParserCombinators.Parsec.Token as P
 
 parseExpr :: String -> Either String Expr
-parseExpr = parseWith expr
+parseExpr = parseSimple expr
 
 parseEqExpr :: String -> Either String (Equation Expr)
-parseEqExpr = parseWith (equation expr)
+parseEqExpr = parseSimple (equation expr)
 
 parseRelExpr :: String -> Either String (Relation Expr)
-parseRelExpr = parseWith (relation expr)
+parseRelExpr = parseSimple (relation expr)
    
 parseOrsEqExpr :: String -> Either String (OrList (Equation Expr))
-parseOrsEqExpr = parseWith (ors (equation expr))
+parseOrsEqExpr = parseSimple (ors (equation expr))
 
 parseOrsRelExpr :: String -> Either String (OrList (Relation Expr))
-parseOrsRelExpr = parseWith (ors (relation expr))
+parseOrsRelExpr = parseSimple (ors (relation expr))
 
 parseLogicRelExpr :: String -> Either String (Logic (Relation Expr))
-parseLogicRelExpr = parseWith (logic (relation expr))
+parseLogicRelExpr = parseSimple (logic (relation expr))
 
 parseExprTuple :: String -> Either String [Expr]
-parseExprTuple = parseWith (tuple expr)
+parseExprTuple = parseSimple (tuple expr)
 
 ors :: Parser a -> Parser (OrList a)
-ors p = do
-   xs <- sepBy1 (logicAtom p) (reserved "or")
-   return (mconcat xs)
+ors p = mconcat <$> sepBy1 (logicAtom p) (reserved "or")
 
 logic :: Parser a -> Parser (Logic a)
 logic p = buildExpressionParser table (logicAtom p)
  where
    table = 
-      [ [Infix (reservedOp "and" >> return (Logic.:&&:)) AssocRight] 
-      , [Infix (reservedOp "or"  >> return (Logic.:||:)) AssocRight] 
+      [ [Infix ((<&&>) <$ reservedOp "and") AssocRight] 
+      , [Infix ((<||>) <$ reservedOp "or" ) AssocRight] 
       ]
 
 logicAtom :: (Container f, BoolValue (f a)) => Parser a -> Parser (f a)
 logicAtom p = choice 
-   [ reserved "true"  >> return true
-   , reserved "false" >> return false
-   , liftM to p
+   [ true  <$  reserved "true" 
+   , false <$  reserved "false"
+   , to    <$> p
    ]
 
 equation :: Parser a -> Parser (Equation a)
-equation p = do
-   a <- p
-   reservedOp "=="
-   b <- p
-   return (a :==: b)
-      
+equation p = (:==:) <$> p <* reservedOp "==" <*> p
+
 relation :: Parser a -> Parser (Relation a)
-relation p = do
-   a <- p
-   f <- choice (map make table)
-   b <- p
-   return (f a b)
+relation p = p <**> choice (map make table) <*> p
  where
    make (s, f) = reserved s >> return f
    table = 
@@ -115,14 +93,14 @@ expr = buildExpressionParser exprTable term
 
 term :: Parser Expr
 term = choice 
-   [ reserved "sqrt" >> liftM sqrt atom
-   , reserved "root" >> liftM2 (binary rootSymbol) atom atom
-   , reserved "log"  >> liftM2 (binary logSymbol) atom atom
+   [ sqrt <$ reserved "sqrt" <*> atom
+   , binary rootSymbol <$ reserved "root" <*> atom <*> atom
+   , binary logSymbol  <$ reserved "log"  <*> atom <*> atom
    , do reserved "D"
         x <- identifier <|> parens identifier
         a <- atom
         return $ unary diffSymbol (binary lambdaSymbol (Var x) a)
-   , do a  <- qualified
+   , do a  <- qualId
         as <- many atom
         return (function (newSymbol a) as)
    , atom
@@ -130,34 +108,34 @@ term = choice
       
 atom :: Parser Expr
 atom = choice 
-   [ try (liftM Number float)
-   , liftM fromInteger integer
-   , liftM Var identifier 
+   [ try (Number <$> float)
+   , fromInteger <$> integer
+   , Var <$> identifier 
    , parens expr
    ]
 
 exprTable :: [[Operator Char () Expr]]
 exprTable = 
    [ -- precedence level 7
-     [ Infix (reservedOp "^" >> return (^)) AssocRight
+     [ Infix ((^) <$ reservedOp "^") AssocRight
      ]
      -- precedence level 7
-   , [ Infix (reservedOp "*" >> return (*)) AssocLeft
-     , Infix (reservedOp "/" >> return (/)) AssocLeft
+   , [ Infix ((*) <$ reservedOp "*") AssocLeft
+     , Infix ((/) <$ reservedOp "/") AssocLeft
      ]
      -- precedence level 6+
-   , [ Prefix (reservedOp "-" >> return negate) 
+   , [ Prefix (negate <$ reservedOp "-") 
      ] 
      -- precedence level 6
-   , [ Infix (reservedOp "+" >> return (+)) AssocLeft
-     , Infix (reservedOp "-" >> return (-)) AssocLeft
+   , [ Infix ((+) <$ reservedOp "+") AssocLeft
+     , Infix ((-) <$ reservedOp "-") AssocLeft
      ]
    ]
 
 --------------------------------------------------------------------------
 -- Lexing
 
-lexer :: TokenParser a
+lexer :: P.TokenParser a
 lexer = P.makeTokenParser $ emptyDef 
    { reservedNames   = ["sqrt", "root", "log", "and", "or", "true", "false", "D"]
    , reservedOpNames = ["==", "<=", ">=", "<", ">", "~=", "+", "-", "*", "^", "/"]
@@ -172,8 +150,8 @@ float = P.float lexer
 identifier :: Parser String
 identifier = P.identifier lexer
 
-qualified :: CharParser st Id
-qualified = try (P.lexeme lexer (do
+qualId :: CharParser st Id
+qualId = try (P.lexeme lexer (do
    xs <- idPart `sepBy1` char '.'
    guard (length xs > 1)
    return (mconcat (map newId xs))) 
@@ -201,4 +179,6 @@ instance Argument Expr where
    makeArgDescr = exprArgDescr
 
 exprArgDescr :: String -> ArgDescr Expr
-exprArgDescr descr = ArgDescr descr Nothing (either (const Nothing) Just . parseExpr) show arbitrary
+exprArgDescr descr = 
+   let p = either (const Nothing) Just . parseExpr
+   in ArgDescr descr Nothing p show arbitrary

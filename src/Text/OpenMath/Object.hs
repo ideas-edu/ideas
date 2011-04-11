@@ -21,11 +21,8 @@ import Data.Maybe
 import Data.Typeable
 import Text.OpenMath.Symbol
 import Text.XML
-import Text.ParserCombinators.Parsec.Token
-import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as P
-import Text.ParserCombinators.Parsec.Language
-import Control.Arrow
+import Text.Parsing
 
 -- internal representation for OpenMath objects
 data OMOBJ = OMI Integer 
@@ -124,20 +121,12 @@ omobj2xml object = makeXML "OMOBJ" $ do
             rec z
 
 scanInt :: String -> Maybe Integer     
-scanInt = either (const Nothing) Just . parseWith (integer lexer)
+scanInt = either (const Nothing) Just . parseSimple (P.integer lexer)
 
 scanNumber :: String -> Maybe Double   
-scanNumber = either (error . show) Just . parseWith p
+scanNumber = either (error . show) Just . parseSimple p
  where
-   p = do 
-      f <- option id (P.reservedOp lexer "-" >> return negate) 
-      a <- P.float lexer
-      return (f a)
-
-parseWith :: Parser a -> String -> Either String a
-parseWith p = left show . runParser start () ""
- where
-   start = (P.whiteSpace lexer) >> p >>= \a -> eof >> return a
+   p = option id (P.reservedOp lexer "-" >> return negate) <*> P.float lexer
 
 lexer :: P.TokenParser a
 lexer = P.makeTokenParser $ emptyDef {reservedOpNames = ["-"]}

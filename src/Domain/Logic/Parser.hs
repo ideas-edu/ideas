@@ -16,68 +16,57 @@ module Domain.Logic.Parser
 
 import Common.Algebra.Boolean
 import Common.Utils (ShowString(..))
-import Control.Arrow
-import Control.Monad
 import Domain.Logic.Formula
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Expr
-import Text.ParserCombinators.Parsec.Language
+import Text.Parsing
 import qualified Text.ParserCombinators.Parsec.Token as P
 
 -----------------------------------------------------------
 --- Parser
 
-parseWith :: Parser a -> String -> Either String a
-parseWith p = left show . runParser start () ""
- where
-   start = (P.whiteSpace lexer) >> p >>= \a -> eof >> return a
-
 parseLogic :: String -> Either String SLogic
-parseLogic = parseWith (parserSLogic False False)
+parseLogic = parseSimple (parserSLogic False False)
 
 parseLogicUnicode :: String -> Either String SLogic
-parseLogicUnicode = parseWith (parserSLogic True False)
+parseLogicUnicode = parseSimple (parserSLogic True False)
 
 parseLogicPars :: String -> Either String SLogic
 parseLogicPars input = 
      either (Left . ambiguousOperators parseLogic input) suspiciousVariable
-   $ parseWith (parserSLogic False True) input
+   $ parseSimple (parserSLogic False True) input
 
 parseLogicUnicodePars :: String -> Either String SLogic
 parseLogicUnicodePars input = 
    either (Left . ambiguousOperators parseLogicUnicode input) suspiciousVariable
-   $ parseWith (parserSLogic True True) input
+   $ parseSimple (parserSLogic True True) input
 
 -- generalized parser
 parserSLogic :: Bool -> Bool -> Parser SLogic
 parserSLogic unicode extraPars = pLogic
  where
    pLogic 
-      | extraPars = liftM2 (flip ($)) atom (option id composed)
+      | extraPars = atom <**> option id composed
       | otherwise = buildExpressionParser table atom
    
    composed = choice
-      [ reservedOp implSym  >> liftM (flip (:->:))  atom 
-      , reservedOp equivSym >> liftM (flip (:<->:)) atom 
-      , do xs <- many1 (reservedOp disjSym >> atom)
-           return (\x -> ors (x:xs))
-      , do xs <- many1 (reservedOp conjSym >> atom)
-           return (\x -> ands (x:xs))
+      [ flip (:->:)  <$ reservedOp implSym  <*> atom 
+      , flip (:<->:) <$ reservedOp equivSym <*> atom 
+      , (\xs x -> ors (x:xs))  <$> many1 (reservedOp disjSym >> atom)
+      , (\xs x -> ands (x:xs)) <$> many1 (reservedOp conjSym >> atom)
       ]
    
    atom = choice 
-      [ P.reserved lexer trSym >> return T
-      , P.reserved lexer flSym >> return F
-      , liftM (Var . ShowString) (P.identifier lexer)
+      [ T <$ P.reserved lexer trSym
+      , F <$ P.reserved lexer flSym
+      , Var . ShowString <$> P.identifier lexer
       , P.parens lexer pLogic
-      , reservedOp negSym >> liftM Not atom
+      , Not <$ reservedOp negSym <*> atom
       ]
       
    table = 
-      [ [Infix (reservedOp implSym  >> return (:->:))  AssocRight ]
-      , [Infix (reservedOp conjSym  >> return (:&&:))  AssocRight ]
-      , [Infix (reservedOp disjSym  >> return (:||:))  AssocRight ]
-      , [Infix (reservedOp equivSym >> return (:<->:)) AssocRight ]
+      [ [Infix ((:->:)  <$ reservedOp implSym)  AssocRight ]
+      , [Infix ((:&&:)  <$ reservedOp conjSym)  AssocRight ]
+      , [Infix ((:||:)  <$ reservedOp disjSym)  AssocRight ]
+      , [Infix ((:<->:) <$ reservedOp equivSym) AssocRight ]
       ]
       
    (implSym, equivSym, conjSym, disjSym, negSym, trSym, flSym)

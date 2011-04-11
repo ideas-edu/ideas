@@ -11,43 +11,39 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Parser (parseRelAlg, ppRelAlg) where
 
-import Control.Arrow
-import Control.Monad
 import Domain.RelationAlgebra.Formula
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Language
-import Text.ParserCombinators.Parsec.Expr
+import Text.Parsing
 import qualified Text.ParserCombinators.Parsec.Token as P
    
 -----------------------------------------------------------
 --- Parser
 
 parseRelAlg  :: String -> Either String RelAlg
-parseRelAlg = parseWith relalg
+parseRelAlg = parseSimple relalg
  where
    relalg = buildExpressionParser table term
    
-   term = liftM2 (foldl (flip ($))) atom (many pUn)
+   term = foldl (flip ($)) <$> atom <*> many pUn
    
    pUn = choice 
-      [ reservedOp "~" >> return Inv
-      , reservedOp "-" >> return Not
+      [ Inv <$ reservedOp "~"
+      , Not <$ reservedOp "-"
       ]
    
    atom = choice
-      [ P.reserved lexer "V" >> return V
-      , P.reserved lexer "E" >> return empty
-      , P.reserved lexer "I" >> return I
-      , liftM Var (P.identifier lexer)
+      [ V     <$  P.reserved lexer "V"
+      , empty <$  P.reserved lexer "E"
+      , I     <$  P.reserved lexer "I"
+      , Var   <$> P.identifier lexer
       , P.parens lexer relalg
       ]
    
    table = 
-      [ [ Infix (reservedOp ";" >> return (:.:)) AssocNone
-        , Infix (reservedOp "!" >> return (:+:)) AssocNone
+      [ [ Infix ((:.:) <$ reservedOp ";") AssocNone
+        , Infix ((:+:) <$ reservedOp "!") AssocNone
         ]
-      , [ Infix (reservedOp "/\\" >> return (:&&:)) AssocRight ]
-      , [ Infix (reservedOp "\\/" >> return (:||:)) AssocRight ]
+      , [ Infix ((:&&:) <$ reservedOp "/\\") AssocRight ]
+      , [ Infix ((:||:) <$ reservedOp "\\/") AssocRight ]
       ]
 
 -----------------------------------------------------------
@@ -66,11 +62,6 @@ lexer = P.makeTokenParser $ emptyDef
 reservedOp :: String -> Parser ()
 reservedOp = P.reservedOp lexer
 
-parseWith :: Parser a -> String -> Either String a
-parseWith p = left show . runParser start () ""
- where
-   start = (P.whiteSpace lexer) >> p >>= \a -> eof >> return a
-                  
 -----------------------------------------------------------
 --- Pretty-Printer
 

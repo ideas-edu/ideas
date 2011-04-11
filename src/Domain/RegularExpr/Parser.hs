@@ -11,28 +11,25 @@
 -----------------------------------------------------------------------------
 module Domain.RegularExpr.Parser (parseRegExp) where
 
-import Control.Arrow
-import Control.Monad
 import Domain.RegularExpr.Expr
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Language
+import Text.Parsing
 import qualified Text.ParserCombinators.Parsec.Token as P
 
 parseRegExp :: String -> Either String RegExp
-parseRegExp = parseWith pRE 
+parseRegExp = parseSimple pRE 
  where
-   pRE  = chainl1 pSeq (reservedOp "|" >> return (:|:))
-   pSeq = liftM (foldl1 (:*:)) (many1 post)
-   post = liftM2 (foldl (flip ($))) atom (many pUn)
+   pRE  = chainl1 pSeq ((:|:) <$ reservedOp "|")
+   pSeq = foldl1 (:*:) <$> many1 post
+   post = foldl (flip ($)) <$> atom <*> many pUn
    pUn  = choice 
-      [ reservedOp "*" >> return Star
-      , reservedOp "+" >> return Plus
-      , reservedOp "?" >> return Option
+      [ Star   <$ reservedOp "*" 
+      , Plus   <$ reservedOp "+" 
+      , Option <$ reservedOp "?" 
       ]
    atom = choice
-      [ P.reserved lexer "T" >> return Epsilon
-      , P.reserved lexer "F" >> return EmptySet
-      , liftM Atom (P.identifier lexer)
+      [ Epsilon  <$ P.reserved lexer "T"
+      , EmptySet <$ P.reserved lexer "F"
+      , Atom <$> P.identifier lexer
       , P.parens lexer pRE
       ]
 
@@ -49,9 +46,4 @@ lexer = P.makeTokenParser $ emptyDef
 reservedOp :: String -> Parser ()
 reservedOp = P.reservedOp lexer
 
-parseWith :: Parser a -> String -> Either String a
-parseWith p = left show . runParser start () ""
- where
-   start = (P.whiteSpace lexer) >> p >>= \a -> eof >> return a
-   
 --  testje = parseRegExp "P+*((QS?)?|R)"

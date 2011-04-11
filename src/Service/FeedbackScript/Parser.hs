@@ -21,6 +21,7 @@ import Service.FeedbackScript.Syntax
 import Text.ParserCombinators.Parsec.Char
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec
+import Text.Parsing
 
 parseScript :: FilePath -> IO Script
 parseScript file = do
@@ -29,113 +30,89 @@ parseScript file = do
       Left e   -> print e >> return mempty
       Right xs -> return xs
 
-script :: CharParser st Script
-script = do
-   lexeme (return ())
-   xs <- decls
-   eof
-   return (makeScript xs)
+script :: Parser Script
+script = makeScript <$> complete decls
 
-decls :: CharParser st [Decl]
+decls :: Parser [Decl]
 decls = many $ do 
    pos <- getPosition
    guard (sourceColumn pos == 1)
    decl
 
-decl :: CharParser st Decl
+decl :: Parser Decl
 decl = do
    dt <- declType
    a  <- identifiers
    f  <- (simpleDecl <|> guardedDecl)
    return (f dt a)
- <|> do
-   lexString "namespace"
-   liftM NameSpace identifiers
- <|> do
-   lexString "supports"
-   liftM Supports identifiers
+ <|>
+   NameSpace <$ lexString "namespace" <*>  identifiers
+ <|>
+   Supports <$ lexString "supports" <*> identifiers
  <?> "declaration"
 
-simpleDecl, guardedDecl :: CharParser st (DeclType -> [Id] -> Decl)
-simpleDecl  = liftM (\t dt a -> Simple dt a t) text
-guardedDecl = do
-   xs <- many1 $ do
-            c <- lexChar '|' >> condition
-            t <- text
-            return (c, t)
-   return (\dt a -> Guarded dt a xs)
+simpleDecl, guardedDecl :: Parser (DeclType -> [Id] -> Decl)
+simpleDecl  =  (\t dt a -> Simple dt a t) 
+           <$> text
+guardedDecl =  (\xs dt a -> Guarded dt a xs) 
+           <$> many1 ((,) <$> (lexChar '|' *> condition) <*> text)
 
-declType :: CharParser st DeclType
-declType =  (lexString "text"     >> return TextForId)
-        <|> (lexString "string"   >> return StringDecl)
-        <|> (lexString "feedback" >> return Feedback)
+declType :: Parser DeclType
+declType =  (TextForId  <$ lexString "text")
+        <|> (StringDecl <$ lexString "string")
+        <|> (Feedback   <$ lexString "feedback")
 
-condition :: CharParser st Condition
+condition :: Parser Condition
 condition = choice
-   [ lexeme (liftM CondRef attribute)
-   , lexString "recognize" >> lexeme (liftM RecognizedIs identifier)
-   , lexString "true"  >> return (CondConst True)
-   , lexString "false" >> return (CondConst False)
-   , lexString "not" >> liftM CondNot condition
+   [ CondRef         <$> lexeme attribute
+   , RecognizedIs    <$  lexString "recognize" <*> identifier
+   , CondConst True  <$  lexString "true" 
+   , CondConst False <$  lexString "false"
+   , CondNot         <$  lexString "not" <*> condition
    ]
 
-text :: CharParser st Text
-text = do 
-   skip (lexChar '=')
-   (singleLineText <|> multiLineText)
+text :: Parser Text
+text = lexChar '=' *> (singleLineText <|> multiLineText)
 
-singleLineText :: CharParser st Text
-singleLineText = do 
-   xs <- manyTill textItem (lexeme (skip newline <|> comment))
-   return (mconcat xs)
+singleLineText :: Parser Text
+singleLineText = 
+   mconcat <$> manyTill textItem (lexeme (skip newline <|> comment))
 
-multiLineText :: CharParser st Text
-multiLineText = do 
-   skip (char '{')
-   xs <- manyTill (textItem <|> (newline >> return mempty)) (lexChar '}')
-   return (mconcat xs)
+multiLineText :: Parser Text
+multiLineText = 
+   mconcat <$  char '{' 
+           <*> manyTill (textItem <|> (mempty <$ newline)) (lexChar '}')
 
-textItem :: CharParser st Text
-textItem = liftM makeText (many1 (noneOf "@#{}\n" <|> try escaped))
-       <|> liftM TextRef attribute
+textItem :: Parser Text
+textItem = makeText <$> many1 (noneOf "@#{}\n" <|> try escaped)
+       <|> TextRef  <$> attribute
  where
-   escaped = skip (char '@') >> satisfy (not . isAlphaNum)
+   escaped = char '@' *> satisfy (not . isAlphaNum)
 
-identifiers :: CharParser st [Id]
+identifiers :: Parser [Id]
 identifiers = sepBy1 identifier (lexChar ',')
 
 -- Lexical units
-identifier :: CharParser st Id
-identifier = lexeme (do
-   xs <- idPart `sepBy1` char '.'
-   return (mconcat (map newId xs))) 
+identifier :: Parser Id
+identifier = lexeme (mconcat . map newId <$> idPart `sepBy1` char '.')
  <?> "identifier"
  where
    idPart   = many1 idLetter
    idLetter = alphaNum <|> oneOf "-_"
 
-attribute :: CharParser st Id
-attribute = do
-   skip (char '@')
-   s <- many1 (alphaNum <|> oneOf "-_") -- identifier?
-   return (newId s)
- <?> "attribute"
+attribute :: Parser Id
+attribute = newId <$ skip (char '@') <*>  many1 (alphaNum <|> oneOf "-_")
+   <?> "attribute"
  
-lexChar :: Char -> CharParser s ()
+lexChar :: Char -> Parser ()
 lexChar = skip . lexeme . char
 
-lexString :: String -> CharParser s ()
+lexString :: String -> Parser ()
 lexString s = skip (lexeme (try (string s))) <?> "string " ++ show s
 
-comment :: CharParser st ()
-comment = skip (char '#' >> manyTill (noneOf "\n") (skip newline <|> eof))
-
-skip :: CharParser st a -> CharParser st ()
-skip p = p >> return ()
+comment :: Parser ()
+comment = skip (char '#' <* manyTill (noneOf "\n") (skip newline <|> eof))
 
 -- parse white space and comments afterwards   
-lexeme :: CharParser s a -> CharParser s a
-lexeme p = do 
-   a <- p
-   skipMany (skip space <|> comment)
-   return a
+lexeme :: Parser a -> Parser a
+lexeme p = p <* skipMany (skip space <|> comment)

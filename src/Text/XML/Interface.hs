@@ -17,7 +17,7 @@ import Control.Arrow
 import Text.XML.Document (Name)
 import Text.XML.Unicode (decoding)
 import Text.XML.Parser (document, extParsedEnt)
-import Text.XML.ParseLib (parse)
+import Text.Parsing (parseSimple)
 import qualified Text.XML.Document as D
 import System.FilePath (takeDirectory, pathSeparator)
 import Data.Char (chr, ord)
@@ -111,7 +111,7 @@ extend e = D.XMLDoc
 parseXML :: String -> Either String Element
 parseXML xs = do
    input <- decoding xs
-   doc   <- parse document input
+   doc   <- parseSimple document input
    return (normalize doc)
 
 parseIO :: String -> IO Element
@@ -119,7 +119,7 @@ parseIO baseFile = do
    -- putStrLn $ "Reading " ++ show baseFile
    xs    <- readFile baseFile
    input <- decoding xs
-   case parse document input of
+   case parseSimple document input of
       Left err  -> fail err
       Right doc -> do
          let exts = getExternals doc
@@ -141,7 +141,7 @@ parseIO baseFile = do
       -- putStrLn $ "Reading " ++ show full
       xs    <- readFile full
       input <- decoding xs
-      case parse extParsedEnt input of
+      case parseSimple extParsedEnt input of
          Right doc -> return doc
          Left err  -> fail err
 

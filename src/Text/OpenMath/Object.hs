@@ -14,15 +14,13 @@ module Text.OpenMath.Object
    ( OMOBJ(..), getOMVs, xml2omobj, omobj2xml
    ) where
 
-import Control.Monad
 import Data.Generics.Uniplate hiding (children)
+import Data.Char
 import Data.List (nub)
 import Data.Maybe
 import Data.Typeable
 import Text.OpenMath.Symbol
 import Text.XML
-import qualified Text.ParserCombinators.Parsec.Token as P
-import Text.Parsing
 
 -- internal representation for OpenMath objects
 data OMOBJ = OMI Integer 
@@ -69,13 +67,13 @@ xml2omobj xmlTop =
             return (OMS (mcd, n))
 
          [Left s] | name xml == "OMI" ->
-            case scanInt s of
+            case readInt s of
                Just i -> return (OMI (toInteger i))
                _      -> fail "invalid integer in OMI"
          
          [] | name xml == "OMF" -> do
             s <- findAttribute "dec" xml 
-            case scanNumber s of
+            case readDouble s of
                Just nr -> return (OMF nr)
                _       -> fail "invalid floating-point in OMF"
                     
@@ -120,13 +118,12 @@ omobj2xml object = makeXML "OMOBJ" $ do
             element "OMBVAR" (mapM_ (rec . OMV) ys) 
             rec z
 
-scanInt :: String -> Maybe Integer     
-scanInt = either (const Nothing) Just . parseSimple (P.integer lexer)
+readInt :: String -> Maybe Integer     
+readInt s = case reads s of
+               [(n, xs)] | all isSpace xs -> Just n
+               _ -> Nothing
 
-scanNumber :: String -> Maybe Double   
-scanNumber = either (error . show) Just . parseSimple p
- where
-   p = option id (P.reservedOp lexer "-" >> return negate) <*> P.float lexer
-
-lexer :: P.TokenParser a
-lexer = P.makeTokenParser $ emptyDef {reservedOpNames = ["-"]}
+readDouble :: String -> Maybe Double   
+readDouble s = case reads s of
+                  [(n, xs)] | all isSpace xs -> Just n
+                  _ -> Nothing

@@ -17,15 +17,16 @@ module Text.Parsing
    , module Text.ParserCombinators.Parsec.Language
    , (<*>), (*>), (<*), (<$>), (<$), (<**>)
    , parseSimple, complete, accepts, skip, (<..>), ranges, stopOn
-   , signFloat
+   , naturalOrFloat, float
    ) where
    
 import Control.Arrow
 import Control.Applicative hiding ((<|>))
+import Data.Char
+import Data.List
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language
-import qualified Text.ParserCombinators.Parsec.Token as P
 
 parseSimple :: Parser a -> String -> Either String a
 parseSimple p = left show . runParser (complete p) () ""
@@ -39,6 +40,40 @@ accepts p = either (const False) (const True) . parseSimple p
 skip :: Parser a -> Parser ()
 skip p = p >> return ()
 
+-- Like the combinator from parser, except that for doubles 
+-- the read instance is used. This is a more precies representation
+-- of the double (e.g., 1.413 is not 1.413000000001).
+naturalOrFloat :: Parser (Either Integer Double) 
+naturalOrFloat = do
+   a <- num
+   b <- option "" ((:) <$> char '.' <*> nat) 
+   c <- option "" ((:) <$> oneOf "eE" <*> num)
+   spaces 
+   case reads (a++b++c) of
+      _ | null b && null c -> 
+         case a of
+            '-':xs -> return (Left (negate (readInt xs)))
+            xs     -> return (Left (readInt xs))
+      [(d, [])] -> return (Right d)
+      _         -> fail "not a float"
+ where
+   nat = many1 digit
+   num = maybe id (:) <$> optionMaybe (char '-') <*> nat
+   readInt = foldl' op 0 -- '
+   op a b  = a*10+fromIntegral (ord b)-48
+
+float :: Parser Double
+float = do
+   a <- nat
+   b <- option "" ((:) <$> char '.' <*> nat) 
+   c <- option "" ((:) <$> oneOf "eE" <*> num)
+   case reads (a++b++c) of
+      [(d, [])] -> return d
+      _         -> fail "not a float"
+ where
+   nat = many1 digit
+   num = (:) <$> char '-' <*> nat
+
 infix  6 <..>
 
 (<..>) :: Char -> Char -> Parser Char
@@ -46,9 +81,6 @@ x <..> y = satisfy (\c -> c >= x && c <= y)
 
 ranges :: [(Char, Char)] -> Parser Char
 ranges xs = choice [ a <..> b | (a, b) <- xs ]
-
-signFloat :: P.TokenParser () -> Parser Double
-signFloat l = option id (negate <$ char '-') <*> P.float l
 
 -- return in local function f needed for backwards compatibility
 stopOn :: [String] -> Parser String

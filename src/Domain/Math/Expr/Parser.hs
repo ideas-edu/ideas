@@ -117,8 +117,8 @@ term = choice
       
 atom :: Parser Expr
 atom = choice 
-   [ try (fromDouble <$> float)
-   , fromInteger <$> integer
+   [ do notFollowedBy (char '-') 
+        either fromInteger fromDouble <$> naturalOrFloat
    , Var <$> identifier 
    , parens expr
    ]
@@ -149,12 +149,6 @@ lexer = P.makeTokenParser $ emptyDef
    { reservedNames   = ["sqrt", "root", "log", "and", "or", "true", "false", "D"]
    , reservedOpNames = ["==", "<=", ">=", "<", ">", "~=", "+", "-", "*", "^", "/"]
    }
-
-integer :: Parser Integer
-integer = P.integer lexer
-
-float :: Parser Double
-float = P.float lexer
 
 identifier :: Parser String
 identifier = P.identifier lexer

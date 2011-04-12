@@ -39,8 +39,8 @@ parseRelAlg = parseSimple relalg
       ]
    
    table = 
-      [ [ Infix ((:.:) <$ reservedOp ";") AssocNone
-        , Infix ((:+:) <$ reservedOp "!") AssocNone
+      [ [ Infix ((:.:) <$ reservedOp ";") AssocRight -- or none-associative?
+        , Infix ((:+:) <$ reservedOp "!") AssocRight -- or none-associative?
         ]
       , [ Infix ((:&&:) <$ reservedOp "/\\") AssocRight ]
       , [ Infix ((:||:) <$ reservedOp "\\/") AssocRight ]

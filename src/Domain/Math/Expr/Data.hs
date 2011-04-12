@@ -270,7 +270,7 @@ instance IsTerm Expr where
          Nothing      -> error "IsTerm Expr"
 
    fromTerm (Term.Num n)   = return (fromInteger n)
-   fromTerm (Term.Float d) = return (Number d)
+   fromTerm (Term.Float d) = return (fromDouble d)
    fromTerm (Term.Var v)   = return (Var v)
    fromTerm t =
       case getFunction t of

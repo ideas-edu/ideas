@@ -281,7 +281,7 @@ solutionInequation = describe "Determine solution for inequality" $
     where
       useSide f = match doubleView (sub (f r))
       
-      sub (Var x) | x==v = Number d
+      sub (Var x) | x==v = fromDouble d
       sub expr = descend sub expr
 
 data DExpr = A Double Expr

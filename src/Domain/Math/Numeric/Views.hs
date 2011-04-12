@@ -63,7 +63,7 @@ mixedFractionView = newView "num.mixed-fraction" (match rationalView) mix
       in sign (fromInteger d .+. rest)
 
 doubleView :: View Expr Double
-doubleView = newView "num.double" (exprToNum doubleSym return) Number
+doubleView = newView "num.double" (exprToNum doubleSym return) fromDouble
  
 -------------------------------------------------------------------
 -- Numeric views in normal form 

@@ -17,14 +17,14 @@ module Domain.Math.Expr.Parser
    , parseExprTuple
    ) where
 
-import Common.Algebra.Boolean (BoolValue, Boolean(..))
+import Common.Algebra.Boolean (BoolValue, Boolean(..), ands)
 import Common.Classes
 import Common.Id
 import Common.Rewriting
 import Common.Transformation
 import Control.Monad
 import Data.Monoid
-import Domain.Logic.Formula (Logic)
+import Domain.Logic.Formula (Logic, catLogic)
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr.Data
@@ -50,7 +50,7 @@ parseOrsRelExpr :: String -> Either String (OrList (Relation Expr))
 parseOrsRelExpr = parseSimple (ors (relation expr))
 
 parseLogicRelExpr :: String -> Either String (Logic (Relation Expr))
-parseLogicRelExpr = parseSimple (logic (relation expr))
+parseLogicRelExpr = parseSimple (catLogic <$> logic (relationChain expr))
 
 parseExprTuple :: String -> Either String [Expr]
 parseExprTuple = parseSimple (tuple expr)
@@ -77,14 +77,23 @@ equation :: Parser a -> Parser (Equation a)
 equation p = (:==:) <$> p <* reservedOp "==" <*> p
 
 relation :: Parser a -> Parser (Relation a)
-relation p = p <**> choice (map make table) <*> p
+relation p = p <**> relType <*> p
+
+relationChain :: Parser a -> Parser (Logic (Relation a))
+relationChain p = (\x -> ands . make x) <$> p <*> many1 ((,) <$> relType <*> p)
+ where
+   make _ []             = []
+   make a ((f, b): rest) = to (f a b) : make b rest
+
+relType :: Parser (a -> a -> Relation a)
+relType = choice (map make table)
  where
    make (s, f) = reserved s >> return f
    table = 
       [ ("==", (.==.)), ("<=", (.<=.)), (">=", (.>=.))
       , ("<", (.<.)), (">", (.>.)), ("~=", (.~=.))
       ]
-
+      
 tuple :: Parser a -> Parser [a]
 tuple p = parens (sepBy p comma)
 
@@ -108,7 +117,7 @@ term = choice
       
 atom :: Parser Expr
 atom = choice 
-   [ try (Number <$> float)
+   [ try (fromDouble <$> float)
    , fromInteger <$> integer
    , Var <$> identifier 
    , parens expr
@@ -157,7 +166,7 @@ qualId = try (P.lexeme lexer (do
    return (mconcat (map newId xs))) 
  <?> "qualified identifier")
  where
-   idPart   = many1 idLetter
+   idPart   = (:) <$> letter <*> many idLetter
    idLetter = alphaNum <|> oneOf "-_"
 
 reserved :: String -> Parser ()

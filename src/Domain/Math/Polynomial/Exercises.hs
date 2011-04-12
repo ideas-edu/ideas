@@ -193,7 +193,7 @@ equivalentApprox a b
 toApprox :: Equation Expr -> Relation Expr
 toApprox (a :==: b) = f a .~=. f b
  where
-   f x = maybe x (Number . precision 4) (match doubleView x)
+   f x = maybe x (fromDouble . precision 4) (match doubleView x)
       
 equivalentRelation :: (OrList (Equation a) -> OrList (Equation a) -> Bool) -> OrList (Relation a) -> OrList (Relation a) -> Bool
 equivalentRelation f ra rb = fromMaybe False $ do

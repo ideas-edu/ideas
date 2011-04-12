@@ -202,7 +202,7 @@ eqApproxWith f a b = do
    d2 <- match doubleView (subst b)
    return $ abs (d1 - d2) < 1e-9 -- 11 is still ok for example set
  where 
-    subst (Var s) = Number (f s)
+    subst (Var s) = fromDouble (f s)
     subst expr    = descend subst expr
     
 doubleList :: [Double] -- between -20 and 20

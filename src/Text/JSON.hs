@@ -150,7 +150,7 @@ parseJSON = parseSimple json
       [ Null          <$ P.reserved lexer "null"  
       , Boolean True  <$ P.reserved lexer "true" 
       , Boolean False <$ P.reserved lexer "false" 
-      , Number . either I D <$> P.naturalOrFloat lexer
+      , Number . either I D <$> naturalOrFloat -- redefined in Text.Parsing
       , String . fromMaybe [] . UTF8.decodeM <$> P.stringLiteral lexer
       , Array  <$> P.brackets lexer (sepBy json (P.comma lexer))
       , Object <$> P.braces lexer (sepBy keyValue (P.comma lexer))

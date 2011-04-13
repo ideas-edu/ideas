@@ -126,9 +126,9 @@ idS = id
 infix 1 === 
 
 (===) :: Strategy () -> Strategy () -> Bool
-a === b = rec (20::Int) [(make a, make b)]
+a === b = rec (10::Int) [(make a, make b)]
  where
-   make x = restrictHeight 3 (derivationTree x ())
+   make x = restrictHeight 2 (derivationTree x ())
  
    rec _ [] = True
    rec n ((s, t):rest)

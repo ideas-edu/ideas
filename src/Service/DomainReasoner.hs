@@ -169,6 +169,6 @@ defaultScript a = do
    list <- gets scripts 
    case lookup a list of
       Just file -> 
-         liftIO $ parseScript ("scripts/" ++ file)
+         liftIO $ parseScript file
       Nothing -> 
          throwError $ "No feedback script available for " ++ show a

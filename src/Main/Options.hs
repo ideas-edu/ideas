@@ -21,7 +21,8 @@ import System.Environment
 import System.Exit
 
 data Flag = Version | Help | Logging Bool | InputFile String 
-          | FixRNG | DocItem DocItem | DocDir String | TestDir String
+          | FixRNG | DocItem DocItem 
+          | DocDir String | TestDir String | ScriptDir String
           | MakeScriptFor String | AnalyzeScript String
    deriving Eq
 
@@ -58,6 +59,7 @@ options =
      , Option ""  ["test"]        (OptArg testArg "DIR")       "run tests on directory (default: 'test')"
      , Option ""  ["docs-dir"]    (ReqArg DocDir "DIR")        "directory for documentation (default: 'docs')" 
      , Option ""  ["test-dir"]    (ReqArg TestDir "DIR")       "directory with tests (default: 'test')"
+     , Option ""  ["script-dir"]  (ReqArg ScriptDir "DIR")     "directory with feedback scripts (default: 'scripts')"
      , Option ""  ["make-script"] (ReqArg MakeScriptFor "ID")  "generate feedback script for exercise" 
      , Option ""  ["analyze-script"] (ReqArg AnalyzeScript "FILE") "analyze feedback script and report errors"
      ]
@@ -89,8 +91,13 @@ docDir flags = case [ d | DocDir d <- flags ] of
 
 testDir :: [Flag] -> String
 testDir flags = case [ d | TestDir d <- flags ] of
-                  d:_ -> d
-                  _   -> "test"
+                   d:_ -> d
+                   _   -> "test"
+
+scriptDir :: [Flag] -> String
+scriptDir flags = case [ d | ScriptDir d <- flags ] of
+                     d:_ -> d
+                     _   -> "scripts"
 
 documentationMode :: [Flag] -> Bool
 documentationMode = not . null . docItems

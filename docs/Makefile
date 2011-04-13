@@ -45,7 +45,7 @@ $(HPCTMPDIR)/checks$(EXE): $(HS-SOURCES)
 	
 $(HPCTMPDIR)/checks$(EXE).tix: $(HPCTMPDIR)/checks$(EXE)
 	$(RM) -f $(HPCTMPDIR)/checks$(EXE).tix
-	$(CD) $(HPCTMPDIR); ./checks$(EXE) --make-pages --docs-dir=../../docs --test-dir=../../test $(PROFILERTS) || ($(RM) -f checks$(EXE).tix; exit 1);
+	$(CD) $(HPCTMPDIR); ./checks$(EXE) --make-pages --docs-dir=../../docs --test-dir=../../test --script-dir=../../scripts $(PROFILERTS) || ($(RM) -f checks$(EXE).tix; exit 1);
 
 $(COVERAGEDIR)/hpc_index.html: $(HPCTMPDIR)/checks$(EXE).tix
 	$(HPC) markup --hpcdir=$(HPCTMPDIR) --destdir=$(COVERAGEDIR) $(HPCTMPDIR)/checks$(EXE)

@@ -23,12 +23,27 @@ import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec
 import Text.Parsing
 
-parseScript :: FilePath -> IO Script
-parseScript file = do
-   result <- parseFromFile script file
+-- chases all included script files
+parseScript :: Maybe FilePath -> FilePath -> IO Script
+parseScript path file = rec [] [file]
+ where
+   rec _ [] = return mempty
+   rec hist (a:as)
+      | a `elem` hist = rec hist as
+      | otherwise = do
+           s1 <- parseOneScriptFile path a
+           let new = [ b | Include bs <- scriptDecls s1, b <- bs ]
+           s2 <- rec (a:hist) (new++as) -- depth-first
+           return (s1 <> s2) -- included parts are inserted at the end
+
+parseOneScriptFile :: Maybe FilePath -> FilePath -> IO Script
+parseOneScriptFile path file = do
+   result <- parseFromFile script full
    case result of
       Left e   -> print e >> return mempty
       Right xs -> return xs
+ where
+   full = maybe id (\p a -> p ++ "/" ++ a) path file
 
 script :: Parser Script
 script = makeScript <$> complete decls
@@ -49,6 +64,8 @@ decl = do
    NameSpace <$ lexString "namespace" <*>  identifiers
  <|>
    Supports <$ lexString "supports" <*> identifiers
+ <|> 
+   Include <$ lexString "include" <*> filenames
  <?> "declaration"
 
 simpleDecl, guardedDecl :: Parser (DeclType -> [Id] -> Decl)
@@ -104,6 +121,12 @@ attribute :: Parser Id
 attribute = newId <$ skip (char '@') <*>  many1 (alphaNum <|> oneOf "-_")
    <?> "attribute"
  
+filenames :: Parser [FilePath]
+filenames = sepBy1 filename (lexChar ',')
+  
+filename :: Parser FilePath
+filename = lexeme $ many1 (alphaNum <|> oneOf "+-_./\\:;|")
+
 lexChar :: Char -> Parser ()
 lexChar = skip . lexeme . char
 

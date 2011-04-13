@@ -43,7 +43,7 @@ import Observable hiding (Id)
 exerciseScript :: HasId a => a -> IO (Maybe Script)
 exerciseScript a
    | take 1 (qualifiers a) == ["logic"] =
-        liftM Just (parseScript "scripts/logic.txt")
+        liftM Just (parseScript (Just "scripts") "logic.txt")
    | otherwise =
         return Nothing
 

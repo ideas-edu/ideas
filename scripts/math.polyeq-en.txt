@@ -1,6 +1,8 @@
 supports algebra.equations.polynomial
 namespace algebra.equations
 
+include math.quadreq-en.txt
+
 # -------------------------------------------------------------
 # Feedback
 
@@ -16,71 +18,12 @@ feedback step = {}
 # -------------------------------------------------------------
 # Rules
 
-text coverup.negate = {}
-text coverup.numerator = {}
-text coverup.onevar.minus-left = {}
-text coverup.onevar.minus-right = {}
-text coverup.onevar.plus = {}
-text coverup.power = {}
-text coverup.times = {}
-text linear.distr-times = distribution multiplication
-text linear.flip = flip equation
-text linear.merge = merge similar terms
 text polynomial.back-subst = Substitute back a variable
 text polynomial.expose-factor = expose same factor
 text polynomial.power-factors = all power factors
 text polynomial.subst = Substitute variable
-text quadratic.abc = quadratic formula (abc formule)
-text quadratic.approx = Approximate irrational number
-text quadratic.cancel = Cancel terms
-text quadratic.common-factor = {}
-text quadratic.distr-div = distribution division
-text quadratic.distr-square = distribution square
-text quadratic.left-square = factor left as square
-text quadratic.move-left = Move to left
-text quadratic.nice-factors = {}
-text quadratic.no-lin = No linear term ('b=0')
-text quadratic.prepare-split = prepare split square
-text quadratic.product-zero = multiplication is zero
-text quadratic.same-con-factor = same constant factor
-text quadratic.same-factor = same factor
-text quadratic.scale = {}
-text quadratic.simpler-poly = simpler polynomial
-text quadratic.simpler-sqrt = simpler square root
-text quadratic.square-both = square both sides
 
 # -------------------------------------------------------------
 # Buggy rules
 
-text buggy.abc.minus-4ac = {}
-text buggy.abc.minus-b = {}
-text buggy.abc.one-solution = {}
-text buggy.abc.two-a = {}
-text buggy.cancel-minus = Cancel terms on both sides, but terms have different signs.
-text buggy.coverup.even-power = Covering up an even power, but forgetting the negative root
-text buggy.coverup.even-power-forget = Trying to cover up an even power, but there is some other operation to be done first. Example: 9*x^2=81, and rewriting this into x=9 or x=-9.
-text buggy.coverup.even-power-too-early = Trying to cover up an even power, but there is some other operation to be done first. Example: x^2+1=9
-text buggy.coverup.square-minus = A squared term is equal to a negative term on the right-hand side, resulting in an error in the signs
-text buggy.coverup.times-mul = Covering-up a multiplication, but instead of dividing the right-hand side, multiplication is used.
-text buggy.coverup.times-with-plus = Covering-up a multiplication, with an addition on the other side. Only one of the terms is divided.
-text buggy.distr-square = Incorrect removal of parentheses in a squared addition: forgetting the 2ab term
-text buggy.distr-square-forget = Incorrect removal of parentheses in a squared addition: squaring only one term
-text buggy.distr-times-denom = Incorrct distribution of times over plus: one of the terms is a fraction, and the outer expression is multiplied by the fraction's denominator.
-text buggy.distr-times-plus = Incorrect distribution of times over plus: one term is not multiplied.
-text buggy.distr-times-plus-forget = Incorrect distribution of times over plus: one term is forgotten.
-text buggy.distr-times-plus-sign = Incorrect distribution of times over plus: changing sign of addition.
-text buggy.distr-times-too-many = Strange distribution of times over plus: a*(b+c)+d, where 'a' is also multiplied to d.
-text buggy.divide-negate = Dividing, but wrong sign.
-text buggy.divide-numdenom = Dividing both sides, but swapping numerator/denominator.
-text buggy.division-by-var-both = Divide both sides by variable, without introducing the x=0 alternative.
-text buggy.division-by-var-zero = Divide both sides by variable, without introducing the x=0 alternative.
-text buggy.flip-negate-one-side = Negate terms on one side only.
-text buggy.minus-minus = Incorrect rewriting of a-(b-c): forgetting to change sign.
-text buggy.multiply-forget-one = Multiply the terms on both sides of the equation, but forget one.
-text buggy.multiply-one-side = Multiplication on one side of the equation only
-text buggy.negate-all = Negating all terms (on both sides of the equation, but forgetting one term.
-text buggy.negate-one-side = Negate terms on one side only.
-text buggy.plus = Moving a term from the left-hand side to the right-hand side (or the other way around), but forgetting to change the sign.
-text buggy.priority-times = Prioity of operators is changed, possibly by ignoring some parentheses.
-text buggy.square-multiplication = Incorrect square of a term that involves a multiplication.
-
+# (none at the moment)

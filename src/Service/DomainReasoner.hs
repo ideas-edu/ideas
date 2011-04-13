@@ -17,7 +17,7 @@ module Service.DomainReasoner
      -- * Update functions
    , addPackages, addPackage, addPkgService
    , addServices, addService, addTestSuite
-   , addAliases, addScripts
+   , addAliases, addScripts, setScriptDir
    , setVersion, setFullVersion
      -- * Accessor functions
    , getPackages, getExercises, getServices
@@ -45,6 +45,7 @@ data Content = Content
    { packages    :: [Some ExercisePackage]
    , services    :: [Some ExercisePackage] -> [Service]
    , aliases     :: [(Id, Id)]
+   , scriptDir   :: Maybe FilePath
    , scripts     :: [(Id, FilePath)]
    , testSuite   :: TestSuite
    , version     :: String
@@ -52,7 +53,7 @@ data Content = Content
    }
    
 noContent :: Content
-noContent = Content [] (const []) [] [] (return ()) [] Nothing
+noContent = Content [] (const []) [] Nothing [] (return ()) [] Nothing
 
 runDomainReasoner :: DomainReasoner a -> IO a
 runDomainReasoner m = do
@@ -117,6 +118,9 @@ addTestSuite m = modify $ \c -> c { testSuite = testSuite c >> m }
 addAliases :: [(Id, Id)] -> DomainReasoner ()
 addAliases xs = modify $ \c -> c { aliases = xs ++ aliases c }
 
+setScriptDir :: FilePath -> DomainReasoner ()
+setScriptDir path = modify $ \c -> c { scriptDir = Just path }
+
 addScripts :: [(Id, FilePath)] -> DomainReasoner ()
 addScripts xs = modify $ \c -> c { scripts = xs ++ scripts c }
 
@@ -166,9 +170,10 @@ findService txt = do
       
 defaultScript :: Id -> DomainReasoner Script
 defaultScript a = do
+   path <- gets scriptDir
    list <- gets scripts 
    case lookup a list of
       Just file -> 
-         liftIO $ parseScript file
+         liftIO $ parseScript path file
       Nothing -> 
          throwError $ "No feedback script available for " ++ show a

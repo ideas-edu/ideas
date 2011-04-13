@@ -49,7 +49,8 @@ useIDEAS action = runDomainReasoner $ do
    addPkgService  exerciselistS
    -- feedback scripts
    flags <- liftIO serviceOptions
-   addScripts (scripts (scriptDir flags))
+   setScriptDir (scriptDir flags)
+   addScripts scripts
    -- domain checks
    addTestSuite $ do
       MathNum.main
@@ -144,9 +145,8 @@ aliases = map (newId *** newId)
    , ("solvelinearsystemwithmatrix", "linearalgebra.systemwithmatrix")
    ]
    
-scripts :: String -> [(Id, FilePath)]
-scripts dir = 
-   map (second ((dir ++ "/") ++)) 
+scripts :: [(Id, FilePath)]
+scripts =
    [ (getId Logic.dnfExercise,         "logic.txt")
    , (getId Logic.dnfUnicodeExercise,  "logic.txt")
    , (getId Math.linearExercise,       "math.lineq-en.txt")

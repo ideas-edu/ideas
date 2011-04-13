@@ -33,6 +33,7 @@ makeScript = S
 data Decl 
    = NameSpace [Id]
    | Supports  [Id]
+   | Include [FilePath]
    | Simple  DeclType [Id] Text
    | Guarded DeclType [Id] [(Condition, Text)]
 
@@ -69,6 +70,7 @@ instance Show Decl where
       in case decl of
             NameSpace as     -> "namespace " ++ idList as
             Supports as      -> "supports "  ++ idList as
+            Include xs       -> "include "   ++ commaList xs
             Simple dt as t   -> f dt as ++ " = " ++ nonEmpty (show t)
             Guarded dt as xs -> unlines (f dt as : map g xs)
 

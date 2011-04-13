@@ -26,8 +26,8 @@ import Service.FeedbackScript.Syntax
 import Service.FeedbackScript.Parser
 import Service.FeedbackScript.Run 
 
-withScripts :: [String] -> [FilePath] -> DomainReasoner ()
-withScripts xs ys = do 
+withScripts :: Maybe FilePath -> [String] -> [FilePath] -> DomainReasoner ()
+withScripts path xs ys = do 
    -- generate scripts
    forM_ xs $ \s -> do
       Some pkg <- findPackage (newId s)
@@ -35,7 +35,7 @@ withScripts xs ys = do
    -- analyze scripts
    forM_ ys $ \file -> do
       liftIO $ putStrLn $ "Parsing " ++ show file
-      script <- liftIO $ parseScript file
+      script <- liftIO $ parseScript path file
       let sups = [ a | Supports as <- scriptDecls script, a <- as ]
       exs <- forM sups $ \a -> do
                 liftM Right (findPackage a)

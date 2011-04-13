@@ -23,6 +23,7 @@ import Common.Id
 import Common.Utils (safeHead, fst3)
 import Control.Monad
 import Common.Transformation
+import Data.List
 import Data.Maybe
 import Data.Monoid
 import Service.BasicServices
@@ -77,7 +78,7 @@ eval env script = fmap show . either (return . findIdRef) evalText
       | a == newId "hasexpected" = isJust (expected env)
       | otherwise                = False
 
-   namespaces = mempty : [ a | NameSpace as <- scriptDecls script, a <- as ]
+   namespaces = nub $ mempty : [ a | NameSpace as <- scriptDecls script, a <- as ]
 
    -- equality with namespaces
    eqId :: Id -> Id -> Bool

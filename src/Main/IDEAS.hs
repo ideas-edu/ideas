@@ -147,6 +147,9 @@ aliases = map (newId *** newId)
 scripts :: String -> [(Id, FilePath)]
 scripts dir = 
    map (second ((dir ++ "/") ++)) 
-   [ (getId Logic.dnfExercise,        "logic.txt")
-   , (getId Logic.dnfUnicodeExercise, "logic.txt")
+   [ (getId Logic.dnfExercise,         "logic.txt")
+   , (getId Logic.dnfUnicodeExercise,  "logic.txt")
+   , (getId Math.linearExercise,       "math.lineq-en.txt")
+   , (getId Math.quadraticExercise,    "math.quadreq-en.txt")
+   , (getId Math.higherDegreeExercise, "math.polyeq-en.txt")
    ]      

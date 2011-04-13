@@ -1,0 +1,52 @@
+namespace algebra.equations
+
+supports algebra.equations.linear
+
+# -------------------------------------------------------------
+# Feedback
+
+feedback same = {}
+feedback noteq = {}
+feedback unknown = {}
+feedback ok = {}
+feedback buggy = {}
+feedback detour = {}
+feedback hint = {}
+feedback step = {}
+
+# -------------------------------------------------------------
+# Rules
+
+text coverup.negate = {}
+text coverup.onevar.minus-left = {}
+text coverup.onevar.minus-right = {}
+text coverup.onevar.plus = {}
+text coverup.times = {}
+text linear.distr-times = distribution multiplication
+text linear.flip = flip equation
+text linear.merge = merge similar terms
+text linear.norm-mixed = normalize mixed fraction
+text linear.norm-rational = normalize rational number
+text linear.remove-div = remove division
+text linear.var-left = variable to left
+
+# -------------------------------------------------------------
+# Buggy rules
+
+text buggy.cancel-minus = Cancel terms on both sides, but terms have different signs.
+text buggy.distr-times-denom = Incorrct distribution of times over plus: one of the terms is a fraction, and the outer expression is multiplied by the fraction's denominator.
+text buggy.distr-times-plus = Incorrect distribution of times over plus: one term is not multiplied.
+text buggy.distr-times-plus-forget = Incorrect distribution of times over plus: one term is forgotten.
+text buggy.distr-times-plus-sign = Incorrect distribution of times over plus: changing sign of addition.
+text buggy.distr-times-too-many = Strange distribution of times over plus: a*(b+c)+d, where 'a' is also multiplied to d.
+text buggy.divide-negate = Dividing, but wrong sign.
+text buggy.divide-numdenom = Dividing both sides, but swapping numerator/denominator.
+text buggy.flip-negate-one-side = Negate terms on one side only.
+text buggy.minus-minus = Incorrect rewriting of a-(b-c): forgetting to change sign.
+text buggy.multiply-forget-one = Multiply the terms on both sides of the equation, but forget one.
+text buggy.multiply-one-side = Multiplication on one side of the equation only
+text buggy.negate-all = Negating all terms (on both sides of the equation, but forgetting one term.
+text buggy.negate-one-side = Negate terms on one side only.
+text buggy.plus = Moving a term from the left-hand side to the right-hand side (or the other way around), but forgetting to change the sign.
+text buggy.priority-times = Prioity of operators is changed, possibly by ignoring some parentheses.
+

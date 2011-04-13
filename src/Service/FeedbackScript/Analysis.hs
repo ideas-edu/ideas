@@ -90,7 +90,7 @@ analyzeScript exs script =
            [ a | Guarded TextForId as _ <- decls, a <- as ]
    strids = [ a | Simple  StringDecl as _ <- decls, a <- as ] ++
             [ a | Guarded StringDecl as _ <- decls, a <- as ]
-   namespaces = mempty : [ a | NameSpace as <- scriptDecls script, a <- as ]
+   namespaces = nub $ mempty : [ a | NameSpace as <- scriptDecls script, a <- as ]
    noTextFor a = null [ () | n <- namespaces, b <- txids, (n#b) == a ]
         
    texts = [ t | Simple  _ _ t <- decls ] ++

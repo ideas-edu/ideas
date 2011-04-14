@@ -15,6 +15,7 @@ import Common.Classes
 import Common.Context
 import Common.Exercise
 import Common.TestSuite
+import Data.Maybe
 import Domain.LinearAlgebra hiding (getSolution)
 import Domain.Math.Expr
 import Domain.Math.Simplification (simplify)
@@ -33,11 +34,11 @@ checks = suite "Linear algebra" $ do
 
 propEchelon :: Matrix Rational -> Bool
 propEchelon =
-   withoutContext inRowEchelonForm . applyD forwardPass . gaussContext
+   fromMaybe False . fromContextWith inRowEchelonForm . applyD forwardPass . gaussContext
 
 propReducedEchelon :: Matrix Rational -> Bool
 propReducedEchelon = 
-   withoutContext inRowReducedEchelonForm . applyD gaussianElimStrategy . gaussContext
+   fromMaybe False . fromContextWith inRowReducedEchelonForm . applyD gaussianElimStrategy . gaussContext
    
 propSound :: Matrix Rational -> Bool
 propSound m =
@@ -58,9 +59,6 @@ arbSolution m = do
    let finalCol  = map (return . sum . zipWith (*) solution) (rows m)
        newMatrix = makeMatrix $ zipWith (++) (rows m) finalCol
    return (solution, newMatrix)
-   
-withoutContext :: (a -> Bool) -> Context a -> Bool
-withoutContext f = maybe False f . fromContext
 
 gaussContext :: Matrix Rational -> Context (Matrix Expr)
 gaussContext = inContext gaussianElimExercise . fmap fromRational

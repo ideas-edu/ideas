@@ -15,7 +15,8 @@
 -----------------------------------------------------------------------------
 module Common.Context 
    ( -- * Abstract data type
-     Context, fromContext, newContext, getEnvironment, modifyEnvironment
+     Context, fromContext, fromContextWith, fromContextWith2
+   , newContext, getEnvironment, modifyEnvironment
      -- * Key-value pair environment (abstract)
    , Environment, emptyEnv, nullEnv, keysEnv, lookupEnv, storeEnv
    , diffEnv, deleteEnv
@@ -51,6 +52,12 @@ data Context a = C
 
 fromContext :: Monad m => Context a -> m a
 fromContext = leave . getNavigator
+
+fromContextWith :: Monad m => (a -> b) -> Context a -> m b
+fromContextWith f = liftM f . fromContext
+
+fromContextWith2 :: Monad m => (a -> b -> c) -> Context a -> Context b -> m c
+fromContextWith2 f a b = liftM2 f (fromContext a) (fromContext b)
 
 instance Eq a => Eq (Context a) where
    x == y = fromMaybe False $ liftM2 (==) (fromContext x) (fromContext y)

@@ -54,7 +54,7 @@ simplifyPowerExercise = (powerExercise simplifyPowerStrategy)
                        newId "algebra.manipulation.exponents.simplify"
    , isReady      = isPowerAdd
    , isSuitable   = (`belongsTo` normPowerMapView)
-   , equivalence  = viewEquivalent normPowerMapView
+   , equivalence  = withoutContext (viewEquivalent normPowerMapView)
    , examples     = level Medium $ concat $ simplerPowers 
                            ++ powers1 ++ powers2 
                            ++ negExp1 ++ negExp2
@@ -70,7 +70,7 @@ powerOfExercise = (powerExercise powerOfStrategy)
                        newId "algebra.manipulation.exponents.powerof"
    , isReady      = isSimplePower
    , isSuitable   = (`belongsTo` normPowerView)
-   , equivalence  = viewEquivalent normPowerNonNegRatio
+   , equivalence  = withoutContext (viewEquivalent normPowerNonNegRatio)
    , examples     = level Medium $ concat $  powersOfA ++ powersOfX 
                            ++ brokenExp1' ++ brokenExp2 ++ brokenExp3 
                            ++ normPower5' ++ normPower6
@@ -85,7 +85,7 @@ nonNegBrokenExpExercise = (powerExercise nonNegBrokenExpStrategy)
                        newId "algebra.manipulation.exponents.nonnegative"
    , isReady      = isPower plainNatView
    , isSuitable   = (`belongsTo` normPowerNonNegDouble)
-   , equivalence  = viewEquivalent normPowerNonNegDouble
+   , equivalence  = withoutContext (viewEquivalent normPowerNonNegDouble)
    , examples     = level Medium $ concat $  nonNegExp ++ nonNegExp2 ++ negExp4 ++ negExp5 
                            ++ brokenExp1 
                            ++ normPower4' ++ normPower5
@@ -102,7 +102,7 @@ calcPowerExercise = (powerExercise calcPowerStrategy)
                        newId "arithmetic.exponents"
    , isReady      = isPowerAdd
    , isSuitable   = (`belongsTo` normPowerMapView)
-   , equivalence  = viewEquivalent normPowerMapView
+   , equivalence  = withoutContext (viewEquivalent normPowerMapView)
    , examples     = level Medium $ concat $ negExp3 ++ normPower3' ++ normPower4
    }
 

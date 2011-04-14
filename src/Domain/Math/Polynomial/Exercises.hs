@@ -45,8 +45,8 @@ linearExercise = makeExercise
                        newId "algebra.equations.linear"
    , status       = Provisional
    , parser       = parseEqExpr
-   , similarity   = viewEquivalent (traverseView cleanUpACView)
-   , equivalence  = viewEquivalent linearEquationView
+   , similarity   = withoutContext (viewEquivalent (traverseView cleanUpACView))
+   , equivalence  = withoutContext (viewEquivalent linearEquationView)
    , isSuitable   = (`belongsTo` linearEquationView)
    , isReady      = solvedRelationWith $ \a -> 
                        a `belongsTo` mixedFractionNormalForm || 
@@ -77,8 +77,8 @@ quadraticExercise = makeExercise
    , status       = Provisional
    , parser       = parseOrsEqExpr
                        >>> right (build (traverseView equationView)) 
-   , similarity   = viewEquivalent (traverseView (traverseView cleanUpView))
-   , equivalence  = equivalentRelation (viewEquivalent quadraticEquationsView)
+   , similarity   = withoutContext (viewEquivalent (traverseView (traverseView cleanUpView)))
+   , equivalence  = withoutContext (equivalentRelation (viewEquivalent quadraticEquationsView))
    , isSuitable   = (`belongsTo` (traverseView equationView >>> quadraticEquationsView))
    , isReady      = solvedRelations
    , extraRules   = map use abcBuggyRules ++ buggyQuadratic ++
@@ -97,8 +97,8 @@ higherDegreeExercise = makeExercise
                         newId "algebra.equations.polynomial"
    , status        = Provisional
    , parser        = parser quadraticExercise
-   , similarity    = viewEquivalent (traverseView (traverseView cleanUpView))
-   , eqWithContext = Just $ eqAfterSubstitution $ 
+   , similarity    = withoutContext (viewEquivalent (traverseView (traverseView cleanUpView)))
+   , equivalence   = eqAfterSubstitution $ 
                         equivalentRelation (viewEquivalent higherDegreeEquationsView)
    , isSuitable    = (`belongsTo` (traverseView equationView >>> higherDegreeEquationsView))
    , isReady       = solvedRelations
@@ -132,7 +132,7 @@ quadraticWithApproximation = quadraticExercise
    , status       = Alpha
    , parser       = parseOrsRelExpr
    , strategy     = configure cfg quadraticStrategy
-   , equivalence  = equivalentApprox
+   , equivalence  = withoutContext equivalentApprox
    }
  where
    cfg = [ (byName (newId "approximate result"), Reinsert)
@@ -145,8 +145,8 @@ findFactorsExercise = makeExercise
                        newId "algebra.manipulation.polynomial.factor"
    , status       = Provisional
    , parser       = parseExpr
-   , similarity   = \a b -> cleanUpExpr a == cleanUpExpr b
-   , equivalence  = viewEquivalent (polyViewWith rationalView)
+   , similarity   = withoutContext (\a b -> cleanUpExpr a == cleanUpExpr b)
+   , equivalence  = withoutContext (viewEquivalent (polyViewWith rationalView))
    , isReady      = (`belongsTo` linearFactorsView)
    , strategy     = findFactorsStrategy
    , navigation   = termNavigator

@@ -15,7 +15,7 @@ module Common.Exercise
    ( -- * Exercises
      Exercise, testableExercise, makeExercise, emptyExercise
    , exerciseId, status, parser, prettyPrinter
-   , equivalence, similarity, isReady, isSuitable, eqWithContext
+   , equivalence, similarity, isReady, isSuitable
    , splitParts
    , strategy, navigation, canBeRestarted, extraRules, ruleOrdering
    , difference, ordering, testGenerator, randomExercise, examples, getRule
@@ -27,8 +27,8 @@ module Common.Exercise
      -- * Exercise status
    , Status(..), isPublic, isPrivate
      -- * Miscellaneous
-   , prettyPrinterContext
-   , equivalenceContext, restrictGenerator
+   , withoutContext, simpleSimilarity, simpleEquivalence
+   , prettyPrinterContext, restrictGenerator
    , showDerivation, printDerivation
    , ExerciseDerivation, defaultDerivation, derivationDiffEnv
    , checkExercise, checkParserPretty
@@ -50,6 +50,7 @@ import Common.View (makeView)
 import Control.Monad.Error
 import Control.Arrow
 import Data.Char
+import Data.Function
 import Data.List
 import Data.Maybe
 import Data.Ord
@@ -65,14 +66,13 @@ data Exercise a = Exercise
    , parser         :: String -> Either String a
    , prettyPrinter  :: a -> String
      -- syntactic and semantic checks
-   , equivalence    :: a -> a -> Bool
-   , similarity     :: a -> a -> Bool      -- possibly more liberal than syntactic equality
+   , equivalence    :: Context a -> Context a -> Bool
+   , similarity     :: Context a -> Context a -> Bool -- possibly more liberal than syntactic equality
    , ordering       :: a -> a -> Ordering  -- syntactic comparison
    , isReady        :: a -> Bool
    , isSuitable     :: a -> Bool
    , difference     :: Bool -> a -> a -> Maybe (a, a)
    , splitParts     :: a -> [a]
-   , eqWithContext  :: Maybe (Context a -> Context a -> Bool) -- special equivalence with context info
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
    , navigation     :: a -> Navigator a
@@ -126,7 +126,6 @@ emptyExercise = Exercise
    , isSuitable     = const True
    , difference     = \_ _ _ -> Nothing
    , splitParts     = return
-   , eqWithContext  = Nothing
      -- strategies and rules
    , strategy       = label "Fail" S.fail
    , navigation     = noNavigator
@@ -225,8 +224,7 @@ recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [Lo
 recognizeRule ex r ca cb = rec (fromMaybe ca (top ca))
  where
    rec x = [ location x | here r x cb ] ++ concatMap rec (allDowns x)
-   here  = ruleRecognizer $ \cx cy -> fromMaybe False $
-      liftM2 (similarity ex) (fromContext cx) (fromContext cy)
+   here  = ruleRecognizer (similarity ex)
 
 ruleOrderingWith :: [Rule a] -> Rule a -> Rule a -> Ordering
 ruleOrderingWith = ruleOrderingWithId . map getId
@@ -260,14 +258,20 @@ isPrivate = not . isPublic
 
 ---------------------------------------------------------------
 -- Rest
-     
-equivalenceContext :: Exercise a -> Context a -> Context a -> Bool
-equivalenceContext ex a b = 
-   case eqWithContext ex of
-      Just f  -> f a b 
-      Nothing -> fromMaybe False $ 
-         liftM2 (equivalence ex) (fromContext a) (fromContext b)
-    
+
+-- | Function for defining equivalence or similarity without taking
+-- the context into account. 
+withoutContext :: (a -> a -> Bool) -> Context a -> Context a -> Bool
+withoutContext f a b = fromMaybe False (fromContextWith2 f a b)
+
+-- | Similarity on terms without a context
+simpleSimilarity :: Exercise a -> a -> a -> Bool
+simpleSimilarity ex = similarity ex `on` inContext ex
+
+-- | Equivalence on terms without a context
+simpleEquivalence :: Exercise a -> a -> a -> Bool
+simpleEquivalence ex = equivalence ex `on` inContext ex
+
 prettyPrinterContext :: Exercise a -> Context a -> String
 prettyPrinterContext ex = 
    maybe "<<invalid term>>" (prettyPrinter ex) . fromContext
@@ -331,10 +335,10 @@ exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseId ex)) $ do
    -- do tests
    assertTrue "Exercise terms defined" (not (null xs))
    assertTrue "Equivalence implemented" $
-      let eq a b = equivalenceContext ex (inContext ex a) (inContext ex b)
+      let eq a b = equivalence ex (inContext ex a) (inContext ex b)
       in length (nubBy eq xs) > 1
    assertTrue "Similarity implemented" $
-      let sim a b = similarity ex a b
+      let sim a b = similarity ex (inContext ex a) (inContext ex b)
       in length (nubBy sim xs) > 1
    checkExamples ex
    case testGenerator ex of 
@@ -342,11 +346,11 @@ exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseId ex)) $ do
       Just gen -> do
          let showAsGen = showAs (prettyPrinter ex) gen
          addProperty "parser/pretty printer" $ forAll showAsGen $
-            checkParserPrettyEx ex . fromS
+            checkParserPrettyEx ex . inContext ex . fromS
 
          suite "Soundness non-buggy rules" $
             forM_ (filter (not . isBuggyRule) $ ruleset ex) $ \r -> 
-               let eq a b = equivalenceContext ex (fromS a) (fromS b)
+               let eq a b = equivalence ex (fromS a) (fromS b)
                    myGen  = showAs (prettyPrinterContext ex) (liftM (inContext ex) gen)
                    myView = makeView (return . fromS) (S (prettyPrinterContext ex))
                    args   = stdArgs {maxSize = 10, maxSuccess = 10, maxDiscard = 100}
@@ -371,9 +375,10 @@ checkParserPretty :: (a -> a -> Bool) -> (String -> Either String a) -> (a -> St
 checkParserPretty eq p pretty a = 
    either (const False) (eq a) (p (pretty a))
 
-checkParserPrettyEx :: Exercise a -> a -> Bool
+checkParserPrettyEx :: Exercise a -> Context a -> Bool
 checkParserPrettyEx ex = 
-   checkParserPretty (similarity ex) (parser ex) (prettyPrinter ex)
+   let f = either Left (Right . inContext ex) . parser ex
+   in checkParserPretty (similarity ex) f (prettyPrinterContext ex)
 
 checkExamples :: Exercise a -> TestSuite
 checkExamples ex = do
@@ -424,7 +429,7 @@ checksForDerivation ex d = do
 
    -- Parser/pretty printer on terms
    let ts  = terms d
-       p1  = maybe False (not . checkParserPrettyEx ex) . fromContext
+       p1  = not . checkParserPrettyEx ex
    assertNull "parser/pretty-printer" $ take 1 $ flip map (filter p1 ts) $ \hd -> 
       let s = prettyPrinterContext ex hd 
       in "parse error for " ++ s ++ ": parsed as " 
@@ -433,19 +438,18 @@ checksForDerivation ex d = do
 
    -- Equivalences between terms
    let pairs    = [ (x, y) | x <- ts, y <- ts ]
-       p2 (x, y) = not (equivalenceContext ex x y)
+       p2 (x, y) = not (equivalence ex x y)
    assertNull "equivalences" $ take 1 $ flip map (filter p2 pairs) $ \(x, y) ->
       "not equivalent: " ++ prettyPrinterContext ex x
       ++ "  with  " ++ prettyPrinterContext ex y
 
    -- Similarity of terms
-   let p3 (x, _, y) = fromMaybe False $ 
-                        liftM2 (similarity ex) (fromContext x) (fromContext y)
+   let p3 (x, _, y) = similarity ex x y
    assertNull  "similars" $ take 1 $ flip map (filter p3 (triples d)) $ \(x, r, y) -> 
       "similar subsequent terms: " ++ prettyPrinterContext ex x
       ++ "  with  " ++ prettyPrinterContext ex y
       ++ "  using  " ++ show r
                
-   let xs = [ x | cx <- terms d, x <- fromContext cx, not (similarity ex x x) ]
+   let xs = [ x | x <- terms d, not (similarity ex x x) ]
    assertNull "self similarity" $ take 1 $ flip map xs $ \hd -> 
-      "term not similar to itself: " ++ prettyPrinter ex hd
+      "term not similar to itself: " ++ prettyPrinterContext ex hd

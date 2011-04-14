@@ -67,14 +67,14 @@ newState diagnosis =
 diagnose :: State a -> a -> Diagnosis a
 diagnose state new
    -- Is the submitted term equivalent?
-   | not (equivalenceContext ex (stateContext state) newc) =
+   | not (equivalence ex (stateContext state) newc) =
         -- Is the rule used discoverable by trying all known buggy rules?
         case discovered True of
            Just r  -> Buggy r -- report the buggy rule
            Nothing -> NotEquivalent -- compareParts state new
               
    -- Is the submitted term (very) similar to the previous one? 
-   | similarity ex (stateTerm state) new =
+   | similarity ex (stateContext state) newc =
         -- If yes, report this
         Similar (ready state) state
         
@@ -99,7 +99,7 @@ diagnose state new
    
    expected = do
       let xs = either (const []) id $ allfirsts (restartIfNeeded state)
-          p (_, _, ns) = similarity ex new (stateTerm ns)
+          p (_, _, ns) = similarity ex newc (stateContext ns)
       safeHead (filter p xs)
 
    discovered searchForBuggy = safeHead

@@ -32,8 +32,8 @@ coverUpExercise = makeExercise
                        newId "algebra.equations.coverup"
    , status       = Provisional
    , parser       = parseOrsEqExpr
-   , equivalence  = eqCoverUp
-   , similarity   = myEq
+   , equivalence  = withoutContext eqCoverUp
+   , similarity   = withoutContext myEq
    , isReady      = solvedEquations
    , extraRules   = coverUpRulesOr
    , strategy     = coverUpStrategy

@@ -15,7 +15,6 @@ module Service.ProblemDecomposition
 
 import Common.Library
 import Common.Utils
-import Control.Monad
 import Data.Maybe
 import Service.ExercisePackage
 import Service.State
@@ -33,7 +32,7 @@ problemDecomposition msloc state answer
                | not (null witnesses) -> Right $
                     Ok newLocation newState
                   where 
-                    witnesses   = filter (similarityCtx ex answeredTerm . fst) $ take 1 answers
+                    witnesses   = filter (similarity ex answeredTerm . fst) $ take 1 answers
                     (newCtx, newPrefix) = head witnesses
                     newLocation = nextTaskLocation (strategy ex) sloc $ 
                                      fromMaybe topId $ nextMajorForPrefix newPrefix newCtx
@@ -43,7 +42,7 @@ problemDecomposition msloc state answer
              where
                newLocation = subTaskLocation (strategy ex) sloc loc
                expState = makeState pkg (Just pref) expected
-               isEquiv  = maybe False (equivalenceContext ex expected) maybeAnswer
+               isEquiv  = maybe False (equivalence ex expected) maybeAnswer
                (loc, arguments) = fromMaybe (topId, []) $ 
                                      firstMajorInPrefix pr pref requestedTerm
  where
@@ -52,10 +51,6 @@ problemDecomposition msloc state answer
    topId = getId (strategy ex)
    sloc  = fromMaybe topId msloc
    requestedTerm = stateContext state
-   
-similarityCtx :: Exercise a -> Context a -> Context a -> Bool
-similarityCtx ex a b = fromMaybe False $
-   liftM2 (similarity ex) (fromContext a) (fromContext b)
 
 -- | Continue with a prefix until a certain strategy location is reached. At least one
 -- major rule should have been executed

@@ -41,7 +41,8 @@ gramSchmidtExercise = makeExercise
                               Right a  -> Right (fmap simplified a)
                               Left msg -> Left msg
    , prettyPrinter  = unlines . map show . vectors
-   , equivalence    = \x y -> let f = length . filter (not . isZero) . vectors . gramSchmidt
+   , equivalence    = withoutContext $
+                      \x y -> let f = length . filter (not . isZero) . vectors . gramSchmidt
                               in f x == f y
    , extraRules     = rulesGramSchmidt
    , isReady        = orthonormalList . filter (not . isZero) . vectors
@@ -59,7 +60,8 @@ linearSystemExercise = makeExercise
                                Right a  -> Right (simplify a)
                                Left msg -> Left msg
    , prettyPrinter  = unlines . map show
-   , equivalence    = \x y -> let f = fromContext . applyD linearSystemStrategy 
+   , equivalence    = withoutContext $
+                      \x y -> let f = fromContext . applyD linearSystemStrategy 
                                     . inContext linearSystemExercise . map toStandardForm
                               in case (f x, f y) of  
                                     (Just a, Just b) -> getSolution a == getSolution b
@@ -80,7 +82,8 @@ gaussianElimExercise = makeExercise
                                Right a  -> Right (simplify a)
                                Left msg -> Left msg
    , prettyPrinter  = ppMatrixWith show
-   , equivalence    = let f = fmap simplified
+   , equivalence    = withoutContext $
+                      let f = fmap simplified
                       in \x y -> eqMatrix (f x) (f y)
    , extraRules     = matrixRules
    , isReady        = inRowReducedEchelonForm
@@ -102,12 +105,13 @@ systemWithMatrixExercise = makeExercise
                                   (Just ls, _) -> (unlines . map show) (ls :: Equations Expr)
                                   (_, Just m)  -> ppMatrix (m :: Matrix Expr)
                                   _            -> show expr
-   , equivalence    = \x y -> let f expr = case (fromExpr expr, fromExpr expr) of
+   , equivalence    = withoutContext $ 
+                      \x y -> let f expr = case (fromExpr expr, fromExpr expr) of
                                               (Just ls, _) -> Just (ls :: Equations Expr)
                                               (_, Just m)  -> Just $ matrixToSystem (m :: Matrix Expr)
                                               _            -> Nothing
                               in case (f x, f y) of
-                                    (Just a, Just b) -> equivalence linearSystemExercise a b
+                                    (Just a, Just b) -> simpleEquivalence linearSystemExercise a b
                                     _ -> False
    , extraRules     = map useC equationsRules ++ map useC (matrixRules :: [Rule (Context (Matrix Expr))])
    , isReady        = inSolvedForm . (fromExpr :: Expr -> Equations Expr)

@@ -52,7 +52,7 @@ powerEqExercise = let precision = 2 in makeExercise
                        powerEquations ++ [last higherPowerEquations]
   , isReady        = solvedRelation
   , isSuitable   = (`belongsTo` (normPowerEqApproxView precision))
-  , equivalence    = viewEquivalent (normPowerEqApproxView precision)
+  , equivalence    = withoutContext (viewEquivalent (normPowerEqApproxView precision))
   }
   
 expEqExercise :: Exercise (Equation Expr)
@@ -67,7 +67,7 @@ expEqExercise = makeExercise
   , isReady        = \ rel -> isVariable (leftHandSide rel) 
                            && rightHandSide rel `belongsTo` rationalView
   , isSuitable     = (`belongsTo` normExpEqView)
-  , equivalence    = viewEquivalent normExpEqView
+  , equivalence    = withoutContext (viewEquivalent normExpEqView)
   , ruleOrdering   = ruleOrderingWithId [ getId root2power ]  
   }
 
@@ -82,7 +82,7 @@ logEqExercise = makeExercise
   , examples       = level Medium $ map (to . build equationView) (concat logEquations)
   , isReady        = solvedRelations
   , isSuitable     = (`belongsTo` (traverseView equationView >>> normLogEqView))
-  , equivalence    = viewEquivalent (traverseView equationView >>> normLogEqView)
+  , equivalence    = withoutContext (viewEquivalent (traverseView equationView >>> normLogEqView))
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]
   }
@@ -99,7 +99,7 @@ higherPowerEqExercise = makeExercise
                        higherPowerEquations ++ take 3 rootEquations
   , isReady        = solvedRelations
   , isSuitable     = F.all (`belongsTo` normPowerEqView)
-  , equivalence    = viewEquivalent ((normPowerEqView' hasSomeVar) >>> higherDegreeEquationsView)
+  , equivalence    = withoutContext (viewEquivalent ((normPowerEqView' hasSomeVar) >>> higherDegreeEquationsView))
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]
   }
@@ -115,7 +115,7 @@ rootEqExercise = makeExercise
   , examples       = level Medium $ map to $ concat $ drop 3 rootEquations
   , isReady        = solvedRelations
   , isSuitable     = F.all (`belongsTo` normPowerEqView)
-  , equivalence    = on (==) (sortOrList . simplify (normPowerEqView' $ elem "x" . vars))
+  , equivalence    = withoutContext (on (==) (sortOrList . simplify (normPowerEqView' $ elem "x" . vars)))
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]
   }

@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module Common.Context 
    ( -- * Abstract data type
-     Context, fromContext, newContext, getEnvironment
+     Context, fromContext, newContext, getEnvironment, modifyEnvironment
      -- * Key-value pair environment (abstract)
    , Environment, emptyEnv, nullEnv, keysEnv, lookupEnv, storeEnv
    , diffEnv, deleteEnv
@@ -77,6 +77,9 @@ instance TypedNavigator Context where
 -- | Construct a context
 newContext :: Environment -> Navigator a -> Context a
 newContext = C
+
+modifyEnvironment :: (Environment -> Environment) -> Context a -> Context a
+modifyEnvironment f c = c {getEnvironment = f (getEnvironment c)}
 
 ----------------------------------------------------------
 -- Key-value pair environment (abstract)

@@ -13,6 +13,7 @@ module ExerciseInfoPanel (exerciseInfoPanel) where
 
 import Graphics.UI.WX
 import Common.Exercise
+import Common.Id
 import Data.Maybe
 import Service.ExercisePackage
 import Common.Utils (Some(..))

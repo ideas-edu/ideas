@@ -19,6 +19,7 @@ import Data.List
 import Data.Maybe
 import ExerciseInfoPanel
 import Common.Exercise
+import Common.Id
 import Main.IDEAS
 import Service.DomainReasoner
 import Service.ExercisePackage

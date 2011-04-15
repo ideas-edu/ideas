@@ -20,14 +20,8 @@ module Domain.Math.Power.Exercises
 
 import Prelude hiding ( (^) )
 
-import Common.Classes 
-import Common.Context
-import Common.Exercise
-import Common.Navigator
-import Common.Rewriting
-import Common.Strategy hiding (not, replicate)
 import Common.Utils (distinct)
-import Common.View
+import Common.Library
 import Data.Maybe
 import Domain.Math.Power.Examples
 import Domain.Math.Expr hiding (isPower)

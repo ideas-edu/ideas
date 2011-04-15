@@ -14,7 +14,7 @@
 module Common.Library 
    ( module Common.Classes, module Common.Transformation
    , module Common.Context, module Common.Navigator
-   , module Common.Derivation
+   , module Common.Derivation, module Common.Id
    , module Common.Rewriting, module Common.Exercise
    , module Common.Strategy, module Common.View
    , failS, notS, repeatS, replicateS, sequenceS, untilS
@@ -24,6 +24,7 @@ import Common.Classes
 import Common.Context
 import Common.Derivation
 import Common.Exercise
+import Common.Id
 import Common.Navigator hiding (left, right)
 import Common.Rewriting hiding (difference)
 import Common.Strategy  hiding (fail, not, repeat, replicate, sequence, until)

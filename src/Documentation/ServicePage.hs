@@ -23,6 +23,7 @@ import qualified Text.XML as XML
 import Text.XML (XML)
 import Control.Monad
 import Common.Exercise
+import Common.Id
 import Common.Utils (Some(..))
 
 makeServicePage :: String -> Service -> DomainReasoner ()

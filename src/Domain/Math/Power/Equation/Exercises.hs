@@ -19,10 +19,7 @@ module Domain.Math.Power.Equation.Exercises
 
 import Prelude hiding ( (^) )
 
-import Common.Classes
-import Common.Context
-import Common.Exercise
-import Common.View
+import Common.Library
 import Data.Function (on)
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -32,7 +29,7 @@ import Domain.Math.Expr hiding (isPower)
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Rules
-import Domain.Math.Power.Utils ( (===), sortOrList)
+import Domain.Math.Power.Utils (sortOrList)
 import Domain.Math.Power.Equation.Strategies
 import Domain.Math.Power.Equation.NormViews
 import qualified Data.Foldable as F

@@ -33,7 +33,6 @@ module Common.Exercise
    , ExerciseDerivation, defaultDerivation, derivationDiffEnv
    , checkExercise, checkParserPretty
    , checkExamples, exerciseTestSuite
-   , module Common.Id -- for backwards compatibility
    ) where
 
 import Common.Classes
@@ -45,7 +44,7 @@ import Common.Id
 import Common.Navigator
 import Common.TestSuite
 import Common.Transformation
-import Common.Utils (ShowString(..))
+import Common.Utils (ShowString(..), Some(..), commaList)
 import Common.View (makeView)
 import Control.Monad.Error
 import Control.Arrow
@@ -288,16 +287,23 @@ getRule ex a =
 showDerivation :: Exercise a -> a -> String
 showDerivation ex a = show (present der) ++ extra
  where
-   der   = derivationDiffEnv (defaultDerivation ex a)
+   der   = derivationPrevious (derivationDiffEnv (defaultDerivation ex a))
    extra =
       case fromContext (last (terms der)) of
          Nothing               -> "<<invalid term>>"
          Just b | isReady ex b -> ""
                 | otherwise    -> "<<not ready>>"
-   present = mapStepsDerivation (ShowString . uncurry f) 
+   present = mapStepsDerivation (ShowString . f) 
            . fmap (ShowString . prettyPrinterContext ex)
-   f b env | nullEnv env = showId b
-           | otherwise   = showId b ++ "\n      " ++ show env
+   f ((b, env), old) = showId b ++ part1 ++ part2
+    where 
+      newl = "\n      "
+      g (Some descr) x = labelArgument descr ++ "=" ++ x
+      part1 = case expectedArguments b old of
+                 Just xs -> newl ++ commaList (zipWith g (getDescriptors b) xs)
+                 Nothing -> ""
+      part2 | nullEnv env = "" 
+            | otherwise   = newl ++ show env
 
 type ExerciseDerivation a = Derivation (Rule (Context a)) (Context a)
 
@@ -316,6 +322,12 @@ derivationDiffEnv d =
        xs   = zipWith3 f (steps d) (drop 1 (terms d)) (terms d)
        f b x y = (b, deleteEnv "location" (diffEnv (getEnvironment x) (getEnvironment y))) -- ShowString (show a ++ extra)
    in newDerivation t (zip xs ts)
+
+-- helper, needed for showing arguments
+derivationPrevious :: Derivation s a -> Derivation (s, a) a
+derivationPrevious d =
+   let t:ts = terms d  
+   in newDerivation t (zip (zip (steps d) (t:ts)) ts)
 
 printDerivation :: Exercise a -> a -> IO ()
 printDerivation ex = putStrLn . showDerivation ex

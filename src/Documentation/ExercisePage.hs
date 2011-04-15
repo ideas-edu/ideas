@@ -11,12 +11,8 @@
 -----------------------------------------------------------------------------
 module Documentation.ExercisePage (makeExercisePage) where
 
-import Common.Context
-import Common.Exercise
-import Common.Derivation
-import Common.Strategy hiding (not, replicate)
-import Common.Transformation
 import Common.Utils (Some(..), splitAtSequence)
+import Common.Library hiding (up)
 import Control.Monad
 import Data.Char
 import Data.List

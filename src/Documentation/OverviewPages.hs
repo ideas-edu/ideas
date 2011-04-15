@@ -19,6 +19,7 @@ import Data.List
 import Data.Maybe
 import Control.Monad
 import Common.Utils (Some(..), safeHead)
+import Common.Id
 import Common.Exercise
 import Service.DomainReasoner
 import Service.Types

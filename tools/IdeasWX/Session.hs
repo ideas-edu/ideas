@@ -32,6 +32,7 @@ import Common.Exercise hiding (showDerivation)
 import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Utils
+import Common.Id
 import Control.Monad
 import Data.List
 import Data.Maybe

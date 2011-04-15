@@ -14,14 +14,11 @@ module Domain.Math.Numeric.Exercises
    , rationalExercise, fractionExercise
    ) where
    
-import Common.Exercise
-import Common.Strategy
-import Common.View
+import Common.Library
 import Domain.Math.Expr
 import Domain.Math.Numeric.Strategies
 import Domain.Math.Numeric.Views
 import Domain.Math.Numeric.Generators
-import Common.Context
    
 ------------------------------------------------------------
 -- Exercises

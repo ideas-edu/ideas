@@ -16,12 +16,7 @@ module Domain.Logic.Exercises
    ( dnfExercise, dnfUnicodeExercise
    ) where
 
-import Common.Context
-import Common.Derivation
-import Common.Exercise
-import Common.Navigator
-import Common.Rewriting (differenceMode)
-import Common.Strategy
+import Common.Library
 import Data.Maybe
 import Domain.Logic.BuggyRules
 import Domain.Logic.Formula

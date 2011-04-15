@@ -11,9 +11,7 @@
 -----------------------------------------------------------------------------
 module Documentation.RulePage (makeRulePages) where
 
-import Common.Context
-import Common.Exercise
-import Common.Transformation
+import Common.Library hiding (up)
 import Common.Utils (commaList, Some(..))
 import Control.Monad
 import Data.List

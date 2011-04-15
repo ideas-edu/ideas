@@ -14,10 +14,7 @@ module Domain.LinearAlgebra.Exercises
    , gaussianElimExercise, systemWithMatrixExercise
    ) where
 
-import Common.Classes
-import Common.Context
-import Common.Exercise
-import Common.Transformation
+import Common.Library hiding (simplify)
 import Control.Monad
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules

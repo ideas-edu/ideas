@@ -17,15 +17,8 @@ import Domain.RelationAlgebra.Generator
 import Domain.RelationAlgebra.Strategies
 import Domain.RelationAlgebra.Rules
 import Domain.RelationAlgebra.Parser
-import Common.Classes
-import Common.Exercise
-import Common.Context
+import Common.Library
 import Data.Maybe
-import Common.Derivation
-import Common.Rewriting (differenceMode)
-import Common.Strategy hiding (not)
-import Common.Transformation
-import Common.Navigator
 
 cnfExercise :: Exercise RelAlg
 cnfExercise = testableExercise

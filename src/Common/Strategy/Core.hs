@@ -17,14 +17,12 @@ module Common.Strategy.Core
    ( GCore(..), Core
    , (.|.), (.*.), (.%.)
    , coreMany, coreRepeat, coreOrElse, coreFix
-   , mapLabel, noLabels, substCoreVar
+   , noLabels, substCoreVar
    ) where
 
+import Common.Classes
 import Common.Transformation
 import Common.Uniplate
-import Control.Applicative 
-import Data.Foldable (Foldable, foldMap)
-import qualified Data.Traversable as T
 
 -----------------------------------------------------------------
 -- Strategy (internal) data structure, containing a selection
@@ -61,31 +59,7 @@ data GCore l a
 -- Useful instances
 
 instance Functor (GCore l) where
-   fmap = T.fmapDefault
-
-instance Foldable (GCore l) where
-   foldMap = T.foldMapDefault 
-   
-instance T.Traversable (GCore l) where
-   traverse f = rec
-    where
-      rec core =
-         case core of
-            a :*: b   -> (:*:)   <$> rec a <*> rec b
-            a :|: b   -> (:|:)   <$> rec a <*> rec b
-            a :|>: b  -> (:|>:)  <$> rec a <*> rec b
-            a :%: b   -> (:%:)   <$> rec a <*> rec b
-            a :!%: b  -> (:!%:)  <$> rec a <*> rec b
-            Many a    -> Many    <$> rec a
-            Repeat a  -> Repeat  <$> rec a
-            Not a     -> Not     <$> rec a
-            Label l a -> Label l <$> rec a
-            Atomic a  -> Atomic  <$> rec a
-            Rec n a   -> Rec n   <$> rec a
-            Rule a    -> Rule    <$> f a
-            Var n     -> pure (Var n)
-            Succeed   -> pure Succeed
-            Fail      -> pure Fail
+   fmap = mapSecond
 
 instance Uniplate (GCore l a) where
    uniplate core =
@@ -102,6 +76,27 @@ instance Uniplate (GCore l a) where
          Rec n a   -> ([a],   \[x]   -> Rec n x)
          Not a     -> ([a],   \[x]   -> Not x)
          _         -> ([],    \_     -> core)
+
+instance BiFunctor GCore where
+   biMap f g = rec 
+    where
+      rec core =
+         case core of
+            a :*: b   -> rec a :*:  rec b
+            a :|: b   -> rec a :|:  rec b
+            a :|>: b  -> rec a :|>: rec b
+            a :%: b   -> rec a :%:  rec b
+            a :!%: b  -> rec a :!%: rec b
+            Many a    -> Many   (rec a)
+            Repeat a  -> Repeat (rec a)
+            Not a     -> Not    (rec a)
+            Atomic a  -> Atomic (rec a)
+            Rec n a   -> Rec n  (rec a)
+            Label l a -> Label (f l) (rec a)
+            Rule a    -> Rule (g a)
+            Var n     -> Var n
+            Succeed   -> Succeed
+            Fail      -> Fail
 
 -----------------------------------------------------------------
 -- Smart constructors
@@ -165,12 +160,6 @@ coreVars core =
       Var n   -> [n]
       Rec n a -> n : coreVars a
       _       -> concatMap coreVars (children core)
-
-mapLabel :: (l -> l) -> GCore l a -> GCore l a
-mapLabel f = run
- where
-   run (Label l a) = Label (f l) (run a)
-   run core        = descend run core
 
 noLabels :: GCore l a -> GCore l a
 noLabels (Label _ a) = noLabels a

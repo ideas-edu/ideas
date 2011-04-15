@@ -30,7 +30,8 @@ module Common.Exercise
    , withoutContext, simpleSimilarity, simpleEquivalence
    , prettyPrinterContext, restrictGenerator
    , showDerivation, printDerivation
-   , ExerciseDerivation, defaultDerivation, derivationDiffEnv
+   , ExerciseDerivation, defaultDerivation
+   , derivationDiffEnv, derivationPrevious
    , checkExercise, checkParserPretty
    , checkExamples, exerciseTestSuite
    ) where
@@ -293,8 +294,7 @@ showDerivation ex a = show (present der) ++ extra
          Nothing               -> "<<invalid term>>"
          Just b | isReady ex b -> ""
                 | otherwise    -> "<<not ready>>"
-   present = mapStepsDerivation (ShowString . f) 
-           . fmap (ShowString . prettyPrinterContext ex)
+   present = biMap (ShowString . f) (ShowString . prettyPrinterContext ex)
    f ((b, env), old) = showId b ++ part1 ++ part2
     where 
       newl = "\n      "

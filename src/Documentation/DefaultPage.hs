@@ -11,7 +11,6 @@
 -----------------------------------------------------------------------------
 module Documentation.DefaultPage where
 
-import Common.Exercise
 import Common.Id
 import Control.Monad
 import Service.DomainReasoner

@@ -174,7 +174,7 @@ fullDerivationTree = make . processLabelInfo id . toCore . toStrategy
  
 -- | Returns the derivation tree for a strategy and a term with only major rules
 derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
-derivationTree s = mergeMaybeSteps . mapSteps f . fullDerivationTree s
+derivationTree s = mergeMaybeSteps . mapFirst f . fullDerivationTree s
  where
    f (RuleStep r) | isMajorRule r = Just r
    f _ = Nothing

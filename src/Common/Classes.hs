@@ -14,6 +14,7 @@
 module Common.Classes 
    ( Apply, apply, applyAll, applicable, applyD, applyM
    , Container, to, from
+   , BiFunctor, biMap, mapFirst, mapSecond
    ) where
 
 import Common.Utils (safeHead)
@@ -61,3 +62,20 @@ instance Container [] where
 instance Container S.Set where
    to   = S.singleton
    from = from . S.toList
+   
+-----------------------------------------------------------
+-- * Type class |BiFunctor|
+
+class BiFunctor f where
+   biMap     :: (a -> c) -> (b -> d) -> f a b -> f c d
+   mapFirst  :: (a -> b) -> f a c -> f b c
+   mapSecond :: (b -> c) -> f a b -> f a c
+   -- default definitions
+   mapFirst  = flip biMap id
+   mapSecond = biMap id
+
+instance BiFunctor Either where
+   biMap f g = either (Left . f) (Right . g)
+
+instance BiFunctor (,) where
+  biMap f g (a, b) = (f a, g b)

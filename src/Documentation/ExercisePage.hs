@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Documentation.ExercisePage (makeExercisePage) where
 
-import Common.Utils (Some(..), splitAtSequence)
+import Common.Utils (Some(..), splitAtSequence, commaList)
 import Common.Library hiding (up)
 import Control.Monad
 import Data.Char
@@ -113,7 +113,7 @@ exercisePage exampleFileExists pkg = do
    ex    = exercise pkg
    exid  = getId ex
    len   = length (qualifiers pkg)
-   trees = [ mapSteps getId (derivationTree (strategy ex) (inContext ex a)) 
+   trees = [ mapFirst getId (derivationTree (strategy ex) (inContext ex a)) 
            | (_, a) <- examples ex 
            ]
 
@@ -146,7 +146,7 @@ derivationHTML ex a = divClass "derivation" $ do
       divClass "error" $ text "<<not ready>>"
  where
    ups = length (qualifiers ex)
-   der = derivationDiffEnv (defaultDerivation ex a)
+   der = derivationPrevious (derivationDiffEnv (defaultDerivation ex a))
    ok  = maybe False (isReady ex) . fromContext . last . terms
 
 idboxHTML :: String -> Id -> HTMLBuilder
@@ -187,20 +187,26 @@ diagnosisPage xs pkg = do
          (_, Left msg) -> "parse error (afterr): " ++ msg
          (Right a, Right b) -> show (diagnose (emptyState pkg a) b)
        
-forStep :: HasId a => Int -> (a, Environment) -> HTMLBuilder  
-forStep n (i, env) = do 
+forStep :: Int -> ((Rule (Context a), Environment), Context a) -> HTMLBuilder  
+forStep n ((r, env), old) = do 
       spaces 3
       text "=>"
       space
-      let target = up n ++ ruleFile i
-          make | null (description i) = link target
-               | otherwise = linkTitle target (description i)
-      make (text (unqualified i))
-      br
+      let target = up n ++ ruleFile r
+          make | null (description r) = link target
+               | otherwise = linkTitle target (description r)
+      make (text (unqualified r))
+      let xs = fromMaybe [] (expectedArguments r old)
+          g (Some descr) x = labelArgument descr ++ "=" ++ x
+      unless (null xs) $ do
+         br
+         spaces 6
+         text (commaList (zipWith g (getDescriptors r) xs))
       unless (nullEnv env) $ do
+         br 
          spaces 6
          text (show env)
-         br
+      br
 
 forTerm :: Exercise a -> Context a -> HTMLBuilder
 forTerm ex ca = do

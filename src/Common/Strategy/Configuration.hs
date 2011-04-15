@@ -20,6 +20,7 @@ module Common.Strategy.Configuration
    , remove, reinsert, collapse, expand, hide, reveal
    ) where
 
+import Common.Classes
 import Common.Id
 import Common.Strategy.Abstract
 import Common.Strategy.Core
@@ -63,7 +64,7 @@ configure cfg ls =
    label (getId ls) (fromCore (configureCore cfg (toCore (unlabel ls))))
 
 configureCore :: StrategyConfiguration -> Core LabelInfo a -> Core LabelInfo a
-configureCore cfg = mapLabel (change [])
+configureCore cfg = mapFirst (change [])
  where
    change groups info = 
       let actions = getActions info groups cfg

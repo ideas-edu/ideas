@@ -22,11 +22,10 @@ module Common.Derivation
    , results, lengthMax
      -- * Adapters
    , restrictHeight, restrictWidth, commit
-   , mergeSteps, cutOnStep, mapSteps, mergeMaybeSteps
-   , changeLabel, sortTree
+   , mergeSteps, cutOnStep, mergeMaybeSteps, sortTree
      -- * Query a derivation
-   , isEmpty, derivationLength, terms, steps, triples, filterDerivation
-   , mapStepsDerivation, derivationM
+   , isEmpty, derivationLength, terms, steps, triples
+   , filterDerivation, derivationM
      -- * Conversions
    , derivation, randomDerivation, derivations
    ) where
@@ -34,6 +33,7 @@ module Common.Derivation
 import Common.Utils (safeHead)
 import Control.Arrow
 import Control.Monad
+import Common.Classes
 import Data.List
 import Data.Maybe
 import System.Random
@@ -57,10 +57,16 @@ instance (Show s, Show a) => Show (Derivation s a) where
       show a : concatMap (\(r, b) -> ["   => " ++ show r, show b]) xs
 
 instance Functor (DerivationTree s) where
-   fmap f (DT a b xs) = DT (f a) b (map (second (fmap f)) xs)
+   fmap = mapSecond
+
+instance BiFunctor DerivationTree where
+   biMap f g (DT a b xs) = DT (g a) b (map (biMap f (biMap f g)) xs)
 
 instance Functor (Derivation s) where
-   fmap f (D a xs) = D (f a) (map (second f) xs)
+   fmap = mapSecond
+
+instance BiFunctor Derivation where
+   biMap f g (D a xs) = D (g a) (map (biMap f g) xs)
 
 -----------------------------------------------------------------------------
 -- Constructors for a derivation tree
@@ -138,16 +144,6 @@ mergeSteps p = rec
          | p s       = (False, [(s, st)])
          | otherwise = (endpoint st, branches st)
 
--- Change the annotation
-mapSteps :: (s -> t) -> DerivationTree s a -> DerivationTree t a
-mapSteps f t = t {branches = map g (branches t)}
- where g (s, st) = (f s, mapSteps f st)
-
-changeLabel :: (l -> m) -> DerivationTree l a -> DerivationTree m a
-changeLabel f = rec
- where
-   rec t = t {branches = map (f *** rec) (branches t)}
-
 sortTree :: (l -> l -> Ordering) -> DerivationTree l a -> DerivationTree l a
 sortTree f t = t {branches = change (branches t) }
  where
@@ -155,7 +151,7 @@ sortTree f t = t {branches = change (branches t) }
    cmp (l1, _) (l2, _) = f l1 l2
 
 mergeMaybeSteps :: DerivationTree (Maybe s) a -> DerivationTree s a
-mergeMaybeSteps = mapSteps fromJust . mergeSteps isJust
+mergeMaybeSteps = mapFirst fromJust . mergeSteps isJust
 
 cutOnStep :: (s -> Bool) -> DerivationTree s a -> DerivationTree s a
 cutOnStep p = rec
@@ -174,9 +170,6 @@ newDerivation = D
 -- | Tests whether the derivation is empty
 isEmpty :: Derivation s a -> Bool
 isEmpty (D _ xs) = null xs
-
-mapStepsDerivation :: (s -> t) -> Derivation s a -> Derivation t a
-mapStepsDerivation f (D a xs) = D a (map (first f) xs)
 
 -- | Returns the number of steps in a derivation
 derivationLength :: Derivation s a -> Int

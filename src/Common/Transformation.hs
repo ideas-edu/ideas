@@ -36,17 +36,16 @@ module Common.Transformation
    , testRule, propRuleSmart
    ) where
 
-import Common.Rewriting
 import Common.Classes
+import Common.Id
+import Common.Rewriting
 import Common.Utils
 import Common.View
 import Control.Monad
 import Data.Char
-import Data.Foldable (Foldable)
 import Data.Maybe
 import Data.Ratio
 import Test.QuickCheck
-import Common.Id
 
 -----------------------------------------------------------
 --- Transformations
@@ -55,7 +54,6 @@ import Common.Id
 data Transformation a
    = Function (a -> [a])
    | RewriteRule (RewriteRule a) (a -> [a])
-   | Transformation a :*: Transformation a -- sequence
    | forall b . Abstraction (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
    | forall b c . LiftView (ViewList a (b, c)) (Transformation b)
    | Recognizer (a -> a -> Bool) (Transformation a)
@@ -65,7 +63,6 @@ instance Apply Transformation where
    applyAll (RewriteRule _ f)   = f
    applyAll (Abstraction _ f g) = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
    applyAll (LiftView v t)      = \a -> [ build v (b, c) | (b0, c) <- match v a, b <- applyAll t b0  ]
-   applyAll (s :*: t)           = \a -> applyAll s a >>= applyAll t
    applyAll (Recognizer _ t)    = applyAll t
    
 -- | Turn a function (which returns its result in the Maybe monad) into a transformation 
@@ -175,7 +172,6 @@ getDescriptors r =
          Abstraction args _ _ -> someArguments args
          LiftView _ t   -> rec t
          Recognizer _ t -> rec t
-         s :*: t        -> rec s ++ rec t
          _ -> []
 
 -- | Returns a list of pretty-printed expected arguments. Nothing indicates that there are no such arguments
@@ -193,8 +189,6 @@ expectedArguments r =
           LiftView v t -> do 
              (b, _) <- safeHead (match v a)
              rec t b
-          s :*: t -> 
-             rec s a `mplus` rec t a
           Recognizer _ t ->
              rec t a
           _ -> Nothing
@@ -214,8 +208,6 @@ useArguments list r =
          Abstraction args _ g -> fmap g (parseArguments args list)
          LiftView v t         -> fmap (LiftView v) (make t)
          Recognizer f t       -> fmap (Recognizer f) (make t)
-         s :*: t              -> fmap (:*: t) (make s) `mplus`
-                                 fmap (s :*:) (make t)
          _                    -> Nothing
    
 -----------------------------------------------------------
@@ -276,6 +268,7 @@ ratioArgDescr descr = ArgDescr descr Nothing parseRatio showRatio arbitrary
 data Rule a = Rule 
    { ruleId          :: Id  -- ^ Unique identifier of the rule
    , transformations :: [Transformation a]
+   , afterwards      :: a -> a
    , isBuggyRule     :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
    , isMinorRule     :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
    , ruleGroups      :: [Id]
@@ -291,7 +284,8 @@ instance Eq (Rule a) where
 instance Apply Rule where
    applyAll r a = do 
       t <- transformations r
-      applyAll t a
+      b <- applyAll t a
+      return (afterwards r b)
 
 instance HasId (Rule a) where
    getId        = ruleId
@@ -324,7 +318,7 @@ makeRule n = makeRuleList n . return
 
 -- | Turn a list of transformations into a single rule: the first argument is the rule's name
 makeRuleList :: IsId n => n -> [Transformation a] -> Rule a
-makeRuleList n ts = Rule (newId n) ts False False [] []
+makeRuleList n ts = Rule (newId n) ts id False False [] []
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: the first argument is the rule's name
 makeSimpleRule :: IsId n => n -> (a -> Maybe a) -> Rule a
@@ -356,18 +350,9 @@ minorRule r = r {isMinorRule = True}
 buggyRule :: Rule a -> Rule a 
 buggyRule r = r {isBuggyRule = True}
 
--- | Perform the function before the rule has been fired
-doBefore :: (a -> a) -> Rule a -> Rule a
-doBefore f = doBeforeTrans (makeTrans (return . f))
-
--- | Perform the function before the rule has been fired
-doBeforeTrans :: Transformation a -> Rule a -> Rule a
-doBeforeTrans t r = r {transformations = map (t :*:) (transformations r)}
-
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a
-doAfter f r = r {transformations = map make (transformations r)}
- where make t = t :*: makeTransList (return . f)
+doAfter f r = r {afterwards = afterwards r . f}
 
 getRewriteRules :: Rule a -> [(Some RewriteRule, Bool)]
 getRewriteRules r = concatMap f (transformations r)
@@ -377,7 +362,6 @@ getRewriteRules r = concatMap f (transformations r)
       case trans of
          RewriteRule rr _ -> [(Some rr, not $ isBuggyRule r)]      
          LiftView _ t     -> f t
-         s :*: t          -> f s ++ f t
          _                -> []
 
 ruleRecognizer :: (a -> a -> Bool) -> Rule a -> a -> a -> Bool
@@ -395,7 +379,6 @@ transRecognizer eq trans a b =
          , (bv, _) <- match v b
          , let f z = build v (z, c)
          ]
-      this :*: _ -> transRecognizer eq this a b
       _ -> any (`eq` b) (applyAll trans a)
 
 useRecognizer :: (a -> a -> Bool) -> Transformation a -> Transformation a
@@ -407,15 +390,17 @@ useRecognizer = Recognizer
 liftTrans :: View a b -> Transformation b -> Transformation a
 liftTrans v = liftTransIn (v &&& identity) 
 
-liftTransIn :: (Foldable m, Monad m) => ViewM m a (b, c) -> Transformation b -> Transformation a
+liftTransIn :: View a (b, c) -> Transformation b -> Transformation a
 liftTransIn = LiftView . viewList
 
 liftRule :: View a b -> Rule b -> Rule a
 liftRule v = liftRuleIn (v &&& identity) 
 
-liftRuleIn :: (Foldable m, Monad m) => ViewM m a (b, c) -> Rule b -> Rule a
+liftRuleIn :: View a (b, c) -> Rule b -> Rule a
 liftRuleIn v r = r
-   { transformations = map (liftTransIn v) (transformations r) }
+   { transformations = map (liftTransIn v) (transformations r) 
+   , afterwards      = simplifyWith (mapFirst (afterwards r)) v
+   }
 
 -----------------------------------------------------------
 --- QuickCheck
@@ -451,8 +436,6 @@ smartGenTrans a trans =
          (b, c) <- match v a
          gen    <- smartGenTrans b t
          return $ liftM (\n -> build v (n, c)) gen
-      s :*: t -> 
-         smartGenTrans a s ++ smartGenTrans a t
       _ -> []
 
 smartApplyRule :: Rule a -> a -> Gen (Maybe a)

@@ -1,5 +1,6 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <list>
+    <elem ruleid="algebra.equations.linear.flip"/>
     <elem ruleid="algebra.equations.linear.remove-div"/>
     <elem ruleid="algebra.equations.linear.var-left"/>
   </list>

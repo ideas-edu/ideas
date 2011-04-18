@@ -27,8 +27,8 @@ module Common.Transformation
    , ruleGroups, ruleSiblings, addRuleToGroup
    , rule, ruleList
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
-   , idRule, checkRule, emptyRule, minorRule, buggyRule, doBefore, doAfter
-   , siblingOf, transformations, getRewriteRules, doBeforeTrans
+   , idRule, checkRule, emptyRule, minorRule, buggyRule, doAfter
+   , siblingOf, transformations, getRewriteRules
    , ruleRecognizer, useRecognizer
      -- * Lifting
    , liftRule, liftTrans, liftRuleIn, liftTransIn
@@ -395,6 +395,7 @@ transRecognizer eq trans a b =
          , (bv, _) <- match v b
          , let f z = build v (z, c)
          ]
+      this :*: _ -> transRecognizer eq this a b
       _ -> any (`eq` b) (applyAll trans a)
 
 useRecognizer :: (a -> a -> Bool) -> Transformation a -> Transformation a

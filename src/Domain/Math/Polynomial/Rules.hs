@@ -18,7 +18,7 @@ module Domain.Math.Polynomial.Rules
    , parentNotNegCheck, prepareSplitSquare, quadraticRuleOrder, removeDivision
    , ruleApproximate, ruleNormalizeMixedFraction, ruleNormalizeRational
    , sameFactor, simplerLinearFactor, simplerPolynomial, simplerSquareRoot
-   , squareBothSides, substBackVar, varToLeft
+   , squareBothSides, substBackVar, varToLeft, conditionVarsRHS
    ) where
 
 import Common.Library hiding (terms, simplify)
@@ -253,14 +253,14 @@ factorLeftAsSquare = describe "factor left as square" $
 
 -- flip the two sides of an equation
 flipEquation :: Rule (Equation Expr)
-flipEquation = doBeforeTrans condition $
-   describe "flip equation" $
+flipEquation = describe "flip equation" $
    rule (lineq, "flip") $ \a b ->
       (a :==: b) :~> (b :==: a)
- where
-   condition = makeTrans $ \eq@(lhs :==: rhs) -> do
-      guard (hasSomeVar rhs && hasNoVar lhs)
-      return eq
+
+conditionVarsRHS :: Rule (Equation Expr)
+conditionVarsRHS = describe "All variables are in the right-hand side" $ 
+   checkRule $ \(lhs :==: rhs) -> 
+      hasSomeVar rhs && hasNoVar lhs
 
 -- Afterwards, merge and sort
 moveToLeft :: Rule (Equation Expr)

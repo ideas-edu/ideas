@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <label name="linearequation">
     <sequence>
       <rule name="identity"/>
@@ -59,7 +59,10 @@
         <repeat>
           <choice>
             <orelse>
-              <rule name="algebra.equations.linear.flip"/>
+              <sequence>
+                <rule name="check"/>
+                <rule name="algebra.equations.linear.flip"/>
+              </sequence>
               <rule name="algebra.equations.linear.var-left"/>
             </orelse>
             <rule name="algebra.equations.coverup.onevar.plus"/>

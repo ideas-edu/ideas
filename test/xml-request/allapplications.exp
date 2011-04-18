@@ -1,5 +1,13 @@
-<reply result="ok" version="0.7.1 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <list>
+    <elem ruleid="algebra.equations.linear.flip">
+      []
+      <state>
+        <expr>
+          x/2 == 5*(x-1)
+        </expr>
+      </state>
+    </elem>
     <elem ruleid="algebra.equations.linear.remove-div">
       []
       <state>

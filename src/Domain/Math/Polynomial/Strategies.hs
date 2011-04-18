@@ -16,13 +16,8 @@ module Domain.Math.Polynomial.Strategies
    , findFactorsStrategy, findFactorsStrategyG
    ) where
 
-import Prelude hiding (repeat, replicate, fail)
-import Common.Strategy
-import Common.Navigator
-import Common.Id
 import Common.Uniplate (transform)
-import Common.View
-import Common.Context
+import Common.Library
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Numeric.Views
@@ -31,7 +26,6 @@ import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.CleanUp
 import Data.Maybe
-import Common.Rewriting
 
 ------------------------------------------------------------
 -- Linear equations
@@ -50,19 +44,19 @@ linearMixedStrategy =
 linearStrategyG :: IsTerm a => LabeledStrategy (Context a)
 linearStrategyG =
    label "Linear Equation" $
-       label "Phase 1" (repeat (
+       label "Phase 1" (repeatS (
                use removeDivision
           <|>  multi (showId distributeTimes) (somewhere (useC parentNotNegCheck <*> use distributeTimes))
           <|>  multi (showId merge) (once (use merge))))
-   <*> label "Phase 2" (repeat (
-              (use flipEquation |> use varToLeft)
+   <*> label "Phase 2" (repeatS (
+              (flipEquationS |> use varToLeft)
           <|> use (coverUpPlusWith oneVar) 
           <|> use (coverUpMinusLeftWith oneVar)
           <|> use (coverUpMinusRightWith oneVar)
           <|> use coverUpTimes 
           <|> use coverUpNegate
            ))
-   <*> repeat (once 
+   <*> repeatS (once 
           (  use ruleNormalizeRational
          <|> remove (use ruleNormalizeMixedFraction)
           ))
@@ -76,7 +70,7 @@ quadraticStrategy =
 
 quadraticStrategyG :: IsTerm a => LabeledStrategy (Context a)
 quadraticStrategyG = 
-   label "Quadratic Equation Strategy" $ repeat $
+   label "Quadratic Equation Strategy" $ repeatS $
    -- Relaxed strategy: even if there are "nice" factors, allow use of quadratic formula
       somewhere (generalForm <|> generalABCForm)
       |> somewhere zeroForm 
@@ -127,7 +121,7 @@ quadraticStrategyG =
                (useC parentNotNegCheck <*> use distributeTimes))
         <|> multi (showId distributeDivision) (somewhere 
                (once (use distributeDivision)))
-        <|> somewhere (use flipEquation)
+        <|> somewhere flipEquationS
          )
       |> somewhere (use moveToLeft <|> remove (use prepareSplitSquare))
 
@@ -144,7 +138,7 @@ higherDegreeStrategyG = label "higher degree" $
    <*> label "quadratic"  quadraticStrategyG
    <*> afterSubst
  where
-   higherForm = label "higher degree form" $ repeat $
+   higherForm = label "higher degree form" $ repeatS $
       somewhere (use allPowerFactors)
       |> somewhere (
               use coverUpPower
@@ -160,14 +154,14 @@ higherDegreeStrategyG = label "higher degree" $
       |> somewhere (use moveToLeft)
    
    afterSubst = label "afterwards" $ try $
-      useC substBackVar  <*> repeat (somewhere (use coverUpPower)) 
+      useC substBackVar  <*> repeatS (somewhere (use coverUpPower)) 
 
 -----------------------------------------------------------
 -- Finding factors in an expression
 
 findFactorsStrategy :: LabeledStrategy (Context Expr)
 findFactorsStrategy = cleanUpStrategy (applyTop cleanUpSimple) $
-   label "find factors" $ replicate 10 $ try findFactorsStrategyG
+   label "find factors" $ replicateS 10 $ try findFactorsStrategyG
    
 findFactorsStrategyG :: IsTerm a => LabeledStrategy (Context a)
 findFactorsStrategyG = label "find factor step" $
@@ -181,3 +175,6 @@ somewhereTimes = somewhereWith "SomewhereTimes" $ \c ->
    
 isTimesC :: Context a -> Bool
 isTimesC = maybe False (isJust . isTimes :: Term -> Bool) . currentT
+
+flipEquationS :: IsTerm a => Strategy (Context a)
+flipEquationS = use conditionVarsRHS <*> use flipEquation

@@ -19,26 +19,15 @@ module Domain.Math.Power.Equation.Strategies
    -- ) 
    where
 
-import Prelude hiding (repeat, not)
-
-import Common.Classes
-import Common.Context
-import Common.Id
 import Common.Library
-import Common.Navigator
-import Common.Rewriting
-import Common.Strategy
-import Common.View (belongsTo)
-import Control.Arrow
 import Data.Maybe
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
-import Domain.Math.Equation.CoverUpExercise
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.CleanUp
 import Domain.Math.Polynomial.Strategies (quadraticStrategy, linearStrategy)
-import qualified Domain.Math.Polynomial.Rules as PR
+import Domain.Math.Polynomial.Rules (flipEquation, conditionVarsRHS)
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Equation.Rules
@@ -49,7 +38,7 @@ import Domain.Math.Numeric.Rules
 powerEqStrategy :: IsTerm a => LabeledStrategy (Context a)
 powerEqStrategy = cleanUpStrategy clean strat
   where
-    strat =  label "Power equation" $ repeat
+    strat =  label "Power equation" $ repeatS
           $  myCoverUpStrategy
          <*> option (use greatestPower <*> use commonPower)
          <*> use nthRoot
@@ -69,8 +58,8 @@ expEqStrategy = cleanUpStrategy cleanup strat
   where 
     strat =  label "Exponential equation" 
           $  myCoverUpStrategy
-         <*> repeat (somewhereNotInExp (use factorAsPower))
-         <*> repeat (somewhereNotInExp (use reciprocal))
+         <*> repeatS (somewhereNotInExp (use factorAsPower))
+         <*> repeatS (somewhereNotInExp (use reciprocal))
          <*> powerS 
          <*> (use sameBase <|> use equalsOne)
          <*> linearStrategy
@@ -87,13 +76,13 @@ expEqStrategy = cleanUpStrategy cleanup strat
 logEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 logEqStrategy = label "Logarithmic equation"
               $  try (use logarithm)
-             <*> try (use PR.flipEquation)
-             <*> repeat (somewhere $  use nthRoot 
-                                  <|> use calcPower 
-                                  <|> use calcPowerPlus 
-                                  <|> use calcPowerMinus
-                                  <|> use calcPlainRoot
-                                  <|> use calcPowerRatio)
+             <*> try (use conditionVarsRHS <*> use flipEquation)
+             <*> repeatS (somewhere $  use nthRoot 
+                                   <|> use calcPower 
+                                    <|> use calcPowerPlus 
+                                   <|> use calcPowerMinus
+                                   <|> use calcPlainRoot
+                                   <|> use calcPowerRatio)
              <*> quadraticStrategy
 
 higherPowerEqStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
@@ -112,7 +101,7 @@ rootEqStrategy =  cleanUpStrategy cleanup strat
 -- | Help functions -----------------------------------------------------------
 
 myCoverUpStrategy :: IsTerm a => Strategy (Context a)
-myCoverUpStrategy = repeat $ alternatives $ map use coverUpRules
+myCoverUpStrategy = repeatS $ alternatives $ map use coverUpRules
 
 coverUpStrategy' :: LabeledStrategy (Context (OrList (Equation Expr)))
 coverUpStrategy' = cleanUpStrategy (applyTop $ fmap $ fmap cleanUpExpr) $

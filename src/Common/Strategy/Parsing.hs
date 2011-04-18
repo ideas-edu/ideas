@@ -18,7 +18,7 @@ module Common.Strategy.Parsing
    ) where
 
 import Common.Classes
-import Common.Derivation
+import Common.DerivationTree
 import Common.Strategy.Core
 import Common.Transformation
 import Common.Uniplate

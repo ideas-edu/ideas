@@ -21,7 +21,7 @@ import Common.Utils
 import Common.Strategy.Abstract
 import Common.Strategy.Parsing
 import Common.Transformation
-import Common.Derivation
+import Common.DerivationTree
 import Data.Maybe
 import Control.Monad
 

@@ -41,6 +41,7 @@ import Common.Context
 import Common.Strategy hiding (not, fail, repeat, replicate)
 import qualified Common.Strategy as S
 import Common.Derivation
+import Common.DerivationTree
 import Common.Id
 import Common.Navigator
 import Common.TestSuite
@@ -311,23 +312,17 @@ defaultDerivation :: Exercise a -> a -> ExerciseDerivation a
 defaultDerivation ex a =
    let ca     = inContext ex a
        tree   = sortTree (ruleOrdering ex) (derivationTree (strategy ex) ca)
-       single = newDerivation ca []
+       single = emptyDerivation ca
    in fromMaybe single (derivation tree)
 
 derivationDiffEnv :: Derivation s (Context a) -> Derivation (s, Environment) (Context a)
-derivationDiffEnv d =
-   -- A bit of hack to show the delta between two environments, not including
-   -- the location variable
-   let t:ts = terms d
-       xs   = zipWith3 f (steps d) (drop 1 (terms d)) (terms d)
-       f b x y = (b, deleteEnv "location" (diffEnv (getEnvironment x) (getEnvironment y))) -- ShowString (show a ++ extra)
-   in newDerivation t (zip xs ts)
+derivationDiffEnv = updateSteps $ \y b x -> 
+   let env = diffEnv (getEnvironment x) (getEnvironment y)
+   in (b, deleteEnv "location" env)
 
 -- helper, needed for showing arguments
 derivationPrevious :: Derivation s a -> Derivation (s, a) a
-derivationPrevious d =
-   let t:ts = terms d  
-   in newDerivation t (zip (zip (steps d) (t:ts)) ts)
+derivationPrevious = updateSteps $ \a s _ -> (s, a)
 
 printDerivation :: Exercise a -> a -> IO ()
 printDerivation ex = putStrLn . showDerivation ex

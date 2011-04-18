@@ -11,11 +11,10 @@
 -- Buggy rules in the logic domain, expressing common misconceptions
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.BuggyRules where
+module Domain.Logic.BuggyRules (buggyRules) where
 
 import Domain.Logic.Formula
 import Domain.Logic.Generator()
-import Domain.Logic.Rules (makeGroup, logic)
 import Common.Id
 import Common.Rewriting
 import Common.Transformation (Rule, buggyRule)
@@ -23,7 +22,7 @@ import qualified Common.Transformation as Rule
 
 -- Collection of all known buggy rules
 buggyRules :: [Rule SLogic]
-buggyRules = snd $ makeGroup "Common misconceptions"
+buggyRules =
    [ buggyRuleCommImp, buggyRuleAssImp, buggyRuleIdemImp, buggyRuleIdemEqui
    , buggyRuleEquivElim1, buggyRuleImplElim2, buggyRuleEquivElim2, buggyRuleEquivElim3
    , buggyRuleImplElim, buggyRuleImplElim1, buggyRuleDeMorgan1, buggyRuleDeMorgan2, buggyRuleDeMorgan3
@@ -34,10 +33,10 @@ buggyRules = snd $ makeGroup "Common misconceptions"
    ]
 
 rule :: (RuleBuilder f a, Rewrite a) => String -> f -> Rule a
-rule = Rule.rule . logic . ( "buggy" # )
+rule = Rule.rule . ( "logic.propositional.buggy" # )
 
 ruleList :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
-ruleList = Rule.ruleList . logic . ( "buggy" # )
+ruleList = Rule.ruleList . ( "logic.propositional.buggy" # )
 
 -----------------------------------------------------------------------------
 -- Buggy rules

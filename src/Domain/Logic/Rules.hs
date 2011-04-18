@@ -12,23 +12,31 @@
 -- DWA course)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Rules where
+module Domain.Logic.Rules 
+   ( extraLogicRules, ruleAbsorpAnd, ruleAbsorpOr, ruleAndOverOr
+   , ruleComplAnd, ruleComplOr, ruleDeMorganAnd, ruleDeMorganOr
+   , ruleDefEquiv, ruleDefImpl, ruleFalseInEquiv, ruleFalseInImpl
+   , ruleFalseZeroAnd, ruleFalseZeroOr, ruleIdempAnd, ruleIdempOr
+   , ruleNotFalse, ruleNotNot, ruleNotTrue, ruleTrueInEquiv
+   , ruleTrueInImpl, ruleTrueZeroAnd, ruleTrueZeroOr
+   ) where
 
 import Domain.Logic.Formula
 import Common.Id
-import Common.Transformation (Rule, addRuleToGroup, minorRule)
+import Common.Transformation (Rule, minorRule)
 import Common.Rewriting
 import Domain.Logic.Generator()
 import Domain.Logic.GeneralizedRules
 import qualified Common.Transformation as Rule
  
-logicRules :: [Rule SLogic]
-logicRules = concatMap snd
-   [ groupCommutativity, groupAssociativity, groupIdempotency
-   , groupAbsorption, groupTrueProperties, groupFalseProperties, groupDoubleNegation
-   , groupDeMorgan, groupImplicationEliminatinon, groupEquivalenceElimination, groupAdditional
-   , groupDistributionOrOverAnd, groupDistributionAndOverOr
-   , groupInverseDeMorgan,groupInverseDistr
+extraLogicRules :: [Rule SLogic]
+extraLogicRules = 
+   [ ruleCommOr, ruleCommAnd, ruleAssocOr, ruleAssocAnd
+   , ruleFalseInEquiv, ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
+   , ruleCommEquiv, ruleDefEquivImpls, ruleEquivSame, ruleImplSame
+   , generalRuleOrOverAnd, ruleOrOverAnd
+   , inverseDeMorganOr, inverseDeMorganAnd
+   , inverseAndOverOr, inverseOrOverAnd
    ]
 
 logic :: IsId a => a -> Id
@@ -39,49 +47,6 @@ rule = Rule.rule . logic
 
 ruleList :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
 ruleList = Rule.ruleList . logic
-
------------------------------------------------------------------------------
--- Grouping DWA rules
-
-makeGroup :: String -> [Rule SLogic] -> (Id, [Rule SLogic])
-makeGroup s rs =  
-   let a = logic s
-   in (a, map (addRuleToGroup a) rs)
-
-groupCommutativity, groupAssociativity, groupDistributionOrOverAnd, 
-   groupDistributionAndOverOr,groupIdempotency, groupAbsorption, 
-   groupTrueProperties, groupFalseProperties, groupDoubleNegation,
-   groupDeMorgan, groupImplicationEliminatinon, groupEquivalenceElimination,
-   groupInverseDeMorgan, groupInverseDistr :: (Id, [Rule SLogic])
-
-groupCommutativity = makeGroup "Commutativity" 
-   [ruleCommOr, ruleCommAnd]
-groupAssociativity = makeGroup "Associativity"
-   [ruleAssocOr, ruleAssocAnd]
-groupIdempotency = makeGroup "Idempotency"
-   [ruleIdempOr, ruleIdempAnd]
-groupAbsorption = makeGroup "Absorption"
-   [ruleAbsorpOr, ruleAbsorpAnd]
-groupTrueProperties = makeGroup "True Properties"
-   [ruleTrueZeroOr, ruleTrueZeroAnd, ruleComplOr, ruleNotTrue]
-groupFalseProperties = makeGroup "False Properties"
-   [ruleFalseZeroOr, ruleFalseZeroAnd, ruleComplAnd, ruleNotFalse]
-groupDoubleNegation = makeGroup "Double Negation"
-   [ruleNotNot]
-groupDeMorgan = makeGroup "De Morgan" 
-   [ruleDeMorganOr, ruleDeMorganAnd, generalRuleDeMorganOr, generalRuleDeMorganAnd ]
-groupImplicationEliminatinon = makeGroup "Implication Elimination"
-   [ruleDefImpl]
-groupEquivalenceElimination = makeGroup "Equivalence Elimination"
-   [ruleDefEquiv]
-groupDistributionOrOverAnd = makeGroup "DistributionOrOverAnd"
-   [generalRuleOrOverAnd, ruleOrOverAnd ]
-groupDistributionAndOverOr = makeGroup "DistributionAndOverOr"
-   [generalRuleAndOverOr, ruleAndOverOr ]
-groupInverseDeMorgan = makeGroup "InverseDeMorgan" 
-   [inverseDeMorganOr, inverseDeMorganAnd]
-groupInverseDistr = makeGroup "InverseDistr"
-   [inverseAndOverOr, inverseOrOverAnd]
    
 -----------------------------------------------------------------------------
 -- Commutativity
@@ -231,12 +196,6 @@ ruleDefEquiv = rule "DefEquiv" $
 
 -----------------------------------------------------------------------------
 -- Additional rules, not in the DWA course
-
-groupAdditional :: (Id, [Rule SLogic])
-groupAdditional = makeGroup "Additional rules"
-   [ ruleFalseInEquiv, ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
-   , ruleCommEquiv, ruleDefEquivImpls, ruleEquivSame, ruleImplSame
-   ]
 
 ruleFalseInEquiv :: Rule SLogic 
 ruleFalseInEquiv = ruleList "FalseInEquiv"

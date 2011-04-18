@@ -24,8 +24,7 @@ module Common.Transformation
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
    , Rule, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
-   , ruleGroups, ruleSiblings, addRuleToGroup
-   , rule, ruleList
+   , ruleSiblings, rule, ruleList
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doAfter
    , siblingOf, transformations, getRewriteRules
@@ -271,7 +270,6 @@ data Rule a = Rule
    , afterwards      :: a -> a
    , isBuggyRule     :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
    , isMinorRule     :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
-   , ruleGroups      :: [Id]
    , ruleSiblings    :: [Id]
    }
 
@@ -301,9 +299,6 @@ isRewriteRule = not . null . getRewriteRules
 siblingOf :: HasId b => b -> Rule a -> Rule a 
 siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
 
-addRuleToGroup :: HasId b => b -> Rule a -> Rule a
-addRuleToGroup g r = r { ruleGroups = getId g : ruleGroups r }
-
 ruleList :: (IsId n, RuleBuilder f a, Rewrite a) => n -> [f] -> Rule a
 ruleList n = makeRuleList a . map (makeRewriteTrans . rewriteRule a)
  where a = newId n
@@ -318,7 +313,7 @@ makeRule n = makeRuleList n . return
 
 -- | Turn a list of transformations into a single rule: the first argument is the rule's name
 makeRuleList :: IsId n => n -> [Transformation a] -> Rule a
-makeRuleList n ts = Rule (newId n) ts id False False [] []
+makeRuleList n ts = Rule (newId n) ts id False False []
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: the first argument is the rule's name
 makeSimpleRule :: IsId n => n -> (a -> Maybe a) -> Rule a

@@ -14,7 +14,7 @@ module Domain.RelationAlgebra.Rules where
 import Domain.RelationAlgebra.Formula
 import Domain.RelationAlgebra.Generator()
 import Common.Id
-import Common.Transformation (Rule, addRuleToGroup, buggyRule)
+import Common.Transformation (Rule, buggyRule)
 import Common.Rewriting
 import qualified Common.Transformation as Rule
 
@@ -52,113 +52,93 @@ ruleList = Rule.ruleList . relalg
                    
 -- | 1. Alle ~ operatoren naar binnen verplaatsen
 
-conversionGroup :: (RuleBuilder f a, Rewrite a) => String -> f -> Rule a
-conversionGroup s = 
-   addRuleToGroup (relalg "Conversion") . rule s
-
 ruleInvOverUnion :: Rule RelAlg
-ruleInvOverUnion = conversionGroup "InvOverUnion" $ 
+ruleInvOverUnion = rule "InvOverUnion" $ 
    \r s -> Inv (r :||: s) :~> Inv r :||: Inv s
 
 ruleInvOverIntersec :: Rule RelAlg
-ruleInvOverIntersec = conversionGroup "InvOverIntersect" $  
+ruleInvOverIntersec = rule "InvOverIntersect" $  
    \r s -> Inv (r :&&: s) :~> Inv r :&&: Inv s --- !!!!!!! ALLEEN VOOR FUNCTIES
 
 ruleInvOverComp :: Rule RelAlg
-ruleInvOverComp = conversionGroup "InvOverComp" $ 
+ruleInvOverComp = rule "InvOverComp" $ 
    \r s -> Inv (r :.: s) :~> Inv s :.: Inv r
 
 ruleInvOverAdd :: Rule RelAlg
-ruleInvOverAdd = conversionGroup "InvOverAdd" $ 
+ruleInvOverAdd = rule "InvOverAdd" $ 
    \r s -> Inv (r :+: s) :~> Inv s :+: Inv r
 
 ruleInvOverNot :: Rule RelAlg
-ruleInvOverNot = conversionGroup "InvOverNot" $ 
+ruleInvOverNot = rule "InvOverNot" $ 
    \r -> Inv (Not r) :~> Not (Inv r)
    
 ruleDoubleInv :: Rule RelAlg
-ruleDoubleInv = conversionGroup "DoubleInv" $ 
+ruleDoubleInv = rule "DoubleInv" $ 
    \r -> Inv (Inv r) :~> r
       
 
 
 
 -- | 2. Alle ; en + operatoren zoveel mogelijk naar binnen verplaatsen 
-distributionGroup :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
-distributionGroup s = 
-   addRuleToGroup (relalg "Distribution") . ruleList s
 
 ruleCompOverUnion :: Rule RelAlg
-ruleCompOverUnion = distributionGroup "CompOverUnion" 
+ruleCompOverUnion = ruleList "CompOverUnion" 
    [ \q r s -> q :.: (r :||: s) :~>  (q :.: r) :||: (q :.: s) 
    , \q r s -> (q :||: r) :.: s :~>  (q :.: s) :||: (r :.: s) 
    ]
 
 ruleCompOverIntersec :: Rule RelAlg
-ruleCompOverIntersec = distributionGroup "CompOverIntersec" 
+ruleCompOverIntersec = ruleList "CompOverIntersec" 
    [ \q r s -> q :.: (r :&&: s) :~> (q :.: r) :&&: (q :.: s)  --alleen toegestaan als q een functie is!
    , \q r s -> (q :&&: r) :.: s :~> (q :.: s) :&&: (r :.: s)  --idem
    ]
 ruleAddOverUnion :: Rule RelAlg
-ruleAddOverUnion = distributionGroup "AddOverUnion"  
+ruleAddOverUnion = ruleList "AddOverUnion"  
    [ \q r s -> q :+: (r :||: s) :~>  (q :+: r) :||: (q :+: s) --alleen toegestaan als q een functie is!
    , \q r s -> (q :||: r) :+: s :~>  (q :+: s) :||: (r :+: s) --idem
    ]
 
 ruleAddOverIntersec :: Rule RelAlg
-ruleAddOverIntersec = distributionGroup "AddOverIntersec"  
+ruleAddOverIntersec = ruleList "AddOverIntersec"  
    [ \q r s -> q :+: (r :&&: s) :~>  (q :+: r) :&&: (q :+: s)  
    , \q r s -> (q :&&: r) :+: s :~>  (q :+: s) :&&: (r :+: s)  
    ]
 -- | 3. Distribute union over intersection
  
 ruleUnionOverIntersec :: Rule RelAlg
-ruleUnionOverIntersec = distributionGroup "UnionOverIntersec" 
+ruleUnionOverIntersec = ruleList "UnionOverIntersec" 
    [ \q r s -> q :||: (r :&&: s) :~> (q :||: r) :&&: (q :||: s) 
    , \q r s -> (q :&&: r) :||: s :~> (q :||: s) :&&: (r :||: s) 
    ]
 
 -- | 4. De Morgan rules
 
-deMorganGroup :: (RuleBuilder f a, Rewrite a) => String -> f -> Rule a
-deMorganGroup s = 
-   addRuleToGroup (relalg "DeMorgan") . rule s
-
 ruleDeMorganOr :: Rule RelAlg
-ruleDeMorganOr = deMorganGroup "DeMorganOr" $
+ruleDeMorganOr = rule "DeMorganOr" $
    \r s -> Not (r :||: s) :~> Not r :&&: Not s
    
 ruleDeMorganAnd :: Rule RelAlg
-ruleDeMorganAnd = deMorganGroup "DeMorganAnd" $
+ruleDeMorganAnd = rule "DeMorganAnd" $
    \r s -> Not (r :&&: s) :~> Not r :||: Not s
 
 -- | 5. Idempotency
 
-idempotencyGroup :: (RuleBuilder f a, Rewrite a) => String -> f -> Rule a
-idempotencyGroup s = 
-   addRuleToGroup (relalg "Idempotency") . rule s
-
 ruleIdempOr :: Rule RelAlg
-ruleIdempOr = idempotencyGroup "IdempotencyOr" $
+ruleIdempOr = rule "IdempotencyOr" $
    \r -> r :||: r :~>  r
    
 ruleIdempAnd :: Rule RelAlg
-ruleIdempAnd = idempotencyGroup "IdempotencyAnd" $
+ruleIdempAnd = rule "IdempotencyAnd" $
    \r -> r :&&: r :~>  r
 
 -- | 6. Complement
 
-complementGroup :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
-complementGroup s = 
-   addRuleToGroup (relalg "Complement") . ruleList s
-
 ruleDoubleNegation :: Rule RelAlg
-ruleDoubleNegation = complementGroup "DoubleNegation"
-   [ \r -> Not (Not r) :~> r
-   ]
+ruleDoubleNegation = rule "DoubleNegation" $
+   \r -> Not (Not r) :~> r
 
 ruleRemCompl :: Rule RelAlg
-ruleRemCompl = complementGroup "RemCompl" 
+ruleRemCompl = ruleList "RemCompl" 
    [ \r -> r :||: Not r :~>  V
    , \r -> Not r :||: r :~>  V
    , \r -> r :&&: Not r :~>  empty
@@ -168,23 +148,19 @@ ruleRemCompl = complementGroup "RemCompl"
 -- Distribute Not over . and +
 
 ruleNotOverComp :: Rule RelAlg
-ruleNotOverComp = complementGroup "NotOverComp"
-   [ \r s -> Not (r :.: s) :~> Not r :+: Not s
-   ]
+ruleNotOverComp = rule "NotOverComp" $
+   \r s -> Not (r :.: s) :~> Not r :+: Not s
+  
    
 ruleNotOverAdd :: Rule RelAlg
-ruleNotOverAdd = complementGroup "NotOverAdd"
-   [ \r s -> Not (r :+: s) :~> Not r :.: Not s
-   ]
+ruleNotOverAdd = rule "NotOverAdd" $
+   \r s -> Not (r :+: s) :~> Not r :.: Not s
+  
   
 -- | 7. Absorption complement
 
-absorptionGroup :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
-absorptionGroup s = 
-   addRuleToGroup (relalg "Absorption") . ruleList s
-
 ruleAbsorpCompl :: Rule RelAlg
-ruleAbsorpCompl = absorptionGroup "AbsorpCompl" 
+ruleAbsorpCompl = ruleList "AbsorpCompl" 
    [ \r s -> r :&&: (Not r :||: s) :~> r :&&: s
    , \r s -> r :&&: (s :||: Not r) :~> r :&&: s  
    , \r s -> (Not r :||: s) :&&: r :~> r :&&: s
@@ -196,7 +172,7 @@ ruleAbsorpCompl = absorptionGroup "AbsorpCompl"
    ]
    
 ruleAbsorp :: Rule RelAlg
-ruleAbsorp = absorptionGroup "Absorp"  
+ruleAbsorp = ruleList "Absorp"  
    [ \r s -> r :&&: (r :||: s)  :~> r
    , \r s -> r :&&: (s :||: r)  :~> r
    , \r s -> (r :||: s) :&&: r  :~> r
@@ -209,12 +185,8 @@ ruleAbsorp = absorptionGroup "Absorp"
 
 -- | 8. Remove redundant expressions
 
-simplificationGroup :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
-simplificationGroup s = 
-   addRuleToGroup (relalg "Simplification") . ruleList s
-
 ruleRemRedunExprs :: Rule RelAlg
-ruleRemRedunExprs = simplificationGroup "RemRedunExprs"  
+ruleRemRedunExprs = ruleList "RemRedunExprs"  
    [ \r -> r :||: V :~> V
    , \r -> V :||: r :~> V 
    , \r -> r :&&: V :~> r
@@ -245,8 +217,8 @@ ruleRemRedunExprs = simplificationGroup "RemRedunExprs"
 -- Buggy rules:
 
 buggyGroup :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
-buggyGroup s = addRuleToGroup (relalg "Buggy") . buggyRule 
-             . Rule.ruleList ("relationalgebra.buggy." ++ s)
+buggyGroup s = 
+   buggyRule . Rule.ruleList ("relationalgebra.buggy." ++ s)
     
 buggyRuleIdemComp :: Rule RelAlg
 buggyRuleIdemComp = buggyGroup "IdemComp" 

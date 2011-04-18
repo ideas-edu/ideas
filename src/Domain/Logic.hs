@@ -20,11 +20,11 @@ module Domain.Logic
    , module Domain.Logic.Strategies
    ) where
 
-import Domain.Logic.BuggyRules hiding (rule, ruleList)
+import Domain.Logic.BuggyRules
 import Domain.Logic.Exercises
 import Domain.Logic.Formula
 import Domain.Logic.GeneralizedRules
 import Domain.Logic.Generator
 import Domain.Logic.Parser
-import Domain.Logic.Rules      hiding (rule, ruleList)
+import Domain.Logic.Rules
 import Domain.Logic.Strategies

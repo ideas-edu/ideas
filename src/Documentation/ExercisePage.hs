@@ -87,7 +87,6 @@ exercisePage exampleFileExists pkg = do
              , text $ showBool $ isBuggyRule r
              , text $ showBool $ hasArguments r
              , text $ showBool $ r `elem` rs
-             , text $ concat $ intersperse "," $ map showId $ ruleGroups r
              , when (isRewriteRule r) $
                   ruleToHTML (Some ex) r
              ]

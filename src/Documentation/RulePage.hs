@@ -58,7 +58,6 @@ rulePage ex exMap usedIn r = do
    para $ table 
       [ [bold $ text "Buggy", text $ showBool (isBuggyRule r)]
       , [bold $ text "Rewrite rule", text $ showBool (isRewriteRule r)]
-      , [bold $ text "Groups", idList $ ruleGroups r]
       , [bold $ text "Siblings", idList $ ruleSiblings r] 
       ]
    when (isRewriteRule r) $ para $

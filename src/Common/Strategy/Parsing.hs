@@ -65,12 +65,11 @@ newState core a = push core (S emptyStack [] [] 0 a)
 -- Parse derivation tree
 
 parseDerivationTree :: State l a -> DerivationTree (Step l a) (State l a)
-parseDerivationTree state = addBranches list node
- where
-   xs    = firsts state
-   empty = not (null [ () | (Ready, _) <- xs ])
-   node  = singleNode state empty
-   list  = [ (step, parseDerivationTree s) | (Result step, s) <- xs ] 
+parseDerivationTree = makeTree $ \state -> 
+   let xs = firsts state
+   in ( any (isReady . fst) xs
+      , [ (step, s) | (Result step, s) <- xs ]
+      )
 
 firsts :: State l a -> [(Result (Step l a), State l a)]
 firsts st =
@@ -101,6 +100,10 @@ firsts st =
 
 -- helper datatype
 data Result a = Result a | Ready
+
+isReady :: Result a -> Bool
+isReady Ready = True
+isReady _     = False
 
 ----------------------------------------------------------------------
 -- Running the parser

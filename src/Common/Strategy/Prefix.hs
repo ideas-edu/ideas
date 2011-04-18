@@ -63,12 +63,8 @@ makePrefix (i:is) ls = liftM P $
 
 -- | Create a derivation tree with a "prefix" as annotation.
 prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
-prefixTree (P s) a = f (parseDerivationTree s {value = a})
- where
-   f t = addBranches list (singleNode (value $ root t) (endpoint t))
-    where
-      list = map g (branches t)
-      g (_, st) = (P (root st), f st)
+prefixTree (P s) a = fmap value $ updateAnnotations (\_ _ -> P) $ 
+   parseDerivationTree s {value = a}
 
 prefixToSteps :: Prefix a -> [Step LabelInfo a]
 prefixToSteps (P t) = reverse (trace t)

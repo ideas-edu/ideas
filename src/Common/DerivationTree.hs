@@ -16,13 +16,13 @@ module Common.DerivationTree
    ( -- * Data types 
      DerivationTree
      -- * Constructors
-   , singleNode, addBranch, addBranches
+   , singleNode, addBranches, makeTree
      -- * Query 
-   , root, endpoint, branches, annotations, subtrees
-   , results, lengthMax
+   , root, endpoint, branches, subtrees
+   , lengthMax
      -- * Adapters
-   , restrictHeight, restrictWidth, commit
-   , mergeSteps, cutOnStep, mergeMaybeSteps, sortTree
+   , restrictHeight, restrictWidth, updateAnnotations
+   , cutOnStep, mergeMaybeSteps, sortTree
      -- * Conversions
    , derivation, randomDerivation, derivations
    ) where
@@ -59,14 +59,16 @@ instance BiFunctor DerivationTree where
 singleNode :: a -> Bool -> DerivationTree s a
 singleNode a b = DT a b []
 
--- | Add a single branch
-addBranch :: (s, DerivationTree s a) -> DerivationTree s a -> DerivationTree s a
-addBranch = addBranches . return
-
 -- | Branches are attached after the existing ones (order matters)
 addBranches :: [(s, DerivationTree s a)] -> DerivationTree s a -> DerivationTree s a
 addBranches new (DT a b xs) = DT a b (xs ++ new)
-
+ 
+makeTree :: (a -> (Bool, [(s, a)])) -> a -> DerivationTree s a 
+makeTree f = rec
+ where
+   rec a = let (b, xs) = f a
+           in addBranches (map (mapSecond rec) xs) (singleNode a b)
+ 
 -----------------------------------------------------------------------------
 -- Inspecting a derivation tree
 
@@ -78,10 +80,6 @@ annotations = map fst . branches
 subtrees :: DerivationTree s a -> [DerivationTree s a]
 subtrees = map snd . branches
 
--- | Returns all final terms
-results :: DerivationTree s a -> [a]
-results = map lastTerm . derivations
-
 -- | The argument supplied is the maximum number of steps; if more steps are
 -- needed, Nothing is returned
 lengthMax :: Int -> DerivationTree s a -> Maybe Int
@@ -89,6 +87,13 @@ lengthMax n = join . fmap (f . derivationLength) . derivation
             . commit . restrictHeight (n+1)
  where 
     f i = if i<=n then Just i else Nothing
+
+updateAnnotations :: (a -> s -> a -> t) -> DerivationTree s a -> DerivationTree t a
+updateAnnotations f = rec
+ where
+   rec (DT a b xs) = 
+      let g (s, t) = (f a s (root t), rec t)
+      in DT a b (map g xs)
 
 -----------------------------------------------------------------------------
 -- Changing a derivation tree
@@ -102,7 +107,7 @@ restrictHeight n t
  where
    f = mapSecond (restrictHeight (n-1))
 
--- | Restrict the width of the tree (by cuttin off branches). 
+-- | Restrict the width of the tree (by cutting off branches). 
 restrictWidth :: Int -> DerivationTree s a -> DerivationTree s a
 restrictWidth n = rec 
  where

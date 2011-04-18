@@ -146,7 +146,7 @@ derivationHTML ex a = divClass "derivation" $ do
  where
    ups = length (qualifiers ex)
    der = derivationPrevious (derivationDiffEnv (defaultDerivation ex a))
-   ok  = maybe False (isReady ex) . fromContext . last . terms
+   ok  = maybe False (isReady ex) . fromContext . lastTerm
 
 idboxHTML :: String -> Id -> HTMLBuilder
 idboxHTML kind i = divClass "idbox" $ do

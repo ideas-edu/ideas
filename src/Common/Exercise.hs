@@ -291,7 +291,7 @@ showDerivation ex a = show (present der) ++ extra
  where
    der   = derivationPrevious (derivationDiffEnv (defaultDerivation ex a))
    extra =
-      case fromContext (last (terms der)) of
+      case fromContext (lastTerm der) of
          Nothing               -> "<<invalid term>>"
          Just b | isReady ex b -> ""
                 | otherwise    -> "<<not ready>>"
@@ -411,7 +411,7 @@ checksForTerm leftMost ex a = do
 checksForDerivation :: Exercise a -> Derivation (Rule (Context a)) (Context a) -> TestSuite
 checksForDerivation ex d = do
    -- Conditions on starting term
-   let start = head (terms d)
+   let start = firstTerm d
    assertTrueMsg "start term" 
       ("not suitable: " ++ prettyPrinterContext ex start) $
       maybe False (isSuitable ex) (fromContext start)
@@ -422,7 +422,7 @@ checksForDerivation ex d = do
                "start term is ready: " ++ prettyPrinterContext ex start
             return b-}
    -- Conditions on final term
-   let final = last (terms d)
+   let final = lastTerm d
    {-
    b3 <- do let b = False -- maybe True (isSuitable ex) (fromContext final)
             when b $ report $ 

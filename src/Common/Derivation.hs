@@ -8,86 +8,91 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Datatype for representing derivations as a tree. The datatype stores all 
--- intermediate results as well as annotations for the steps.
+-- Datatype for representing a derivation (parameterized both in the terms
+-- and the steps)
 --
 -----------------------------------------------------------------------------
 module Common.Derivation
-   ( -- * Data types 
+   ( -- * Data type
      Derivation
-     -- * Constructors
-   , emptyDerivation
-     -- * Query a derivation
+     -- * Constructing a derivation
+   , emptyDerivation, prepend, extend
+     -- * Querying a derivation
    , isEmpty, derivationLength, terms, steps, triples
-   , filterDerivation, derivationM, extend, prepend, lastTerm, withoutLast
-   , updateSteps
+   , firstTerm, lastTerm, withoutLast
+   , updateSteps, derivationM
    ) where
 
 import Common.Classes
+import qualified Data.Sequence as S
+import qualified Data.Foldable as F
 
 -----------------------------------------------------------------------------
--- Data type definitions for derivation trees and derivation lists
+-- Data type definition and instances
 
-data Derivation s a = D a [(s, a)]
+data Derivation s a = D a (S.Seq (s, a))
 
 instance (Show s, Show a) => Show (Derivation s a) where
    show (D a xs) = unlines $
-      show a : concatMap (\(r, b) -> ["   => " ++ show r, show b]) xs
+      show a : concatMap (\(r, b) -> ["   => " ++ show r, show b]) (F.toList xs)
 
 instance Functor (Derivation s) where
    fmap = mapSecond
 
 instance BiFunctor Derivation where
-   biMap f g (D a xs) = D (g a) (map (biMap f g) xs)
+   biMap f g (D a xs) = D (g a) (fmap (biMap f g) xs)
 
 -----------------------------------------------------------------------------
--- Inspecting a derivation
+-- Constructing a derivation
 
 emptyDerivation :: a -> Derivation s a
-emptyDerivation a = D a []
+emptyDerivation a = D a S.empty
+
+prepend :: (a, s) -> Derivation s a -> Derivation s a
+prepend (a, s) (D b xs) = D a ((s, b) S.<| xs)
+
+extend :: Derivation s a -> (s, a) -> Derivation s a
+extend (D a xs) p = D a (xs S.|> p)
+
+-----------------------------------------------------------------------------
+-- Querying a derivation
 
 -- | Tests whether the derivation is empty
 isEmpty :: Derivation s a -> Bool
-isEmpty (D _ xs) = null xs
+isEmpty (D _ xs) = S.null xs
 
 -- | Returns the number of steps in a derivation
 derivationLength :: Derivation s a -> Int
-derivationLength (D _ xs) = length xs
+derivationLength (D _ xs) = S.length xs
 
 -- | All terms in a derivation
 terms :: Derivation s a -> [a]
-terms (D a xs) = a:map snd xs
-
-lastTerm :: Derivation s a -> a
-lastTerm = last . terms
-
-withoutLast :: Derivation s a -> Derivation s a
-withoutLast (D a xs) = D a (drop 1 xs)
+terms (D a xs) = a:map snd (F.toList xs)
 
 -- | All steps in a derivation
 steps :: Derivation s a -> [s]
-steps (D _ xs) = map fst xs
+steps (D _ xs) = map fst (F.toList xs)
 
 -- | The triples of a derivation, consisting of the before term, the 
 -- step, and the after term.
 triples :: Derivation s a -> [(a, s, a)]
 triples d = zip3 (terms d) (steps d) (tail (terms d))
 
--- | Filter steps from a derivation
-filterDerivation :: (s -> a -> Bool) -> Derivation s a -> Derivation s a
-filterDerivation p (D a xs) = D a (filter (uncurry p) xs)
+firstTerm :: Derivation s a -> a
+firstTerm = head . terms
+
+lastTerm :: Derivation s a -> a
+lastTerm = last . terms
+
+withoutLast :: Derivation s a -> Derivation s a
+withoutLast (D a xs) = D a (S.drop 1 xs)
+
+updateSteps :: (a -> s -> a -> t) -> Derivation s a -> Derivation t a
+updateSteps f d = 
+   let ts   = [ f a b c | (a, b, c) <- triples d ]
+       x:xs = terms d
+   in D x (S.fromList (zip ts xs))
 
 -- | Apply a monadic function to each term, and to each step
 derivationM :: Monad m => (s -> m ()) -> (a -> m ()) -> Derivation s a -> m ()
-derivationM f g (D a xs) = g a >> mapM_ (\(s, b) -> f s >> g b) xs
-
-prepend :: (a, s) -> Derivation s a -> Derivation s a
-prepend (a, s) (D b xs) = D a ((s, b):xs)
-
-extend :: Derivation s a -> (s, a) -> Derivation s a
-extend (D a xs) p = D a (xs++[p])
-
-updateSteps :: (a -> s -> a -> t) -> Derivation s a -> Derivation t a
-updateSteps f d@(D x xs) = 
-   let ts = [ f a b c | (a, b, c) <- triples d ]
-   in D x (zip ts (map snd xs))
+derivationM f g (D a xs) = g a >> mapM_ (\(s, b) -> f s >> g b) (F.toList xs)

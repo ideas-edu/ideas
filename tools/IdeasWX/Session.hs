@@ -18,25 +18,20 @@ module Session
    , stepText, nextStep, currentState, getDerivation, currentExerciseId
    ) where
 
-import Service.BasicServices
-import Service.State
-import Service.Diagnose (restartIfNeeded)
-import Service.Submit
-import Service.FeedbackText
-import Service.FeedbackScript.Parser
-import Service.FeedbackScript.Run
-import Service.ExercisePackage (ExercisePackage)
-import qualified Service.ExercisePackage as Pkg
-import Common.Context
-import Common.Exercise hiding (showDerivation)
-import Common.Strategy (emptyPrefix)
-import Common.Transformation
+import Common.Library hiding (current, showDerivation)
 import Common.Utils
-import Common.Id
 import Control.Monad
-import Data.List
 import Data.Maybe
 import Observable hiding (Id)
+import Service.BasicServices
+import Service.Diagnose (restartIfNeeded)
+import Service.ExercisePackage (ExercisePackage)
+import Service.FeedbackScript.Parser
+import Service.FeedbackScript.Run
+import Service.FeedbackText
+import Service.State
+import Service.Submit
+import qualified Service.ExercisePackage as Pkg
 
 ------------------------------------------------------------
 -- Helper function
@@ -55,7 +50,7 @@ type Session = Control (Some SessionState)
 
 data SessionState a = SessionState 
    { getPackage    :: ExercisePackage a
-   , getDerivation :: Derivation a
+   , getDerivation :: Derivation () (State a)
    }
 
 currentExerciseId :: Session -> IO Id
@@ -63,7 +58,7 @@ currentExerciseId ref = do
    (Some st) <- getValue ref
    return (getId (getPackage st))
 
-withDerivation :: (forall a . Derivation a -> IO b) -> Session -> IO b
+withDerivation :: (forall a . Derivation () (State a) -> IO b) -> Session -> IO b
 withDerivation f ref = do
    Some d <- getValue ref
    f (getDerivation d)
@@ -86,7 +81,7 @@ thisExercise txt ref = do
    case parser (Pkg.exercise pkg) txt of
       Left _  -> return ()
       Right a -> do
-         let new = makeDerivation $ emptyState pkg a
+         let new = emptyDerivation $ emptyState pkg a
          setValue ref $ Some $ ss {getDerivation = new}
 
 thisExerciseFor :: String -> Some ExercisePackage -> Session -> IO (Maybe String)
@@ -95,7 +90,7 @@ thisExerciseFor txt (Some pkg) ref =
    case parser ex txt of
       Left err  -> return (Just $ show err)
       Right a -> do
-         let new = makeDerivation $ makeState pkg (Just $ emptyPrefix $ strategy ex) (inContext ex a)
+         let new = emptyDerivation $ makeState pkg (Just $ emptyPrefix $ strategy ex) (inContext ex a)
          setValue ref $ Some $ SessionState pkg new
          return Nothing         
     
@@ -117,7 +112,7 @@ suggestTermFor dif (Some pkg) = do
        
 undo :: Session -> IO ()
 undo ref =
-   changeValue ref $ \(Some ss) -> Some ss {getDerivation = undoLast (getDerivation ss)}
+   changeValue ref $ \(Some ss) -> Some ss {getDerivation = withoutLast (getDerivation ss)}
 
 submitText :: String -> Session -> IO String
 submitText txt ref = do
@@ -224,72 +219,29 @@ nextStep ref = do
             _ -> 
                return ("You have applied rule " ++ showId r ++ " correctly.")
 
-{-
-getRuleAtIndex :: Int -> Session -> IO (Some Rule)
-getRuleAtIndex i = withDerivation $ \d -> do
-   let rule = filter (not . isMinorRule) (ruleset (exercise d)) !! i
-   return (Some rule)
-
-applyRuleAtIndex :: Int -> Maybe Location -> [String] -> Session -> IO (String, Bool)
-applyRuleAtIndex i mloc args ref = do
-   Some d <- readIORef ref
-   let a = exercise d
-   let rule    = filter isMajorRule (ruleset a) !! i
-       newRule = fromMaybe rule (useArguments args rule)
-       loc     = fromMaybe (makeLocation []) mloc
-       results = applyAll newRule (setLocation loc $ current d)
-       answers = allfirsts (currentState d)
-       check (r, _, s) = name r==name rule && any (similarity a (term s) . fromContext) results
-       thisRule (r, _, _) = name r==name rule
-   case safeHead (filter check answers) of
-      Just (_, _, new) -> do
-         writeIORef ref $ Some (extendDerivation new d)
-         return ("Successfully applied rule " ++ name rule, True)
-      _ | any thisRule answers && not (null args) -> 
-         return ("Use rule " ++ name rule ++ " with different arguments:" ++ unlines (map (prettyPrinter a . fromContext) results), False)
-      _ | any thisRule answers && null args ->
-         return ("Apply rule " ++ name rule ++ " at a different location", False)
-      _ ->
-         return ("You selected rule " ++ name rule ++ ": try a different rule", False)
--}
-
 --------------------------------------------------
 -- Session state
 
-exercise :: Derivation a -> Exercise a
-exercise (D (s:_)) = Pkg.exercise (exercisePkg s)
-exercise _ = error "Session.exercise: empty list"
+exercise :: Derivation () (State a) -> Exercise a
+exercise = Pkg.exercise . exercisePkg . currentState
 
 --------------------------------------------------
 -- Derivations
 
-newtype Derivation a = D [State a]
 
-startNewDerivation :: Difficulty -> ExercisePackage a -> IO (Derivation a)
+startNewDerivation :: Difficulty -> ExercisePackage a -> IO (Derivation () (State a))
 startNewDerivation dif pkg = do
    a <- randomTerm dif (Pkg.exercise pkg)
-   return $ makeDerivation (emptyState pkg a)
+   return $ emptyDerivation (emptyState pkg a)
 
-makeDerivation :: State a -> Derivation a
-makeDerivation state = D [state]
+extendDerivation :: a -> Derivation () a -> Derivation () a
+extendDerivation x d = d `extend` ((), x)
 
-undoLast :: Derivation a -> Derivation a
-undoLast (D [x]) = D [x]
-undoLast (D xs)  = D (drop 1 xs)
+current :: Derivation () (State a) -> Context a
+current = stateContext . currentState
 
-extendDerivation :: State a -> Derivation a -> Derivation a
-extendDerivation x (D xs) = D (x:xs)
+currentState :: Derivation () a -> a
+currentState = last . terms
 
-current :: Derivation a -> Context a
-current (D (s:_)) = stateContext s
-current _ = error "Session.current: empty list"
-
-currentState :: Derivation a -> State a
-currentState (D xs) = head xs
-
-showDerivation :: (a -> String) -> Derivation a -> String
-showDerivation f (D xs) = unlines $ intersperse "   =>" $ reverse $ 
-   [ f (stateTerm s) | s <- xs ] 
-
-derivationLength :: Derivation a -> Int
-derivationLength (D xs) = length xs - 1
+showDerivation :: (a -> String) -> Derivation () (State a) -> String
+showDerivation f = show . biMap (const (ShowString "")) (f . stateTerm)

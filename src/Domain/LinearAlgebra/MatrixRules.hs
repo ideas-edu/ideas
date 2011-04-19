@@ -84,15 +84,15 @@ ruleUncoverRow = minorRule $ makeRule "linearalgebra.gaussianelim.UncoverRow" $ 
 -- Parameterized rules
 
 ruleScaleRow :: (Argument a, Fractional a) => (Context (Matrix a) -> Maybe (Int, a)) -> Rule (Context (Matrix a))
-ruleScaleRow f = makeRule "linearalgebra.gaussianelim.scale" (supplyLabeled2 descr f rowScale)
+ruleScaleRow f = makeRule "linearalgebra.gaussianelim.scale" (supply2 descr f rowScale)
  where descr  = ("row", "scale factor")
       
 ruleExchangeRows :: Num a => (Context (Matrix a) -> Maybe (Int, Int)) -> Rule (Context (Matrix a))
-ruleExchangeRows f = makeRule "linearalgebra.gaussianelim.exchange" (supplyLabeled2 descr f rowExchange)
+ruleExchangeRows f = makeRule "linearalgebra.gaussianelim.exchange" (supply2 descr f rowExchange)
  where descr = ("row 1", "row 2")
 
 ruleAddMultiple :: (Argument a, Fractional a) => (Context (Matrix a) -> Maybe (Int, Int, a)) -> Rule (Context (Matrix a))
-ruleAddMultiple f = makeRule "linearalgebra.gaussianelim.add" (supplyLabeled3 descr f  rowAdd)
+ruleAddMultiple f = makeRule "linearalgebra.gaussianelim.add" (supply3 descr f  rowAdd)
  where descr  = ("row 1", "row2", "scale factor")
       
 ---------------------------------------------------------------------------------

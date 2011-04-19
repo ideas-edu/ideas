@@ -40,7 +40,7 @@ equationsRules =
 ruleExchangeEquations :: Rule (Context (LinearSystem Expr))
 ruleExchangeEquations = describe "Exchange two equations" $ 
    simplifySystem $ makeRule "linearalgebra.linsystem.exchange" $ 
-   supplyLabeled2 descr args (\x y -> liftTransContext $ exchange x y)
+   supply2 descr args (\x y -> liftTransContext $ exchange x y)
  where
    descr = ("equation 1", "equation 2")
    args  = evalCM $ \ls -> do
@@ -53,7 +53,7 @@ ruleExchangeEquations = describe "Exchange two equations" $
 ruleEliminateVar :: Rule (Context (LinearSystem Expr))
 ruleEliminateVar = describe "Eliminate a variable (using addition)" $
    simplifySystem $ makeRule "linearalgebra.linsystem.eliminate" $ 
-   supplyLabeled3 descr args (\x y z -> liftTransContext $ addEquations x y z)
+   supply3 descr args (\x y z -> liftTransContext $ addEquations x y z)
  where
    descr = ("equation 1", "equation 2", "scale factor")
    args  = evalCM $ \ls -> do 
@@ -84,7 +84,7 @@ ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
 ruleScaleEquation :: Rule (Context (LinearSystem Expr))
 ruleScaleEquation = describe "Scale equation to one" $ 
    simplifySystem $ makeRule "linearalgebra.linsystem.scale" $ 
-   supplyLabeled2 descr args (\x y -> liftTransContext $ scaleEquation x y)
+   supply2 descr args (\x y -> liftTransContext $ scaleEquation x y)
  where
    descr = ("equation", "scale factor")
    args  = evalCM $ \ls -> do 
@@ -99,7 +99,7 @@ ruleScaleEquation = describe "Scale equation to one" $
 ruleBackSubstitution :: Rule (Context (LinearSystem Expr))
 ruleBackSubstitution = describe "Back substitution" $
    simplifySystem $ makeRule "linearalgebra.linsystem.subst" $ 
-   supplyLabeled3 descr args (\x y z -> liftTransContext $ addEquations x y z)
+   supply3 descr args (\x y z -> liftTransContext $ addEquations x y z)
  where
    descr = ("equation 1", "equation 2", "scale factor")
    args  = evalCM $ \ls -> do 

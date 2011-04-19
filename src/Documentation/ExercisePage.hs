@@ -15,7 +15,6 @@ import Common.Utils (Some(..), splitAtSequence, commaList)
 import Common.Library hiding (up)
 import Control.Monad
 import Data.Char
-import Data.List
 import Data.Maybe
 import Documentation.DefaultPage
 import Documentation.RulePresenter
@@ -196,11 +195,11 @@ forStep n ((r, env), old) = do
                | otherwise = linkTitle target (description r)
       make (text (unqualified r))
       let xs = fromMaybe [] (expectedArguments r old)
-          g (Some descr) x = labelArgument descr ++ "=" ++ x
+          g (Some descr, x) = labelArgument descr ++ "=" ++ x
       unless (null xs) $ do
          br
          spaces 6
-         text (commaList (zipWith g (getDescriptors r) xs))
+         text (commaList (map g xs))
       unless (nullEnv env) $ do
          br 
          spaces 6

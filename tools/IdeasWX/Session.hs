@@ -190,7 +190,7 @@ hintOrStep verbose ref = do
          return $ unlines $
             [ "Use " ++ showRule r
             ] ++
-            [ "   with arguments " ++ commaList (fromJust args)
+            [ "   with arguments " ++ commaList (map snd (fromJust args))
             | let args = expectedArguments r (current d), isJust args
             ] ++ if verbose then
             [ "   to rewrite the term into:"

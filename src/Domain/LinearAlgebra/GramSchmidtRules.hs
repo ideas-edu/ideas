@@ -36,7 +36,7 @@ ruleNormalize = makeSimpleRule "Turn into unit Vector" $ withCM $ \vs -> do
 -- Make the current vector orthogonal with some other vector
 -- that has already been considered
 ruleOrthogonal :: Floating a => Rule (Context (VectorSpace a))
-ruleOrthogonal = makeRule "Make orthogonal" $ supplyLabeled2 descr args transOrthogonal
+ruleOrthogonal = makeRule "Make orthogonal" $ supply2 descr args transOrthogonal
  where
    descr = ("vector 1", "vector 2")
    args  = evalCM $ \_ -> do

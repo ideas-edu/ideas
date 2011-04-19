@@ -475,7 +475,7 @@ distributionT = makeTransList f
 varToLeft :: Rule (Relation Expr)
 varToLeft = doAfter (fmap collectLikeTerms) $ 
    describe "variable to left" $ 
-   makeRule (lineq, "var-left") $ flip supply1 minusT $ \eq -> do
+   makeRule (lineq, "var-left") $ flip (supply1 "term") minusT $ \eq -> do
       (x, a, _) <- match (linearViewWith rationalView) (rightHandSide eq)
       guard (a/=0)
       return (fromRational a * Var x)
@@ -484,7 +484,7 @@ varToLeft = doAfter (fmap collectLikeTerms) $
 removeDivision :: Rule (Relation Expr)
 removeDivision = doAfter (fmap (collectLikeTerms . distributeAll)) $
    describe "remove division" $ 
-   makeRule (lineq, "remove-div") $ flip supply1 timesT $ \eq -> do
+   makeRule (lineq, "remove-div") $ flip (supply1 "factor") timesT $ \eq -> do
       xs <- match sumView (leftHandSide eq)
       ys <- match sumView (rightHandSide eq)
       -- also consider parts without variables

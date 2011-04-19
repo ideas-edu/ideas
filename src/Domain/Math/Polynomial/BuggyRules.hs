@@ -28,7 +28,7 @@ import Common.Classes
 import Common.Context
 import Common.Rewriting
 import Common.View
-import Common.Transformation (Rule, buggyRule, siblingOf, Transformation, useRecognizer, supply1, makeTransList)
+import Common.Transformation hiding (makeRule, makeSimpleRule, makeSimpleRuleList, ruleList)
 import Control.Monad
 import qualified Common.Transformation as Rule
 
@@ -207,7 +207,7 @@ buggyPriorityTimes = describe "Prioity of operators is changed, possibly by \
 buggyMultiplyOneSide :: Rule (Equation Expr)
 buggyMultiplyOneSide = describe "Multiplication on one side of the equation only" $
    buggyRule $ makeRule "multiply-one-side" $ 
-   useRecognizer recognizeEq $ supply1 (const (Just 2)) multiplyOneSide
+   useRecognizer recognizeEq $ supply1 "factor" (const (Just 2)) multiplyOneSide
  where
    recognizeEq eq1@(a1 :==: a2) eq2@(b1 :==: b2) =
       let p r  = r `notElem` [-1, 0, 1] && 
@@ -234,7 +234,7 @@ buggyMultiplyForgetOne :: Rule (Equation Expr)
 buggyMultiplyForgetOne = describe "Multiply the terms on both sides of the \
    \equation, but forget one." $
    buggyRule $ makeRule "multiply-forget-one" $ 
-   useRecognizer recognizeEq $ supply1 (const (Just 2)) multiplyForgetOne
+   useRecognizer recognizeEq $ supply1 "factor" (const (Just 2)) multiplyForgetOne
  where
    recognizeEq eq1@(a1 :==: a2) eq2@(b1 :==: b2) =
       let p r  = r `notElem` [-1, 0, 1] && 

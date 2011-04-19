@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification #-} 
+{-# LANGUAGE GADTs, ExistentialQuantification #-} 
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -20,7 +20,7 @@ module Common.Transformation
      Transformation, makeTrans, makeTransList, makeRewriteTrans
      -- * Arguments
    , ArgDescr(..), defaultArgDescr, Argument(..)
-   , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3, supplyWith1
+   , supply1, supply2, supply3
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
    , Rule, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
@@ -54,14 +54,14 @@ data Transformation a
    = Function (a -> [a])
    | RewriteRule (RewriteRule a) (a -> [a])
    | forall b . Abstraction (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
-   | forall b c . LiftView (ViewList a (b, c)) (Transformation b)
+   | forall b c . LiftView (View a (b, c)) (Transformation b)
    | Recognizer (a -> a -> Bool) (Transformation a)
    
 instance Apply Transformation where
    applyAll (Function f)        = f
    applyAll (RewriteRule _ f)   = f
    applyAll (Abstraction _ f g) = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
-   applyAll (LiftView v t)      = \a -> [ build v (b, c) | (b0, c) <- match v a, b <- applyAll t b0  ]
+   applyAll (LiftView v t)      = \a -> [ build v (b, c) | (b0, c) <- matchM v a, b <- applyAll t b0  ]
    applyAll (Recognizer _ t)    = applyAll t
    
 -- | Turn a function (which returns its result in the Maybe monad) into a transformation 
@@ -105,54 +105,31 @@ instance Argument Integer where
 instance (Integral a, Arbitrary a) => Argument (Ratio a) where
    makeArgDescr = ratioArgDescr
 
--- | Parameterization with one argument using a default label
-supply1 :: Argument x => 
-             (a -> Maybe x) -> (x -> Transformation a) -> Transformation a
-supply1 = supplyLabeled1 "argument 1"
-
--- | Parameterization with two arguments using default labels
-supply2 :: (Argument x, Argument y) => 
-             (a -> Maybe (x, y)) -> (x -> y -> Transformation a) -> Transformation a
-supply2 = supplyLabeled2 ("argument 1", "argument 2")
-
--- | Parameterization with three arguments using default labels
-supply3 :: (Argument x, Argument y, Argument z) => 
-             (a -> Maybe (x, y, z)) -> (x -> y -> z -> Transformation a) -> Transformation a
-supply3 = supplyLabeled3 ("argument 1", "argument 2", "argument 3")
-
 -- | Parameterization with one argument using the provided label
-supplyLabeled1 :: Argument x 
+supply1 :: Argument x 
                   => String -> (a -> Maybe x)
                   -> (x -> Transformation a) -> Transformation a
-supplyLabeled1 s f t = 
-   let args = cons (makeArgDescr s) nil
-       nest a = (a, ())
-   in Abstraction args (fmap nest . f) (\(a, ()) -> t a)
-
-supplyWith1 :: ArgDescr x -> (a -> Maybe x)
-                  -> (x -> Transformation a) -> Transformation a
-supplyWith1 descr f t = 
-   let args = cons descr nil
-       nest a = (a, ())
-   in Abstraction args (fmap nest . f) (\(a, ()) -> t a)
+supply1 s f t = 
+   let args = Single (makeArgDescr s)
+   in Abstraction args f t
    
 -- | Parameterization with two arguments using the provided labels
-supplyLabeled2 :: (Argument x, Argument y) 
+supply2 :: (Argument x, Argument y) 
                    => (String, String) -> (a -> Maybe (x, y)) 
                    -> (x -> y -> Transformation a) -> Transformation a
-supplyLabeled2 (s1, s2) f t = 
-   let args = cons (makeArgDescr s1) (cons (makeArgDescr s2) nil)
-       nest (a, b) = (a, (b, ()))
-   in Abstraction args (fmap nest . f) (\(a, (b, ())) -> t a b)
+supply2 (s1, s2) f t = 
+   let args = Pair (Single (makeArgDescr s1)) (Single (makeArgDescr s2))
+   in Abstraction args f (uncurry t)
 
 -- | Parameterization with three arguments using the provided labels
-supplyLabeled3 :: (Argument x, Argument y, Argument z) 
+supply3 :: (Argument x, Argument y, Argument z) 
                   => (String, String, String) -> (a -> Maybe (x, y, z)) 
                   -> (x -> y -> z -> Transformation a) -> Transformation a
-supplyLabeled3 (s1, s2, s3) f t =
-   let args = cons (makeArgDescr s1) (cons (makeArgDescr s2) (cons (makeArgDescr s3) nil))
-       nest (a, b, c) = (a, (b, (c, ())))
-   in Abstraction args (fmap nest . f) (\(a, (b, (c, ()))) -> t a b c)
+supply3 (s1, s2, s3) f t =
+   let args = Pair (Single (makeArgDescr s1))
+                   (Pair (Single (makeArgDescr s2)) (Single (makeArgDescr s3)))
+       nest (a, b, c) = (a, (b, c))
+   in Abstraction args (fmap nest . f) (\(a, (b, c)) -> t a b c)
 
 -- | Checks whether a rule is parameterized
 hasArguments :: Rule a -> Bool
@@ -173,20 +150,22 @@ getDescriptors r =
          Recognizer _ t -> rec t
          _ -> []
 
--- | Returns a list of pretty-printed expected arguments. Nothing indicates that there are no such arguments
-expectedArguments :: Rule a -> a -> Maybe [String]
+-- | Returns a list of pretty-printed expected arguments. 
+-- Nothing indicates that there are no such arguments (or the arguments
+-- are not applicable for the current value)
+expectedArguments :: Rule a -> a -> Maybe [(Some ArgDescr, String)]
 expectedArguments r =
    case transformations r of
       [t] -> rec t
       _   -> const Nothing
  where
-    rec :: Transformation a -> a -> Maybe [String]
+    rec :: Transformation a -> a -> Maybe [(Some ArgDescr, String)]
     rec trans a =  
        case trans of
           Abstraction args f _ -> 
-             fmap (showArguments args) (f a)
+             fmap (zip (someArguments args) . showArguments args) (f a)
           LiftView v t -> do 
-             (b, _) <- safeHead (match v a)
+             (b, _) <- match v a
              rec t b
           Recognizer _ t ->
              rec t a
@@ -212,35 +191,28 @@ useArguments list r =
 -----------------------------------------------------------
 --- Internal machinery for arguments
                
-data ArgumentList a
-   = Nil a
-   | forall b c . Cons ((b, c) -> a, a -> (b, c)) (ArgDescr b) (ArgumentList c)
-
--- smart constructor
-nil :: ArgumentList ()
-nil = Nil ()
-
--- smart constructor (provides the isomorphism proofs)
-cons :: ArgDescr a -> ArgumentList b -> ArgumentList (a, b)
-cons = Cons (id, id)
-
-showArguments :: ArgumentList a -> a -> [String]
-showArguments (Nil _) _ = []
-showArguments (Cons (_, f) arg list) a =
-   let (b, c) = f a
-   in showArgument arg b : showArguments list c
+data ArgumentList a where
+   Single :: ArgDescr a -> ArgumentList a
+   Pair   :: ArgumentList a -> ArgumentList b -> ArgumentList (a, b)
    
+showArguments :: ArgumentList a -> a -> [String]
+showArguments (Single a) x = [showArgument a x]
+showArguments (Pair a b) (x, y) = 
+   showArguments a x ++ showArguments b y
+
 parseArguments :: ArgumentList a -> [String] -> Maybe a
-parseArguments (Nil a) [] = Just a 
-parseArguments (Cons (f, _) arg list) (x:xs) = do
-   b <- parseArgument  arg  x
-   c <- parseArguments list xs
-   return $ f (b, c)
+parseArguments (Single a) [x] = parseArgument a x
+parseArguments (Pair a b) xs =
+   let (ys, zs) = splitAt (numberOfArguments a) xs 
+   in liftM2 (,) (parseArguments a ys) (parseArguments b zs)
 parseArguments _ _ = Nothing
    
 someArguments :: ArgumentList a -> [Some ArgDescr]
-someArguments (Nil _) = []
-someArguments (Cons _ arg list) = Some arg : someArguments list
+someArguments (Single a) = [Some a]
+someArguments (Pair a b) = someArguments a ++ someArguments b
+
+numberOfArguments :: ArgumentList a -> Int
+numberOfArguments = length . someArguments
 
 ratioArgDescr :: (Integral a, Arbitrary a) => String -> ArgDescr (Ratio a)
 ratioArgDescr descr = ArgDescr descr Nothing parseRatio showRatio arbitrary
@@ -370,8 +342,8 @@ transRecognizer eq trans a b =
       LiftView v t   -> 
          any (`eq` b) (applyAll trans a) || or  -- ?? Quick Fix
          [ transRecognizer (\x y -> eq (f x) (f y)) t av bv
-         | (av, c) <- match v a 
-         , (bv, _) <- match v b
+         | (av, c) <- matchM v a 
+         , (bv, _) <- matchM v b
          , let f z = build v (z, c)
          ]
       _ -> any (`eq` b) (applyAll trans a)
@@ -386,7 +358,7 @@ liftTrans :: View a b -> Transformation b -> Transformation a
 liftTrans v = liftTransIn (v &&& identity) 
 
 liftTransIn :: View a (b, c) -> Transformation b -> Transformation a
-liftTransIn = LiftView . viewList
+liftTransIn = LiftView
 
 liftRule :: View a b -> Rule b -> Rule a
 liftRule v = liftRuleIn (v &&& identity) 
@@ -421,17 +393,17 @@ smartGen :: Rule a -> Gen a -> Gen a
 smartGen r gen = frequency [(2, gen), (1, smart)]
  where
    smart = gen >>= \a -> 
-      oneof (gen : concatMap (smartGenTrans a) (transformations r))
+      oneof (gen : mapMaybe (smartGenTrans a) (transformations r))
 
-smartGenTrans :: a -> Transformation a -> [Gen a]
+smartGenTrans :: a -> Transformation a -> Maybe (Gen a)
 smartGenTrans a trans =
    case trans of
       RewriteRule r _ -> return (smartGenerator r)
       LiftView v t -> do
-         (b, c) <- match v a
+         (b, c) <- matchM v a
          gen    <- smartGenTrans b t
          return $ liftM (\n -> build v (n, c)) gen
-      _ -> []
+      _ -> Nothing
 
 smartApplyRule :: Rule a -> a -> Gen (Maybe a)
 smartApplyRule r a = do
@@ -447,5 +419,5 @@ smartApplyTrans trans a =
       _ -> return (applyAll trans a)
       
 smartArgs :: ArgumentList a -> Gen a
-smartArgs (Nil a) = return a
-smartArgs (Cons (f, _) descr xs) = liftM2 (curry f) (genArgument descr) (smartArgs xs)
+smartArgs (Single a) = genArgument a
+smartArgs (Pair a b) = liftM2 (,) (smartArgs a) (smartArgs b)

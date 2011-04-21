@@ -59,7 +59,7 @@ runPrefixLocation loc p0 =
    concatMap (checkPair . f) . derivations . 
    cutOnStep (stop . lastStepInPrefix) . prefixTree p0
  where
-   f d = (last (terms d), if isEmpty d then p0 else last (steps d))
+   f d = (lastTerm d, fromMaybe p0 (lastStep d))
    stop (Just (Exit info)) = getId info == loc
    stop _ = False
  
@@ -106,7 +106,7 @@ runPrefixMajor :: Prefix a -> a -> [(a, Prefix a)]
 runPrefixMajor p0 = 
    map f . derivations . cutOnStep (stop . lastStepInPrefix) . prefixTree p0
  where
-   f d = (last (terms d), if isEmpty d then p0 else last (steps d))
+   f d = (lastTerm d, fromMaybe p0 (lastStep d))
    stop (Just (RuleStep r)) = isMajorRule r
    stop _ = False
         

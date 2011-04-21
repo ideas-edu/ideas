@@ -25,10 +25,10 @@ import Service.FeedbackScript.Run
 ------------------------------------------------------------
 -- Services
 
-derivationtext :: Script -> State a -> Either String [(String, Context a)]
+derivationtext :: Script -> State a -> Either String (Derivation String (Context a))
 derivationtext script state =
-   let f = map (first (ruleToString (newEnvironment state) script))
-   in right f (derivation Nothing state)
+   let f = ruleToString (newEnvironment state) script
+   in right (mapFirst f) (derivation Nothing state)
 
 onefirsttext :: Script -> State a -> Maybe String -> (Bool, String, State a)
 onefirsttext script old event = 

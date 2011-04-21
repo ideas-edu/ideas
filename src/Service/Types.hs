@@ -17,7 +17,7 @@ module Service.Types
      -- * Types
    , Type(..), TypedValue(..), tuple2, tuple3, tuple4
    , maybeType, optionType
-   , errorType, difficultyType, listType, elemType
+   , errorType, difficultyType, listType, elemType, derivationType
    , equal, equalM
    ) where
 
@@ -125,6 +125,12 @@ difficultyType :: Type a Difficulty
 difficultyType = Tag "difficulty" (Iso f show String)
  where
    f = fromMaybe Medium . readDifficulty
+
+derivationType :: Type a t1 -> Type a t2 -> Type a (Derivation t1 t2)
+derivationType t1 t2 = Iso f g (listType (tuple2 t1 t2))
+ where
+   f = foldl extend (emptyDerivation (error "derivationType") )
+   g = map (\(_, s, a) -> (s, a)) . triples
 
 data Type a t where
    -- Type isomorphisms (for defining type synonyms)

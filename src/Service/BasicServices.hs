@@ -28,8 +28,9 @@ generate :: StdGen -> ExercisePackage a -> Difficulty -> State a
 generate rng pkg dif = 
    emptyState pkg (randomTermWith rng dif (exercise pkg))
 
-derivation :: Maybe StrategyConfiguration -> State a -> Either String [(Rule (Context a), Context a)]
-derivation mcfg state =
+derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a)) (Context a))
+derivation mcfg state = 
+   mapSecond (mapSecond stateContext) $
    case (statePrefix state, mcfg) of 
       (Nothing, _) -> Left "Prefix is required"
       -- configuration is only allowed beforehand: hence, the prefix 
@@ -39,24 +40,23 @@ derivation mcfg state =
          let newStrategy = configure cfg (strategy ex)
              newExercise = ex {strategy = newStrategy}
              newPackage  = pkg {exercise = newExercise}
-         in rec timeout [] (empyStateContext newPackage (stateContext state))
-      _ -> rec timeout [] state
+         in rec timeout d0 (empyStateContext newPackage (stateContext state))
+      _ -> rec timeout d0 state
  where
+   d0  = emptyDerivation state
    pkg = exercisePkg state
    ex  = exercise pkg
    timeout = 50 :: Int
  
    rec i acc st = 
       case onefirst st of
-         Left _         -> Right (reverse acc)
+         Left _         -> Right acc
          Right (r, _, next)
             | i <= 0    -> Left msg
-            | otherwise -> rec (i-1) ((r, stateContext next) : acc) next
+            | otherwise -> rec (i-1) (acc `extend` (r, next)) next
     where
       msg = "Time out after " ++ show timeout ++ " steps. " ++ 
-            concatMap f (reverse acc)
-      f (r, c) = let s = maybe "???" (prettyPrinter ex) (fromContext c)
-                 in "[" ++ show r ++ "]  " ++ s ++ "; "
+            show (mapSecond (prettyPrinterContext ex . stateContext) acc)
 
 -- Note that we have to inspect the last step of the prefix afterwards, because
 -- the remaining part of the derivation could consist of minor rules only.
@@ -75,13 +75,12 @@ allfirsts state =
    stop _ = False
    
    make d = do
-      prefixEnd <- safeHead (reverse (steps d))
-      termEnd   <- safeHead (reverse (terms d))
+      prefixEnd <- lastStep d
       case lastStepInPrefix prefixEnd of
          Just (RuleStep r) | isMajorRule r -> return
             ( r
-            , location termEnd
-            , makeState (exercisePkg state) (Just prefixEnd) termEnd
+            , location (lastTerm d)
+            , makeState (exercisePkg state) (Just prefixEnd) (lastTerm d)
             )
          _ -> Nothing
 
@@ -142,7 +141,7 @@ ready :: State a -> Bool
 ready state = isReady (exercise (exercisePkg state)) (stateTerm state)
 
 stepsremaining :: State a -> Either String Int
-stepsremaining = right length . derivation Nothing
+stepsremaining = mapSecond derivationLength . derivation Nothing
 
 findbuggyrules :: State a -> a -> [Rule (Context a)]
 findbuggyrules state a =

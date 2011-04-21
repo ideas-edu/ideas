@@ -19,11 +19,12 @@ module Common.Derivation
    , emptyDerivation, prepend, extend
      -- * Querying a derivation
    , isEmpty, derivationLength, terms, steps, triples
-   , firstTerm, lastTerm, withoutLast
+   , firstTerm, lastTerm, lastStep, withoutLast
    , updateSteps, derivationM
    ) where
 
 import Common.Classes
+import Common.Utils (safeHead)
 import qualified Data.Sequence as S
 import qualified Data.Foldable as F
 
@@ -83,6 +84,9 @@ firstTerm = head . terms
 
 lastTerm :: Derivation s a -> a
 lastTerm = last . terms
+
+lastStep:: Derivation s a -> Maybe s
+lastStep = safeHead . reverse . steps
 
 withoutLast :: Derivation s a -> Derivation s a
 withoutLast (D a xs) = D a (S.drop 1 xs)

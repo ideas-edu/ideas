@@ -51,7 +51,7 @@ derivationS = makeService "derivation"
    \current expression. The first optional argument lets you configure the \
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $ 
-   derivation ::: maybeType StrategyCfg :-> stateType :-> errorType (listType (tuple2 Rule Context))
+   derivation ::: maybeType StrategyCfg :-> stateType :-> errorType (derivationType Rule Context)
 
 allfirstsS :: Service
 allfirstsS = makeService "allfirsts" 
@@ -169,7 +169,7 @@ derivationtextS :: Service
 derivationtextS = makeService "derivationtext" 
    "Similar to the derivation service, but the rules appearing in the derivation \
    \have been replaced by a short description of the rule." $ 
-   derivationtext ::: Script :-> stateType :-> errorType (listType (tuple2 String Context))
+   derivationtext ::: Script :-> stateType :-> errorType (derivationType String Context)
 
 feedbacktextS :: Service
 feedbacktextS = makeService "feedbacktext"

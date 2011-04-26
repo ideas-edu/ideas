@@ -170,7 +170,7 @@ randomDerivation g t = msum xs
               map make (branches t)
    make (r, st) = do 
       d <- randomDerivation g0 st
-      return ((root st, r) `prepend` d)
+      return ((root t, r) `prepend` d)
       
 shuffle :: RandomGen g => g -> [a] -> ([a], g)
 shuffle g0 xs = rec g0 [] (length xs) xs

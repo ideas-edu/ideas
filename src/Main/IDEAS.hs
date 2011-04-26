@@ -29,6 +29,7 @@ import qualified Domain.Math.Numeric.Tests as MathNum
 import qualified Domain.Math.Polynomial.Exercises as Math
 import qualified Domain.Math.Polynomial.IneqExercises as Math
 import qualified Domain.Math.Polynomial.RationalExercises as Math
+import qualified Domain.Math.Polynomial.Balance as Math
 import qualified Domain.Math.Polynomial.Tests as MathPoly
 import qualified Domain.Math.Power.Exercises as Math
 import qualified Domain.Math.Power.Equation.Exercises as Math
@@ -77,6 +78,7 @@ packages =
    , someTermPackage Math.coverUpExercise
    , someTermPackage Math.linearExercise
    , someTermPackage Math.linearMixedExercise
+   , someTermPackage Math.balanceExercise
    , someTermPackage Math.quadraticExercise
    , someTermPackage Math.higherDegreeExercise
    , someTermPackage Math.findFactorsExercise

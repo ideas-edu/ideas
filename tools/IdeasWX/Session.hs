@@ -39,7 +39,7 @@ import qualified Service.ExercisePackage as Pkg
 exerciseScript :: HasId a => a -> IO (Maybe Script)
 exerciseScript a
    | take 1 (qualifiers a) == ["logic"] =
-        liftM Just (parseScript (Just "scripts") "logic.txt")
+        liftM Just (parseScript (Just "../scripts") "logic.txt")
    | otherwise =
         return Nothing
 
@@ -49,9 +49,11 @@ exerciseScript a
 type Session = Control (Some SessionState)
 
 data SessionState a = SessionState 
-   { getPackage    :: ExercisePackage a
-   , getDerivation :: Derivation () (State a)
+   { getDerivation :: Derivation () (State a)
    }
+
+getPackage :: SessionState a -> ExercisePackage a
+getPackage = exercisePkg . firstTerm . getDerivation
 
 currentExerciseId :: Session -> IO Id
 currentExerciseId ref = do
@@ -72,7 +74,7 @@ makeSession pkg = do
 newExercise :: Difficulty -> Some ExercisePackage -> Session -> IO ()
 newExercise dif (Some pkg) ref = do
    d <- startNewDerivation dif pkg
-   setValue ref $ Some $ SessionState pkg d
+   setValue ref $ Some $ SessionState d
 
 thisExercise :: String -> Session -> IO ()
 thisExercise txt ref = do
@@ -91,7 +93,7 @@ thisExerciseFor txt (Some pkg) ref =
       Left err  -> return (Just $ show err)
       Right a -> do
          let new = emptyDerivation $ makeState pkg (Just $ emptyPrefix $ strategy ex) (inContext ex a)
-         setValue ref $ Some $ SessionState pkg new
+         setValue ref $ Some $ SessionState new
          return Nothing         
     
 newTerm :: Difficulty -> Session -> IO ()

@@ -20,7 +20,7 @@ module Service.FeedbackScript.Run
 
 import Common.Context (Context)
 import Common.Id
-import Common.Utils (safeHead, fst3)
+import Common.Utils (safeHead)
 import Control.Monad
 import Common.Transformation
 import Data.List
@@ -41,12 +41,13 @@ data Environment a = Env
 newEnvironment :: State a -> Environment a
 newEnvironment st = Env 
    { oldReady   = ready st
-   , expected   = fmap fst3 next
+   , expected   = fmap fst4 next
    , recognized = Nothing
    , diffPair   = Nothing
    }
  where
    next = either (const Nothing) Just (onefirst st)
+   fst4 (a, _, _, _) = a
 
 toString :: Environment a -> Script -> Text -> String
 toString env script = fromMaybe "" . eval env script . Right

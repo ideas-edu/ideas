@@ -81,7 +81,7 @@ diagnose state new
    -- Was the submitted term expected by the strategy?
    | isJust expected =
         -- If yes, return new state and rule
-        let (r, _, ns) = fromJust expected  
+        let (r, _, _, ns) = fromJust expected  
         in Expected (ready ns) ns r
 
    -- Is the rule used discoverable by trying all known rules?
@@ -99,7 +99,7 @@ diagnose state new
    
    expected = do
       let xs = either (const []) id $ allfirsts (restartIfNeeded state)
-          p (_, _, ns) = similarity ex newc (stateContext ns)
+          p (_, _, _, ns) = similarity ex newc (stateContext ns)
       safeHead (filter p xs)
 
    discovered searchForBuggy = safeHead

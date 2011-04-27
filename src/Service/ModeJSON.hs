@@ -117,12 +117,15 @@ jsonEncoder ex = Encoder
                       conv <- equalM serviceType stateType
                       encodeState (encodeTerm enc) (conv a)
                  
-              Tp.List t    -> liftM Array (mapM (encode enc t) a)
-              Tp.Tag s t   -> liftM (\b -> Object [(s, b)]) (encode enc t a)
-              Tp.Int       -> return (toJSON a)
-              Tp.Bool      -> return (toJSON a)
-              Tp.String    -> return (toJSON a)
-              _            -> encodeDefault enc serviceType a
+              Tp.List t     -> liftM Array (mapM (encode enc t) a)
+              Tp.ArgValueTp -> case a of
+                                  ArgValue descr x -> return $ 
+                                     Object [(labelArgument descr, String (showArgument descr x))]
+              Tp.Tag s t    -> liftM (\b -> Object [(s, b)]) (encode enc t a)
+              Tp.Int        -> return (toJSON a)
+              Tp.Bool       -> return (toJSON a)
+              Tp.String     -> return (toJSON a)
+              _             -> encodeDefault enc serviceType a
     where
       xs = tupleList (a ::: serviceType)
     

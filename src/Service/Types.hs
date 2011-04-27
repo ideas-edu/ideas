@@ -17,7 +17,8 @@ module Service.Types
      -- * Types
    , Type(..), TypedValue(..), tuple2, tuple3, tuple4
    , maybeType, optionType
-   , errorType, difficultyType, listType, elemType, derivationType
+   , errorType, difficultyType, listType, elemType
+   , derivationType
    , equal, equalM
    ) where
 
@@ -67,6 +68,7 @@ equal type1 type2 =
       (ExercisePkg, ExercisePkg) -> Just id
       (Script,      Script     ) -> Just id
       (Context,     Context    ) -> Just id
+      (ArgValueTp,  ArgValueTp ) -> Just id
       (StdGen,      StdGen     ) -> Just id
       (IO a,        IO b       ) -> fmap liftM (equal a b)
       (Exception,   Exception  ) -> Just id
@@ -157,6 +159,7 @@ data Type a t where
    Location     :: Type a Location
    Id           :: Type a Id
    StrategyCfg  :: Type a StrategyConfiguration
+   ArgValueTp   :: Type a ArgValue
    -- Basic types
    Bool         :: Type a Bool
    Int          :: Type a Int
@@ -196,6 +199,7 @@ showGroundType tp =
       Location     -> Just "Location"
       Id           -> Just "Id"
       StrategyCfg  -> Just "StrategyConfiguration"
+      ArgValueTp   -> Just "ArgumentValue"
       StdGen       -> Just "StdGen"
       Exception    -> Just "Exception"
       _            -> Nothing

@@ -19,7 +19,7 @@ module Common.Transformation
    ( -- * Transformations
      Transformation, makeTrans, makeTransList, makeRewriteTrans
      -- * Arguments
-   , ArgDescr(..), defaultArgDescr, Argument(..)
+   , ArgDescr(..), defaultArgDescr, Argument(..), ArgValue(..)
    , supply1, supply2, supply3
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
@@ -41,9 +41,7 @@ import Common.Rewriting
 import Common.Utils
 import Common.View
 import Control.Monad
-import Data.Char
 import Data.Maybe
-import Data.Ratio
 import Test.QuickCheck
 
 -----------------------------------------------------------
@@ -81,16 +79,20 @@ makeRewriteTrans r = RewriteRule r (rewriteM r)
 
 -- | A data type for describing an argument of a parameterized transformation
 data ArgDescr a = ArgDescr
-   { labelArgument   :: String               -- ^ Label that is shown to the user when asked to supply the argument
-   , defaultArgument :: Maybe a              -- ^ Default value that can be used
-   , parseArgument   :: String -> Maybe a    -- ^ A parser 
-   , showArgument    :: a -> String          -- ^ A pretty-printer
-   , genArgument     :: Gen a                -- ^ An arbitrary argument generator
+   { labelArgument    :: String               -- ^ Label that is shown to the user when asked to supply the argument
+   , defaultArgument  :: Maybe a              -- ^ Default value that can be used
+   , parseArgument    :: String -> Maybe a    -- ^ A parser 
+   , showArgument     :: a -> String          -- ^ A pretty-printer
+   , termViewArgument :: View Term a          -- ^ Conversion to/from term
+   , genArgument      :: Gen a                -- ^ An arbitrary argument generator
    }
 
+-- | An argument descriptor, paired with a value
+data ArgValue = forall a . ArgValue (ArgDescr a) a
+
 -- | Constructor function for an argument descriptor that uses the Show and Read type classes
-defaultArgDescr :: (Show a, Read a, Arbitrary a) => String -> ArgDescr a
-defaultArgDescr descr = ArgDescr descr Nothing readM show arbitrary
+defaultArgDescr :: (Show a, Read a, IsTerm a, Arbitrary a) => String -> ArgDescr a
+defaultArgDescr descr = ArgDescr descr Nothing readM show termView arbitrary
 
 -- | A type class for types which have an argument descriptor
 class Arbitrary a => Argument a where
@@ -98,12 +100,6 @@ class Arbitrary a => Argument a where
 
 instance Argument Int where
    makeArgDescr = defaultArgDescr
-
-instance Argument Integer where
-   makeArgDescr = defaultArgDescr
-
-instance (Integral a, Arbitrary a) => Argument (Ratio a) where
-   makeArgDescr = ratioArgDescr
 
 -- | Parameterization with one argument using the provided label
 supply1 :: Argument x 
@@ -153,17 +149,17 @@ getDescriptors r =
 -- | Returns a list of pretty-printed expected arguments. 
 -- Nothing indicates that there are no such arguments (or the arguments
 -- are not applicable for the current value)
-expectedArguments :: Rule a -> a -> Maybe [(Some ArgDescr, String)]
+expectedArguments :: Rule a -> a -> Maybe [ArgValue]
 expectedArguments r =
    case transformations r of
       [t] -> rec t
       _   -> const Nothing
  where
-    rec :: Transformation a -> a -> Maybe [(Some ArgDescr, String)]
+    rec :: Transformation a -> a -> Maybe [ArgValue]
     rec trans a =  
        case trans of
           Abstraction args f _ -> 
-             fmap (zip (someArguments args) . showArguments args) (f a)
+             fmap (argumentValues args) (f a)
           LiftView v t -> do 
              (b, _) <- match v a
              rec t b
@@ -194,11 +190,6 @@ useArguments list r =
 data ArgumentList a where
    Single :: ArgDescr a -> ArgumentList a
    Pair   :: ArgumentList a -> ArgumentList b -> ArgumentList (a, b)
-   
-showArguments :: ArgumentList a -> a -> [String]
-showArguments (Single a) x = [showArgument a x]
-showArguments (Pair a b) (x, y) = 
-   showArguments a x ++ showArguments b y
 
 parseArguments :: ArgumentList a -> [String] -> Maybe a
 parseArguments (Single a) [x] = parseArgument a x
@@ -211,26 +202,12 @@ someArguments :: ArgumentList a -> [Some ArgDescr]
 someArguments (Single a) = [Some a]
 someArguments (Pair a b) = someArguments a ++ someArguments b
 
+argumentValues :: ArgumentList a -> a -> [ArgValue]
+argumentValues (Single a) x      = [ArgValue a x]
+argumentValues (Pair a b) (x, y) = argumentValues a x ++ argumentValues b y
+
 numberOfArguments :: ArgumentList a -> Int
 numberOfArguments = length . someArguments
-
-ratioArgDescr :: (Integral a, Arbitrary a) => String -> ArgDescr (Ratio a)
-ratioArgDescr descr = ArgDescr descr Nothing parseRatio showRatio arbitrary
- where
-   showRatio  r = show (numerator r) ++ if denominator r == 1 then "" else '/' : show (denominator r)
-   parseRatio s = 
-      let readDivOp t = 
-             case dropWhile isSpace t of
-                ('/':rest) -> return rest
-                [] -> return "1"
-                _  -> fail "no (/) operator" 
-      in safeHead [ fromInteger x / fromInteger y 
-                  | (x, s1) <- reads s
-                  , s2 <- readDivOp s1
-                  , (y, s3) <- reads s2
-                  , y /= 0
-                  , all isSpace s3 
-                  ]
       
 -----------------------------------------------------------
 --- Rules

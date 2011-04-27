@@ -14,7 +14,6 @@ module Service.FeedbackText
    ) where
 
 import Common.Library hiding (derivation)
-import Common.Utils (thd3)
 import Data.Maybe
 import Service.ExercisePackage
 import Service.State
@@ -34,14 +33,15 @@ onefirsttext :: Script -> State a -> Maybe String -> (Bool, String, State a)
 onefirsttext script old event = 
    ( isJust next
    , feedbackHint (event == Just "hint button") env script
-   , maybe old thd3 next
+   , maybe old fth4 next
    )
  where
    ex   = exercise (exercisePkg old) 
    next = either (const Nothing) Just (onefirst old)
+   fth4 (_, _, _, a) = a
    env  = (newEnvironment old)
       { diffPair = do
-          new      <- fmap thd3 next
+          new      <- fmap fth4 next
           oldC     <- fromContext (stateContext old)
           a        <- fromContext (stateContext new)
           (d1, d2) <- difference ex False oldC a 

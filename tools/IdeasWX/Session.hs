@@ -188,12 +188,13 @@ hintOrStep verbose ref = do
          return ("Error: " ++ msg)
       Right [] -> 
          return "Sorry, no hint available"
-      Right ((r, _, s):_) ->
+      Right ((r, _, _, s):_) ->
          return $ unlines $
             [ "Use " ++ showRule r
             ] ++
-            [ "   with arguments " ++ commaList (map snd (fromJust args))
+            [ "   with arguments " ++ commaList (map f (fromJust args))
             | let args = expectedArguments r (current d), isJust args
+            , let f (ArgValue d a) = showArgument d a
             ] ++ if verbose then
             [ "   to rewrite the term into:"
             , prettyPrinter (exercise d) (stateTerm s)
@@ -212,7 +213,7 @@ nextStep ref = do
          return ("Error: " ++ msg)
       Right [] -> 
          return "No more steps left to do"
-      Right ((r, _, new):_) -> do
+      Right ((r, _, _, new):_) -> do
          ms <- exerciseScript new
          setValue ref $ Some $ ss { getDerivation = extendDerivation new d  }
          case ms of

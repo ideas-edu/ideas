@@ -1,7 +1,13 @@
-<reply result="ok" version="0.7.1 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="linearalgebra.gaussianelim.scale">
       []
+      <argument description="row">
+        0
+      </argument>
+      <argument description="scale factor">
+        1/1
+      </argument>
       <state>
         <prefix>
           [11,1,1,0]

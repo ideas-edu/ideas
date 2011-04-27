@@ -195,7 +195,7 @@ forStep n ((r, env), old) = do
                | otherwise = linkTitle target (description r)
       make (text (unqualified r))
       let xs = fromMaybe [] (expectedArguments r old)
-          g (Some descr, x) = labelArgument descr ++ "=" ++ x
+          g (ArgValue descr x) = labelArgument descr ++ "=" ++ showArgument descr x
       unless (null xs) $ do
          br
          spaces 6

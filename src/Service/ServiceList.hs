@@ -59,7 +59,7 @@ allfirstsS = makeService "allfirsts"
    \onefirst service to get only one suggestion. For each suggestion, a new \
    \state, the rule used, and the location where the rule was applied are \
    \returned." $ 
-   allfirsts ::: stateType :-> errorType (listType (tuple3 Rule Location stateType))
+   allfirsts ::: stateType :-> errorType (listType (tuple4 Rule Location (List ArgValueTp) stateType))
         
 onefirstS :: Service
 onefirstS = makeService "onefirst" 
@@ -67,7 +67,7 @@ onefirstS = makeService "onefirst"
    \service to get all possible steps that are allowed by the strategy. In \
    \addition to a new state, the rule used and the location where to apply \
    \this rule are returned." $ 
-   onefirst ::: stateType :-> elemType (errorType (tuple3 Rule Location stateType))
+   onefirst ::: stateType :-> elemType (errorType (tuple4 Rule Location (List ArgValueTp) stateType))
   
 readyS :: Service
 readyS = makeService "ready" 

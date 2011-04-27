@@ -211,7 +211,7 @@ buggyMultiplyOneSide = describe "Multiplication on one side of the equation only
  where
    recognizeEq eq1@(a1 :==: a2) eq2@(b1 :==: b2) =
       let p r  = r `notElem` [-1, 0, 1] && 
-                 any (myEq eq2) (applyAll (multiplyOneSide r) eq1)
+                 any (myEq eq2) (applyAll (multiplyOneSide (fromRational r)) eq1)
       in maybe False p (recognizeMultiplication a1 b1) 
       || maybe False p (recognizeMultiplication a2 b2)
 
@@ -223,11 +223,11 @@ recognizeMultiplication a b = do
    guard (d /= 0)
    return (coefficient (degree pb) pb / d)
    
-multiplyOneSide :: Rational -> Transformation (Equation Expr)
+multiplyOneSide :: Expr -> Transformation (Equation Expr)
 multiplyOneSide r = makeTransList $ \(lhs :==: rhs) -> do
       xs <- matchM sumView lhs
       ys <- matchM sumView rhs
-      let f = map (*fromRational r)
+      let f = map (*r)
       [build sumView (f xs) :==: rhs, lhs :==: build sumView (f ys)]
 
 buggyMultiplyForgetOne :: Rule (Equation Expr)
@@ -238,18 +238,18 @@ buggyMultiplyForgetOne = describe "Multiply the terms on both sides of the \
  where
    recognizeEq eq1@(a1 :==: a2) eq2@(b1 :==: b2) =
       let p r  = r `notElem` [-1, 0, 1] && 
-                 any (myEq eq2) (applyAll (multiplyForgetOne r) eq1)
+                 any (myEq eq2) (applyAll (multiplyForgetOne (fromRational r)) eq1)
       in maybe False p (recognizeMultiplication a1 b1) 
       || maybe False p (recognizeMultiplication a2 b2)
 
-multiplyForgetOne :: Rational -> Transformation (Equation Expr)
+multiplyForgetOne :: Expr -> Transformation (Equation Expr)
 multiplyForgetOne r = makeTransList $ \(lhs :==: rhs) -> do
    xs <- matchM sumView lhs
    ys <- matchM sumView rhs
    let makeL i = f (zipWith (mul . (/=i)) [0..] xs) (map (mul True) ys)
        makeR i = f (map (mul True) xs) (zipWith (mul . (/=i)) [0..] ys) 
        f as bs = build sumView as :==: build sumView bs
-       mul b   = if b then (*fromRational r) else id
+       mul b   = if b then (*r) else id
    do guard (length xs > 1) 
       map makeL [0 .. length xs-1]
     `mplus` do

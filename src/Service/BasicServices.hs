@@ -51,7 +51,7 @@ derivation mcfg state =
    rec i acc st = 
       case onefirst st of
          Left _         -> Right acc
-         Right (r, _, next)
+         Right (r, _, _, next)
             | i <= 0    -> Left msg
             | otherwise -> rec (i-1) (acc `extend` (r, next)) next
     where
@@ -60,14 +60,14 @@ derivation mcfg state =
 
 -- Note that we have to inspect the last step of the prefix afterwards, because
 -- the remaining part of the derivation could consist of minor rules only.
-allfirsts :: State a -> Either String [(Rule (Context a), Location, State a)]
+allfirsts :: State a -> Either String [(Rule (Context a), Location, [ArgValue], State a)]
 allfirsts state = 
    case statePrefix state of
       Nothing -> 
          Left "Prefix is required"
       Just p0 ->
          let tree = cutOnStep (stop . lastStepInPrefix) (prefixTree p0 (stateContext state))
-             f (r1, _, _) (r2, _, _) = 
+             f (r1, _, _, _) (r2, _, _, _) = 
                 ruleOrdering (exercise (exercisePkg state)) r1 r2
          in Right (sortBy f (mapMaybe make (derivations tree)))
  where
@@ -76,15 +76,17 @@ allfirsts state =
    
    make d = do
       prefixEnd <- lastStep d
+      let ca = lastTerm (withoutLast d)
       case lastStepInPrefix prefixEnd of
          Just (RuleStep r) | isMajorRule r -> return
             ( r
             , location (lastTerm d)
+            , fromMaybe [] (expectedArguments r ca)
             , makeState (exercisePkg state) (Just prefixEnd) (lastTerm d)
             )
          _ -> Nothing
 
-onefirst :: State a -> Either String (Rule (Context a), Location, State a)
+onefirst :: State a -> Either String (Rule (Context a), Location, [ArgValue], State a)
 onefirst state =
    case allfirsts state of
       Right []     -> Left "No step possible"
@@ -102,7 +104,7 @@ allapplications state = sortBy cmp (xs ++ ys)
  where
    pkg = exercisePkg state
    ex  = exercise pkg
-   xs  = either (const []) id (allfirsts state)
+   xs  = either (const []) (map (\(r, l, _, s) -> (r, l, s))) (allfirsts state)
    ps  = [ (r, loc) | (r, loc, _) <- xs ]
    ys  = maybe [] f (top (stateContext state))
            
@@ -130,7 +132,7 @@ apply r loc state = maybe applyOff applyOn (statePrefix state)
  where
    applyOn _ = -- scenario 1: on-strategy
       maybe applyOff Right $ safeHead
-      [ s1 | Right xs <- [allfirsts state], (r1, loc1, s1) <- xs, showId r == showId r1, loc==loc1 ]
+      [ s1 | Right xs <- [allfirsts state], (r1, loc1, _, s1) <- xs, showId r == showId r1, loc==loc1 ]
       
    applyOff  = -- scenario 2: off-strategy
       case Apply.apply r (setLocation loc (stateContext state)) of

@@ -46,7 +46,7 @@ import Common.Id
 import Common.Navigator
 import Common.TestSuite
 import Common.Transformation
-import Common.Utils (ShowString(..), Some(..), commaList)
+import Common.Utils (ShowString(..), commaList)
 import Common.View (makeView)
 import Control.Monad.Error
 import Control.Arrow
@@ -299,7 +299,7 @@ showDerivation ex a = show (present der) ++ extra
    f ((b, env), old) = showId b ++ part1 ++ part2
     where 
       newl = "\n      "
-      g (Some descr, x) = labelArgument descr ++ "=" ++ x
+      g (ArgValue descr x) = labelArgument descr ++ "=" ++ showArgument descr x
       part1 = case expectedArguments b old of
                  Just xs -> newl ++ commaList (map g xs)
                  Nothing -> ""

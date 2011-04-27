@@ -34,7 +34,8 @@ import qualified Data.Traversable as T
 
 balanceExercise :: Exercise (Equation Expr)
 balanceExercise = makeExercise 
-   { exerciseId   = newId "algebra.equations.linear.balance"
+   { exerciseId   = describe "Solve a linear equation using only balance rules." $ 
+                    newId "algebra.equations.linear.balance"
    , status       = Provisional
    , parser       = parseEqExpr
    , similarity   = withoutContext ((==) `on` fmap cleanUpExpr)

@@ -94,6 +94,20 @@ instance (IsTerm a, IsTerm b) => IsTerm (Either a b) where
       liftM Left  (fromTerm expr) `mplus`
       liftM Right (fromTerm expr) 
 
+instance IsTerm Int where
+   toTerm = Num . fromIntegral
+   fromTerm = liftM fromInteger . fromTerm
+
+instance IsTerm Integer where
+   toTerm = Num
+   fromTerm (Num a) = return a
+   fromTerm _       = fail "fromTerm"
+
+instance IsTerm Double where
+   toTerm = Float
+   fromTerm (Float a) = return a
+   fromTerm _         = fail "fromTerm"
+
 fromTermM :: (Monad m, IsTerm a) => Term -> m a
 fromTermM = maybe (fail "fromTermM") return . fromTerm
 

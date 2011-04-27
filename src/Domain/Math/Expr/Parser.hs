@@ -119,7 +119,7 @@ atom :: Parser Expr
 atom = choice 
    [ do notFollowedBy (char '-') 
         either fromInteger fromDouble <$> naturalOrFloat
-   , Var <$> identifier 
+   , variable <$> identifier 
    , parens expr
    ]
 
@@ -179,9 +179,6 @@ parens = P.parens lexer
 -- Argument descriptor (for parameterized rules)
 
 instance Argument Expr where
-   makeArgDescr = exprArgDescr
-
-exprArgDescr :: String -> ArgDescr Expr
-exprArgDescr descr = 
-   let p = either (const Nothing) Just . parseExpr
-   in ArgDescr descr Nothing p show arbitrary
+   makeArgDescr descr = 
+      let p = either (const Nothing) Just . parseExpr
+      in ArgDescr descr Nothing p show termView arbitrary

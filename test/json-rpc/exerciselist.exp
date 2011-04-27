@@ -11,6 +11,11 @@
          "status": "Provisional"
       },
       {
+         "exerciseid": "algebra.equations.linear.balance",
+         "description": "Solve a linear equation using only balance rules.",
+         "status": "Provisional"
+      },
+      {
          "exerciseid": "algebra.equations.linear.mixed",
          "description": "solve a linear equation with mixed fractions",
          "status": "Provisional"
@@ -163,5 +168,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.7 (0)"
+   "version": "0.7.3 (0)"
 }

@@ -147,14 +147,15 @@ xmlEncodeType b enc pkg serviceType =
          | otherwise ->  
               case useAttribute t1 of
                  Just f | s /= "message" -> return . (s .=.) . f
-                 _ -> liftM (element s) . xmlEncodeType b enc pkg t1
-      Tp.Strategy  -> return . builder . strategyToXML
-      Tp.Rule      -> return . ("ruleid" .=.) . showId
-      Tp.Term      -> encodeTerm enc
-      Tp.Context   -> encodeContext b (encodeTerm enc)
-      Tp.Bool      -> return . text . map toLower . show
-      Tp.String    -> return . text
-      _            -> encodeDefault enc serviceType
+                 _  -> liftM (element s) . xmlEncodeType b enc pkg t1
+      Tp.Strategy   -> return . builder . strategyToXML
+      Tp.Rule       -> return . ("ruleid" .=.) . showId
+      Tp.Term       -> encodeTerm enc
+      Tp.Context    -> encodeContext b (encodeTerm enc)
+      Tp.ArgValueTp -> return . encodeArgValue b
+      Tp.Bool       -> return . text . map toLower . show
+      Tp.String     -> return . text
+      _             -> encodeDefault enc serviceType
 
 xmlDecoder :: Bool -> (XML -> DomainReasoner a) -> ExercisePackage a -> Decoder XML a
 xmlDecoder b f pkg = Decoder
@@ -298,3 +299,13 @@ encodeContext b f ctx = do
    a   <- fromContext ctx
    xml <- f a
    return (xml >> encodeEnvironment b (location ctx) (getEnvironment ctx))
+
+encodeArgValue :: Bool -> ArgValue -> XMLBuilder
+encodeArgValue b (ArgValue descr a) = element "argument" $ do
+   "description" .=. labelArgument descr
+   showValue a
+ where
+   showValue 
+      | b         = builder . omobj2xml . termToOMOBJ . build (termViewArgument descr)
+      | otherwise = text . showArgument descr
+   

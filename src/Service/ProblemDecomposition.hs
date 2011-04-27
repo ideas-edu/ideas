@@ -87,7 +87,7 @@ argumentsForSteps a0 = flip rec a0 . stepsToRules
    rec [] _ = []
    rec (r:rs) a
       | isMinorRule r  = concatMap (rec rs) (applyAll r a)
-      | applicable r a = let f (Some d, s) = (labelArgument d, s)
+      | applicable r a = let f (ArgValue d s) = (labelArgument d, showArgument d s)
                          in maybe [] (map f) (expectedArguments r a)
       | otherwise      = []
  

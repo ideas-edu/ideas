@@ -1,7 +1,8 @@
-<reply result="ok" version="0.7 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <list>
     <elem exerciseid="algebra.equations.coverup" description="solve an equation by covering up" status="Provisional"/>
     <elem exerciseid="algebra.equations.linear" description="solve a linear equation" status="Provisional"/>
+    <elem exerciseid="algebra.equations.linear.balance" description="Solve a linear equation using only balance rules." status="Provisional"/>
     <elem exerciseid="algebra.equations.linear.mixed" description="solve a linear equation with mixed fractions" status="Provisional"/>
     <elem exerciseid="algebra.equations.polynomial" description="solve an equation (higher degree)" status="Provisional"/>
     <elem exerciseid="algebra.equations.quadratic" description="solve a quadratic equation" status="Provisional"/>

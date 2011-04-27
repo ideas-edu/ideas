@@ -1,55 +1,48 @@
-<reply result="ok" version="0.7.1 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <list>
-    <elem ruleid="logic.propositional.buggy.demorgan1">
-      []
+    <elem ruleid="logic.propositional.buggy.demorgan1" location="[]">
       <state>
         <expr>
           ~p || ~q
         </expr>
       </state>
     </elem>
-    <elem ruleid="logic.propositional.buggy.demorgan1">
-      []
+    <elem ruleid="logic.propositional.buggy.demorgan1" location="[]">
       <state>
         <expr>
           p || ~~q
         </expr>
       </state>
     </elem>
-    <elem ruleid="logic.propositional.buggy.demorgan1">
-      []
+    <elem ruleid="logic.propositional.buggy.demorgan1" location="[]">
       <state>
         <expr>
           p || ~q
         </expr>
       </state>
     </elem>
-    <elem ruleid="logic.propositional.buggy.demorgan2">
-      []
+    <elem ruleid="logic.propositional.buggy.demorgan2" location="[]">
       <state>
         <expr>
           ~(~p || ~~q)
         </expr>
       </state>
     </elem>
-    <elem ruleid="logic.propositional.buggy.demorgan3">
-      []
+    <elem ruleid="logic.propositional.buggy.demorgan3" location="[]">
       <state>
         <expr>
           ~p /\ ~~q
         </expr>
       </state>
     </elem>
-    <elem ruleid="logic.propositional.buggy.parenth1">
-      []
+    <elem ruleid="logic.propositional.buggy.parenth1" location="[]">
       <state>
         <expr>
           ~p /\ ~q
         </expr>
       </state>
     </elem>
-    <elem ruleid="logic.propositional.command">
-      [0]
+    <elem ruleid="logic.propositional.command" location="[0]">
       <state>
         <expr>
           ~(~q /\ p)
@@ -59,8 +52,7 @@
         </context>
       </state>
     </elem>
-    <elem ruleid="logic.propositional.demorganand">
-      []
+    <elem ruleid="logic.propositional.demorganand" location="[]">
       <state>
         <prefix>
           [5,1,1,0,1,1,0,0,1,1,0]

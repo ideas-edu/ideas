@@ -1,7 +1,6 @@
-<reply result="ok" version="0.7.1 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <list>
-    <elem ruleid="algebra.equations.quadratic.simpler-poly">
-      []
+    <elem ruleid="algebra.equations.quadratic.simpler-poly" location="[]">
       <state>
         <prefix>
           [5,1,0,0,0,1,1,0]
@@ -11,8 +10,7 @@
         </expr>
       </state>
     </elem>
-    <elem ruleid="algebra.equations.quadratic.simpler-poly">
-      []
+    <elem ruleid="algebra.equations.quadratic.simpler-poly" location="[]">
       <state>
         <prefix>
           [5,1,0,0,0,1,1,0]
@@ -22,8 +20,7 @@
         </expr>
       </state>
     </elem>
-    <elem ruleid="algebra.equations.quadratic.abc">
-      []
+    <elem ruleid="algebra.equations.quadratic.abc" location="[]">
       <state>
         <prefix>
           [5,1,0,0,1]

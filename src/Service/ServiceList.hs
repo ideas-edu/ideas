@@ -13,7 +13,7 @@
 module Service.ServiceList (serviceList, exerciselistS) where
 
 import Common.Library hiding (apply, applicable, derivation)
-import Common.Utils (Some(..))
+import Common.Utils (fst3, Some(..))
 import Data.List (sortBy)
 import Data.Ord
 import Service.FeedbackText
@@ -51,7 +51,10 @@ derivationS = makeService "derivation"
    \current expression. The first optional argument lets you configure the \
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $ 
-   derivation ::: maybeType StrategyCfg :-> stateType :-> errorType (derivationType Rule Context)
+   derivationTemp ::: maybeType StrategyCfg :-> stateType :-> errorType (derivationType Rule Context)
+   -- derivation ::: maybeType StrategyCfg :-> stateType :-> errorType (derivationType (tuple3 Rule Location (List ArgValueTp)) Context) 
+ where
+   derivationTemp cfg = fmap (mapFirst fst3) . derivation cfg
 
 allfirstsS :: Service
 allfirstsS = makeService "allfirsts" 

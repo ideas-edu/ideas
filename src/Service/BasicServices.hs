@@ -16,7 +16,7 @@ module Service.BasicServices
    ) where
 
 import Common.Library hiding (derivation, applicable, apply)
-import Common.Utils (safeHead)
+import Common.Utils (fst3, safeHead)
 import Data.List
 import Data.Maybe
 import System.Random (StdGen)
@@ -28,7 +28,7 @@ generate :: StdGen -> ExercisePackage a -> Difficulty -> State a
 generate rng pkg dif = 
    emptyState pkg (randomTermWith rng dif (exercise pkg))
 
-derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a)) (Context a))
+derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a), Location, [ArgValue]) (Context a))
 derivation mcfg state = 
    mapSecond (mapSecond stateContext) $
    case (statePrefix state, mcfg) of 
@@ -51,12 +51,12 @@ derivation mcfg state =
    rec i acc st = 
       case onefirst st of
          Left _         -> Right acc
-         Right (r, _, _, next)
+         Right (r, l, as, next)
             | i <= 0    -> Left msg
-            | otherwise -> rec (i-1) (acc `extend` (r, next)) next
+            | otherwise -> rec (i-1) (acc `extend` ((r, l, as), next)) next
     where
       msg = "Time out after " ++ show timeout ++ " steps. " ++ 
-            show (mapSecond (prettyPrinterContext ex . stateContext) acc)
+            show (biMap fst3 (prettyPrinterContext ex . stateContext) acc)
 
 -- Note that we have to inspect the last step of the prefix afterwards, because
 -- the remaining part of the derivation could consist of minor rules only.

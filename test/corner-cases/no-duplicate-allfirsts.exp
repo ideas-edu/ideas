@@ -1,7 +1,6 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <list>
-    <elem ruleid="algebra.equations.linear.distr-times">
-      []
+    <elem ruleid="algebra.equations.linear.distr-times" location="[]">
       <state>
         <prefix>
           [5,1,1,0]

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.1 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <incorrect equivalent="true">
     <location>
       forwardpass
@@ -35,14 +35,26 @@
         <item name="covered" value="0"/>
       </context>
     </state>
-    <arguments>
-      <elem descr="row">
-        0
-      </elem>
-      <elem descr="scale factor">
-        1/2
-      </elem>
-    </arguments>
+    <argument description="row">
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMI>
+          0
+        </OMI>
+      </OMOBJ>
+    </argument>
+    <argument description="scale factor">
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="arith1" name="divide"/>
+          <OMI>
+            1
+          </OMI>
+          <OMI>
+            2
+          </OMI>
+        </OMA>
+      </OMOBJ>
+    </argument>
   </incorrect>
 </reply>
 

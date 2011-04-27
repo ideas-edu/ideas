@@ -152,6 +152,7 @@ xmlEncodeType b enc pkg serviceType =
       Tp.Rule       -> return . ("ruleid" .=.) . showId
       Tp.Term       -> encodeTerm enc
       Tp.Context    -> encodeContext b (encodeTerm enc)
+      Tp.Location   -> return . ("location" .=.) . show
       Tp.ArgValueTp -> return . encodeArgValue b
       Tp.Bool       -> return . text . map toLower . show
       Tp.String     -> return . text

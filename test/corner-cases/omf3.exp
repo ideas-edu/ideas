@@ -1,6 +1,5 @@
-<reply result="ok" version="0.6.5 (0)">
-  <elem ruleid="algebra.equations.coverup.power">
-    []
+<reply result="ok" version="0.7.3 (0)">
+  <elem ruleid="algebra.equations.coverup.power" location="[]">
     <state>
       <prefix>
         [5,1,0,0,0,1,1,1,1,1]

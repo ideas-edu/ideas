@@ -1,7 +1,6 @@
 <reply result="ok" version="0.7.3 (0)">
   <list>
-    <elem ruleid="linearalgebra.gaussianelim.scale">
-      []
+    <elem ruleid="linearalgebra.gaussianelim.scale" location="[]">
       <argument description="row">
         0
       </argument>

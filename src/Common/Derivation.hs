@@ -89,7 +89,10 @@ lastStep:: Derivation s a -> Maybe s
 lastStep = safeHead . reverse . steps
 
 withoutLast :: Derivation s a -> Derivation s a
-withoutLast (D a xs) = D a (S.drop 1 xs)
+withoutLast d@(D a xs) =
+   case S.viewr xs of
+      S.EmptyR  -> d
+      ys S.:> _ -> D a ys
 
 updateSteps :: (a -> s -> a -> t) -> Derivation s a -> Derivation t a
 updateSteps f d = 

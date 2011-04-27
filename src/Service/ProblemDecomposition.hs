@@ -70,7 +70,7 @@ runPrefixLocation loc p0 =
     where
       rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
 
-firstMajorInPrefix :: Prefix a -> Prefix a -> a -> Maybe (Id, Args)
+firstMajorInPrefix :: Prefix a -> Prefix a -> a -> Maybe (Id, [ArgValue])
 firstMajorInPrefix p0 p a = do
    let newSteps = drop (length $ prefixToSteps p0) (prefixToSteps p)
    is <- firstLocation newSteps
@@ -81,14 +81,13 @@ firstMajorInPrefix p0 p a = do
    firstLocation (Enter info:RuleStep r:_) | isMajorRule r = Just (getId info)
    firstLocation (_:rest) = firstLocation rest
  
-argumentsForSteps :: a -> [Step l a] -> Args
+argumentsForSteps :: a -> [Step l a] -> [ArgValue]
 argumentsForSteps a0 = flip rec a0 . stepsToRules
  where
    rec [] _ = []
    rec (r:rs) a
       | isMinorRule r  = concatMap (rec rs) (applyAll r a)
-      | applicable r a = let f (ArgValue d s) = (labelArgument d, showArgument d s)
-                         in maybe [] (map f) (expectedArguments r a)
+      | applicable r a = fromMaybe [] (expectedArguments r a)
       | otherwise      = []
  
 nextMajorForPrefix :: Prefix a -> a -> Maybe Id
@@ -114,9 +113,7 @@ runPrefixMajor p0 =
 -- Data types for replies
 
 data Reply a = Ok Id (State a)
-             | Incorrect Bool Id (State a) Args
-
-type Args = [(String, String)]
+             | Incorrect Bool Id (State a) [ArgValue]
 
 ------------------------------------------------------------------------
 -- Type definition
@@ -134,4 +131,4 @@ replyType = Iso f g tp
       :|: Tag "incorrect" (tuple4 (Tag "equivalent" Bool) locType stateType argsType)
     
    locType  = Tag "location" Id
-   argsType = Tag "arguments" (List (elemType (Pair (Tag "descr" String) String)))
+   argsType = List ArgValueTp

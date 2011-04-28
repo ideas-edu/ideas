@@ -71,7 +71,7 @@ linbal = "algebra.equations.linear.balance"
   
 -- factor is always positive due to lcm function
 removeDivision :: Rule (Equation Expr)
-removeDivision = doAfter (fmap distributeLocal) $
+removeDivision =
    describe "remove division" $ 
    makeRule (linbal, "remove-div") $ useRecognizer isTimesT $
    supply1 "factor" removeDivisionArg timesT 
@@ -100,7 +100,7 @@ varToLeft = doAfter (fmap collectLocal) $
     varToLeftArg (_ :==: rhs) = do
        (x, a, _) <- matchLin rhs
        guard (a /= 0)
-       return (fromRational a * Var x)
+       return (fromRational a .*. Var x)
 
 conToRight :: Rule (Equation Expr)
 conToRight = doAfter (fmap collectLocal) $

@@ -1,6 +1,9 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        (-1)*x
+      </argument>
       <expr>
         3*x-8 == 18
       </expr>

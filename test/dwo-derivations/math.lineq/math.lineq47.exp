@@ -1,6 +1,9 @@
 <reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
+      <argument description="factor">
+        6
+      </argument>
       <expr>
         5*x-13 == -24*x+3*(3*x-6)
       </expr>
@@ -16,6 +19,9 @@
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        (-15)*x
+      </argument>
       <expr>
         20*x-13 == -18
       </expr>

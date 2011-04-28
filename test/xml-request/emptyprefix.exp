@@ -1,6 +1,9 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        (-2)*x
+      </argument>
       <expr>
         3*x+3 == 5
       </expr>

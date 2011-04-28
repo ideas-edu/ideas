@@ -1,6 +1,9 @@
-<reply result="ok" version="0.6.6 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
+      <argument description="factor">
+        6
+      </argument>
       <expr>
         -3*(x+2) == 54*(2/3*x+1/3)-10
       </expr>
@@ -11,6 +14,9 @@
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        36*x
+      </argument>
       <expr>
         -39*x-6 == 8
       </expr>

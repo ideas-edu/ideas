@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.6">
+<reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
@@ -6,6 +6,9 @@
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        (-1)*x
+      </argument>
       <expr>
         10-5*x == 6
       </expr>

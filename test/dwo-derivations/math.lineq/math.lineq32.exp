@@ -1,11 +1,17 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
+      <argument description="factor">
+        4
+      </argument>
       <expr>
         x+2 == 10*x+8
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        10*x
+      </argument>
       <expr>
         -9*x+2 == 8
       </expr>

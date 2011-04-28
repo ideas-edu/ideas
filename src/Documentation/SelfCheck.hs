@@ -107,11 +107,11 @@ doBlackBoxTest run format path = do
  where
    expPath = baseOf path ++ ".exp"
    baseOf  = reverse . drop 1 . dropWhile (/= '.') . reverse
-   x ~= y  = filterVersion x == filterVersion y
+   x ~= y  = filterVersion x == filterVersion y -- compare line-based
    
    filterVersion = 
       let p s = not (null s || "version" `isInfixOf` s)
-      in unlines . filter p . lines
+      in filter p . lines
 
 simplerDirectory :: String -> String
 simplerDirectory s

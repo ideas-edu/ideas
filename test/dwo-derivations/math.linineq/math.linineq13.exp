@@ -1,6 +1,9 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
+      <argument description="factor">
+        6
+      </argument>
       <expr>
         -3*(x-12) &gt; 2*(x+3)
       </expr>
@@ -11,6 +14,9 @@
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        2*x
+      </argument>
       <expr>
         -5*x+36 &gt; 6
       </expr>

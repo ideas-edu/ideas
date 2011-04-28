@@ -54,7 +54,7 @@ show:
 # Programs, tools, and flags
 
 GHC        = ghc
-GHCWARN    = -Wall # -fwarn-tabs -fwarn-duplicate-exports # -fwarn-orphans -fwarn-missing-signatures
+GHCWARN    = -Wall -fwarn-tabs
 HADDOCK    = haddock
 HPC        = hpc
 RUNHASKELL = runhaskell
@@ -63,9 +63,9 @@ AG         = uuagc
 AG_OPTS    = -scfr --genlinepragmas
 
 ifeq ($(IDEASSERVER), yes)
-GHCFLAGS   = --make -DDB -O -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) -fwarn-unused-imports $(GHCWARN)
+GHCFLAGS   = --make -DDB -O -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
 else
-GHCFLAGS   = --make -O -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) -fwarn-unused-imports $(GHCWARN)
+GHCFLAGS   = --make -O -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
 PROFFLAGS  = --make -prof -auto-all -iprof-src -O -i$(SRCDIR) -odir $(PROFDIR) -hidir $(PROFDIR)
 endif
 

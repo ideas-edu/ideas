@@ -1,11 +1,17 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
+      <argument description="factor">
+        12
+      </argument>
       <expr>
         9*x-4 == 8*x-9
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        8*x
+      </argument>
       <expr>
         x-4 == -9
       </expr>

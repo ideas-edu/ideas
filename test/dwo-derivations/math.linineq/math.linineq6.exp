@@ -1,11 +1,17 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
+      <argument description="factor">
+        6
+      </argument>
       <expr>
         2*x+60 &gt; 3*x
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        3*x
+      </argument>
       <expr>
         -x+60 &gt; 0
       </expr>

@@ -1,6 +1,9 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
+      <argument description="factor">
+        30
+      </argument>
       <expr>
         60*x-6*(2*x+2) == 360+5*(x-1)
       </expr>
@@ -16,6 +19,9 @@
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        5*x
+      </argument>
       <expr>
         43*x-12 == 355
       </expr>

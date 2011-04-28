@@ -1,6 +1,9 @@
 <reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
+      <argument description="factor">
+        2
+      </argument>
       <expr>
         x+3 == 10*(1/2*x+3/2)
       </expr>
@@ -11,6 +14,9 @@
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        5*x
+      </argument>
       <expr>
         -4*x+3 == 15
       </expr>

@@ -1,6 +1,9 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        11*x
+      </argument>
       <expr>
         -7*x-18 == 14
       </expr>

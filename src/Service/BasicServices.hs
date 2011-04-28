@@ -28,9 +28,10 @@ generate :: StdGen -> ExercisePackage a -> Difficulty -> State a
 generate rng pkg dif = 
    emptyState pkg (randomTermWith rng dif (exercise pkg))
 
-derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a), Location, [ArgValue]) (Context a))
+-- TODO: add a location to each step
+derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a), [ArgValue]) (Context a))
 derivation mcfg state = 
-   mapSecond (mapSecond stateContext) $
+   mapSecond (biMap (\(r, _, as) -> (r, as)) stateContext) $
    case (statePrefix state, mcfg) of 
       (Nothing, _) -> Left "Prefix is required"
       -- configuration is only allowed beforehand: hence, the prefix 

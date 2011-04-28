@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.6">
+<reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
@@ -6,6 +6,9 @@
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        11*x
+      </argument>
       <expr>
         -7*x-4 == -12
       </expr>

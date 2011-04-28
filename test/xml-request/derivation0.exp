@@ -1,6 +1,9 @@
 <reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
+      <argument description="factor">
+        2
+      </argument>
       <expr>
         10*(x-1) == x
       </expr>
@@ -11,6 +14,9 @@
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        1*x
+      </argument>
       <expr>
         9*x-10 == 0
       </expr>

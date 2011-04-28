@@ -1,6 +1,9 @@
 <reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
+      <argument description="factor">
+        18
+      </argument>
       <expr>
         9*(7-2/3*x) == 36+2*x
       </expr>
@@ -11,6 +14,9 @@
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        2*x
+      </argument>
       <expr>
         63-8*x == 36
       </expr>

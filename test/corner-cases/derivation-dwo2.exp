@@ -1,6 +1,13 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.7.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
+      <argument description="factor">
+        <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+          <OMI>
+            12
+          </OMI>
+        </OMOBJ>
+      </argument>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="relation1" name="eq"/>
@@ -144,6 +151,17 @@
       </OMOBJ>
     </elem>
     <elem ruleid="algebra.equations.linear.var-left">
+      <argument description="term">
+        <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+          <OMA>
+            <OMS cd="arith1" name="times"/>
+            <OMI>
+              21
+            </OMI>
+            <OMV name="x"/>
+          </OMA>
+        </OMOBJ>
+      </argument>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="relation1" name="eq"/>

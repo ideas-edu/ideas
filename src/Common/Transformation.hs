@@ -296,7 +296,7 @@ buggyRule r = r {isBuggyRule = True}
 
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a
-doAfter f r = r {afterwards = afterwards r . f}
+doAfter f r = r {afterwards = f . afterwards r}
 
 getRewriteRules :: Rule a -> [(Some RewriteRule, Bool)]
 getRewriteRules r = concatMap f (transformations r)

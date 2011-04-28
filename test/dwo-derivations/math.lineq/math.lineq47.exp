@@ -2,7 +2,7 @@
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
       <expr>
-        5*x-1-12 == -24*x+3*(3*x-6)
+        5*x-13 == -24*x+3*(3*x-6)
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.distr-times">

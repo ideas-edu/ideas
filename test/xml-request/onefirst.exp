@@ -8,7 +8,7 @@
         [5,1,0]
       </prefix>
       <expr>
-        10*x-10 == x
+        10*(x-1) == x
       </expr>
     </state>
   </elem>

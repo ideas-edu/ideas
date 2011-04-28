@@ -2,6 +2,11 @@
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
       <expr>
+        9*(7-2/3*x) == 36+2*x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
         63-6*x == 36+2*x
       </expr>
     </elem>

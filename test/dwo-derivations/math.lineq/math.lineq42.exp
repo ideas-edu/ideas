@@ -2,6 +2,11 @@
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
       <expr>
+        x+3 == 10*(1/2*x+3/2)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
         x+3 == 5*x+15
       </expr>
     </elem>

@@ -2,6 +2,11 @@
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
       <expr>
+        10*(x-1) == x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
         10*x-10 == x
       </expr>
     </elem>

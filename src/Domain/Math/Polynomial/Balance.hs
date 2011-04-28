@@ -71,7 +71,7 @@ linbal = "algebra.equations.linear.balance"
   
 -- factor is always positive due to lcm function
 removeDivision :: Rule (Equation Expr)
-removeDivision = doAfter (fmap (cleanUpExpr . distributeLocal)) $
+removeDivision = doAfter (fmap distributeLocal) $
    describe "remove division" $ 
    makeRule (linbal, "remove-div") $ useRecognizer isTimesT $
    supply1 "factor" removeDivisionArg timesT 

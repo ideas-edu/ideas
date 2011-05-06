@@ -44,11 +44,11 @@ makeDocumentation docDir testDir item =
          getServices >>= mapM_ (makeServicePage docDir)
          report "Running tests"
          makeTestsPage docDir testDir
-         report "Status hashtable"
+         {- report "Status hashtable"
          let file = docDir ++ "/hashtable.out"
          liftIO $ do 
             putStrLn $ "Generating " ++ show file
-            tableStatus >>= writeFile file
+            tableStatus >>= writeFile file -}
       SelfCheck -> do
          checks <- selfCheck testDir
          result <- liftIO (runTestSuiteResult checks)

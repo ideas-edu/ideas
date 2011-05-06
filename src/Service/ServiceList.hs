@@ -157,7 +157,7 @@ onefirsttextS = makeService "onefirsttext"
    onefirsttext ::: Script :-> stateType :-> maybeType String :-> elemType (tuple3 Bool String stateType)
 
 submittextS :: Service
-submittextS = makeService "submittext" 
+submittextS = deprecate $ makeService "submittext" 
    "Similar to the submit service, except that the result is now returned as \
    \a formatted text message. The expression 'submitted' by the student is sent \
    \in plain text (and parsed by the exercise's parser). \

@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Documentation.TestsPage (makeTestsPage) where
 
+import Control.Monad
 import Common.TestSuite
 import Documentation.DefaultPage
 import Documentation.SelfCheck
@@ -29,36 +30,20 @@ testsPage result = do
    h1 "Summary"
    preText (makeSummary result)
    h1 "Tests"
-   makeTestLogWith formatHTML result
-   
-formatHTML :: FormatLog HTMLBuilder
-formatHTML = FormatLog
-   { formatRoot = \_ -> id
-   , formatSuite = \loc s _ _ a -> 
-        showHeader loc s >> a 
-   , formatSuccesses = \xs -> 
-        let f (_, n) = if n==1 then "." else "(passed " ++ show n ++ " tests)"
-        in mapM_ (\s -> ttText s >> br) (breakLine (concatMap f xs))
-   , formatFailure = \s msg -> colorRed $ do
-        bold (ttText ("Error" ++ putLabel s))
-        tt space
-        ttText msg
-        br
-   , formatWarning = \s msg -> colorOrange $ do
-        ttText ("Warning" ++ putLabel s)
-        tt space
-        ttText msg
-        br
-   }
- where 
-   putLabel s = if null s then ":" else " (" ++ s ++ "):"
+   formatResult [] result
 
-breakLine :: String -> [String]
-breakLine xs
-   | null xs   = []
-   | otherwise = ys : breakLine zs
- where
-   (ys, zs) = splitAt 80 xs
+formatResult :: [Int] -> TestSuiteResult -> HTMLBuilder
+formatResult loc result = do
+   ttText (show result)
+   br
+   forM_ (topMessages result) $ \m -> 
+      (if isError m then bold . colorRed else colorOrange) 
+      (ttText (show m) >> br)
+   let subs = zip [1::Int ..] (subResults result) 
+   forM_ subs $ \(i, (s, a)) -> do
+      let newloc = loc ++ [i]
+      showHeader newloc s
+      formatResult newloc a
 
 showHeader :: [Int] -> String -> HTMLBuilder
 showHeader [a]   s = h2 (show a ++ ". " ++ s)

@@ -412,8 +412,8 @@ checksForDerivation :: Exercise a -> Derivation (Rule (Context a)) (Context a) -
 checksForDerivation ex d = do
    -- Conditions on starting term
    let start = firstTerm d
-   assertTrueMsg "start term" 
-      ("not suitable: " ++ prettyPrinterContext ex start) $
+   assertTrue
+      ("start term not suitable: " ++ prettyPrinterContext ex start) $
       maybe False (isSuitable ex) (fromContext start)
    
    {-
@@ -429,8 +429,8 @@ checksForDerivation ex d = do
                "final term is suitable: " ++ prettyPrinterContext ex start
                ++ "  =>  " ++ prettyPrinterContext ex final
             return b -}
-   assertTrueMsg "final term" 
-      ("not ready: " ++ prettyPrinterContext ex start
+   assertTrue
+      ("final term not ready: " ++ prettyPrinterContext ex start
                ++ "  =>  " ++ prettyPrinterContext ex final) $ 
       maybe False (isReady ex) (fromContext final)
 

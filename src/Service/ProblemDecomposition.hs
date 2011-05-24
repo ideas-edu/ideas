@@ -16,7 +16,6 @@ module Service.ProblemDecomposition
 import Common.Library
 import Common.Utils
 import Data.Maybe
-import Service.ExercisePackage
 import Service.State
 import Service.Types
 
@@ -36,18 +35,17 @@ problemDecomposition msloc state answer
                     (newCtx, newPrefix) = head witnesses
                     newLocation = nextTaskLocation (strategy ex) sloc $ 
                                      fromMaybe topId $ nextMajorForPrefix newPrefix newCtx
-                    newState    = makeState pkg (Just newPrefix) newCtx
+                    newState    = makeState ex (Just newPrefix) newCtx
             ((expected, pref):_, maybeAnswer) -> Right $
                     Incorrect isEquiv newLocation expState arguments
              where
                newLocation = subTaskLocation (strategy ex) sloc loc
-               expState = makeState pkg (Just pref) expected
+               expState = makeState ex (Just pref) expected
                isEquiv  = maybe False (equivalence ex expected) maybeAnswer
                (loc, arguments) = fromMaybe (topId, []) $ 
                                      firstMajorInPrefix pr pref requestedTerm
  where
-   pkg   = exercisePkg state
-   ex    = pkg
+   ex    = exercise state
    topId = getId (strategy ex)
    sloc  = fromMaybe topId msloc
    requestedTerm = stateContext state

@@ -30,7 +30,6 @@ import Data.Monoid
 import Service.BasicServices
 import Service.FeedbackScript.Syntax
 import Service.Diagnose
-import Service.ExercisePackage
 import Service.State
 
 data Environment a = Env
@@ -53,7 +52,7 @@ newEnvironment st = Env
    }
  where
    next = either (const Nothing) Just (onefirst st)
-   pp   = prettyPrinter (exercisePkg st) . stateTerm
+   pp   = prettyPrinter (exercise st) . stateTerm
    fst4 (a, _, _, _) = a
    fth4 (_, _, _, a) = a
 

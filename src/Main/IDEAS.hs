@@ -12,11 +12,11 @@
 module Main.IDEAS (useIDEAS) where
 
 import Common.Id
+import Common.Exercise
 import Common.Utils (Some(..))
 import Control.Arrow
 import Main.Options
 import Service.DomainReasoner
-import Service.ExercisePackage
 import Service.ServiceList
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.LinearAlgebra.Checks as LA
@@ -63,7 +63,7 @@ useIDEAS action = runDomainReasoner $ do
    -- do the rest
    action
 
-exercises :: [Some ExercisePackage]
+exercises :: [Some Exercise]
 exercises =
    [ -- logic and relation-algebra
      Some Logic.dnfExercise
@@ -109,7 +109,7 @@ exercises =
    , Some LA.gaussianElimExercise
    , Some LA.systemWithMatrixExercise
      -- regular expressions
-   -- , somePackage RE.regexpExercise
+   -- , some RE.regexpExercise
    ]
    
 aliases :: [(Id, Id)]

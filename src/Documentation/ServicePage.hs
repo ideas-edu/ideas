@@ -13,7 +13,6 @@
 module Documentation.ServicePage (makeServicePage) where
 
 import Documentation.DefaultPage
-import Service.ExercisePackage
 import Service.TypedExample
 import Service.Types
 import Service.DomainReasoner
@@ -84,32 +83,31 @@ examplesFor s = tryAll [ f t | (t, f) <- list, s == t ]
       ]
    
    logic1, logic2 :: Args
-   logic1 pkg = newState pkg "~(p /\\ ~q)"
-   logic2 pkg = newState pkg "~~p /\\ T"
+   logic1 ex = newState ex "~(p /\\ ~q)"
+   logic2 ex = newState ex "~~p /\\ T"
    
    lineq1, lineq2 :: Args
-   lineq1 pkg = newState pkg "5*(x+1) == 11"
-   lineq2 pkg = newState pkg "5*(x+1) == (x-1)/2"
+   lineq1 ex = newState ex "5*(x+1) == 11"
+   lineq2 ex = newState ex "5*(x+1) == (x-1)/2"
    
-   (f +++ g) pkg = f pkg ++ g pkg
+   (f +++ g) ex = f ex ++ g ex
    
-   noCfg _    = [Nothing ::: maybeType StrategyCfg]
-   noArgs _   = []
-   exArgs pkg = [pkg ::: ExercisePkg]
+   noCfg _   = [Nothing ::: maybeType StrategyCfg]
+   noArgs _  = []
+   exArgs ex = [ex ::: Exercise]
 
 tryAll :: [DomainReasoner a] -> DomainReasoner [a]
 tryAll xs = 
    let f m = liftM return m `catchError` const (return [])
    in liftM concat (mapM f xs)
       
-newState :: Monad m => ExercisePackage a -> String -> m (TypedValue a)
-newState pkg s = do
-   let ex = pkg
+newState :: Monad m => Exercise a -> String -> m (TypedValue a)
+newState ex s = do
    case parser ex s of
       Left msg -> fail ("newState: " ++ msg)
-      Right a  -> return (emptyState pkg a ::: stateType)
+      Right a  -> return (emptyState ex a ::: stateType)
       
-type Args = forall a . ExercisePackage a -> [TypedValue a]
+type Args = forall a . Exercise a -> [TypedValue a]
 
 makeExample :: String -> Args -> String -> DomainReasoner Example
 makeExample exName f srvName = do

@@ -70,7 +70,7 @@ xmlRequest xml = do
 xmlReply :: Request -> XML -> DomainReasoner XML
 xmlReply request xml = do
    srv <- findService (service request)
-   pkg <- 
+   ex  <- 
       case exerciseId request of
          Just code -> findExercise code
          Nothing   
@@ -80,8 +80,8 @@ xmlReply request xml = do
                  fail "unknown exercise code"
    Some conv <-
       case encoding request of
-         Just StringEncoding -> return (stringFormatConverter pkg)
-         _                   -> return (openMathConverter pkg)
+         Just StringEncoding -> return (stringFormatConverter ex)
+         _                   -> return (openMathConverter ex)
    res <- evalService conv srv xml
    return (resultOk res)
 
@@ -101,14 +101,13 @@ resultError txt = makeXML "reply" $ do
 ------------------------------------------------------------
 -- Mixing abstract syntax (OpenMath format) and concrete syntax (string)
 
-stringFormatConverter :: Some ExercisePackage -> Some (Evaluator XML XMLBuilder)
-stringFormatConverter (Some pkg) = Some (stringFormatConverterTp pkg)
+stringFormatConverter :: Some Exercise -> Some (Evaluator XML XMLBuilder)
+stringFormatConverter (Some ex) = Some (stringFormatConverterTp ex)
 
-stringFormatConverterTp :: ExercisePackage a -> Evaluator XML XMLBuilder a
-stringFormatConverterTp pkg = 
-   Evaluator (xmlEncoder False f pkg) (xmlDecoder False g pkg)
+stringFormatConverterTp :: Exercise a -> Evaluator XML XMLBuilder a
+stringFormatConverterTp ex = 
+   Evaluator (xmlEncoder False f ex) (xmlDecoder False g ex)
  where
-   ex = pkg
    f  = return . element "expr" . text . prettyPrinter ex
    g xml0 = do
       xml <- findChild "expr" xml0 -- quick fix
@@ -116,38 +115,38 @@ stringFormatConverterTp pkg =
       let input = getData xml
       either (fail . show) return (parser ex input)
 
-openMathConverter :: Some ExercisePackage -> Some (Evaluator XML XMLBuilder)
-openMathConverter (Some pkg) = Some (openMathConverterTp pkg)
+openMathConverter :: Some Exercise -> Some (Evaluator XML XMLBuilder)
+openMathConverter (Some ex) = Some (openMathConverterTp ex)
         
-openMathConverterTp :: ExercisePackage a -> Evaluator XML XMLBuilder a
-openMathConverterTp pkg =
-   Evaluator (xmlEncoder True f pkg) (xmlDecoder True g pkg)
+openMathConverterTp :: Exercise a -> Evaluator XML XMLBuilder a
+openMathConverterTp ex =
+   Evaluator (xmlEncoder True f ex) (xmlDecoder True g ex)
  where
-   f = liftM (builder . toXML) . toOpenMath pkg
+   f = liftM (builder . toXML) . toOpenMath ex
    g xml = do
       xob   <- findChild "OMOBJ" xml
       omobj <- liftEither (xml2omobj xob)
-      case fromOpenMath pkg omobj of
+      case fromOpenMath ex omobj of
          Just a  -> return a
          Nothing -> fail "Invalid OpenMath object for this exercise"
 
-xmlEncoder :: Bool -> (a -> DomainReasoner XMLBuilder) -> ExercisePackage a -> Encoder XMLBuilder a
-xmlEncoder b f pkg = Encoder
-   { encodeType  = xmlEncodeType b (xmlEncoder b f pkg) pkg
+xmlEncoder :: Bool -> (a -> DomainReasoner XMLBuilder) -> Exercise a -> Encoder XMLBuilder a
+xmlEncoder b f ex = Encoder
+   { encodeType  = xmlEncodeType b (xmlEncoder b f ex) ex
    , encodeTerm  = f
    , encodeTuple = sequence_
    }
 
-xmlEncodeType :: Bool -> Encoder XMLBuilder a -> ExercisePackage a -> Type a t -> t -> DomainReasoner XMLBuilder
-xmlEncodeType b enc pkg serviceType =
+xmlEncodeType :: Bool -> Encoder XMLBuilder a -> Exercise a -> Type a t -> t -> DomainReasoner XMLBuilder
+xmlEncodeType b enc ex serviceType =
    case serviceType of
       Tp.Tag s t1
          | s == "RulesInfo" -> \_ ->
-              rulesInfoXML pkg (encodeTerm enc)
+              rulesInfoXML ex (encodeTerm enc)
          | otherwise ->  
               case useAttribute t1 of
                  Just f | s /= "message" -> return . (s .=.) . f
-                 _  -> liftM (element s) . xmlEncodeType b enc pkg t1
+                 _  -> liftM (element s) . xmlEncodeType b enc ex t1
       Tp.Strategy   -> return . builder . strategyToXML
       Tp.Rule       -> return . ("ruleid" .=.) . showId
       Tp.Term       -> encodeTerm enc
@@ -158,11 +157,11 @@ xmlEncodeType b enc pkg serviceType =
       Tp.String     -> return . text
       _             -> encodeDefault enc serviceType
 
-xmlDecoder :: Bool -> (XML -> DomainReasoner a) -> ExercisePackage a -> Decoder XML a
-xmlDecoder b f pkg = Decoder
-   { decodeType      = xmlDecodeType b (xmlDecoder b f pkg)
+xmlDecoder :: Bool -> (XML -> DomainReasoner a) -> Exercise a -> Decoder XML a
+xmlDecoder b f ex = Decoder
+   { decodeType      = xmlDecodeType b (xmlDecoder b f ex)
    , decodeTerm      = f
-   , decoderExercise = pkg
+   , decoderExercise = ex
    }
 
 xmlDecodeType :: Bool -> Decoder XML a -> Type a t -> XML -> DomainReasoner (t, XML)
@@ -197,7 +196,7 @@ xmlDecodeType b dec serviceType =
               return (g a)
          | s == "prefix" -> \xml -> do
               f  <- equalM String t
-              mp <- decodePrefix (decoderPackage dec) xml
+              mp <- decodePrefix (decoderExercise dec) xml
               s  <- maybe (fail "no prefix") (return . show) mp
               return (f s, xml) -}
          | otherwise -> keep $ \xml -> do
@@ -215,15 +214,15 @@ useAttribute String = Just id
 useAttribute Bool   = Just (map toLower . show)
 useAttribute _      = Nothing
          
-decodeState :: Monad m => Bool -> ExercisePackage a -> (XML -> m a) -> XML -> m (State a)
-decodeState b pkg f xmlTop = do
+decodeState :: Monad m => Bool -> Exercise a -> (XML -> m a) -> XML -> m (State a)
+decodeState b ex f xmlTop = do
    xml  <- findChild "state" xmlTop
-   mpr  <- decodePrefix pkg xml
-   term <- decodeContext b pkg f xml
-   return (makeState pkg mpr term)
+   mpr  <- decodePrefix ex xml
+   term <- decodeContext b ex f xml
+   return (makeState ex mpr term)
 
-decodePrefix :: Monad m => ExercisePackage a -> XML -> m (Maybe (Prefix (Context a)))
-decodePrefix pkg xml
+decodePrefix :: Monad m => Exercise a -> XML -> m (Maybe (Prefix (Context a)))
+decodePrefix ex xml
    | all isSpace prefixText =
         return (Just (emptyPrefix str))
    | prefixText ~= "no prefix" =
@@ -234,15 +233,15 @@ decodePrefix pkg xml
         return (Just pr)
  where
    prefixText = maybe "" getData (findChild "prefix" xml)
-   str = strategy pkg
+   str = strategy ex
    a ~= b = g a == g b
    g = map toLower . filter (not . isSpace)
    
-decodeContext :: Monad m => Bool -> ExercisePackage a -> (XML -> m a) -> XML -> m (Context a)
-decodeContext b pkg f xml = do
+decodeContext :: Monad m => Bool -> Exercise a -> (XML -> m a) -> XML -> m (Context a)
+decodeContext b ex f xml = do
    expr <- f xml
    env  <- decodeEnvironment b xml
-   return (makeContext pkg env expr)
+   return (makeContext ex env expr)
 
 decodeEnvironment :: Monad m => Bool -> XML -> m Environment
 decodeEnvironment b xml =

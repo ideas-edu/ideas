@@ -20,13 +20,12 @@ import Common.Utils (fst3, safeHead)
 import Data.List
 import Data.Maybe
 import System.Random (StdGen)
-import Service.ExercisePackage
 import Service.State
 import qualified Common.Classes as Apply
 
-generate :: StdGen -> ExercisePackage a -> Difficulty -> State a
-generate rng pkg dif = 
-   emptyState pkg (randomTermWith rng dif pkg)
+generate :: StdGen -> Exercise a -> Difficulty -> State a
+generate rng ex dif = 
+   emptyState ex (randomTermWith rng dif ex)
 
 -- TODO: add a location to each step
 derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a), [ArgValue]) (Context a))
@@ -43,9 +42,8 @@ derivation mcfg state =
          in rec timeout d0 (empyStateContext newExercise (stateContext state))
       _ -> rec timeout d0 state
  where
-   d0  = emptyDerivation state
-   pkg = exercisePkg state
-   ex  = pkg
+   d0 = emptyDerivation state
+   ex = exercise state
    timeout = 50 :: Int
  
    rec i acc st = 
@@ -68,7 +66,7 @@ allfirsts state =
       Just p0 ->
          let tree = cutOnStep (stop . lastStepInPrefix) (prefixTree p0 (stateContext state))
              f (r1, _, _, _) (r2, _, _, _) = 
-                ruleOrdering (exercisePkg state) r1 r2
+                ruleOrdering (exercise state) r1 r2
          in Right (sortBy f (mapMaybe make (derivations tree)))
  where
    stop (Just (RuleStep r)) = isMajorRule r
@@ -82,7 +80,7 @@ allfirsts state =
             ( r
             , location (lastTerm d)
             , fromMaybe [] (expectedArguments r ca)
-            , makeState (exercisePkg state) (Just prefixEnd) (lastTerm d)
+            , makeState (exercise state) (Just prefixEnd) (lastTerm d)
             )
          _ -> Nothing
 
@@ -97,19 +95,18 @@ onefirst state =
 applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =
    let p r = not (isBuggyRule r) && Apply.applicable r (setLocation loc (stateContext state))
-   in filter p (ruleset (exercisePkg state))
+   in filter p (ruleset (exercise state))
 
 allapplications :: State a -> [(Rule (Context a), Location, State a)]
 allapplications state = sortBy cmp (xs ++ ys)
  where
-   pkg = exercisePkg state
-   ex  = pkg
-   xs  = either (const []) (map (\(r, l, _, s) -> (r, l, s))) (allfirsts state)
-   ps  = [ (r, loc) | (r, loc, _) <- xs ]
-   ys  = maybe [] f (top (stateContext state))
+   ex = exercise state
+   xs = either (const []) (map (\(r, l, _, s) -> (r, l, s))) (allfirsts state)
+   ps = [ (r, loc) | (r, loc, _) <- xs ]
+   ys = maybe [] f (top (stateContext state))
            
    f c = g c ++ concatMap f (allDowns c)
-   g c = [ (r, location new, makeState pkg Nothing new)
+   g c = [ (r, location new, makeState ex Nothing new)
          | r   <- ruleset ex
          , (r, location c) `notElem` ps
          , new <- applyAll r c
@@ -136,18 +133,18 @@ apply r loc state = maybe applyOff applyOn (statePrefix state)
       
    applyOff  = -- scenario 2: off-strategy
       case Apply.apply r (setLocation loc (stateContext state)) of
-         Just new -> Right (makeState (exercisePkg state) Nothing new)
+         Just new -> Right (makeState (exercise state) Nothing new)
          Nothing  -> Left ("Cannot apply " ++ show r)
        
 ready :: State a -> Bool
-ready state = isReady (exercisePkg state) (stateTerm state)
+ready state = isReady (exercise state) (stateTerm state)
 
 stepsremaining :: State a -> Either String Int
 stepsremaining = mapSecond derivationLength . derivation Nothing
 
 findbuggyrules :: State a -> a -> [Rule (Context a)]
 findbuggyrules state a =
-   let ex      = exercisePkg state
+   let ex      = exercise state
        buggies = filter isBuggyRule (ruleset ex)
        p r     = ruleIsRecognized ex r (stateContext state) (inContext ex a)
    in filter p buggies

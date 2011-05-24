@@ -85,15 +85,14 @@ diagnose state new
 
    -- Is the rule used discoverable by trying all known rules?
    | otherwise =
-        let ns = restartIfNeeded (makeState pkg Nothing newc)
+        let ns = restartIfNeeded (makeState ex Nothing newc)
         in case discovered False of
               Just r ->  -- If yes, report the found rule as a detour
                  Detour (ready ns) ns r
               Nothing -> -- If not, we give up
                  Correct (ready ns) ns
  where
-   pkg  = exercisePkg state
-   ex   = pkg
+   ex   = exercise state
    newc = inContext ex new
    
    expected = do
@@ -121,11 +120,11 @@ diagnose state new
 -- When resetting the prefix, also make sure that the context is refreshed
 restartIfNeeded :: State a -> State a
 restartIfNeeded state 
-   | isNothing (statePrefix state) && canBeRestarted pkg = 
-        emptyState pkg (stateTerm state)
+   | isNothing (statePrefix state) && canBeRestarted ex = 
+        emptyState ex (stateTerm state)
    | otherwise = state
  where
-   pkg = exercisePkg state
+   ex = exercise state
    
 diagnosisType :: Type a (Diagnosis a)
 diagnosisType = Iso f g tp
@@ -169,7 +168,7 @@ diagnosisType = Iso f g tp
 compareParts :: State a -> a -> Diagnosis a
 compareParts state = answerList eq split solve (stateTerm state)
  where
-   ex    = exercise (exercisePkg state)
+   ex    = exercise (exercise state)
    eq    = equivalence ex
    split = splitParts ex
    solve = \a -> fromMaybe a $ 

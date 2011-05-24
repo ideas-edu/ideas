@@ -18,7 +18,6 @@ import Data.List (sortBy)
 import Data.Ord
 import Service.FeedbackText
 import Service.ProblemDecomposition (problemDecomposition, replyType)
-import Service.ExercisePackage
 import Service.Types
 import Service.RulesInfo
 import Service.State
@@ -108,7 +107,7 @@ generateS :: Service
 generateS = makeService "generate" 
    "Given an exercise code and a difficulty level (optional), this service \
    \returns an initial state with a freshly generated expression." $ 
-   generate ::: StdGen :-> ExercisePkg :-> optionType Medium difficultyType :-> stateType
+   generate ::: StdGen :-> Exercise :-> optionType Medium difficultyType :-> stateType
 
 examplesS :: Service
 examplesS = makeService "examples"
@@ -116,7 +115,7 @@ examplesS = makeService "examples"
    \with an exercise. These are the examples that appear at the page generated \
    \for each exercise. Also see the generate service, which returns a random \
    \start term." $
-   (map snd . examples) ::: ExercisePkg :-> listType Term
+   (map snd . examples) ::: Exercise :-> listType Term
 
 findbuggyrulesS :: Service
 findbuggyrulesS = makeService "findbuggyrules" 
@@ -189,7 +188,7 @@ problemdecompositionS = makeService "problemdecomposition"
 ------------------------------------------------------
 -- Reflective services
    
-exerciselistS :: [Some ExercisePackage] -> Service
+exerciselistS :: [Some Exercise] -> Service
 exerciselistS list = makeService "exerciselist" 
    "Returns all exercises known to the system. For each exercise, its domain, \
    \identifier, a short description, and its current status are returned." $
@@ -201,7 +200,7 @@ rulelistS = makeService "rulelist"
    \name (or identifier), whether the rule is buggy, and whether the rule was \
    \expressed as an observable rewrite rule. See rulesinfo for more details \
    \about the rules." $ 
-   allRules ::: ExercisePkg :-> listType (tuple3 (Tag "name" String) (Tag "buggy" Bool) (Tag "rewriterule" Bool))
+   allRules ::: Exercise :-> listType (tuple3 (Tag "name" String) (Tag "buggy" Bool) (Tag "rewriterule" Bool))
       
 rulesinfoS :: Service
 rulesinfoS = makeService "rulesinfo" 
@@ -212,17 +211,17 @@ rulesinfoS = makeService "rulesinfo"
 strategyinfoS :: Service
 strategyinfoS = makeService "strategyinfo"
    "Returns the representation of the strategy of a particular exercise." $ 
-   (toStrategy . strategy) ::: ExercisePkg :-> Strategy
+   (toStrategy . strategy) ::: Exercise :-> Strategy
    
-allExercises :: [Some ExercisePackage] -> [(String, String, String)]
+allExercises :: [Some Exercise] -> [(String, String, String)]
 allExercises = map make . sortBy (comparing f)
  where
    f :: Some Exercise -> String
-   f (Some pkg) = showId pkg
-   make (Some pkg) = 
-      (showId pkg, description pkg, show (status pkg))
+   f (Some ex) = showId ex
+   make (Some ex) = 
+      (showId ex, description ex, show (status ex))
 
-allRules :: ExercisePackage a -> [(String, Bool, Bool)]
+allRules :: Exercise a -> [(String, Bool, Bool)]
 allRules = map make . ruleset
  where  
    make r  = (showId r, isBuggyRule r, isRewriteRule r)

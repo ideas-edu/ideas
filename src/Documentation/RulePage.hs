@@ -18,7 +18,6 @@ import Data.List
 import Documentation.DefaultPage
 import Documentation.RulePresenter
 import Service.DomainReasoner
-import Service.ExercisePackage
 import Service.RulesInfo (rewriteRuleToFMP, collectExamples, ExampleMap)
 import Text.HTML
 import Text.OpenMath.FMP
@@ -26,7 +25,7 @@ import Text.OpenMath.Object
 import qualified Data.Map as M
 import qualified Text.XML as XML
 
-data ExItem a = EI (ExercisePackage a) (ExampleMap a)
+data ExItem a = EI (Exercise a) (ExampleMap a)
 
 makeRulePages :: String -> DomainReasoner ()
 makeRulePages dir = do
@@ -40,16 +39,15 @@ makeRulePages dir = do
           | Some ex <- exs
           , r <- ruleset ex
           ]
-   forM_ (M.toList ruleMap) $ \(ruleId, list@(Some pkg:_)) -> do
-      let noExamples = Some (EI pkg M.empty) 
+   forM_ (M.toList ruleMap) $ \(ruleId, list@(Some ex:_)) -> do
+      let noExamples = Some (EI ex M.empty) 
           level      = length (qualifiers ruleId) + 1
-          usedIn     = sortBy compareId [ getId pkg1 | Some pkg1 <- list ]
-      case M.findWithDefault noExamples (getId pkg) exMap of
-         Some (EI pkg1 e) -> do
-            let ex = pkg1
-            forM_ (getRule ex ruleId) $ \r ->
+          usedIn     = sortBy compareId [ getId ex1 | Some ex1 <- list ]
+      case M.findWithDefault noExamples (getId ex) exMap of
+         Some (EI ex1 e) -> do
+            forM_ (getRule ex1 ruleId) $ \r ->
                generatePageAt level dir (ruleFile ruleId) $
-                  rulePage ex e usedIn r
+                  rulePage ex1 e usedIn r
 
 rulePage :: Exercise a -> ExampleMap a -> [Id] ->  Rule (Context a) -> HTMLBuilder
 rulePage ex exMap usedIn r = do

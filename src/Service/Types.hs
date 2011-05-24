@@ -27,7 +27,6 @@ import Common.Utils (commaList)
 import Control.Monad
 import Data.Maybe
 import System.Random
-import Service.ExercisePackage
 import Service.FeedbackScript.Syntax
 
 -----------------------------------------------------------------------------
@@ -65,7 +64,7 @@ equal type1 type2 =
       (Location,    Location   ) -> Just id
       (Id,          Id         ) -> Just id
       (Term,        Term       ) -> Just id
-      (ExercisePkg, ExercisePkg) -> Just id
+      (Exercise,    Exercise   ) -> Just id
       (Script,      Script     ) -> Just id
       (Context,     Context    ) -> Just id
       (ArgValueTp,  ArgValueTp ) -> Just id
@@ -150,7 +149,7 @@ data Type a t where
    IO           :: Type a t -> Type a (IO t)
    Exception    :: Type a String
    -- Exercise-specific types
-   ExercisePkg  :: Type a (ExercisePackage a)
+   Exercise     :: Type a (Exercise a)
    Script       :: Type a Script
    Strategy     :: Type a (Strategy (Context a))
    Rule         :: Type a (Rule (Context a))
@@ -186,7 +185,7 @@ showTuple tp = "(" ++ commaList (collect tp) ++ ")"
 showGroundType :: Type a t -> Maybe String
 showGroundType tp =
    case tp of 
-      ExercisePkg  -> Just "ExercisePkg"
+      Exercise     -> Just "Exercise"
       Script       -> Just "Script"
       Strategy     -> Just "Strategy"
       Rule         -> Just "Rule"

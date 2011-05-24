@@ -22,7 +22,6 @@ import Control.Monad
 import Data.Either
 import Data.List
 import Service.DomainReasoner
-import Service.ExercisePackage
 import Service.FeedbackScript.Syntax
 import Service.FeedbackScript.Parser
 import Service.FeedbackScript.Run 
@@ -73,7 +72,7 @@ instance Show Message where
          UnknownAttribute a  -> "Unknown attribute @" ++ show a ++ " in text"
          UnknownCondAttr a   -> "Unknown attribute @" ++ show a ++ " in condition"
    
-analyzeScript :: [Some ExercisePackage] -> Script -> [Message]
+analyzeScript :: [Some Exercise] -> Script -> [Message]
 analyzeScript exs script =
    map FeedbackUndefined (filter (`notElem` fbids) feedbackIds) ++ 
    map UnknownFeedback   (filter (`notElem`feedbackIds ) fbids) ++ 

@@ -13,25 +13,25 @@
 module Service.TypedExample (typedExample) where
 
 import Data.Char
+import Data.Maybe
 import Service.DomainReasoner
 import Service.ModeXML
-import Service.ExercisePackage
 import Service.Evaluator
 import Service.Types
 import Common.Library
 import Text.XML
    
-typedExample :: ExercisePackage a -> Service -> [TypedValue a] -> DomainReasoner (XML, XML, Bool)
-typedExample pkg service args = do
+typedExample :: Exercise a -> Service -> [TypedValue a] -> DomainReasoner (XML, XML, Bool)
+typedExample ex service args = do
    -- Construct a request in xml
    request <- 
       case makeArgType args of
          Nothing -> return $  
-            stdReply (showId service) enc pkg (return ())
+            stdReply (showId service) enc ex (return ())
          Just (reqTuple ::: reqTp) -> do
             xml <- encodeType (encoder evaluator) reqTp reqTuple
             return $ 
-               stdReply (showId service) enc pkg xml
+               stdReply (showId service) enc ex xml
    -- Construct a reply in xml
    reply <-
       case foldl dynamicApply (serviceFunction service) args of
@@ -52,8 +52,8 @@ typedExample pkg service args = do
    return (request, reply, xmlTest)
  where
    (evaluator, enc)
-      | withOpenMath pkg = (openMathConverterTp pkg, "openmath")
-      | otherwise        = (stringFormatConverterTp pkg, "string")
+      | isJust (hasTermView ex) = (openMathConverterTp ex, "openmath")
+      | otherwise               = (stringFormatConverterTp ex, "string")
 
 stdReply :: String -> String -> Exercise a -> XMLBuilder -> XML
 stdReply s enc ex body = makeXML "request" $ do 
@@ -65,7 +65,7 @@ stdReply s enc ex body = makeXML "request" $ do
 
 makeArgType :: [TypedValue a] -> Maybe (TypedValue a)
 makeArgType []   = fail "makeArgType: empty list"
-makeArgType [_ ::: ExercisePkg] = fail "makeArgType: empty list"
+makeArgType [_ ::: Exercise] = fail "makeArgType: empty list"
 makeArgType [tv] = return tv
 makeArgType ((a1 ::: t1) : rest) = do
    a2 ::: t2 <- makeArgType rest

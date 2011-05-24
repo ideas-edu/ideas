@@ -62,7 +62,7 @@ decodeDefault dec tp s =
          return ((), s)
       Tag _ t1 ->
          decodeType dec t1 s
-      ExercisePkg ->
+      Exercise ->
          return (decoderExercise dec, s)
       StdGen -> do
          stdgen <- liftIO newStdGen
@@ -95,7 +95,7 @@ encodeDefault enc tp tv =
       Location      -> encodeAsString enc tv
       Id            -> encodeAsString enc tv
       Int           -> encodeAsString enc tv
-      ExercisePkg   -> return (encodeTuple enc [])
+      Exercise      -> return (encodeTuple enc [])
       IO t          -> do a <- liftIO tv
                           encodeType enc t a
       Exception     -> fail tv

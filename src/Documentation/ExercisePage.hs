@@ -21,34 +21,32 @@ import Documentation.RulePresenter
 import Service.BasicServices
 import Service.Diagnose
 import Service.DomainReasoner
-import Service.ExercisePackage
 import Service.State
 import Service.StrategyInfo
 import System.Directory
 import System.Random
 import Text.HTML
 
-makeExercisePage :: String -> ExercisePackage a -> DomainReasoner ()
-makeExercisePage dir pkg = do
-   let ex       = pkg
-       make     = makeId pkg
+makeExercisePage :: String -> Exercise a -> DomainReasoner ()
+makeExercisePage dir ex = do
+   let make     = makeId ex
        makeId a = generatePageAt (length (qualifiers a)) dir . ($ (getId a))
        exFile   = dir ++ "/" ++ diagnosisExampleFile (getId ex)
 
    exampleFileExists <- liftIO (doesFileExist exFile)
 
-   make exercisePageFile     (exercisePage exampleFileExists pkg)
+   make exercisePageFile     (exercisePage exampleFileExists ex)
    make exerciseStrategyFile (strategyPage ex)
-   unless (null (examples pkg)) $
+   unless (null (examples ex)) $
        make exerciseDerivationsFile (derivationsPage ex)
    when (exampleFileExists) $ do
       xs <- liftIO (readFile exFile)
-      make exerciseDiagnosisFile (diagnosisPage xs pkg)
+      make exerciseDiagnosisFile (diagnosisPage xs ex)
     `catchError` \_ -> return ()
 
-exercisePage :: Bool -> ExercisePackage a -> HTMLBuilder
-exercisePage exampleFileExists pkg = do
-   idboxHTML "strategy" (getId pkg)
+exercisePage :: Bool -> Exercise a -> HTMLBuilder
+exercisePage exampleFileExists ex = do
+   idboxHTML "strategy" exid
    
    h2 "1. General information"
 
@@ -63,10 +61,10 @@ exercisePage exampleFileExists pkg = do
              text (showId $ strategy ex)
         ]
       , [ text "OpenMath support"
-        , text $ showBool $ withOpenMath pkg
+        , text $ showBool $ isJust $ hasTermView ex
         ]
       {- , [ text "Textual feedback"
-        , text $ showBool $ isJust $ getScript pkg
+        , text $ showBool $ isJust $ getScript ex
         ] -}
       , [ text "Restartable strategy"
         , text $ showBool $ canBeRestarted ex
@@ -81,7 +79,7 @@ exercisePage exampleFileExists pkg = do
 
    h2 "2. Rules"
    let rs  = rulesInStrategy (strategy ex)
-       ups = up (length (qualifiers pkg)) 
+       ups = up (length (qualifiers ex)) 
        f r = [ link (ups ++ ruleFile r) $ ttText (showId r)
              , text $ showBool $ isBuggyRule r
              , text $ showBool $ hasArguments r
@@ -103,14 +101,13 @@ exercisePage exampleFileExists pkg = do
    -- preText $ show $ treesToInfo ex trees
 
    h2 "3. Example"
-   let state = generate (mkStdGen 0) pkg Medium
+   let state = generate (mkStdGen 0) ex Medium
    derivationHTML ex (stateTerm state)
    para $ unless (null (examples ex)) $ 
       link (up len ++ exerciseDerivationsFile exid) (text "More examples")
  where
-   ex    = pkg
    exid  = getId ex
-   len   = length (qualifiers pkg)
+   len   = length (qualifiers ex)
    trees = [ mapFirst getId (derivationTree (strategy ex) (inContext ex a)) 
            | (_, a) <- examples ex 
            ]
@@ -156,9 +153,9 @@ idboxHTML kind i = divClass "idbox" $ do
       br
       italic (text (description i))
 
-diagnosisPage :: String -> ExercisePackage a -> HTMLBuilder
-diagnosisPage xs pkg = do
-   h1 ("Diagnosis examples for " ++ showId pkg)
+diagnosisPage :: String -> Exercise a -> HTMLBuilder
+diagnosisPage xs ex = do
+   h1 ("Diagnosis examples for " ++ showId ex)
    forM_ (zip [1::Int ..] (mapMaybe f (lines xs))) $ \(i, (t0, t1, expl)) -> do 
       h2 (show i ++ ".")
       preText (t0 ++ "\n  =>\n" ++ t1)
@@ -172,7 +169,6 @@ diagnosisPage xs pkg = do
             space
             text (getDiagnosis t0 t1)
  where
-   ex  = pkg
    f a = do 
       (x, b) <- splitAtSequence "==>" a
       let (y, z) = fromMaybe (b, "") (splitAtSequence ":::" b)
@@ -183,7 +179,7 @@ diagnosisPage xs pkg = do
       case (parser ex t0, parser ex t1) of
          (Left msg, _) -> "parse error (before): " ++ msg
          (_, Left msg) -> "parse error (afterr): " ++ msg
-         (Right a, Right b) -> show (diagnose (emptyState pkg a) b)
+         (Right a, Right b) -> show (diagnose (emptyState ex a) b)
        
 forStep :: Int -> ((Rule (Context a), Environment), Context a) -> HTMLBuilder  
 forStep n ((r, env), old) = do 

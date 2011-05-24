@@ -33,7 +33,7 @@ onefirsttext script old event =
    , fmap fth4 next
    )
  where
-   ex   = exercisePkg old
+   ex   = exercise old
    next = either (const Nothing) Just (onefirst old)
    fth4 (_, _, _, a) = a
    env  = (newEnvironment old)
@@ -50,7 +50,7 @@ onefirsttext script old event =
 -- to go back to the previous state (False)      
 submittext :: Script -> State a -> String -> (Bool, String, State a)
 submittext script old input =
-   case parser (exercisePkg old) input of
+   case parser (exercise old) input of
       Left msg -> (False, msg, old)
       Right a  -> (feedbacktext script old a)
 
@@ -66,7 +66,7 @@ feedbacktext script old a =
  where
    diagnosis = diagnose old a
    output    = feedbackDiagnosis diagnosis env script
-   ex  = exercisePkg old
+   ex  = exercise old
    env = (newEnvironment old)
             { diffPair = do
                  oldC     <- fromContext (stateContext old)

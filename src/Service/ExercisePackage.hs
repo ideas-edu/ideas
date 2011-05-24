@@ -11,10 +11,8 @@
 --
 -----------------------------------------------------------------------------
 module Service.ExercisePackage
-   ( -- Type, and selectors 
-     ExercisePackage, withOpenMath
-     -- Conversion functions to/from OpenMath
-   , toOpenMath, fromOpenMath
+   ( -- * Conversion functions to/from OpenMath
+     toOpenMath, fromOpenMath
    , termToOMOBJ, omobjToTerm
    ) where
 
@@ -23,28 +21,19 @@ import Common.Rewriting.Term
 import Control.Monad
 import Data.Char
 import Data.List
-import Data.Maybe
 import Text.OpenMath.Object
 import qualified Text.OpenMath.Symbol as OM
 import Text.OpenMath.Dictionary.Fns1
 
 -----------------------------------------------------------------------------
--- Package data type (and constructor functions)
-
-type ExercisePackage = Exercise
-
-withOpenMath :: ExercisePackage a -> Bool
-withOpenMath = isJust . hasTermView
-
------------------------------------------------------------------------------
 -- Utility functions for conversion to/from OpenMath
 
-toOpenMath :: Monad m => ExercisePackage a -> a -> m OMOBJ 
+toOpenMath :: Monad m => Exercise a -> a -> m OMOBJ 
 toOpenMath pkg a = do
    v <- hasTermViewM pkg 
    return (termToOMOBJ (build v a))
 
-fromOpenMath :: MonadPlus m => ExercisePackage a -> OMOBJ -> m a
+fromOpenMath :: MonadPlus m => Exercise a -> OMOBJ -> m a
 fromOpenMath pkg omobj = do 
    v <- hasTermViewM pkg 
    a <- omobjToTerm omobj

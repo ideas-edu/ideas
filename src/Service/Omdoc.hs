@@ -5,12 +5,14 @@ module Service.Omdoc where
 import Data.Map(Map,empty,insert,(!))
 
 import Common.Exercise
+import Common.Id
 import Common.Rewriting.Term
-import Service.ExercisePackage
+import Service.OpenMathSupport
 import qualified Main.Revision as MR
 import Text.OpenMath.Object
 import Text.XML.Interface
 
+import Data.Maybe
 import Domain.LinearAlgebra
 import Domain.Math.Polynomial.Exercises
 import Domain.Math.Derivative.Exercises
@@ -162,7 +164,7 @@ recbookfile version revision sourcefiles exercisesrefs =
                           ,formatelt "application/omdoc+xml"
                           ,extradataelt
                             sourcefiles
-	                      ]
+                          ]
                         :exercisesrefs
                         )
                       ]
@@ -227,13 +229,14 @@ omdocexercisefile version revision ex =
   in writeFile (omdocpath ++ context info ++ ".omdoc") filestring
 
 omdocexercises :: (IsTerm a) => Exercise a -> [Element]
-omdocexercises ex = zipWith make [(0::Int)..] (examples ex)
+omdocexercises ex = catMaybes $ zipWith make [(0::Int)..] (examples ex)
  where
    info = mBExerciseInfo ! (exerciseId $ ex)
-   pkg  = termPackage ex
    make nr (dif, example) = 
-      let omobj = omobj2xml (toOpenMath pkg example)
-      in omdocexercise  
+      fmap (makeElement . omobj2xml) (toOpenMath ex example)
+    where
+      makeElement omobj =
+         omdocexercise  
             (context info ++ show nr)
             (show dif)
             "en"

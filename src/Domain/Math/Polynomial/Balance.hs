@@ -212,9 +212,9 @@ ff a = printDerivation balanceExercise a
 
 x = Var "x"
 
-r = diagnose (emptyState pkg old) new
+r = diagnose (emptyState ex old) new
  where
-   pkg = termPackage balanceExercise
+   ex  = balanceExercise
    old = 3*x + 1 :==: 4
    new = 3*x + 2 :==: 5
    

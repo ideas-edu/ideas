@@ -42,7 +42,7 @@ useIDEAS action = runDomainReasoner $ do
    -- version information
    setVersion     shortVersion
    setFullVersion fullVersion
-   -- exercise packages
+   -- exercises
    addExercises   exercises
    addAliases     aliases
    -- services

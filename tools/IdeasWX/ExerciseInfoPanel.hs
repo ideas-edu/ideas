@@ -15,12 +15,11 @@ import Graphics.UI.WX
 import Common.Exercise
 import Common.Id
 import Data.Maybe
-import Service.ExercisePackage
 import Common.Utils (Some(..))
 import Observable
 import Control.Monad
 
-exerciseInfoPanel :: Window a -> Control (Maybe (Some ExercisePackage)) -> IO (Panel ())
+exerciseInfoPanel :: Window a -> Control (Maybe (Some Exercise)) -> IO (Panel ())
 exerciseInfoPanel w ref = do
    p <- panel w []
    descr <- staticText p [font := fontDefault { _fontWeight = WeightBold} ]
@@ -39,20 +38,19 @@ exerciseInfoPanel w ref = do
       , [ label "Examples",             hfill (widget txtExamples)  ]
       ]]]
    -- install event handler
-   addObserver ref $ \mpkg -> 
-      case mpkg of 
+   addObserver ref $ \mex -> 
+      case mex of 
          Nothing -> do
             set descr [text := "No exercise selected"]
             let txts = [ txtCode, txtStatus, txtOpenMath, txtTextual
                        , txtRestart, txtGenerator, txtExamples ]
             forM_ txts $ \a -> set a [text := "-"]
-         Just (Some pkg) -> do
-            let ex = exercise pkg
+         Just (Some ex) -> do
             set descr        [text := description ex]
             set txtCode      [text := showId ex]
             set txtStatus    [text := show (status ex)]
-            set txtOpenMath  [text := showBool (withOpenMath pkg)]
-            -- set txtTextual   [text := showBool (isJust (getScript pkg))]
+            set txtOpenMath  [text := showBool $ isJust $ hasTermView ex]
+            -- set txtTextual   [text := showBool (isJust (getScript ex))]
             set txtRestart   [text := showBool (canBeRestarted ex)]
             set txtGenerator [text := showBool (isJust (randomExercise ex))]
             set txtExamples  [text := show (length (examples ex))]

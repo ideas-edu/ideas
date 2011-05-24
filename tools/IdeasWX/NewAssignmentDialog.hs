@@ -22,17 +22,16 @@ import Common.Exercise
 import Common.Id
 import Main.IDEAS
 import Service.DomainReasoner
-import Service.ExercisePackage
 
-defaultAssignment :: IO (Some ExercisePackage)
-defaultAssignment = useIDEAS (liftM head getPackages)
+defaultAssignment :: IO (Some Exercise)
+defaultAssignment = useIDEAS (liftM head getExercises)
 
 newAssignmentDialog :: Window a -> Session -> IO ()
 newAssignmentDialog w session = do
-   -- packages and domains
-   pkgs <- useIDEAS getPackages
+   -- exercises and domains
+   exs <- useIDEAS getExercises
    let domains = sort $ nub 
-          [ qualification pkg | Some pkg <- pkgs ]
+          [ qualification ex | Some ex <- exs ]
    -- create frame
    f <- dialog w [text := "New Assignment", bgcolor := white] 
    -- current exercise
@@ -62,32 +61,32 @@ newAssignmentDialog w session = do
    set f [ layout := margin 20 $ row 30 [fill $ widget leftPanel, fill $ widget rightPanel]
          , size := sz 600 450]
    
-   let getPackageList = do
+   let getExerciseList = do
           i <- get domainBox selection 
           b <- get experimentalBox checked
-          return (selectPackages b (domains !! i) pkgs)
-       currentPackage = do
+          return (selectExercises b (domains !! i) exs)
+       currentExercise = do
           i  <- get exerciseList selection
-          xs <- getPackageList
+          xs <- getExerciseList
           return $ if i>=0 && length xs > i then Just (xs !! i) else Nothing
-       fillPackageList b = do
-          xs <- getPackageList
-          let ys = [ description (exercise pkg) | Some pkg <- xs ]
-              isCode (Some pkg) = exerciseId (exercise pkg) == exid
+       fillExerciseList b = do
+          xs <- getExerciseList
+          let ys = [ description ex | Some ex <- xs ]
+              isCode (Some ex) = exerciseId ex == exid
               mi = if b then findIndex isCode xs else Nothing
           set exerciseList [items := ys, selection := fromMaybe 0 mi]
           fillOwnText
        fillOwnText = do 
-          mpkg <- currentPackage
-          case mpkg of
+          mex <- currentExercise
+          case mex of
              Nothing  -> return ()
-             Just (Some pkg) -> do
+             Just (Some ex) -> do
                 dif <- get difficultySlider selection
-                txt <- suggestTermFor (toEnum dif) (Some pkg)
+                txt <- suggestTermFor (toEnum dif) (Some ex)
                 set ownTextView [text := txt]
-   fillPackageList True
+   fillExerciseList True
    
-   ref <- currentPackage >>= createControl
+   ref <- currentExercise >>= createControl
    pi  <- exerciseInfoPanel leftPanel ref
    notifyObservers ref
    
@@ -98,19 +97,19 @@ newAssignmentDialog w session = do
       , row 10  [widget cancelButton, hglue, widget goButton]]]
    
     
-   set domainBox       [on select  := fillPackageList False >> currentPackage >>= setValue ref]
-   set experimentalBox [on command := fillPackageList False >> currentPackage >>= setValue ref]
-   set exerciseList    [on select  := fillOwnText >> currentPackage >>= setValue ref]
+   set domainBox       [on select  := fillExerciseList False >> currentExercise >>= setValue ref]
+   set experimentalBox [on command := fillExerciseList False >> currentExercise >>= setValue ref]
+   set exerciseList    [on select  := fillOwnText >> currentExercise >>= setValue ref]
    set randomButton    [on command := fillOwnText]
    
    -- event handler for go button
    let goCommand stop = do
-          txt  <- get ownTextView text
-          mpkg <- currentPackage
-          case mpkg of
+          txt <- get ownTextView text
+          mex <- currentExercise
+          case mex of
              Nothing  -> errorDialog f "Error" "No exercise selected"
-             Just pkg -> do  
-                merr <- thisExerciseFor txt pkg session
+             Just ex -> do  
+                merr <- thisExerciseFor txt ex session
                 case merr of
                    Nothing  -> stop Nothing
                    Just err -> errorDialog f "Error" ("Parse error: " ++ err)
@@ -120,8 +119,8 @@ newAssignmentDialog w session = do
       set goButton     [on command := goCommand stop]
    return () 
    
-selectPackages :: Bool -> String -> [Some ExercisePackage] -> [Some ExercisePackage]
-selectPackages b d = filter $ \(Some pkg) ->  
-   qualification pkg == d && (b || isPublic (exercise pkg))
+selectExercises :: Bool -> String -> [Some Exercise] -> [Some Exercise]
+selectExercises b d = filter $ \(Some ex) ->  
+   qualification ex == d && (b || isPublic ex)
 
 myGrey = rgb 230 230 230

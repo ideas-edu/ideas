@@ -23,7 +23,7 @@ import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
-import Service.ExercisePackage
+import Service.OpenMathSupport
 import Service.Request
 import Service.RulesInfo (rulesInfoXML)
 import Service.StrategyInfo

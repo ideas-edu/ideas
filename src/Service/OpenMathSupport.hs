@@ -10,7 +10,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Service.ExercisePackage
+module Service.OpenMathSupport
    ( -- * Conversion functions to/from OpenMath
      toOpenMath, fromOpenMath
    , termToOMOBJ, omobjToTerm
@@ -29,13 +29,13 @@ import Text.OpenMath.Dictionary.Fns1
 -- Utility functions for conversion to/from OpenMath
 
 toOpenMath :: Monad m => Exercise a -> a -> m OMOBJ 
-toOpenMath pkg a = do
-   v <- hasTermViewM pkg 
+toOpenMath ex a = do
+   v <- hasTermViewM ex 
    return (termToOMOBJ (build v a))
 
 fromOpenMath :: MonadPlus m => Exercise a -> OMOBJ -> m a
-fromOpenMath pkg omobj = do 
-   v <- hasTermViewM pkg 
+fromOpenMath ex omobj = do 
+   v <- hasTermViewM ex 
    a <- omobjToTerm omobj
    matchM v a
 

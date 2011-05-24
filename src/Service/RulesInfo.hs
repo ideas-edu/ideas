@@ -20,7 +20,7 @@ import Control.Monad
 import Text.OpenMath.Object
 import Text.OpenMath.FMP
 import Text.XML hiding (name)
-import Service.ExercisePackage (termToOMOBJ)
+import Service.OpenMathSupport (termToOMOBJ)
 import Service.Types
 import qualified Data.Map as M
 

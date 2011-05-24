@@ -18,20 +18,18 @@ module Session
    , stepText, nextStep, currentState, getDerivation, currentExerciseId
    ) where
 
-import Common.Library hiding (current, showDerivation)
+import Common.Library
 import Common.Utils
 import Control.Monad
 import Data.Maybe
 import Observable hiding (Id)
 import Service.BasicServices
 import Service.Diagnose (restartIfNeeded)
-import Service.ExercisePackage (ExercisePackage)
 import Service.FeedbackScript.Parser
 import Service.FeedbackScript.Run
 import Service.FeedbackText
 import Service.State
 import Service.Submit
-import qualified Service.ExercisePackage as Pkg
 
 ------------------------------------------------------------
 -- Helper function
@@ -52,63 +50,56 @@ data SessionState a = SessionState
    { getDerivation :: Derivation () (State a)
    }
 
-getPackage :: SessionState a -> ExercisePackage a
-getPackage = exercisePkg . firstTerm . getDerivation
+getExercise :: SessionState a -> Exercise a
+getExercise = exercise . firstTerm . getDerivation
 
 currentExerciseId :: Session -> IO Id
 currentExerciseId ref = do
    (Some st) <- getValue ref
-   return (getId (getPackage st))
+   return (getId (getExercise st))
 
-withDerivation :: (forall a . Derivation () (State a) -> IO b) -> Session -> IO b
-withDerivation f ref = do
-   Some d <- getValue ref
-   f (getDerivation d)
-
-makeSession :: Some ExercisePackage -> IO Session
-makeSession pkg = do
+makeSession :: Some Exercise -> IO Session
+makeSession ex = do
    ref <- createControl (error "reference not initialized")
-   newExercise Medium pkg ref
+   newExercise Medium ex ref
    return ref
 
-newExercise :: Difficulty -> Some ExercisePackage -> Session -> IO ()
-newExercise dif (Some pkg) ref = do
-   d <- startNewDerivation dif pkg
+newExercise :: Difficulty -> Some Exercise -> Session -> IO ()
+newExercise dif (Some ex) ref = do
+   d <- startNewDerivation dif ex
    setValue ref $ Some $ SessionState d
 
 thisExercise :: String -> Session -> IO ()
 thisExercise txt ref = do
    Some ss <- getValue ref
-   let pkg = getPackage ss
-   case parser (Pkg.exercise pkg) txt of
+   let ex = getExercise ss
+   case parser ex txt of
       Left _  -> return ()
       Right a -> do
-         let new = emptyDerivation $ emptyState pkg a
+         let new = emptyDerivation $ emptyState ex a
          setValue ref $ Some $ ss {getDerivation = new}
 
-thisExerciseFor :: String -> Some ExercisePackage -> Session -> IO (Maybe String)
-thisExerciseFor txt (Some pkg) ref =
-   let ex = Pkg.exercise pkg in
+thisExerciseFor :: String -> Some Exercise -> Session -> IO (Maybe String)
+thisExerciseFor txt (Some ex) ref =
    case parser ex txt of
       Left err  -> return (Just $ show err)
       Right a -> do
-         let new = emptyDerivation $ makeState pkg (Just $ emptyPrefix $ strategy ex) (inContext ex a)
+         let new = emptyDerivation $ makeState ex (Just $ emptyPrefix $ strategy ex) (inContext ex a)
          setValue ref $ Some $ SessionState new
          return Nothing         
     
 newTerm :: Difficulty -> Session -> IO ()
 newTerm dif ref = do
    Some ss <- getValue ref
-   newExercise dif (Some (getPackage ss)) ref
+   newExercise dif (Some (getExercise ss)) ref
    
 suggestTerm :: Session -> IO String
 suggestTerm ref = do
    Some ss <- getValue ref
-   suggestTermFor Medium (Some (getPackage ss))
+   suggestTermFor Medium (Some (getExercise ss))
 
-suggestTermFor :: Difficulty -> Some ExercisePackage -> IO String
-suggestTermFor dif (Some pkg) = do
-   let ex = Pkg.exercise pkg
+suggestTermFor :: Difficulty -> Some Exercise -> IO String
+suggestTermFor dif (Some ex) = do
    a  <- randomTerm dif ex
    return $ prettyPrinter ex a
        
@@ -119,7 +110,7 @@ undo ref =
 submitText :: String -> Session -> IO String
 submitText txt ref = do
    Some ss <- getValue ref
-   ms <- exerciseScript (getPackage ss)
+   ms <- exerciseScript (getExercise ss)
    let d = getDerivation ss
    case ms of
       -- Use exercise text module
@@ -130,7 +121,7 @@ submitText txt ref = do
          return msg
       -- Use default text
       _ ->
-         case parser (exercise d) txt of
+         case parser (getExercise ss) txt of
             Left err -> 
                return (show err)
             Right term ->
@@ -151,34 +142,40 @@ submitText txt ref = do
                      return ("Equivalent, but not a known rule. Please retry.")
 
 currentText :: Session -> IO String
-currentText = withDerivation $ \d -> do
-   a <- fromContext $ current d
-   return $ prettyPrinter (exercise d) a
+currentText ref = do 
+   Some ss <- getValue ref
+   a <- fromContext $ currentContext $ getDerivation ss
+   return $ prettyPrinter (getExercise ss) a
 
 currentDescription :: Session -> IO String
-currentDescription = withDerivation $ \d -> 
-   return $ description (exercise d)
+currentDescription ref = do 
+   Some ss <- getValue ref
+   return $ description (getExercise ss)
 
 derivationText :: Session -> IO String
-derivationText = withDerivation $ \d -> 
-   return $ showDerivation (prettyPrinter (exercise d)) d
+derivationText ref = do 
+   Some ss <- getValue ref
+   return $ showDerivationWith (prettyPrinter (getExercise ss)) (getDerivation ss)
 
 progressPair :: Session -> IO (Int, Int)
-progressPair = withDerivation $ \d -> 
-   let x = derivationLength d
+progressPair ref = do
+   Some ss <- getValue ref
+   let d = getDerivation ss 
+       x = derivationLength d
        y = either (const 0) id (stepsremaining (currentState d))
-   in return (x, x+y)
+   return (x, x+y)
 
 readyText :: Session -> IO String
-readyText = withDerivation $ \d -> 
-   if ready (currentState d)
+readyText ref = do
+   Some ss <- getValue ref 
+   if ready (currentState (getDerivation ss))
    then return "Congratulations: you have reached a solution!"
    else return "Sorry, you have not yet reached a solution"
 
 hintOrStep :: Bool -> Session -> IO String
 hintOrStep verbose ref = do
    Some ss <- getValue ref
-   ms <- exerciseScript (getPackage ss)
+   ms <- exerciseScript (getExercise ss)
    let d = getDerivation ss
        showRule r = fromMaybe ("rule " ++ showId r) $ do 
           script <- ms
@@ -193,11 +190,11 @@ hintOrStep verbose ref = do
             [ "Use " ++ showRule r
             ] ++
             [ "   with arguments " ++ commaList (map f (fromJust args))
-            | let args = expectedArguments r (current d), isJust args
-            , let f (ArgValue d a) = showArgument d a
+            | let args = expectedArguments r (currentContext d), isJust args
+            , let f (ArgValue descr a) = showArgument descr a
             ] ++ if verbose then
             [ "   to rewrite the term into:"
-            , prettyPrinter (exercise d) (stateTerm s)
+            , prettyPrinter (getExercise ss) (stateTerm s)
             ] else []
 
 hintText, stepText :: Session -> IO String
@@ -223,28 +220,22 @@ nextStep ref = do
                return ("You have applied rule " ++ showId r ++ " correctly.")
 
 --------------------------------------------------
--- Session state
-
-exercise :: Derivation () (State a) -> Exercise a
-exercise = Pkg.exercise . exercisePkg . currentState
-
---------------------------------------------------
 -- Derivations
 
 
-startNewDerivation :: Difficulty -> ExercisePackage a -> IO (Derivation () (State a))
-startNewDerivation dif pkg = do
-   a <- randomTerm dif (Pkg.exercise pkg)
-   return $ emptyDerivation (emptyState pkg a)
+startNewDerivation :: Difficulty -> Exercise a -> IO (Derivation () (State a))
+startNewDerivation dif ex = do
+   a <- randomTerm dif ex
+   return $ emptyDerivation (emptyState ex a)
 
 extendDerivation :: a -> Derivation () a -> Derivation () a
 extendDerivation x d = d `extend` ((), x)
 
-current :: Derivation () (State a) -> Context a
-current = stateContext . currentState
+currentContext :: Derivation () (State a) -> Context a
+currentContext = stateContext . currentState
 
 currentState :: Derivation () a -> a
 currentState = last . terms
 
-showDerivation :: (a -> String) -> Derivation () (State a) -> String
-showDerivation f = show . biMap (const (ShowString "")) (f . stateTerm)
+showDerivationWith :: (a -> String) -> Derivation () (State a) -> String
+showDerivationWith f = show . biMap (const (ShowString "")) (f . stateTerm)

@@ -30,15 +30,15 @@ data ExItem a = EI (ExercisePackage a) (ExampleMap a)
 
 makeRulePages :: String -> DomainReasoner ()
 makeRulePages dir = do
-   pkgs <- getPackages 
+   exs <- getExercises 
    let exMap = M.fromList 
-          [ (getId pkg, Some (EI pkg (collectExamples pkg)))
-          | Some pkg <- pkgs
+          [ (getId ex, Some (EI ex (collectExamples ex)))
+          | Some ex <- exs
           ]
        ruleMap = M.fromListWith (++)
-          [ (getId r, [Some pkg]) 
-          | Some pkg <- pkgs
-          , r <- ruleset pkg
+          [ (getId r, [Some ex]) 
+          | Some ex <- exs
+          , r <- ruleset ex
           ]
    forM_ (M.toList ruleMap) $ \(ruleId, list@(Some pkg:_)) -> do
       let noExamples = Some (EI pkg M.empty) 

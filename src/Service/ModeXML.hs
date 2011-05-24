@@ -72,7 +72,7 @@ xmlReply request xml = do
    srv <- findService (service request)
    pkg <- 
       case exerciseId request of
-         Just code -> findPackage code
+         Just code -> findExercise code
          Nothing   
             | service request == "exerciselist" ->
                  return (Some emptyExercise)
@@ -160,15 +160,15 @@ xmlEncodeType b enc pkg serviceType =
 
 xmlDecoder :: Bool -> (XML -> DomainReasoner a) -> ExercisePackage a -> Decoder XML a
 xmlDecoder b f pkg = Decoder
-   { decodeType     = xmlDecodeType b (xmlDecoder b f pkg)
-   , decodeTerm     = f
-   , decoderPackage = pkg
+   { decodeType      = xmlDecodeType b (xmlDecoder b f pkg)
+   , decodeTerm      = f
+   , decoderExercise = pkg
    }
 
 xmlDecodeType :: Bool -> Decoder XML a -> Type a t -> XML -> DomainReasoner (t, XML)
 xmlDecodeType b dec serviceType =
    case serviceType of
-      Tp.Context     -> keep $ decodeContext b (decoderPackage dec) (decodeTerm dec)
+      Tp.Context     -> keep $ decodeContext b (decoderExercise dec) (decodeTerm dec)
       Tp.Location    -> keep $ liftM (read . getData) . findChild "location"
       Tp.Id          -> keep $ \xml -> do
                            a <- findChild "location" xml
@@ -179,7 +179,7 @@ xmlDecodeType b dec serviceType =
       Tp.Tag s t
          | s == "state" -> keep $ \xml -> do 
               g  <- equalM stateType serviceType
-              st <- decodeState b (decoderPackage dec) (decodeTerm dec) xml
+              st <- decodeState b (decoderExercise dec) (decodeTerm dec) xml
               return (g st)
          | s == "answer" -> keep $ \xml -> do
               c <- findChild "answer" xml 

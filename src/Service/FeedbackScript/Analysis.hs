@@ -31,15 +31,15 @@ withScripts :: Maybe FilePath -> [String] -> [FilePath] -> DomainReasoner ()
 withScripts path xs ys = do 
    -- generate scripts
    forM_ xs $ \s -> do
-      Some pkg <- findPackage (newId s)
-      liftIO $ print (generateScript pkg)
+      Some ex <- findExercise (newId s)
+      liftIO $ print (generateScript ex)
    -- analyze scripts
    forM_ ys $ \file -> do
       liftIO $ putStrLn $ "Parsing " ++ show file
       script <- liftIO $ parseScript path file
       let sups = [ a | Supports as <- scriptDecls script, a <- as ]
       exs <- forM sups $ \a -> do
-                liftM Right (findPackage a)
+                liftM Right (findExercise a)
               `catchError` \_ -> return $ Left $ UnknownExercise a
            
       let ms = lefts exs ++ analyzeScript (rights exs) script

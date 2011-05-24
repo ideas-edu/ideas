@@ -82,11 +82,11 @@ jsonRequest json = do
 
 myHandler :: JSON_RPC_Handler DomainReasoner
 myHandler fun arg = do
-   pkg  <- if fun == "exerciselist" 
+   ex   <- if fun == "exerciselist" 
            then return (Some emptyExercise)
-           else extractExerciseId arg >>= findPackage
+           else extractExerciseId arg >>= findExercise
    srv  <- findService fun
-   case jsonConverter pkg of
+   case jsonConverter ex of
       Some conv ->
          evalService conv srv arg
 
@@ -137,9 +137,9 @@ jsonEncoder ex = Encoder
 
 jsonDecoder :: ExercisePackage a -> Decoder JSON a
 jsonDecoder pkg = Decoder
-   { decodeType     = decode (jsonDecoder pkg)
-   , decodeTerm     = reader pkg
-   , decoderPackage = pkg
+   { decodeType      = decode (jsonDecoder pkg)
+   , decodeTerm      = reader pkg
+   , decoderExercise = pkg
    }
  where
    reader :: Monad m => Exercise a -> JSON -> m a
@@ -153,8 +153,8 @@ jsonDecoder pkg = Decoder
          Tp.Term     -> useFirst $ decodeTerm dec
          Tp.Rule     -> useFirst $ \x -> jsonToId x >>= getRule (decoderExercise dec)
          Tp.ExercisePkg -> \json -> case json of
-                                       Array (String _:rest) -> return (decoderPackage dec, Array rest)
-                                       _ -> return (decoderPackage dec, json)
+                                       Array (String _:rest) -> return (decoderExercise dec, Array rest)
+                                       _ -> return (decoderExercise dec, json)
          Tp.Int      -> useFirst $ \json -> case json of 
                                                Number (I n) -> return (fromIntegral n)
                                                _        -> fail "not an integer"
@@ -163,7 +163,7 @@ jsonDecoder pkg = Decoder
                                                _        -> fail "not a string"
          Tp.Tag s _ | s == "state" -> do 
             f <- equalM stateType serviceType
-            useFirst (liftM f . decodeState (decoderPackage dec) (decodeTerm dec))
+            useFirst (liftM f . decodeState (decoderExercise dec) (decodeTerm dec))
          _ -> decodeDefault dec serviceType
    
    useFirst :: Monad m => (JSON -> m a) -> JSON -> m (a, JSON)

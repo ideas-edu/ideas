@@ -15,14 +15,14 @@ module Service.DomainReasoner
      DomainReasoner, runDomainReasoner, runWithCurrent
    , liftEither, MonadIO(..), catchError 
      -- * Update functions
-   , addPackages, addPackage, addPkgService
+   , addExercises, addExercise, addExerciseService
    , addServices, addService, addTestSuite
    , addAliases, addScripts, setScriptDir
    , setVersion, setFullVersion
      -- * Accessor functions
-   , getPackages, getExercises, getServices
+   , getExercises, getServices
    , getVersion, getFullVersion, getTestSuite
-   , findPackage, findService
+   , findExercise, findService
    , defaultScript
    ) where
 
@@ -33,7 +33,6 @@ import Control.Monad.Error
 import Control.Monad.State
 import Data.Maybe
 import Service.Types
-import Service.ExercisePackage
 import Service.FeedbackScript.Parser
 
 -----------------------------------------------------------------------
@@ -42,8 +41,8 @@ import Service.FeedbackScript.Parser
 newtype DomainReasoner a = DR { unDR :: ErrorT String (StateT Content IO) a }
 
 data Content = Content
-   { packages    :: [Some ExercisePackage]
-   , services    :: [Some ExercisePackage] -> [Service]
+   { exercises   :: [Some Exercise]
+   , services    :: [Some Exercise] -> [Service]
    , aliases     :: [(Id, Id)]
    , scriptDir   :: Maybe FilePath
    , scripts     :: [(Id, FilePath)]
@@ -96,18 +95,18 @@ instance MonadIO DomainReasoner where
 -----------------------------------------------------------------------
 -- Update functions
 
-addPackages :: [Some ExercisePackage] -> DomainReasoner ()
-addPackages xs = modify $ \c -> c { packages = xs ++ packages c }
+addExercises :: [Some Exercise] -> DomainReasoner ()
+addExercises xs = modify $ \c -> c { exercises = xs ++ exercises c }
 
-addPackage :: Some ExercisePackage -> DomainReasoner ()
-addPackage pkg = addPackages [pkg]
+addExercise :: Some Exercise -> DomainReasoner ()
+addExercise ex = addExercises [ex]
 
-addPkgService :: ([Some ExercisePackage] -> Service) -> DomainReasoner ()
-addPkgService f = modify $ \c -> 
+addExerciseService :: ([Some Exercise] -> Service) -> DomainReasoner ()
+addExerciseService f = modify $ \c -> 
    c { services = \xs -> f xs : services c xs }
 
 addServices :: [Service] -> DomainReasoner ()
-addServices = mapM_ (addPkgService . const)
+addServices = mapM_ (addExerciseService . const)
 
 addService :: Service -> DomainReasoner ()
 addService s = addServices [s]
@@ -133,14 +132,11 @@ setFullVersion s = modify $ \c -> c  { fullVersion = Just s }
 -----------------------------------------------------------------------
 -- Accessor functions
 
-getPackages :: DomainReasoner [Some ExercisePackage]
-getPackages = gets packages
-
 getExercises :: DomainReasoner [Some Exercise]
-getExercises = gets (map (\(Some pkg) -> Some pkg) . packages)
+getExercises = gets exercises
 
 getServices :: DomainReasoner [Service]
-getServices = gets (\c -> services c (packages c))
+getServices = gets (\c -> services c (exercises c))
 
 getVersion :: DomainReasoner String
 getVersion = gets version
@@ -151,14 +147,14 @@ getFullVersion = gets fullVersion >>= maybe getVersion return
 getTestSuite :: DomainReasoner TestSuite
 getTestSuite = gets testSuite
 
-findPackage :: Id -> DomainReasoner (Some ExercisePackage)
-findPackage i = do
-   pkgs  <- getPackages
+findExercise :: Id -> DomainReasoner (Some Exercise)
+findExercise i = do
+   xs    <- getExercises
    table <- gets aliases
    let res = fromMaybe i (lookup i table)
-   case [ a | a@(Some pkg) <- pkgs, getId pkg == res ] of
+   case [ a | a@(Some ex) <- xs, getId ex == res ] of
       [this] -> return this
-      _      -> throwError $ "Package " ++ show i ++ " not found"
+      _      -> throwError $ "Exercise " ++ show i ++ " not found"
       
 findService :: String -> DomainReasoner Service
 findService txt = do

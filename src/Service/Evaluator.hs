@@ -14,7 +14,6 @@ module Service.Evaluator where
 
 import Common.Library
 import Control.Monad
-import Service.ExercisePackage
 import Service.Types
 import Service.DomainReasoner
 import System.Random
@@ -34,13 +33,10 @@ data Encoder s a = Encoder
    }
 
 data Decoder s a = Decoder 
-   { decodeType     :: forall t . Type a t -> s -> DomainReasoner (t, s)
-   , decodeTerm     :: s -> DomainReasoner a
-   , decoderPackage :: ExercisePackage a
+   { decodeType      :: forall t . Type a t -> s -> DomainReasoner (t, s)
+   , decodeTerm      :: s -> DomainReasoner a
+   , decoderExercise :: Exercise a
    } 
-
-decoderExercise :: Decoder s a -> Exercise a
-decoderExercise = decoderPackage
 
 eval :: Evaluator inp out a -> TypedValue a -> inp -> DomainReasoner out
 eval f (tv ::: tp) s = 
@@ -67,12 +63,12 @@ decodeDefault dec tp s =
       Tag _ t1 ->
          decodeType dec t1 s
       ExercisePkg ->
-         return (decoderPackage dec, s)
+         return (decoderExercise dec, s)
       StdGen -> do
          stdgen <- liftIO newStdGen
          return (stdgen, s)
       Script -> do
-         script <- defaultScript (getId (decoderPackage dec))
+         script <- defaultScript (getId (decoderExercise dec))
          return (script, s)
       _ ->
          fail $ "No support for argument type: " ++ show tp

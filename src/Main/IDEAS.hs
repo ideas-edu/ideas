@@ -43,11 +43,11 @@ useIDEAS action = runDomainReasoner $ do
    setVersion     shortVersion
    setFullVersion fullVersion
    -- exercise packages
-   addPackages    packages
+   addExercises   exercises
    addAliases     aliases
    -- services
-   addServices    serviceList
-   addPkgService  exerciselistS
+   addServices  serviceList
+   addExerciseService exerciselistS
    -- feedback scripts
    flags <- liftIO serviceOptions
    setScriptDir (scriptDir flags)
@@ -63,8 +63,8 @@ useIDEAS action = runDomainReasoner $ do
    -- do the rest
    action
 
-packages :: [Some ExercisePackage]
-packages =
+exercises :: [Some ExercisePackage]
+exercises =
    [ -- logic and relation-algebra
      Some Logic.dnfExercise
    , Some Logic.dnfUnicodeExercise

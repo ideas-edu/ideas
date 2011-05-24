@@ -11,7 +11,6 @@
 -----------------------------------------------------------------------------
 module Documentation.Make (DocItem(..), makeDocumentation) where
 
-import Common.StringRef (tableStatus)
 import Common.TestSuite
 import Common.Utils (Some(..))
 import Control.Monad
@@ -35,9 +34,9 @@ makeDocumentation docDir testDir item =
          makeOverviewExercises docDir
          makeOverviewServices  docDir
          report "Generating exercise pages"
-         pkgs <- getPackages
-         forM_ pkgs $ \(Some pkg) -> 
-            makeExercisePage docDir pkg
+         exs <- getExercises
+         forM_ exs $ \(Some ex) -> 
+            makeExercisePage docDir ex
          report "Generating rule pages"
          makeRulePages docDir
          report "Generating service pages"

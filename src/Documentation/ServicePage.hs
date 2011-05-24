@@ -112,9 +112,8 @@ newState pkg s = do
 type Args = forall a . ExercisePackage a -> [TypedValue a]
 
 makeExample :: String -> Args -> String -> DomainReasoner Example
-makeExample pkgName f srvName = do
-   let a = newId pkgName
-   Some pkg <- findPackage a
-   srv      <- findService srvName
-   tr       <- typedExample pkg srv (f pkg)
-   return (showId pkg, tr)
+makeExample exName f srvName = do
+   Some ex <- findExercise (newId exName)
+   srv     <- findService srvName
+   tr      <- typedExample ex srv (f ex)
+   return (showId ex, tr)

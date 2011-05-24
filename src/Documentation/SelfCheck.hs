@@ -32,7 +32,7 @@ import qualified Text.UTF8 as UTF8
 
 selfCheck :: String -> DomainReasoner TestSuite
 selfCheck dir = do
-   pkgs        <- getPackages
+   list        <- getExercises
    domainSuite <- getTestSuite
    run         <- runWithCurrent
    
@@ -53,8 +53,8 @@ selfCheck dir = do
       suite "Domain checks" domainSuite
       
       suite "Exercise checks" $
-         forM_ pkgs $ \(Some pkg) ->
-            exerciseTestSuite pkg
+         forM_ list $ \(Some ex) ->
+            exerciseTestSuite ex
       
       suite "Black box tests" $ do 
          liftIO (blackBoxTests run dir) >>= id

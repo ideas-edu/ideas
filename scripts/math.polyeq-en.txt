@@ -6,14 +6,14 @@ include math.quadreq-en.txt
 # -------------------------------------------------------------
 # Feedback
 
-feedback same = {}
-feedback noteq = {}
-feedback unknown = {}
-feedback ok = {}
-feedback buggy = {}
-feedback detour = {}
-feedback hint = {}
-feedback step = {}
+# feedback same = {}
+# feedback noteq = {}
+# feedback unknown = {}
+# feedback ok = {}
+# feedback buggy = {}
+# feedback detour = {}
+# feedback hint = {}
+# feedback step = {}
 
 # -------------------------------------------------------------
 # Rules

@@ -151,10 +151,9 @@ onefirsttextS :: Service
 onefirsttextS = makeService "onefirsttext" 
    "Similar to the onefirst service, except that the result is now returned as \
    \a formatted text message. The optional string is for announcing the event \
-   \leading to this service call (which can influence the returned result). \
-   \The boolean in the result specifies whether a suggestion was available or \
-   \not." $ 
-   onefirsttext ::: Script :-> stateType :-> maybeType String :-> elemType (tuple3 Bool String stateType)
+   \leading to this service call (which can influence the returned result)." $ 
+   onefirsttext ::: Script :-> stateType :-> maybeType String 
+                :-> elemType (tuple2 String (maybeType stateType))
 
 submittextS :: Service
 submittextS = deprecate $ makeService "submittext" 

@@ -1,6 +1,5 @@
 {
    "result": [
-      true,
       "Use De Morgan to rewrite ~(~x || ~y) into ~~x /\\ ~~y.",
       [
          "logic.propositional.dnf",
@@ -12,5 +11,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.6.5 (0)"
+   "version": "0.7.3 (0)"
 }

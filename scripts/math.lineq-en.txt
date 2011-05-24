@@ -5,23 +5,24 @@ supports algebra.equations.linear
 # -------------------------------------------------------------
 # Feedback
 
-feedback same = {}
-feedback noteq = {}
-feedback unknown = {}
-feedback ok = {}
-feedback buggy = {}
-feedback detour = {}
-feedback hint = {}
-feedback step = {}
+feedback same = {SAME}
+feedback noteq = {NOTEQ}
+feedback unknown = {UNKNOWN}
+feedback ok = {OK}
+feedback buggy = {BUGGY}
+feedback detour = {DETOUR}
+
+feedback hint = {Use @expected to rewrite @before into @after.}
+feedback step = @hint
 
 # -------------------------------------------------------------
 # Rules
 
-text coverup.negate = {}
-text coverup.onevar.minus-left = {}
-text coverup.onevar.minus-right = {}
-text coverup.onevar.plus = {}
-text coverup.times = {}
+text coverup.negate = {rule negate}
+text coverup.onevar.minus-left = {rule minus left}
+text coverup.onevar.minus-right = {rule minus right}
+text coverup.onevar.plus = {rule plus}
+text coverup.times = {rule times}
 text linear.distr-times = distribution multiplication
 text linear.flip = flip equation
 text linear.merge = merge similar terms

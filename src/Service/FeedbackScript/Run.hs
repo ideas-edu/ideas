@@ -20,6 +20,7 @@ module Service.FeedbackScript.Run
 
 import Common.Context (Context)
 import Common.Id
+import Common.Exercise
 import Common.Utils (safeHead)
 import Control.Monad
 import Common.Transformation
@@ -29,6 +30,7 @@ import Data.Monoid
 import Service.BasicServices
 import Service.FeedbackScript.Syntax
 import Service.Diagnose
+import Service.ExercisePackage
 import Service.State
 
 data Environment a = Env
@@ -36,6 +38,8 @@ data Environment a = Env
    , expected   :: Maybe (Rule (Context a))
    , recognized :: Maybe (Rule (Context a))
    , diffPair   :: Maybe (String, String)
+   , before     :: String
+   , after      :: Maybe String
    }
    
 newEnvironment :: State a -> Environment a
@@ -44,10 +48,14 @@ newEnvironment st = Env
    , expected   = fmap fst4 next
    , recognized = Nothing
    , diffPair   = Nothing
+   , before     = pp st
+   , after      = fmap (pp . fth4) next
    }
  where
    next = either (const Nothing) Just (onefirst st)
+   pp   = prettyPrinter (exercise $ exercisePkg st) . stateTerm
    fst4 (a, _, _, _) = a
+   fth4 (_, _, _, a) = a
 
 toString :: Environment a -> Script -> Text -> String
 toString env script = fromMaybe "" . eval env script . Right
@@ -62,12 +70,14 @@ eval env script = fmap show . either (return . findIdRef) evalText
    evalText = liftM mconcat . mapM unref . textItems
     where
       unref (TextRef a) 
-         | a == newId "expected"   = fmap (findIdRef . getId) (expected env)
-         | a == newId "recognized" = fmap (findIdRef . getId) (recognized env)
-         | a == newId "diffbefore" = fmap (TextString . fst) (diffPair env)
-         | a == newId "diffafter"  = fmap (TextString . snd) (diffPair env)
-         | a `elem` feedbackIds    = findRef (==a)
-         | otherwise               = findRef (==a) 
+         | a == expectedId      = fmap (findIdRef . getId) (expected env)
+         | a == recognizedId    = fmap (findIdRef . getId) (recognized env)
+         | a == diffbeforeId    = fmap (TextString . fst) (diffPair env)
+         | a == diffafterId     = fmap (TextString . snd) (diffPair env)
+         | a == beforeId        = Just $ TextString $ before env
+         | a == afterId         = fmap TextString $ after env
+         | a `elem` feedbackIds = findRef (==a)
+         | otherwise            = findRef (==a) 
       unref t = Just t
 
    evalBool :: Condition -> Bool
@@ -75,9 +85,9 @@ eval env script = fmap show . either (return . findIdRef) evalText
    evalBool (CondNot c)      = not (evalBool c)
    evalBool (CondConst b)    = b
    evalBool (CondRef a)
-      | a == newId "oldready"    = oldReady env
-      | a == newId "hasexpected" = isJust (expected env)
-      | otherwise                = False
+      | a == oldreadyId    = oldReady env
+      | a == hasexpectedId = isJust (expected env)
+      | otherwise          = False
 
    namespaces = nub $ mempty : [ a | NameSpace as <- scriptDecls script, a <- as ]
 
@@ -122,9 +132,20 @@ feedbackIds = map newId
    ["same", "noteq", "unknown", "ok", "buggy", "detour", "hint", "step"]
    
 attributeIds :: [Id]
-attributeIds = map newId 
-   ["expected", "recognized", "diffbefore", "diffafter"]
+attributeIds =
+   [expectedId, recognizedId, diffbeforeId, diffafterId, beforeId, afterId]
    
 conditionIds :: [Id]
-conditionIds = map newId
-    ["oldready", "hasexpected"]
+conditionIds = [oldreadyId, hasexpectedId]
+    
+expectedId, recognizedId, diffbeforeId, diffafterId, beforeId, afterId :: Id
+expectedId   = newId "expected"  
+recognizedId = newId "recognized"
+diffbeforeId = newId "diffbefore"
+diffafterId  = newId "diffafter" 
+beforeId     = newId "before"    
+afterId      = newId "after"     
+
+oldreadyId, hasexpectedId :: Id
+oldreadyId    = newId "oldready" 
+hasexpectedId = newId "hasexpected"

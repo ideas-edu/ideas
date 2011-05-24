@@ -14,7 +14,6 @@ module Service.FeedbackText
    ) where
 
 import Common.Library hiding (derivation)
-import Data.Maybe
 import Service.ExercisePackage
 import Service.State
 import Service.Diagnose
@@ -29,11 +28,10 @@ derivationtext script state =
    let f = ruleToString (newEnvironment state) script . fst
    in right (mapFirst f) (derivation Nothing state)
 
-onefirsttext :: Script -> State a -> Maybe String -> (Bool, String, State a)
+onefirsttext :: Script -> State a -> Maybe String -> (String, Maybe (State a))
 onefirsttext script old event = 
-   ( isJust next
-   , feedbackHint (event == Just "hint button") env script
-   , maybe old fth4 next
+   ( feedbackHint (event == Just "hint button") env script
+   , fmap fth4 next
    )
  where
    ex   = exercise (exercisePkg old) 

@@ -13,10 +13,10 @@
 -----------------------------------------------------------------------------
 module Common.Exercise 
    ( -- * Exercises
-     Exercise, testableExercise, makeExercise, emptyExercise
+     Exercise, makeExercise, emptyExercise
    , exerciseId, status, parser, prettyPrinter
    , equivalence, similarity, isReady, isSuitable
-   , splitParts
+   , splitParts, hasTermView
    , strategy, navigation, canBeRestarted, extraRules, ruleOrdering
    , difference, ordering, testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
@@ -44,12 +44,12 @@ import Common.Derivation
 import Common.DerivationTree
 import Common.Id
 import Common.Navigator
+import Common.Rewriting.Term
 import Common.TestSuite
 import Common.Transformation
 import Common.Utils (ShowString(..), commaList)
-import Common.View (makeView)
+import Common.View (View, makeView, second)
 import Control.Monad.Error
-import Control.Arrow
 import Data.Char
 import Data.Function
 import Data.List
@@ -74,6 +74,7 @@ data Exercise a = Exercise
    , isSuitable     :: a -> Bool
    , difference     :: Bool -> a -> a -> Maybe (a, a)
    , splitParts     :: a -> [a]
+   , hasTermView    :: Maybe (View Term a)
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
    , navigation     :: a -> Navigator a
@@ -99,16 +100,12 @@ instance HasId (Exercise a) where
    getId = exerciseId
    changeId f ex = ex { exerciseId = f (exerciseId ex) }
 
-testableExercise :: (Arbitrary a, Show a, Ord a) => Exercise a
-testableExercise = makeExercise
-   { testGenerator = Just arbitrary
-   }
-
-makeExercise :: (Show a, Ord a) => Exercise a
+makeExercise :: (Show a, Ord a, IsTerm a) => Exercise a
 makeExercise = emptyExercise
    { prettyPrinter = show
    , similarity    = (==)
    , ordering      = compare
+   , hasTermView   = Just termView
    }
    
 emptyExercise :: Exercise a
@@ -127,6 +124,7 @@ emptyExercise = Exercise
    , isSuitable     = const True
    , difference     = \_ _ _ -> Nothing
    , splitParts     = return
+   , hasTermView    = Nothing
      -- strategies and rules
    , strategy       = label "Fail" S.fail
    , navigation     = noNavigator

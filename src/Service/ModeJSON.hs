@@ -83,7 +83,7 @@ jsonRequest json = do
 myHandler :: JSON_RPC_Handler DomainReasoner
 myHandler fun arg = do
    pkg  <- if fun == "exerciselist" 
-           then return (Some (package emptyExercise))
+           then return (Some emptyExercise)
            else extractExerciseId arg >>= findPackage
    srv  <- findService fun
    case jsonConverter pkg of
@@ -92,7 +92,7 @@ myHandler fun arg = do
 
 jsonConverter :: Some ExercisePackage -> Some (Evaluator JSON JSON)
 jsonConverter (Some pkg) =
-   Some (Evaluator (jsonEncoder (exercise pkg)) (jsonDecoder pkg))
+   Some (Evaluator (jsonEncoder pkg) (jsonDecoder pkg))
 
 jsonEncoder :: Exercise a -> Encoder JSON a
 jsonEncoder ex = Encoder
@@ -138,7 +138,7 @@ jsonEncoder ex = Encoder
 jsonDecoder :: ExercisePackage a -> Decoder JSON a
 jsonDecoder pkg = Decoder
    { decodeType     = decode (jsonDecoder pkg)
-   , decodeTerm     = reader (exercise pkg)
+   , decodeTerm     = reader pkg
    , decoderPackage = pkg
    }
  where
@@ -199,7 +199,7 @@ encodeContext env = Object (map f (keysEnv env))
 decodeState :: Monad m => ExercisePackage a -> (JSON -> m a) -> JSON -> m (State a)
 decodeState pkg f (Array [a]) = decodeState pkg f a
 decodeState pkg f (Array [String _code, String p, ce, jsonContext]) = do
-   let ex  = exercise pkg
+   let ex  = pkg
        mpr = readM p >>= (`makePrefix` strategy ex)
    a    <- f ce 
    env  <- decodeContext jsonContext

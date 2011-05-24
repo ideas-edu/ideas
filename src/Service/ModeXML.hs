@@ -75,7 +75,7 @@ xmlReply request xml = do
          Just code -> findPackage code
          Nothing   
             | service request == "exerciselist" ->
-                 return (Some (package emptyExercise))
+                 return (Some emptyExercise)
             | otherwise -> 
                  fail "unknown exercise code"
    Some conv <-
@@ -108,7 +108,7 @@ stringFormatConverterTp :: ExercisePackage a -> Evaluator XML XMLBuilder a
 stringFormatConverterTp pkg = 
    Evaluator (xmlEncoder False f pkg) (xmlDecoder False g pkg)
  where
-   ex = exercise pkg
+   ex = pkg
    f  = return . element "expr" . text . prettyPrinter ex
    g xml0 = do
       xml <- findChild "expr" xml0 -- quick fix
@@ -123,7 +123,7 @@ openMathConverterTp :: ExercisePackage a -> Evaluator XML XMLBuilder a
 openMathConverterTp pkg =
    Evaluator (xmlEncoder True f pkg) (xmlDecoder True g pkg)
  where
-   f = return . builder . toXML . toOpenMath pkg
+   f = liftM (builder . toXML) . toOpenMath pkg
    g xml = do
       xob   <- findChild "OMOBJ" xml
       omobj <- liftEither (xml2omobj xob)
@@ -143,7 +143,7 @@ xmlEncodeType b enc pkg serviceType =
    case serviceType of
       Tp.Tag s t1
          | s == "RulesInfo" -> \_ ->
-              rulesInfoXML (exercise pkg) (encodeTerm enc)
+              rulesInfoXML pkg (encodeTerm enc)
          | otherwise ->  
               case useAttribute t1 of
                  Just f | s /= "message" -> return . (s .=.) . f
@@ -234,7 +234,7 @@ decodePrefix pkg xml
         return (Just pr)
  where
    prefixText = maybe "" getData (findChild "prefix" xml)
-   str = strategy (exercise pkg)
+   str = strategy pkg
    a ~= b = g a == g b
    g = map toLower . filter (not . isSpace)
    
@@ -242,7 +242,7 @@ decodeContext :: Monad m => Bool -> ExercisePackage a -> (XML -> m a) -> XML -> 
 decodeContext b pkg f xml = do
    expr <- f xml
    env  <- decodeEnvironment b xml
-   return (makeContext (exercise pkg) env expr)
+   return (makeContext pkg env expr)
 
 decodeEnvironment :: Monad m => Bool -> XML -> m Environment
 decodeEnvironment b xml =

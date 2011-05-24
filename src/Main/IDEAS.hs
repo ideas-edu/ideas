@@ -66,48 +66,48 @@ useIDEAS action = runDomainReasoner $ do
 packages :: [Some ExercisePackage]
 packages =
    [ -- logic and relation-algebra
-     someTermPackage Logic.dnfExercise
-   , someTermPackage Logic.dnfUnicodeExercise
-   -- , somePackage Logic.proofExercise
-   , somePackage RA.cnfExercise
+     Some Logic.dnfExercise
+   , Some Logic.dnfUnicodeExercise
+   -- , Some Logic.proofExercise
+   , Some RA.cnfExercise
      -- basic math
-   -- , someTermPackage Math.naturalExercise
-   -- , someTermPackage Math.integerExercise
-   -- , someTermPackage Math.rationalExercise
-   , someTermPackage Math.fractionExercise
-   , someTermPackage Math.coverUpExercise
-   , someTermPackage Math.linearExercise
-   , someTermPackage Math.linearMixedExercise
-   , someTermPackage Math.balanceExercise
-   , someTermPackage Math.quadraticExercise
-   , someTermPackage Math.higherDegreeExercise
-   , someTermPackage Math.findFactorsExercise
-   , someTermPackage Math.ineqLinearExercise
-   , someTermPackage Math.ineqQuadraticExercise
-   , someTermPackage Math.ineqHigherDegreeExercise
-   , someTermPackage Math.rationalEquationExercise
-   , someTermPackage Math.simplifyRationalExercise
-   -- , someTermPackage Math.divisionBrokenExercise
-   , someTermPackage Math.quadraticNoABCExercise
-   , someTermPackage Math.quadraticWithApproximation
-   , someTermPackage Math.derivativeExercise
-   , someTermPackage Math.derivativePolyExercise
-   , someTermPackage Math.derivativeProductExercise
-   , someTermPackage Math.derivativeQuotientExercise
-   -- , someTermPackage Math.derivativePowerExercise
-   , someTermPackage Math.simplifyPowerExercise
-   , someTermPackage Math.powerOfExercise     
-   , someTermPackage Math.nonNegBrokenExpExercise
-   , someTermPackage Math.calcPowerExercise
-   , someTermPackage Math.powerEqExercise
-   , someTermPackage Math.expEqExercise
-   , someTermPackage Math.logEqExercise
---   , someTermPackage Math.higherPowerEqExercise
+   -- , Some Math.naturalExercise
+   -- , Some Math.integerExercise
+   -- , Some Math.rationalExercise
+   , Some Math.fractionExercise
+   , Some Math.coverUpExercise
+   , Some Math.linearExercise
+   , Some Math.linearMixedExercise
+   , Some Math.balanceExercise
+   , Some Math.quadraticExercise
+   , Some Math.higherDegreeExercise
+   , Some Math.findFactorsExercise
+   , Some Math.ineqLinearExercise
+   , Some Math.ineqQuadraticExercise
+   , Some Math.ineqHigherDegreeExercise
+   , Some Math.rationalEquationExercise
+   , Some Math.simplifyRationalExercise
+   -- , Some Math.divisionBrokenExercise
+   , Some Math.quadraticNoABCExercise
+   , Some Math.quadraticWithApproximation
+   , Some Math.derivativeExercise
+   , Some Math.derivativePolyExercise
+   , Some Math.derivativeProductExercise
+   , Some Math.derivativeQuotientExercise
+   -- , Some Math.derivativePowerExercise
+   , Some Math.simplifyPowerExercise
+   , Some Math.powerOfExercise     
+   , Some Math.nonNegBrokenExpExercise
+   , Some Math.calcPowerExercise
+   , Some Math.powerEqExercise
+   , Some Math.expEqExercise
+   , Some Math.logEqExercise
+--   , Some Math.higherPowerEqExercise
      -- linear algebra
-   , someTermPackage LA.gramSchmidtExercise
-   , someTermPackage LA.linearSystemExercise
-   , someTermPackage LA.gaussianElimExercise
-   , someTermPackage LA.systemWithMatrixExercise
+   , Some LA.gramSchmidtExercise
+   , Some LA.linearSystemExercise
+   , Some LA.gaussianElimExercise
+   , Some LA.systemWithMatrixExercise
      -- regular expressions
    -- , somePackage RE.regexpExercise
    ]

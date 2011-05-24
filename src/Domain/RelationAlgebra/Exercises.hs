@@ -19,9 +19,10 @@ import Domain.RelationAlgebra.Rules
 import Domain.RelationAlgebra.Parser
 import Common.Library
 import Data.Maybe
+import Test.QuickCheck
 
 cnfExercise :: Exercise RelAlg
-cnfExercise = testableExercise
+cnfExercise = makeExercise
    { exerciseId     = describe "To conjunctive normal form" $
                          newId "relationalgebra.cnf"
    , status         = Alpha
@@ -37,6 +38,7 @@ cnfExercise = testableExercise
    , randomExercise = let ok p = let n = fromMaybe maxBound (stepsRemaining 4 p)
                                  in n >= 2 && n <= 4
                       in useGenerator ok (\_ -> templateGenerator 1)
+   , testGenerator  = Just arbitrary
    }
 
 stepsRemaining :: Int -> RelAlg -> Maybe Int

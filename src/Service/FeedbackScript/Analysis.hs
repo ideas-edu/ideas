@@ -32,7 +32,7 @@ withScripts path xs ys = do
    -- generate scripts
    forM_ xs $ \s -> do
       Some pkg <- findPackage (newId s)
-      liftIO $ print (generateScript (exercise pkg))
+      liftIO $ print (generateScript pkg)
    -- analyze scripts
    forM_ ys $ \file -> do
       liftIO $ putStrLn $ "Parsing " ++ show file
@@ -77,8 +77,8 @@ analyzeScript :: [Some ExercisePackage] -> Script -> [Message]
 analyzeScript exs script =
    map FeedbackUndefined (filter (`notElem` fbids) feedbackIds) ++ 
    map UnknownFeedback   (filter (`notElem`feedbackIds ) fbids) ++ 
-   [ NoTextForRule (getId r) (getId pkg) 
-   | Some pkg <- exs, r <- ruleset (exercise pkg), noTextFor (getId r)
+   [ NoTextForRule (getId r) (getId ex) 
+   | Some ex <- exs, r <- ruleset ex, noTextFor (getId r)
    ] ++
    [ UnknownAttribute a | a <- textRefs
    , a `notElem` feedbackIds ++ attributeIds ++ strids ] ++

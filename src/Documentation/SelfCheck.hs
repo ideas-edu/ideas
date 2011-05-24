@@ -17,7 +17,6 @@ import Common.Utils (useFixedStdGen, Some(..), snd3)
 import Control.Monad
 import Data.List
 import Service.DomainReasoner
-import Service.ExercisePackage
 import Service.ModeJSON
 import Service.ModeXML
 import Service.Request
@@ -55,7 +54,7 @@ selfCheck dir = do
       
       suite "Exercise checks" $
          forM_ pkgs $ \(Some pkg) ->
-            exerciseTestSuite (exercise pkg)
+            exerciseTestSuite pkg
       
       suite "Black box tests" $ do 
          liftIO (blackBoxTests run dir) >>= id

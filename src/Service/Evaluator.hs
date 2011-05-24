@@ -40,7 +40,7 @@ data Decoder s a = Decoder
    } 
 
 decoderExercise :: Decoder s a -> Exercise a
-decoderExercise = exercise . decoderPackage
+decoderExercise = decoderPackage
 
 eval :: Evaluator inp out a -> TypedValue a -> inp -> DomainReasoner out
 eval f (tv ::: tp) s = 

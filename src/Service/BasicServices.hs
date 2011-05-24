@@ -26,7 +26,7 @@ import qualified Common.Classes as Apply
 
 generate :: StdGen -> ExercisePackage a -> Difficulty -> State a
 generate rng pkg dif = 
-   emptyState pkg (randomTermWith rng dif (exercise pkg))
+   emptyState pkg (randomTermWith rng dif pkg)
 
 -- TODO: add a location to each step
 derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a), [ArgValue]) (Context a))
@@ -40,13 +40,12 @@ derivation mcfg state =
       (Just p, Just cfg) | null (prefixToSteps p) -> 
          let newStrategy = configure cfg (strategy ex)
              newExercise = ex {strategy = newStrategy}
-             newPackage  = pkg {exercise = newExercise}
-         in rec timeout d0 (empyStateContext newPackage (stateContext state))
+         in rec timeout d0 (empyStateContext newExercise (stateContext state))
       _ -> rec timeout d0 state
  where
    d0  = emptyDerivation state
    pkg = exercisePkg state
-   ex  = exercise pkg
+   ex  = pkg
    timeout = 50 :: Int
  
    rec i acc st = 
@@ -69,7 +68,7 @@ allfirsts state =
       Just p0 ->
          let tree = cutOnStep (stop . lastStepInPrefix) (prefixTree p0 (stateContext state))
              f (r1, _, _, _) (r2, _, _, _) = 
-                ruleOrdering (exercise (exercisePkg state)) r1 r2
+                ruleOrdering (exercisePkg state) r1 r2
          in Right (sortBy f (mapMaybe make (derivations tree)))
  where
    stop (Just (RuleStep r)) = isMajorRule r
@@ -98,13 +97,13 @@ onefirst state =
 applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =
    let p r = not (isBuggyRule r) && Apply.applicable r (setLocation loc (stateContext state))
-   in filter p (ruleset (exercise (exercisePkg state)))
+   in filter p (ruleset (exercisePkg state))
 
 allapplications :: State a -> [(Rule (Context a), Location, State a)]
 allapplications state = sortBy cmp (xs ++ ys)
  where
    pkg = exercisePkg state
-   ex  = exercise pkg
+   ex  = pkg
    xs  = either (const []) (map (\(r, l, _, s) -> (r, l, s))) (allfirsts state)
    ps  = [ (r, loc) | (r, loc, _) <- xs ]
    ys  = maybe [] f (top (stateContext state))
@@ -141,14 +140,14 @@ apply r loc state = maybe applyOff applyOn (statePrefix state)
          Nothing  -> Left ("Cannot apply " ++ show r)
        
 ready :: State a -> Bool
-ready state = isReady (exercise (exercisePkg state)) (stateTerm state)
+ready state = isReady (exercisePkg state) (stateTerm state)
 
 stepsremaining :: State a -> Either String Int
 stepsremaining = mapSecond derivationLength . derivation Nothing
 
 findbuggyrules :: State a -> a -> [Rule (Context a)]
 findbuggyrules state a =
-   let ex      = exercise (exercisePkg state)
+   let ex      = exercisePkg state
        buggies = filter isBuggyRule (ruleset ex)
        p r     = ruleIsRecognized ex r (stateContext state) (inContext ex a)
    in filter p buggies

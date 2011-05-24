@@ -12,20 +12,18 @@
 -----------------------------------------------------------------------------
 module Service.ExercisePackage
    ( -- Type, and selectors 
-     ExercisePackage, exercise, withOpenMath
-   , toOpenMath, fromOpenMath
-     -- Constructors
-   , package, termPackage, somePackage, someTermPackage
+     ExercisePackage, withOpenMath
      -- Conversion functions to/from OpenMath
+   , toOpenMath, fromOpenMath
    , termToOMOBJ, omobjToTerm
    ) where
 
 import Common.Library
-import Common.Utils (Some(..))
 import Common.Rewriting.Term
 import Control.Monad
 import Data.Char
 import Data.List
+import Data.Maybe
 import Text.OpenMath.Object
 import qualified Text.OpenMath.Symbol as OM
 import Text.OpenMath.Dictionary.Fns1
@@ -33,40 +31,24 @@ import Text.OpenMath.Dictionary.Fns1
 -----------------------------------------------------------------------------
 -- Package data type (and constructor functions)
 
-data ExercisePackage a = P
-   { exercise     :: Exercise a
-   , withOpenMath :: Bool
-   , toOpenMath   :: a -> OMOBJ 
-   , fromOpenMath :: MonadPlus m => OMOBJ -> m a
-   }
+type ExercisePackage = Exercise
 
-instance HasId (ExercisePackage a) where
-   getId = getId . exercise
-   changeId f pkg = pkg { exercise = changeId f (exercise pkg) }
-
-package :: Exercise a -> ExercisePackage a
-package ex = P 
-   { exercise     = ex
-   , withOpenMath = False
-   , toOpenMath   = error "no OpenMath support"
-   , fromOpenMath = fail "no OpenMath support"
-   }
-
-termPackage :: IsTerm a => Exercise a -> ExercisePackage a
-termPackage ex = (package ex)
-   { withOpenMath = True
-   , toOpenMath   = termToOMOBJ . toTerm
-   , fromOpenMath = (>>= fromTerm) . omobjToTerm
-   }
-
-somePackage :: Exercise a -> Some ExercisePackage
-somePackage = Some . package
-
-someTermPackage :: IsTerm a => Exercise a -> Some ExercisePackage
-someTermPackage = Some . termPackage
+withOpenMath :: ExercisePackage a -> Bool
+withOpenMath = isJust . hasTermView
 
 -----------------------------------------------------------------------------
 -- Utility functions for conversion to/from OpenMath
+
+toOpenMath :: Monad m => ExercisePackage a -> a -> m OMOBJ 
+toOpenMath pkg a = do
+   v <- hasTermViewM pkg 
+   return (termToOMOBJ (build v a))
+
+fromOpenMath :: MonadPlus m => ExercisePackage a -> OMOBJ -> m a
+fromOpenMath pkg omobj = do 
+   v <- hasTermViewM pkg 
+   a <- omobjToTerm omobj
+   matchM v a
 
 termToOMOBJ :: Term -> OMOBJ
 termToOMOBJ term =
@@ -106,3 +88,6 @@ idToSymbol a
         OM.extraSymbol (unqualified a)
    | otherwise = 
         OM.makeSymbol (qualification a) (unqualified a)
+        
+hasTermViewM  :: Monad m => Exercise a -> m (View Term a)
+hasTermViewM = maybe (fail "No support for terms") return . hasTermView

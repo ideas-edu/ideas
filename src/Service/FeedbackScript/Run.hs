@@ -53,7 +53,7 @@ newEnvironment st = Env
    }
  where
    next = either (const Nothing) Just (onefirst st)
-   pp   = prettyPrinter (exercise $ exercisePkg st) . stateTerm
+   pp   = prettyPrinter (exercisePkg st) . stateTerm
    fst4 (a, _, _, _) = a
    fth4 (_, _, _, a) = a
 
@@ -70,14 +70,13 @@ eval env script = fmap show . either (return . findIdRef) evalText
    evalText = liftM mconcat . mapM unref . textItems
     where
       unref (TextRef a) 
-         | a == expectedId      = fmap (findIdRef . getId) (expected env)
-         | a == recognizedId    = fmap (findIdRef . getId) (recognized env)
-         | a == diffbeforeId    = fmap (TextString . fst) (diffPair env)
-         | a == diffafterId     = fmap (TextString . snd) (diffPair env)
-         | a == beforeId        = Just $ TextString $ before env
-         | a == afterId         = fmap TextString $ after env
-         | a `elem` feedbackIds = findRef (==a)
-         | otherwise            = findRef (==a) 
+         | a == expectedId   = fmap (findIdRef . getId) (expected env)
+         | a == recognizedId = fmap (findIdRef . getId) (recognized env)
+         | a == diffbeforeId = fmap (TextString . fst) (diffPair env)
+         | a == diffafterId  = fmap (TextString . snd) (diffPair env)
+         | a == beforeId     = Just $ TextString $ before env
+         | a == afterId      = fmap TextString $ after env
+         | otherwise         = findRef (==a) 
       unref t = Just t
 
    evalBool :: Condition -> Bool

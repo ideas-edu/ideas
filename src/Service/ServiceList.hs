@@ -116,7 +116,7 @@ examplesS = makeService "examples"
    \with an exercise. These are the examples that appear at the page generated \
    \for each exercise. Also see the generate service, which returns a random \
    \start term." $
-   (map snd . examples . exercise) ::: ExercisePkg :-> listType Term
+   (map snd . examples) ::: ExercisePkg :-> listType Term
 
 findbuggyrulesS :: Service
 findbuggyrulesS = makeService "findbuggyrules" 
@@ -212,16 +212,17 @@ rulesinfoS = makeService "rulesinfo"
 strategyinfoS :: Service
 strategyinfoS = makeService "strategyinfo"
    "Returns the representation of the strategy of a particular exercise." $ 
-   (toStrategy . strategy . exercise) ::: ExercisePkg :-> Strategy
+   (toStrategy . strategy) ::: ExercisePkg :-> Strategy
    
 allExercises :: [Some ExercisePackage] -> [(String, String, String)]
 allExercises = map make . sortBy (comparing f)
  where
-   f (Some pkg) = showId (exercise pkg)
+   f :: Some Exercise -> String
+   f (Some pkg) = showId pkg
    make (Some pkg) = 
-      (showId pkg, description pkg, show (status (exercise pkg)))
+      (showId pkg, description pkg, show (status pkg))
 
 allRules :: ExercisePackage a -> [(String, Bool, Bool)]
-allRules = map make . ruleset . exercise
+allRules = map make . ruleset
  where  
    make r  = (showId r, isBuggyRule r, isRewriteRule r)

@@ -47,11 +47,11 @@ makeState = State
 empyStateContext :: ExercisePackage a -> Context a -> State a
 empyStateContext pkg = makeState pkg (Just pr)
  where
-   ex = exercise pkg
+   ex = pkg
    pr = emptyPrefix (strategy ex)
 
 emptyState :: ExercisePackage a -> a -> State a
-emptyState pkg = empyStateContext pkg . inContext (exercise pkg)
+emptyState pkg = empyStateContext pkg . inContext pkg
 
 --------------------------------------------------------------
 
@@ -59,7 +59,7 @@ stateType :: Type a (State a)
 stateType = Tag "state" (Iso f g tp)
  where
    f (pkg, mp, ctx) =
-      let str = strategy (exercise pkg)
+      let str = strategy pkg
           h   = fromMaybe [] . readM
       in makeState pkg (mp >>= flip makePrefix str . h) ctx
    g st = 

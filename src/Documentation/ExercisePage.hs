@@ -30,7 +30,7 @@ import Text.HTML
 
 makeExercisePage :: String -> ExercisePackage a -> DomainReasoner ()
 makeExercisePage dir pkg = do
-   let ex       = exercise pkg
+   let ex       = pkg
        make     = makeId pkg
        makeId a = generatePageAt (length (qualifiers a)) dir . ($ (getId a))
        exFile   = dir ++ "/" ++ diagnosisExampleFile (getId ex)
@@ -39,7 +39,7 @@ makeExercisePage dir pkg = do
 
    make exercisePageFile     (exercisePage exampleFileExists pkg)
    make exerciseStrategyFile (strategyPage ex)
-   unless (null (examples (exercise pkg))) $
+   unless (null (examples pkg)) $
        make exerciseDerivationsFile (derivationsPage ex)
    when (exampleFileExists) $ do
       xs <- liftIO (readFile exFile)
@@ -108,7 +108,7 @@ exercisePage exampleFileExists pkg = do
    para $ unless (null (examples ex)) $ 
       link (up len ++ exerciseDerivationsFile exid) (text "More examples")
  where
-   ex    = exercise pkg
+   ex    = pkg
    exid  = getId ex
    len   = length (qualifiers pkg)
    trees = [ mapFirst getId (derivationTree (strategy ex) (inContext ex a)) 
@@ -172,7 +172,7 @@ diagnosisPage xs pkg = do
             space
             text (getDiagnosis t0 t1)
  where
-   ex  = exercise pkg
+   ex  = pkg
    f a = do 
       (x, b) <- splitAtSequence "==>" a
       let (y, z) = fromMaybe (b, "") (splitAtSequence ":::" b)

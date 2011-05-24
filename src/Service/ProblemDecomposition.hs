@@ -47,7 +47,7 @@ problemDecomposition msloc state answer
                                      firstMajorInPrefix pr pref requestedTerm
  where
    pkg   = exercisePkg state
-   ex    = exercise pkg
+   ex    = pkg
    topId = getId (strategy ex)
    sloc  = fromMaybe topId msloc
    requestedTerm = stateContext state

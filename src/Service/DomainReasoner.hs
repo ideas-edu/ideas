@@ -137,7 +137,7 @@ getPackages :: DomainReasoner [Some ExercisePackage]
 getPackages = gets packages
 
 getExercises :: DomainReasoner [Some Exercise]
-getExercises = gets (map (\(Some pkg) -> Some (exercise pkg)) . packages)
+getExercises = gets (map (\(Some pkg) -> Some pkg) . packages)
 
 getServices :: DomainReasoner [Service]
 getServices = gets (\c -> services c (packages c))

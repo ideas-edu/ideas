@@ -32,13 +32,13 @@ makeRulePages :: String -> DomainReasoner ()
 makeRulePages dir = do
    pkgs <- getPackages 
    let exMap = M.fromList 
-          [ (getId pkg, Some (EI pkg (collectExamples (exercise pkg))))
+          [ (getId pkg, Some (EI pkg (collectExamples pkg)))
           | Some pkg <- pkgs
           ]
        ruleMap = M.fromListWith (++)
           [ (getId r, [Some pkg]) 
           | Some pkg <- pkgs
-          , r <- ruleset (exercise pkg) 
+          , r <- ruleset pkg
           ]
    forM_ (M.toList ruleMap) $ \(ruleId, list@(Some pkg:_)) -> do
       let noExamples = Some (EI pkg M.empty) 
@@ -46,7 +46,7 @@ makeRulePages dir = do
           usedIn     = sortBy compareId [ getId pkg1 | Some pkg1 <- list ]
       case M.findWithDefault noExamples (getId pkg) exMap of
          Some (EI pkg1 e) -> do
-            let ex = exercise pkg1
+            let ex = pkg1
             forM_ (getRule ex ruleId) $ \r ->
                generatePageAt level dir (ruleFile ruleId) $
                   rulePage ex e usedIn r

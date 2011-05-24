@@ -104,7 +104,7 @@ tryAll xs =
       
 newState :: Monad m => ExercisePackage a -> String -> m (TypedValue a)
 newState pkg s = do
-   let ex = exercise pkg
+   let ex = pkg
    case parser ex s of
       Left msg -> fail ("newState: " ++ msg)
       Right a  -> return (emptyState pkg a ::: stateType)

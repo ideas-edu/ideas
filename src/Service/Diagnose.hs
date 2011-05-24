@@ -21,7 +21,6 @@ import Common.Library
 import Common.Utils (safeHead)
 import Data.List (sortBy)
 import Data.Maybe
-import Service.ExercisePackage
 import Service.State
 import Service.BasicServices hiding (apply)
 import Service.Types
@@ -94,7 +93,7 @@ diagnose state new
                  Correct (ready ns) ns
  where
    pkg  = exercisePkg state
-   ex   = exercise pkg
+   ex   = pkg
    newc = inContext ex new
    
    expected = do
@@ -122,7 +121,7 @@ diagnose state new
 -- When resetting the prefix, also make sure that the context is refreshed
 restartIfNeeded :: State a -> State a
 restartIfNeeded state 
-   | isNothing (statePrefix state) && canBeRestarted (exercise pkg) = 
+   | isNothing (statePrefix state) && canBeRestarted pkg = 
         emptyState pkg (stateTerm state)
    | otherwise = state
  where

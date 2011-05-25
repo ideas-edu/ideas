@@ -118,7 +118,7 @@ submitText txt ref = do
          let (b, msg, st) = submittext script (currentState d) txt
              new = restartIfNeeded st
          when b $ setValue ref $ Some $ ss {getDerivation = extendDerivation new d}
-         return msg
+         return (show msg)
       -- Use default text
       _ ->
          case parser (getExercise ss) txt of

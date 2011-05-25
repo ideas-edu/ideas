@@ -162,7 +162,7 @@ submittextS = deprecate $ makeService "submittext"
    \The boolean in the \
    \result specifies whether the submitted term is accepted and incorporated \
    \in the new state." $ 
-   submittext ::: Script :-> stateType :-> String :-> elemType (tuple3 Bool String stateType)
+   submittext ::: Script :-> stateType :-> String :-> elemType (tuple3 Bool Text stateType)
 
 derivationtextS :: Service
 derivationtextS = makeService "derivationtext" 
@@ -173,7 +173,7 @@ derivationtextS = makeService "derivationtext"
 feedbacktextS :: Service
 feedbacktextS = makeService "feedbacktext"
    "Textual feedback for diagnose service. Experimental." $
-   feedbacktext ::: Script :-> stateType :-> Term :-> tuple3 (Tag "accept" Bool) (Tag "message" String) stateType
+   feedbacktext ::: Script :-> stateType :-> Term :-> tuple3 (Tag "accept" Bool) Text stateType
 
 ------------------------------------------------------
 -- Problem decomposition service

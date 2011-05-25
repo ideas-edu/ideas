@@ -49,13 +49,13 @@ onefirsttext script old event =
 -- Feedback messages for submit service (free student input). The boolean
 -- indicates whether the student is allowed to continue (True), or forced 
 -- to go back to the previous state (False)      
-submittext :: Script -> State a -> String -> (Bool, String, State a)
+submittext :: Script -> State a -> String -> (Bool, Text, State a)
 submittext script old input =
    case parser (exercise old) input of
-      Left msg -> (False, msg, old)
+      Left msg -> (False, TextString msg, old)
       Right a  -> (feedbacktext script old a)
 
-feedbacktext :: Script -> State a -> a -> (Bool, String, State a)
+feedbacktext :: Script -> State a -> a -> (Bool, Text, State a)
 feedbacktext script old a =
    case diagnosis of
       Buggy _        -> (False, output, old)

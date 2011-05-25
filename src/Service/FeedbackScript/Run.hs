@@ -58,9 +58,6 @@ newEnvironment st = Env
    fst4 (a, _, _, _) = a
    fth4 (_, _, _, a) = a
 
-toString :: Environment a -> Script -> Text -> String -- temporarily
-toString env script = show . toText env script
-
 toText :: Environment a -> Script -> Text -> Text
 toText env script = fromMaybe mempty . eval env script . Right -- mempty for error situation
 
@@ -114,7 +111,7 @@ eval env script = either (return . findIdRef) evalText
           f _ = []
       in concatMap f (scriptDecls script)
 
-feedbackDiagnosis :: Diagnosis a -> Environment a -> Script -> String
+feedbackDiagnosis :: Diagnosis a -> Environment a -> Script -> Text
 feedbackDiagnosis diagnosis env = 
    case diagnosis of
       Buggy r        -> make "buggy"   env {recognized = Just r}
@@ -123,15 +120,12 @@ feedbackDiagnosis diagnosis env =
       Similar _ _    -> make "same"    env
       Detour _ _ r   -> make "detour"  env {recognized = Just r}
       Correct _ _    -> make "unknown" env
-   
+  
 feedbackHint :: Bool -> Environment a -> Script -> Text
-feedbackHint b = make2 (if b then "hint" else "step")
+feedbackHint b = make (if b then "hint" else "step")
 
-make :: String -> Environment a -> Script -> String
-make s env script = toString env script (TextRef (newId s))
-
-make2 :: String -> Environment a -> Script -> Text
-make2 s env script = toText env script (TextRef (newId s))
+make :: String -> Environment a -> Script -> Text
+make s env script = toText env script (TextRef (newId s))
 
 feedbackIds :: [Id]
 feedbackIds = map newId 

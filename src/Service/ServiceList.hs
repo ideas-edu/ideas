@@ -152,7 +152,7 @@ onefirsttextS = makeService "onefirsttext"
    \a formatted text message. The optional string is for announcing the event \
    \leading to this service call (which can influence the returned result)." $ 
    onefirsttext ::: Script :-> stateType :-> maybeType String 
-                :-> elemType (tuple2 String (maybeType stateType))
+                :-> elemType (tuple2 Text (maybeType stateType))
 
 submittextS :: Service
 submittextS = deprecate $ makeService "submittext" 

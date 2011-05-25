@@ -68,6 +68,7 @@ equal type1 type2 =
       (Script,      Script     ) -> Just id
       (Context,     Context    ) -> Just id
       (ArgValueTp,  ArgValueTp ) -> Just id
+      (Text,        Text       ) -> Just id
       (StdGen,      StdGen     ) -> Just id
       (IO a,        IO b       ) -> fmap liftM (equal a b)
       (Exception,   Exception  ) -> Just id
@@ -159,6 +160,7 @@ data Type a t where
    Id           :: Type a Id
    StrategyCfg  :: Type a StrategyConfiguration
    ArgValueTp   :: Type a ArgValue
+   Text         :: Type a Text
    -- Basic types
    Bool         :: Type a Bool
    Int          :: Type a Int
@@ -199,6 +201,7 @@ showGroundType tp =
       Id           -> Just "Id"
       StrategyCfg  -> Just "StrategyConfiguration"
       ArgValueTp   -> Just "ArgumentValue"
+      Text         -> Just "TextMessage"
       StdGen       -> Just "StdGen"
       Exception    -> Just "Exception"
       _            -> Nothing

@@ -27,6 +27,7 @@ import Service.OpenMathSupport
 import Service.Request
 import Service.RulesInfo (rulesInfoXML)
 import Service.StrategyInfo
+import Service.FeedbackScript.Syntax
 import Service.State
 import Service.Types
 import qualified Service.Types as Tp
@@ -153,6 +154,7 @@ xmlEncodeType b enc ex serviceType =
       Tp.Context    -> encodeContext b (encodeTerm enc)
       Tp.Location   -> return . ("location" .=.) . show
       Tp.ArgValueTp -> return . encodeArgValue b
+      Tp.Text       -> liftM (element "message") . encodeText enc ex
       Tp.Bool       -> return . text . map toLower . show
       Tp.String     -> return . text
       _             -> encodeDefault enc serviceType
@@ -309,3 +311,11 @@ encodeArgValue b (ArgValue descr a) = element "argument" $ do
       | b         = builder . omobj2xml . termToOMOBJ . build (termViewArgument descr)
       | otherwise = text . showArgument descr
    
+encodeText :: Encoder s a -> Exercise a -> Text -> DomainReasoner s
+encodeText enc ex = liftM (encodeTuple enc) . mapM f . textItems
+ where
+   f (TextTerm a) = fromMaybe (encodeAsString enc a) $ do
+      v <- hasTermView ex
+      b <- match v a
+      return (encodeTerm enc b)
+   f a = encodeAsString enc a

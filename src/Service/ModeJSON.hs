@@ -120,6 +120,7 @@ jsonEncoder ex = Encoder
               Tp.ArgValueTp -> case a of
                                   ArgValue descr x -> return $ 
                                      Object [(labelArgument descr, String (showArgument descr x))]
+              Tp.Text       -> return (toJSON (show a))
               Tp.Tag s t    -> liftM (\b -> Object [(s, b)]) (encode enc t a)
               Tp.Int        -> return (toJSON a)
               Tp.Bool       -> return (toJSON a)

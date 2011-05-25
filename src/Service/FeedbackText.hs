@@ -18,6 +18,7 @@ import Service.State
 import Service.Diagnose
 import Service.BasicServices
 import Service.FeedbackScript.Run
+import Service.FeedbackScript.Syntax
 
 ------------------------------------------------------------
 -- Services
@@ -27,7 +28,7 @@ derivationtext script state =
    let f = ruleToString (newEnvironment state) script . fst
    in right (mapFirst f) (derivation Nothing state)
 
-onefirsttext :: Script -> State a -> Maybe String -> (String, Maybe (State a))
+onefirsttext :: Script -> State a -> Maybe String -> (Text, Maybe (State a))
 onefirsttext script old event = 
    ( feedbackHint (event == Just "hint button") env script
    , fmap fth4 next

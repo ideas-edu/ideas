@@ -21,9 +21,11 @@ module Service.FeedbackScript.Run
 import Common.Context (Context)
 import Common.Id
 import Common.Exercise
+import Common.Rewriting.Term
 import Common.Utils (safeHead)
 import Control.Monad
 import Common.Transformation
+import Common.View
 import Data.List
 import Data.Maybe
 import Data.Monoid
@@ -37,8 +39,8 @@ data Environment a = Env
    , expected   :: Maybe (Rule (Context a))
    , recognized :: Maybe (Rule (Context a))
    , diffPair   :: Maybe (String, String)
-   , before     :: String
-   , after      :: Maybe String
+   , before     :: Maybe Term
+   , after      :: Maybe Term
    }
    
 newEnvironment :: State a -> Environment a
@@ -47,23 +49,26 @@ newEnvironment st = Env
    , expected   = fmap fst4 next
    , recognized = Nothing
    , diffPair   = Nothing
-   , before     = pp st
-   , after      = fmap (pp . fth4) next
+   , before     = f st
+   , after      = liftM fth4 next >>= f
    }
  where
    next = either (const Nothing) Just (onefirst st)
-   pp   = prettyPrinter (exercise st) . stateTerm
+   f s  = fmap (`build` stateTerm s) (hasTermView (exercise s))
    fst4 (a, _, _, _) = a
    fth4 (_, _, _, a) = a
 
-toString :: Environment a -> Script -> Text -> String
-toString env script = fromMaybe "" . eval env script . Right
+toString :: Environment a -> Script -> Text -> String -- temporarily
+toString env script = show . toText env script
+
+toText :: Environment a -> Script -> Text -> Text
+toText env script = fromMaybe mempty . eval env script . Right -- mempty for error situation
 
 ruleToString :: Environment a -> Script -> Rule b -> String
-ruleToString env script = fromMaybe "" . eval env script . Left . getId
+ruleToString env script = maybe "" show . eval env script . Left . getId
 
-eval :: Environment a -> Script -> Either Id Text -> Maybe String
-eval env script = fmap show . either (return . findIdRef) evalText
+eval :: Environment a -> Script -> Either Id Text -> Maybe Text
+eval env script = either (return . findIdRef) evalText
  where   
    evalText :: Text -> Maybe Text
    evalText = liftM mconcat . mapM unref . textItems
@@ -73,8 +78,8 @@ eval env script = fmap show . either (return . findIdRef) evalText
          | a == recognizedId = fmap (findIdRef . getId) (recognized env)
          | a == diffbeforeId = fmap (TextString . fst) (diffPair env)
          | a == diffafterId  = fmap (TextString . snd) (diffPair env)
-         | a == beforeId     = Just $ TextString $ before env
-         | a == afterId      = fmap TextString $ after env
+         | a == beforeId     = fmap TextTerm (before env)
+         | a == afterId      = fmap TextTerm (after env)
          | otherwise         = findRef (==a) 
       unref t = Just t
 
@@ -112,18 +117,21 @@ eval env script = fmap show . either (return . findIdRef) evalText
 feedbackDiagnosis :: Diagnosis a -> Environment a -> Script -> String
 feedbackDiagnosis diagnosis env = 
    case diagnosis of
-      Buggy r        -> make "buggy" env {recognized = Just r}
-      NotEquivalent  -> make "noteq" env
-      Expected _ _ r -> make "ok" env {recognized = Just r}
-      Similar _ _    -> make "same" env
-      Detour _ _ r   -> make "detour" env {recognized = Just r}
+      Buggy r        -> make "buggy"   env {recognized = Just r}
+      NotEquivalent  -> make "noteq"   env
+      Expected _ _ r -> make "ok"      env {recognized = Just r}
+      Similar _ _    -> make "same"    env
+      Detour _ _ r   -> make "detour"  env {recognized = Just r}
       Correct _ _    -> make "unknown" env
    
-feedbackHint :: Bool -> Environment a -> Script -> String
-feedbackHint b = make (if b then "hint" else "step")
+feedbackHint :: Bool -> Environment a -> Script -> Text
+feedbackHint b = make2 (if b then "hint" else "step")
 
 make :: String -> Environment a -> Script -> String
 make s env script = toString env script (TextRef (newId s))
+
+make2 :: String -> Environment a -> Script -> Text
+make2 s env script = toText env script (TextRef (newId s))
 
 feedbackIds :: [Id]
 feedbackIds = map newId 

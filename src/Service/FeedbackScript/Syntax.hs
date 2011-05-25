@@ -19,6 +19,7 @@ module Service.FeedbackScript.Syntax
    ) where
 
 import Common.Algebra.Group ((<>))
+import Common.Rewriting.Term
 import Common.Id
 import Common.Uniplate
 import Common.Utils (commaList, safeHead)
@@ -41,6 +42,7 @@ data DeclType = TextForId | StringDecl | Feedback
         
 data Text
    = TextString String  
+   | TextTerm   Term
    | TextRef Id
    | TextEmpty
    | Text :<>: Text
@@ -52,7 +54,7 @@ data Condition
    | CondRef Id
 
 makeText :: String -> Text
-makeText = mconcat . map TextString . words
+makeText = TextString . combineList . words
 
 feedbackDecl, textForIdDecl :: HasId a => a -> Text -> Decl
 feedbackDecl  a t = Simple Feedback  [getId a] t
@@ -87,6 +89,7 @@ instance Show Condition where
 
 instance Show Text where
    show (TextString s) = s
+   show (TextTerm a)   = show a
    show TextEmpty      = ""
    show t@(_ :<>: _)   = show [t]
    show (TextRef a)    = "@" ++ show a
@@ -116,7 +119,10 @@ textItems t = rec t []
    rec (a :<>: b) = rec a . rec b
    rec TextEmpty  = id
    rec a          = (a:)
-   
+
+combineList :: [String] -> String
+combineList = foldr combine []
+
 combine :: String -> String -> String
 combine a b 
    | null a    = b

@@ -1,0 +1,5 @@
+<request service="onefirst" exerciseid="algebra.equations.linear.balance" encoding="string">
+<state>
+<expr>5*(x-1) == x/2</expr>
+</state>
+</request>

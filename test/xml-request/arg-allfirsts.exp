@@ -1,0 +1,28 @@
+<reply result="ok" version="0.7.3 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.balance.remove-div" location="[]">
+      <argument description="factor">
+        2
+      </argument>
+      <state>
+        <prefix>
+          [5,1,1,1]
+        </prefix>
+        <expr>
+          10*(x-1) == x
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.distribute" location="[]">
+      <state>
+        <prefix>
+          [5,1,1,0]
+        </prefix>
+        <expr>
+          5*x-5 == 1/2*x
+        </expr>
+      </state>
+    </elem>
+  </list>
+</reply>
+

@@ -169,8 +169,8 @@ readyText :: Session -> IO String
 readyText ref = do
    Some ss <- getValue ref 
    if ready (currentState (getDerivation ss))
-   then return "Congratulations: you have reached a solution!"
-   else return "Sorry, you have not yet reached a solution"
+     then return "Congratulations: you have reached a solution!"
+     else return "Sorry, you have not yet reached a solution"
 
 hintOrStep :: Bool -> Session -> IO String
 hintOrStep verbose ref = do

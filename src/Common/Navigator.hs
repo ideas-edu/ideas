@@ -20,11 +20,11 @@ module Common.Navigator
    , navigator, noNavigator, viewNavigator, viewNavigatorWith
      -- * Derived navigations
    , leave, replace, arity, isTop, isLeaf, ups, downs, navigateTo
-   , navigateTowards, top, leafs, downFirst, downLast, left, right
+   , navigateTowards, top, downFirst, downLast, left, right
    , replaceT
    ) where
 
-import Common.Uniplate hiding (leafs)
+import Common.Uniplate
 import Common.View hiding (left, right)
 import Control.Monad
 import Data.Maybe
@@ -115,11 +115,6 @@ navigateTowards is a =
 
 top :: (IsNavigator f, Monad m) => f a -> m (f a)
 top = navigateTo []
-
-leafs :: IsNavigator f => f a -> [f a]
-leafs a 
-   | isLeaf a  = [a]
-   | otherwise = concatMap leafs (allDowns a)
 
 downFirst :: (IsNavigator f, Monad m) => f a -> m (f a)
 downFirst = down 0

@@ -19,7 +19,7 @@ module Common.DerivationTree
    , singleNode, addBranches, makeTree
      -- * Query 
    , root, endpoint, branches, subtrees
-   , lengthMax
+   , leafs, lengthMax
      -- * Adapters
    , restrictHeight, restrictWidth, updateAnnotations
    , cutOnStep, mergeMaybeSteps, sortTree
@@ -79,6 +79,11 @@ annotations = map fst . branches
 -- | Returns all subtrees at a given node
 subtrees :: DerivationTree s a -> [DerivationTree s a]
 subtrees = map snd . branches
+
+-- | Returns all leafs, i.e., final results in derivation. Be careful: 
+-- the returned list may be very long
+leafs :: DerivationTree s a -> [a]
+leafs t = [ root t | endpoint t ] ++ concatMap leafs (subtrees t)
 
 -- | The argument supplied is the maximum number of steps; if more steps are
 -- needed, Nothing is returned

@@ -177,6 +177,11 @@ xmlDecodeType b dec serviceType =
       Tp.Rule        -> keep $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . newId . getData) . findChild "ruleid"
       Tp.Term        -> keep $ decodeTerm dec
       Tp.StrategyCfg -> keep decodeConfiguration
+      Tp.Script      -> keep $ \xml -> do
+                           case findAttribute "script" xml of
+                              Just s  -> readScript s
+                              Nothing -> 
+                                 defaultScript (getId (decoderExercise dec))
       Tp.Tag s t
          | s == "state" -> keep $ \xml -> do 
               g  <- equalM stateType serviceType
@@ -190,21 +195,13 @@ xmlDecodeType b dec serviceType =
               g <- equalM difficultyType serviceType
               a <- findAttribute "difficulty" xml
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
-         
-         {-
-         | s == "script" -> keep $ \xml -> do
-              g <- equalM (Tag "script" String) serviceType
-              a <- findAttribute "script" xml
-              return (g a)
-         | s == "prefix" -> \xml -> do
+         {- | s == "prefix" -> \xml -> do
               f  <- equalM String t
               mp <- decodePrefix (decoderExercise dec) xml
               s  <- maybe (fail "no prefix") (return . show) mp
               return (f s, xml) -}
-         | otherwise -> keep $ \xml -> do
-              c <- findChild s xml
-              (a, _) <- xmlDecodeType b dec t c
-              return a
+         | otherwise -> keep $ \xml ->
+              findChild s xml >>= liftM fst . xmlDecodeType b dec t
               
       _ -> decodeDefault dec serviceType
  where         

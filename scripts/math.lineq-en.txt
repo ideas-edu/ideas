@@ -12,8 +12,8 @@ feedback ok = {OK}
 feedback buggy = {BUGGY}
 feedback detour = {DETOUR}
 
-feedback hint = {Use @expected to rewrite @before into @after.}
-feedback step = @hint
+feedback hint = hint
+feedback step = Use @expected to rewrite the equation into: @after
 
 # -------------------------------------------------------------
 # Rules

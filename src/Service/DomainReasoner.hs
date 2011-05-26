@@ -23,7 +23,7 @@ module Service.DomainReasoner
    , getExercises, getServices
    , getVersion, getFullVersion, getTestSuite
    , findExercise, findService
-   , defaultScript
+   , readScript, defaultScript
    ) where
 
 import Common.Library
@@ -32,6 +32,7 @@ import Common.Utils (Some(..))
 import Control.Monad.Error
 import Control.Monad.State
 import Data.Maybe
+import Data.Monoid
 import Service.Types
 import Service.FeedbackScript.Parser
 
@@ -166,10 +167,13 @@ findService txt = do
       
 defaultScript :: Id -> DomainReasoner Script
 defaultScript a = do
+   list <- gets scripts
+   maybe (return mempty) readScript (lookup a list)
+
+-- | Returns an empty script if the file does not exist
+readScript :: FilePath -> DomainReasoner Script
+readScript file = do
    path <- gets scriptDir
-   list <- gets scripts 
-   case lookup a list of
-      Just file -> 
-         liftIO $ parseScript path file
-      Nothing -> 
-         throwError $ "No feedback script available for " ++ show a
+   liftIO $ parseScript path file
+    `catchError`
+      \_ -> return mempty

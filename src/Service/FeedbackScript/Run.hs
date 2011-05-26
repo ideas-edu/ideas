@@ -58,11 +58,13 @@ newEnvironment st = Env
    fst4 (a, _, _, _) = a
    fth4 (_, _, _, a) = a
 
-toText :: Environment a -> Script -> Text -> Text
-toText env script = fromMaybe mempty . eval env script . Right -- mempty for error situation
+toText :: Environment a -> Script -> Text -> Maybe Text
+toText env script = eval env script . Right
 
 ruleToString :: Environment a -> Script -> Rule b -> String
-ruleToString env script = maybe "" show . eval env script . Left . getId
+ruleToString env script r = 
+   let f = eval env script . Left . getId
+   in maybe (showId r) show (f r) 
 
 eval :: Environment a -> Script -> Either Id Text -> Maybe Text
 eval env script = either (return . findIdRef) evalText
@@ -113,6 +115,7 @@ eval env script = either (return . findIdRef) evalText
 
 feedbackDiagnosis :: Diagnosis a -> Environment a -> Script -> Text
 feedbackDiagnosis diagnosis env = 
+   fromMaybe (TextString "ERROR") .
    case diagnosis of
       Buggy r        -> make "buggy"   env {recognized = Just r}
       NotEquivalent  -> make "noteq"   env
@@ -122,9 +125,17 @@ feedbackDiagnosis diagnosis env =
       Correct _ _    -> make "unknown" env
   
 feedbackHint :: Bool -> Environment a -> Script -> Text
-feedbackHint b = make (if b then "hint" else "step")
+feedbackHint b env script = 
+   fromMaybe (defaultHint env script) $
+   make (if b then "hint" else "step") env script
 
-make :: String -> Environment a -> Script -> Text
+defaultHint :: Environment a -> Script -> Text
+defaultHint env script = makeText $ 
+   case expected env of
+      Just r  -> ruleToString env script r
+      Nothing -> "Sorry, not hint available."
+
+make :: String -> Environment a -> Script -> Maybe Text
 make s env script = toText env script (TextRef (newId s))
 
 feedbackIds :: [Id]

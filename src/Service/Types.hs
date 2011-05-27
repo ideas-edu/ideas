@@ -18,7 +18,7 @@ module Service.Types
    , Type(..), TypedValue(..), tuple2, tuple3, tuple4
    , maybeType, optionType
    , errorType, difficultyType, listType, elemType
-   , derivationType
+   , derivationType, messageType
    , equal, equalM
    ) where
 
@@ -122,6 +122,9 @@ listType = Tag "list" . List . elemType
 
 elemType :: Type a t -> Type a t
 elemType = Tag "elem"
+
+messageType :: Type a t -> Type a t
+messageType = Tag "message"
 
 difficultyType :: Type a Difficulty
 difficultyType = Tag "difficulty" (Iso f show String)

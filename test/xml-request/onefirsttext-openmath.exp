@@ -1,0 +1,99 @@
+<reply result="ok" version="0.7.3 (0)">
+  <message>
+    Use
+    remove division
+    to rewrite the equation into:
+    <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+      <OMA>
+        <OMS cd="relation1" name="eq"/>
+        <OMA>
+          <OMS cd="arith1" name="plus"/>
+          <OMV name="x"/>
+          <OMI>
+            3
+          </OMI>
+        </OMA>
+        <OMA>
+          <OMS cd="arith1" name="times"/>
+          <OMI>
+            10
+          </OMI>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMA>
+                <OMS cd="arith1" name="divide"/>
+                <OMI>
+                  1
+                </OMI>
+                <OMI>
+                  2
+                </OMI>
+              </OMA>
+              <OMV name="x"/>
+            </OMA>
+            <OMA>
+              <OMS cd="arith1" name="divide"/>
+              <OMI>
+                3
+              </OMI>
+              <OMI>
+                2
+              </OMI>
+            </OMA>
+          </OMA>
+        </OMA>
+      </OMA>
+    </OMOBJ>
+  </message>
+  <state>
+    <prefix>
+      [5,1,0]
+    </prefix>
+    <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+      <OMA>
+        <OMS cd="relation1" name="eq"/>
+        <OMA>
+          <OMS cd="arith1" name="plus"/>
+          <OMV name="x"/>
+          <OMI>
+            3
+          </OMI>
+        </OMA>
+        <OMA>
+          <OMS cd="arith1" name="times"/>
+          <OMI>
+            10
+          </OMI>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMA>
+                <OMS cd="arith1" name="divide"/>
+                <OMI>
+                  1
+                </OMI>
+                <OMI>
+                  2
+                </OMI>
+              </OMA>
+              <OMV name="x"/>
+            </OMA>
+            <OMA>
+              <OMS cd="arith1" name="divide"/>
+              <OMI>
+                3
+              </OMI>
+              <OMI>
+                2
+              </OMI>
+            </OMA>
+          </OMA>
+        </OMA>
+      </OMA>
+    </OMOBJ>
+  </state>
+</reply>
+

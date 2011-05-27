@@ -1,11 +1,6 @@
 <reply result="ok" version="0.7.3 (0)">
-  <message>
-    Use
-    remove division
-    to rewrite the equation into:
-    <expr>
-      x+3 == 10*(1/2*x+3/2)
-    </expr>
+  <message accept="true">
+    Well done!
   </message>
   <state>
     <prefix>

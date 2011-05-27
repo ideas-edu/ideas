@@ -17,6 +17,7 @@ import Common.Utils (Some(..))
 import Data.List (sortBy)
 import Data.Ord
 import Service.FeedbackText
+import Service.FeedbackScript.Syntax
 import Service.ProblemDecomposition (problemDecomposition, replyType)
 import Service.Types
 import Service.RulesInfo
@@ -152,7 +153,14 @@ onefirsttextS = makeService "onefirsttext"
    \a formatted text message. The optional string is for announcing the event \
    \leading to this service call (which can influence the returned result)." $ 
    onefirsttext ::: Script :-> stateType :-> maybeType String 
-                :-> elemType (tuple2 Text (maybeType stateType))
+                :-> tuple2 (messageType Text) (maybeType stateType)
+
+derivationtextS :: Service
+derivationtextS = makeService "derivationtext" 
+   "Similar to the derivation service, but the rules appearing in the derivation \
+   \have been replaced by a short description of the rule." $ 
+   derivationtext ::: Script :-> stateType :-> errorType (derivationType (Tag "ruletext" String) Context)
+
 
 submittextS :: Service
 submittextS = deprecate $ makeService "submittext" 
@@ -162,18 +170,21 @@ submittextS = deprecate $ makeService "submittext"
    \The boolean in the \
    \result specifies whether the submitted term is accepted and incorporated \
    \in the new state." $ 
-   submittext ::: Script :-> stateType :-> String :-> elemType (tuple3 Bool Text stateType)
-
-derivationtextS :: Service
-derivationtextS = makeService "derivationtext" 
-   "Similar to the derivation service, but the rules appearing in the derivation \
-   \have been replaced by a short description of the rule." $ 
-   derivationtext ::: Script :-> stateType :-> errorType (derivationType String Context)
+   submittext ::: Script :-> stateType :-> String :-> messageAndState
 
 feedbacktextS :: Service
 feedbacktextS = makeService "feedbacktext"
    "Textual feedback for diagnose service. Experimental." $
-   feedbacktext ::: Script :-> stateType :-> Term :-> tuple3 (Tag "accept" Bool) Text stateType
+   feedbacktext ::: Script :-> stateType :-> Term :-> messageAndState
+   
+-- Helper type for submittext and feedbacktext: reorders elements, and inserts
+-- some extra tags
+messageAndState :: Type a (Bool, Text, State a)
+messageAndState = Iso f g tp
+ where
+   f ((a, b), c) = (a, b, c)
+   g (a, b, c)   = ((a, b), c)
+   tp  = tuple2 (messageType (tuple2 (Tag "accept" Bool) Text)) stateType
 
 ------------------------------------------------------
 -- Problem decomposition service

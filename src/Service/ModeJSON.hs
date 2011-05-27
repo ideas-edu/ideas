@@ -133,6 +133,8 @@ jsonEncoder ex = Encoder
    tupleList (a ::: Tp.Iso _ f t)   = tupleList (f a ::: t)
    tupleList (p ::: Tp.Pair t1 t2) = 
       tupleList (fst p ::: t1) ++ tupleList (snd p ::: t2)
+   tupleList (a ::: Tag s t) 
+      | s `elem` ["ruletext", "message", "accept"] = tupleList (a ::: t)
    tupleList tv = [tv]
 
 jsonDecoder :: Exercise a -> Decoder JSON a

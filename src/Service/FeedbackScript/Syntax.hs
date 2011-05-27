@@ -54,7 +54,9 @@ data Condition
    | CondRef Id
 
 makeText :: String -> Text
-makeText = TextString . combineList . words
+makeText s = case words s of
+                [] -> TextEmpty
+                xs -> TextString (combineList xs)
 
 feedbackDecl, textForIdDecl :: HasId a => a -> Text -> Decl
 feedbackDecl  a t = Simple Feedback  [getId a] t

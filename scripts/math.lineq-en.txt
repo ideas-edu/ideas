@@ -5,15 +5,17 @@ supports algebra.equations.linear
 # -------------------------------------------------------------
 # Feedback
 
-feedback same = {SAME}
-feedback noteq = {NOTEQ}
-feedback unknown = {UNKNOWN}
-feedback ok = {OK}
-feedback buggy = {BUGGY}
-feedback detour = {DETOUR}
+feedback same = @ok
+feedback noteq = @incorrect
+feedback unknown = @ok
+feedback ok = {Well done!}
+feedback buggy = {@incorrect @recognized}
+feedback detour = @ok
 
 feedback hint = hint
 feedback step = Use @expected to rewrite the equation into: @after
+
+string incorrect = {This step is incorrect.}
 
 # -------------------------------------------------------------
 # Rules
@@ -36,7 +38,7 @@ text linear.var-left = variable to left
 
 text buggy.cancel-minus = Cancel terms on both sides, but terms have different signs.
 text buggy.distr-times-denom = Incorrct distribution of times over plus: one of the terms is a fraction, and the outer expression is multiplied by the fraction's denominator.
-text buggy.distr-times-plus = Incorrect distribution of times over plus: one term is not multiplied.
+text buggy.distr-times-plus = Distribution of times over plus: one term is not multiplied.
 text buggy.distr-times-plus-forget = Incorrect distribution of times over plus: one term is forgotten.
 text buggy.distr-times-plus-sign = Incorrect distribution of times over plus: changing sign of addition.
 text buggy.distr-times-too-many = Strange distribution of times over plus: a*(b+c)+d, where 'a' is also multiplied to d.

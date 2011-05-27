@@ -154,7 +154,7 @@ xmlEncodeType b enc ex serviceType =
       Tp.Context    -> encodeContext b (encodeTerm enc)
       Tp.Location   -> return . ("location" .=.) . show
       Tp.ArgValueTp -> return . encodeArgValue b
-      Tp.Text       -> liftM (element "message") . encodeText enc ex
+      Tp.Text       -> encodeText enc ex
       Tp.Bool       -> return . text . map toLower . show
       Tp.String     -> return . text
       _             -> encodeDefault enc serviceType

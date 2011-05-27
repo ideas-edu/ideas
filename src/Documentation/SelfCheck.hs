@@ -110,7 +110,7 @@ doBlackBoxTest run format path = do
    
    filterVersion = 
       let p s = not (null s || "version" `isInfixOf` s)
-      in filter p . lines
+      in filter p . lines . filter (/= '\r')
 
 simplerDirectory :: String -> String
 simplerDirectory s

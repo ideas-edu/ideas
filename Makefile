@@ -170,13 +170,16 @@ $(SRCDIR)/Domain/Programming/InlinePatternBindings.hs : \
 
 ifeq ($(IDEASSERVER), yes)
 
-INSTALL-CGI  = /var/www/cgi-bin
-INSTALL-DOC  = /var/www/html/docs/latest
+INSTALL-CGI    = /var/www/cgi-bin
+INSTALL-DOC    = /var/www/html/docs/latest
+INSTALL-SCRIPT = /var/www/cgi-bin/scripts
 
 install: ideas
 	# "sudo make install"
 	$(CP) $(BINDIR)/ideas.cgi $(INSTALL-CGI)
 	$(CP) -r $(DOCDIR)/* $(INSTALL-DOC)
+	$(CP) $(SCRIPTDIR)/* $(INSTALL-SCRIPT)
+	$(CHMOD) 744 $(INSTALL-SCRIPT)/*
 
 endif
 	

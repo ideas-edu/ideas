@@ -195,7 +195,7 @@ xmlDecodeType b dec serviceType =
               g <- equalM difficultyType serviceType
               a <- findAttribute "difficulty" xml
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
-         {- | s == "prefix" -> \xml -> do
+         {- s == "prefix" -> \xml -> do
               f  <- equalM String t
               mp <- decodePrefix (decoderExercise dec) xml
               s  <- maybe (fail "no prefix") (return . show) mp

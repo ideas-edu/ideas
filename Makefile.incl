@@ -35,11 +35,12 @@ status:
 #---------------------------------------------------------------------------------------
 # Directories that have to be created
 
-BINDIR  = bin
-OUTDIR  = out
-PROFDIR = out/prof
-DOCDIR  = docs
-TESTDIR = test
+BINDIR    = bin
+SCRIPTDIR = scripts
+OUTDIR    = out
+PROFDIR   = out/prof
+DOCDIR    = docs
+TESTDIR   = test
 
 #---------------------------------------------------------------------------------------
 # Source files
@@ -80,6 +81,7 @@ TOUCH = touch
 STRIP = strip
 MKDIR = mkdir
 CP    = cp
+CHMOD = chmod
 RM    = rm
 RMDIR = rmdir
 CD    = cd

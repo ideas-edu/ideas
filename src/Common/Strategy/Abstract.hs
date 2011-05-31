@@ -14,7 +14,7 @@ module Common.Strategy.Abstract
    ( Strategy, IsStrategy(..)
    , LabeledStrategy, label, unlabel
    , fullDerivationTree, derivationTree, rulesInStrategy
-   , mapRules, mapRulesS, cleanUpStrategy
+   , mapRules, mapRulesS, cleanUpStrategy, cleanUpStrategyAfter
      -- Accessors to the underlying representation
    , toCore, fromCore, liftCore, liftCore2, makeLabeledStrategy
    , toLabeledStrategy
@@ -190,13 +190,17 @@ mapRules f (LS n s) = LS n (mapRulesS f s)
 mapRulesS :: (Rule a -> Rule b) -> Strategy a -> Strategy b
 mapRulesS f = S . fmap f . toCore
 
--- | Use a function as do-after hook for all rules in a labeled strategy
+-- | Use a function as do-after hook for all rules in a labeled strategy, but
+-- also use the function beforehand
 cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
-cleanUpStrategy f (LS n s) = mapRules g (LS n (S core))
+cleanUpStrategy f (LS n s) = cleanUpStrategyAfter f (LS n (make s))
  where
-   core = Rule (doAfter f idRule) :*: toCore s
-   g r | isMajorRule r = doAfter f r  
-       | otherwise     = r
+   make = liftCore2 (.*.) (doAfter f idRule)
+
+-- | Use a function as do-after hook for all rules in a labeled strategy
+cleanUpStrategyAfter :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
+cleanUpStrategyAfter f = mapRules $ \r -> 
+   if isMajorRule r then doAfter f r else r
        
 -----------------------------------------------------------
 --- Functions to lift the core combinators

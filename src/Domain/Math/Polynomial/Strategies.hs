@@ -31,7 +31,7 @@ import Data.Maybe
 -- Linear equations
 
 linearStrategy :: LabeledStrategy (Context (Equation Expr))
-linearStrategy = cleanUpStrategy (applyTop (fmap cleanUpSimple)) linearStrategyG
+linearStrategy = cleanUpStrategyAfter (applyTop (fmap cleanUpSimple)) linearStrategyG
 
 linearMixedStrategy :: LabeledStrategy (Context (Equation Expr))
 linearMixedStrategy = 
@@ -39,7 +39,7 @@ linearMixedStrategy =
        cfg = [ (byName ruleNormalizeMixedFraction, Reinsert)
              , (byName ruleNormalizeRational, Remove)
              ] 
-   in cleanUpStrategy f (configureNow (configure cfg linearStrategyG))
+   in cleanUpStrategyAfter f (configureNow (configure cfg linearStrategyG))
 
 linearStrategyG :: IsTerm a => LabeledStrategy (Context a)
 linearStrategyG =

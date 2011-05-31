@@ -41,7 +41,8 @@ module Common.Strategy
    , Prefix, emptyPrefix, makePrefix, prefixTree, Step(..)
    , prefixToSteps, stepsToRules, lastStepInPrefix
      -- * Misc
-   , cleanUpStrategy, rulesInStrategy, mapRules, mapRulesS
+   , cleanUpStrategy, cleanUpStrategyAfter
+   , rulesInStrategy, mapRules, mapRulesS
    ) where
 
 import Common.Strategy.Abstract

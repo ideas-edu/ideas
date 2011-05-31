@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.3 (0)">
+<reply result="ok" version="0.7.4 (0)">
   <message>
     Use
     remove division
@@ -49,7 +49,7 @@
   </message>
   <state>
     <prefix>
-      [5,1,0]
+      [4,1,0]
     </prefix>
     <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
       <OMA>

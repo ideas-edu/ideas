@@ -1,7 +1,6 @@
-<reply result="ok" version="0.7.3 (0)">
+<reply result="ok" version="0.7.4 (0)">
   <label name="linearequation">
     <sequence>
-      <rule name="identity"/>
       <label name="phase1">
         <repeat>
           <choice>

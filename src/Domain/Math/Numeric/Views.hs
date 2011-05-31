@@ -22,6 +22,7 @@ import Common.View
 import Control.Monad
 import Data.Ratio
 import Domain.Math.Expr
+import qualified Domain.Math.Data.MixedFraction as MF
 
 -------------------------------------------------------------------
 -- Numeric views
@@ -53,14 +54,13 @@ rationalView = newView "num.rational" (exprToNum f (const Nothing)) fromRational
            return (if numerator ry < 0 then 1/a else a)
    f _ _ = Nothing
    
-mixedFractionView :: View Expr Rational
-mixedFractionView = newView "num.mixed-fraction" (match rationalView) mix 
+mixedFractionView :: View Expr MF.MixedFraction
+mixedFractionView = newView "num.mixed-fraction" f g
  where
-   mix r = 
-      let (d, m) = abs (numerator r) `divMod` denominator r
-          rest   = fromInteger m ./. fromInteger (denominator r)
-          sign   = if numerator r < 0 then negate else id
-      in sign (fromInteger d .+. rest)
+   f   = fmap fromRational . match rationalView
+   g a = let sign = if a < 0 then negate else id
+             rest = fromRational (MF.fractionPart a)
+         in sign (fromInteger (MF.wholeNumber a) .+. rest)
 
 doubleView :: View Expr Double
 doubleView = newView "num.double" (exprToNum doubleSym return) fromDouble
@@ -79,31 +79,30 @@ integerNormalForm = newView "num.integer-nf" (optionNegate f) fromInteger
 rationalNormalForm :: View Expr Rational
 rationalNormalForm = newView "num.rational-nf" f fromRational
  where   
-   f (Nat a :/: Nat b) = simple a b
-   f (Negate (Nat a :/: Nat b)) = fmap negate (simple a b)
-   f (Negate (Nat a) :/: Nat b) = fmap negate (simple a b)
+   f (Nat a :/: Nat b) = simpleRational a b
+   f (Negate (Nat a :/: Nat b)) = fmap negate (simpleRational a b)
+   f (Negate (Nat a) :/: Nat b) = fmap negate (simpleRational a b)
    f a = fmap fromInteger (match integerNormalForm a)
    
-   simple a b
-      | a > 0 && b > 1 && gcd a b == 1 = 
-           Just (fromInteger a / fromInteger b)
-      | otherwise = Nothing
-
-mixedFractionNormalForm :: View Expr Rational
-mixedFractionNormalForm = newView "num.mixed-fraction-nf" f fromRational
+mixedFractionNormalForm :: View Expr MF.MixedFraction
+mixedFractionNormalForm = newView "num.mixed-fraction-nf" f (build mixedFractionView)
  where
-   f (Negate (Nat a) :-: (Nat b :/: Nat c)) | a > 0 = fmap (negate . (fromInteger a+)) (simple b c)
-   f (Negate (Nat a :+: (Nat b :/: Nat c))) | a > 0 = fmap (negate . (fromInteger a+)) (simple b c)
-   f (Nat a :+: (Nat b :/: Nat c)) | a > 0 = fmap (fromInteger a+) (simple b c)
-   f (Nat a :/: Nat b) = simple a b
-   f (Negate (Nat a :/: Nat b)) = fmap negate (simple a b)
-   f (Negate (Nat a) :/: Nat b) = fmap negate (simple a b)
-   f a = fmap fromInteger (match integerNormalForm a)
+   f (Negate (Nat a) :-: (Nat b :/: Nat c)) = fmap negate (simple a b c)
+   f (Negate (Nat a :+: (Nat b :/: Nat c))) = fmap negate (simple a b c)
+   f (Nat a :+: (Nat b :/: Nat c)) = simple a b c
+   f expr = do r <- match rationalNormalForm expr
+               guard ((-1 < r && r < 1) || denominator r == 1)
+               return (fromRational r)
    
-   simple a b
-      | a > 0 && b > 1 && gcd a b == 1 && a < b = 
-           Just (fromInteger a / fromInteger b)
-      | otherwise = Nothing
+   simple a b c = do
+      guard (a > 0 && b < c)
+      r <- simpleRational b c
+      return (fromInteger a + fromRational r)
+
+simpleRational :: Integer -> Integer -> Maybe Rational
+simpleRational a b = do
+   guard (a > 0 && b > 1 && gcd a b == 1)
+   return (fromInteger a / fromInteger b)
 
 fractionForm :: View Expr (Integer, Integer)
 fractionForm = newView "num.fraction-form" f (\(a, b) -> (fromInteger a :/: fromInteger b))

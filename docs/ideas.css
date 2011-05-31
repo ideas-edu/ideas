@@ -131,7 +131,6 @@ a:visited
 
 a:hover 
   { text-decoration: underline;
-  , background: rgb(255,0,0);
   }
     
 dt.header

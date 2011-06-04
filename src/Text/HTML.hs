@@ -9,14 +9,19 @@
 -- Portability :  portable (depends on ghc)
 --
 -- A minimal interface for constructing simple HTML pages
+-- See http://www.w3.org/TR/html4/
 --
 -----------------------------------------------------------------------------
 module Text.HTML 
    ( HTML, HTMLBuilder, showHTML
    , htmlPage, errorPage, link, linkTitle
    , h1, h2, h3, h4, preText, ul, table
-   , text, image, space, tt, spaces, highlightXML
-   , font, bold, italic, para, ttText, hr, br, pre, center, bullet, divClass
+   , text, image, space, spaces, highlightXML
+   , font, para, ttText, hr, br, pre, center, bullet, divClass
+     -- HTML generic attributes
+   , idA, classA, styleA, titleA
+     -- Font style elements
+   , tt, italic, bold, big, small
    ) where
 
 import Text.XML hiding (text)
@@ -77,10 +82,6 @@ h4 = element "h4" . text
 font :: String -> HTMLBuilder -> HTMLBuilder
 font n = element "font" . ("class" .=. n >>)
 
-bold, italic :: HTMLBuilder -> HTMLBuilder
-bold   = element "b" 
-italic = element "i"
-
 para :: HTMLBuilder -> HTMLBuilder
 para = element "p"
 
@@ -95,9 +96,6 @@ hr = tag "hr"
 
 br :: HTMLBuilder
 br = tag "br"
-
-tt :: HTMLBuilder -> HTMLBuilder
-tt = element "tt"
 
 ttText :: String -> HTMLBuilder
 ttText = tt . text
@@ -163,3 +161,40 @@ highlightXML nice
            "</font>&gt;</font>" ++ f (drop 4 list)
       | x=='=' = "<font color='orange'>=</font>" ++ g xs
       | otherwise = x : g xs
+
+
+-----------------------------------------------------------
+-- * HTML generic attributes
+
+idA, classA, styleA, titleA :: String -> HTMLBuilder -> HTMLBuilder
+idA    = setA "id"     -- ^ document-wide unique id
+classA = setA "class"  -- ^ space-separated list of classes
+styleA = setA "style"  -- ^ associated style info
+titleA = setA "title"  -- ^ advisory title
+
+setA :: String -> String -> HTMLBuilder -> HTMLBuilder
+setA attr value = updateLast $ \e ->  
+   e { attributes = (attr := value) : attributes e }
+
+-----------------------------------------------------------
+-- * Font style elements
+
+-- | Renders as teletype or monospaced text.
+tt :: HTMLBuilder -> HTMLBuilder
+tt = element "tt"
+
+-- | Renders as italic text style.
+italic :: HTMLBuilder -> HTMLBuilder
+italic = element "i"
+
+-- | Renders as bold text style.
+bold :: HTMLBuilder -> HTMLBuilder
+bold = element "b" 
+
+-- BIG: Renders text in a "large" font.
+big :: HTMLBuilder -> HTMLBuilder
+big = element "big"
+
+-- SMALL: Renders text in a "small" font.
+small :: HTMLBuilder -> HTMLBuilder
+small = element "small"

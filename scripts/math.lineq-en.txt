@@ -37,7 +37,7 @@ text linear.var-left = variable to left
 # Buggy rules
 
 text buggy.cancel-minus = Cancel terms on both sides, but terms have different signs.
-text buggy.distr-times-denom = Incorrct distribution of times over plus: one of the terms is a fraction, and the outer expression is multiplied by the fraction's denominator.
+text buggy.distr-times-denom = Incorrect distribution of times over plus: one of the terms is a fraction, and the outer expression is multiplied by the fraction's denominator.
 text buggy.distr-times-plus = Distribution of times over plus: one term is not multiplied.
 text buggy.distr-times-plus-forget = Incorrect distribution of times over plus: one term is forgotten.
 text buggy.distr-times-plus-sign = Incorrect distribution of times over plus: changing sign of addition.

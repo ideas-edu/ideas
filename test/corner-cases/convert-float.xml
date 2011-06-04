@@ -1,0 +1,5 @@
+<request service="onefirst" exerciseid="math.lineq" encoding="string">
+<state>
+<expr>0.2*(x+2) == 5</expr>
+</state>
+</request>

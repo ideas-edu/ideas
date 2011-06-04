@@ -13,15 +13,16 @@ module Domain.Math.Numeric.Views
    ( integralView, integerView
    , rationalView, doubleView, mixedFractionView
    , integerNormalForm, rationalNormalForm, mixedFractionNormalForm
-   , rationalRelaxedForm, fractionForm
+   , rationalRelaxedForm, fractionForm, exactView
    , intDiv, fracDiv
    ) where
 
 import Common.Rewriting
+import Common.Uniplate
 import Common.View
 import Control.Monad
 import Data.Ratio
-import Domain.Math.Expr
+import Domain.Math.Expr hiding ((^))
 import qualified Domain.Math.Data.MixedFraction as MF
 
 -------------------------------------------------------------------
@@ -41,8 +42,14 @@ integralView = newView "num.integer" (exprToNum f (const Nothing)) fromIntegral
 integerView :: View Expr Integer
 integerView = integralView
 
+-- |like oldRationalView (the original defintion), except that this view
+-- now also converts floating point numbers (using an exact approximation)
 rationalView :: View Expr Rational
-rationalView = newView "num.rational" (exprToNum f (const Nothing)) fromRational
+rationalView = newView "num.rational" f fromRational
+ where f a = match exactView a >>= either (const Nothing) Just
+
+oldRationalView :: View Expr Rational
+oldRationalView = newView "num.rational" (exprToNum f (const Nothing)) fromRational
  where
    f s [x, y] 
       | isDivideSymbol s = 
@@ -53,11 +60,27 @@ rationalView = newView "num.rational" (exprToNum f (const Nothing)) fromRational
            let a = x Prelude.^ abs (numerator ry)
            return (if numerator ry < 0 then 1/a else a)
    f _ _ = Nothing
+
+exactView :: View Expr (Either Double Rational)
+exactView = newView "num.exact" f (either fromDouble fromRational)
+ where
+   f (Number d) = Just (Left d)
+   f (Negate a) = fmap (negate +++ negate) (f a)
+   f expr       = fmap Right (match oldRationalView (g expr))
    
+   g (Number d) = fromRational (doubleToRational d)
+   g expr       = descend g expr
+
+doubleToRational :: Double -> Rational
+doubleToRational d = fromInteger base / 10^digs
+ where
+   digs = 8 :: Int -- maximum number of digits
+   base = round (d * 10^digs) :: Integer
+
 mixedFractionView :: View Expr MF.MixedFraction
 mixedFractionView = newView "num.mixed-fraction" f g
  where
-   f   = fmap fromRational . match rationalView
+   f   = fmap fromRational . match oldRationalView
    g a = let sign = if a < 0 then negate else id
              rest = fromRational (MF.fractionPart a)
          in sign (fromInteger (MF.wholeNumber a) .+. rest)

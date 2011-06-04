@@ -1,0 +1,16 @@
+<reply result="ok" version="0.7.4 (0)">
+  <elem ruleid="algebra.equations.linear.norm-rational" location="[2]">
+    <state>
+      <prefix>
+        [8,0,0,1,0]
+      </prefix>
+      <expr>
+        x == 2/3
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </state>
+  </elem>
+</reply>
+

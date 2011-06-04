@@ -15,7 +15,7 @@
 module Text.XML
    ( XML, Attr, AttrList, InXML(..), Element(..)
    , XMLBuilder, makeXML, text, unescaped, element, tag, attribute
-   , parseXML, showXML, compactXML, (.=.), findAttribute
+   , parseXML, showXML, compactXML, (.=.), findAttribute, updateLast
    , children, Attribute(..), builder, findChild, getData
    ) where
 
@@ -109,6 +109,16 @@ makeXML s m =
 
 text :: String -> XMLBuilder
 text = unescaped . escape
+
+updateLast :: (Element -> Element) -> XMLBuilderM a -> XMLBuilderM a
+updateLast f m = XMLBuilder $ do
+   a <- unBuild m
+   modify $ \s -> s {bsElements = (++) (rec (bsElements s []))}
+   return a
+ where
+   rec []     = []
+   rec [x]    = [fmap f x]
+   rec (x:xs) = x:rec xs
 
 -- Should be used with care: the argument String is not escaped, and
 -- therefore may contain xml tags or xml entities

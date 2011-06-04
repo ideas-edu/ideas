@@ -1,0 +1,13 @@
+<reply result="ok" version="0.7.4 (0)">
+  <elem ruleid="algebra.equations.linear.distr-times" location="[]">
+    <state>
+      <prefix>
+        [4,1,1,0]
+      </prefix>
+      <expr>
+        0.2*x+2/5 == 5
+      </expr>
+    </state>
+  </elem>
+</reply>
+

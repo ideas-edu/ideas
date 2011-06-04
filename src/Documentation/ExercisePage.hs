@@ -146,7 +146,7 @@ derivationHTML ex a = divClass "derivation" $ do
 
 idboxHTML :: String -> Id -> HTMLBuilder
 idboxHTML kind i = divClass "idbox" $ do
-   font "id" $ ttText (showId i)
+   spanClass "id" $ ttText (showId i)
    spaces 3
    text $ "(" ++ kind ++ ")"
    unless (null $ description i) $ do
@@ -188,7 +188,7 @@ forStep n ((r, env), old) = do
       space
       let target = up n ++ ruleFile r
           make | null (description r) = link target
-               | otherwise = linkTitle target (description r)
+               | otherwise = titleA (description r) . link target
       make (text (unqualified r))
       let xs = fromMaybe [] (expectedArguments r old)
           g (ArgValue descr x) = labelArgument descr ++ "=" ++ showArgument descr x

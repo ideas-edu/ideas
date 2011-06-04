@@ -12,9 +12,13 @@ h1, h2, h3 {
    color: rgb(41,134,189);
 }
 
-div.error {
+div.error, span.error {
    color: rgb(255,0,0);
    font-weight:      bold;
+}
+
+span.warning {
+   color: rgb(255,165,0);
 }
 
 div.menu {
@@ -46,7 +50,7 @@ div.idbox {
     border-style:     solid;
 }
 
-font.id {
+span.id {
    color: rgb(41,134,189);
    font-size: 12pt;
    font-weight: bold;

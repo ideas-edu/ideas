@@ -17,7 +17,6 @@ import Documentation.DefaultPage
 import Documentation.SelfCheck
 import Service.DomainReasoner
 import Text.HTML
-import qualified Text.XML as XML
 
 makeTestsPage :: String -> String -> DomainReasoner ()
 makeTestsPage docDir testDir = do
@@ -37,7 +36,7 @@ formatResult loc result = do
    ttText (show result)
    br
    forM_ (topMessages result) $ \m -> 
-      (if isError m then bold . colorRed else colorOrange) 
+      spanClass (if isError m then "error" else "warning") 
       (ttText (show m) >> br)
    let subs = zip [1::Int ..] (subResults result) 
    forM_ subs $ \(i, (s, a)) -> do
@@ -49,13 +48,3 @@ showHeader :: [Int] -> String -> HTMLBuilder
 showHeader [a]   s = h2 (show a ++ ". " ++ s)
 showHeader [a,b] s = h3 (show a ++ "." ++ show b ++ ". " ++ s)
 showHeader _     s = para (bold (text s))
-
-colorRed :: HTMLBuilder -> HTMLBuilder
-colorRed body = XML.element "font" $ do
-   "color" XML..=. "red"
-   body
-   
-colorOrange :: HTMLBuilder -> HTMLBuilder
-colorOrange body = XML.element "font" $ do
-   "color" XML..=. "#FE9A2E"
-   body

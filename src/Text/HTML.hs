@@ -14,16 +14,19 @@
 -----------------------------------------------------------------------------
 module Text.HTML 
    ( HTML, HTMLBuilder, showHTML
-   , htmlPage, errorPage, link, linkTitle
-   , h1, h2, h3, h4, preText, ul, table
+   , htmlPage, link
+   , h1, h2, h3, h4, h5, h6
+   , preText, ul, table
    , text, image, space, spaces, highlightXML
-   , font, para, ttText, hr, br, pre, center, bullet, divClass
+   , para, ttText, hr, br, pre, bullet
+   , divClass, spanClass
      -- HTML generic attributes
    , idA, classA, styleA, titleA
      -- Font style elements
    , tt, italic, bold, big, small
    ) where
 
+import Prelude hiding (div)
 import Text.XML hiding (text)
 import qualified Text.XML as XML
 import Control.Monad
@@ -49,38 +52,19 @@ htmlPage title css body = makeXML "html" $ do
             "rel"  .=. "STYLESHEET" 
             "href" .=. n
             "type" .=. "text/css"
-   element "body" body     
-
-errorPage :: String -> HTML
-errorPage s = htmlPage "Error" Nothing $ do
-   h1 "Error"
-   text s
+   element "body" body
    
 link :: String -> HTMLBuilder -> HTMLBuilder
 link url body = element "a" $ 
    ("href" .=. url) >> body
 
-linkTitle :: String -> String -> HTMLBuilder -> HTMLBuilder
-linkTitle url title body = element "a" $ 
-   ("href" .=. url) >> ("title" .=. title) >> body
-
-center :: HTMLBuilder -> HTMLBuilder
-center = element "center"
-
-h1 :: String -> HTMLBuilder
+h1, h2, h3, h4, h5, h6 :: String -> HTMLBuilder
 h1 = element "h1" . text
-
-h2 :: String -> HTMLBuilder
 h2 = element "h2" . text
-
-h3 :: String -> HTMLBuilder
 h3 = element "h3" . text
-
-h4 :: String -> HTMLBuilder
 h4 = element "h4" . text
-
-font :: String -> HTMLBuilder -> HTMLBuilder
-font n = element "font" . ("class" .=. n >>)
+h5 = element "h5" . text
+h6 = element "h6" . text
 
 para :: HTMLBuilder -> HTMLBuilder
 para = element "p"
@@ -130,7 +114,10 @@ text :: String -> HTMLBuilder
 text = XML.text
 
 divClass :: String -> HTMLBuilder -> HTMLBuilder
-divClass n body = element "div" ("class" .=. n >> body)
+divClass n = classA n . element "div"
+
+spanClass :: String -> HTMLBuilder -> HTMLBuilder
+spanClass n = classA n . element "span"
 
 -- A simple XML highlighter
 highlightXML :: Bool -> XML -> HTMLBuilder

@@ -87,7 +87,7 @@ rulePage ex exMap usedIn r = do
 idboxHTML :: String -> Id -> HTMLBuilder
 idboxHTML kind i = divClass "idbox" $ do
    para $ do 
-      font "id" $ ttText (showId i)
+      spanClass "id" $ ttText (showId i)
       spaces 3
       text $ "(" ++ kind ++ ")"
    unless (null $ description i) $
@@ -100,7 +100,7 @@ forStep n (i, env) = do
       space
       let target = up n ++ ruleFile i
           make | null (description i) = link target
-               | otherwise = linkTitle target (description i)
+               | otherwise = titleA (description i) . link target
       make (text (unqualified i))
       br
       unless (nullEnv env) $ do

@@ -18,7 +18,6 @@ import Service.Types
 import Service.DomainReasoner
 import Service.State
 import Text.HTML
-import qualified Text.XML as XML
 import Text.XML (XML)
 import Control.Monad
 import Common.Exercise
@@ -57,8 +56,7 @@ servicePage xs s = do
             bold $ text "Reply:"
             highlightXML True xmlReply
             unless xmlTest $ 
-               XML.element "font" $ do
-                  "color" XML..=. "red"
+               spanClass "error" $ do
                   bold $ text "Error: invalid request/reply pair"
 
 -----------------------------------------------------------------------

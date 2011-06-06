@@ -91,6 +91,11 @@
          "status": "Provisional"
       },
       {
+         "exerciseid": "algebra.manipulation.polynomial.expand",
+         "description": "expand an expression to polynomial normal form",
+         "status": "Provisional"
+      },
+      {
          "exerciseid": "algebra.manipulation.polynomial.factor",
          "description": "factorize the expression",
          "status": "Provisional"
@@ -168,5 +173,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.7.3 (0)"
+   "version": "0.7.4 (0)"
 }

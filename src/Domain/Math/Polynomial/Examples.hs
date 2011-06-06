@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Examples 
    ( linearExamples, quadraticExamples, higherDegreeExamples
-   , factorizeExamples
+   , factorizeExamples, expandExamples
    , ineqLin1, ineqQuad1, ineqQuad2, extraIneqQuad, ineqHigh
    ) where
 
@@ -177,6 +177,14 @@ factorizeExamples =
       , x^2-x-2
       , x^2-11*x+28
       ]
+
+expandExamples :: Examples Expr
+expandExamples = level Easy $
+   [ 5*(x+1), -3*(x-3), (x-1)*7
+   , (x+1)*(x-3), x*(x-1), 3*(x-2)*2*x
+   , (x-1)^2, (x+1)^2, (x-1)^2*(x+1)
+   , (x+1)^3, (x-1)^3*x, (x-1)*(x+3)*(x-5)
+   ]
 
 --------------------------------------------------------------------
 -- Algemene applet

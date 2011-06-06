@@ -132,7 +132,7 @@ betweenView = makeView f h
       in Logic.Var (g o1 x y) :&&: Logic.Var (g o2 y z)
 
 ineqLinear :: LabeledStrategy (Context (Relation Expr))
-ineqLinear = cleanUpStrategy (applyTop (fmap cleanUpSimple)) ineqLinearG
+ineqLinear = cleanUpStrategyAfter (applyTop (fmap cleanUpSimple)) ineqLinearG
 
 ineqLinearG :: IsTerm a => LabeledStrategy (Context a)
 ineqLinearG = label "Linear inequation" $
@@ -184,7 +184,7 @@ flipSign = describe "Flip sign of inequality" $
       maybe False fst (match productView expr)
  
 ineqQuadratic :: LabeledStrategy (Context (Logic (Relation Expr)))
-ineqQuadratic = cleanUpStrategy (applyTop cleanUpLogicRelation) $ 
+ineqQuadratic = cleanUpStrategyAfter (applyTop cleanUpLogicRelation) $ 
    label "Quadratic inequality" $ 
       use trivialRelation
        |> try (useC turnIntoEquation) 
@@ -192,7 +192,7 @@ ineqQuadratic = cleanUpStrategy (applyTop cleanUpLogicRelation) $
       <*> useC solutionInequation
 
 ineqHigherDegree :: LabeledStrategy (Context (Logic (Relation Expr)))
-ineqHigherDegree = cleanUpStrategy (applyTop cleanUpLogicRelation) $
+ineqHigherDegree = cleanUpStrategyAfter (applyTop cleanUpLogicRelation) $
    label "Inequality of a higher degree" $ 
       use trivialRelation
        |> try (useC turnIntoEquation) 

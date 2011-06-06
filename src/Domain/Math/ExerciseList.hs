@@ -48,6 +48,7 @@ exerciseList =
    , Some quadraticExercise
    , Some higherDegreeExercise
    , Some findFactorsExercise
+   , Some expandExercise
    , Some ineqLinearExercise
    , Some ineqQuadraticExercise
    , Some ineqHigherDegreeExercise

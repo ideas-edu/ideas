@@ -17,6 +17,7 @@ module Domain.Math.Polynomial.Rules
    , niceFactors, niceFactorsNew, noDivisionConstant, noLinFormula, oneVar
    , parentNotNegCheck, prepareSplitSquare, quadraticRuleOrder, removeDivision
    , ruleApproximate, ruleNormalizeMixedFraction, ruleNormalizeRational
+   , ruleNormalizePolynomial
    , sameFactor, simplerLinearFactor, simplerPolynomial, simplerSquareRoot
    , squareBothSides, substBackVar, varToLeft, conditionVarsRHS
    ) where
@@ -295,6 +296,11 @@ ruleNormalizeMixedFraction :: Rule Expr
 ruleNormalizeMixedFraction = 
    describe "normalize mixed fraction" $
    ruleFromView (lineq, "norm-mixed") mixedFractionView
+
+ruleNormalizePolynomial :: Rule Expr
+ruleNormalizePolynomial =
+   describe "normalize polynomial" $
+   ruleFromView (polyeq, "norm-poly") (polyNormalForm rationalView)
 
 -----------------------------------------------------------
 -------- Rules From HDE

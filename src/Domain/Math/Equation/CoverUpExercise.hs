@@ -45,7 +45,7 @@ coverUpExercise = makeExercise
 -- Strategy and rules
    
 coverUpStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
-coverUpStrategy = cleanUpStrategy (applyTop $ fmap $ fmap cleanUpExpr) $
+coverUpStrategy = cleanUpStrategyAfter (applyTop $ fmap $ fmap cleanUpExpr) $
    label "Cover-up" $
    repeatS $ somewhere $ alternatives coverUpRulesOr
 

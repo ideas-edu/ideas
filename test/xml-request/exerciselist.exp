@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.3 (0)">
+<reply result="ok" version="0.7.4 (0)">
   <list>
     <elem exerciseid="algebra.equations.coverup" description="solve an equation by covering up" status="Provisional"/>
     <elem exerciseid="algebra.equations.linear" description="solve a linear equation" status="Provisional"/>
@@ -18,6 +18,7 @@
     <elem exerciseid="algebra.manipulation.exponents.powerof" description="write as a power of a" status="Provisional"/>
     <elem exerciseid="algebra.manipulation.exponents.simplify" description="simplify expression (powers)" status="Provisional"/>
     <elem exerciseid="algebra.manipulation.logarithmic.equation" description="solve logarithmic equation algebraically" status="Provisional"/>
+    <elem exerciseid="algebra.manipulation.polynomial.expand" description="expand an expression to polynomial normal form" status="Provisional"/>
     <elem exerciseid="algebra.manipulation.polynomial.factor" description="factorize the expression" status="Provisional"/>
     <elem exerciseid="algebra.manipulation.rational.simplify" description="simplify a rational expression (with a variable in a divisor)" status="Alpha"/>
     <elem exerciseid="arithmetic.exponents" description="simplify expression (powers)" status="Provisional"/>

@@ -29,7 +29,7 @@ import Domain.Math.Power.Rules
 import Prelude hiding ((^))
 
 derivativeStrategy :: LabeledStrategy (Context Expr)
-derivativeStrategy = cleanUpStrategy (applyTop cleanUpExpr) $
+derivativeStrategy = cleanUpStrategyAfter (applyTop cleanUpExpr) $
    label "Derivative" $ repeatS $ somewhere $ 
       alternatives (map liftToContext derivativeRules)
       <|> derivativePolyStepStrategy
@@ -38,7 +38,7 @@ derivativeStrategy = cleanUpStrategy (applyTop cleanUpExpr) $
    isDiffC = maybe False isDiff . current
 
 derivativePolyStrategy :: LabeledStrategy (Context Expr)
-derivativePolyStrategy = cleanUpStrategy (applyTop cleanUpExpr) $
+derivativePolyStrategy = cleanUpStrategyAfter (applyTop cleanUpExpr) $
    label "derivative-polynomial" $
       repeatS (somewhere (alternatives (map liftToContext rulesPolyNF)))
       <*> derivativePolyStepStrategy
@@ -50,7 +50,7 @@ rulesPolyNF =
    ]
 
 derivativeProductStrategy :: LabeledStrategy (Context Expr)
-derivativeProductStrategy = cleanUpStrategy (applyTop cleanUpExpr) $
+derivativeProductStrategy = cleanUpStrategyAfter (applyTop cleanUpExpr) $
    label "derivative-product" $
       repeatS (somewhere (derivativePolyStepStrategy |> alternatives list))
  where
@@ -61,7 +61,7 @@ derivativeProductStrategy = cleanUpStrategy (applyTop cleanUpExpr) $
       ]
 
 derivativeQuotientStrategy :: LabeledStrategy (Context Expr)
-derivativeQuotientStrategy = cleanUpStrategy (applyTop cleanUpExpr) $
+derivativeQuotientStrategy = cleanUpStrategyAfter (applyTop cleanUpExpr) $
    label "derivative-quotient" $
    repeatS (somewhere (derivativePolyStepStrategy |> alternatives list))
    <*> repeatS (exceptLowerDiv (alternatives (map liftToContext rulesPolyNF)))
@@ -71,11 +71,11 @@ derivativeQuotientStrategy = cleanUpStrategy (applyTop cleanUpExpr) $
       
 derivativePowerStrategy :: LabeledStrategy (Context Expr)
 derivativePowerStrategy = label "derivative-power" $ 
-   cleanUpStrategy (applyTop cleanUpExpr) (label "split-rational" 
+   cleanUpStrategyAfter (applyTop cleanUpExpr) (label "split-rational" 
       (repeatS (somewhere (liftToContext ruleSplitRational)))) <*>
    configure mycfg powerOfStrategy <*> 
    repeatS (distr <*> configure mycfg powerOfStrategy) <*>
-   cleanUpStrategy (applyTop cleanUpExpr) (label "use-derivative-rules" 
+   cleanUpStrategyAfter (applyTop cleanUpExpr) (label "use-derivative-rules" 
       (repeatS (somewhere (alternatives list)))) <*>
    configure mycfg nonNegBrokenExpStrategy
  where
@@ -83,7 +83,7 @@ derivativePowerStrategy = label "derivative-power" $
       [ ruleDerivPlus, ruleDerivMin, ruleDerivNegate, ruleDerivPowerFactor
       , ruleDerivCon ]
    mycfg = [(byName myFractionTimes, Remove)]
-   distr = cleanUpStrategy (applyTop cleanUpExpr) $ 
+   distr = cleanUpStrategyAfter (applyTop cleanUpExpr) $ 
       label "distr" (somewhere (alternatives (map liftToContext rulesPolyNF)))
       
 derivativePolyStepStrategy :: LabeledStrategy (Context Expr)

@@ -183,8 +183,8 @@ coreInterleave a b = (a :!%: b) :|: (b :!%: a) :|: emptyOnly (a :*: b)
  where
    emptyOnly (Rule step) | interleaveAfter step = Fail
    emptyOnly core@(Not _) = core
-   emptyOnly (a :|>: b)   = emptyOnly a :|: (Not a :*: emptyOnly b)
-   emptyOnly (Repeat a)   = emptyOnly (coreRepeat a)
+   emptyOnly (x :|>: y)   = emptyOnly x :|: (Not x :*: emptyOnly y)
+   emptyOnly (Repeat x)   = emptyOnly (coreRepeat x)
    emptyOnly core = descend emptyOnly core
 
 ----------------------------------------------------------------------

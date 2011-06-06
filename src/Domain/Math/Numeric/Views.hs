@@ -13,7 +13,7 @@ module Domain.Math.Numeric.Views
    ( integralView, integerView
    , rationalView, doubleView, mixedFractionView
    , integerNormalForm, rationalNormalForm, mixedFractionNormalForm
-   , rationalRelaxedForm, fractionForm, exactView
+   , doubleNormalForm, rationalRelaxedForm, fractionForm, exactView
    , intDiv, fracDiv
    ) where
 
@@ -121,6 +121,12 @@ mixedFractionNormalForm = newView "num.mixed-fraction-nf" f (build mixedFraction
       guard (a > 0 && b < c)
       r <- simpleRational b c
       return (fromInteger a + fromRational r)
+
+doubleNormalForm :: View Expr Double
+doubleNormalForm = newView "num.double-nf" f fromDouble
+ where
+   f (Number d) = Just d
+   f _          = Nothing
 
 simpleRational :: Integer -> Integer -> Maybe Rational
 simpleRational a b = do

@@ -154,10 +154,10 @@ highlightXML nice
 -- * HTML generic attributes
 
 idA, classA, styleA, titleA :: String -> HTMLBuilder -> HTMLBuilder
-idA    = setA "id"     -- ^ document-wide unique id
-classA = setA "class"  -- ^ space-separated list of classes
-styleA = setA "style"  -- ^ associated style info
-titleA = setA "title"  -- ^ advisory title
+idA    = setA "id"     -- document-wide unique id
+classA = setA "class"  -- space-separated list of classes
+styleA = setA "style"  -- associated style info
+titleA = setA "title"  -- advisory title
 
 setA :: String -> String -> HTMLBuilder -> HTMLBuilder
 setA attr value = updateLast $ \e ->  

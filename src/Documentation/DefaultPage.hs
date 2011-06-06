@@ -51,8 +51,7 @@ header level = do
       make "api/index.html"          "API"
    hr
  where
-   make target s = f $ link (up level ++ target) $ text s
-   f m = spaces 3 >> text "[" >> space >> m >> space >> text "]" >> spaces 3
+   make target = spanClass "menuitem" . link (up level ++ target) . text
    
 footer :: String -> HTMLBuilder
 footer version = do 

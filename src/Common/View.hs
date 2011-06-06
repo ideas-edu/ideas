@@ -18,6 +18,7 @@ module Common.View
      ViewM, match, build, newView, makeView, biArr, identity, (>>>)
    , canonical, canonicalWith, canonicalWithM
    , Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)
+   , (++>)
      -- * Simple views
    , View, ViewList, Match, belongsTo
    , simplify, simplifyWith, viewEquivalent, viewEquivalentWith
@@ -69,6 +70,14 @@ instance Monad m => ArrowChoice (ViewM m) where
    right = VRight
    (+++) = (:+++:)
    (|||) = (:|||:)
+
+infixr 2 ++>
+
+(++>) :: MonadPlus m => ViewM m a b -> ViewM m a c -> ViewM m a (Either b c)
+v1 ++> v2 = makeView f g
+ where
+   f a = liftM Left (match v1 a) `mplus` liftM Right (match v2 a)
+   g   = either (build v1) (build v2)
 
 ----------------------------------------------------------------------------------
 -- Operations on a view

@@ -28,6 +28,18 @@ div.menu {
    padding-bottom:   10px;
 }
 
+span.menuitem {
+   background-color: rgb(200,200,255);
+   border-color: rgb(100,100,255);
+   border-width: 1px;
+   border-style: solid;
+   padding-left: 15px;
+   padding-right: 15px;
+   padding-top: 5px;
+   padding-bottom: 5px;
+   margin: 15px;
+}
+
 hr {
    border: 1px solid rgb(200,200,255);
    margin-top: 15px;

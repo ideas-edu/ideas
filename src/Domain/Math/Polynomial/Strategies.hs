@@ -13,7 +13,7 @@ module Domain.Math.Polynomial.Strategies
    ( linearStrategy, linearMixedStrategy, linearStrategyG
    , quadraticStrategy, quadraticStrategyG
    , higherDegreeStrategy, higherDegreeStrategyG
-   , findFactorsStrategy, findFactorsStrategyG
+   , findFactorsStrategy, findFactorsStrategyG, expandStrategy
    ) where
 
 import Common.Uniplate (transform)
@@ -161,7 +161,7 @@ higherDegreeStrategyG = label "higher degree" $
 
 findFactorsStrategy :: LabeledStrategy (Context Expr)
 findFactorsStrategy = cleanUpStrategy (applyTop cleanUpSimple) $
-   label "find factors" $ replicateS 10 $ try findFactorsStrategyG
+   label "find factors" $ repeatS findFactorsStrategyG
    
 findFactorsStrategyG :: IsTerm a => LabeledStrategy (Context a)
 findFactorsStrategyG = label "find factor step" $
@@ -178,3 +178,12 @@ isTimesC = maybe False (isJust . isTimes :: Term -> Bool) . currentT
 
 flipEquationS :: IsTerm a => Strategy (Context a)
 flipEquationS = use conditionVarsRHS <*> use flipEquation
+
+-----------------------------------------------------------
+-- Expanding factors of an expression
+
+expandStrategy :: LabeledStrategy (Context Expr)
+expandStrategy = cleanUpStrategyAfter (applyTop cleanUpSimple) $
+   label "expand factors" $ repeatS $ somewhere $
+      (use distributionSquare <|> use distributeTimes <|> use defPowerNat)
+      -- <*> try (use (ruleNormalizePolynomial))

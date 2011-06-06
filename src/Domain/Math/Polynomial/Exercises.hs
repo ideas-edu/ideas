@@ -13,11 +13,13 @@ module Domain.Math.Polynomial.Exercises
    ( linearExercise, linearMixedExercise
    , quadraticExercise, quadraticNoABCExercise
    , quadraticWithApproximation
-   , higherDegreeExercise, findFactorsExercise
+   , higherDegreeExercise
+   , findFactorsExercise, expandExercise
    ) where
 
 import Common.Library
 import Control.Monad
+import Data.Function
 import Data.Maybe
 import Domain.Math.Approximation
 import Domain.Math.Data.OrList
@@ -48,9 +50,8 @@ linearExercise = makeExercise
    , similarity   = withoutContext (viewEquivalent (traverseView cleanUpACView))
    , equivalence  = withoutContext (viewEquivalent linearEquationView)
    , isSuitable   = (`belongsTo` linearEquationView)
-   , isReady      = solvedRelationWith $ \a -> 
-                       a `belongsTo` mixedFractionNormalForm || 
-                       a `belongsTo` rationalNormalForm
+   , isReady      = solvedRelationWith
+                       (`belongsTo` (mixedFractionNormalForm ++> rationalNormalForm ++> doubleNormalForm))
    , extraRules   = map use buggyRulesEquation ++
                     map use buggyRulesExpr 
    , ruleOrdering = ruleOrderingWithId
@@ -145,13 +146,28 @@ findFactorsExercise = makeExercise
                        newId "algebra.manipulation.polynomial.factor"
    , status       = Provisional
    , parser       = parseExpr
-   , similarity   = withoutContext (\a b -> cleanUpExpr a == cleanUpExpr b)
+   , similarity   = withoutContext ((==) `on` cleanUpExpr)
    , equivalence  = withoutContext (viewEquivalent (polyViewWith rationalView))
    , isReady      = (`belongsTo` linearFactorsView)
    , strategy     = findFactorsStrategy
    , navigation   = termNavigator
    , extraRules   = map liftToContext buggyRulesExpr
    , examples     = factorizeExamples
+   }
+
+expandExercise :: Exercise Expr
+expandExercise = makeExercise
+   { exerciseId   = describe "expand an expression to polynomial normal form" $ 
+                       newId "algebra.manipulation.polynomial.expand"
+   , status       = Provisional
+   , parser       = parseExpr
+   , similarity   = withoutContext ((==) `on` cleanUpExpr)
+   , equivalence  = withoutContext (viewEquivalent (polyViewWith rationalView))
+   , isReady      = (`belongsTo` polyNormalForm rationalView)
+   , strategy     = expandStrategy
+   , navigation   = termNavigator
+   , extraRules   = map liftToContext buggyRulesExpr
+   , examples     = expandExamples
    }
 
 linearFactorsView :: View Expr (Bool, [(String, Expr, Expr)])

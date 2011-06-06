@@ -1,0 +1,5 @@
+<request service="ready" exerciseid="algebra.equations.linear" encoding="string">
+<state>
+<expr>x == 0.2</expr>
+</state>
+</request>

@@ -12,8 +12,11 @@
 --
 -----------------------------------------------------------------------------
 module Common.Classes 
-   ( Apply, apply, applyAll, applicable, applyD, applyM
+   ( -- * Type class Apply
+     Apply, apply, applyAll, applicable, applyD, applyM
+     -- * Type class Container
    , Container, to, from
+     -- * Type class BiFunctor
    , BiFunctor, biMap, mapFirst, mapSecond
    ) where
 
@@ -23,7 +26,7 @@ import Data.Maybe
 import qualified Data.Set as S
 
 -----------------------------------------------------------
--- * Type class |Apply|
+-- Type class Apply
 
 -- | A type class for functors that can be applied to a value. Transformation, 
 -- Rule, and Strategy are all instances of this type class. 
@@ -47,7 +50,7 @@ applyM :: (Apply t, Monad m) => t a -> a -> m a
 applyM ta = maybe (fail "applyM") return . apply ta
 
 -----------------------------------------------------------
--- * Type class |Container|
+-- Type class Container
 
 -- | Instances should satisfy the following law: @from . to == Just@
 class Container f where
@@ -64,7 +67,7 @@ instance Container S.Set where
    from = from . S.toList
    
 -----------------------------------------------------------
--- * Type class |BiFunctor|
+-- Type class BiFunctor
 
 class BiFunctor f where
    biMap     :: (a -> c) -> (b -> d) -> f a b -> f c d

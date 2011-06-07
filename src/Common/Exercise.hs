@@ -167,7 +167,7 @@ readDifficulty s =
             _   -> Nothing
  where
    normal = filter isAlpha . map toLower
-   p = ((== normal s) . normal . show)
+   p = (== normal s) . normal . show
 
 level :: Difficulty -> [a] -> Examples a
 level = zip . repeat

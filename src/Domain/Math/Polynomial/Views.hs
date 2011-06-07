@@ -17,7 +17,7 @@ module Domain.Math.Polynomial.Views
    , monomialPolyView, binomialPolyView, trinomialPolyView
    , polyNormalForm
    , linearEquationView, quadraticEquationView, quadraticEquationsView
-   , higherDegreeEquationsView
+   , higherDegreeEquationsView, listOfPowerFactors
    ) where
 
 import Prelude hiding ((^))

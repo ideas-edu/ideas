@@ -42,7 +42,7 @@ buggyRelAlgRules = [buggyRuleIdemComp, buggyRuleIdemAdd, buggyRuleDeMorgan
                    ]
 
 relalg :: IsId a => a -> Id
-relalg = (#) "relationalgebra"
+relalg = ( # ) "relationalgebra"
 
 rule :: (RuleBuilder f a, Rewrite a) => String -> f -> Rule a
 rule = Rule.rule . relalg

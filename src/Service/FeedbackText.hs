@@ -53,7 +53,7 @@ submittext :: Script -> State a -> String -> (Bool, Text, State a)
 submittext script old input =
    case parser (exercise old) input of
       Left msg -> (False, TextString msg, old)
-      Right a  -> (feedbacktext script old a)
+      Right a  -> feedbacktext script old a
 
 feedbacktext :: Script -> State a -> a -> (Bool, Text, State a)
 feedbacktext script old a =

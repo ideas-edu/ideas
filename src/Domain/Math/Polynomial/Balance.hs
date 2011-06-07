@@ -54,7 +54,7 @@ balanceExercise = makeExercise
 -- Strategy
 
 linearStrategy :: LabeledStrategy (Context (Equation Expr))
-linearStrategy = cleanUpStrategy (applyTop (fmap cleanUpExpr)) $
+linearStrategy = cleanUpStrategyAfter (applyTop (fmap cleanUpExpr)) $
    label "Linear Equation" $
        label "Phase 1" (repeatS (
                use collect

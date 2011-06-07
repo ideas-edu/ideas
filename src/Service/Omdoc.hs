@@ -185,7 +185,7 @@ omdocrefpath  =  ""
 
 omdocexerciserefs :: Exercise a -> Element
 omdocexerciserefs ex = 
-  let info             = mBExerciseInfo ! (exerciseId $ ex)
+  let info             = mBExerciseInfo ! (exerciseId ex)
       len              = length (examples ex)
       refs             = map (\i -> omdocrefpath  -- relative dir (the same right now)
                                 ++  context info  -- filename
@@ -193,7 +193,7 @@ omdocexerciserefs ex =
                                 ++  context info  -- exercise id
                                 ++  show i)       -- and nr
                              [0..len-1]
-      exercises        = map (\ ref -> refelt ref "exercise") refs
+      exercises        = map (`refelt` "exercise") refs
   in omgroupelt "" "" (metadataelt "" [titleelt (title info)]:exercises)
 
 --------------------------------------------------------------------------------
@@ -206,7 +206,7 @@ omdocpath = "/Users/johanj/Documents/Research/ExerciseAssistants/Feedback/math-b
 
 omdocexercisefile :: (IsTerm a) => String -> Int -> Exercise a -> IO ()
 omdocexercisefile version revision ex = 
-  let info = mBExerciseInfo ! (exerciseId $ ex)
+  let info = mBExerciseInfo ! (exerciseId ex)
       filestring = 
              xmldecl 
           ++ activemathdtd 
@@ -231,7 +231,7 @@ omdocexercisefile version revision ex =
 omdocexercises :: (IsTerm a) => Exercise a -> [Element]
 omdocexercises ex = catMaybes $ zipWith make [(0::Int)..] (examples ex)
  where
-   info = mBExerciseInfo ! (exerciseId $ ex)
+   info = mBExerciseInfo ! (exerciseId ex)
    make nr (dif, example) = 
       fmap (makeElement . omobj2xml) (toOpenMath ex example)
     where
@@ -330,7 +330,7 @@ mBExerciseInfo =
   $ insert (exerciseId rationalEquationExercise)   rationalEquationExerciseInfo
   $ insert (exerciseId simplifyPowerExercise)      simplifyPowerExerciseInfo
   $ insert (exerciseId simplifyRationalExercise)   simplifyRationalExerciseInfo
-  $ empty
+    empty
 
 calcPowerExerciseInfo :: MBExerciseInfo
 calcPowerExerciseInfo = MBExerciseInfo

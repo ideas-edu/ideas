@@ -107,14 +107,14 @@ groupLaws = monoidLaws ++ inverseLaws ++
 
 appendInverseLaws :: Group a => [Law a]
 appendInverseLaws = 
-   [ make 1 $ \a b   ->           a <>- b :==: a <> (inverse b)
+   [ make 1 $ \a b   ->           a <>- b :==: a <> inverse b
    , make 2 $ \a     ->           a <>- a :==: mempty
    , make 3 $ \a     ->      a <>- mempty :==: a
    , make 4 $ \a     ->      mempty <>- a :==: inverse a
    , make 5 $ \a b c ->    a <>- (b <> c) :==: (a <>- b) <>- c
    , make 6 $ \a b c ->   a <>- (b <>- c) :==: (a <>- b) <> c
    , make 7 $ \a b c ->    a <> (b <>- c) :==: (a <> b) <>- c
-   , make 8 $ \a b   -> a <>- (inverse b) :==: a <> b
+   , make 8 $ \a b   ->   a <>- inverse b :==: a <> b
    , make 9 $ \a b   -> inverse (a <>- b) :==: inverse a <> b
    ]
  where

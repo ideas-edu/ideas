@@ -209,7 +209,7 @@ instance Traversable Equation where
 instance Relational Equation where
    leftHandSide  = leftHandSide  . build equationView
    rightHandSide = rightHandSide . build equationView
-   flipSides     = \(x :==: y) -> y :==: x
+   flipSides (x :==: y) = y :==: x
    constructor   = const (:==:)
    isSymmetric   = const True
 

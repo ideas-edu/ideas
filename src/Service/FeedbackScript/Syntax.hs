@@ -59,8 +59,8 @@ makeText s = case words s of
                 xs -> TextString (combineList xs)
 
 feedbackDecl, textForIdDecl :: HasId a => a -> Text -> Decl
-feedbackDecl  a t = Simple Feedback  [getId a] t
-textForIdDecl a t = Simple TextForId [getId a] t
+feedbackDecl  a = Simple Feedback  [getId a]
+textForIdDecl a = Simple TextForId [getId a]
 
 instance Show Script where
    show = unlines . map show . scriptDecls
@@ -87,14 +87,14 @@ instance Show Condition where
    show (RecognizedIs a) = "recognize " ++ show a
    show (CondNot c)      = "not " ++ show c
    show (CondConst b)    = map toLower (show b)
-   show (CondRef a)      = "@" ++ show a 
+   show (CondRef a)      = '@' : show a 
 
 instance Show Text where
    show (TextString s) = s
    show (TextTerm a)   = show a
    show TextEmpty      = ""
    show t@(_ :<>: _)   = show [t]
-   show (TextRef a)    = "@" ++ show a
+   show (TextRef a)    = '@' : show a
    
    showList xs ys = 
       foldr (combine . show) ys (concatMap textItems xs)

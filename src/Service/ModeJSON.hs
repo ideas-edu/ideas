@@ -107,7 +107,7 @@ jsonEncoder ex = Encoder
       | otherwise = 
            case serviceType of
               Tp.Tag s t 
-                 | s == "elem" || s == "list" -> 
+                 | s `elem` ["elem", "list"] -> 
                       encode enc t a
                  | s == "Result" -> do
                       conv <- equalM serviceType submitType

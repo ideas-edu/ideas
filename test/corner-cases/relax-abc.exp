@@ -1,9 +1,9 @@
-<reply result="ok" version="0.7.3 (0)">
+<reply result="ok" version="0.7.4 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.nice-factors" location="[]">
       <state>
         <prefix>
-          [5,1,0,0,0,1,1,1,1,0]
+          [4,1,0,0,0,1,1,1,1,0]
         </prefix>
         <expr>
           (x-12)*(x-13) == 0
@@ -13,7 +13,7 @@
     <elem ruleid="algebra.equations.quadratic.abc" location="[]">
       <state>
         <prefix>
-          [5,1,0,0,1]
+          [4,1,0,0,1]
         </prefix>
         <expr>
           x == 13 or x == 12

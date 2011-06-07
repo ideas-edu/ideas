@@ -63,7 +63,7 @@ listToSubst = mconcat . map (uncurry singletonSubst)
 -- the co-domain of the right-hand side substitution
 (@@) :: Substitution -> Substitution -> Substitution
 s1 @@ s2
-   | composable s1 s2 = S $ IM.map (s1 |->) (unS s2) `IM.union` (unS s1)
+   | composable s1 s2 = S $ IM.map (s1 |->) (unS s2) `IM.union` unS s1
    | otherwise        = error "Substitution: cyclic"
 
 composable :: Substitution -> Substitution -> Bool

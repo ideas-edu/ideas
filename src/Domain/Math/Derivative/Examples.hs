@@ -40,7 +40,7 @@ diffSet1 = differentiateLists $
    let p = Var "p" in
    let q = Var "q" in
    let r = Var "r" in
-   [ [ 3*x^4 - 7*x^2, -x^3-5*x, 1/2*x^6-5*x^2+4, -1/3*x^3+(1+1/2)*x^2-x+1]
+   [ [ 3*x^4 - 7*x^2, -x^3-5*x, 1/2*x^6-5*x^2+4, -1/3*x^3+(3/2)*x^2-x+1]
    , [ -x^5+5*x+23, -2*p^4+5*p-12, 3/5*q^5-q^3+4*q, -2/3*r^6+1/4*r^4-3*r+7]  
    , -- werk eerst de haakjes weg
      [ (x-2)^2, -(1-3*x)^2, (x-1)*(2*x+5), -(1-3*x)*(2*x+7)]

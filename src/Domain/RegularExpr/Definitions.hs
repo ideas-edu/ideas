@@ -16,7 +16,7 @@ import Common.Uniplate
 import Common.Utils (distinct)
 
 deterministic :: (Show a, Eq a) => RE a -> Bool
-deterministic r = deterministicSimple r {-
+deterministic = deterministicSimple {-
    case (deterministicSimple r, det r) of
       (b1, b2) | b1==b2 -> b1
       _ -> error $ show r -}
@@ -45,10 +45,10 @@ det regexp =
       (q :*: s) :*: r -> det (q :*: (s :*: r))
 
 
-disj xs ys = all (`notElem` xs) ys
+disj xs = all (`notElem` xs)
 
 empty :: RE a -> Bool
-empty = foldRE (False, True, const (False), const True, const True, id, (&&), (||))
+empty = foldRE (False, True, const False, const True, const True, id, (&&), (||))
 
 lookahead :: RE a -> [a]
 lookahead = map fst . firsts

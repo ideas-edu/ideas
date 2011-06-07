@@ -20,6 +20,7 @@ import Common.Library
 import Common.TestSuite
 import Control.Monad
 import Data.List
+import Data.Ord
 import Test.QuickCheck hiding (label)
 import qualified Common.Algebra.Field as F
 
@@ -53,7 +54,8 @@ tests = suite "Strategy combinator properties" $ do
         <|>
       (idS y <*> ((atomic x <*> idS a) <%> idS b))
  where
-   fs ps = mapM_ (\p -> addProperty (show p) p) ps
+   fs :: (Arbitrary a, Show a, Eq a) => [Law a] -> TestSuite
+   fs = mapM_ (\p -> addProperty (show p) p)
 
 -- Only a selected set of combinators is used
 instance Arbitrary (Strategy a) where
@@ -142,7 +144,7 @@ a === b = rec (10::Int) [(make a, make b)]
 merged :: Show s => DerivationTree s a -> [(s, DerivationTree s a)]
 merged = map f . groupBy eq . sortBy cmp . branches
  where
-   cmp a b = show (fst a) `compare` show (fst b)
+   cmp a b = comparing show (fst a) (fst b)
    eq  a b = show (fst a) == show (fst b)
    f xs    = (fst $ head xs, foldr1 merge (map snd xs))
       

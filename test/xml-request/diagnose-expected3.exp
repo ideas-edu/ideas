@@ -1,8 +1,8 @@
-<reply result="ok" version="0.7.1 (0)">
+<reply result="ok" version="0.7.4 (0)">
   <expected ready="true" ruleid="algebra.equations.quadratic.abc">
     <state>
       <prefix>
-        [5,1,0,0,1]
+        [4,1,0,0,1]
       </prefix>
       <expr>
         x == -3/2

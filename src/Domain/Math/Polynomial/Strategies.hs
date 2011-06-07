@@ -20,11 +20,13 @@ import Common.Uniplate (transform)
 import Common.Library
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Polynomial.Rules
+import Domain.Math.Polynomial.Views
 import Domain.Math.Numeric.Views
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.CleanUp
+import Domain.Math.Simplification (mergeAlike)
 import Data.Maybe
 
 ------------------------------------------------------------
@@ -66,7 +68,7 @@ linearStrategyG =
 
 quadraticStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 quadraticStrategy = 
-   cleanUpStrategy (applyTop cleanUpRelations) quadraticStrategyG
+   cleanUpStrategyAfter (applyTop cleanUpRelations) quadraticStrategyG
 
 quadraticStrategyG :: IsTerm a => LabeledStrategy (Context a)
 quadraticStrategyG = 
@@ -130,7 +132,7 @@ quadraticStrategyG =
 
 higherDegreeStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 higherDegreeStrategy = 
-   cleanUpStrategy (applyTop cleanUpRelations) higherDegreeStrategyG
+   cleanUpStrategyAfter (applyTop cleanUpRelations) higherDegreeStrategyG
 
 higherDegreeStrategyG :: IsTerm a => LabeledStrategy (Context a)
 higherDegreeStrategyG = label "higher degree" $ 
@@ -160,7 +162,7 @@ higherDegreeStrategyG = label "higher degree" $
 -- Finding factors in an expression
 
 findFactorsStrategy :: LabeledStrategy (Context Expr)
-findFactorsStrategy = cleanUpStrategy (applyTop cleanUpSimple) $
+findFactorsStrategy = cleanUpStrategyAfter (applyTop cleanUpSimple) $
    label "find factors" $ repeatS findFactorsStrategyG
    
 findFactorsStrategyG :: IsTerm a => LabeledStrategy (Context a)
@@ -183,7 +185,11 @@ flipEquationS = use conditionVarsRHS <*> use flipEquation
 -- Expanding factors of an expression
 
 expandStrategy :: LabeledStrategy (Context Expr)
-expandStrategy = cleanUpStrategyAfter (applyTop cleanUpSimple) $
+expandStrategy = cleanUpStrategyAfter (applyTop f) $
    label "expand factors" $ repeatS $ somewhere $
       (use distributionSquare <|> use distributeTimes <|> use defPowerNat)
       -- <*> try (use (ruleNormalizePolynomial))
+ where
+   f = mergeAlike 
+      . transform (simplify (listOfPowerFactors "x" rationalView)) 
+      . cleanUpSimple

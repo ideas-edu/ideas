@@ -177,7 +177,7 @@ xmlDecodeType b dec serviceType =
       Tp.Rule        -> keep $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . newId . getData) . findChild "ruleid"
       Tp.Term        -> keep $ decodeTerm dec
       Tp.StrategyCfg -> keep decodeConfiguration
-      Tp.Script      -> keep $ \xml -> do
+      Tp.Script      -> keep $ \xml ->
                            case findAttribute "script" xml of
                               Just s  -> readScript s
                               Nothing -> 

@@ -270,7 +270,7 @@ isUpperTriangular = and . zipWith check [0..] . rows
 
 inRowEchelonForm :: Num a => Matrix a -> Bool
 inRowEchelonForm (M rs) =
-   null (filter nonZero (dropWhile nonZero rs)) &&
+   not (any nonZero (dropWhile nonZero rs)) &&
    increasing (map (length . takeWhile (==0)) (filter nonZero rs))
  where
    increasing (x:ys@(y:_)) = x < y && increasing ys

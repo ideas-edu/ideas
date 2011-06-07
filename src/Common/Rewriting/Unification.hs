@@ -52,7 +52,7 @@ match term1 term2 =
          fail "unifyM: no unifier"
       (Apply f a, Apply g b) -> do
          s1 <- match f g
-         s2 <- match (s1 |-> a) (b)
+         s2 <- match (s1 |-> a) b
          guard (composable s1 s2)
          return (s1 @@ s2)
       _ | term1 == term2 -> 

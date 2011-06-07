@@ -37,7 +37,7 @@ withScripts path xs ys = do
       liftIO $ putStrLn $ "Parsing " ++ show file
       script <- liftIO $ parseScript path file
       let sups = [ a | Supports as <- scriptDecls script, a <- as ]
-      exs <- forM sups $ \a -> do
+      exs <- forM sups $ \a ->
                 liftM Right (findExercise a)
               `catchError` \_ -> return $ Left $ UnknownExercise a
            
@@ -91,7 +91,7 @@ analyzeScript exs script =
    strids = [ a | Simple  StringDecl as _ <- decls, a <- as ] ++
             [ a | Guarded StringDecl as _ <- decls, a <- as ]
    namespaces = nub $ mempty : [ a | NameSpace as <- scriptDecls script, a <- as ]
-   noTextFor a = null [ () | n <- namespaces, b <- txids, (n#b) == a ]
+   noTextFor a = null [ () | n <- namespaces, b <- txids, n#b == a ]
         
    texts = [ t | Simple  _ _ t <- decls ] ++
            [ t | Guarded _ _ xs <- decls, (_, t) <- xs ]

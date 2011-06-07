@@ -118,7 +118,7 @@ addAssertion msg io = TSM $ do
       addResult okResult
     else do
       newlineIndent
-      liftIO $ putStrLn (show msg)
+      liftIO (print msg)
       reset
       addResult (messageResult msg)
 
@@ -277,7 +277,8 @@ toTestResult res =
          Success _ _ _           -> Nothing
          Failure _ _ _ _ msg _ _ -> make msg
          NoExpectedFailure _ _ _ -> make "no expected failure"
-         GaveUp i _  _           -> make $ "passed only " ++ show i ++ " tests"
+         GaveUp i _  _           -> fmap warning $ make $ 
+                                    "passed only " ++ show i ++ " tests"
 
 updateDiffTime :: MonadIO m => m TestSuiteResult -> m TestSuiteResult
 updateDiffTime m = do

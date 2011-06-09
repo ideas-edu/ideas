@@ -38,25 +38,24 @@ defaultPage :: String -> String -> Int -> HTMLBuilder -> HTML
 defaultPage version title level builder = 
    htmlPage title (Just (up level ++ "ideas.css")) $ do
       header level
-      builder
+      divClass "content" builder
       footer version
 
 header :: Int -> HTMLBuilder
-header level = do 
-   divClass "menu" $ do
-      make exerciseOverviewPageFile  "Exercises"
-      make "services.html"           "Services"
-      make "tests.html"              "Tests"
-      make "coverage/hpc_index.html" "Coverage"
-      make "api/index.html"          "API"
-   hr
+header level = divClass "header" $ do
+   divClass "ideas-logo" $ image (up level ++ "ideas.png")
+   divClass "ounl-logo" $ image (up level ++ "ounl.png")
+   make exerciseOverviewPageFile  "Exercises"
+   make "services.html"           "Services"
+   make "tests.html"              "Tests"
+   make "coverage/hpc_index.html" "Coverage"
+   make "api/index.html"          "API"
  where
    make target = spanClass "menuitem" . link (up level ++ target) . text
    
 footer :: String -> HTMLBuilder
-footer version = do 
-   hr 
-   italic $ text $ "Automatically generated from sources: " ++ version
+footer version = divClass "footer" $
+   text $ "Automatically generated from sources: " ++ version
 
 up :: Int -> String
 up = concat . flip replicate "../"

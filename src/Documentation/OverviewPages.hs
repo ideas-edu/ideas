@@ -51,7 +51,7 @@ exerciseOverviewPage showAll list = do
       
    forM_ (zip [1::Int ..] (grouping list)) $ \(i, (dom, xs)) -> do
       h2 (show i ++ ". " ++ dom)
-      table (map makeRow xs) 
+      table False (map makeRow xs) 
  where
    title | showAll   = "All exercises"
          | otherwise = "Exercises"

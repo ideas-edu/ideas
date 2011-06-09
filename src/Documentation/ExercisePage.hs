@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Documentation.ExercisePage (makeExercisePage) where
+module Documentation.ExercisePage (makeExercisePage, idboxHTML) where
 
 import Common.Utils (Some(..), splitAtSequence, commaList)
 import Common.Library hiding (up)
@@ -53,7 +53,7 @@ exercisePage exampleFileExists ex = do
    let bolds (x:xs) = bold x:xs
        bolds []     = []
 
-   table $ map bolds
+   table False $ map bolds
       [ [ text "Code",   ttText (showId ex)]
       , [ text "Status", text (show $ status ex)]
       , [ text "Strategy"
@@ -87,13 +87,12 @@ exercisePage exampleFileExists ex = do
              , when (isRewriteRule r) $
                   ruleToHTML (Some ex) r
              ]
-   table ( [bold $ text "Rule name", bold $ text "Buggy"
-           , bold $ text "Args" 
-           , bold $ text "Used", bold $ text "Groups"
-           , bold $ text "Rewrite rule"
-           ]
-         : map f (ruleset ex)
-         )
+   table True 
+      ( [ text "Rule name", text "Buggy", text "Args" 
+        , text "Used", text "Rewrite rule"
+        ]
+      : map f (ruleset ex)
+      )
    when exampleFileExists $ do
       para $ link (up len ++ exerciseDiagnosisFile exid) $ do
          br
@@ -121,9 +120,10 @@ strategyPage ex = do
    let f (loc, a) = 
           [text (show loc), indent (length loc) >> text (showId a)]
        indent n = text (replicate (3*n) '.')
-   table ( [bold $ text "Location", bold $ text "Label"] 
-         : map f (strategyLocations (strategy ex))
-         )
+   table True 
+      ( [text "Location", text "Label"] 
+      : map f (strategyLocations (strategy ex))
+      )
  where
    title = "Strategy for " ++ showId ex
 
@@ -146,12 +146,10 @@ derivationHTML ex a = divClass "derivation" $ do
 
 idboxHTML :: String -> Id -> HTMLBuilder
 idboxHTML kind i = divClass "idbox" $ do
-   spanClass "id" $ ttText (showId i)
-   spaces 3
-   text $ "(" ++ kind ++ ")"
-   unless (null $ description i) $ do
-      br
-      italic (text (description i))
+   spanClass "id-code" $ ttText (showId i)
+   divClass "id-type" $ text kind
+   unless (null $ description i) $
+      divClass "id-description" $ text (description i)
 
 diagnosisPage :: String -> Exercise a -> HTMLBuilder
 diagnosisPage xs ex = do

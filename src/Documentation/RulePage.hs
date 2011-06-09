@@ -16,6 +16,7 @@ import Common.Utils (commaList, Some(..))
 import Control.Monad
 import Data.List
 import Documentation.DefaultPage
+import Documentation.ExercisePage (idboxHTML)
 import Documentation.RulePresenter
 import Service.DomainReasoner
 import Service.RulesInfo (rewriteRuleToFMP, collectExamples, ExampleMap)
@@ -53,7 +54,7 @@ rulePage :: Exercise a -> ExampleMap a -> [Id] ->  Rule (Context a) -> HTMLBuild
 rulePage ex exMap usedIn r = do
    idboxHTML "rule" (getId r)
    let idList = text . commaList . map showId
-   para $ table 
+   para $ table False
       [ [bold $ text "Buggy", text $ showBool (isBuggyRule r)]
       , [bold $ text "Rewrite rule", text $ showBool (isRewriteRule r)]
       , [bold $ text "Siblings", idList $ ruleSiblings r] 
@@ -83,15 +84,6 @@ rulePage ex exMap usedIn r = do
          let fmp = rewriteRuleToFMP b rr
          highlightXML False $ XML.makeXML "FMP" $ 
             XML.builder (omobj2xml (toObject fmp))
-
-idboxHTML :: String -> Id -> HTMLBuilder
-idboxHTML kind i = divClass "idbox" $ do
-   para $ do 
-      spanClass "id" $ ttText (showId i)
-      spaces 3
-      text $ "(" ++ kind ++ ")"
-   unless (null $ description i) $
-      para $ italic $ text (description i)
 
 forStep :: Int -> (Id, Environment) -> HTMLBuilder  
 forStep n (i, env) = do 

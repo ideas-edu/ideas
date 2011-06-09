@@ -87,8 +87,9 @@ ttText = tt . text
 ul :: [HTMLBuilder] -> HTMLBuilder
 ul = element "ul" . mapM_ (element "li")
 
-table :: [[HTMLBuilder]] -> HTMLBuilder
-table rows = element "table" $ do
+-- | First argument indicates whether the table has a header or not
+table :: Bool -> [[HTMLBuilder]] -> HTMLBuilder
+table b rows = element "table" $ do
    "border" .=. "1"
    forM_ (zip [0::Int ..] rows) $ \(i, r) ->
       element "tr" $ do
@@ -96,9 +97,9 @@ table rows = element "table" $ do
          mapM_ (element "td") r
  where
    getClass i
-      | i == 0    = "topRow"
-      | even i    = "evenRow"
-      | otherwise = "oddRow" 
+      | i == 0 && b = "topRow"
+      | even i      = "evenRow"
+      | otherwise   = "oddRow" 
 
 spaces :: Int -> HTMLBuilder
 spaces n = replicateM_ n space

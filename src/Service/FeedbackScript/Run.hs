@@ -41,6 +41,7 @@ data Environment a = Env
    , diffPair   :: Maybe (String, String)
    , before     :: Maybe Term
    , after      :: Maybe Term
+   , afterText  :: Maybe String
    }
    
 newEnvironment :: State a -> Environment a
@@ -51,10 +52,12 @@ newEnvironment st = Env
    , diffPair   = Nothing
    , before     = f st
    , after      = liftM fth4 next >>= f
+   , afterText  = liftM fth4 next >>= g
    }
  where
    next = either (const Nothing) Just (onefirst st)
    f s  = fmap (`build` stateTerm s) (hasTermView (exercise s))
+   g s  = return $ (prettyPrinter $ exercise s) $ stateTerm s
    fst4 (a, _, _, _) = a
    fth4 (_, _, _, a) = a
 
@@ -79,6 +82,7 @@ eval env script = either (return . findIdRef) evalText
          | a == diffafterId  = fmap (TextString . snd) (diffPair env)
          | a == beforeId     = fmap TextTerm (before env)
          | a == afterId      = fmap TextTerm (after env)
+         | a == afterTextId  = fmap TextString (afterText env)
          | otherwise         = findRef (==a) 
       unref t = Just t
 
@@ -144,18 +148,19 @@ feedbackIds = map newId
    
 attributeIds :: [Id]
 attributeIds =
-   [expectedId, recognizedId, diffbeforeId, diffafterId, beforeId, afterId]
+   [expectedId, recognizedId, diffbeforeId, diffafterId, beforeId, afterId, afterTextId]
    
 conditionIds :: [Id]
 conditionIds = [oldreadyId, hasexpectedId]
     
-expectedId, recognizedId, diffbeforeId, diffafterId, beforeId, afterId :: Id
+expectedId, recognizedId, diffbeforeId, diffafterId, beforeId, afterId, afterTextId :: Id
 expectedId   = newId "expected"  
 recognizedId = newId "recognized"
 diffbeforeId = newId "diffbefore"
 diffafterId  = newId "diffafter" 
 beforeId     = newId "before"    
 afterId      = newId "after"     
+afterTextId  = newId "aftertext"
 
 oldreadyId, hasexpectedId :: Id
 oldreadyId    = newId "oldready" 

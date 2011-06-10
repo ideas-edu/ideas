@@ -19,7 +19,7 @@ module Common.Strategy.Abstract
    , toCore, fromCore, liftCore, liftCore2, makeLabeledStrategy
    , toLabeledStrategy
    , LabelInfo, processLabelInfo, changeInfo, makeInfo
-   , removed, collapsed, hidden, IsLabeled(..)
+   , removed, collapsed, hidden, IsLabeled(..), noInterleaving
    ) where
 
 import Common.Id
@@ -201,7 +201,15 @@ cleanUpStrategy f (LS n s) = cleanUpStrategyAfter f (LS n (make s))
 cleanUpStrategyAfter :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
 cleanUpStrategyAfter f = mapRules $ \r -> 
    if isMajorRule r then doAfter f r else r
-       
+
+noInterleaving :: IsStrategy f => f a -> Strategy a
+noInterleaving = liftCore $ transform f
+   where
+      f (a :%:  b) = a :*: b
+      f (a :!%: b) = a :*: b
+      f (Atomic a) = a
+      f s          = s    
+
 -----------------------------------------------------------
 --- Functions to lift the core combinators
 

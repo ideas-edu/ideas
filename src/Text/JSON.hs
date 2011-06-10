@@ -59,6 +59,7 @@ showCompact json =
 escape :: String -> String
 escape = concatMap f . fromMaybe "invalid UTF8 string" . UTF8.encodeM 
  where
+   f '\n' = "\\\\n"
    f '"'  = "\\\""
    f '\\' = "\\\\"
    f c    = [c]

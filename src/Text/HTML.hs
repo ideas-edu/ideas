@@ -94,7 +94,7 @@ table b rows = element "table" $ do
    forM_ (zip [0::Int ..] rows) $ \(i, r) ->
       element "tr" $ do
          "class" .=. getClass i
-         mapM_ (element "td") r
+         mapM_ ((if i==0 then classA "topCell" else id) . element "td") r
  where
    getClass i
       | i == 0 && b = "topRow"

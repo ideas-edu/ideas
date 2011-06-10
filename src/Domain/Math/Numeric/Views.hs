@@ -17,6 +17,7 @@ module Domain.Math.Numeric.Views
    , intDiv, fracDiv
    ) where
 
+import Common.Id
 import Common.Rewriting
 import Common.Uniplate
 import Common.View
@@ -45,8 +46,12 @@ integerView = integralView
 -- |like oldRationalView (the original defintion), except that this view
 -- now also converts floating point numbers (using an exact approximation)
 rationalView :: View Expr Rational
-rationalView = newView "num.rational" f fromRational
- where f a = match exactView a >>= either (const Nothing) Just
+rationalView = describe "Interpret an expression as a (normalized) rational \
+   \number, performing computations such as addition and multiplication if \
+   \necessary." $ 
+   newView "math.rational" f fromRational
+ where 
+   f a = match exactView a >>= either (const Nothing) Just
 
 oldRationalView :: View Expr Rational
 oldRationalView = newView "num.rational" (exprToNum f (const Nothing)) fromRational
@@ -108,7 +113,10 @@ rationalNormalForm = newView "num.rational-nf" f fromRational
    f a = fmap fromInteger (match integerNormalForm a)
    
 mixedFractionNormalForm :: View Expr MF.MixedFraction
-mixedFractionNormalForm = newView "num.mixed-fraction-nf" f (build mixedFractionView)
+mixedFractionNormalForm = describe "A normal form for mixed fractions. \
+   \Improper fractions (numerator greater or equal to denominator) are not \
+   \allowed." $ 
+   newView "math.mixed-fraction-nf" f (build mixedFractionView)
  where
    f (Negate (Nat a) :-: (Nat b :/: Nat c)) = fmap negate (simple a b c)
    f (Negate (Nat a :+: (Nat b :/: Nat c))) = fmap negate (simple a b c)

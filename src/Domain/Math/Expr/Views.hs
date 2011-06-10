@@ -16,6 +16,7 @@ module Domain.Math.Expr.Views
 
 import Common.Algebra.CoField
 import Prelude hiding (recip, (^))
+import Common.Id
 import Common.Rewriting
 import Common.View
 import Domain.Math.Expr.Data
@@ -86,7 +87,10 @@ fractionView = divView >>> signs >>> (conView *** conView)
 -- Sums and products
 
 sumView :: View Expr [Expr]
-sumView = makeView (return . ($ []) . f False) (foldl (.+.) 0)
+sumView = describe "View an expression as the sum of a list of elements, \
+   \taking into account associativity of plus, its unit element zero, and \
+   \inverse (both unary negation, and binary subtraction)." $
+   newView "math.sum" (return . ($ []) . f False) (foldl (.+.) 0)
  where
    f n (a :+: b)  = f n a . f n b
    f n (a :-: b)  = f n a . f (not n) b

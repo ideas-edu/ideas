@@ -98,13 +98,22 @@ table, th, td {
 
 td {
    vertical-align:top;
-   padding:2px;
+   padding-top: 2px;
+   padding-bottom: 2px;
+   padding-left: 5px;
+   padding-right: 5px;
 }
 
 tr.topRow {
    background-color: #03436A;
    color: white;
    font-weight: bold;
+}
+
+td.topCell {
+   padding-top: 5px;
+   padding-bottom: 5px;
+   padding-right: 15px;
 }
 
 tr.evenRow {
@@ -130,6 +139,7 @@ span.warning {
 
 div.idbox {
     background-color: white;
+    margin: 10px;
     padding: 10px;
     border-color:     #64A8D1;
     border-width:     1px;

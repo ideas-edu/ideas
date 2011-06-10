@@ -46,7 +46,7 @@ makeExercisePage dir ex = do
 
 exercisePage :: Bool -> Exercise a -> HTMLBuilder
 exercisePage exampleFileExists ex = do
-   idboxHTML "strategy" exid
+   idboxHTML "exercise" exid
    
    h2 "1. General information"
 
@@ -146,10 +146,10 @@ derivationHTML ex a = divClass "derivation" $ do
 
 idboxHTML :: String -> Id -> HTMLBuilder
 idboxHTML kind i = divClass "idbox" $ do
-   spanClass "id-code" $ ttText (showId i)
    divClass "id-type" $ text kind
-   unless (null $ description i) $
-      divClass "id-description" $ text (description i)
+   spanClass "id-code" $ ttText (showId i)
+   divClass "id-description" $ text $ 
+      if null (description i) then "no description" else description i
 
 diagnosisPage :: String -> Exercise a -> HTMLBuilder
 diagnosisPage xs ex = do

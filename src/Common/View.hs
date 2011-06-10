@@ -71,6 +71,10 @@ instance Monad m => ArrowChoice (ViewM m) where
    (+++) = (:+++:)
    (|||) = (:|||:)
 
+instance HasId (ViewM m a b) where
+   getId (Prim a _ _) = a
+   changeId f (Prim a g h) = Prim (f a) g h 
+
 infixr 2 ++>
 
 (++>) :: MonadPlus m => ViewM m a b -> ViewM m a c -> ViewM m a (Either b c)

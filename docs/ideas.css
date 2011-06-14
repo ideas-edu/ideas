@@ -178,3 +178,15 @@ div.derivation, div.step {
     border-width:     1px;
     border-style:     solid;
 }
+
+div.mathml {
+   float: right;
+   background-color: white;
+   padding: 5px;
+   margin-top: 5px;
+}
+
+.mathml a:link, .mathml a:visited, .mathml a:hover {
+   color: #03436A;
+   font-size: x-small;
+}

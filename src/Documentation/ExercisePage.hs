@@ -18,6 +18,7 @@ import Data.Char
 import Data.Maybe
 import Documentation.DefaultPage
 import Documentation.RulePresenter
+import Documentation.OpenMathDerivations
 import Service.BasicServices
 import Service.Diagnose
 import Service.DomainReasoner
@@ -35,17 +36,18 @@ makeExercisePage dir ex = do
 
    exampleFileExists <- liftIO (doesFileExist exFile)
 
-   make exercisePageFile     (exercisePage exampleFileExists ex)
+   make exercisePageFile     (exercisePage exampleFileExists dir ex)
    make exerciseStrategyFile (strategyPage ex)
-   unless (null (examples ex)) $
-       make exerciseDerivationsFile (derivationsPage ex)
+   unless (null (examples ex)) $ do
+       make exerciseDerivationsFile (derivationsPage dir ex)
+       liftIO $ makeOpenMathDerivations dir ex
    when (exampleFileExists) $ do
       xs <- liftIO (readFile exFile)
       make exerciseDiagnosisFile (diagnosisPage xs ex)
     `catchError` \_ -> return ()
 
-exercisePage :: Bool -> Exercise a -> HTMLBuilder
-exercisePage exampleFileExists ex = do
+exercisePage :: Bool -> String -> Exercise a -> HTMLBuilder
+exercisePage exampleFileExists dir ex = do
    idboxHTML "exercise" exid
    
    h2 "1. General information"
@@ -101,7 +103,7 @@ exercisePage exampleFileExists ex = do
 
    h2 "3. Example"
    let state = generate (mkStdGen 0) ex Medium
-   derivationHTML ex (stateTerm state)
+   derivationHTML dir ex (stateTerm state)
    para $ unless (null (examples ex)) $ 
       link (up len ++ exerciseDerivationsFile exid) (text "More examples")
  where
@@ -127,15 +129,18 @@ strategyPage ex = do
  where
    title = "Strategy for " ++ showId ex
 
-derivationsPage :: Exercise a -> HTMLBuilder
-derivationsPage ex = do
+derivationsPage :: String -> Exercise a -> HTMLBuilder
+derivationsPage dir ex = do
    h1 "Examples"
    forM_ (zip [1::Int ..] (examples ex)) $ \(i, (_, a)) -> do
       h2 (show i ++ ".")
-      derivationHTML ex a
+      derivationHTML dir ex a
 
-derivationHTML :: Exercise a -> a -> HTMLBuilder
-derivationHTML ex a = divClass "derivation" $ do 
+derivationHTML :: String -> Exercise a -> a -> HTMLBuilder
+derivationHTML dir ex a = divClass "derivation" $ do 
+   when (isJust (hasTermView ex)) $ 
+      let file = up ups ++ "derivations/" ++ showId ex ++ ".xml"
+      in divClass "mathml" $ link file $ text "MathML"
    pre $ derivationM (forStep ups) (forTerm ex) der
    unless (ok der) $
       divClass "error" $ text "<<not ready>>"
@@ -146,9 +151,9 @@ derivationHTML ex a = divClass "derivation" $ do
 
 idboxHTML :: String -> Id -> HTMLBuilder
 idboxHTML kind i = divClass "idbox" $ do
-   divClass "id-type" $ text kind
+   divClass  "id-type" $ text kind
    spanClass "id-code" $ ttText (showId i)
-   divClass "id-description" $ text $ 
+   divClass  "id-description" $ text $ 
       if null (description i) then "no description" else description i
 
 diagnosisPage :: String -> Exercise a -> HTMLBuilder

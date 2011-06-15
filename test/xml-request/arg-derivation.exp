@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.3 (0)">
+<reply result="ok" version="0.7.5 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.balance.remove-div">
       <argument description="factor">
@@ -13,17 +13,17 @@
         10*x-10 == x
       </expr>
     </elem>
-    <elem ruleid="algebra.equations.linear.balance.con-to-right">
-      <argument description="term">
-        -10
-      </argument>
-      <expr>
-        10*x == x+10
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.linear.balance.var-left">
+    <elem ruleid="algebra.equations.linear.balance.var-left-minus">
       <argument description="term">
         x
+      </argument>
+      <expr>
+        9*x-10 == 0
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.con-right-plus">
+      <argument description="term">
+        10
       </argument>
       <expr>
         9*x == 10

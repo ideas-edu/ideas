@@ -25,6 +25,7 @@ import Domain.Math.Equation.Views
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Examples
+import Domain.Math.Polynomial.Rules (conditionVarsRHS, flipEquation)
 import Domain.Math.Polynomial.Views
 import Domain.Math.Simplification
 import qualified Data.Traversable as T
@@ -44,24 +45,50 @@ balanceExercise = makeExercise
    , isReady      = solvedRelationWith $ \a -> 
                        a `belongsTo` mixedFractionNormalForm || 
                        a `belongsTo` rationalNormalForm
-   , strategy     = linearStrategy
-   , ruleOrdering = ruleOrderingWithId [getId removeDivision]
+   , strategy     = balanceStrategy
+   , ruleOrdering = ruleOrderingWithId balanceOrder
    , navigation   = termNavigator
    , examples     = linearExamples
    }
+
+balanceOrder :: [Id]
+balanceOrder = 
+   [ getId collect, getId removeDivision, getId collect
+   , getId varRightMinus, getId varRightPlus
+   , getId conLeftMinus, getId conLeftPlus
+   , getId varLeftMinus, getId varLeftPlus
+   , getId conRightMinus, getId conRightPlus
+   , getId scaleToOne, getId flipEquation
+   ]
       
 ------------------------------------------------------------
 -- Strategy
 
-linearStrategy :: LabeledStrategy (Context (Equation Expr))
-linearStrategy = cleanUpStrategyAfter (applyTop (fmap cleanUpExpr)) $
-   label "Linear Equation" $
+balanceStrategy :: LabeledStrategy (Context (Equation Expr))
+balanceStrategy = cleanUpStrategyAfter (applyTop (fmap cleanUpExpr)) $
+   label "Balance equation" $
        label "Phase 1" (repeatS (
                use collect
            |>  (use distribute <|> use removeDivision)))
    <*> label "Phase 2" (repeatS (
-              use varToLeft <|> use conToRight)
+              use varLeftMinus <|> use varLeftPlus <|> 
+              use conRightMinus <|> use conRightPlus <|>
+              (check p2 <*> (use varRightMinus <|> use varRightPlus)) <|>
+              (check p1 <*> (use conLeftMinus <|> use conLeftPlus)))              
           <*> try (use scaleToOne))
+   <%>
+       try (use conditionVarsRHS <*> use flipEquation)
+ where
+   -- move constants to left only if there are no variables on the left
+   p1 = maybe False (hasNoVar . leftHandSide) . fromContext
+   p2 ceq = fromMaybe False $ do
+      lhs :==: rhs <- fromContext ceq
+      (x1, a, _) <- matchLin lhs
+      (x2, b, _) <- matchLin rhs
+      return (x1 == x2 && b > a && a /= 0)
+   
+   
+-- (use conditionVarsRHS <*> use flipEquation)
 
 ------------------------------------------------------------
 -- Rules
@@ -91,27 +118,49 @@ removeDivision =
       guard (or bs)
       return (fromInteger (foldr1 lcm ns))
 
-varToLeft :: Rule (Equation Expr)
-varToLeft = doAfter (fmap collectLocal) $
-   makeRule (linbal, "var-left") $ useRecognizer isPlusT $
-   supply1 "term" varToLeftArg minusT
- where
-    varToLeftArg :: Equation Expr -> Maybe Expr
-    varToLeftArg (_ :==: rhs) = do
-       (x, a, _) <- matchLin rhs
-       guard (a /= 0)
-       return (fromRational a .*. Var x)
+varLeftMinus, varLeftPlus :: Rule (Equation Expr)
+varLeftMinus = varLeft True  (linbal, "var-left-minus")
+varLeftPlus  = varLeft False (linbal, "var-left-plus")
 
-conToRight :: Rule (Equation Expr)
-conToRight = doAfter (fmap collectLocal) $
-   makeRule (linbal, "con-to-right") $ useRecognizer isPlusT $
-   supply1 "term" conToRightArg minusT
+varLeft :: IsId a => Bool -> a -> Rule (Equation Expr)
+varLeft useMinus rid = doAfter (fmap collectLocal) $
+   makeRule rid $ useRecognizer isPlusT $
+   supply1 "term" varLeftArg (if useMinus then minusT else plusT)
  where
-    conToRightArg :: Equation Expr -> Maybe Expr
-    conToRightArg (lhs :==: _) = do
+    varLeftArg :: Equation Expr -> Maybe Expr
+    varLeftArg (lhs :==: rhs) = do
+       guard (hasSomeVar lhs)
+       (x, a, _) <- matchLin rhs
+       guard (if useMinus then a > 0 else a < 0)
+       return (fromRational (abs a) .*. Var x)
+
+conRightMinus, conRightPlus :: Rule (Equation Expr)
+conRightMinus = conRight True  (linbal, "con-right-minus")
+conRightPlus  = conRight False (linbal, "con-right-plus")
+
+conRight :: IsId a => Bool -> a -> Rule (Equation Expr)
+conRight useMinus rid = doAfter (fmap collectLocal) $
+   makeRule rid $ useRecognizer isPlusT $
+   supply1 "term" conRightArg (if useMinus then minusT else plusT)
+ where
+    conRightArg :: Equation Expr -> Maybe Expr
+    conRightArg (lhs :==: _) = do
+       guard (hasSomeVar lhs)
        (_, _, b) <- matchLin lhs
-       guard (b /= 0)
-       return (fromRational b)
+       guard (if useMinus then b > 0 else b < 0)
+       return (fromRational (abs b))
+
+varRightMinus, varRightPlus :: Rule (Equation Expr)
+varRightMinus = flipped (linbal, "var-right-minus") varLeftMinus
+varRightPlus  = flipped (linbal, "var-right-plus")  varLeftPlus
+
+conLeftMinus, conLeftPlus :: Rule (Equation Expr)
+conLeftMinus = flipped (linbal, "con-left-minus") conRightMinus
+conLeftPlus  = flipped (linbal, "con-left-plus")  conRightPlus
+
+flipped :: IsId a => a -> Rule (Equation b) -> Rule (Equation b)
+flipped rid = liftRule flipView . changeId (const (newId rid))
+ where flipView = makeView (Just . flipSides) flipSides
 
 scaleToOne :: Rule (Equation Expr)
 scaleToOne = doAfter (fmap distributeLocal) $ 
@@ -119,9 +168,12 @@ scaleToOne = doAfter (fmap distributeLocal) $
    supply1 "factor" scaleToOneArg divisionT
  where
    scaleToOneArg :: Equation Expr -> Maybe Expr
-   scaleToOneArg (lhs :==: rhs) = do
-      (_, a1, b1) <- matchLin lhs
-      guard (a1 /= 0 && a1 /= 1 && b1 == 0 && hasNoVar rhs)
+   scaleToOneArg (lhs :==: rhs) = f lhs rhs `mplus` f rhs lhs
+      
+   f :: Expr -> Expr -> Maybe Expr
+   f expr c = do
+      (_, a1, b1) <- matchLin expr
+      guard (a1 /= 0 && a1 /= 1 && b1 == 0 && hasNoVar c)
       return (fromRational a1)
       
 collect :: Rule (Equation Expr)

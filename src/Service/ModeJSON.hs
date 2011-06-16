@@ -130,7 +130,7 @@ jsonEncoder ex = Encoder
       xs = tupleList (a ::: serviceType)
     
    tupleList :: TypedValue a -> [TypedValue a]
-   tupleList (a ::: Tp.Iso _ f t)   = tupleList (f a ::: t)
+   tupleList (a ::: Tp.Iso p t)   = tupleList (to p a ::: t)
    tupleList (p ::: Tp.Pair t1 t2) = 
       tupleList (fst p ::: t1) ++ tupleList (snd p ::: t2)
    tupleList (a ::: Tag s t) 

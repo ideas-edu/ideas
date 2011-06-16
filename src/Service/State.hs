@@ -54,7 +54,7 @@ emptyState ex = empyStateContext ex . inContext ex
 --------------------------------------------------------------
 
 stateType :: Type a (State a)
-stateType = Tag "state" (Iso f g tp)
+stateType = Tag "state" (Iso (f <-> g) tp)
  where
    f (ex, mp, ctx) =
       let str = strategy ex
@@ -68,4 +68,4 @@ stateType = Tag "state" (Iso f g tp)
    tp = tuple3 Exercise prefixType Context
 
    -- iso prevents that prefix is turned into an (XML) attribute
-   prefixType = maybeType (Tag "prefix" (Iso id id String))
+   prefixType = maybeType (Tag "prefix" (Iso identity String))

@@ -15,7 +15,7 @@ module Common.Classes
    ( -- * Type class Apply
      Apply, apply, applyAll, applicable, applyD, applyM
      -- * Type class Container
-   , Container, to, from
+   , Container, singleton, getSingleton
      -- * Type class BiFunctor
    , BiFunctor, biMap, mapFirst, mapSecond
    ) where
@@ -52,19 +52,19 @@ applyM ta = maybe (fail "applyM") return . apply ta
 -----------------------------------------------------------
 -- Type class Container
 
--- | Instances should satisfy the following law: @from . to == Just@
+-- | Instances should satisfy the following law: @getSingleton . singleton == Just@
 class Container f where
-   to   :: a   -> f a
-   from :: f a -> Maybe a
+   singleton    :: a   -> f a
+   getSingleton :: f a -> Maybe a
 
 instance Container [] where
-   to       = return
-   from [a] = Just a
-   from _   = Nothing
+   singleton        = return
+   getSingleton [a] = Just a
+   getSingleton _   = Nothing
    
 instance Container S.Set where
-   to   = S.singleton
-   from = from . S.toList
+   singleton    = S.singleton
+   getSingleton = getSingleton . S.toList
    
 -----------------------------------------------------------
 -- Type class BiFunctor

@@ -50,7 +50,7 @@ eval f (tv ::: tp) s =
 decodeDefault :: Decoder s a -> Type a t -> s -> DomainReasoner (t, s)
 decodeDefault dec tp s =
    case tp of
-      Iso f _ t  -> liftM (first f) (decodeType dec t s)
+      Iso p t  -> liftM (from (first p)) (decodeType dec t s)
       Pair t1 t2 -> do
          (a, s1) <- decodeType dec t1 s
          (b, s2) <- decodeType dec t2 s1
@@ -76,7 +76,7 @@ decodeDefault dec tp s =
 encodeDefault :: Encoder s a -> Type a t -> t -> DomainReasoner s
 encodeDefault enc tp tv =
    case tp of
-      Iso _ f t  -> encodeType enc t (f tv)
+      Iso p t    -> encodeType enc t (to p tv)
       Pair t1 t2 ->
          case tv of
             (a, b) -> do

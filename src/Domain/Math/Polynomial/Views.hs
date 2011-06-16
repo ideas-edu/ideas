@@ -185,7 +185,8 @@ isList4 _            = Nothing
 -- Normal form, and list of power factors
 
 listOfPowerFactors :: Num a => String -> View Expr a -> View Expr [(a, Int)]
-listOfPowerFactors pv v = sumView >>> listView (powerFactorViewForWith pv v)
+listOfPowerFactors pv v = 
+   toView sumView >>> listView (powerFactorViewForWith pv v)
 
 polyNormalForm :: Num a => View Expr a -> View Expr (String, Polynomial a)
 polyNormalForm v = makeView f (uncurry g)
@@ -234,9 +235,9 @@ quadraticEquationView = makeView f g
                    twoA   = SQ.scale 2 a
                case compare discr 0 of
                   LT   -> return false
-                  EQ   -> return $ to (-b/twoA)
+                  EQ   -> return $ singleton (-b/twoA)
                   GT   -> return $ toOrList [(-b+sdiscr)/twoA, (-b-sdiscr)/twoA]
-            [a, b]     -> return $ to (-b/a)
+            [a, b]     -> return $ singleton (-b/a)
             [a] | a==0 -> return true
             _          -> return false
    

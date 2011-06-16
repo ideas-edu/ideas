@@ -127,7 +127,7 @@ restartIfNeeded state
    ex = exercise state
    
 diagnosisType :: Type a (Diagnosis a)
-diagnosisType = Iso f g tp
+diagnosisType = Iso (f <-> g) tp
  where
    f (Left (Left r)) = Buggy r
 --   f (Left (Right (Left ()))) = Missing

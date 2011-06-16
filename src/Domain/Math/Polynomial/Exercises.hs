@@ -89,7 +89,7 @@ quadraticExercise = makeExercise
    , splitParts   = splitOrList
    , strategy     = quadraticStrategy
    , navigation   = termNavigator
-   , examples     = mapExamples (to . build equationView) quadraticExamples
+   , examples     = mapExamples (singleton . build equationView) quadraticExamples
    }
 
 higherDegreeExercise :: Exercise (OrList (Relation Expr))
@@ -109,7 +109,7 @@ higherDegreeExercise = makeExercise
    , splitParts   = splitOrList
    , strategy      = higherDegreeStrategy
    , navigation    = termNavigator
-   , examples      = mapExamples (to . build equationView) higherDegreeExamples
+   , examples      = mapExamples (singleton . build equationView) higherDegreeExamples
    }
    
 quadraticNoABCExercise :: Exercise (OrList (Relation Expr))
@@ -171,7 +171,7 @@ expandExercise = makeExercise
    }
 
 linearFactorsView :: View Expr (Bool, [(String, Expr, Expr)])
-linearFactorsView = productView >>> second (listView myLinearView)
+linearFactorsView = toView productView >>> second (listView myLinearView)
  where
    myLinearView :: View Expr (String, Expr, Expr)
    myLinearView = makeView f (build linearView)
@@ -220,4 +220,4 @@ equivalentRelation f ra rb = fromMaybe False $ do
 splitOrList :: OrList a -> [OrList a]
 splitOrList p 
    | isTrue p  = [p]
-   | otherwise = map to (F.toList p)
+   | otherwise = map singleton (F.toList p)

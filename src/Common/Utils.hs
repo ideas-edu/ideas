@@ -12,7 +12,14 @@
 -- A collection of general utility functions
 --
 -----------------------------------------------------------------------------
-module Common.Utils where
+module Common.Utils 
+   ( Some(..), ShowString(..), readInt, readM
+   , stringToHex, charToHex, subsets, isSubsetOf
+   , cartesian, distinct, allsame
+   , safeHead, fixpoint, fixpointM
+   , splitAtElem, splitsWithElem, splitAtSequence
+   , useFixedStdGen, fst3, snd3, thd3, commaList, ratioGen, swap
+   ) where
 
 import Control.Monad
 import Data.Char
@@ -122,7 +129,7 @@ thd3 :: (a, b, c) -> c
 thd3 (_, _, x) = x
 
 commaList :: [String] -> String
-commaList = concat . intersperse ", "
+commaList = intercalate ", "
 
 -- | Prevents a bias towards small numbers
 ratioGen :: Integral a => Int -> Int -> Gen (Ratio a)

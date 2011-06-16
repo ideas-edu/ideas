@@ -72,7 +72,7 @@ cleanUpRelation = f . fmap cleanUpBU
       | otherwise = 
            case (match rationalView a, match rationalView b) of
               (Just r, Just s) -> fromBool (eval (relationType rel) r s)
-              _                -> to rel
+              _                -> singleton rel
     where
       (a, b) = (leftHandSide rel, rightHandSide rel)
 
@@ -90,8 +90,8 @@ cleanUpExpr = fixpoint $
    cleanUpBU . transform (simplify (squareRootViewWith rationalView))
 
 cleanUpView, cleanUpACView :: View Expr Expr
-cleanUpView   = biArr cleanUpExpr id
-cleanUpACView = biArr (acExpr . cleanUpExpr) id
+cleanUpView   = makeView (return . cleanUpExpr) id
+cleanUpACView = makeView (return . acExpr . cleanUpExpr) id
 
 -- normalize expr with associativity and commutative rules for + and *
 assocExpr, acExpr :: Expr -> Expr
@@ -102,11 +102,11 @@ normExpr :: ([Expr] -> [Expr]) -> Expr -> Expr
 normExpr f = rec 
  where
    rec expr = 
-      case (match sumView expr, match productView expr) of
-         (Just xs, _) | length xs > 1 -> 
-            build sumView $ f $ map rec xs
-         (_, Just (b, xs)) | length xs > 1 -> 
-            build productView (b, f $ map rec xs)
+      case (from sumEP expr, from productEP expr) of
+         (xs, _) | length xs > 1 -> 
+            to sumEP $ f $ map rec xs
+         (_, (b, xs)) | length xs > 1 -> 
+            to productEP (b, f $ map rec xs)
          _ -> 
             descend rec expr 
   
@@ -151,7 +151,7 @@ cleanUpBU = {- fixpoint $ -} transform $ \e ->
    myView = powerFactorViewWith rationalView
 
 specialSqrtOrder :: View Expr [Expr]
-specialSqrtOrder = sumView >>> makeView f id
+specialSqrtOrder = toView sumView >>> makeView f id
  where
    make = match (squareRootViewWith rationalView)
    g    = isNothing . fromSquareRoot . snd

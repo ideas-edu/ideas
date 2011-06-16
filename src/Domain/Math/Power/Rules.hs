@@ -147,7 +147,7 @@ mulExponents = makeSimpleRule (power, "mul-exponents") $ \ expr -> do
 -- | (a0 * a1 ... * an)^x = a0^x * a1^x ... * an^x
 distributePower :: Rule Expr
 distributePower = makeSimpleRule (power, "distr-power") $ \ expr -> do
-  ((sign, as), x) <- match (powerViewWith productView identity) expr
+  ((sign, as), x) <- match (powerViewWith (toView productView) identity) expr
   guard $ length as > 1
   let y = build productView (False, map (\a -> build powerView (a, x)) as)
   return $ 
@@ -302,7 +302,7 @@ calcBinPowerRule opName op m =
     return $ build unitPowerViewVar (op c1 c2, (a, x))
 
 -- use twoNonAdHoles instead of split ???
-makeCommutative :: View Expr [Expr] -> (Expr -> Expr -> Expr) -> Rule Expr -> Rule Expr
+makeCommutative :: IsView f => f Expr [Expr] -> (Expr -> Expr -> Expr) -> Rule Expr -> Rule Expr
 makeCommutative view op r = 
   makeSimpleRuleList (getId r) $ \ expr ->
     case match view expr of

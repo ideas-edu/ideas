@@ -228,7 +228,7 @@ distributionSquare = describe "distribution square" $
 squareBothSides :: Rule (OrList (Equation Expr))
 squareBothSides = describe "square both sides" $ 
    rule (quadreq, "square-both") $ \a b -> 
-   to (a^2 :==: b^2) :~> toOrList [a :==: b, a :==: -b]
+   singleton (a^2 :==: b^2) :~> toOrList [a :==: b, a :==: -b]
 
 -- prepare splitting a square; turn lhs into x^2+bx+c such that (b/2)^2 is c
 prepareSplitSquare :: Rule (Equation Expr)
@@ -361,7 +361,7 @@ sameConFactor =
           (newLeft, newRight) = splitAt (length ps1) (zipWith3 make bs rs es)
       return (newLeft :==: newRight)
  where
-   myView = bothSidesView (sumView >>> listView productView)
+   myView = bothSidesView (toView sumView >>> listView (toView productView))
  
    whichCon :: [Rational] -> Maybe Rational
    whichCon xs 
@@ -380,7 +380,7 @@ abcFormula = describe "quadratic formula (abc formule)" $
    addToClipboard "D" (fromRational discr)
    case compare discr 0 of
       LT -> return false
-      EQ -> return $ to $ 
+      EQ -> return $ singleton $ 
          Var x :==: (-fromRational b) / (2 * fromRational a)
       GT -> return $ toOrList
          [ Var x :==: (-fromRational b + sqD) / (2 * fromRational a)
@@ -413,7 +413,7 @@ substBackVar = describe "Substitute back a variable" $
 
 exposeSameFactor :: Rule (Equation Expr)
 exposeSameFactor = describe "expose same factor" $ 
-   liftRule (bothSidesView productView) $ 
+   liftRule (bothSidesView (toView productView)) $ 
    makeSimpleRuleList (polyeq, "expose-factor") $ \((bx, xs) :==: (by, ys)) -> do 
       (nx, ny) <- [ (xs, new) | x <- xs, suitable x, new <- exposeList x ys ] ++
                   [ (new, ys) | y <- ys, suitable y, new <- exposeList y xs ]
@@ -513,7 +513,7 @@ distributeTimes = describe "distribution multiplication" $
 distributeDivision :: Rule Expr
 distributeDivision = describe "distribution division" $
    makeSimpleRule (quadreq, "distr-div") $ \expr -> do
-      (xs, r) <- match (divView >>> (sumView *** rationalView)) expr
+      (xs, r) <- match (divView >>> (toView sumView *** rationalView)) expr
       guard (length xs > 1)
       let ys = map (/fromRational r) xs
       return $ build sumView ys

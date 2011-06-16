@@ -180,7 +180,7 @@ feedbacktextS = makeService "feedbacktext"
 -- Helper type for submittext and feedbacktext: reorders elements, and inserts
 -- some extra tags
 messageAndState :: Type a (Bool, Text, State a)
-messageAndState = Iso f g tp
+messageAndState = Iso (f <-> g) tp
  where
    f ((a, b), c) = (a, b, c)
    g (a, b, c)   = ((a, b), c)

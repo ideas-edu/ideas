@@ -116,7 +116,8 @@ coverUpPowerWith = coverUpBinaryOrRule "power" (isBinary powerSymbol) fb
       guard (n > 0)
       let new1 = root rhs (fromIntegral n)
           new2 = (neg new1)
-      return $ to new1 <> if even n && new1 /= new2 then to new2 else false
+      return $ singleton new1 <> 
+         if even n && new1 /= new2 then singleton new2 else false
       
 coverUpPlusWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpPlusWith = coverUpBinaryRule "plus" (commOp . isPlus) (-)
@@ -158,9 +159,9 @@ coverUpOrs :: OrList (Equation Expr) -> OrList (Equation Expr)
 coverUpOrs = foldMap  (f . coverUp)
  where
    f :: Equation Expr -> OrList (Equation Expr)
-   f eq = case apply coverUpPower (to eq) of
+   f eq = case apply coverUpPower (singleton eq) of
              Just xs -> coverUpOrs xs
-             Nothing -> to eq
+             Nothing -> singleton eq
                  
 coverUp :: Equation Expr -> Equation Expr
 coverUp eq = 

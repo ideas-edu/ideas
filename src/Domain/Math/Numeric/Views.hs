@@ -46,9 +46,9 @@ integerView = integralView
 -- |like oldRationalView (the original defintion), except that this view
 -- now also converts floating point numbers (using an exact approximation)
 rationalView :: View Expr Rational
-rationalView = describe "Interpret an expression as a (normalized) rational \
+rationalView = {- describe "Interpret an expression as a (normalized) rational \
    \number, performing computations such as addition and multiplication if \
-   \necessary." $ 
+   \necessary." $ -}
    newView "math.rational" f fromRational
  where 
    f a = match exactView a >>= either (const Nothing) Just
@@ -113,9 +113,9 @@ rationalNormalForm = newView "num.rational-nf" f fromRational
    f a = fmap fromInteger (match integerNormalForm a)
    
 mixedFractionNormalForm :: View Expr MF.MixedFraction
-mixedFractionNormalForm = describe "A normal form for mixed fractions. \
+mixedFractionNormalForm = {- describe "A normal form for mixed fractions. \
    \Improper fractions (numerator greater or equal to denominator) are not \
-   \allowed." $ 
+   \allowed." $ -}
    newView "math.mixed-fraction-nf" f (build mixedFractionView)
  where
    f (Negate (Nat a) :-: (Nat b :/: Nat c)) = fmap negate (simple a b c)

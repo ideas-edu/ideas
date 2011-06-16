@@ -121,10 +121,10 @@ powerViewForWith va vb a = makeView f ((build va a .^.) .  build vb)
 powerViewFor :: Expr -> View Expr Expr
 powerViewFor = powerViewForWith identity identity
 
-powerFactorView :: (Expr -> Expr -> Bool) -> View Expr (Bool, [Expr])
-powerFactorView p = productView >>> second (makeView f id)
+powerFactorView :: (Expr -> Expr -> Bool) -> Projection Expr (Bool, [Expr])
+powerFactorView p = productView >>> second (f <-> id)
   where
-    f = Just . map (build productView . (,) False) . joinBy p
+    f = map (build productView . (,) False) . joinBy p
 
 -- | Log views ----------------------------------------------------------------
 

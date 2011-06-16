@@ -78,7 +78,7 @@ mergeConstants = mergeConstantsWith (`belongsTo` rationalView)
 
 -- | View functions -----------------------------------------------------------
 
-(<&>) :: (MonadPlus m) => ViewM m a b -> ViewM m a b -> ViewM m a b
+(<&>) :: View a b -> View a b -> View a b
 v <&> w = makeView (\x -> match v x `mplus` match w x) (build v)
 
 infixl 1 <&>

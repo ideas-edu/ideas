@@ -84,9 +84,9 @@ instance CoBoolean (Logic a) where
    isComplement _       = Nothing
 
 instance Container Logic where
-   to = Var
-   from (Var a) = Just a
-   from _       = Nothing
+   singleton            = Var
+   getSingleton (Var a) = Just a
+   getSingleton _       = Nothing
 
 -- | The type LogicAlg is the algebra for the data type Logic
 -- | Used in the fold for Logic.

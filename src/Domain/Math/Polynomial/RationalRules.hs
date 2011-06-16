@@ -74,7 +74,7 @@ sameDividend = makeSimpleRule (ratId, "same-dividend") $ withCM $ oneDisjunct $ 
    guard (a1==a2)
    conditionNotZero b
    conditionNotZero c
-   return $ to (a1 :==: 0) <> to (b :==: c)
+   return $ singleton (a1 :==: 0) <> singleton (b :==: c)
    
 -- a/b = c/d  iff  a*d = b*c   (and b/=0 and d/=0)
 crossMultiply :: Rule (Context (Equation Expr))
@@ -115,7 +115,7 @@ cancelTermsDiv = makeSimpleRule (ratId, "cancel-div") $ withCM $ \expr -> do
    conditionNotZero (build productView (False, map g rs))
    return $ build myView ((b, map g ps), (c, map g qs))
  where
-   myView = divView >>> (productView *** productView)
+   myView = divView >>> toView (productView *** productView)
    powInt = powerView >>> second integerView
    f a = fromMaybe (a, 1) (match powInt a)
    g   = build powInt
@@ -181,6 +181,6 @@ conditionNotZero expr = condition (f xs)
    f  = pushNotWith (Logic.Var . notRelation) . Not
    eq = expr :==: 0
    xs = fmap (build equationView . fmap cleanUpExpr) $ 
-        case match higherDegreeEquationsView (to eq) of
+        case match higherDegreeEquationsView (singleton eq) of
            Just ys -> build orListView (coverUpOrs (build higherDegreeEquationsView ys))
            Nothing -> Logic.Var (coverUp eq)

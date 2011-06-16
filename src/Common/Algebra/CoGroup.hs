@@ -64,7 +64,7 @@ fromMonoidZero f = fromMonoid $ \a ->
 ----------------------
 -}
 associativeList :: CoMonoid a => a -> [a]
-associativeList = fromSemiGroup to
+associativeList = fromSemiGroup singleton
 {-
 monoidList :: CoMonoid a => a -> [a]
 monoidList = fromMonoid singleton

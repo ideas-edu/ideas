@@ -68,9 +68,9 @@ logic p = buildExpressionParser table (logicAtom p)
 
 logicAtom :: (Container f, BoolValue (f a)) => Parser a -> Parser (f a)
 logicAtom p = choice 
-   [ true  <$  reserved "true" 
-   , false <$  reserved "false"
-   , to    <$> p
+   [ true      <$  reserved "true" 
+   , false     <$  reserved "false"
+   , singleton <$> p
    ]
 
 equation :: Parser a -> Parser (Equation a)
@@ -83,7 +83,7 @@ relationChain :: Parser a -> Parser (Logic (Relation a))
 relationChain p = (\x -> ands . make x) <$> p <*> many1 ((,) <$> relType <*> p)
  where
    make _ []             = []
-   make a ((f, b): rest) = to (f a b) : make b rest
+   make a ((f, b): rest) = singleton (f a b) : make b rest
 
 relType :: Parser (a -> a -> Relation a)
 relType = choice (map make table)

@@ -117,7 +117,7 @@ data Reply a = Ok Id (State a)
 -- Type definition
 
 replyType :: Type a (Reply a)
-replyType = Iso f g tp
+replyType = Iso (f <-> g) tp
  where
    f (Left (a, b))        = Ok a b
    f (Right (a, b, c, d)) = Incorrect a b c d

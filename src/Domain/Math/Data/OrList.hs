@@ -55,8 +55,8 @@ instance BoolValue (OrList a) where
    isFalse = isEmpty
 
 instance Container OrList where
-   to = OrList . pure . to
-   from (OrList a) = fromWithZero a >>= from
+   singleton = OrList . pure . singleton
+   getSingleton (OrList a) = fromWithZero a >>= getSingleton
 
 instance Rewrite a => Rewrite (OrList a)
 
@@ -105,20 +105,20 @@ instance Ord a => BoolValue (OrSet a) where
    isFalse = isEmpty
 
 instance Container OrSet where
-   to = OrSet . pure . to
-   from (OrSet a) = fromWithZero a >>= from
+   singleton = OrSet . pure . singleton
+   getSingleton (OrSet a) = fromWithZero a >>= getSingleton
 
 ------------------------------------------------------------
 -- View to the logic data type
  
 toOrList :: [a] -> OrList a
-toOrList = mconcat . map to
+toOrList = mconcat . map singleton
  
 orListView :: View (Logic a) (OrList a)
 orListView = makeView f g 
  where
    f p  = case p of
-             Logic.Var a -> return (to a)
+             Logic.Var a -> return (singleton a)
              Logic.T     -> return true
              Logic.F     -> return false
              a :||: b    -> liftM2 mappend (f a) (f b)

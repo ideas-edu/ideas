@@ -56,7 +56,7 @@ rationalEquationExercise = makeExercise
    , strategy      = rationalEquationStrategy
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , navigation    = termNavigator
-   , examples      = level Medium $ map to (concat brokenEquations)
+   , examples      = level Medium $ map singleton (concat brokenEquations)
    }
    
 simplifyRationalExercise :: Exercise Expr
@@ -185,7 +185,7 @@ rationalEquation eq = do
 restrictOrList :: Logic (Relation Expr) -> OrList Expr -> OrList Expr
 restrictOrList p0 = catOrList . fmap f
  where
-   f a | p a       = to a
+   f a | p a       = singleton a
        | otherwise = false
    p zeroExpr = 
       case coverUp (zeroExpr :==: 0) of 

@@ -45,7 +45,7 @@ submit :: State a -> a -> Result a
 submit state = fromDiagnose . diagnose state
 
 submitType :: Type a (Result a)
-submitType = Tag "Result" (Iso f g tp)
+submitType = Tag "Result" (Iso (f <-> g) tp)
  where
    f (Left rs) = Buggy rs
    f (Right (Left ())) = NotEquivalent

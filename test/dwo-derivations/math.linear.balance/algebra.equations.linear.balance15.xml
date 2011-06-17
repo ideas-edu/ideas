@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.equations.linear.balance" encoding="string">
+  <state>
+    <expr>
+      4*x-6 == 7*x-14
+    </expr>
+  </state>
+</request>

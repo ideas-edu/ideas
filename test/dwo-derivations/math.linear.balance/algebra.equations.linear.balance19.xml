@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.equations.linear.balance" encoding="string">
+  <state>
+    <expr>
+      17 == 4-10*x
+    </expr>
+  </state>
+</request>

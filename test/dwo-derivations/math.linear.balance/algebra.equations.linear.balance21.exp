@@ -1,0 +1,39 @@
+<reply result="ok" version="0.7.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.balance.distribute">
+      <expr>
+        4*x-4 == 11*x-12
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.var-right-minus">
+      <argument description="term">
+        4*x
+      </argument>
+      <expr>
+        -4 == 7*x-12
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.con-left-plus">
+      <argument description="term">
+        12
+      </argument>
+      <expr>
+        8 == 7*x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.scale-to-one">
+      <argument description="factor">
+        7
+      </argument>
+      <expr>
+        8/7 == x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.flip">
+      <expr>
+        x == 8/7
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,34 @@
+<reply result="ok" version="0.7.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.balance.remove-div">
+      <argument description="factor">
+        12
+      </argument>
+      <expr>
+        12*(3/4*x-1/3) == 12*(2/3*x-3/4)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.distribute">
+      <expr>
+        9*x-4 == 8*x-9
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.var-left-minus">
+      <argument description="term">
+        8*x
+      </argument>
+      <expr>
+        x-4 == -9
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.con-right-plus">
+      <argument description="term">
+        4
+      </argument>
+      <expr>
+        x == -5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

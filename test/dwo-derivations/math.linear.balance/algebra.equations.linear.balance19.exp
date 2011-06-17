@@ -1,0 +1,26 @@
+<reply result="ok" version="0.7.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.balance.con-left-minus">
+      <argument description="term">
+        4
+      </argument>
+      <expr>
+        13 == -10*x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.scale-to-one">
+      <argument description="factor">
+        -10
+      </argument>
+      <expr>
+        -13/10 == x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.flip">
+      <expr>
+        x == -13/10
+      </expr>
+    </elem>
+  </list>
+</reply>
+

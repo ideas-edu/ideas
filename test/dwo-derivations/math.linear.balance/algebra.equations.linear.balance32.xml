@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.equations.linear.balance" encoding="string">
+  <state>
+    <expr>
+      1/4*x+1/2 == 5/2*x+2
+    </expr>
+  </state>
+</request>

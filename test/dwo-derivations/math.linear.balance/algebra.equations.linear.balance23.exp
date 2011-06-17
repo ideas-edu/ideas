@@ -1,0 +1,39 @@
+<reply result="ok" version="0.7.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.balance.distribute">
+      <expr>
+        10-6*x == 6-x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.var-right-plus">
+      <argument description="term">
+        6*x
+      </argument>
+      <expr>
+        10 == 6+5*x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.con-left-minus">
+      <argument description="term">
+        6
+      </argument>
+      <expr>
+        4 == 5*x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.scale-to-one">
+      <argument description="factor">
+        5
+      </argument>
+      <expr>
+        4/5 == x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.flip">
+      <expr>
+        x == 4/5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

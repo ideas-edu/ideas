@@ -1,0 +1,34 @@
+<reply result="ok" version="0.7.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.balance.var-right-minus">
+      <argument description="term">
+        4*x
+      </argument>
+      <expr>
+        -6 == 3*x-14
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.con-left-plus">
+      <argument description="term">
+        14
+      </argument>
+      <expr>
+        8 == 3*x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.scale-to-one">
+      <argument description="factor">
+        3
+      </argument>
+      <expr>
+        8/3 == x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.flip">
+      <expr>
+        x == 8/3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

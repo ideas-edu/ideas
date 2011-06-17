@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.equations.linear.balance" encoding="string">
+  <state>
+    <expr>
+      -12+5*x == 33
+    </expr>
+  </state>
+</request>

@@ -1,0 +1,52 @@
+<reply result="ok" version="0.7.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.balance.collect">
+      <expr>
+        -1/2*x+3/2 == 2*x-5
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.remove-div">
+      <argument description="factor">
+        2
+      </argument>
+      <expr>
+        2*(-1/2*x+3/2) == 2*(2*x-5)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.distribute">
+      <expr>
+        -x+3 == 4*x-10
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.var-right-plus">
+      <argument description="term">
+        x
+      </argument>
+      <expr>
+        3 == 5*x-10
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.con-left-plus">
+      <argument description="term">
+        10
+      </argument>
+      <expr>
+        13 == 5*x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.scale-to-one">
+      <argument description="factor">
+        5
+      </argument>
+      <expr>
+        13/5 == x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.flip">
+      <expr>
+        x == 13/5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

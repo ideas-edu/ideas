@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.equations.linear.balance" encoding="string">
+  <state>
+    <expr>
+      4*x-(x-2) == 12+5*(x-1)
+    </expr>
+  </state>
+</request>

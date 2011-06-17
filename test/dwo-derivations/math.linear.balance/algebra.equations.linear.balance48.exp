@@ -1,0 +1,47 @@
+<reply result="ok" version="0.7.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.balance.remove-div">
+      <argument description="factor">
+        30
+      </argument>
+      <expr>
+        30*(2*x-(2*x+2)/5) == 30*(12+(x-1)/6)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.distribute">
+      <expr>
+        60*x-12*x-12 == 360+5*x-5
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.collect">
+      <expr>
+        48*x-12 == 355+5*x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.var-left-minus">
+      <argument description="term">
+        5*x
+      </argument>
+      <expr>
+        43*x-12 == 355
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.con-right-plus">
+      <argument description="term">
+        12
+      </argument>
+      <expr>
+        43*x == 367
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.scale-to-one">
+      <argument description="factor">
+        43
+      </argument>
+      <expr>
+        x == 367/43
+      </expr>
+    </elem>
+  </list>
+</reply>
+

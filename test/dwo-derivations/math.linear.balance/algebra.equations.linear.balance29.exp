@@ -1,0 +1,39 @@
+<reply result="ok" version="0.7.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.balance.distribute">
+      <expr>
+        -5*x-5 == 9*x+31
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.var-right-plus">
+      <argument description="term">
+        5*x
+      </argument>
+      <expr>
+        -5 == 14*x+31
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.con-left-minus">
+      <argument description="term">
+        31
+      </argument>
+      <expr>
+        -36 == 14*x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.scale-to-one">
+      <argument description="factor">
+        14
+      </argument>
+      <expr>
+        -18/7 == x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.flip">
+      <expr>
+        x == -18/7
+      </expr>
+    </elem>
+  </list>
+</reply>
+

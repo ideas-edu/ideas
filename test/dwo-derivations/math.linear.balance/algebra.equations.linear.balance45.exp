@@ -1,0 +1,52 @@
+<reply result="ok" version="0.7.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.balance.collect">
+      <expr>
+        -5/4*(x-7) == 3/4*(x+2)-9/2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.remove-div">
+      <argument description="factor">
+        4
+      </argument>
+      <expr>
+        -5*(x-7) == 4*(3/4*(x+2)-9/2)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.distribute">
+      <expr>
+        -5*x+35 == 3*x-12
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.var-right-plus">
+      <argument description="term">
+        5*x
+      </argument>
+      <expr>
+        35 == 8*x-12
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.con-left-plus">
+      <argument description="term">
+        12
+      </argument>
+      <expr>
+        47 == 8*x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.scale-to-one">
+      <argument description="factor">
+        8
+      </argument>
+      <expr>
+        47/8 == x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.flip">
+      <expr>
+        x == 47/8
+      </expr>
+    </elem>
+  </list>
+</reply>
+

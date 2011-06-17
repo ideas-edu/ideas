@@ -1,0 +1,52 @@
+<reply result="ok" version="0.7.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.balance.collect">
+      <expr>
+        -1/2*(x+2) == 9*(2/3*x+1/3)-5/3
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.remove-div">
+      <argument description="factor">
+        6
+      </argument>
+      <expr>
+        -3*(x+2) == 6*(9*(2/3*x+1/3)-5/3)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.distribute">
+      <expr>
+        -3*x-6 == 36*x+8
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.var-right-plus">
+      <argument description="term">
+        3*x
+      </argument>
+      <expr>
+        -6 == 39*x+8
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.con-left-minus">
+      <argument description="term">
+        8
+      </argument>
+      <expr>
+        -14 == 39*x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.scale-to-one">
+      <argument description="factor">
+        39
+      </argument>
+      <expr>
+        -14/39 == x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.flip">
+      <expr>
+        x == -14/39
+      </expr>
+    </elem>
+  </list>
+</reply>
+

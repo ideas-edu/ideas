@@ -1,0 +1,47 @@
+<reply result="ok" version="0.7.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.balance.remove-div">
+      <argument description="factor">
+        20
+      </argument>
+      <expr>
+        20*(2/5*x-1/4) == 20*(1/2*x+3/4)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.distribute">
+      <expr>
+        8*x-5 == 10*x+15
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.var-right-minus">
+      <argument description="term">
+        8*x
+      </argument>
+      <expr>
+        -5 == 2*x+15
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.con-left-minus">
+      <argument description="term">
+        15
+      </argument>
+      <expr>
+        -20 == 2*x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.scale-to-one">
+      <argument description="factor">
+        2
+      </argument>
+      <expr>
+        -10 == x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.flip">
+      <expr>
+        x == -10
+      </expr>
+    </elem>
+  </list>
+</reply>
+

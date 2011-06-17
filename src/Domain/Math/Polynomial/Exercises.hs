@@ -106,7 +106,7 @@ higherDegreeExercise = makeExercise
    , extraRules    = map use abcBuggyRules ++ buggyQuadratic ++
                      map use buggyRulesEquation ++ map use buggyRulesExpr 
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
-   , splitParts   = splitOrList
+   , splitParts    = splitOrList
    , strategy      = higherDegreeStrategy
    , navigation    = termNavigator
    , examples      = mapExamples (singleton . build equationView) higherDegreeExamples
@@ -149,6 +149,7 @@ findFactorsExercise = makeExercise
    , similarity   = withoutContext ((==) `on` cleanUpExpr)
    , equivalence  = withoutContext (viewEquivalent (polyViewWith rationalView))
    , isReady      = (`belongsTo` linearFactorsView)
+   , ruleOrdering = ruleOrderingWithId quadraticRuleOrder
    , strategy     = findFactorsStrategy
    , navigation   = termNavigator
    , extraRules   = map liftToContext buggyRulesExpr
@@ -164,6 +165,7 @@ expandExercise = makeExercise
    , similarity   = withoutContext ((==) `on` cleanUpExpr)
    , equivalence  = withoutContext (viewEquivalent (polyViewWith rationalView))
    , isReady      = (`belongsTo` polyNormalForm rationalView)
+   , ruleOrdering = ruleOrderingWithId (getId fractionProduct:quadraticRuleOrder)
    , strategy     = expandStrategy
    , navigation   = termNavigator
    , extraRules   = map liftToContext buggyRulesExpr

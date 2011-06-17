@@ -1,17 +1,9 @@
-<reply result="ok" version="0.6.6 (0)">
+<reply result="ok" version="0.7.5 (0)">
   <list>
-    <elem ruleid="algebra.equations.polynomial.factor-varpower">
+    <elem ruleid="algebra.equations.quadratic.common-factor">
       <expr>
-        x*(36*x+30)
+        6*x*(6*x+5)
       </expr>
-    </elem>
-    <elem ruleid="algebra.equations.polynomial.simpler-linfactor">
-      <expr>
-        x*6*(6*x+5)
-      </expr>
-      <context>
-        <item name="location" value="[2]"/>
-      </context>
     </elem>
   </list>
 </reply>

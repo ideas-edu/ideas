@@ -1,0 +1,15 @@
+<reply result="ok" version="0.7.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        (3*x-6)*2*x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        6*x^2-12*x
+      </expr>
+    </elem>
+  </list>
+</reply>
+

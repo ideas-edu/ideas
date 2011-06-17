@@ -1,0 +1,20 @@
+<reply result="ok" version="0.7.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.polynomial.def-power-nat">
+      <expr>
+        (x+1)*(x+1)*(x+1)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        (x^2+x+x+1)*(x+1)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        x^3+3*x^2+3*x+1
+      </expr>
+    </elem>
+  </list>
+</reply>
+

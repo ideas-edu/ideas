@@ -19,7 +19,7 @@ module Domain.Math.Polynomial.Rules
    , ruleApproximate, ruleNormalizeMixedFraction, ruleNormalizeRational
    , ruleNormalizePolynomial
    , sameFactor, simplerLinearFactor, simplerPolynomial, simplerSquareRoot
-   , squareBothSides, substBackVar, varToLeft, conditionVarsRHS
+   , squareBothSides, substBackVar, varToLeft, conditionVarsRHS, fractionProduct
    ) where
 
 import Common.Library hiding (terms, simplify)
@@ -216,12 +216,14 @@ cancelTerms = describe "Cancel terms" $
    let without as = build sumView (as \\ zs)
    return (without xs :==: without ys)
 
--- Two out of three "merkwaardige producten"
+-- "merkwaardige producten"
 distributionSquare :: Rule Expr
-distributionSquare = describe "distribution square" $
+distributionSquare = describe "distribution for special products" $
    ruleList (quadreq, "distr-square")
       [ \a b -> (a+b)^2 :~> a^2 + 2*a*b + b^2
       , \a b -> (a-b)^2 :~> a^2 - 2*a*b + b^2
+      , \a b -> (a+b)*(a-b) :~> a^2 - b^2
+      , \a b -> (a-b)*(a+b) :~> a^2 - b^2
       ]
 
 -- a^2 == b^2
@@ -579,6 +581,12 @@ noDivisionConstant = makeSimpleRule (lineq, "no-div-con") f
    f (a :/: b) | hasNoVar b && hasSomeVar a = 
       return ((1/b) * a)
    f _ = Nothing
+   
+-- (a/b) * (c/d) = (a*c)/(b*d)
+fractionProduct :: Rule Expr
+fractionProduct = makeSimpleRule (polyeq, "fraction-product") $ \expr -> do
+   ((a, b), (c, d)) <- match (timesView >>> divView *** divView) expr
+   return ((a .*. c) ./. (b .*. d))
    
 defPowerNat :: Rule Expr
 defPowerNat = makeSimpleRule (polyeq, "def-power-nat") f

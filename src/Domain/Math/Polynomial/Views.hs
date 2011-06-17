@@ -15,7 +15,7 @@ module Domain.Math.Polynomial.Views
    , linearView, linearViewWith -- linearViewFor linearViewForWith
    , constantPolyView, linearPolyView, quadraticPolyView, cubicPolyView
    , monomialPolyView, binomialPolyView, trinomialPolyView
-   , polyNormalForm
+   , polyNormalForm, polyRelaxedForm
    , linearEquationView, quadraticEquationView, quadraticEquationsView
    , higherDegreeEquationsView, listOfPowerFactors
    ) where
@@ -188,15 +188,23 @@ listOfPowerFactors :: Num a => String -> View Expr a -> View Expr [(a, Int)]
 listOfPowerFactors pv v = 
    toView sumView >>> listView (powerFactorViewForWith pv v)
 
-polyNormalForm :: Num a => View Expr a -> View Expr (String, Polynomial a)
-polyNormalForm v = makeView f (uncurry g)
+-- Generalization
+polyForm :: Num a => Bool -> View Expr a -> View Expr (String, Polynomial a)
+polyForm relaxed v = makeView f (uncurry g)
  where
    f e = do
       pv <- selectVar e
       xs <- match (listOfPowerFactors pv v) e
-      guard (distinct (map snd xs))
+      guard (relaxed || distinct (map snd xs))
       return (pv, buildPairs xs)
    g pv = build (listOfPowerFactors pv v) . reverse . terms
+
+polyNormalForm :: Num a => View Expr a -> View Expr (String, Polynomial a)
+polyNormalForm = polyForm False
+
+-- relaxes the condition that all powers should be distinct
+polyRelaxedForm :: Num a => View Expr a -> View Expr (String, Polynomial a)
+polyRelaxedForm = polyForm True
    
 -------------------------------------------------------------------
 -- Normal forms for equations

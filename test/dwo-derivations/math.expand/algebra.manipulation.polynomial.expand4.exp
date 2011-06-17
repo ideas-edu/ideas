@@ -1,8 +1,8 @@
 <reply result="ok" version="0.7.5 (0)">
   <list>
-    <elem ruleid="algebra.equations.quadratic.common-factor">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
-        2*x*(7*x-5)
+        -8*x+12
       </expr>
     </elem>
   </list>

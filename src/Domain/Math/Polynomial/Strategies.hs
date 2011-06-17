@@ -26,7 +26,6 @@ import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.CleanUp
-import Domain.Math.Simplification (mergeAlike)
 import Data.Maybe
 
 ------------------------------------------------------------
@@ -185,11 +184,13 @@ flipEquationS = use conditionVarsRHS <*> use flipEquation
 -- Expanding factors of an expression
 
 expandStrategy :: LabeledStrategy (Context Expr)
-expandStrategy = cleanUpStrategyAfter (applyTop f) $
-   label "expand factors" $ repeatS $ somewhere $
-      (use distributionSquare <|> use distributeTimes <|> use defPowerNat)
-      -- <*> try (use (ruleNormalizePolynomial))
- where
-   f = mergeAlike 
-      . transform (simplify (listOfPowerFactors "x" rationalView)) 
-      . cleanUpSimple
+expandStrategy = cleanUpStrategyAfter (applyTop f . change g) $
+   label "expand factors" $ repeatS (somewhere $
+      use distributionSquare <|> use merge <|> use distributeTimes <|> 
+      use defPowerNat <|> use noDivisionConstant <|> use fractionProduct)
+   <*>
+      try (use ruleNormalizePolynomial)
+ where -- mergeAlike
+   f = transform (simplify (listOfPowerFactors "x" rationalView)) 
+     -- . cleanUpSimple
+   g a = simplify (polyRelaxedForm rationalView) a

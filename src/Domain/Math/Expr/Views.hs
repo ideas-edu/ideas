@@ -16,6 +16,7 @@ module Domain.Math.Expr.Views
 
 import Common.Algebra.CoField
 import Prelude hiding (recip, (^))
+import Common.Id
 import Common.Rewriting
 import Common.View
 import Domain.Math.Expr.Data
@@ -82,18 +83,25 @@ fractionView = divView >>> signs >>> (conView *** conView)
 -------------------------------------------------------------
 -- Sums and products
 
-sumEP :: Projection Expr [Expr]
-sumEP = (($ []) . f False) <-> (foldl (.+.) 0)
+sumView :: Projection Expr [Expr]
+sumView = describe "View an expression as the sum of a list of elements, \
+   \taking into account associativity of plus, its unit element zero, and \
+   \inverse (both unary negation, and binary subtraction)." $
+   "math.sum" @> sumEP
  where
+   sumEP = (($ []) . f False) <-> (foldl (.+.) 0)
+
    f n (a :+: b)  = f n a . f n b
    f n (a :-: b)  = f n a . f (not n) b
    f n (Negate a) = f (not n) a
    f _ (Nat 0)    = id
    f n e          = if n then (neg e:) else (e:)
 
-productEP :: Projection Expr (Bool, [Expr])
-productEP = (second ($ []) . f False) <-> g
+productView :: Projection Expr (Bool, [Expr])
+productView = "math.product" @> productEP
  where
+   productEP = (second ($ []) . f False) <-> g
+
    f r (a :*: b)  = f r a .&&. f r b
    f r (a :/: b)  = case a of -- two special cases (for efficiency)
                        Nat 1          -> f (not r) b
@@ -105,27 +113,17 @@ productEP = (second ($ []) . f False) <-> g
    (n1, g1) .&&. (n2, g2) = (n1 /= n2, g1 . g2)
    
    g (b, xs) = (if b then neg else id) (foldl (.*.) 1 xs)
-
-simpleProductEP :: Projection Expr (Bool, [Expr])
-simpleProductEP = (second ($ []) . f) <-> to productEP
+   
+simpleProductView :: Projection Expr (Bool, [Expr])
+simpleProductView = "math.product.simple" @> simpleProductEP
  where
+   simpleProductEP = (second ($ []) . f) <-> to productView
+
    f (a :*: b)  = f a .&&. f b
    f (Negate a) = first not (f a)
    f e          = (False, (e:))
    
    (n1, g1) .&&. (n2, g2) = (n1 /= n2, g1 . g2)
-
-sumView :: Projection Expr [Expr]
-sumView = {- describe "View an expression as the sum of a list of elements, \
-   \taking into account associativity of plus, its unit element zero, and \
-   \inverse (both unary negation, and binary subtraction)." $
-   projectionView "math.sum" -} sumEP
-
-simpleProductView :: Projection Expr (Bool, [Expr])
-simpleProductView = {- projectionView "math.product.simple" -} simpleProductEP
-
-productView :: Projection Expr (Bool, [Expr])
-productView = {- projectionView "math.product" -} productEP
    
 -- helper to determine the name of the variable (move to a different module?)
 selectVar :: Expr -> Maybe String

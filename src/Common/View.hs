@@ -27,6 +27,7 @@ module Common.View
    , Projection, from, to, (<->)
      -- * Some combinators
    , swapView, listView, traverseView, (++>)
+   , Identify(..)
      -- * Properties on views
    , propIdempotence, propSoundness, propNormalForm
    ) where
@@ -36,6 +37,7 @@ import Common.Utils (swap)
 import Control.Arrow
 import Control.Monad
 import Data.Maybe
+import Data.Monoid (mempty)
 import Test.QuickCheck
 import qualified Control.Category as C
 import qualified Data.Traversable as T
@@ -95,7 +97,8 @@ viewEquivalentWith eq view x y =
 -- Views
 
 data View a b where
-   Prim    :: Id -> (a -> Maybe b) -> (b -> a) -> View a b
+   Prim    :: (a -> Maybe b) -> (b -> a) -> View a b
+   (:@)    :: Id -> View a b -> View a b
    (:>>>:) :: View a b -> View b c -> View a c 
    First   :: View a b -> View (a, c) (b, c)
    Second  :: View b c -> View (a, b) (a, c)
@@ -111,7 +114,7 @@ instance C.Category View where
    v . w = w :>>>: v
 
 instance Arrow View where
-   arr f  = Prim (newId "views.arr") (return . f) (error "Control.View.arr: function is not invertible")
+   arr f  = Prim (return . f) (error "Control.View.arr: function is not invertible")
    first  = First
    second = Second
    (***)  = (:***:)
@@ -126,7 +129,8 @@ instance ArrowChoice View where
 instance IsView View where
    match view =
       case view of
-         Prim _ f _ -> f
+         Prim f _   -> f
+         _ :@ v     -> match v
          v :>>>: w  -> \a      -> match v a >>= match w
          First v    -> \(a, c) -> match v a >>= \b -> return (b, c)
          Second v   -> \(a, b) -> match v b >>= \c -> return (a, c)
@@ -139,7 +143,8 @@ instance IsView View where
 
    build view = 
       case view of
-         Prim _ _ f -> f
+         Prim _ f   -> f
+         _ :@ v     -> build v
          v :>>>: w  -> build v . build w
          First v    -> first (build v)
          Second v   -> second (build v)
@@ -150,20 +155,32 @@ instance IsView View where
          v :+++: w  -> either (Left . build v) (Right . build w)
          v :|||: _  -> Left . build v -- left-biased
 
+instance HasId (View a b) where
+   getId (n :@ _) = n
+   getId _        = mempty
+   changeId f (n :@ a) = f n :@ a
+   changeId f a        = f mempty :@ a
+
+instance Identify (View a b) where
+   n @> v | isEmptyId a = v
+          | otherwise   = a :@ v
+    where
+      a = newId n
+
 identity :: C.Category f => f a a 
 identity = C.id
 
 -- The preferred way of constructing a view
 newView :: IsId n => n -> (a -> Maybe b) -> (b -> a) -> View a b
-newView = Prim . newId
+newView n f g = n @> makeView f g
 
 makeView :: (a -> Maybe b) -> (b -> a) -> View a b
-makeView = newView "views.makeView"
+makeView = Prim
 
 ----------------------------------------------------------------------------------
 -- Embedding-projection pairs
 
-data Projection a b = EP { from :: a -> b, to :: b -> a}
+data Projection a b = EP { pid :: Id, from :: a -> b, to :: b -> a }
 
 instance C.Category Projection where
    id    = id <-> id
@@ -183,12 +200,19 @@ instance ArrowChoice Projection where
    p ||| q = from p ||| from q <-> Left . to p -- left-biased
 
 instance IsView Projection where
-   toView p = makeView (Just . from p) (to p)
+   toView p = getId p @> makeView (Just . from p) (to p)
+
+instance HasId (Projection a b) where 
+   getId = pid
+   changeId f p = p { pid = f (pid p) }
+
+instance Identify (Projection a b) where
+   (@>) = changeId . const . newId
 
 infix 1 <->
 
 (<->) :: (a -> b) -> (b -> a) -> Projection a b
-(<->) = EP
+(<->) = EP mempty
 
 ----------------------------------------------------------------------------------
 -- Some combinators
@@ -211,6 +235,9 @@ v1 ++> v2 = makeView f g
  where
    f a = liftM Left (match v1 a) `mplus` liftM Right (match v2 a)
    g   = either (build v1) (build v2)
+
+class HasId a => Identify a where
+   (@>) :: IsId n => n -> a -> a 
 
 ----------------------------------------------------------------------------------
 -- Properties on views

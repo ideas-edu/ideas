@@ -102,11 +102,11 @@ normExpr :: ([Expr] -> [Expr]) -> Expr -> Expr
 normExpr f = rec 
  where
    rec expr = 
-      case (from sumEP expr, from productEP expr) of
+      case (from sumView expr, from productView expr) of
          (xs, _) | length xs > 1 -> 
-            to sumEP $ f $ map rec xs
+            to sumView $ f $ map rec xs
          (_, (b, xs)) | length xs > 1 -> 
-            to productEP (b, f $ map rec xs)
+            to productView (b, f $ map rec xs)
          _ -> 
             descend rec expr 
   

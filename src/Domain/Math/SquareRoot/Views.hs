@@ -42,7 +42,7 @@ squareRootViewWith v = makeView f g
       | n >= 0    = a ^ n
       | otherwise = 1 / (a ^ abs n)
    
-   g = to sumEP . map h . toList
+   g = to sumView . map h . toList
    h (a, n)  
       | n == 0    = 0
       | n == 1    = build v a

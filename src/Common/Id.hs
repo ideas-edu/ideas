@@ -14,7 +14,7 @@
 module Common.Id 
    ( Id, IsId(..), HasId(..), ( # ), sameId
    , unqualified, qualifiers, qualification
-   , describe, description, showId, compareId
+   , describe, description, showId, compareId, isEmptyId
    ) where
 
 import Data.Char
@@ -142,7 +142,7 @@ qualifiers a
    xs = idList (getId a)
 
 qualification :: HasId a => a -> String
-qualification = concat . intersperse "." . qualifiers
+qualification = intercalate "." . qualifiers
 
 description :: HasId a => a -> String 
 description = idDescription . getId
@@ -152,6 +152,9 @@ showId = show . getId
 
 compareId :: HasId a => a -> a -> Ordering
 compareId = comparing showId
+
+isEmptyId :: Id -> Bool
+isEmptyId = (== mempty)
 
 describe :: HasId a => String -> a -> a
 describe = changeId . describeId

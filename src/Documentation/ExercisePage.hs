@@ -11,12 +11,12 @@
 -----------------------------------------------------------------------------
 module Documentation.ExercisePage (makeExercisePage, idboxHTML) where
 
-import Common.Utils (Some(..), splitAtSequence, commaList)
+import Common.Utils (Some(..), commaList)
 import Common.Library hiding (up)
 import Control.Monad
-import Data.Char
 import Data.Maybe
 import Documentation.DefaultPage
+import Documentation.ExampleFile
 import Documentation.RulePresenter
 import Documentation.OpenMathDerivations
 import Service.BasicServices
@@ -42,8 +42,8 @@ makeExercisePage dir ex = do
        make exerciseDerivationsFile (derivationsPage dir ex)
        liftIO $ makeOpenMathDerivations dir ex
    when (exampleFileExists) $ do
-      xs <- liftIO (readFile exFile)
-      make exerciseDiagnosisFile (diagnosisPage xs ex)
+      ef <- liftIO (readExampleFile exFile)
+      make exerciseDiagnosisFile (diagnosisPage ef ex)
     `catchError` \_ -> return ()
 
 exercisePage :: Bool -> String -> Exercise a -> HTMLBuilder
@@ -103,7 +103,7 @@ exercisePage exampleFileExists dir ex = do
 
    h2 "3. Example"
    let state = generate (mkStdGen 0) ex Medium
-   derivationHTML dir ex (stateTerm state)
+   derivationHTML ex (stateTerm state)
    para $ unless (null (examples ex)) $ 
       link (up len ++ exerciseDerivationsFile exid) (text "More examples")
  where
@@ -134,10 +134,10 @@ derivationsPage dir ex = do
    h1 "Examples"
    forM_ (zip [1::Int ..] (examples ex)) $ \(i, (_, a)) -> do
       h2 (show i ++ ".")
-      derivationHTML dir ex a
+      derivationHTML ex a
 
-derivationHTML :: String -> Exercise a -> a -> HTMLBuilder
-derivationHTML dir ex a = divClass "derivation" $ do 
+derivationHTML :: Exercise a -> a -> HTMLBuilder
+derivationHTML ex a = divClass "derivation" $ do 
    when (isJust (hasTermView ex)) $ 
       let file = up ups ++ "derivations/" ++ showId ex ++ ".xml"
       in divClass "mathml" $ link file $ text "MathML"
@@ -156,10 +156,25 @@ idboxHTML kind i = divClass "idbox" $ do
    divClass  "id-description" $ text $ 
       if null (description i) then "no description" else description i
 
-diagnosisPage :: String -> Exercise a -> HTMLBuilder
-diagnosisPage xs ex = do
+diagnosisPage :: ExampleFile -> Exercise a -> HTMLBuilder
+diagnosisPage ef ex = do
    h1 ("Diagnosis examples for " ++ showId ex)
-   forM_ (zip [1::Int ..] (mapMaybe f (lines xs))) $ \(i, (t0, t1, expl)) -> do 
+   let rs = [ (t, eb, descr) | Ready t eb descr <- items ef ]
+   unless (null rs) $ table True $ 
+      map text ["term", "ready", "description"] : map readyItem rs
+   let ts = [ (t0, t1, expl) | Diagnose t0 t1 expl <- items ef ]
+   zipWithM_ diagnoseItem [1::Int ..] ts
+ where
+   readyItem (t, eb, descr) =
+      let mark = if ok then id else spanClass "error"
+          (ok, result) = 
+             case parser ex t of
+                Left _  -> (False, "error")
+                Right a -> let b = isReady ex a
+                           in (maybe True (==b) eb, showBool b)
+      in map mark [ttText t, text result, text descr]
+      
+   diagnoseItem i (t0, t1, expl) = do
       h2 (show i ++ ".")
       preText (t0 ++ "\n  =>\n" ++ t1)
       para $ do
@@ -171,17 +186,11 @@ diagnosisPage xs ex = do
             bold $ text "Diagnosis:"
             space
             text (getDiagnosis t0 t1)
- where
-   f a = do 
-      (x, b) <- splitAtSequence "==>" a
-      let (y, z) = fromMaybe (b, "") (splitAtSequence ":::" b)
-          trim = reverse . dropWhile isSpace . reverse . dropWhile isSpace
-      return (trim x, trim y, trim z)
       
    getDiagnosis t0 t1 = 
       case (parser ex t0, parser ex t1) of
          (Left msg, _) -> "parse error (before): " ++ msg
-         (_, Left msg) -> "parse error (afterr): " ++ msg
+         (_, Left msg) -> "parse error (after): "  ++ msg
          (Right a, Right b) -> show (diagnose (emptyState ex a) b)
        
 forStep :: Int -> ((Rule (Context a), Environment), Context a) -> HTMLBuilder  

@@ -89,7 +89,7 @@ servicePageFile :: Service -> String
 servicePageFile srv = "services/" ++ filePathId srv ++ ".html"
 
 diagnosisExampleFile :: Id -> String
-diagnosisExampleFile a = "examples/" ++ showId a ++ ".txt"
+diagnosisExampleFile a = "examples/" ++ showId a ++ ".xml"
 
 ------------------------------------------------------------
 -- Utility functions

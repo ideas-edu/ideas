@@ -47,7 +47,7 @@ simpleConstant :: (IsId n, Eq a) => n -> a -> Constant a
 simpleConstant n a = makeConstant n a (==a)
 
 constantView :: Constant a -> View a ()
-constantView (C i a p) = newView i (guard . p) (const a)
+constantView (C i a p) = i @> makeView (guard . p) (const a)
 
 ----------------------------------------------------------------------
 -- Unary operators
@@ -76,7 +76,7 @@ isUnaryOp :: UnaryOp a -> a -> Bool
 isUnaryOp op = isJust . unaryOpMatch op
 
 unaryOpView :: UnaryOp a -> View a a
-unaryOpView (U i op m) = newView i m op
+unaryOpView (U i op m) = i @> makeView m op
 
 ----------------------------------------------------------------------
 -- Binary operators
@@ -105,4 +105,4 @@ isBinaryOp :: BinaryOp a -> a -> Bool
 isBinaryOp op = isJust . binaryOpMatch op
 
 binaryOpView :: BinaryOp a -> View a (a, a)
-binaryOpView (B n op m) = newView n m (uncurry op)
+binaryOpView (B n op m) = n @> makeView m (uncurry op)

@@ -12,9 +12,10 @@
 --
 -----------------------------------------------------------------------------
 module Common.Id 
-   ( Id, IsId(..), HasId(..), ( # ), sameId
+   ( Id, IsId(..), HasId(..), Identify(..), ( # ), sameId
    , unqualified, qualifiers, qualification
-   , describe, description, showId, compareId, isEmptyId
+   , describe, description, showId, compareId
+   , mempty, isEmptyId
    ) where
 
 import Data.Char
@@ -43,7 +44,7 @@ instance Ord Id where
    compare = comparing idRef
 
 instance Monoid Id where
-   mempty  = stringId ""
+   mempty  = emptyId
    mappend = ( # )
 
 ---------------------------------------------------------------------
@@ -67,7 +68,7 @@ instance IsId a => IsId [a] where
    concatId = mconcat . map newId
 
 instance IsId () where
-   newId = const mempty
+   newId = const emptyId
 
 instance (IsId a, IsId b) => IsId (a, b) where
    newId (a, b) = newId a # newId b
@@ -76,7 +77,7 @@ instance (IsId a, IsId b, IsId c) => IsId (a, b, c) where
    newId (a, b, c) = newId a # newId b # newId c
    
 instance IsId a => IsId (Maybe a) where
-   newId = maybe mempty newId
+   newId = maybe emptyId newId
    
 instance (IsId a, IsId b) => IsId (Either a b) where
    newId = either newId newId
@@ -95,7 +96,10 @@ instance HasId Id where
 instance (HasId a, HasId b) => HasId (Either a b) where
    getId      = either getId getId
    changeId f = either (Left . changeId f) (Right . changeId f)
-   
+ 
+class HasId a => Identify a where
+   (@>) :: IsId n => n -> a -> a
+ 
 ---------------------------------------------------------------------
 -- Private constructors
 
@@ -115,6 +119,9 @@ stringId txt = Id (make s) "" (stringRef s)
    make = filter (not . null) . splitsWithElem '.'
    norm = filter ok . map toLower
    ok c = isAlphaNum c || c `elem` ".-_"
+
+emptyId :: Id
+emptyId = Id [] "" (stringRef "")
 
 ---------------------------------------------------------------------
 -- Additional functionality (overloaded)
@@ -154,7 +161,7 @@ compareId :: HasId a => a -> a -> Ordering
 compareId = comparing showId
 
 isEmptyId :: Id -> Bool
-isEmptyId = (== mempty)
+isEmptyId = (== emptyId)
 
 describe :: HasId a => String -> a -> a
 describe = changeId . describeId

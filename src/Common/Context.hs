@@ -30,6 +30,7 @@ module Common.Context
    , maybeCM, withCM, evalCM
    ) where 
 
+import Common.Id
 import Common.Navigator
 import Common.Rewriting
 import Common.Transformation
@@ -202,7 +203,7 @@ useC :: (IsTerm a, IsTerm b) => Rule (Context a) -> Rule (Context b)
 useC = liftRule (makeView (castT termView) (fromJust . castT termView))
 
 contextView :: View (Context a) (a, Context a)
-contextView = newView "views.contextView" f g
+contextView = "views.contextView" @> makeView f g
  where
    f ctx = current ctx >>= \a -> Just (a, ctx)
    g = uncurry replace

@@ -30,7 +30,7 @@ import qualified Domain.Math.Data.MixedFraction as MF
 -- Numeric views
 
 integralView :: Integral a => View Expr a
-integralView = newView "num.integer" (exprToNum f (const Nothing)) fromIntegral
+integralView = "num.integer" @> makeView (exprToNum f (const Nothing)) fromIntegral
  where
    f s [x, y] 
       | isDivideSymbol s = 
@@ -46,15 +46,15 @@ integerView = integralView
 -- |like oldRationalView (the original defintion), except that this view
 -- now also converts floating point numbers (using an exact approximation)
 rationalView :: View Expr Rational
-rationalView = {- describe "Interpret an expression as a (normalized) rational \
+rationalView = describe "Interpret an expression as a (normalized) rational \
    \number, performing computations such as addition and multiplication if \
-   \necessary." $ -}
-   newView "math.rational" f fromRational
+   \necessary." $
+   "math.rational" @> makeView f fromRational
  where 
    f a = match exactView a >>= either (const Nothing) Just
 
 oldRationalView :: View Expr Rational
-oldRationalView = newView "num.rational" (exprToNum f (const Nothing)) fromRational
+oldRationalView = "num.rational" @> makeView (exprToNum f (const Nothing)) fromRational
  where
    f s [x, y] 
       | isDivideSymbol s = 
@@ -67,7 +67,7 @@ oldRationalView = newView "num.rational" (exprToNum f (const Nothing)) fromRatio
    f _ _ = Nothing
 
 exactView :: View Expr (Either Double Rational)
-exactView = newView "num.exact" f (either fromDouble fromRational)
+exactView = "num.exact" @> makeView f (either fromDouble fromRational)
  where
    f (Number d) = Just (Left d)
    f (Negate a) = fmap (negate +++ negate) (f a)
@@ -83,7 +83,7 @@ doubleToRational d = fromInteger base / 10^digs
    base = round (d * 10^digs) :: Integer
 
 mixedFractionView :: View Expr MF.MixedFraction
-mixedFractionView = newView "num.mixed-fraction" f g
+mixedFractionView = "num.mixed-fraction" @> makeView f g
  where
    f   = fmap fromRational . match oldRationalView
    g a = let sign = if a < 0 then negate else id
@@ -91,21 +91,21 @@ mixedFractionView = newView "num.mixed-fraction" f g
          in sign (fromInteger (MF.wholeNumber a) .+. rest)
 
 doubleView :: View Expr Double
-doubleView = newView "num.double" (exprToNum doubleSym return) fromDouble
+doubleView = "num.double" @> makeView (exprToNum doubleSym return) fromDouble
  
 -------------------------------------------------------------------
 -- Numeric views in normal form 
 
 -- N or -N (where n is a natural number)
 integerNormalForm :: View Expr Integer
-integerNormalForm = newView "num.integer-nf" (optionNegate f) fromInteger
+integerNormalForm = "num.integer-nf" @> makeView (optionNegate f) fromInteger
  where
    f (Nat n) = Just n
    f _       = Nothing
 
 -- 5, -(2/5), (-2)/5, but not 2/(-5), 6/8, or -((-2)/5)
 rationalNormalForm :: View Expr Rational
-rationalNormalForm = newView "num.rational-nf" f fromRational
+rationalNormalForm = "num.rational-nf" @> makeView f fromRational
  where   
    f (Nat a :/: Nat b) = simpleRational a b
    f (Negate (Nat a :/: Nat b)) = fmap negate (simpleRational a b)
@@ -113,10 +113,10 @@ rationalNormalForm = newView "num.rational-nf" f fromRational
    f a = fmap fromInteger (match integerNormalForm a)
    
 mixedFractionNormalForm :: View Expr MF.MixedFraction
-mixedFractionNormalForm = {- describe "A normal form for mixed fractions. \
+mixedFractionNormalForm = describe "A normal form for mixed fractions. \
    \Improper fractions (numerator greater or equal to denominator) are not \
-   \allowed." $ -}
-   newView "math.mixed-fraction-nf" f (build mixedFractionView)
+   \allowed." $
+   "math.mixed-fraction-nf" @> makeView f (build mixedFractionView)
  where
    f (Negate (Nat a) :-: (Nat b :/: Nat c)) = fmap negate (simple a b c)
    f (Negate (Nat a :+: (Nat b :/: Nat c))) = fmap negate (simple a b c)
@@ -131,7 +131,7 @@ mixedFractionNormalForm = {- describe "A normal form for mixed fractions. \
       return (fromInteger a + fromRational r)
 
 doubleNormalForm :: View Expr Double
-doubleNormalForm = newView "num.double-nf" f fromDouble
+doubleNormalForm = "num.double-nf" @> makeView f fromDouble
  where
    f (Number d) = Just d
    f _          = Nothing
@@ -142,7 +142,7 @@ simpleRational a b = do
    return (fromInteger a / fromInteger b)
 
 fractionForm :: View Expr (Integer, Integer)
-fractionForm = newView "num.fraction-form" f (\(a, b) -> (fromInteger a :/: fromInteger b))
+fractionForm = "num.fraction-form" @> makeView f (\(a, b) -> (fromInteger a :/: fromInteger b))
  where
    f (Negate a) = liftM (first negate) (g a)
    f a = g a
@@ -154,7 +154,7 @@ fractionForm = newView "num.fraction-form" f (\(a, b) -> (fromInteger a :/: from
    g _       = Nothing
 
 rationalRelaxedForm :: View Expr Rational
-rationalRelaxedForm = newView "num.rational-relaxed" (optionNegate f) fromRational
+rationalRelaxedForm = "num.rational-relaxed" @> makeView (optionNegate f) fromRational
  where
    f (e1 :/: e2) = do
       a <- match integerNormalForm e1

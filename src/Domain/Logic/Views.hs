@@ -16,6 +16,7 @@ module Domain.Logic.Views
    ) where
 
 import Common.Algebra.CoBoolean 
+import Common.Id
 import Common.View hiding (simplify)
 import Domain.Logic.Formula
 
@@ -83,7 +84,7 @@ pushNot :: Logic a -> Logic a
 pushNot = pushNotWith (nott . Var)
          
 orView :: View (Logic a) [a]
-orView = newView "logic.orView" (($ []) . f) (foldr ((.||.) . Var) F)
+orView = "logic.orView" @> makeView (($ []) . f) (foldr ((.||.) . Var) F)
  where
    f (p :||: q) = (>>= f p) .  f q
    f (Var a)    = return . (a:)
@@ -91,7 +92,7 @@ orView = newView "logic.orView" (($ []) . f) (foldr ((.||.) . Var) F)
    f _          = const Nothing
 
 andView :: View (Logic a) [a]
-andView = newView "logic.andView" (($ []) . f) (foldr ((.&&.) . Var) T)
+andView = "logic.andView" @> makeView (($ []) . f) (foldr ((.&&.) . Var) T)
  where
    f (p :&&: q) = (>>= f p) .  f q
    f (Var a)    = return . (a:)

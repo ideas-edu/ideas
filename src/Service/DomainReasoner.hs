@@ -32,7 +32,6 @@ import Common.Utils (Some(..))
 import Control.Monad.Error
 import Control.Monad.State
 import Data.Maybe
-import Data.Monoid
 import Service.Types
 import Service.FeedbackScript.Parser
 

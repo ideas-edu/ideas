@@ -129,7 +129,7 @@ niceFactorsNew = describe "Find a nice decomposition" $
 -- 3) If a<0, then also suggest to change sign (return two solutions)
 simplerPolynomial :: Rule (Equation Expr)
 simplerPolynomial = describe "simpler polynomial" $
-   rhsIsZero $ liftRuleIn (quadraticNF >>> swapView) $ 
+   rhsIsZero $ liftRuleIn (quadraticNF >>> toView swapView) $ 
    makeSimpleRuleList (quadreq, "simpler-poly") $ \(a, b, c) -> do
       r <- findFactor (filter (/=0) [a, b, c])
       d <- if a >= 0 then [r] else [-r, r]
@@ -139,7 +139,7 @@ simplerPolynomial = describe "simpler polynomial" $
 -- Simplified variant of simplerPoly: just bring a to 1.
 -- Needed for quadratic strategy without square formula
 bringAToOne :: Rule (Equation Expr)
-bringAToOne = rhsIsZero $ liftRuleIn (quadraticNF >>> swapView) $ 
+bringAToOne = rhsIsZero $ liftRuleIn (quadraticNF >>> toView swapView) $ 
    describe "Bring 'a' to one" $ 
    makeSimpleRule (quadreq, "scale") $ \(a, b, c) -> do
    guard (a `notElem` [0, 1])

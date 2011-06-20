@@ -22,12 +22,11 @@ module Common.View
    , simplify, simplifyWith
    , belongsTo, viewEquivalent, viewEquivalentWith
      -- * Views
-   , View, identity, newView, makeView
+   , View, identity, makeView
      -- * Embedding-projection pairs
    , Projection, from, to, (<->)
      -- * Some combinators
    , swapView, listView, traverseView, (++>)
-   , Identify(..)
      -- * Properties on views
    , propIdempotence, propSoundness, propNormalForm
    ) where
@@ -37,7 +36,6 @@ import Common.Utils (swap)
 import Control.Arrow
 import Control.Monad
 import Data.Maybe
-import Data.Monoid (mempty)
 import Test.QuickCheck
 import qualified Control.Category as C
 import qualified Data.Traversable as T
@@ -167,15 +165,11 @@ instance Identify (View a b) where
     where
       a = newId n
 
-identity :: C.Category f => f a a 
-identity = C.id
-
--- The preferred way of constructing a view
-newView :: IsId n => n -> (a -> Maybe b) -> (b -> a) -> View a b
-newView n f g = n @> makeView f g
-
 makeView :: (a -> Maybe b) -> (b -> a) -> View a b
 makeView = Prim
+
+identity :: C.Category f => f a a 
+identity = C.id
 
 ----------------------------------------------------------------------------------
 -- Embedding-projection pairs
@@ -217,8 +211,8 @@ infix 1 <->
 ----------------------------------------------------------------------------------
 -- Some combinators
 
-swapView :: View (a, b) (b, a)
-swapView = newView "views.swap" (return . swap) swap
+swapView :: Projection (a, b) (b, a)
+swapView = "views.swap" @> (swap <-> swap)
 
 -- | Specialized version of traverseView
 listView :: View a b -> View [a] [b]
@@ -235,9 +229,6 @@ v1 ++> v2 = makeView f g
  where
    f a = liftM Left (match v1 a) `mplus` liftM Right (match v2 a)
    g   = either (build v1) (build v2)
-
-class HasId a => Identify a where
-   (@>) :: IsId n => n -> a -> a 
 
 ----------------------------------------------------------------------------------
 -- Properties on views

@@ -35,6 +35,8 @@ useIDEAS action = runDomainReasoner $ do
    -- services
    addServices  serviceList
    addExerciseService exerciselistS
+   -- views
+   addViews Math.viewList
    -- feedback scripts
    flags <- liftIO serviceOptions
    setScriptDir (scriptDir flags)

@@ -1,0 +1,16 @@
+<examples exerciseid="math.sum">
+  <ready term="x+(x+1)" description="plus is associative"/>
+  <ready term="(x+x)+1" description="plus is associative"/>
+  <ready term="-(-x+x+1)" description="negations are cancelled"/>
+  <ready term="x-(x-1)" description="negations are cancelled"/>
+  <ready term="-(-x)" description="negations are cancelled"/>
+  <ready term="x-x" />
+  <ready term="x+(-x)" description="use binary negation"/>
+  <ready term="0-x" description="use unary negation"/>
+  <ready term="0" />
+  <ready term="x+0" description="zero as unit element"/>
+  <ready term="0*x" description="multiplications are not simplified"/>
+  <ready term="1+1" description="no calculation takes place"/>
+  <ready term="2*x+1" description=""/>
+  <ready term="2*(x+1)" description="product seen as one term"/>
+</examples>

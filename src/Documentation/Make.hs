@@ -22,6 +22,7 @@ import Documentation.RulePage
 import Documentation.TestsPage
 import Documentation.ServicePage
 import Documentation.OverviewPages
+import Documentation.ViewPage
 
 data DocItem = Pages | SelfCheck | BlackBox (Maybe String)
    deriving Eq
@@ -37,6 +38,8 @@ makeDocumentation docDir testDir item =
          exs <- getExercises
          forM_ exs $ \(Some ex) -> 
             makeExercisePage docDir ex
+         report "Generating view pages"
+         makeViewPages docDir
          report "Generating rule pages"
          makeRulePages docDir
          report "Generating service pages"

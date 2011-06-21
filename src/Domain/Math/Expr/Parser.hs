@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Parser
-   ( parseExpr
+   ( parseExpr, parseExprM
    , parseEqExpr, parseRelExpr
    , parseOrsEqExpr, parseOrsRelExpr
    , parseLogicRelExpr
@@ -36,6 +36,9 @@ import qualified Text.ParserCombinators.Parsec.Token as P
 
 parseExpr :: String -> Either String Expr
 parseExpr = parseSimple expr
+
+parseExprM :: Monad m => String -> m Expr
+parseExprM = either fail return . parseExpr
 
 parseEqExpr :: String -> Either String (Equation Expr)
 parseEqExpr = parseSimple (equation expr)
@@ -180,5 +183,4 @@ parens = P.parens lexer
 
 instance Argument Expr where
    makeArgDescr descr = 
-      let p = either (const Nothing) Just . parseExpr
-      in ArgDescr descr Nothing p show termView arbitrary
+      ArgDescr descr Nothing parseExprM show termView arbitrary

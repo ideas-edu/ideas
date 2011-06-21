@@ -49,12 +49,12 @@ rationalView :: View Expr Rational
 rationalView = describe "Interpret an expression as a (normalized) rational \
    \number, performing computations such as addition and multiplication if \
    \necessary." $
-   "math.rational" @> makeView f fromRational
+   "number.rational" @> makeView f fromRational
  where 
    f a = match exactView a >>= either (const Nothing) Just
 
 oldRationalView :: View Expr Rational
-oldRationalView = "num.rational" @> makeView (exprToNum f (const Nothing)) fromRational
+oldRationalView = makeView (exprToNum f (const Nothing)) fromRational
  where
    f s [x, y] 
       | isDivideSymbol s = 
@@ -67,7 +67,7 @@ oldRationalView = "num.rational" @> makeView (exprToNum f (const Nothing)) fromR
    f _ _ = Nothing
 
 exactView :: View Expr (Either Double Rational)
-exactView = "num.exact" @> makeView f (either fromDouble fromRational)
+exactView = "number.exact" @> makeView f (either fromDouble fromRational)
  where
    f (Number d) = Just (Left d)
    f (Negate a) = fmap (negate +++ negate) (f a)
@@ -116,7 +116,7 @@ mixedFractionNormalForm :: View Expr MF.MixedFraction
 mixedFractionNormalForm = describe "A normal form for mixed fractions. \
    \Improper fractions (numerator greater or equal to denominator) are not \
    \allowed." $
-   "math.mixed-fraction-nf" @> makeView f (build mixedFractionView)
+   "number.mixed-fraction-nf" @> makeView f (build mixedFractionView)
  where
    f (Negate (Nat a) :-: (Nat b :/: Nat c)) = fmap negate (simple a b c)
    f (Negate (Nat a :+: (Nat b :/: Nat c))) = fmap negate (simple a b c)

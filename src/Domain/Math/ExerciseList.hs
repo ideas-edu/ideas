@@ -12,17 +12,18 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.ExerciseList 
-   ( exerciseList, scriptList, testSuiteList
+   ( exerciseList, viewList, scriptList, testSuiteList
    ) where
 
-import Common.Exercise
-import Common.Id
+import Common.Library
 import Common.TestSuite
 import Common.Utils (Some(..))
 import Domain.Math.Data.Interval
 import Domain.Math.Derivative.Exercises
+import Domain.Math.Expr
 import Domain.Math.Equation.CoverUpExercise
 import Domain.Math.Numeric.Exercises
+import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Balance
 import Domain.Math.Polynomial.Exercises
 import Domain.Math.Polynomial.IneqExercises
@@ -71,6 +72,13 @@ exerciseList =
    , Some logEqExercise
 --   , Some higherPowerEqExercise
    ]
+
+viewList :: [ViewPackage]
+viewList = 
+   [exprVP sumView, exprVP rationalView, exprVP mixedFractionNormalForm]
+ where
+   exprVP :: (IsView f, Show a) => f Expr a -> ViewPackage
+   exprVP a = ViewPackage parseExprM (toView a)
    
 scriptList :: [(Id, FilePath)]
 scriptList =

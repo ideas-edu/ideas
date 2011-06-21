@@ -70,11 +70,12 @@ filePathId a = foldr (\x y -> x ++ "/" ++ y) (unqualified a) (qualifiers a)
 -- Paths and files
 
 exerciseOverviewPageFile, exerciseOverviewAllPageFile, 
-   serviceOverviewPageFile, testsPageFile :: String
+   serviceOverviewPageFile, testsPageFile, viewsOverviewPageFile :: String
 
 exerciseOverviewPageFile    = "exercises.html"
 exerciseOverviewAllPageFile = "exercises-all.html"
 serviceOverviewPageFile     = "services.html"
+viewsOverviewPageFile       = "views.html"
 testsPageFile               = "tests.html"
 
 exercisePageFile, exerciseDerivationsFile, exerciseStrategyFile,
@@ -87,6 +88,9 @@ ruleFile                a = filePathId ("rule" # getId a) ++ ".html"
 
 servicePageFile :: Service -> String
 servicePageFile srv = "services/" ++ filePathId srv ++ ".html"
+
+viewPageFile :: HasId a => a -> String
+viewPageFile a = "views/" ++ showId a ++ ".html"
 
 diagnosisExampleFile :: Id -> String
 diagnosisExampleFile a = "examples/" ++ showId a ++ ".xml"

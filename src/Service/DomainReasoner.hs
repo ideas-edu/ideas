@@ -16,11 +16,12 @@ module Service.DomainReasoner
    , liftEither, MonadIO(..), catchError 
      -- * Update functions
    , addExercises, addExercise, addExerciseService
-   , addServices, addService, addTestSuite
+   , addServices, addService, addViews, addView
+   , addTestSuite
    , addAliases, addScripts, setScriptDir
    , setVersion, setFullVersion
      -- * Accessor functions
-   , getExercises, getServices
+   , getExercises, getServices, getViews
    , getVersion, getFullVersion, getTestSuite
    , findExercise, findService
    , readScript, defaultScript
@@ -43,6 +44,7 @@ newtype DomainReasoner a = DR { unDR :: ErrorT String (StateT Content IO) a }
 data Content = Content
    { exercises   :: [Some Exercise]
    , services    :: [Some Exercise] -> [Service]
+   , views       :: [ViewPackage]
    , aliases     :: [(Id, Id)]
    , scriptDir   :: Maybe FilePath
    , scripts     :: [(Id, FilePath)]
@@ -52,7 +54,7 @@ data Content = Content
    }
    
 noContent :: Content
-noContent = Content [] (const []) [] Nothing [] (return ()) [] Nothing
+noContent = Content [] (const []) [] [] Nothing [] (return ()) [] Nothing
 
 runDomainReasoner :: DomainReasoner a -> IO a
 runDomainReasoner m = do
@@ -111,6 +113,12 @@ addServices = mapM_ (addExerciseService . const)
 addService :: Service -> DomainReasoner ()
 addService s = addServices [s]
 
+addViews :: [ViewPackage] -> DomainReasoner ()
+addViews xs = modify $ \c -> c { views = xs ++ views c }
+
+addView :: ViewPackage -> DomainReasoner ()
+addView = addViews . return
+
 addTestSuite :: TestSuite -> DomainReasoner ()
 addTestSuite m = modify $ \c -> c { testSuite = testSuite c >> m }
 
@@ -137,6 +145,9 @@ getExercises = gets exercises
 
 getServices :: DomainReasoner [Service]
 getServices = gets (\c -> services c (exercises c))
+
+getViews :: DomainReasoner [ViewPackage]
+getViews = gets views
 
 getVersion :: DomainReasoner String
 getVersion = gets version

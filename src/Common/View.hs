@@ -27,6 +27,8 @@ module Common.View
    , Projection, from, to, (<->)
      -- * Some combinators
    , swapView, listView, traverseView, (++>)
+     -- * Packaging a view
+   , ViewPackage(..)
      -- * Properties on views
    , propIdempotence, propSoundness, propNormalForm
    ) where
@@ -153,6 +155,8 @@ instance IsView View where
          v :+++: w  -> either (Left . build v) (Right . build w)
          v :|||: _  -> Left . build v -- left-biased
 
+   toView = id
+
 instance HasId (View a b) where
    getId (n :@ _) = n
    getId _        = mempty
@@ -229,6 +233,17 @@ v1 ++> v2 = makeView f g
  where
    f a = liftM Left (match v1 a) `mplus` liftM Right (match v2 a)
    g   = either (build v1) (build v2)
+
+----------------------------------------------------------------------------------
+-- Packaging a view for documentation purposes
+
+data ViewPackage where
+   ViewPackage :: 
+      (Show a, Show b, Eq a) => (String -> Maybe a) -> View a b -> ViewPackage
+
+instance HasId ViewPackage where
+   getId      (ViewPackage _ a) = getId a
+   changeId f (ViewPackage p a) = ViewPackage p (changeId f a)
 
 ----------------------------------------------------------------------------------
 -- Properties on views

@@ -18,6 +18,7 @@ module Service.ModeXML
    ) where
 
 import Common.Library hiding (exerciseId)
+import Common.Uniplate (transform)
 import Common.Utils (Some(..), readM)
 import Control.Monad
 import Data.Char
@@ -33,6 +34,7 @@ import Service.Types
 import qualified Service.Types as Tp
 import Service.Evaluator
 import Text.OpenMath.Object
+import Text.OpenMath.Symbol
 import Text.XML
 import Service.DomainReasoner
 
@@ -82,7 +84,8 @@ xmlReply request xml = do
    Some conv <-
       case encoding request of
          Just StringEncoding -> return (stringFormatConverter ex)
-         _                   -> return (openMathConverter ex)
+         Just OpenMathFocus  -> return (openMathConverter True ex)
+         _                   -> return (openMathConverter False ex)
    res <- evalService conv srv xml
    return (resultOk res)
 
@@ -109,33 +112,48 @@ stringFormatConverterTp :: Exercise a -> Evaluator XML XMLBuilder a
 stringFormatConverterTp ex = 
    Evaluator (xmlEncoder False f ex) (xmlDecoder False g ex)
  where
-   f  = return . element "expr" . text . prettyPrinter ex
+   f  = liftM (element "expr" . text . prettyPrinter ex) . fromContext
    g xml0 = do
       xml <- findChild "expr" xml0 -- quick fix
       -- guard (name xml == "expr")
       let input = getData xml
       either (fail . show) return (parser ex input)
 
-openMathConverter :: Some Exercise -> Some (Evaluator XML XMLBuilder)
-openMathConverter (Some ex) = Some (openMathConverterTp ex)
+openMathConverter :: Bool -> Some Exercise -> Some (Evaluator XML XMLBuilder)
+openMathConverter useFocus (Some ex) = Some (openMathConverterTp useFocus ex)
         
-openMathConverterTp :: Exercise a -> Evaluator XML XMLBuilder a
-openMathConverterTp ex =
+openMathConverterTp :: Bool -> Exercise a -> Evaluator XML XMLBuilder a
+openMathConverterTp useFocus ex =
    Evaluator (xmlEncoder True f ex) (xmlDecoder True g ex)
  where
-   f = liftM (builder . toXML) . toOpenMath ex
+   f ctx = liftM (builder . toXML) $ do
+      case changeT (return . markFocus) ctx >>= leaveT of
+         Just term | useFocus -> do
+            return (toOMOBJ (term :: Term))
+         _ -> 
+            fromContext ctx >>= toOpenMath ex
    g xml = do
       xob   <- findChild "OMOBJ" xml
       omobj <- liftEither (xml2omobj xob)
-      case fromOpenMath ex omobj of
+      case fromOpenMath ex (if useFocus then transform noFocus omobj else omobj) of
          Just a  -> return a
          Nothing -> fail "Invalid OpenMath object for this exercise"
 
-xmlEncoder :: Bool -> (a -> DomainReasoner XMLBuilder) -> Exercise a -> Encoder XMLBuilder a
-xmlEncoder b f ex = Encoder
-   { encodeType  = xmlEncodeType b (xmlEncoder b f ex) ex
-   , encodeTerm  = f
-   , encodeTuple = sequence_
+   markFocus :: Term -> Term
+   markFocus = unary (newSymbol focusSymbol)
+
+   noFocus :: OMOBJ -> OMOBJ
+   noFocus (OMA [OMS s, x]) | s == focusSymbol = x
+   noFocus a = a
+
+   focusSymbol = makeSymbol "ideas" "focus"
+
+xmlEncoder :: Bool -> (Context a -> DomainReasoner XMLBuilder) -> Exercise a -> Encoder XMLBuilder a
+xmlEncoder isOM f ex = Encoder
+   { encodeType    = xmlEncodeType isOM (xmlEncoder isOM f ex) ex
+   , encodeCtxTerm = f
+   , encodeTerm    = f . inContext ex -- (not so nice)
+   , encodeTuple   = sequence_
    }
 
 xmlEncodeType :: Bool -> Encoder XMLBuilder a -> Exercise a -> Type a t -> t -> DomainReasoner XMLBuilder
@@ -151,7 +169,7 @@ xmlEncodeType b enc ex serviceType =
       Tp.Strategy   -> return . builder . strategyToXML
       Tp.Rule       -> return . ("ruleid" .=.) . showId
       Tp.Term       -> encodeTerm enc
-      Tp.Context    -> encodeContext b (encodeTerm enc)
+      Tp.Context    -> encodeContext b (encodeCtxTerm enc)
       Tp.Location   -> return . ("location" .=.) . show
       Tp.ArgValueTp -> return . encodeArgValue b
       Tp.Text       -> encodeText enc ex
@@ -255,10 +273,10 @@ decodeEnvironment b xml =
       case findChild "OMOBJ" item of
          -- OpenMath object found inside item tag
          Just this | b ->
-            case xml2omobj this >>= omobjToTerm of
+            case xml2omobj this >>= fromOMOBJ of
                Left err -> fail err
                Right term -> 
-                  return (storeEnv n term env)
+                  return (storeEnv n (term :: Term) env)
          -- Simple value in attribute
          _ -> do
             value <- findAttribute "value" item
@@ -287,16 +305,15 @@ encodeEnvironment b loc env0
            element "item" $ do 
               "name"  .=. k
               case lookupEnv k env of 
-                 Just term | b -> builder  (omobj2xml (termToOMOBJ term))
+                 Just term | b -> builder (omobj2xml (toOMOBJ (term :: Term)))
                  _             -> "value" .=. fromMaybe "" (lookupEnv k env)
  where
    env | null loc  = env0
        | otherwise = storeEnv "location" loc env0
 
-encodeContext :: Monad m => Bool -> (a -> m XMLBuilder) -> Context a -> m XMLBuilder
+encodeContext :: Monad m => Bool -> (Context a -> m XMLBuilder) -> Context a -> m XMLBuilder
 encodeContext b f ctx = do
-   a   <- fromContext ctx
-   xml <- f a
+   xml <- f ctx
    return (xml >> encodeEnvironment b (location ctx) (getEnvironment ctx))
 
 encodeArgValue :: Bool -> ArgValue -> XMLBuilder
@@ -305,7 +322,7 @@ encodeArgValue b (ArgValue descr a) = element "argument" $ do
    showValue a
  where
    showValue 
-      | b         = builder . omobj2xml . termToOMOBJ . build (termViewArgument descr)
+      | b         = builder . omobj2xml . toOMOBJ . build (termViewArgument descr)
       | otherwise = text . showArgument descr
    
 encodeText :: Encoder s a -> Exercise a -> Text -> DomainReasoner s

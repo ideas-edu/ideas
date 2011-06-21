@@ -25,7 +25,7 @@ data Request = Request
 data DataFormat = XML | JSON 
    deriving Show
 
-data Encoding = OpenMath | StringEncoding
+data Encoding = OpenMath | OpenMathFocus | StringEncoding
    deriving Show
 
 discoverDataFormat :: Monad m => String -> m DataFormat
@@ -39,5 +39,6 @@ readEncoding :: Monad m => String -> m Encoding
 readEncoding xs =
    case map toLower xs of
       "openmath" -> return OpenMath
+      "omfocus"  -> return OpenMathFocus
       "string"   -> return StringEncoding
       _          -> fail $ "Invalid encoding: " ++ xs

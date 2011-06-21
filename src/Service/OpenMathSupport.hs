@@ -13,7 +13,7 @@
 module Service.OpenMathSupport
    ( -- * Conversion functions to/from OpenMath
      toOpenMath, fromOpenMath
-   , termToOMOBJ, omobjToTerm
+   , toOMOBJ, fromOMOBJ
    ) where
 
 import Common.Library
@@ -31,43 +31,47 @@ import Text.OpenMath.Dictionary.Fns1
 toOpenMath :: Monad m => Exercise a -> a -> m OMOBJ 
 toOpenMath ex a = do
    v <- hasTermViewM ex 
-   return (termToOMOBJ (build v a))
+   return (toOMOBJ (build v a))
 
 fromOpenMath :: MonadPlus m => Exercise a -> OMOBJ -> m a
 fromOpenMath ex omobj = do 
    v <- hasTermViewM ex 
-   a <- omobjToTerm omobj
+   a <- fromOMOBJ omobj
    matchM v a
 
-termToOMOBJ :: Term -> OMOBJ
-termToOMOBJ term =
-   case term of
-      Var s     -> OMV s
-      Con s     -> OMS (idToSymbol (getId s))
-      Meta i    -> OMV ('$' : show i)
-      Num n     -> OMI n
-      Float d   -> OMF d
-      Apply _ _ -> let (f, xs) = getSpine term
-                   in make (map termToOMOBJ (f:xs))
+toOMOBJ :: IsTerm a => a -> OMOBJ
+toOMOBJ = rec . toTerm
  where
+   rec term =
+      case term of
+         Var s     -> OMV s
+         Con s     -> OMS (idToSymbol (getId s))
+         Meta i    -> OMV ('$' : show i)
+         Num n     -> OMI n
+         Float d   -> OMF d
+         Apply _ _ -> let (f, xs) = getSpine term
+                      in make (map rec (f:xs))
+
    make [OMS s, OMV x, body] | s == lambdaSymbol = 
       OMBIND (OMS s) [x] body
    make xs = OMA xs
 
-omobjToTerm :: MonadPlus m => OMOBJ -> m Term
-omobjToTerm omobj =
-   case omobj of 
-      OMV x -> case isMeta x of
-                  Just n  -> return (Meta n)
-                  Nothing -> return (Var x)
-      OMS s -> return (symbol (newSymbol (OM.dictionary s # OM.symbolName s)))
-      OMI n -> return (Num n)
-      OMF a -> return (Float a)
-      OMA (x:xs) -> liftM2 makeTerm (omobjToTerm x) (mapM omobjToTerm xs)
-      OMBIND binder xs body ->
-         omobjToTerm (OMA (binder:map OMV xs++[body]))
-      _ -> fail "Invalid OpenMath object"
+fromOMOBJ :: (MonadPlus m, IsTerm a) => OMOBJ -> m a
+fromOMOBJ = (>>= fromTerm) . rec 
  where
+   rec omobj =
+      case omobj of 
+         OMV x -> case isMeta x of
+                     Just n  -> return (Meta n)
+                     Nothing -> return (Var x)
+         OMS s -> return (symbol (newSymbol (OM.dictionary s # OM.symbolName s)))
+         OMI n -> return (Num n)
+         OMF a -> return (Float a)
+         OMA (x:xs) -> liftM2 makeTerm (rec x) (mapM rec xs)
+         OMBIND binder xs body ->
+            rec (OMA (binder:map OMV xs++[body]))
+         _ -> fail "Invalid OpenMath object"
+
    isMeta ('$':xs) = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
    isMeta _        = Nothing
 

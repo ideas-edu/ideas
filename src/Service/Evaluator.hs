@@ -27,9 +27,10 @@ data Evaluator inp out a = Evaluator
    }
 
 data Encoder s a = Encoder 
-   { encodeType  :: forall t . Type a t -> t -> DomainReasoner s
-   , encodeTerm  :: a -> DomainReasoner s
-   , encodeTuple :: [s] -> s
+   { encodeType    :: forall t . Type a t -> t -> DomainReasoner s
+   , encodeCtxTerm :: Context a -> DomainReasoner s
+   , encodeTerm    :: a -> DomainReasoner s
+   , encodeTuple   :: [s] -> s
    }
 
 data Decoder s a = Decoder 

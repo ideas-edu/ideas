@@ -184,7 +184,7 @@ isVariable :: WithVars a => a -> Bool
 isVariable = isJust . getVariable
 
 vars :: (Uniplate a, WithVars a) => a -> [String]
-vars = concatMap getVariable . leafs
+vars = concatMap getVariable . universe
 
 varSet :: (Uniplate a, WithVars a) => a -> S.Set String
 varSet = S.fromList . vars
@@ -217,7 +217,7 @@ isMetaVar :: WithMetaVars a => a -> Bool
 isMetaVar = isJust . getMetaVar
 
 metaVars :: (Uniplate a, WithMetaVars a) => a -> [Int]
-metaVars = concatMap getMetaVar . leafs
+metaVars = concatMap getMetaVar . universe
 
 metaVarSet :: (Uniplate a, WithMetaVars a) => a -> IS.IntSet
 metaVarSet = IS.fromList . metaVars

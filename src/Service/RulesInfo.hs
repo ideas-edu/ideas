@@ -20,7 +20,7 @@ import Control.Monad
 import Text.OpenMath.Object
 import Text.OpenMath.FMP
 import Text.XML hiding (name)
-import Service.OpenMathSupport (termToOMOBJ)
+import Service.OpenMathSupport (toOMOBJ)
 import Service.Types
 import qualified Data.Map as M
 
@@ -64,7 +64,7 @@ rewriteRuleToFMP sound r
    | sound     = eqFMP    a b
    | otherwise = buggyFMP a b 
  where
-   a :~> b = fmap termToOMOBJ (ruleSpecTerm r)
+   a :~> b = fmap toOMOBJ (ruleSpecTerm r)
 
 type ExampleMap a = M.Map Id [(a, a)]
 

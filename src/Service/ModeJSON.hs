@@ -95,9 +95,10 @@ jsonConverter (Some ex) =
 
 jsonEncoder :: Exercise a -> Encoder JSON a
 jsonEncoder ex = Encoder
-   { encodeType  = encode (jsonEncoder ex)
-   , encodeTerm  = return . String . prettyPrinter ex
-   , encodeTuple = jsonTuple
+   { encodeType    = encode (jsonEncoder ex)
+   , encodeCtxTerm = liftM (String . prettyPrinter ex) . fromContext
+   , encodeTerm    = return . String . prettyPrinter ex
+   , encodeTuple   = jsonTuple
    }
  where
    encode :: Encoder JSON a -> Type a t -> t -> DomainReasoner JSON

@@ -44,6 +44,7 @@
   <ready term="x == 1+4/3" expected="False" description="illegal mixed fraction"/>
   <ready term="x == 1+2" expected="False" description="perform calculation"/>
   <ready term="1 == 1" expected="False" description="illegal form"/>
+  <ready term="x == 1/0" expected="False" description="division by zero"/>
   <ready term="2*x == x-1" expected="False" description="not solved"/>
 </examples>
 

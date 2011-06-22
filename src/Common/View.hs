@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module Common.View 
    ( Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)
-   , (>>>), (<<<)
+   , (>>>), (<<<), BiArrow(..)
      -- *  @IsView@ type class
    , IsView(..), matchM
    , canonical, canonicalWith, canonicalWithM, isCanonical, isCanonicalWith
@@ -24,7 +24,7 @@ module Common.View
      -- * Views
    , View, identity, makeView
      -- * Embedding-projection pairs
-   , Projection, from, to, (<->)
+   , Projection, from, to
      -- * Some combinators
    , swapView, listView, traverseView, (++>)
      -- * Packaging a view
@@ -34,8 +34,8 @@ module Common.View
    ) where
 
 import Common.Id
-import Common.Utils (swap)
 import Control.Arrow
+import Common.Classes
 import Control.Monad
 import Data.Maybe
 import Test.QuickCheck
@@ -100,31 +100,28 @@ data View a b where
    Prim    :: (a -> Maybe b) -> (b -> a) -> View a b
    (:@)    :: Id -> View a b -> View a b
    (:>>>:) :: View a b -> View b c -> View a c 
-   First   :: View a b -> View (a, c) (b, c)
-   Second  :: View b c -> View (a, b) (a, c)
    (:***:) :: View a c -> View b d -> View (a, b) (c, d)
-   (:&&&:) :: View a b -> View a c -> View a (b, c)
-   VLeft   :: View a b -> View (Either a c) (Either b c)
-   VRight  :: View b c -> View (Either a b) (Either a c)
    (:+++:) :: View a c -> View b d -> View (Either a b) (Either c d)
-   (:|||:) :: View a c -> View b c -> View (Either a b) c
 
 instance C.Category View where
    id    = makeView return id
    v . w = w :>>>: v
 
 instance Arrow View where
-   arr f  = Prim (return . f) (error "Control.View.arr: function is not invertible")
-   first  = First
-   second = Second
-   (***)  = (:***:)
-   (&&&)  = (:&&&:)
+   arr     = (!->)
+   first   = (*** identity) 
+   second  = (identity ***)
+   (***)   = (:***:)
+   f &&& g = copy >>> (f *** g)
+
+instance BiArrow View where
+   (<->) f = makeView (return . f)
 
 instance ArrowChoice View where
-   left  = VLeft
-   right = VRight
-   (+++) = (:+++:)
-   (|||) = (:|||:)
+   left    = (+++ identity)
+   right   = (identity +++)
+   (+++)   = (:+++:)
+   f ||| g = (f +++ g) >>> merge
 
 instance IsView View where
    match view =
@@ -132,28 +129,16 @@ instance IsView View where
          Prim f _   -> f
          _ :@ v     -> match v
          v :>>>: w  -> \a      -> match v a >>= match w
-         First v    -> \(a, c) -> match v a >>= \b -> return (b, c)
-         Second v   -> \(a, b) -> match v b >>= \c -> return (a, c)
          v :***: w  -> \(a, c) -> liftM2 (,) (match v a) (match w c)
-         v :&&&: w  -> \a      -> liftM2 (,) (match v a) (match w a)
-         VLeft v    -> either (liftM Left . match v) (return . Right)
-         VRight v   -> either (return . Left) (liftM Right . match v)
          v :+++: w  -> either (liftM Left . match v) (liftM Right . match w)
-         v :|||: w  -> either (match v) (match w)
 
    build view = 
       case view of
          Prim _ f   -> f
          _ :@ v     -> build v
          v :>>>: w  -> build v . build w
-         First v    -> first (build v)
-         Second v   -> second (build v)
          v :***: w  -> build v *** build w
-         v :&&&: _  -> build v . fst -- left-biased
-         VLeft v    -> either (Left . build v) Right
-         VRight v   -> either Left (Right . build v)
          v :+++: w  -> either (Left . build v) (Right . build w)
-         v :|||: _  -> Left . build v -- left-biased
 
    toView = id
 
@@ -185,17 +170,20 @@ instance C.Category Projection where
    f . g = from f . from g <-> to g . to f
 
 instance Arrow Projection where
-   arr f    = f <-> error "function is not invertible"
-   first  p = first  (from p) <-> first  (to p)
-   second p = second (from p) <-> second (to p)
-   p *** q  = from p *** from q <-> to p *** to q
-   p &&& q  = from p &&& from q <-> to p . fst -- left-biased
+   arr     = (!->)
+   first   = (*** identity) 
+   second  = (identity ***)
+   p *** q = from p *** from q <-> to p *** to q
+   f &&& g = copy >>> (f *** g)
+
+instance BiArrow Projection where
+   (<->) = EP mempty
 
 instance ArrowChoice Projection where
-   left  p = left  (from p) <-> left  (to p)
-   right p = right (from p) <-> right (to p)
+   left    = (+++ identity)
+   right   = (identity +++)
    p +++ q = from p +++ from q <-> to p +++ to q
-   p ||| q = from p ||| from q <-> Left . to p -- left-biased
+   f ||| g = (f +++ g) >>> merge
 
 instance IsView Projection where
    toView p = getId p @> makeView (Just . from p) (to p)
@@ -207,16 +195,11 @@ instance HasId (Projection a b) where
 instance Identify (Projection a b) where
    (@>) = changeId . const . newId
 
-infix 1 <->
-
-(<->) :: (a -> b) -> (b -> a) -> Projection a b
-(<->) = EP mempty
-
 ----------------------------------------------------------------------------------
 -- Some combinators
 
 swapView :: Projection (a, b) (b, a)
-swapView = "views.swap" @> (swap <-> swap)
+swapView = "views.swap" @> swap
 
 -- | Specialized version of traverseView
 listView :: View a b -> View [a] [b]
@@ -233,6 +216,18 @@ v1 ++> v2 = makeView f g
  where
    f a = liftM Left (match v1 a) `mplus` liftM Right (match v2 a)
    g   = either (build v1) (build v2)
+
+swap :: BiArrow arr => arr (a, b) (b, a)
+swap = f <-> f
+ where
+   f :: (a, b) -> (b, a)
+   f (a, b) = (b, a)
+
+copy :: BiArrow arr => arr a (a, a)
+copy = (\a -> (a, a)) <-> fst
+
+merge :: BiArrow arr => arr (Either a a) a
+merge = either id id <-> Left
 
 ----------------------------------------------------------------------------------
 -- Packaging a view for documentation purposes

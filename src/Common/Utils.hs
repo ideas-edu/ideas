@@ -18,7 +18,7 @@ module Common.Utils
    , cartesian, distinct, allsame
    , safeHead, fixpoint, fixpointM
    , splitAtElem, splitsWithElem
-   , useFixedStdGen, fst3, snd3, thd3, commaList, ratioGen, swap
+   , useFixedStdGen, fst3, snd3, thd3, commaList, ratioGen
    ) where
 
 import Control.Monad
@@ -130,6 +130,3 @@ ratioGen n m = do
    b <- liftM (succ . abs) (choose (-m, m))
    c <- choose (1-b, b-1)
    return (fromIntegral a + (fromIntegral c / fromIntegral b))
-   
-swap :: (a, b) -> (b, a)
-swap (a, b) = (b, a)

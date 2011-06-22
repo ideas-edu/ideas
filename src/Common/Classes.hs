@@ -16,11 +16,14 @@ module Common.Classes
      Apply, apply, applyAll, applicable, applyD, applyM
      -- * Type class Container
    , Container, singleton, getSingleton
+     -- * Type class BiArrow
+   , BiArrow(..)
      -- * Type class BiFunctor
    , BiFunctor, biMap, mapFirst, mapSecond
    ) where
 
 import Common.Utils (safeHead)
+import Control.Arrow
 import Data.Maybe
 
 import qualified Data.Set as S
@@ -65,6 +68,24 @@ instance Container [] where
 instance Container S.Set where
    singleton    = S.singleton
    getSingleton = getSingleton . S.toList
+
+-----------------------------------------------------------
+-- Type class BiArrow
+
+infix 1 <->
+
+-- |Type class for bi-directional arrows. @<->@ should be used instead of
+-- @arr@ from the arrow interface. Minimal complete definition: @<->@.
+class Arrow arr => BiArrow arr where
+   (<->) :: (a -> b) -> (b -> a) -> arr a b
+   (!->) :: (a -> b) -> arr a b
+   (<-!) :: (b -> a) -> arr a b
+   -- default definitions
+   (!->) f = f <-> errBiArrow
+   (<-!) f = errBiArrow <-> f 
+
+errBiArrow :: a
+errBiArrow = error "BiArrow: not bi-directional"
    
 -----------------------------------------------------------
 -- Type class BiFunctor

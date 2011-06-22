@@ -16,9 +16,7 @@ module Domain.Math.Expr.Views
 
 import Common.Algebra.CoField
 import Prelude hiding (recip, (^))
-import Common.Id
-import Common.Rewriting
-import Common.View
+import Common.Library
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbols
 import qualified Data.Set as S
@@ -83,7 +81,7 @@ fractionView = divView >>> signs >>> (conView *** conView)
 -------------------------------------------------------------
 -- Sums and products
 
-sumView :: Projection Expr [Expr]
+sumView :: Isomorphism Expr [Expr]
 sumView = describe "View an expression as the sum of a list of elements, \
    \taking into account associativity of plus, its unit element zero, and \
    \inverse (both unary negation, and binary subtraction)." $
@@ -97,7 +95,7 @@ sumView = describe "View an expression as the sum of a list of elements, \
    f _ (Nat 0)    = id
    f n e          = if n then (neg e:) else (e:)
 
-productView :: Projection Expr (Bool, [Expr])
+productView :: Isomorphism Expr (Bool, [Expr])
 productView = "math.product" @> productEP
  where
    productEP = (second ($ []) . f False) <-> g
@@ -114,7 +112,7 @@ productView = "math.product" @> productEP
    
    g (b, xs) = (if b then neg else id) (foldl (.*.) 1 xs)
    
-simpleProductView :: Projection Expr (Bool, [Expr])
+simpleProductView :: Isomorphism Expr (Bool, [Expr])
 simpleProductView = "math.product.simple" @> simpleProductEP
  where
    simpleProductEP = (second ($ []) . f) <-> to productView

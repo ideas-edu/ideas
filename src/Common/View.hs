@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module Common.View 
    ( Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)
-   , (>>>), (<<<), BiArrow(..)
+   , (>>>), (<<<)
      -- *  @IsView@ type class
    , IsView(..), matchM
    , canonical, canonicalWith, canonicalWithM, isCanonical, isCanonicalWith
@@ -23,8 +23,8 @@ module Common.View
    , belongsTo, viewEquivalent, viewEquivalentWith
      -- * Views
    , View, identity, makeView
-     -- * Embedding-projection pairs
-   , Projection, from, to
+     -- * Isomorphisms
+   , Isomorphism, from, to
      -- * Some combinators
    , swapView, listView, traverseView, (++>)
      -- * Packaging a view
@@ -57,7 +57,7 @@ class IsView f where
 
 -- |generalized monadic variant of @match@
 matchM :: (Monad m, IsView f) => f a b -> a -> m b
-matchM v = maybe (Prelude.fail "no match") return . match v
+matchM v = maybe (fail "no match") return . match v
 
 canonical :: IsView f => f a b -> a -> Maybe a
 canonical = canonicalWith id
@@ -161,44 +161,45 @@ identity :: C.Category f => f a a
 identity = C.id
 
 ----------------------------------------------------------------------------------
--- Embedding-projection pairs
+-- Isomorphisms (embedding-projection pairs)
 
-data Projection a b = EP { pid :: Id, from :: a -> b, to :: b -> a }
+-- to ep . from ep == id
+data Isomorphism a b = EP { pid :: Id, from :: a -> b, to :: b -> a }
 
-instance C.Category Projection where
+instance C.Category Isomorphism where
    id    = id <-> id
    f . g = from f . from g <-> to g . to f
 
-instance Arrow Projection where
+instance Arrow Isomorphism where
    arr     = (!->)
    first   = (*** identity) 
    second  = (identity ***)
    p *** q = from p *** from q <-> to p *** to q
    f &&& g = copy >>> (f *** g)
 
-instance BiArrow Projection where
+instance BiArrow Isomorphism where
    (<->) = EP mempty
 
-instance ArrowChoice Projection where
+instance ArrowChoice Isomorphism where
    left    = (+++ identity)
    right   = (identity +++)
    p +++ q = from p +++ from q <-> to p +++ to q
    f ||| g = (f +++ g) >>> merge
 
-instance IsView Projection where
+instance IsView Isomorphism where
    toView p = getId p @> makeView (Just . from p) (to p)
 
-instance HasId (Projection a b) where 
+instance HasId (Isomorphism a b) where 
    getId = pid
    changeId f p = p { pid = f (pid p) }
 
-instance Identify (Projection a b) where
+instance Identify (Isomorphism a b) where
    (@>) = changeId . const . newId
 
 ----------------------------------------------------------------------------------
 -- Some combinators
 
-swapView :: Projection (a, b) (b, a)
+swapView :: Isomorphism (a, b) (b, a)
 swapView = "views.swap" @> swap
 
 -- | Specialized version of traverseView

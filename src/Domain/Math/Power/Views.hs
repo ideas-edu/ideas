@@ -22,13 +22,10 @@ module Domain.Math.Power.Views
    , plainNatView, plainRationalView, varView
    ) where
 
-import Control.Arrow ( (>>^) )
 import Control.Monad
-import Common.Rewriting
-import Common.View
+import Common.Library hiding (root)
 import Domain.Math.Expr
 import Domain.Math.Power.Utils
-
 
 -- | Power views with constant factor -----------------------------------------
 
@@ -56,7 +53,7 @@ unitPowerViewForVar s = makeView f g
 
 unitPowerViewWith :: View Expr a -> View Expr (Expr, (a, Expr))
 unitPowerViewWith v = addNegativeView $ addUnitTimesView $ 
-  powerViewWith v identity <&> (unitTimes v >>^ swap)
+  powerViewWith v identity <&> (unitTimes v >>> toView swapView)
 
 unitPowerViewVar :: View Expr (Expr, (String, Expr))
 unitPowerViewVar = unitPowerViewWith varView
@@ -100,8 +97,7 @@ strictPowerView = makeView f (uncurry (.^.))
 powerView :: View Expr (Expr, Expr)
 powerView = makeView f g 
   where
-    f = match ((strictRootView >>^ h) <&> strictPowerView)
-    h (a, b) = (a, 1 ./. b)
+    f = match ((strictRootView >>> second ((1 ./.) <-> id)) <&> strictPowerView)
     g (a, b) = 
        case b of 
          (Nat 1 :/: b') -> build strictRootView (a, b')
@@ -121,7 +117,7 @@ powerViewForWith va vb a = makeView f ((build va a .^.) .  build vb)
 powerViewFor :: Expr -> View Expr Expr
 powerViewFor = powerViewForWith identity identity
 
-powerFactorView :: (Expr -> Expr -> Bool) -> Projection Expr (Bool, [Expr])
+powerFactorView :: (Expr -> Expr -> Bool) -> Isomorphism Expr (Bool, [Expr])
 powerFactorView p = productView >>> second (f <-> id)
   where
     f = map (build productView . (,) False) . joinBy p
@@ -139,7 +135,7 @@ logView = makeView f (uncurry logBase)
 -- | Help (non-power) views ---------------------------------------------------
 
 unitTimes :: Num t => View a b -> View a (t, b)
-unitTimes = (>>^ (,) 1)
+unitTimes v = v >>> ((,) 1 <-> snd)
 
 addTimesView :: View Expr a -> View Expr (Expr, a)
 addTimesView v = timesView >>> second v

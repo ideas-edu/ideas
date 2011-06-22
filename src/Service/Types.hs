@@ -139,7 +139,7 @@ derivationType t1 t2 = Iso (f <-> g) (listType (tuple2 t1 t2))
 
 data Type a t where
    -- Type isomorphisms (for defining type synonyms)
-   Iso          :: Projection t1 t2 -> Type a t1 -> Type a t2
+   Iso          :: Isomorphism t1 t2 -> Type a t1 -> Type a t2
    -- Function type
    (:->)        :: Type a t1 -> Type a t2 -> Type a (t1 -> t2)
    -- Special annotations

@@ -52,8 +52,9 @@ instance Boolean (Predicate a) where
    complement x         = Compl x
 
 instance HasId (Predicate a) where
-   getId (n :@ _) = n
-   getId _        = mempty
+   getId (n :@ _)  = n
+   getId (PView v) = getId v
+   getId _         = mempty
    changeId f (n :@ a) = f n :@ a
    changeId f a        = f mempty :@ a
 

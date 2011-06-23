@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Views
-   ( polyView, polyViewWith -- polyViewFor, polyViewForWith
+   ( polyView, polyViewWith
    , quadraticView, quadraticViewWith --, quadraticViewFor quadraticViewForWith
    , linearView, linearViewWith -- linearViewFor linearViewForWith
    , constantPolyView, linearPolyView, quadraticPolyView, cubicPolyView
@@ -41,19 +41,11 @@ import qualified Domain.Math.Data.SquareRoot as SQ
 import Domain.Math.SquareRoot.Views
 import Domain.Math.Power.OldViews (powerFactorViewForWith)
 
--------------------------------------------------------------------
--- Polynomial view
-
-polyView :: View Expr (String, Polynomial Expr)
-polyView = polyViewWith identity
-
-polyViewWith :: Fractional a => View Expr a -> View Expr (String, Polynomial a)
-polyViewWith v = makeView matchPoly (uncurry buildPoly)
- where
-   matchPoly expr = do 
-      pv <- selectVar expr
-      p  <- matchPolyFor pv expr
-      return (pv, p) 
+polyViewWithNew :: View (String, Expr) (String, Polynomial Expr)
+polyViewWithNew = makeView matchPoly buildPoly
+ where 
+   matchPoly (s, expr) = liftM ((,) s) (matchPolyFor s expr)
+   buildPoly (s, p)    = (s, buildPolyFor s p)
 
    matchPolyFor pv expr =
       case expr of
@@ -64,28 +56,37 @@ polyViewWith v = makeView matchPoly (uncurry buildPoly)
          a :-: b  -> liftM2 (-) (f a) (f b)
          a :*: b  -> liftM2 (*) (f a) (f b)
          a :/: b  -> do
-            c <- match v b
-            guard (c /= 0)
+            guard (b /= 0)
             guard (withoutVar pv b)
             p <- f a
-            return (fmap (/c) p)
+            return (fmap (/b) p)
          Sym s [a, n] | isPowerSymbol s ->
            liftM2 power (f a) (matchNat n)
          _ -> do 
             guard (withoutVar pv expr)
-            liftM con (match v expr)
+            return (con expr)
     where
       f = matchPolyFor pv
    
-   buildPoly pv = 
-      let f (a, n) = build v a .*. (Var pv .^. fromIntegral n)
+   buildPolyFor pv = 
+      let f (a, n) = a .*. (Var pv .^. fromIntegral n)
       in build sumView . map f . reverse . terms
-   
    
    matchNat expr = do
       n <- match integralView expr
       guard (n >= 0)
       return n
+
+-------------------------------------------------------------------
+-- Polynomial view
+
+polyView :: View Expr (String, Polynomial Expr)
+polyView = (f <-> snd) >>> polyViewWithNew
+ where
+   f a = (fromMaybe "" (selectVar a), a)
+
+polyViewWith :: Fractional a => View Expr a -> View Expr (String, Polynomial a)
+polyViewWith v = polyView >>> second (traverseView v)
 
 -------------------------------------------------------------------
 -- Quadratic view
@@ -94,9 +95,9 @@ quadraticView :: View Expr (String, Expr, Expr, Expr)
 quadraticView = quadraticViewWith identity
 
 quadraticViewWith :: Fractional a => View Expr a -> View Expr (String, a, a, a)
-quadraticViewWith v = polyViewWith v >>> second quadraticPolyView >>> makeView f g
+quadraticViewWith v = polyViewWith v >>> second quadraticPolyView >>> (f <-> g)
  where
-   f (s, (a, b, c)) = return (s, a, b, c)
+   f (s, (a, b, c)) = (s, a, b, c)
    g (s, a, b, c)   = (s, (a, b, c))
 
 -------------------------------------------------------------------
@@ -106,9 +107,9 @@ linearView :: View Expr (String, Expr, Expr)
 linearView = linearViewWith identity
 
 linearViewWith :: Fractional a => View Expr a -> View Expr (String, a, a)
-linearViewWith v = polyViewWith v >>> second linearPolyView >>> makeView f g
+linearViewWith v = polyViewWith v >>> second linearPolyView >>> (f <-> g)
  where
-   f (s, (a, b)) = return (s, a, b)
+   f (s, (a, b)) = (s, a, b)
    g (s, a, b)   = (s, (a, b))
 
 -------------------------------------------------------------------
@@ -255,9 +256,9 @@ quadraticEquationView = makeView f g
       make (x, a) = Var x .-. build (squareRootViewWith rationalView) a
 
 higherDegreeEquationsView :: View (OrList (Equation Expr)) (OrList Expr)
-higherDegreeEquationsView = makeView f (fmap (:==: 0))
+higherDegreeEquationsView = f <-> fmap (:==: 0)
  where
-   f    = Just . simplify orSetView . foldMap make . coverUpOrs
+   f    = simplify orSetView . foldMap make . coverUpOrs
    make = toOrList . filter (not . hasNegSqrt) 
         . map (cleanUpExpr . distr) . normHDE . sub
    sub (a :==: b) = a-b

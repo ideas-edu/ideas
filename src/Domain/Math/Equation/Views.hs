@@ -10,50 +10,54 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Equation.Views 
-   ( solvedRelations, solvedRelation
-   , equationSolvedForm, solvedEquation, solvedEquations 
-   , solvedRelationWith
+   ( relationSolvedForm, relationsSolvedForm
+   , equationSolvedForm, equationsSolvedForm, equationSolvedWith
    ) where
 
 import Domain.Math.Expr
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
+import Common.Id
 import Common.View
-import qualified Data.Foldable as F
+import Data.Traversable
 
--- generalized to relation
-solvedRelations :: (F.Foldable f, Relational g) => f (g Expr) -> Bool
-solvedRelations = F.all solvedRelation
+relationsSolvedForm :: (Traversable f, Relational g) => 
+   View (f (g Expr)) (f (Expr -> Expr -> g Expr, String, Expr))
+relationsSolvedForm = "relations.solved" @> traverseView relationSolvedForm
 
 -- The variable may appear on one of the sides of the relation (right-hand side
 -- is thus allowed), but must be isolated
-solvedRelation :: Relational f => f Expr -> Bool
-solvedRelation r =
-   case (getVariable (leftHandSide r), getVariable (rightHandSide r)) of
-      (Just _, Just _)  -> False
-      (Just x, Nothing) -> withoutVar x (rightHandSide r)
-      (Nothing, Just x) -> withoutVar x (leftHandSide r)
-      _ -> hasNoVar (leftHandSide r) && hasNoVar (rightHandSide r)
-
--- The variable must appear on the left
-solvedRelationWith :: Relational f => (Expr -> Bool) -> f Expr -> Bool
-solvedRelationWith p r =
-   isVariable (leftHandSide r) && p (rightHandSide r)
+relationSolvedForm :: Relational f => 
+   View (f Expr) (Expr -> Expr -> f Expr, String, Expr)
+relationSolvedForm = "relation.solved" @> makeView f g
+ where
+   f r = case (getVariable (leftHandSide r), getVariable (rightHandSide r)) of
+            (Just x, Nothing) | withoutVar x (rightHandSide r) ->
+               return (constructor r, x, rightHandSide r)
+            (Nothing, Just x) | withoutVar x (leftHandSide r) ->
+               return (flip (constructor r), x, leftHandSide r)
+            _ -> Nothing
+   g (make, s, e) = make (Var s) e
 
 -------------------------------------------------------------
 -- Views on equations
 
-solvedEquations :: OrList (Equation Expr) -> Bool
-solvedEquations = F.all solvedEquation
-
-solvedEquation :: Equation Expr -> Bool
-solvedEquation eq@(lhs :==: rhs) = 
-   (eq `belongsTo` equationSolvedForm) || (hasNoVar lhs && hasNoVar rhs)
+equationsSolvedForm :: View (OrList (Equation Expr)) (OrList (String, Expr))
+equationsSolvedForm = "equations.solved" @> traverseView equationSolvedForm
 
 equationSolvedForm :: View (Equation Expr) (String, Expr)
-equationSolvedForm = makeView f g
+equationSolvedForm = "equation.solved" @> makeView f g
  where
    f (Var x :==: e) | withoutVar x e =
       return (x, e)
    f _ = Nothing
    g (s, e) = Var s :==: e
+   
+equationSolvedWith :: View Expr a -> View (Equation Expr) (String, a)
+equationSolvedWith v = "equation.solved-with" @> makeView f g
+ where
+   f (lhs :==: rhs) = do
+      x <- getVariable lhs
+      a <- match v rhs
+      return (x, a)
+   g (s, a) = Var s :==: build v a

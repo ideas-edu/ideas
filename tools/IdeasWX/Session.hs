@@ -18,7 +18,7 @@ module Session
    , stepText, nextStep, currentState, getDerivation, currentExerciseId
    ) where
 
-import Common.Library
+import Common.Library hiding (ready)
 import Common.Utils
 import Control.Monad
 import Data.Maybe

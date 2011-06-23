@@ -26,7 +26,7 @@ module Common.View
      -- * Isomorphisms
    , Isomorphism, from, to
      -- * Some combinators
-   , swapView, listView, traverseView, (++>)
+   , swapView, listView, traverseView
      -- * Packaging a view
    , ViewPackage(..)
      -- * Properties on views
@@ -102,6 +102,7 @@ data View a b where
    (:>>>:) :: View a b -> View b c -> View a c 
    (:***:) :: View a c -> View b d -> View (a, b) (c, d)
    (:+++:) :: View a c -> View b d -> View (Either a b) (Either c d)
+   Traverse :: T.Traversable f => View a b -> View (f a) (f b)
 
 instance C.Category View where
    id    = makeView return id
@@ -131,6 +132,7 @@ instance IsView View where
          v :>>>: w  -> \a      -> match v a >>= match w
          v :***: w  -> \(a, c) -> liftM2 (,) (match v a) (match w c)
          v :+++: w  -> either (liftM Left . match v) (liftM Right . match w)
+         Traverse v -> T.mapM (match v)
 
    build view = 
       case view of
@@ -139,6 +141,7 @@ instance IsView View where
          v :>>>: w  -> build v . build w
          v :***: w  -> build v *** build w
          v :+++: w  -> either (Left . build v) (Right . build w)
+         Traverse v -> fmap (build v)
 
    toView = id
 
@@ -208,15 +211,7 @@ listView = traverseView
 
 -- or is liftView a better name?
 traverseView :: T.Traversable f => View a b -> View (f a) (f b)
-traverseView v = makeView (T.mapM (match v)) (fmap (build v))
-
-infixr 2 ++>
-
-(++>) :: View a b -> View a c -> View a (Either b c)
-v1 ++> v2 = makeView f g
- where
-   f a = liftM Left (match v1 a) `mplus` liftM Right (match v2 a)
-   g   = either (build v1) (build v2)
+traverseView = Traverse
 
 swap :: BiArrow arr => arr (a, b) (b, a)
 swap = f <-> f

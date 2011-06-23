@@ -32,7 +32,6 @@ import Domain.Math.Power.Rules
 import Domain.Math.Power.Utils (sortOrList)
 import Domain.Math.Power.Equation.Strategies
 import Domain.Math.Power.Equation.NormViews
-import qualified Data.Foldable as F
 
 ------------------------------------------------------------
 -- Exercises
@@ -47,7 +46,7 @@ powerEqExercise = let precision = 2 in makeExercise
                        newId "algebra.manipulation.exponents.equation"
   , examples       = level Medium $ concatMap (map $ build equationView) $ 
                        powerEquations ++ [last higherPowerEquations]
-  , ready          = predicate solvedRelation
+  , ready          = predicateView relationSolvedForm
   , suitable       = predicateView (normPowerEqApproxView precision)
   , equivalence    = withoutContext (viewEquivalent (normPowerEqApproxView precision))
   }
@@ -77,7 +76,7 @@ logEqExercise = makeExercise
   , exerciseId     = describe "solve logarithmic equation algebraically" $ 
                        newId "algebra.manipulation.logarithmic.equation"
   , examples       = level Medium $ map (singleton . build equationView) (concat logEquations)
-  , ready          = predicate solvedRelations
+  , ready          = predicateView relationsSolvedForm
   , suitable       = predicateView (traverseView equationView >>> normLogEqView)
   , equivalence    = withoutContext (viewEquivalent (traverseView equationView >>> normLogEqView))
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
@@ -94,8 +93,8 @@ higherPowerEqExercise = makeExercise
                        newId "algebra.manipulation.exponents.equation"
   , examples       = level Medium $ map singleton $ concat $ 
                        higherPowerEquations ++ take 3 rootEquations
-  , ready          = predicate (solvedRelations)
-  , suitable       = predicate (F.all (`belongsTo` normPowerEqView))
+  , ready          = predicateView relationsSolvedForm
+  , suitable       = predicateView (traverseView normPowerEqView)
   , equivalence    = withoutContext (viewEquivalent ((normPowerEqView' hasSomeVar) >>> higherDegreeEquationsView))
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]
@@ -110,8 +109,8 @@ rootEqExercise = makeExercise
   , exerciseId     = describe "solve higher power equation algebraically" $ 
                        newId "algebra.manipulation.exponents.equation"
   , examples       = level Medium $ map singleton $ concat $ drop 3 rootEquations
-  , ready          = predicate solvedRelations
-  , suitable       = predicate (F.all (`belongsTo` normPowerEqView))
+  , ready          = predicateView relationsSolvedForm
+  , suitable       = predicateView (traverseView normPowerEqView)
   , equivalence    = withoutContext (on (==) (sortOrList . simplify (normPowerEqView' $ elem "x" . vars)))
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]

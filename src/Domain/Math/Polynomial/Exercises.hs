@@ -50,8 +50,9 @@ linearExercise = makeExercise
    , similarity   = withoutContext (viewEquivalent (traverseView cleanUpACView))
    , equivalence  = withoutContext (viewEquivalent linearEquationView)
    , suitable     = predicateView linearEquationView
-   , ready        = predicate $ solvedRelationWith
-                       (`belongsTo` (mixedFractionNormalForm ++> rationalNormalForm ++> doubleNormalForm))
+   , ready        = predicateView (equationSolvedWith mixedFractionNormalForm)
+                    <||> predicateView (equationSolvedWith rationalNormalForm)
+                    <||> predicateView (equationSolvedWith doubleNormalForm)
    , extraRules   = map use buggyRulesEquation ++
                     map use buggyRulesExpr 
    , ruleOrdering = ruleOrderingWithId
@@ -67,7 +68,7 @@ linearMixedExercise :: Exercise (Equation Expr)
 linearMixedExercise = linearExercise 
    { exerciseId   = describe "solve a linear equation with mixed fractions" $ 
                        newId "algebra.equations.linear.mixed"
-   , ready        = predicate (solvedRelationWith (`belongsTo` mixedFractionNormalForm))
+   , ready        = predicateView (equationSolvedWith mixedFractionNormalForm)
    , strategy     = linearMixedStrategy
    } 
 
@@ -81,7 +82,7 @@ quadraticExercise = makeExercise
    , similarity   = withoutContext (viewEquivalent (traverseView (traverseView cleanUpView)))
    , equivalence  = withoutContext (equivalentRelation (viewEquivalent quadraticEquationsView))
    , suitable     = predicateView (traverseView equationView >>> quadraticEquationsView)
-   , ready        = predicate solvedRelations
+   , ready        = predicateView relationsSolvedForm
    , extraRules   = map use abcBuggyRules ++ buggyQuadratic ++
                     map use buggyRulesEquation ++ map use buggyRulesExpr 
    , ruleOrdering = ruleOrderingWithId $ 
@@ -102,7 +103,7 @@ higherDegreeExercise = makeExercise
    , equivalence   = eqAfterSubstitution $ 
                         equivalentRelation (viewEquivalent higherDegreeEquationsView)
    , suitable      = predicateView (traverseView equationView >>> higherDegreeEquationsView)
-   , ready         = predicate solvedRelations
+   , ready         = predicateView relationsSolvedForm
    , extraRules    = map use abcBuggyRules ++ buggyQuadratic ++
                      map use buggyRulesEquation ++ map use buggyRulesExpr 
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder

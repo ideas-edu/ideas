@@ -31,6 +31,7 @@ import Data.Maybe
 import Data.Ord
 import Data.Ratio
 import Domain.Math.Approximation (precision)
+import Domain.Math.CleanUp
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
@@ -523,9 +524,10 @@ distributeDivision = describe "distribution division" $
 merge :: Rule Expr
 merge = describe "merge similar terms" $ 
    makeSimpleRule (lineq, "merge") $ \old -> do
-      let new = collectLikeTerms old
-          f = maybe 0 length . match sumView
-      guard (f old > f new)
+      let norm = cleanUpSimple old -- don't use rule just for cleaning up
+          new  = collectLikeTerms norm
+          f    = maybe 0 length . match sumView
+      guard (f norm > f new)
       return new
 
 simplerLinearFactor :: Rule Expr

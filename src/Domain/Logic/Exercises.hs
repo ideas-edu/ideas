@@ -36,13 +36,13 @@ dnfExercise = makeExercise
    , prettyPrinter  = ppLogicPars
    , equivalence    = withoutContext eqLogic
    , similarity     = withoutContext equalLogicA
-   , isReady        = isDNF
-   , isSuitable     = suitable
+   , ready          = predicate isDNF
+   , suitable       = predicate mySuitable
    , extraRules     = map liftToContext (extraLogicRules ++ buggyRules)
    , strategy       = dnfStrategyDWA
    , navigation     = navigator
    , difference     = differenceMode eqLogic
-   , testGenerator  = Just (restrictGenerator suitable arbitrary)
+   , testGenerator  = Just (restrictGenerator mySuitable arbitrary)
    , randomExercise = useGenerator (const True) logicExercise
    }
 
@@ -62,8 +62,8 @@ logicExercise dif =
               in countEquivalences p <= 2 && i >= minStep && i <= maxStep
    in restrictGenerator ok gen
 
-suitable :: SLogic -> Bool
-suitable = (<=2) . countEquivalences
+mySuitable :: SLogic -> Bool
+mySuitable = (<=2) . countEquivalences
 
 stepsRemaining :: Int -> SLogic -> Maybe Int
 stepsRemaining i = 

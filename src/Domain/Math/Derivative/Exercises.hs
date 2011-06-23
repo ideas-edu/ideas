@@ -41,8 +41,8 @@ derivativePolyExercise = describe
    { exerciseId    = diffId # "polynomial"
    , status        = Provisional
    , parser        = parseExpr
-   , isReady       = (`belongsTo` polyNormalForm rationalView)
-   , isSuitable    = isPolyDiff
+   , ready         = predicateView (polyNormalForm rationalView)
+   , suitable      = predicate isPolyDiff
    , equivalence   = withoutContext eqPolyDiff
    , similarity    = withoutContext (viewEquivalent cleanUpACView)
    , strategy      = derivativePolyStrategy
@@ -58,7 +58,7 @@ derivativeProductExercise = describe
    \the parentheses in your answer." $ 
    derivativePolyExercise
    { exerciseId    = diffId # "product"
-   , isReady       = noDiff
+   , ready         = predicate noDiff
    , strategy      = derivativeProductStrategy
    , examples      = level Medium $ concat diffSet3
    }
@@ -69,8 +69,8 @@ derivativeQuotientExercise = describe
    \remove parentheses in the numerator." $ 
    derivativePolyExercise
    { exerciseId    = diffId # "quotient"
-   , isReady       = readyQuotientDiff
-   , isSuitable    = isQuotientDiff
+   , ready         = predicate readyQuotientDiff
+   , suitable      = predicate isQuotientDiff
    , equivalence   = withoutContext eqQuotientDiff
    , strategy      = derivativeQuotientStrategy
    , ruleOrdering  = ruleOrderingWithId [ruleDerivQuotient]
@@ -85,8 +85,8 @@ derivativePowerExercise = describe
    derivativePolyExercise
    { exerciseId    = diffId # "power"
    , status        = Experimental
-   , isReady       = \a -> noDiff a && onlyNatPower a
-   , isSuitable    = const True
+   , ready         = predicate noDiff <&&> predicate onlyNatPower
+   -- , isSuitable    = const True
    , equivalence   = \_ _ -> True -- \x y -> eqApprox (evalDiff x) (evalDiff y)
    , strategy      = derivativePowerStrategy
    , examples      = level Medium $ concat (diffSet5 ++ diffSet6)
@@ -98,7 +98,7 @@ derivativeExercise = makeExercise
    { exerciseId   = describe "Derivative" diffId
    , status       = Experimental
    , parser       = parseExpr
-   , isReady      = noDiff
+   , ready        = predicate noDiff
    , strategy     = derivativeStrategy
    , ruleOrdering = derivativeOrdering
    , navigation   = navigator

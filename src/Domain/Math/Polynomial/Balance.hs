@@ -41,8 +41,8 @@ balanceExercise = makeExercise
    , parser       = parseEqExpr
    , similarity   = withoutContext ((==) `on` fmap cleanUpExpr)
    , equivalence  = withoutContext (viewEquivalent linearEquationView)
-   , isSuitable   = (`belongsTo` linearEquationView)
-   , isReady      = solvedRelationWith $ \a -> 
+   , suitable     = predicateView linearEquationView
+   , ready        = predicate $ solvedRelationWith $ \a -> 
                        a `belongsTo` mixedFractionNormalForm || 
                        a `belongsTo` rationalNormalForm
    , strategy     = balanceStrategy

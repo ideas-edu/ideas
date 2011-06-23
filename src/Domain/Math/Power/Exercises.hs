@@ -22,7 +22,6 @@ import Prelude hiding ( (^) )
 
 import Common.Utils (distinct)
 import Common.Library
-import Data.Maybe
 import Domain.Math.Power.Examples
 import Domain.Math.Expr hiding (isPower)
 import Domain.Math.Numeric.Views
@@ -46,8 +45,8 @@ simplifyPowerExercise :: Exercise Expr
 simplifyPowerExercise = (powerExercise simplifyPowerStrategy)
    { exerciseId   = describe "simplify expression (powers)" $ 
                        newId "algebra.manipulation.exponents.simplify"
-   , isReady      = isPowerAdd
-   , isSuitable   = (`belongsTo` normPowerMapView)
+   , ready        = predicate isPowerAdd
+   , suitable     = predicateView normPowerMapView
    , equivalence  = withoutContext (viewEquivalent normPowerMapView)
    , examples     = level Medium $ concat $ simplerPowers 
                            ++ powers1 ++ powers2 
@@ -62,8 +61,8 @@ powerOfExercise :: Exercise Expr
 powerOfExercise = (powerExercise powerOfStrategy)
    { exerciseId   = describe "write as a power of a" $ 
                        newId "algebra.manipulation.exponents.powerof"
-   , isReady      = isSimplePower
-   , isSuitable   = (`belongsTo` normPowerView)
+   , ready        = predicate isSimplePower
+   , suitable     = predicateView normPowerView
    , equivalence  = withoutContext (viewEquivalent normPowerNonNegRatio)
    , examples     = level Medium $ concat $  powersOfA ++ powersOfX 
                            ++ brokenExp1' ++ brokenExp2 ++ brokenExp3 
@@ -77,8 +76,8 @@ nonNegBrokenExpExercise :: Exercise Expr
 nonNegBrokenExpExercise = (powerExercise nonNegBrokenExpStrategy)
    { exerciseId   = describe "write with a non-negative exponent" $ 
                        newId "algebra.manipulation.exponents.nonnegative"
-   , isReady      = isPower plainNatView
-   , isSuitable   = (`belongsTo` normPowerNonNegDouble)
+   , ready        = predicate (isPower plainNatView)
+   , suitable     = predicateView normPowerNonNegDouble
    , equivalence  = withoutContext (viewEquivalent normPowerNonNegDouble)
    , examples     = level Medium $ concat $  nonNegExp ++ nonNegExp2 ++ negExp4 ++ negExp5 
                            ++ brokenExp1 
@@ -94,8 +93,8 @@ calcPowerExercise :: Exercise Expr
 calcPowerExercise = (powerExercise calcPowerStrategy)
    { exerciseId   = describe "simplify expression (powers)" $ 
                        newId "arithmetic.exponents"
-   , isReady      = isPowerAdd
-   , isSuitable   = (`belongsTo` normPowerMapView)
+   , ready        = predicate isPowerAdd
+   , suitable     = predicateView normPowerMapView
    , equivalence  = withoutContext (viewEquivalent normPowerMapView)
    , examples     = level Medium $ concat $ negExp3 ++ normPower3' ++ normPower4
    }
@@ -110,10 +109,10 @@ isSimplePower _ = False
 
 isPower :: View Expr a -> Expr -> Bool
 isPower v expr = 
-  let Just (_, xs) = match productView expr 
+  let xs = snd (from productView expr)
       f (Nat 1 :/: a) = g a
       f a = g a
-      g (Sym s [Var _, a]) | isPowerSymbol s = isJust (match v a)
+      g (Sym s [Var _, a]) | isPowerSymbol s = a `belongsTo` v
       g (Sym s [x, Nat _]) | isRootSymbol s = isPower v x 
       g (Sqrt x) = g x
       g (Var _) = True
@@ -122,5 +121,5 @@ isPower v expr =
      
 isPowerAdd :: Expr -> Bool
 isPowerAdd expr =
-  let Just xs = match sumView expr
+  let xs = from sumView expr
   in all (isPower rationalView) xs && not (applicable calcPowerPlus expr)

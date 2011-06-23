@@ -36,7 +36,7 @@ naturalExercise :: Exercise Expr
 naturalExercise = (numericExercise naturalStrategy)
    { exerciseId   = describe "simplify expression (natural numbers)" $ 
                        newId "numbers.natural"
-   , isReady      = (`belongsTo` integerNormalForm)
+   , ready        = predicateView integerNormalForm
    , examples     = level Medium $ concat calculateResults
    }
 
@@ -44,7 +44,7 @@ integerExercise :: Exercise Expr
 integerExercise = (numericExercise integerStrategy)
    { exerciseId   = describe "simplify expression (integers)" $ 
                        newId "numbers.integers"
-   , isReady      = (`belongsTo` integerNormalForm)
+   , ready        = predicateView integerNormalForm
    , examples     = level Medium $ concat calculateResults
    }
    
@@ -52,7 +52,7 @@ rationalExercise :: Exercise Expr
 rationalExercise = (numericExercise rationalStrategy)
    { exerciseId     = describe "simplify expression (rational numbers)" $ 
                          newId "numbers.rational"
-   , isReady        = (`belongsTo` rationalNormalForm)
+   , ready          = predicateView rationalNormalForm
    , randomExercise = simpleGenerator (rationalGenerator 5)
    }
 
@@ -60,7 +60,7 @@ fractionExercise :: Exercise Expr
 fractionExercise = (numericExercise fractionStrategy)
    { exerciseId     = describe "simplify expression (fractions)" $ 
                          newId "arithmetic.fractions"
-   , isReady        = (`belongsTo` rationalNormalForm)
+   , ready          = predicateView rationalNormalForm
    , randomExercise = simpleGenerator (rationalGenerator 5)
    }
    

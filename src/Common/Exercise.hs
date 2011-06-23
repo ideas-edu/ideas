@@ -15,7 +15,7 @@ module Common.Exercise
    ( -- * Exercises
      Exercise, makeExercise, emptyExercise
    , exerciseId, status, parser, prettyPrinter
-   , equivalence, similarity, isReady, isSuitable
+   , equivalence, similarity, ready, suitable, isReady, isSuitable
    , splitParts, hasTermView
    , strategy, navigation, canBeRestarted, extraRules, ruleOrdering
    , difference, ordering, testGenerator, randomExercise, examples, getRule
@@ -44,6 +44,7 @@ import Common.Derivation
 import Common.DerivationTree
 import Common.Id
 import Common.Navigator
+import Common.Predicate
 import Common.Rewriting.Term
 import Common.TestSuite
 import Common.Transformation
@@ -70,8 +71,8 @@ data Exercise a = Exercise
    , equivalence    :: Context a -> Context a -> Bool
    , similarity     :: Context a -> Context a -> Bool -- possibly more liberal than syntactic equality
    , ordering       :: a -> a -> Ordering  -- syntactic comparison
-   , isReady        :: a -> Bool
-   , isSuitable     :: a -> Bool
+   , ready          :: Predicate a
+   , suitable       :: Predicate a
    , difference     :: Bool -> a -> a -> Maybe (a, a)
    , splitParts     :: a -> [a]
    , hasTermView    :: Maybe (View Term a)
@@ -120,8 +121,8 @@ emptyExercise = Exercise
    , equivalence    = \_ _ -> True
    , similarity     = \_ _ -> True
    , ordering       = \_ _ -> EQ
-   , isReady        = const True
-   , isSuitable     = const True
+   , ready          = true
+   , suitable       = true
    , difference     = \_ _ _ -> Nothing
    , splitParts     = return
    , hasTermView    = Nothing
@@ -262,6 +263,12 @@ isPrivate = not . isPublic
 -- the context into account. 
 withoutContext :: (a -> a -> Bool) -> Context a -> Context a -> Bool
 withoutContext f a b = fromMaybe False (fromContextWith2 f a b)
+
+isReady :: Exercise a -> a -> Bool
+isReady = evalPredicate . ready
+
+isSuitable :: Exercise a -> a -> Bool
+isSuitable = evalPredicate . suitable
 
 -- | Similarity on terms without a context
 simpleSimilarity :: Exercise a -> a -> a -> Bool

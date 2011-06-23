@@ -34,7 +34,7 @@ cnfExercise = makeExercise
    , navigation     = navigator
    , difference     = differenceMode probablyEqual
    , ordering       = compare
-   , isReady        = ready cnfExercise
+   , ready          = predicate (myReady cnfExercise)
    , randomExercise = let ok p = let n = fromMaybe maxBound (stepsRemaining 4 p)
                                  in n >= 2 && n <= 4
                       in useGenerator ok (\_ -> templateGenerator 1)
@@ -52,6 +52,6 @@ cnfExerciseSimple = cnfExercise
    , strategy    = label "Apply rules exhaustively" $ repeat $ somewhere $ alternatives $ ruleset cnfExercise
    } -}
    
-ready :: Exercise a -> a -> Bool
-ready ex = null . applyAll (alternatives $ filter (not . isBuggyRule) (ruleset ex)) 
+myReady :: Exercise a -> a -> Bool
+myReady ex = null . applyAll (alternatives $ filter (not . isBuggyRule) (ruleset ex)) 
          . inContext ex

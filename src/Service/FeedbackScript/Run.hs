@@ -18,17 +18,11 @@ module Service.FeedbackScript.Run
    , ruleToString, feedbackIds, attributeIds, conditionIds
    ) where
 
-import Common.Context (Context)
-import Common.Id
-import Common.Exercise
-import Common.Rewriting.Term
+import Common.Library hiding (ready, Environment)
 import Common.Utils (safeHead)
 import Control.Monad
-import Common.Transformation
-import Common.View
 import Data.List
 import Data.Maybe
-import Data.Monoid
 import Service.BasicServices
 import Service.FeedbackScript.Syntax
 import Service.Diagnose

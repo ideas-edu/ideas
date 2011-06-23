@@ -49,8 +49,8 @@ linearExercise = makeExercise
    , parser       = parseEqExpr
    , similarity   = withoutContext (viewEquivalent (traverseView cleanUpACView))
    , equivalence  = withoutContext (viewEquivalent linearEquationView)
-   , isSuitable   = (`belongsTo` linearEquationView)
-   , isReady      = solvedRelationWith
+   , suitable     = predicateView linearEquationView
+   , ready        = predicate $ solvedRelationWith
                        (`belongsTo` (mixedFractionNormalForm ++> rationalNormalForm ++> doubleNormalForm))
    , extraRules   = map use buggyRulesEquation ++
                     map use buggyRulesExpr 
@@ -67,7 +67,7 @@ linearMixedExercise :: Exercise (Equation Expr)
 linearMixedExercise = linearExercise 
    { exerciseId   = describe "solve a linear equation with mixed fractions" $ 
                        newId "algebra.equations.linear.mixed"
-   , isReady      = solvedRelationWith (`belongsTo` mixedFractionNormalForm)
+   , ready        = predicate (solvedRelationWith (`belongsTo` mixedFractionNormalForm))
    , strategy     = linearMixedStrategy
    } 
 
@@ -80,8 +80,8 @@ quadraticExercise = makeExercise
                        >>> right (build (traverseView equationView)) 
    , similarity   = withoutContext (viewEquivalent (traverseView (traverseView cleanUpView)))
    , equivalence  = withoutContext (equivalentRelation (viewEquivalent quadraticEquationsView))
-   , isSuitable   = (`belongsTo` (traverseView equationView >>> quadraticEquationsView))
-   , isReady      = solvedRelations
+   , suitable     = predicateView (traverseView equationView >>> quadraticEquationsView)
+   , ready        = predicate solvedRelations
    , extraRules   = map use abcBuggyRules ++ buggyQuadratic ++
                     map use buggyRulesEquation ++ map use buggyRulesExpr 
    , ruleOrdering = ruleOrderingWithId $ 
@@ -101,8 +101,8 @@ higherDegreeExercise = makeExercise
    , similarity    = withoutContext (viewEquivalent (traverseView (traverseView cleanUpView)))
    , equivalence   = eqAfterSubstitution $ 
                         equivalentRelation (viewEquivalent higherDegreeEquationsView)
-   , isSuitable    = (`belongsTo` (traverseView equationView >>> higherDegreeEquationsView))
-   , isReady       = solvedRelations
+   , suitable      = predicateView (traverseView equationView >>> higherDegreeEquationsView)
+   , ready         = predicate solvedRelations
    , extraRules    = map use abcBuggyRules ++ buggyQuadratic ++
                      map use buggyRulesEquation ++ map use buggyRulesExpr 
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
@@ -148,7 +148,7 @@ findFactorsExercise = makeExercise
    , parser       = parseExpr
    , similarity   = withoutContext ((==) `on` cleanUpExpr)
    , equivalence  = withoutContext (viewEquivalent (polyViewWith rationalView))
-   , isReady      = (`belongsTo` linearFactorsView)
+   , ready        = predicateView linearFactorsView
    , ruleOrdering = ruleOrderingWithId quadraticRuleOrder
    , strategy     = findFactorsStrategy
    , navigation   = termNavigator
@@ -164,7 +164,7 @@ expandExercise = makeExercise
    , parser       = parseExpr
    , similarity   = withoutContext ((==) `on` cleanUpExpr)
    , equivalence  = withoutContext (viewEquivalent (polyViewWith rationalView))
-   , isReady      = (`belongsTo` polyNormalForm rationalView)
+   , ready        = predicateView (polyNormalForm rationalView)
    , ruleOrdering = ruleOrderingWithId (getId fractionProduct:quadraticRuleOrder)
    , strategy     = expandStrategy
    , navigation   = termNavigator

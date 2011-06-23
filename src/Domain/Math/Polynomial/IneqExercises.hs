@@ -19,7 +19,7 @@ import Control.Monad
 import Data.Foldable (toList)
 import Data.List
 import Data.Maybe (fromMaybe)
-import Domain.Logic.Formula (Logic((:||:), (:&&:)), catLogic, ors)
+import Domain.Logic.Formula (Logic((:||:), (:&&:)), catLogic)
 import Domain.Math.CleanUp
 import Domain.Math.Data.Interval
 import Domain.Math.Data.OrList
@@ -42,7 +42,7 @@ ineqLinearExercise = makeExercise
                        newId "algebra.inequalities.linear"
    , status       = Provisional
    , parser       = parseRelExpr
-   , isReady      = solvedRelation
+   , ready        = predicate solvedRelation
    , equivalence  = withoutContext linEq
    , similarity   = withoutContext (viewEquivalent (traverseView cleanUpView))
    , strategy     = ineqLinear
@@ -60,7 +60,7 @@ ineqQuadraticExercise = makeExercise
    , status        = Provisional
    , parser        = parseLogicRelExpr
    , prettyPrinter = showLogicRelation
-   , isReady       = solvedRelations
+   , ready         = predicate solvedRelations
    , equivalence   = quadrEqContext
    , similarity    = withoutContext (simLogic (fmap cleanUpExpr . flipGT))
    , strategy      = ineqQuadratic
@@ -78,7 +78,7 @@ ineqHigherDegreeExercise = makeExercise
    , status        = Provisional
    , parser        = parseLogicRelExpr
    , prettyPrinter = showLogicRelation
-   , isReady       = solvedRelations
+   , ready         = predicate solvedRelations
    , equivalence   = highEqContext
    , similarity    = withoutContext (simLogic (fmap cleanUpExpr . flipGT))
    , strategy      = ineqHigherDegree

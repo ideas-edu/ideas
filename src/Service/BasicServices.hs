@@ -15,7 +15,7 @@ module Service.BasicServices
    , onefirst, applicable, allapplications, apply, generate
    ) where
 
-import Common.Library hiding (derivation, applicable, apply)
+import Common.Library hiding (derivation, applicable, apply, ready)
 import Common.Utils (fst3, safeHead)
 import Data.List
 import Data.Maybe

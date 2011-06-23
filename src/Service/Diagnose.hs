@@ -17,7 +17,7 @@ module Service.Diagnose
    , diagnosisType
    ) where 
 
-import Common.Library
+import Common.Library hiding (ready)
 import Common.Utils (safeHead)
 import Data.List (sortBy)
 import Data.Maybe

@@ -49,8 +49,8 @@ rationalEquationExercise = makeExercise
                         newId "algebra.equations.rational"
    , status        = Provisional
    , parser        = parseOrsEqExpr
-   , isSuitable    = isJust . rationalEquations
-   , isReady       = solvedRelations
+   , suitable      = predicate (isJust . rationalEquations)
+   , ready         = predicate solvedRelations
    , equivalence   = eqRationalEquation
    , similarity    = withoutContext (viewEquivalent (traverseView (traverseView cleanUpView)))
    , strategy      = rationalEquationStrategy
@@ -66,7 +66,7 @@ simplifyRationalExercise = makeExercise
    , status        = Alpha -- Provisional
    , parser        = parseExpr
 -- isSuitable
-   , isReady       = simplifiedRational
+   , ready         = predicate simplifiedRational
    -- , eqWithContext = Just eqSimplifyRational
    , similarity    = withoutContext (viewEquivalent cleanUpView)
    , strategy      = simplifyRationalStrategy

@@ -12,7 +12,7 @@
 -----------------------------------------------------------------------------
 module Service.ServiceList (serviceList, exerciselistS) where
 
-import Common.Library hiding (apply, applicable, derivation)
+import Common.Library hiding (apply, applicable, derivation, ready)
 import Common.Utils (Some(..))
 import Data.List (sortBy)
 import Data.Ord

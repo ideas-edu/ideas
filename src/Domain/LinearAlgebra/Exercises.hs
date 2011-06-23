@@ -42,7 +42,7 @@ gramSchmidtExercise = makeExercise
                       \x y -> let f = length . filter (not . isZero) . vectors . gramSchmidt
                               in f x == f y
    , extraRules     = rulesGramSchmidt
-   , isReady        = orthonormalList . filter (not . isZero) . vectors
+   , ready          = predicate (orthonormalList . filter (not . isZero) . vectors)
    , strategy       = gramSchmidtStrategy
    , randomExercise = let f = simplified . fromInteger . (`mod` 25)
                       in simpleGenerator (liftM (fmap f) arbitrary)
@@ -65,7 +65,7 @@ linearSystemExercise = makeExercise
                                     _ -> False 
    , extraRules     = equationsRules
    , ruleOrdering   = ruleOrderingWithId [getId ruleScaleEquation]
-   , isReady        = inSolvedForm
+   , ready          = predicate inSolvedForm
    , strategy       = linearSystemStrategy
    , randomExercise = simpleGenerator (fmap matrixToSystem arbMatrix)
    }
@@ -83,7 +83,7 @@ gaussianElimExercise = makeExercise
                       let f = fmap simplified
                       in \x y -> eqMatrix (f x) (f y)
    , extraRules     = matrixRules
-   , isReady        = inRowReducedEchelonForm
+   , ready          = predicate inRowReducedEchelonForm
    , strategy       = gaussianElimStrategy
    , randomExercise = simpleGenerator arbMatrix
    , testGenerator  = Just arbMatrix
@@ -111,7 +111,7 @@ systemWithMatrixExercise = makeExercise
                                     (Just a, Just b) -> simpleEquivalence linearSystemExercise a b
                                     _ -> False
    , extraRules     = map useC equationsRules ++ map useC (matrixRules :: [Rule (Context (Matrix Expr))])
-   , isReady        = inSolvedForm . (fromExpr :: Expr -> Equations Expr)
+   , ready          = predicate (inSolvedForm . (fromExpr :: Expr -> Equations Expr))
    , strategy       = systemWithMatrixStrategy
    , randomExercise = simpleGenerator (fmap (toExpr . matrixToSystem) (arbMatrix :: Gen (Matrix Expr)))
    , testGenerator  = fmap (liftM toExpr) (testGenerator linearSystemExercise)

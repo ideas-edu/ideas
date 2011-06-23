@@ -211,10 +211,20 @@ distributeLocal expr = fromMaybe expr $ do
    let f a = build productView (False, a)
        zss | b = map neg (head yss) : tail yss
            | otherwise = yss
-   return $ build sumView (map f (combine zss))
+   return $ build sumView (map (timesFraction . f) (combine zss))
 
 distributeGlobal :: Expr -> Expr
 distributeGlobal = fixpoint (transform distributeLocal)
+
+-- (a*b)/c => (a/c)*b   (where a and c are rational)
+timesFraction :: Expr -> Expr
+timesFraction expr = fromMaybe expr $ do 
+   ((a, b), c) <- match mv expr
+   guard (a /= 1 && hasSomeVar b)
+   return $ fromRational (a/c) .*. b
+ where
+   -- (Rat*b)/Rat
+   mv = divView >>> (timesView >>> first rationalView) *** rationalView
 
 combine :: [[a]] -> [[a]]
 combine = foldr (\x xs -> [ a:as | a <- x, as <- xs ]) [[]]
@@ -248,31 +258,3 @@ diffTimes old new = do
    d2 <- b2 `division` a2
    guard (d1 == d2)
    return (build myView (x, d1))
-  
-------------------------------------------------------------
--- Debug code
-   
-{-
-main :: IO ()
-main = mapM_ go [0 .. length (examples balanceExercise) - 1]
-
-go :: Int -> IO ()
-go n = printDerivation balanceExercise (snd $ examples balanceExercise !! n)
-
-ok = checkExercise balanceExercise
-
-ff a = printDerivation balanceExercise a
-
-x = Var "x"
-
-r = diagnose (emptyState ex old) new
- where
-   ex  = balanceExercise
-   old = 3*x + 1 :==: 4
-   new = 3*x + 2 :==: 5
-   
-testje = diffTimes old new
- where
-   old = (x+1)/2 :==: (1/3)*(1-x)
-   new = 3*(x+1) :==: 2*(1-x)
--}

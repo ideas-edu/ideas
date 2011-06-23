@@ -5,11 +5,6 @@
         12
       </argument>
       <expr>
-        12-12*(4*x+2)/3 == 36*x-12*(5*x-1)/4
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.linear.balance.collect">
-      <expr>
         12-4*(4*x+2) == 36*x-3*(5*x-1)
       </expr>
     </elem>

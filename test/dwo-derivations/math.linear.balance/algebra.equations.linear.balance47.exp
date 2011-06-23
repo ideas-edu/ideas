@@ -5,11 +5,6 @@
         6
       </argument>
       <expr>
-        6*(5*x-1)/6-12 == -24*x+6*(3*x-6)/2
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.linear.balance.collect">
-      <expr>
         5*x-13 == -24*x+3*(3*x-6)
       </expr>
     </elem>

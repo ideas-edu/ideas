@@ -12,7 +12,7 @@
 module Domain.Math.CleanUp 
    ( cleanUpRelations, cleanUpRelation, cleanUpExpr
    , cleanUpSimple, cleanUpView, cleanUpACView
-   , assocExpr, acExpr, smart
+   , assocExpr, acExpr, smart, assocPlus
    ) where
 
 import Common.Classes

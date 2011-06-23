@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.5 (0)">
+<reply result="ok" version="0.7.6 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.balance.remove-div" location="[]">
       <argument description="factor">
@@ -16,17 +16,17 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="arith1" name="times"/>
+              <OMS cd="arith1" name="minus"/>
+              <OMA>
+                <OMS cd="arith1" name="times"/>
+                <OMI>
+                  10
+                </OMI>
+                <OMV name="x"/>
+              </OMA>
               <OMI>
                 10
               </OMI>
-              <OMA>
-                <OMS cd="arith1" name="minus"/>
-                <OMV name="x"/>
-                <OMI>
-                  1
-                </OMI>
-              </OMA>
             </OMA>
             <OMV name="x"/>
           </OMA>

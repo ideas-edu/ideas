@@ -1,14 +1,9 @@
-<reply result="ok" version="0.7.5 (0)">
+<reply result="ok" version="0.7.6 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.balance.remove-div">
       <argument description="factor">
         12
       </argument>
-      <expr>
-        12*(-1/3*x+3/4) == 12*(1/4*x+1/6)
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.linear.balance.distribute">
       <expr>
         -4*x+9 == 3*x+2
       </expr>

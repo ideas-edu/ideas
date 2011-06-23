@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.5 (0)">
+<reply result="ok" version="0.7.6 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.balance.distribute">
       <expr>
@@ -9,11 +9,6 @@
       <argument description="factor">
         5
       </argument>
-      <expr>
-        5*(3/5*x+2) == 5*(7*x-14)
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.linear.balance.distribute">
       <expr>
         3*x+10 == 35*x-70
       </expr>

@@ -1,11 +1,16 @@
-<reply result="ok" version="0.7.5 (0)">
+<reply result="ok" version="0.7.6 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.balance.remove-div">
       <argument description="factor">
         30
       </argument>
       <expr>
-        30*(2*x-(2*x+2)/5) == 30*(12+(x-1)/6)
+        60*x-30*(2*x+2)/5 == 360+30*(x-1)/6
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.collect">
+      <expr>
+        60*x-6*(2*x+2) == 360+5*(x-1)
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.balance.distribute">

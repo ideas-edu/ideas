@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.5 (0)">
+<reply result="ok" version="0.7.6 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.balance.collect">
       <expr>
@@ -10,7 +10,7 @@
         4
       </argument>
       <expr>
-        4*(-1/4*x+1) == 4*(3+5/2*(x-1))
+        -x+4 == 12+10*(x-1)
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.balance.distribute">

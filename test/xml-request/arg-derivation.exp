@@ -1,14 +1,9 @@
-<reply result="ok" version="0.7.5 (0)">
+<reply result="ok" version="0.7.6 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.balance.remove-div">
       <argument description="factor">
         2
       </argument>
-      <expr>
-        10*(x-1) == x
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.linear.balance.distribute">
       <expr>
         10*x-10 == x
       </expr>

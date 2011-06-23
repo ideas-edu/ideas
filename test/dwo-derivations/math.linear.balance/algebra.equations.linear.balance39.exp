@@ -1,14 +1,9 @@
-<reply result="ok" version="0.7.5 (0)">
+<reply result="ok" version="0.7.6 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.balance.remove-div">
       <argument description="factor">
         15
       </argument>
-      <expr>
-        15*(2/3*x-2) == 15*(1/5*x-3/5)
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.linear.balance.distribute">
       <expr>
         10*x-30 == 3*x-9
       </expr>

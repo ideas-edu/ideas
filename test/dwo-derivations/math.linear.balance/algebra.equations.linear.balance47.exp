@@ -1,11 +1,16 @@
-<reply result="ok" version="0.7.5 (0)">
+<reply result="ok" version="0.7.6 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.balance.remove-div">
       <argument description="factor">
         6
       </argument>
       <expr>
-        6*((5*x-1)/6-2) == 6*(-4*x+(3*x-6)/2)
+        6*(5*x-1)/6-12 == -24*x+6*(3*x-6)/2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.collect">
+      <expr>
+        5*x-13 == -24*x+3*(3*x-6)
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.balance.distribute">

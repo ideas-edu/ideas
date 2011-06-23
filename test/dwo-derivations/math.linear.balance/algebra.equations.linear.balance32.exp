@@ -1,14 +1,9 @@
-<reply result="ok" version="0.7.5 (0)">
+<reply result="ok" version="0.7.6 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.balance.remove-div">
       <argument description="factor">
         4
       </argument>
-      <expr>
-        4*(1/4*x+1/2) == 4*(5/2*x+2)
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.linear.balance.distribute">
       <expr>
         x+2 == 10*x+8
       </expr>

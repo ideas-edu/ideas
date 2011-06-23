@@ -27,7 +27,7 @@ import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Examples
 import Domain.Math.Polynomial.Rules (conditionVarsRHS, flipEquation)
 import Domain.Math.Polynomial.Views
-import Domain.Math.Simplification
+import Domain.Math.Simplification (collectLikeTerms)
 import qualified Data.Traversable as T
 
 ------------------------------------------------------------
@@ -69,7 +69,7 @@ balanceStrategy = cleanUpStrategyAfter (applyTop (fmap cleanUpExpr)) $
    label "Balance equation" $
        label "Phase 1" (repeatS (
                use collect
-           |>  (use distribute <|> use removeDivision)))
+           <|>  use distribute <|> use removeDivision))
    <*> label "Phase 2" (repeatS (
               use varLeftMinus <|> use varLeftPlus <|> 
               use conRightMinus <|> use conRightPlus <|>
@@ -98,7 +98,7 @@ linbal = "algebra.equations.linear.balance"
   
 -- factor is always positive due to lcm function
 removeDivision :: Rule (Equation Expr)
-removeDivision =
+removeDivision = doAfter (fmap distributeLocal) $
    describe "remove division" $ 
    makeRule (linbal, "remove-div") $ useRecognizer isTimesT $
    supply1 "factor" removeDivisionArg timesT 
@@ -178,8 +178,9 @@ scaleToOne = doAfter (fmap distributeLocal) $
       
 collect :: Rule (Equation Expr)
 collect = makeSimpleRule (linbal, "collect") $ \old -> do
-   let new = fmap collectGlobal old
-   guard (old /= new)
+   let norm = fmap cleanUpExpr old -- don't use rule just for cleaning up
+       new  = fmap collectGlobal norm
+   guard (norm /= new)
    return new
    
 distribute :: Rule (Equation Expr)

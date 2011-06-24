@@ -185,8 +185,9 @@ collect = makeSimpleRule (linbal, "collect") $ \old -> do
    
 distribute :: Rule (Equation Expr)
 distribute = makeSimpleRule (linbal, "distribute") $ \old -> do
-   let new = fmap distributeGlobal old
-   guard (old /= new)
+   let norm = fmap cleanUpExpr old -- don't use rule just for cleaning up
+       new  = fmap distributeGlobal norm
+   guard (norm /= new)
    return new
    
 matchLin :: Expr -> Maybe (String, Rational, Rational)

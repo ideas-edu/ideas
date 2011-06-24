@@ -26,7 +26,7 @@ module Common.View
      -- * Isomorphisms
    , Isomorphism, from, to
      -- * Some combinators
-   , swapView, listView, traverseView
+   , swapView, listView, traverseView, ($<)
      -- * Packaging a view
    , ViewPackage(..)
      -- * Properties on views
@@ -212,6 +212,9 @@ listView = traverseView
 -- or is liftView a better name?
 traverseView :: T.Traversable f => View a b -> View (f a) (f b)
 traverseView = Traverse
+
+($<) :: T.Traversable f => View a (f b) -> View b c -> View a (f c)
+a $< b = a >>> traverseView b
 
 swap :: BiArrow arr => arr (a, b) (b, a)
 swap = f <-> f

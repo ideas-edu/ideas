@@ -10,38 +10,99 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Numeric.Views
-   ( integralView, integerView
+   ( -- * Natural numbers
+     naturalView, naturalNF
+     -- * Integers
+   , integerView, integerNF, integralView 
+     -- * Decimal fractions
+     -- * Rest
    , rationalView, doubleView, mixedFractionView
-   , integerNormalForm, rationalNormalForm, mixedFractionNormalForm
+   , rationalNormalForm, mixedFractionNormalForm
    , doubleNormalForm, rationalRelaxedForm, fractionForm, exactView
    , intDiv, fracDiv
    ) where
 
 import Common.Id
-import Common.Rewriting
 import Common.Uniplate
 import Common.View
 import Control.Monad
 import Data.Ratio
 import Domain.Math.Expr hiding ((^))
-import qualified Domain.Math.Data.MixedFraction as MF
+import qualified Domain.Math.Data.DecimalFraction as DF 
+import qualified Domain.Math.Data.MixedFraction   as MF
+
+-------------------------------------------------------------------
+-- Natural numbers
+
+-- |Non-negative numbers only, also for intermediate results
+naturalView :: View Expr Integer
+naturalView = "num.natural" @> makeView rec fromInteger
+ where
+   rec :: Expr -> Maybe Integer
+   rec expr = do
+      x <- matchInteger rec expr
+      guard (x >= 0)
+      return x
+
+naturalNF :: View Expr Integer
+naturalNF = "num.natural.nf" @> makeView f fromInteger
+ where
+   f (Nat n) = Just n
+   f _       = Nothing
+
+-------------------------------------------------------------------
+-- Integers
+
+integerView :: View Expr Integer
+integerView = integralView
+
+-- N or -N (where n is a natural number)
+integerNF :: View Expr Integer
+integerNF = "num.integer.nf" @> makeView (optionNegate f) fromInteger
+ where
+   f (Nat n) = Just n
+   f _       = Nothing
+
+integralView :: Integral a => View Expr a
+integralView = "num.integer" @> makeView (close matchInteger) fromIntegral
+
+matchInteger :: Integral a => (Expr -> Maybe a) -> Expr -> Maybe a
+matchInteger f expr = 
+   case expr of
+      a :/: b -> join (liftM2 intDiv (f a) (f b))
+      Sym s [a, b]
+         | isPowerSymbol s -> join (liftM2 intPower (f a) (f b))
+      _ -> matchNum f expr
+
+matchNum :: Num a => (Expr -> Maybe a) -> Expr -> Maybe a
+matchNum f expr =
+   case expr of
+      Nat n    -> return (fromInteger n)
+      a :+: b  -> liftM2 (+) (f a) (f b)
+      a :-: b  -> liftM2 (-) (f a) (f b)
+      Negate a -> liftM negate (f a)
+      a :*: b  -> liftM2 (*) (f a) (f b)
+      _        -> Nothing
+
+-------------------------------------------------------------------
+-- Decimal fractions
+
+decimalFractionView :: View Expr DF.DecimalFraction
+decimalFractionView = "num.decimal" @> makeView (close matchDecimal) f
+ where
+   f = fromDouble . fromRational . toRational
+
+matchDecimal :: (Expr -> Maybe DF.DecimalFraction) -> Expr -> Maybe DF.DecimalFraction
+matchDecimal f expr =
+   case expr of
+      Number d -> Just (DF.fromDouble d)
+      a :/: b  -> join (liftM2 DF.divide (f a) (f b))
+      Sym s [a, b]
+         | isPowerSymbol s -> join (liftM2 DF.power (f a) (f b))
+      _ -> matchNum f expr
 
 -------------------------------------------------------------------
 -- Numeric views
-
-integralView :: Integral a => View Expr a
-integralView = "num.integer" @> makeView (exprToNum f (const Nothing)) fromIntegral
- where
-   f s [x, y] 
-      | isDivideSymbol s = 
-           intDiv x y
-      | isPowerSymbol s = do
-           guard (y >= 0)
-           return (x Prelude.^ y)
-   f _ _ = Nothing
-   
-integerView :: View Expr Integer
-integerView = integralView
 
 -- |like oldRationalView (the original defintion), except that this view
 -- now also converts floating point numbers (using an exact approximation)
@@ -54,17 +115,15 @@ rationalView = describe "Interpret an expression as a (normalized) rational \
    f a = match exactView a >>= either (const Nothing) Just
 
 oldRationalView :: View Expr Rational
-oldRationalView = makeView (exprToNum f (const Nothing)) fromRational
- where
-   f s [x, y] 
-      | isDivideSymbol s = 
-           fracDiv x y
-      | isPowerSymbol s = do
-           let ry = toRational y
-           guard (denominator ry == 1)
-           let a = x Prelude.^ abs (numerator ry)
-           return (if numerator ry < 0 then 1/a else a)
-   f _ _ = Nothing
+oldRationalView = makeView (close matchRational) fromRational
+
+matchRational :: (Expr -> Maybe Rational) -> Expr -> Maybe Rational
+matchRational f expr = 
+   case expr of 
+      a :/: b  -> join (liftM2 fracDiv (f a) (f b))
+      Sym s [a, b]
+         | isPowerSymbol s -> join (liftM2 fracPower (f a) (f b))
+      _ -> matchNum f expr 
 
 exactView :: View Expr (Either Double Rational)
 exactView = "number.exact" @> makeView f (either fromDouble fromRational)
@@ -73,14 +132,8 @@ exactView = "number.exact" @> makeView f (either fromDouble fromRational)
    f (Negate a) = fmap (negate +++ negate) (f a)
    f expr       = fmap Right (match oldRationalView (g expr))
    
-   g (Number d) = fromRational (doubleToRational d)
+   g (Number d) = fromRational (toRational (DF.fromDouble d))
    g expr       = descend g expr
-
-doubleToRational :: Double -> Rational
-doubleToRational d = fromInteger base / 10^digs
- where
-   digs = 8 :: Int -- maximum number of digits
-   base = round (d * 10^digs) :: Integer
 
 mixedFractionView :: View Expr MF.MixedFraction
 mixedFractionView = "num.mixed-fraction" @> makeView f g
@@ -91,17 +144,23 @@ mixedFractionView = "num.mixed-fraction" @> makeView f g
          in sign (fromInteger (MF.wholeNumber a) .+. rest)
 
 doubleView :: View Expr Double
-doubleView = "num.double" @> makeView (exprToNum doubleSym return) fromDouble
+doubleView = "num.double" @> makeView (close matchDouble) fromDouble
  
+matchDouble :: (Expr -> Maybe Double) -> Expr -> Maybe Double
+matchDouble f expr =
+   case expr of
+      Number d -> Just d
+      a :/: b  -> join (liftM2 fracDiv (f a) (f b))
+      Sqrt a   -> f a >>= (`floatingRoot` 2)
+      Sym s [a, b]
+         | isPowerSymbol s -> join (liftM2 floatingPower (f a) (f b))
+         | isRootSymbol s  -> join (liftM2 floatingRoot (f a) (f b))
+      _ -> matchNum f expr
+  
 -------------------------------------------------------------------
 -- Numeric views in normal form 
 
--- N or -N (where n is a natural number)
-integerNormalForm :: View Expr Integer
-integerNormalForm = "num.integer-nf" @> makeView (optionNegate f) fromInteger
- where
-   f (Nat n) = Just n
-   f _       = Nothing
+
 
 -- 5, -(2/5), (-2)/5, but not 2/(-5), 6/8, or -((-2)/5)
 rationalNormalForm :: View Expr Rational
@@ -110,7 +169,7 @@ rationalNormalForm = "num.rational-nf" @> makeView f fromRational
    f (Nat a :/: Nat b) = simpleRational a b
    f (Negate (Nat a :/: Nat b)) = fmap negate (simpleRational a b)
    f (Negate (Nat a) :/: Nat b) = fmap negate (simpleRational a b)
-   f a = fmap fromInteger (match integerNormalForm a)
+   f a = fmap fromInteger (match integerNF a)
    
 mixedFractionNormalForm :: View Expr MF.MixedFraction
 mixedFractionNormalForm = describe "A normal form for mixed fractions. \
@@ -147,8 +206,8 @@ fractionForm = "num.fraction-form" @> makeView f (\(a, b) -> (fromInteger a :/: 
    f (Negate a) = liftM (first negate) (g a)
    f a = g a
    g (e1 :/: e2) = do
-      a <- match integerNormalForm e1
-      b <- match integerNormalForm e2
+      a <- match integerNF e1
+      b <- match integerNF e2
       guard (b /= 0)
       return (a, b)
    g _       = Nothing
@@ -157,8 +216,8 @@ rationalRelaxedForm :: View Expr Rational
 rationalRelaxedForm = "num.rational-relaxed" @> makeView (optionNegate f) fromRational
  where
    f (e1 :/: e2) = do
-      a <- match integerNormalForm e1
-      b <- match integerNormalForm e2
+      a <- match integerNF e1
+      b <- match integerNF e2
       fracDiv (fromInteger a) (fromInteger b)
    f (Nat n) = Just (fromInteger n)
    f _       = Nothing
@@ -171,35 +230,8 @@ optionNegate f a          = f a
 -------------------------------------------------------------------
 -- Helper functions
 
-doubleSym :: Symbol -> [Double] -> Maybe Double
-doubleSym s [x, y] 
-   | isDivideSymbol s = fracDiv x y
-   | isPowerSymbol  s = floatingPower x y   
-   | isRootSymbol   s && x >= 0 && y >= 1 = Just (x ** (1/y))
-doubleSym _ _ = Nothing
-
--- General numeric interpretation function: constructors Sqrt and
--- (:/:) are interpreted with function
-exprToNum :: (Monad m, Num a) => (Symbol -> [a] -> m a) -> (Double -> m a) -> Expr -> m a
-exprToNum f g = rec 
- where
-   rec expr =
-      case expr of
-         Sym s xs -> mapM rec xs >>= f s
-         Number d -> g d
-         _        -> exprToNumStep rec expr
-
-exprToNumStep :: (Monad m, Num a) => (Expr -> m a) -> Expr -> m a
-exprToNumStep rec expr = 
-   case expr of 
-      a :+: b  -> liftM2 (+)    (rec a) (rec b)
-      a :*: b  -> liftM2 (*)    (rec a) (rec b)
-      a :-: b  -> liftM2 (-)    (rec a) (rec b)
-      Negate a -> liftM  negate (rec a)
-      Nat n    -> return (fromInteger n)
-      a :/: b  -> rec (Sym divideSymbol [a, b])
-      Sqrt a   -> rec (Sym rootSymbol [a, 2])
-      _        -> fail "exprToNumStep"
+close :: (a -> a) -> a
+close f = f (close f)
 
 intDiv :: Integral a => a -> a -> Maybe a
 intDiv x y 
@@ -207,12 +239,31 @@ intDiv x y
    | otherwise        = Nothing
  where (d, m) = x `divMod` y
  
+intPower :: (Num a, Integral b) => a -> b -> Maybe a
+intPower x y 
+   | y >= 0    = Just (x Prelude.^ y) 
+   | otherwise = Nothing 
+ 
 fracDiv :: Fractional a => a -> a -> Maybe a
 fracDiv x y 
    | y /= 0    = Just (x / y)
    | otherwise = Nothing
-   
+
+fracPower :: Fractional a => a -> Rational -> Maybe a
+fracPower x r
+   | denominator r /= 1 = Nothing
+   | y >= 0             = Just a
+   | otherwise          = Just (1/a)
+ where
+   y = numerator r
+   a = x Prelude.^ abs y
+
 floatingPower :: (Ord a, Floating a) => a -> a -> Maybe a
 floatingPower x y 
    | x==0 && y<0 = Nothing
    | otherwise   = Just (x**y)
+
+floatingRoot :: (Ord a, Floating a) => a -> a -> Maybe a
+floatingRoot x y
+   | x >= 0 && y >= 1 = Just (x ** (1/y))
+   | otherwise        = Nothing

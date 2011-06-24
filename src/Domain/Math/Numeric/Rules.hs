@@ -145,8 +145,8 @@ fractionPlus = makeSimpleRule (alg, "fraction-plus") $ \expr -> do
 fractionPlusScale :: Rule Expr -- also minus
 fractionPlusScale = makeSimpleRuleList (alg, "fraction-plus-scale") $ \expr -> do
    (e1, e2) <- matchM plusView expr
-   (a, b)   <- (matchM fractionForm e1 `mplus` liftM (\n -> (n, 1)) (matchM integerNormalForm e1))
-   (c, d)   <- (matchM fractionForm e2 `mplus` liftM (\n -> (n, 1)) (matchM integerNormalForm e2))
+   (a, b)   <- (matchM fractionForm e1 `mplus` liftM (\n -> (n, 1)) (matchM integerNF e1))
+   (c, d)   <- (matchM fractionForm e2 `mplus` liftM (\n -> (n, 1)) (matchM integerNF e2))
    guard (b /= 0 && d /= 0 && b /= d)
    let bd  = lcm b d
        e1n = build fractionForm (a * (bd `div` b), bd)
@@ -158,7 +158,7 @@ fractionTimes :: Rule Expr
 fractionTimes = makeSimpleRule (alg, "fraction-times") f 
  where
    f (e1 :*: e2) = do
-      (a, b)   <- (matchM fractionForm e1 `mplus` liftM (\n -> (n, 1)) (matchM integerNormalForm e1))
-      (c, d)   <- (matchM fractionForm e2 `mplus` liftM (\n -> (n, 1)) (matchM integerNormalForm e2))
+      (a, b)   <- (matchM fractionForm e1 `mplus` liftM (\n -> (n, 1)) (matchM integerNF e1))
+      (c, d)   <- (matchM fractionForm e2 `mplus` liftM (\n -> (n, 1)) (matchM integerNF e2))
       return (build fractionForm (a*c, b*d)) 
    f _ = Nothing

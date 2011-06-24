@@ -32,14 +32,14 @@ main = suite "Numeric tests" $ do
              addProperty ("soundness " ++ s)   $ propSoundness semEqDouble g v
       f "integer view"          integerView
       f "rational view"         rationalView
-      f "integer normal form"   integerNormalForm
+      f "integer normal form"   integerNF
       f "rational normal form"  rationalNormalForm
       f "rational relaxed form" rationalRelaxedForm
 
    suite "Normal forms" $ do
       let f s v = forM_ numGenerators $ \g ->
              addProperty s $ propNormalForm g v
-      f "integer normal form" integerNormalForm
+      f "integer normal form" integerNF
     -- f rationalNormalForm -- no longer a normal form
 
    suite "Correctness generators" $ do
@@ -53,10 +53,10 @@ main = suite "Numeric tests" $ do
       let va .>. vb = forM_ numGenerators $ \g -> 
              addProperty "" $ forAll g $ \a -> 
                 not (a `belongsTo` va) || a `belongsTo` vb
-      integerNormalForm .>. integerView
+      integerNF .>. integerView
       rationalNormalForm .>. rationalRelaxedForm
       rationalRelaxedForm .>. rationalView
-      integerNormalForm .>. rationalNormalForm
+      integerNF .>. rationalNormalForm
       integerView .>. rationalView
 
    suite "Pre/post conditions strategies" $ do
@@ -65,8 +65,8 @@ main = suite "Numeric tests" $ do
                 let run = fromMaybe a . fromContext . applyD s 
                         . newContext emptyEnv . termNavigator
                 in not (a `belongsTo` pre) || run a `belongsTo` post
-      f "natural"  naturalStrategy  integerView  integerNormalForm
-      f "integer"  integerStrategy  integerView  integerNormalForm
+      f "natural"  naturalStrategy  integerView  integerNF
+      f "integer"  integerStrategy  integerView  integerNF
       f "rational" rationalStrategy rationalView rationalNormalForm
       f "fraction" fractionStrategy rationalView rationalNormalForm
 

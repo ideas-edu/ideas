@@ -129,7 +129,7 @@ apply r loc state = maybe applyOff applyOn (statePrefix state)
  where
    applyOn _ = -- scenario 1: on-strategy
       maybe applyOff Right $ safeHead
-      [ s1 | Right xs <- [allfirsts state], (r1, loc1, _, s1) <- xs, showId r == showId r1, loc==loc1 ]
+      [ s1 | Right xs <- [allfirsts state], (r1, loc1, _, s1) <- xs, r==r1, loc==loc1 ]
       
    applyOff  = -- scenario 2: off-strategy
       case Apply.apply r (setLocation loc (stateContext state)) of

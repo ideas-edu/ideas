@@ -129,7 +129,7 @@ rationalRules =
    [ calcPlusWith "rational" rationalRelaxedForm
    , calcMinusWith "rational" rationalRelaxedForm
    , calcTimesWith "rational" rationalRelaxedForm
-   , calcDivisionWith "integer" integerNormalForm
+   , calcDivisionWith "integer" integerNF
    , doubleNegate, negateZero, divisionDenominator, divisionNumerator
    , simplerFraction
    ]
@@ -137,10 +137,10 @@ rationalRules =
 fractionRules :: [Rule Expr]
 fractionRules =
    [ fractionPlus, fractionPlusScale, fractionTimes
-   , calcPlusWith "integer" integerNormalForm
-   , calcMinusWith "integer" integerNormalForm
-   , calcTimesWith "integer" integerNormalForm -- not needed?
-   , calcDivisionWith "integer" integerNormalForm
+   , calcPlusWith "integer" integerNF
+   , calcMinusWith "integer" integerNF
+   , calcTimesWith "integer" integerNF -- not needed?
+   , calcDivisionWith "integer" integerNF
    , doubleNegate, negateZero, smartRule divisionDenominator
    , smartRule divisionNumerator, simplerFraction
    ]

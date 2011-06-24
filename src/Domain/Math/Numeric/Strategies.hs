@@ -45,10 +45,10 @@ naturalStrategy = label "simplify" $
 integerStrategy :: LabeledStrategy (Context Expr)
 integerStrategy = label "simplify" $ 
    repeat $ somewhere $ alternatives $ map use
-      [ calcPlusWith     "integer" integerNormalForm
-      , calcMinusWith    "integer" integerNormalForm
-      , calcTimesWith    "integer" integerNormalForm
-      , calcDivisionWith "integer" integerNormalForm
+      [ calcPlusWith     "integer" integerNF
+      , calcMinusWith    "integer" integerNF
+      , calcTimesWith    "integer" integerNF
+      , calcDivisionWith "integer" integerNF
       , doubleNegate, negateZero
       ]
 
@@ -58,7 +58,7 @@ rationalStrategy = label "simplify" $
       [ calcPlusWith     "rational" rationalRelaxedForm
       , calcMinusWith    "rational" rationalRelaxedForm
       , calcTimesWith    "rational" rationalRelaxedForm
-      , calcDivisionWith "integer"      integerNormalForm
+      , calcDivisionWith "integer"      integerNF
       , doubleNegate, negateZero, divisionDenominator
       , divisionNumerator, simplerFraction
       ]
@@ -67,10 +67,10 @@ fractionStrategy :: LabeledStrategy (Context Expr)
 fractionStrategy = label "simplify" $ 
    repeat $ 
       somewhere 
-         (  use (calcPlusWith     "integer" integerNormalForm)
-        <|> use (calcMinusWith    "integer" integerNormalForm)
-        <|> use (calcTimesWith    "integer" integerNormalForm) -- not needed?
-        -- <|> use (calcDivisionWith "integer" integerNormalForm)  -- not needed?
+         (  use (calcPlusWith     "integer" integerNF)
+        <|> use (calcMinusWith    "integer" integerNF)
+        <|> use (calcTimesWith    "integer" integerNF) -- not needed?
+        -- <|> use (calcDivisionWith "integer" integerNF)  -- not needed?
          ) |> 
       somewhere
          (  use doubleNegate <|> use negateZero <|> use divisionDenominator  

@@ -36,7 +36,7 @@ naturalExercise :: Exercise Expr
 naturalExercise = (numericExercise naturalStrategy)
    { exerciseId   = describe "simplify expression (natural numbers)" $ 
                        newId "numbers.natural"
-   , ready        = predicateView integerNormalForm
+   , ready        = predicateView integerNF
    , examples     = level Medium $ concat calculateResults
    }
 
@@ -44,7 +44,7 @@ integerExercise :: Exercise Expr
 integerExercise = (numericExercise integerStrategy)
    { exerciseId   = describe "simplify expression (integers)" $ 
                        newId "numbers.integers"
-   , ready        = predicateView integerNormalForm
+   , ready        = predicateView integerNF
    , examples     = level Medium $ concat calculateResults
    }
    

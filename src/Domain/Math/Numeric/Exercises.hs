@@ -52,7 +52,7 @@ rationalExercise :: Exercise Expr
 rationalExercise = (numericExercise rationalStrategy)
    { exerciseId     = describe "simplify expression (rational numbers)" $ 
                          newId "numbers.rational"
-   , ready          = predicateView rationalNormalForm
+   , ready          = predicateView rationalNF
    , randomExercise = simpleGenerator (rationalGenerator 5)
    }
 
@@ -60,7 +60,7 @@ fractionExercise :: Exercise Expr
 fractionExercise = (numericExercise fractionStrategy)
    { exerciseId     = describe "simplify expression (fractions)" $ 
                          newId "arithmetic.fractions"
-   , ready          = predicateView rationalNormalForm
+   , ready          = predicateView rationalNF
    , randomExercise = simpleGenerator (rationalGenerator 5)
    }
    

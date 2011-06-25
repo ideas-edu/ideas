@@ -41,8 +41,8 @@ import qualified Domain.Math.Data.SquareRoot as SQ
 import Domain.Math.SquareRoot.Views
 import Domain.Math.Power.OldViews (powerFactorViewForWith)
 
-polyViewWithNew :: View (String, Expr) (String, Polynomial Expr)
-polyViewWithNew = makeView matchPoly buildPoly
+polyViewWithNew :: Fractional a => View Expr a -> View (String, Expr) (String, Polynomial a)
+polyViewWithNew v = makeView matchPoly buildPoly
  where 
    matchPoly (s, expr) = liftM ((,) s) (matchPolyFor s expr)
    buildPoly (s, p)    = (s, buildPolyFor s p)
@@ -56,37 +56,41 @@ polyViewWithNew = makeView matchPoly buildPoly
          a :-: b  -> liftM2 (-) (f a) (f b)
          a :*: b  -> liftM2 (*) (f a) (f b)
          a :/: b  -> do
-            guard (b /= 0)
             guard (withoutVar pv b)
             p <- f a
-            return (fmap (/b) p)
+            d <- match rationalView b
+            guard (d /= 0)
+            return (fmap (/fromRational d) p)
          Sym s [a, n] | isPowerSymbol s ->
            liftM2 power (f a) (matchNat n)
          _ -> do 
             guard (withoutVar pv expr)
-            return (con expr)
+            a <- match v expr
+            return (con a)
     where
       f = matchPolyFor pv
    
    buildPolyFor pv = 
-      let f (a, n) = a .*. (Var pv .^. fromIntegral n)
+      let f (a, n) = build v a .*. (Var pv .^. fromIntegral n)
       in build sumView . map f . reverse . terms
    
    matchNat expr = do
-      n <- match integralView expr
+      n <- match integerView expr
       guard (n >= 0)
-      return n
+      return (fromInteger n)
 
 -------------------------------------------------------------------
 -- Polynomial view
 
 polyView :: View Expr (String, Polynomial Expr)
-polyView = (f <-> snd) >>> polyViewWithNew
+polyView = (f <-> snd) >>> polyViewWithNew identity
  where
    f a = (fromMaybe "" (selectVar a), a)
 
 polyViewWith :: Fractional a => View Expr a -> View Expr (String, Polynomial a)
-polyViewWith v = polyView >>> second (traverseView v)
+polyViewWith v = (f <-> snd) >>> polyViewWithNew v
+ where
+   f a = (fromMaybe "" (selectVar a), a)
 
 -------------------------------------------------------------------
 -- Quadratic view

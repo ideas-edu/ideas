@@ -35,7 +35,7 @@ data Id = Id
    }
    
 instance Show Id where
-   show = concat . intersperse "." . idList
+   show = intercalate "." . idList
 
 instance Eq Id where
    a == b = idRef a == idRef b

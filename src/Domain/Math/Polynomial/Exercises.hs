@@ -50,9 +50,9 @@ linearExercise = makeExercise
    , similarity   = withoutContext (viewEquivalent (traverseView cleanUpACView))
    , equivalence  = withoutContext (viewEquivalent linearEquationView)
    , suitable     = predicateView linearEquationView
-   , ready        = predicateView (equationSolvedWith mixedFractionNormalForm)
-                    <||> predicateView (equationSolvedWith rationalNormalForm)
-                    <||> predicateView (equationSolvedWith doubleNormalForm)
+   , ready        = predicateView (equationSolvedWith mixedFractionNF)
+                    <||> predicateView (equationSolvedWith rationalNF)
+                    <||> predicateView (equationSolvedWith doubleNF)
    , extraRules   = map use buggyRulesEquation ++
                     map use buggyRulesExpr 
    , ruleOrdering = ruleOrderingWithId
@@ -68,7 +68,7 @@ linearMixedExercise :: Exercise (Equation Expr)
 linearMixedExercise = linearExercise 
    { exerciseId   = describe "solve a linear equation with mixed fractions" $ 
                        newId "algebra.equations.linear.mixed"
-   , ready        = predicateView (equationSolvedWith mixedFractionNormalForm)
+   , ready        = predicateView (equationSolvedWith mixedFractionNF)
    , strategy     = linearMixedStrategy
    } 
 

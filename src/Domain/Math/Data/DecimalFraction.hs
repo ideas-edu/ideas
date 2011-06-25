@@ -14,12 +14,13 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Data.DecimalFraction 
-   ( DecimalFraction, divide, power, fromDouble, validDivisor, digits
+   ( DecimalFraction, fromDouble, validDivisor, digits
    ) where
 
 import Control.Monad
 import Data.Maybe
 import Data.Ratio
+import Domain.Math.Safe
 
 -- |Data type for decimal fractions
 newtype DecimalFraction = DF Rational -- Invariant: denominator is valid
@@ -35,24 +36,23 @@ instance Show DecimalFraction where
       extra  = digs - length (show y)   
 
 instance Fractional DecimalFraction where
-   a/b = fromMaybe (error "invalid divisor") (divide a b)
+   a/b = fromMaybe (error "invalid divisor") (safeDiv a b)
    fromRational r = fromInteger (numerator r) / fromInteger (denominator r)
 
--- |Safe division of two decimal fractions
-divide :: DecimalFraction -> DecimalFraction -> Maybe DecimalFraction
-divide (DF a) (DF b) = do
-   guard (validDivisor (DF b))
-   return (DF (a/b))
-
--- |Safe power of two decimal fractions
-power :: DecimalFraction -> DecimalFraction -> Maybe DecimalFraction
-power x (DF r)
-   | denominator r /= 1 = Nothing
-   | y >= 0             = Just a
-   | otherwise          = divide 1 a
- where
-   y = numerator r
-   a = x Prelude.^ abs y
+instance SafeDiv DecimalFraction where
+   safeDiv (DF a) (DF b) = do
+      guard (validDivisor (DF b))
+      return (DF (a/b))
+   
+instance SafePower DecimalFraction where
+   safePower x (DF r)
+      | denominator r /= 1 = Nothing
+      | y >= 0             = Just a
+      | otherwise          = safeDiv 1 a
+    where
+      y = numerator r
+      a = x Prelude.^ abs y
+   safeRoot x y = safeRecip y >>= safePower x
 
 -- | Approximation of a double, with a precision of 8 digits
 fromDouble :: Double -> DecimalFraction

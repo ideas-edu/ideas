@@ -21,6 +21,7 @@ import Data.Ratio
 import qualified Domain.Math.Data.PrimeFactors as P
 import qualified Data.Map as M
 import qualified Prelude
+import Domain.Math.Safe
 import Control.Monad
 import Test.QuickCheck
 
@@ -80,7 +81,7 @@ timesSqMap m1 m2 =
 recipSqMap :: Fractional a => SqMap a -> SqMap a
 recipSqMap m = 
    case M.toList m of
-      []       -> error "division by zero"
+      []       -> error "SquareRoot: division by zero"
       [(n, x)] -> M.singleton n (recip (x * fromIntegral n))
       _        -> (a .-. b) .*. recipSqMap (makeMap ((a .*. a) .-. (b .*. b)))
  where
@@ -131,6 +132,11 @@ instance Num a => Num (SquareRoot a) where
    -- not defined for square roots
    abs    = error "abs not defined for square roots"
    signum = error "signum not defined for square roots"
+
+instance Fractional a => SafeDiv (SquareRoot a) where
+   safeDiv x y 
+      | y == 0    = Nothing
+      | otherwise = Just (x/y)
 
 instance Fractional a => Fractional (SquareRoot a) where
    recip (S b m) = S b (recipSqMap m)

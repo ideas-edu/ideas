@@ -33,30 +33,30 @@ main = suite "Numeric tests" $ do
       f "integer view"          integerView
       f "rational view"         rationalView
       f "integer normal form"   integerNF
-      f "rational normal form"  rationalNormalForm
+      f "rational normal form"  rationalNF
       f "rational relaxed form" rationalRelaxedForm
 
    suite "Normal forms" $ do
       let f s v = forM_ numGenerators $ \g ->
              addProperty s $ propNormalForm g v
       f "integer normal form" integerNF
-    -- f rationalNormalForm -- no longer a normal form
+    -- f rationalNF -- no longer a normal form
 
    suite "Correctness generators" $ do
       let f s g v = addProperty s $ forAll (sized g) (`belongsTo` v)
       f "integer" integerGenerator integerView
       f "rational" rationalGenerator rationalView
-      f "ratio expr" ratioExprGen rationalNormalForm
-      f "ratio expr nonzero" ratioExprGenNonZero rationalNormalForm
+      f "ratio expr" ratioExprGen rationalNF
+      f "ratio expr nonzero" ratioExprGenNonZero rationalNF
 
    suite "View relations" $ do
       let va .>. vb = forM_ numGenerators $ \g -> 
              addProperty "" $ forAll g $ \a -> 
                 not (a `belongsTo` va) || a `belongsTo` vb
       integerNF .>. integerView
-      rationalNormalForm .>. rationalRelaxedForm
+      rationalNF .>. rationalRelaxedForm
       rationalRelaxedForm .>. rationalView
-      integerNF .>. rationalNormalForm
+      integerNF .>. rationalNF
       integerView .>. rationalView
 
    suite "Pre/post conditions strategies" $ do
@@ -67,8 +67,8 @@ main = suite "Numeric tests" $ do
                 in not (a `belongsTo` pre) || run a `belongsTo` post
       f "natural"  naturalStrategy  integerView  integerNF
       f "integer"  integerStrategy  integerView  integerNF
-      f "rational" rationalStrategy rationalView rationalNormalForm
-      f "fraction" fractionStrategy rationalView rationalNormalForm
+      f "rational" rationalStrategy rationalView rationalNF
+      f "fraction" fractionStrategy rationalView rationalNF
 
 numGenerators :: [Gen Expr]
 numGenerators = map sized 

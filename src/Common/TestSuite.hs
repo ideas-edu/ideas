@@ -97,7 +97,7 @@ assertTrue msg = assertIO msg . return
 
 assertNull :: Show a => String -> [a] -> TestSuite
 assertNull s xs = addAssertion (f xs) (return (null xs))
- where f = setLabel s . newMessage . concat . intersperse "\n" . map show
+ where f = setLabel s . newMessage . intercalate "\n" . map show
  
 assertEquals :: (Eq a, Show a) => String -> a -> a -> TestSuite
 assertEquals s x y = addAssertion (setLabel s msg) (return (x==y))

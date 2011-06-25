@@ -133,17 +133,6 @@ rationalRules =
    , doubleNegate, negateZero, divisionDenominator, divisionNumerator
    , simplerFraction
    ]
-   
-fractionRules :: [Rule Expr]
-fractionRules =
-   [ fractionPlus, fractionPlusScale, fractionTimes
-   , calcPlusWith "integer" integerNF
-   , calcMinusWith "integer" integerNF
-   , calcTimesWith "integer" integerNF -- not needed?
-   , calcDivisionWith "integer" integerNF
-   , doubleNegate, negateZero, smartRule divisionDenominator
-   , smartRule divisionNumerator, simplerFraction
-   ]
 
 coverUpRulesX :: [Rule (Equation Expr)]
 coverUpRulesX = map (\r -> r cfg)

@@ -58,7 +58,7 @@ rationalStrategy = label "simplify" $
       [ calcPlusWith     "rational" rationalRelaxedForm
       , calcMinusWith    "rational" rationalRelaxedForm
       , calcTimesWith    "rational" rationalRelaxedForm
-      , calcDivisionWith "integer"      integerNF
+      , calcDivisionWith "integer"  integerNF
       , doubleNegate, negateZero, divisionDenominator
       , divisionNumerator, simplerFraction
       ]

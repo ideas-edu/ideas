@@ -51,7 +51,7 @@ newEnvironment st = Env
  where
    next = either (const Nothing) Just (onefirst st)
    f s  = fmap (`build` stateTerm s) (hasTermView (exercise s))
-   g s  = return $ (prettyPrinter $ exercise s) $ stateTerm s
+   g s  = return $ (prettyPrinter (exercise s)) (stateTerm s)
    fst4 (a, _, _, _) = a
    fth4 (_, _, _, a) = a
 

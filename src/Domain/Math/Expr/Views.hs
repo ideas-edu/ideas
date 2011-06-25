@@ -61,23 +61,6 @@ divView = makeView matchDiv (uncurry (./.))
                             Just (neg x, y)
    matchDiv _          = Nothing
 
-------------------------------------------------------------
--- Some constant views
-
-conView :: View Expr Integer
-conView = makeView f fromInteger
- where
-   f (Nat n)    = return n
-   f (Negate e) = fmap negate (f e)
-   f _          = Nothing
-
-fractionView :: View Expr (Integer, Integer) -- second component is positive
-fractionView = divView >>> signs >>> (conView *** conView)
- where
-   signs = makeView (Just . f) id
-   f (a, Negate b) = f (neg a, b)
-   f (a, b)        = (a, b)
- 
 -------------------------------------------------------------
 -- Sums and products
 

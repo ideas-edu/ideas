@@ -160,7 +160,7 @@ splitPower i (PF a m) = (PF b p1, PF c p2)
    
 quotRemPF :: PrimeFactors -> PrimeFactors -> (PrimeFactors, PrimeFactors) 
 quotRemPF (PF a m1) (PF b m2)
-   | b==0 = error "division by zero" 
+   | b==0 = error "PrimeFactors: division by zero" 
    | a==0 = (0,0)
    | otherwise = sign $
         case (IM.null up, IM.null dn) of

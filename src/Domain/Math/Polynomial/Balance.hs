@@ -42,9 +42,9 @@ balanceExercise = makeExercise
    , similarity   = withoutContext ((==) `on` fmap cleanUpExpr)
    , equivalence  = withoutContext (viewEquivalent linearEquationView)
    , suitable     = predicateView linearEquationView
-   , ready        = predicateView (equationSolvedWith mixedFractionNormalForm)
-                    <||> predicateView (equationSolvedWith rationalNormalForm)
-                    <||> predicateView (equationSolvedWith doubleNormalForm)
+   , ready        = predicateView (equationSolvedWith mixedFractionNF)
+                    <||> predicateView (equationSolvedWith rationalNF)
+                    <||> predicateView (equationSolvedWith doubleNF)
    , strategy     = balanceStrategy
    , ruleOrdering = ruleOrderingWithId balanceOrder
    , navigation   = termNavigator

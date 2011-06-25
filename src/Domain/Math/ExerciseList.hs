@@ -75,11 +75,18 @@ exerciseList =
 
 viewList :: [ViewPackage]
 viewList = 
-   [exprVP sumView, exprVP rationalView, exprVP mixedFractionNormalForm]
+   [ exprVP sumView
+   , exprVP naturalView, exprVP naturalNF
+   , exprVP integerView, exprVP integerNF
+   , exprVP decimalFractionView
+   , exprVP rationalView, exprVP rationalNF
+   , exprVP mixedFractionView, exprVP mixedFractionNF
+   , exprVP doubleView, exprVP doubleNF
+   ]
  where
    exprVP :: (IsView f, Show a) => f Expr a -> ViewPackage
    exprVP a = ViewPackage parseExprM (toView a)
-   
+
 scriptList :: [(Id, FilePath)]
 scriptList =
    [ (getId linearExercise,       "math.lineq-en.txt")

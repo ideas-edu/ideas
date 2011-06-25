@@ -126,9 +126,9 @@ openMathConverterTp :: Bool -> Exercise a -> Evaluator XML XMLBuilder a
 openMathConverterTp useFocus ex =
    Evaluator (xmlEncoder True f ex) (xmlDecoder True g ex)
  where
-   f ctx = liftM (builder . toXML) $ do
+   f ctx = liftM (builder . toXML) $
       case changeT (return . markFocus) ctx >>= leaveT of
-         Just term | useFocus -> do
+         Just term | useFocus ->
             return (toOMOBJ (term :: Term))
          _ -> 
             fromContext ctx >>= toOpenMath ex

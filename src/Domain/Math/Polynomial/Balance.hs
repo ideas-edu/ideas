@@ -17,6 +17,7 @@ import Common.Utils (fixpoint, safeHead)
 import Control.Monad
 import Data.Function
 import Data.Maybe
+import Domain.Math.Safe
 import Domain.Math.CleanUp
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
@@ -255,7 +256,7 @@ diffTimes old new = do
    a1 :==: a2 <- T.mapM f old
    b1 :==: b2 <- T.mapM f new
    x  <- safeHead (vars (leftHandSide old) ++ vars (rightHandSide old))
-   d1 <- b1 `division` a1
-   d2 <- b2 `division` a2
+   d1 <- b1 `safeDiv` a1
+   d2 <- b2 `safeDiv` a2
    guard (d1 == d2)
    return (build myView (x, d1))

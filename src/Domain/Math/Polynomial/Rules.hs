@@ -31,6 +31,7 @@ import Data.Maybe
 import Data.Ord
 import Data.Ratio
 import Domain.Math.Approximation (precision)
+import Domain.Math.Safe
 import Domain.Math.CleanUp
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Polynomial
@@ -44,6 +45,7 @@ import Domain.Math.Power.OldViews (powerFactorView)
 import Domain.Math.Simplification hiding (simplifyWith)
 import Domain.Math.SquareRoot.Views 
 import Prelude hiding ( (^) )
+import qualified Prelude
 
 quadraticRuleOrder :: [Id]
 quadraticRuleOrder = 
@@ -334,7 +336,8 @@ factorVariablePower = describe "factor variable power" $
    (s, p) <- match (polyNormalForm rationalView) expr
    let n = lowestDegree p
    guard (n > 0 && length (terms p) > 1)
-   return $ Var s .^. fromIntegral n * build myView (s, raise (-n) p)
+   new <- p `safeDiv` (var Prelude.^ n)
+   return $ Var s .^. fromIntegral n * build myView (s, new)
 
 -- A*B = A*C  implies  A=0 or B=C
 sameFactor :: Rule (OrList (Equation Expr))
@@ -434,7 +437,7 @@ exposeSameFactor = describe "expose same factor" $
       (s1, p1) <- matchM (polyViewWith rationalView) a
       (s2, p2) <- matchM (polyViewWith rationalView) b
       guard (s1==s2 && p1/=p2)
-      case division p2 p1 of
+      case safeDiv p2 p1 of
          Just p3 -> return $ map (\p -> build (polyViewWith rationalView) (s1,p)) [p1, p3]
          Nothing -> []
 

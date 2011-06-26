@@ -38,11 +38,12 @@ import Domain.Math.CleanUp
 import Domain.Math.Equation.CoverUpRules
 import Data.Maybe
 import qualified Domain.Math.Data.SquareRoot as SQ
+import qualified Prelude
 import Domain.Math.SquareRoot.Views
 import Domain.Math.Power.OldViews (powerFactorViewForWith)
 
-polyViewWithNew :: Fractional a => View Expr a -> View (String, Expr) (String, Polynomial a)
-polyViewWithNew v = makeView matchPoly buildPoly
+polyViewWithNew :: View (String, Expr) (String, Polynomial Expr)
+polyViewWithNew = makeView matchPoly buildPoly
  where 
    matchPoly (s, expr) = liftM ((,) s) (matchPolyFor s expr)
    buildPoly (s, p)    = (s, buildPolyFor s p)
@@ -62,35 +63,32 @@ polyViewWithNew v = makeView matchPoly buildPoly
             guard (d /= 0)
             return (fmap (/fromRational d) p)
          Sym s [a, n] | isPowerSymbol s ->
-           liftM2 power (f a) (matchNat n)
+           liftM2 (Prelude.^) (f a) (matchNat n)
          _ -> do 
             guard (withoutVar pv expr)
-            a <- match v expr
-            return (con a)
+            return (con expr)
     where
       f = matchPolyFor pv
    
    buildPolyFor pv = 
-      let f (a, n) = build v a .*. (Var pv .^. fromIntegral n)
+      let f (a, n) = a .*. (Var pv .^. fromIntegral n)
       in build sumView . map f . reverse . terms
    
    matchNat expr = do
       n <- match integerView expr
       guard (n >= 0)
-      return (fromInteger n)
+      return n
 
 -------------------------------------------------------------------
 -- Polynomial view
 
 polyView :: View Expr (String, Polynomial Expr)
-polyView = (f <-> snd) >>> polyViewWithNew identity
+polyView = (f <-> snd) >>> polyViewWithNew
  where
    f a = (fromMaybe "" (selectVar a), a)
 
 polyViewWith :: Fractional a => View Expr a -> View Expr (String, Polynomial a)
-polyViewWith v = (f <-> snd) >>> polyViewWithNew v
- where
-   f a = (fromMaybe "" (selectVar a), a)
+polyViewWith v = polyView >>> second (traverseView v)
 
 -------------------------------------------------------------------
 -- Quadratic view
@@ -152,7 +150,7 @@ buildPairs as
    | null as   = 0
    | otherwise = foldl1 (+) (map f as)
  where
-   f (a, n) = con a * power var n
+   f (a, n) = con a * var Prelude.^ n
  
 polynomialList :: Num a => Polynomial a -> [a]
 polynomialList p = map (`coefficient` p) [d, d-1 .. 0]
@@ -314,7 +312,7 @@ normPolynomial x p
         case terms p of 
            [(c, 0), (b, e1), (a, e2)] | e1 > 1 && e2 `mod` e1 == 0 -> 
               let list = [(c, 0), (b, 1), (a, e2 `div` e1)]
-                  newp = sum (map (\(y, z) -> scale y (power var z)) list)
+                  newp = sum (map (\(y, z) -> con y * (var Prelude.^ z)) list)
                   sub  = map (substitute (x, Var x^fromIntegral e1))
               in concatMap normHDE (sub (normPolynomial x newp))
            [(c, 0), (a, n)]

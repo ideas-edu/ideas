@@ -10,32 +10,54 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Data.Polynomial 
-   ( Polynomial, var, con, raise, power, scale
+   ( Polynomial, var, con, raise
    , degree, lowestDegree, coefficient, terms
    , isMonic, toMonic, isRoot, positiveRoots, negativeRoots
-   , derivative, eval, division, longDivision, polynomialGCD
+   , derivative, eval, longDivision, polynomialGCD
    , factorize
    ) where
 
+import Common.Classes
+import Control.Applicative (Applicative, (<$>), liftA)
+import Control.Monad
+import Data.Char
+import Data.Foldable (Foldable, foldMap)
+import Data.List  (nub)
+import Data.Ratio (approxRational)
+import Data.Traversable (Traversable, sequenceA)
+import Domain.Math.Approximation (newton, within)
+import Domain.Math.Safe
+import Test.QuickCheck hiding (within)
 import qualified Data.IntMap as IM
 import qualified Data.IntSet as IS
-import Data.Char
-import Data.List  (nub)
-import Data.Foldable (Foldable, foldMap)
-import Data.Traversable (Traversable, sequenceA)
-import Control.Applicative (Applicative, (<$>))
-import Data.Ratio (approxRational)
-import Domain.Math.Approximation (newton, within)
-import Test.QuickCheck hiding (within)
-import Control.Monad
 
--- Invariants: all keys are non-negative, all values are non-zero
-newtype Polynomial a = P (IM.IntMap a) deriving Eq
+------------------------------------------------------------------
+-- Data type:
+--   Invariant: all keys are non-negative, all values are non-zero
+--   (note that the second part of the invariant (zero values) 
+--    can be violated using the functor instance) 
+
+newtype Polynomial a = P { unsafeP :: IM.IntMap a }
+
+invariant :: Num a => IM.IntMap a -> IM.IntMap a
+invariant = IM.filterWithKey (\n a -> n >= 0 && a /= 0)
+
+makeP :: Num a => IM.IntMap a -> Polynomial a
+makeP = P . invariant
+
+unP :: Num a => Polynomial a -> IM.IntMap a
+unP = invariant . unsafeP
+
+-------------------------------------------------------------------
+-- Instances
+
+instance Num a => Eq (Polynomial a) where
+   p1 == p2 = unP p1 == unP p2
 
 instance Num a => Show (Polynomial a) where
-   show (P m) 
-      | IM.null m = "f(x) = 0"
-      | otherwise = "f(x) = " ++ fix (concatMap f (reverse (IM.toList m)))
+   show p
+      | p ==0     = "f(x) = 0"
+      | otherwise = "f(x) = " ++ fix (concatMap f (reverse (IM.toList (unP p))))
     where
       f (n, a) = sign (one (show a ++ g n))
       g n = concat $ [ "x" | n > 0 ] ++ [ '^' : show n | n > 1 ]
@@ -49,24 +71,33 @@ instance Num a => Show (Polynomial a) where
                   '-':ys -> '-':dropWhile isSpace ys
                   ys     -> ys
 
+instance Fractional a => SafeDiv (Polynomial a) where
+   -- polynomial division, no remainder
+   safeDiv p1 p2
+      | degree p1 < degree p2 = Nothing
+      | b==0      = return a
+      | otherwise = Nothing 
+    where 
+      (a, b) = longDivision p1 p2
+
 -- the Functor instance does not maintain the invariant
 instance Functor Polynomial where
-   fmap f (P m) = P (IM.map f m)
+   fmap f = P . IM.map f . unsafeP
 
 instance Foldable Polynomial where
-   foldMap f (P m) = foldMap f m
+   foldMap f = foldMap f . unsafeP
    
 instance Traversable Polynomial where
-   sequenceA (P m) = P <$> sequenceIntMap m
+   sequenceA = liftA P . sequenceIntMap . unsafeP
 
 instance Num a => Num (Polynomial a) where
-   P m1 + P m2   = P (IM.filter (/= 0) (IM.unionWith (+) m1 m2))
-   p    * P m2   = IM.foldWithKey op 0 m2
-    where op n a m = raise n (scale a p) + m
-   negate         = fmap negate
-   fromInteger n
-      | n == 0    = P IM.empty
-      | otherwise = P (IM.singleton 0 (fromInteger n))
+   p1 + p2 = makeP $ IM.unionWith (+) (unP p1) (unP p2)
+   p1 * p2 = makeP $ foldr (uncurry op) IM.empty list
+    where
+      op   = IM.insertWith (+)
+      list = [ (i+j, a*b) | (a, i) <- terms p1, (b, j) <- terms p2 ]
+   negate      = fmap negate
+   fromInteger = makeP . IM.singleton 0 . fromInteger
    -- not defined for polynomials
    abs    = error "abs not defined for polynomials"
    signum = error "signum not defined for polynomials"
@@ -74,56 +105,48 @@ instance Num a => Num (Polynomial a) where
 instance (Arbitrary a, Num a) => Arbitrary (Polynomial a) where
    arbitrary = do
       d <- choose (0, 5)
-      let f n x = con x * power var n
-      liftM (sum . zipWith f [0..]) (vector (d+1))
+      let f n x = con x * var ^ n
+      liftM (sum . zipWith f [0::Int ..]) (vector (d+1))
+
+-------------------------------------------------------------------
+-- Functions on polynomials
 
 -- a single variable (such as "x") 
 var :: Num a => Polynomial a
-var = P (IM.singleton 1 1)
+var = makeP (IM.singleton 1 1)
 
 con :: Num a => a -> Polynomial a
-con a | a == 0    = P IM.empty
-      | otherwise = P (IM.singleton 0 a)
+con = makeP . IM.singleton 0
 
 -- | Raise all powers by a constant (discarding negative exponents)
-raise :: Int -> Polynomial a -> Polynomial a
-raise i p@(P m)
-   | i > 0     = P $ IM.fromAscList [ (n+i, a) | (n, a) <- IM.toList m ]
-   | i == 0    = p
-   | otherwise = P $ IM.fromAscList [ (n+i, a) | (n, a) <- IM.toList m, n+i>=0 ]
- 
-power :: Num a => Polynomial a -> Int -> Polynomial a
-power _ 0 = 1
-power p n = p * power p (n-1)
-
-scale :: Num a => a -> Polynomial a -> Polynomial a
-scale a p = if a==0 then 0 else fmap (*a) p
+raise :: Num a => Int -> Polynomial a -> Polynomial a
+raise i = makeP . IM.fromAscList . map (mapFirst (+i)) . IM.toList . unP
 
 ------------------------------------------------
 
-degree :: Polynomial a -> Int
-degree (P m)
+degree :: Num a => Polynomial a -> Int
+degree p
    | IS.null is = 0
    | otherwise  = IS.findMax is
- where is = IM.keysSet m
+ where is = IM.keysSet (unP p)
 
-lowestDegree :: Polynomial a -> Int
-lowestDegree (P m)
+lowestDegree :: Num a => Polynomial a -> Int
+lowestDegree p
    | IS.null is = 0
    | otherwise  = IS.findMin is
- where is = IM.keysSet m
+ where is = IM.keysSet (unP p)
 
 coefficient :: Num a => Int -> Polynomial a -> a
-coefficient n (P m) = IM.findWithDefault 0 n m
+coefficient n = IM.findWithDefault 0 n . unP
 
-terms :: Polynomial a -> [(a, Int)]
-terms (P m) = [ (a, n) | (n, a) <- IM.toList m ]
+terms :: Num a => Polynomial a -> [(a, Int)]
+terms p = [ (a, n) | (n, a) <- IM.toList (unP p) ]
 
 isMonic :: Num a => Polynomial a -> Bool
 isMonic p = coefficient (degree p) p == 1
 
 toMonic :: Fractional a => Polynomial a -> Polynomial a
-toMonic p = scale (recip a) p
+toMonic p = con (recip a) * p
  where a = coefficient (degree p) p
 
 isRoot :: Num a => Polynomial a -> a -> Bool
@@ -132,12 +155,12 @@ isRoot p a = eval p a == 0
 -- Returns the maximal number of positive roots (Descartes theorem)
 -- Multiple roots are counted separately
 positiveRoots :: Num a => Polynomial a -> Int
-positiveRoots (P m) = signChanges (IM.elems m)
+positiveRoots = signChanges . IM.elems . unP
 
 -- Returns the maximal number of negative roots (Descartes theorem)
 -- Multiple roots are counted separately
 negativeRoots :: Num a => Polynomial a -> Int
-negativeRoots (P m) = signChanges (flipOdd (IM.elems m))
+negativeRoots = signChanges . flipOdd . IM.elems . unP
  where 
    flipOdd (x:y:zs) = x:negate y:flipOdd zs
    flipOdd xs = xs
@@ -151,25 +174,18 @@ signChanges = f . map signum
 ------------------------------------------------
 
 derivative :: Num a => Polynomial a -> Polynomial a 
-derivative (P m) = P $ IM.fromAscList 
-   [ (n-1, fromIntegral n*a) | (n, a) <- IM.toList m, n > 0 ]
+derivative p = makeP $ IM.fromAscList 
+   [ (n-1, fromIntegral n*a) | (n, a) <- IM.toList (unP p) ]
 
 eval :: Num a => Polynomial a -> a -> a
-eval (P m) x = sum [ a * x^n | (n, a) <- IM.toList m ] 
-
--- polynomial division, no remainder
-division :: Fractional a => Polynomial a -> Polynomial a -> Maybe (Polynomial a)
-division p1 p2
-   | degree p1 < degree p2 = Nothing
-   | b==0      = return a
-   | otherwise = Nothing 
- where 
-   (a, b) = longDivision p1 p2
+eval p x = sum [ a * x^n | (n, a) <- IM.toList (unP p) ] 
 
 -- polynomial long division
 longDivision :: Fractional a => Polynomial a -> Polynomial a -> (Polynomial a, Polynomial a)
-longDivision p1 p2 = monicLongDivision (scale (recip a) p1) (scale (recip a) p2)
- where a = coefficient (degree p2) p2
+longDivision p1 p2 = monicLongDivision (f p1) (f p2)
+ where 
+   f p = con (recip a) * p
+   a   = coefficient (degree p2) p2
 
 -- polynomial long division, where p2 is monic
 monicLongDivision :: Num a => Polynomial a -> Polynomial a -> (Polynomial a, Polynomial a)
@@ -183,7 +199,7 @@ monicLongDivision p1 p2
    ys = drop 1 $ map (negate . (`coefficient` p2)) [d2, d2-1 .. 0]
    
    (quotient, remainder) = rec [] xs
-   toP = P . IM.filter (/= 0) . IM.fromAscList . zip [0..]
+   toP = makeP . IM.fromAscList . zip [0..]
    
    rec acc (a:as) | length as >= length ys = 
       rec (a:acc) (zipWith (+) (map (*a) ys ++ repeat 0) as)
@@ -205,7 +221,7 @@ polynomialGCD x y
 factorize :: Polynomial Rational -> [Polynomial Rational]
 factorize p
    | degree p <= 1 = [p]
-   | l > 0         = power var l : factorize (raise (-l) p)
+   | l > 0         = var ^ l : factorize (raise (-l) p)
    | otherwise     =
         case pairs of
            (p1,p2):_ -> factorize p1 ++ factorize p2
@@ -216,7 +232,7 @@ factorize p
            | a <- candidateRoots p
            , isRoot p a 
            , let p1 = var - con a
-           , Just p2 <- [division p p1]
+           , Just p2 <- [safeDiv p p1]
            ] 
            
 candidateRoots :: Polynomial Rational -> [Rational]

@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -15,14 +15,16 @@
 -----------------------------------------------------------------------------
 module Common.View 
    ( Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)
+   , Control.Arrow.ArrowZero(..), Control.Arrow.ArrowPlus(..)
    , (>>>), (<<<)
-     -- *  @IsView@ type class
-   , IsView(..), matchM
+     -- * @IsMatch@ type class
+   , IsMatch(..), matchM, belongsTo, viewEquivalent, viewEquivalentWith
+   , Match, makeMatch
+     -- * @IsView@ type class
+   , IsView(..), simplify, simplifyWith
    , canonical, canonicalWith, canonicalWithM, isCanonical, isCanonicalWith
-   , simplify, simplifyWith
-   , belongsTo, viewEquivalent, viewEquivalentWith
      -- * Views
-   , View, identity, makeView
+   , View, identity, makeView, matcherView
      -- * Isomorphisms
    , Isomorphism, from, to
      -- * Some combinators
@@ -43,21 +45,50 @@ import qualified Control.Category as C
 import qualified Data.Traversable as T
 
 ----------------------------------------------------------------------------------
+-- @IsMatch@ type class 
+
+class IsMatch f where
+   match   :: f a b -> a -> Maybe b
+   matcher :: f a b -> Match a b
+   -- default definitions
+   match   = runKleisli . unM . matcher
+   matcher = makeMatch . match
+
+-- |generalized monadic variant of @match@
+matchM :: (Monad m, IsMatch f) => f a b -> a -> m b
+matchM v = maybe (fail "no match") return . match v
+
+belongsTo :: IsMatch f => a -> f a b -> Bool
+belongsTo a view = isJust (match view a)
+
+viewEquivalent :: (IsMatch f, Eq b) => f a b -> a -> a -> Bool
+viewEquivalent = viewEquivalentWith (==)
+
+viewEquivalentWith :: IsMatch f => (b -> b -> Bool) -> f a b -> a -> a -> Bool
+viewEquivalentWith eq view x y =
+   case (match view x, match view y) of
+      (Just a, Just b) -> a `eq` b
+      _                -> False
+
+newtype Match a b = M { unM :: Kleisli Maybe a b }
+   deriving (C.Category, Arrow, ArrowZero, ArrowPlus, ArrowChoice)
+
+instance IsMatch Match where
+   matcher = id
+
+makeMatch :: (a -> Maybe b) -> Match a b
+makeMatch = M . Kleisli
+
+----------------------------------------------------------------------------------
 -- @IsView@ type class 
 
 -- |Minimal complete definition: @toView@ or both @match@ and @build@.
-class IsView f where
-   match  :: f a b -> a -> Maybe b
+class IsMatch f => IsView f where
    build  :: f a b -> b -> a
    toView :: f a b -> View a b
    -- default definitions
-   match  f = match (toView f)
    build  f = build (toView f)
    toView f = makeView (match f) (build f)
-
--- |generalized monadic variant of @match@
-matchM :: (Monad m, IsView f) => f a b -> a -> m b
-matchM v = maybe (fail "no match") return . match v
 
 canonical :: IsView f => f a b -> a -> Maybe a
 canonical = canonicalWith id
@@ -81,23 +112,11 @@ simplify = simplifyWith id
 simplifyWith :: IsView f => (b -> b) -> f a b -> a -> a
 simplifyWith f view a = fromMaybe a (canonicalWith f view a)
 
-belongsTo :: IsView f => a -> f a b -> Bool
-belongsTo a view = isJust (match view a)
-
-viewEquivalent :: (IsView f, Eq b) => f a b -> a -> a -> Bool
-viewEquivalent = viewEquivalentWith (==)
-
-viewEquivalentWith :: IsView f => (b -> b -> Bool) -> f a b -> a -> a -> Bool
-viewEquivalentWith eq view x y =
-   case (match view x, match view y) of
-      (Just a, Just b) -> a `eq` b
-      _                -> False
-
 ----------------------------------------------------------------------------------
 -- Views
 
 data View a b where
-   Prim    :: (a -> Maybe b) -> (b -> a) -> View a b
+   Prim    :: Match a b -> (b -> a) -> View a b
    (:@)    :: Id -> View a b -> View a b
    (:>>>:) :: View a b -> View b c -> View a c 
    (:***:) :: View a c -> View b d -> View (a, b) (c, d)
@@ -124,21 +143,22 @@ instance ArrowChoice View where
    (+++)   = (:+++:)
    f ||| g = (f +++ g) >>> merge
 
-instance IsView View where
-   match view =
+instance IsMatch View where 
+   matcher view =
       case view of
-         Prim f _   -> f
-         _ :@ v     -> match v
-         v :>>>: w  -> \a      -> match v a >>= match w
-         v :***: w  -> \(a, c) -> liftM2 (,) (match v a) (match w c)
-         v :+++: w  -> either (liftM Left . match v) (liftM Right . match w)
-         Traverse v -> T.mapM (match v)
+         Prim m _   -> m
+         _ :@ v     -> matcher v
+         v :>>>: w  -> matcher v >>> matcher w
+         v :***: w  -> matcher v *** matcher w
+         v :+++: w  -> matcher v +++ matcher w
+         Traverse v -> makeMatch $ T.mapM (match v)
 
+instance IsView View where
    build view = 
       case view of
          Prim _ f   -> f
          _ :@ v     -> build v
-         v :>>>: w  -> build v . build w
+         v :>>>: w  -> build v <<< build w
          v :***: w  -> build v *** build w
          v :+++: w  -> either (Left . build v) (Right . build w)
          Traverse v -> fmap (build v)
@@ -158,7 +178,10 @@ instance Identify (View a b) where
       a = newId n
 
 makeView :: (a -> Maybe b) -> (b -> a) -> View a b
-makeView = Prim
+makeView = matcherView . makeMatch
+
+matcherView :: Match a b -> (b -> a) -> View a b
+matcherView = Prim
 
 identity :: C.Category f => f a a 
 identity = C.id
@@ -189,8 +212,11 @@ instance ArrowChoice Isomorphism where
    p +++ q = from p +++ from q <-> to p +++ to q
    f ||| g = (f +++ g) >>> merge
 
+instance IsMatch Isomorphism where
+   match p = Just . from p
+
 instance IsView Isomorphism where
-   toView p = getId p @> makeView (Just . from p) (to p)
+   toView p = getId p @> makeView (match p) (to p)
 
 instance HasId (Isomorphism a b) where 
    getId = pid

@@ -42,7 +42,7 @@ instance Fractional DecimalFraction where
 instance SafeDiv DecimalFraction where
    safeDiv (DF a) (DF b) = do
       guard (validDivisor (DF b))
-      return (DF (a/b))
+      liftM DF (a `safeDiv` b)
    
 instance SafePower DecimalFraction where
    safePower x (DF r)
@@ -75,6 +75,7 @@ digits (DF r) = head $ filter p [0..]
 -- local helper
 validDenominator :: Integer -> Bool
 validDenominator n
+   | n == 0         = False
    | even n         = validDenominator (n `div` 2)
    | n `mod` 5 == 0 = validDenominator (n `div` 5)
    | otherwise      = n == 1

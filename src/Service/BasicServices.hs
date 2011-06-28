@@ -67,7 +67,7 @@ allfirsts state =
          let tree = cutOnStep (stop . lastStepInPrefix) (prefixTree p0 (stateContext state))
              f (r1, _, _, _) (r2, _, _, _) = 
                 ruleOrdering (exercise state) r1 r2
-         in Right (sortBy f (mapMaybe make (derivations tree)))
+         in Right $ noDuplicates $ sortBy f $ mapMaybe make $ derivations tree
  where
    stop (Just (RuleStep r)) = isMajorRule r
    stop _ = False
@@ -83,6 +83,13 @@ allfirsts state =
             , makeState (exercise state) (Just prefixEnd) (lastTerm d)
             )
          _ -> Nothing
+         
+   noDuplicates []     = []
+   noDuplicates (x:xs) = x : noDuplicates (filter (not . eq x) xs)
+
+   eq (r1, l1, a1, s1) (r2, l2, a2, s2) = 
+      r1==r2 && l1==l2 && a1==a2 && exercise s1 == exercise s2 
+      && similarity (exercise s1) (stateContext s1) (stateContext s2)
 
 onefirst :: State a -> Either String (Rule (Context a), Location, [ArgValue], State a)
 onefirst state =

@@ -90,6 +90,13 @@ data ArgDescr a = ArgDescr
 -- | An argument descriptor, paired with a value
 data ArgValue = forall a . ArgValue (ArgDescr a) a
 
+instance Show ArgValue where
+   show (ArgValue descr a) = showArgument descr a
+
+instance Eq ArgValue where
+   ArgValue d1 a1 == ArgValue d2 a2 = 
+      build (termViewArgument d1) a1 == build (termViewArgument d2) a2
+
 -- | Constructor function for an argument descriptor that uses the Show and Read type classes
 defaultArgDescr :: (Show a, Read a, IsTerm a, Arbitrary a) => String -> ArgDescr a
 defaultArgDescr descr = ArgDescr descr Nothing readM show termView arbitrary

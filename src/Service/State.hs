@@ -30,6 +30,15 @@ data State a = State
    , statePrefix  :: Maybe (Prefix (Context a))
    , stateContext :: Context a
    }
+   
+instance Show (State a) where
+   show s = unlines $ "State {" : map ("   "++) xs ++ ["}"]
+    where
+      xs = [ "exercise = " ++ showId s
+           , "prefix   = " ++ maybe "no prefix" show (statePrefix s)
+           , "steps    = " ++ maybe "no prefix" (show . prefixToSteps) (statePrefix s)
+           , "term     = " ++ prettyPrinterContext (exercise s) (stateContext s)
+           ]
 
 instance HasId (State a) where 
    getId = getId . exercise

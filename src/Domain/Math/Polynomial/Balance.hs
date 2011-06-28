@@ -68,17 +68,19 @@ balanceOrder =
 balanceStrategy :: LabeledStrategy (Context (Equation Expr))
 balanceStrategy = cleanUpStrategyAfter (applyTop (fmap cleanUpExpr)) $
    label "Balance equation" $
-       label "Phase 1" (repeatS (
-               use collect
-           <|>  use distribute <|> use removeDivision))
-   <*> label "Phase 2" (repeatS (
-              use varLeftMinus <|> use varLeftPlus <|> 
-              use conRightMinus <|> use conRightPlus <|>
-              (check p2 <*> (use varRightMinus <|> use varRightPlus)) <|>
-              (check p1 <*> (use conLeftMinus <|> use conLeftPlus)))              
-          <*> try (use scaleToOne))
-   <%>
-       try (use conditionVarsRHS <*> use flipEquation)
+       label "Phase 1" (repeatS 
+           (  use collect
+          <|> use distribute 
+          <|> use removeDivision
+           ))
+   <*> label "Phase 2" (repeatS 
+           (  use varLeftMinus <|> use varLeftPlus 
+          <|> use conRightMinus <|> use conRightPlus 
+          <|> (check p2 <*> (use varRightMinus <|> use varRightPlus)) 
+          <|> (check p1 <*> (use conLeftMinus <|> use conLeftPlus)
+           ))
+       <*> try (use scaleToOne))
+   <%> try (atomic (use conditionVarsRHS <*> use flipEquation))
  where
    -- move constants to left only if there are no variables on the left
    p1 = maybe False (hasNoVar . leftHandSide) . fromContext
@@ -87,9 +89,6 @@ balanceStrategy = cleanUpStrategyAfter (applyTop (fmap cleanUpExpr)) $
       (x1, a, _) <- matchLin lhs
       (x2, b, _) <- matchLin rhs
       return (x1 == x2 && b > a && a /= 0)
-   
-   
--- (use conditionVarsRHS <*> use flipEquation)
 
 ------------------------------------------------------------
 -- Rules

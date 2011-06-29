@@ -1,6 +1,0 @@
-<request service="diagnose" exerciseid="math.quadreq" encoding="string">
-  <state>
-    <expr> (x+3)*(x-5) == (x+3) </expr>
-  </state>
-  <expr> x == -3 or x == -6 </expr>
-</request>

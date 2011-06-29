@@ -10,14 +10,15 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Expr.Data where
+module Domain.Math.Expr.Data
+   ( Expr(..), toExpr, fromExpr, fromDouble
+   ) where
 
 import Common.Algebra.Field
 import qualified Common.Algebra.CoField as F
 import Common.Rewriting
 import Common.Uniplate
 import Common.Utils (commaList)
-import Common.View
 import Control.Monad
 import Data.Char (isAlphaNum)
 import Data.Maybe
@@ -136,32 +137,12 @@ instance Uniplate Expr where
 -- Arbitrary instance
 
 instance Arbitrary Expr where
-   arbitrary = natGenerator 
+   arbitrary = liftM fromInteger arbitrary 
       -- before changing this instance, check that the 
       -- Gaussian elimination exercise still works (with checkExercise)
       {-
       let syms = [plusSymbol, timesSymbol, minusSymbol, negateSymbol, divSymbol]
       in sized (symbolGenerator (const [natGenerator]) syms) -}
-
-symbolGenerator :: (Int -> [Gen Expr]) -> [(Symbol, Maybe Int)] -> Int -> Gen Expr
-symbolGenerator extras syms = f 
- where
-   f n = oneof $  map (g n) (filter (\(_, a) -> n > 0 || a == Just 0) syms)
-               ++ extras n
-   g n (s, arity) = do
-      i  <- case arity of
-               Just i  -> return i
-               Nothing -> choose (0, 5)
-      as <- replicateM i (f (n `div` i))
-      return (function s as)
-  
-natGenerator :: Gen Expr
-natGenerator = liftM (Nat . abs) arbitrary
-
-varGenerator :: [String] -> Gen Expr
-varGenerator xs
-   | null xs   = error "varGenerator: empty list"
-   | otherwise = oneof [ return (Var x) | x <- xs ]
 
 -----------------------------------------------------------------------
 -- Pretty printer 
@@ -290,6 +271,3 @@ toExpr = fromJust . fromTerm . toTerm
 
 fromExpr :: (MonadPlus m, IsTerm a) => Expr -> m a
 fromExpr = fromTerm . toTerm
-
-exprView :: IsTerm a => View Expr a
-exprView = makeView fromExpr toExpr

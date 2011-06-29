@@ -80,3 +80,21 @@ nonZero = liftM (\a -> if a==0 then 1 else a)
 numSymbols :: [(Symbol, Maybe Int)]
 numSymbols = (negateSymbol, Just 1)
            : zip [plusSymbol, timesSymbol, minusSymbol] (repeat (Just 2))
+           
+-------------------------------------------------------------------
+-- Helpers
+
+symbolGenerator :: (Int -> [Gen Expr]) -> [(Symbol, Maybe Int)] -> Int -> Gen Expr
+symbolGenerator extras syms = f 
+ where
+   f n = oneof $  map (g n) (filter (\(_, a) -> n > 0 || a == Just 0) syms)
+               ++ extras n
+   g n (s, arity) = do
+      i  <- case arity of
+               Just i  -> return i
+               Nothing -> choose (0, 5)
+      as <- replicateM i (f (n `div` i))
+      return (function s as)
+  
+natGenerator :: Gen Expr
+natGenerator = liftM (Nat . abs) arbitrary

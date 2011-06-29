@@ -15,6 +15,7 @@ import Common.Library
 import Common.Uniplate
 import Common.Utils (fixpoint, safeHead)
 import Control.Monad
+import Data.Either
 import Data.Function
 import Data.Maybe
 import Domain.Math.Safe
@@ -60,6 +61,7 @@ balanceOrder =
    , getId varLeftMinus, getId varLeftPlus
    , getId conRightMinus, getId conRightPlus
    , getId scaleToOne, getId flipEquation
+   , getId divideCommonFactor, getId distribute
    ]
       
 ------------------------------------------------------------
@@ -80,7 +82,10 @@ balanceStrategy = cleanUpStrategyAfter (applyTop (fmap cleanUpExpr)) $
           <|> (check p1 <*> (use conLeftMinus <|> use conLeftPlus)
            ))
        <*> try (use scaleToOne))
-   <%> try (atomic (use conditionVarsRHS <*> use flipEquation))
+       -- flip sides of an equation (at most once)
+   <%> option (atomic (use conditionVarsRHS <*> use flipEquation))
+       -- divide by a common factor (but not as final "scale-to-one" step)
+   <%> many (notS (use scaleToOne) <*> use divideCommonFactor)
  where
    -- move constants to left only if there are no variables on the left
    p1 = maybe False (hasNoVar . leftHandSide) . fromContext
@@ -117,6 +122,33 @@ removeDivision = doAfter (fmap distributeLocal) $
           (bs, ns) = unzip (mapMaybe f (concat zs))
       guard (or bs)
       return (fromInteger (foldr1 lcm ns))
+
+divideCommonFactor :: Rule (Equation Expr)
+divideCommonFactor = doAfter (fmap distributeDiv) $
+   describe "divide by common factor" $ 
+   makeRule (linbal, "smart-div") $ useRecognizer isTimesT $
+   supply1 "factor" getArg divisionT
+ where
+   getArg (lhs :==: rhs) = do 
+      xs <- match sumView lhs
+      ys <- match sumView rhs
+      ps <- mapM getFactor (xs ++ ys)
+      let (ns, ms) = partitionEithers ps
+          n = if null ns then 1 else minimum ns
+          p = (==0) . (`mod` n)
+      guard (all p (ns ++ ms))
+      return (fromInteger n)
+      
+   getFactor expr
+      | hasNoVar expr = do 
+           n <- match integerView expr
+           return (Right n)
+      | otherwise = do
+           (a, b) <- match timesView expr
+           case (match integerView a, match integerView b) of
+              (Just n, _) | hasSomeVar b -> return (Left n)
+              (_, Just n) | hasSomeVar a -> return (Left n)
+              _ -> Nothing
 
 varLeftMinus, varLeftPlus :: Rule (Equation Expr)
 varLeftMinus = varLeft True  (linbal, "var-left-minus")
@@ -216,6 +248,19 @@ distributeLocal expr = fromMaybe expr $ do
 
 distributeGlobal :: Expr -> Expr
 distributeGlobal = fixpoint (transform distributeLocal)
+
+distributeDiv :: Expr -> Expr
+distributeDiv expr = fromMaybe expr $ do
+   (a, b) <- match (divView >>> second rationalView) expr
+   let f x = fromMaybe (x/fromRational b) $ do
+          (y, z) <- match (timesView >>> first rationalView) x
+          new    <- y `safeDiv` b
+          return (fromRational new * z)
+        `mplus` do
+          (y, z) <- match (timesView >>> second rationalView) x
+          new    <- z `safeDiv` b
+          return (y * fromRational new)
+   return $ simplifyWith (map f) sumView a
 
 -- (a*b)/c => (a/c)*b   (where a and c are rational)
 timesFraction :: Expr -> Expr

@@ -15,6 +15,7 @@
 module Common.Rewriting.Term 
    ( Term(..), IsTerm(..)
    , Symbol, newSymbol
+   , isAssociative, makeAssociative
    , fromTermM, fromTermWith
    , getSpine, makeTerm
      -- * Functions and symbols
@@ -33,6 +34,7 @@ import Common.Utils (ShowString(..))
 import Common.Uniplate
 import Common.View
 import Control.Monad
+import Data.Function
 import Data.Maybe
 import Data.Typeable
 import qualified Data.IntSet as IS
@@ -54,18 +56,26 @@ instance Uniplate Term where
    uniplate (Apply f a) = ([f, a], \[g, b] -> Apply g b)
    uniplate term        = ([], \_ -> term)
 
-newtype Symbol = S Id
-   deriving (Eq, Ord)
+data Symbol = S { isAssociative :: Bool, symbolId :: Id }
+
+instance Eq Symbol where
+   (==) = (==) `on` getId -- without associativity prop
+
+instance Ord Symbol where
+   compare = compareId  -- without associativity prop
 
 instance Show Symbol where
    show = showId
 
 instance HasId Symbol where
-   getId (S a) = a
-   changeId f (S a) = S (f a)
+   getId = symbolId
+   changeId f (S b a) = S b (f a)
 
 newSymbol :: IsId a => a -> Symbol
-newSymbol = S . newId
+newSymbol = S False . newId
+
+makeAssociative :: Symbol -> Symbol
+makeAssociative (S _ a) = S True a
 
 -----------------------------------------------------------
 -- * Type class for conversion to/from terms

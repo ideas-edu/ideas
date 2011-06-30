@@ -29,8 +29,7 @@ import Common.Uniplate
 -- Code that doesn't belong here, but the arbitrary instance
 -- is needed for the Rewrite instance.
 
-instance Rewrite SLogic where
-   associativeOps = [andOperator, orOperator]
+instance Rewrite SLogic
 
 -- | Equality modulo associativity of operators
 equalLogicA :: Eq a => Logic a -> Logic a -> Bool

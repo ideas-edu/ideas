@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Common.Rewriting.RewriteRule 
    ( -- * Supporting type classes
-     Rewrite(..), Different(..)
+     Rewrite, Different(..)
      -- * Rewrite rules and specs
    , RewriteRule, ruleSpecTerm, RuleSpec(..)
      -- * Compiling rewrite rules
@@ -26,13 +26,11 @@ module Common.Rewriting.RewriteRule
 import Common.Classes
 import Common.Id
 import Common.View hiding (match)
-import Common.Rewriting.Operator
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
 import Common.Rewriting.Unification
 import Common.Uniplate (descend)
 import Control.Monad
-import Data.Maybe
 import Test.QuickCheck
 import qualified Data.IntSet as IS
    
@@ -43,10 +41,7 @@ import qualified Data.IntSet as IS
 -- (in combination with lifting rules). The function in the RewriteRule module
 -- cannot have a type class for this reason
 -- The show type class is added for pretty-printing rules
-class (IsTerm a, Arbitrary a, Show a) => Rewrite a where
-   associativeOps :: [BinaryOp a]
-   -- default definition: no special operators
-   associativeOps = []
+class (IsTerm a, Arbitrary a, Show a) => Rewrite a
 
 ------------------------------------------------------
 -- Rewrite rules and specs
@@ -61,7 +56,6 @@ instance Functor RuleSpec where
 data RewriteRule a = R
    { ruleId          :: Id
    , ruleSpecTerm    :: RuleSpec Term
-   , ruleAssociative :: [BinaryOp a]
    , ruleShow        :: a -> String
    , ruleTermView    :: View Term a
    , ruleGenerator   :: Gen a
@@ -102,9 +96,9 @@ fill i = rec
       | a == b    = a
       | otherwise = Meta i
 
-buildSpec :: [Symbol] -> RuleSpec Term -> Term -> [Term]
-buildSpec ops (lhs :~> rhs) a = do
-   s <- matchA ops lhs a
+buildSpec :: RuleSpec Term -> Term -> [Term]
+buildSpec (lhs :~> rhs) a = do
+   s <- matchA lhs a
    let (b1, b2) = (specialLeft `IS.member` dom s, specialRight `IS.member` dom s)
        sym      = maybe (error "buildSpec") fst (getFunction lhs)
        extLeft  x = if b1 then binary sym (Meta specialLeft) x else x
@@ -112,7 +106,7 @@ buildSpec ops (lhs :~> rhs) a = do
    return (s |-> extLeft (extRight rhs))
 
 rewriteRule :: (IsId n, RuleBuilder f a, Rewrite a) => n -> f -> RewriteRule a
-rewriteRule s f = R (newId s) (buildRuleSpec f 0) associativeOps show termView arbitrary
+rewriteRule s f = R (newId s) (buildRuleSpec f 0) show termView arbitrary
 
 ------------------------------------------------------
 -- Using a rewrite rule
@@ -122,15 +116,7 @@ instance Apply RewriteRule where
 
 rewrite :: RewriteRule a -> a -> [a]
 rewrite r a = 
-   let term = toTermRR r a
-       syms = mapMaybe (operatorSymbol r a) (ruleAssociative r)
-   in concatMap (fromTermRR r) (buildSpec syms (ruleSpecTerm r) term)
-
-operatorSymbol :: RewriteRule a -> a -> BinaryOp a -> Maybe Symbol
-operatorSymbol r a op = 
-   case getFunction (toTermRR r (binaryOp op a a)) of
-      Just (s, [_, _]) -> Just s
-      _                -> Nothing
+   concatMap (fromTermRR r) $ buildSpec (ruleSpecTerm r) $ toTermRR r a
  
 rewriteM :: MonadPlus m => RewriteRule a -> a -> m a
 rewriteM r = msum . map return . rewrite r

@@ -42,7 +42,7 @@ onefirsttext script old event =
           new      <- fmap fth4 next
           oldC     <- fromContext (stateContext old)
           a        <- fromContext (stateContext new)
-          (d1, d2) <- difference ex False oldC a 
+          (d1, d2) <- difference ex oldC a 
           return (prettyPrinter ex d1, prettyPrinter ex d2)
       }
 
@@ -71,6 +71,6 @@ feedbacktext script old a =
    env = (newEnvironment old)
             { diffPair = do
                  oldC     <- fromContext (stateContext old)
-                 (d1, d2) <- difference ex False oldC a 
+                 (d1, d2) <- difference ex oldC a 
                  return (prettyPrinter ex d1, prettyPrinter ex d2)
             }

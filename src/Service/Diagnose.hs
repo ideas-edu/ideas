@@ -107,8 +107,9 @@ diagnose state new
       , ruleIsRecognized ex r sub1 sub2
       ]
     where 
-      (sub1, sub2) = 
-         case difference ex (not searchForBuggy) (stateTerm state) new of 
+      diff = if searchForBuggy then difference else differenceEqual
+      (sub1, sub2) =
+         case diff ex (stateTerm state) new of 
             Just (a, b) -> (inContext ex a, inContext ex b) 
             Nothing     -> (stateContext state, newc)
  

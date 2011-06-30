@@ -18,7 +18,8 @@ module Common.Exercise
    , equivalence, similarity, ready, suitable, isReady, isSuitable
    , hasTermView
    , strategy, navigation, canBeRestarted, extraRules, ruleOrdering
-   , difference, testGenerator, randomExercise, examples, getRule
+   , difference, differenceEqual
+   , testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
    , randomTerm, randomTermWith, ruleset
    , makeContext, inContext, recognizeRule, ruleIsRecognized
@@ -46,7 +47,7 @@ import Common.Id
 import Common.Navigator
 import Common.Predicate
 import Common.Rewriting.Term
-import Common.Rewriting (differenceModeWith)
+import qualified Common.Rewriting.Difference as Diff
 import Common.TestSuite
 import Common.Transformation
 import Common.Utils (ShowString(..), commaList)
@@ -210,10 +211,15 @@ randomTermWith rng dif ex =
               snd (xs !! fst (randomR (0, length xs - 1) rng))
        where xs = examples ex
 
-difference :: Exercise a -> Bool -> a -> a -> Maybe (a, a)
-difference ex mode a b = do
+difference :: Exercise a -> a -> a -> Maybe (a, a)
+difference ex a b = do
    v <- hasTermView ex
-   differenceModeWith v (simpleEquivalence ex) mode a b
+   Diff.differenceWith v a b
+
+differenceEqual :: Exercise a -> a -> a -> Maybe (a, a)
+differenceEqual ex a b = do
+   v <- hasTermView ex
+   Diff.differenceEqualWith v (simpleEquivalence ex) a b
 
 ruleIsRecognized :: Exercise a -> Rule (Context a) -> Context a -> Context a -> Bool
 ruleIsRecognized ex r ca = not . null . recognizeRule ex r ca

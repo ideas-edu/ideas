@@ -17,7 +17,6 @@ module Domain.Logic.Formula
 import Common.Algebra.Boolean
 import Common.Algebra.CoBoolean
 import Common.Classes
-import Common.Id
 import Common.Rewriting
 import Common.Uniplate
 import Common.Utils (ShowString, subsets)
@@ -205,11 +204,5 @@ falseSymbol      = newSymbol OM.falseSymbol
 notSymbol        = newSymbol OM.notSymbol
 impliesSymbol    = newSymbol OM.impliesSymbol
 equivalentSymbol = newSymbol OM.equivalentSymbol
-andSymbol        = newSymbol OM.andSymbol
-orSymbol         = newSymbol OM.orSymbol
-
-andOperator:: BinaryOp (Logic a)
-andOperator = makeBinaryOp (getId andSymbol) (:&&:) isAnd
-
-orOperator :: BinaryOp (Logic a)
-orOperator = makeBinaryOp (getId orSymbol) (:||:) isOr
+andSymbol        = makeAssociative $ newSymbol OM.andSymbol
+orSymbol         = makeAssociative $ newSymbol OM.orSymbol

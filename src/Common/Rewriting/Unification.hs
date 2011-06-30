@@ -64,15 +64,15 @@ match term1 term2 =
 
 -- second term should not have meta variables
 
-matchA :: [Symbol] -> Term -> Term -> [Substitution]
-matchA assocSymbols = rec True
+matchA :: Term -> Term -> [Substitution]
+matchA = rec True
  where
    rec _ (Meta i) y = 
       return (singletonSubst i y)
 
    rec isTop x y =
       case getSpine x of
-         (Con s, [a1, a2]) | s `elem` assocSymbols ->
+         (Con s, [a1, a2]) | isAssociative s ->
             concatMap (uncurry recList . unzip) (associativeMatch isTop s a1 a2 y)
          (a, as) -> do
             let (b, bs) = getSpine y

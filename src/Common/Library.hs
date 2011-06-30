@@ -28,7 +28,7 @@ import Common.Exercise
 import Common.Id
 import Common.Navigator hiding (left, right)
 import Common.Predicate
-import Common.Rewriting hiding (difference)
+import Common.Rewriting
 import Common.Strategy  hiding (fail, not, repeat, replicate, sequence, until)
 import Common.Transformation
 import Common.View

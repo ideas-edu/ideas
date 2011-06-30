@@ -45,16 +45,16 @@ import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
 
 
--- | Identifier prefixes ------------------------------------------------------
+-- Identifier prefixes ------------------------------------------------------
 
 power, logarithmic :: String
 power       = "algebra.manipulation.exponents"
 logarithmic = "algebra.manipulation.logarithmic"
 
 
--- | Power rules --------------------------------------------------------------
+-- Power rules --------------------------------------------------------------
 
--- n  =>  a^e  (with e /= 1)
+-- | n  =>  a^e  (with e /= 1)
 factorAsPower :: Rule Expr
 factorAsPower = makeSimpleRuleList (power, "factor-as-power") $ \ expr -> do
   n      <- matchM myIntegerView expr
@@ -65,6 +65,7 @@ factorAsPower = makeSimpleRuleList (power, "factor-as-power") $ \ expr -> do
       then return $ fromInteger (negate a) .^. fromInteger x
       else fail "Could not factorise number."
 
+-- | Calculate power, e.g., 2^2 => 4
 calcPower :: Rule Expr 
 calcPower = makeSimpleRule "arithmetic.operation.rational.power" $ \ expr -> do 
   (a, x) <- match (powerViewWith rationalView plainNatView) expr
@@ -78,7 +79,7 @@ calcPowerRatio = makeSimpleRule (power, "power-ratio") $ \ expr -> do
   guard $ x /= 1 && y /= 1
   return $ (a .^. fromInteger x) .^. (1 ./. fromInteger y)
 
--- -- | root n x
+-- | root n x
 calcPlainRoot :: Rule (OrList Expr)
 calcPlainRoot = makeSimpleRuleList (power, "root") $ 
    oneDisjunct $ \expr -> do
@@ -280,7 +281,7 @@ logarithm = makeSimpleRule (logarithmic, "logarithm") $ \(lhs :==: rhs) -> do
 
 -- | Common rules --------------------------------------------------------------
 
--- | a/b * c/d = a*c / b*d  (b or else d may be one)  
+-- | a/b * c/d = a*c / b*d  (b or d may be one)  
 myFractionTimes :: Rule Expr
 myFractionTimes = smartRule $ makeSimpleRule (power, "fraction-times") $ \ expr -> do
   (e1, e2) <- match timesView expr

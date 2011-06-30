@@ -13,7 +13,6 @@
 module Domain.Math.Power.Strategies
    ( -- * Power strategies
      simplifyPowerStrategy
-   , powerOfStrategy
    , calcPowerStrategy
    , nonNegBrokenExpStrategy
    ) where
@@ -33,13 +32,11 @@ import Domain.Math.Power.Utils
 import Domain.Math.Simplification
 
 
--- | Strategies ---------------------------------------------------------------
+-- Strategies ---------------------------------------------------------------
 
+-- | Simplify an expression containing powers as far as possible
 simplifyPowerStrategy :: LabeledStrategy (Context Expr)
 simplifyPowerStrategy = cleanUpStrategyRules "Simplify" powerRules 
-
-powerOfStrategy :: LabeledStrategy (Context Expr)
-powerOfStrategy = cleanUpStrategyRules "Write as power of" powerRules 
 
 nonNegBrokenExpStrategy :: LabeledStrategy (Context Expr)
 nonNegBrokenExpStrategy = cleanUpStrategy (change cleanup . applyTop cleanup) strategy
@@ -63,7 +60,7 @@ calcPowerStrategy = cleanUpStrategy cleanup strategy
             . applyD (exhaustiveStrategy $ myFractionTimes : naturalRules)
 
 
--- | Rule collections ---------------------------------------------------------
+-- Rule collections ---------------------------------------------------------
 
 powerRules :: [Rule Expr]
 powerRules =

@@ -73,8 +73,8 @@ derivativePowerStrategy :: LabeledStrategy (Context Expr)
 derivativePowerStrategy = label "derivative-power" $ 
    cleanUpStrategyAfter (applyTop cleanUpExpr) (label "split-rational" 
       (repeatS (somewhere (liftToContext ruleSplitRational)))) <*>
-   configure mycfg powerOfStrategy <*> 
-   repeatS (distr <*> configure mycfg powerOfStrategy) <*>
+   configure mycfg simplifyPowerStrategy <*> 
+   repeatS (distr <*> configure mycfg simplifyPowerStrategy) <*>
    cleanUpStrategyAfter (applyTop cleanUpExpr) (label "use-derivative-rules" 
       (repeatS (somewhere (alternatives list)))) <*>
    configure mycfg nonNegBrokenExpStrategy

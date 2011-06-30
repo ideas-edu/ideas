@@ -12,12 +12,22 @@
 
 module Domain.Math.Power.Views
    ( -- * Power views
+   
+     -- ** Simple power views
      powerView, powerViewWith, powerViewForWith, powerViewFor, powerFactorView
+
+     -- ** Views for power expressions with a constant factor
    , consPowerView, consPowerViewForWith, consPowerViewFor,consPowerViewForVar
+
+     -- ** Power views that allow constants
    , unitPowerViewForVar, unitPowerViewVar, unitPowerView, strictPowerView
+
+     -- Root views
    , rootView, strictRootView
+
      -- * Log view
    , logView
+
      -- * Other views
    , plainNatView, plainRationalView, varView
    ) where
@@ -27,7 +37,7 @@ import Common.Library hiding (root)
 import Domain.Math.Expr
 import Domain.Math.Power.Utils
 
--- | Power views with constant factor -----------------------------------------
+-- Power views with constant factor -----------------------------------------
 
 consPowerView :: View Expr (Expr, (Expr, Expr))
 consPowerView = addNegativeView $ addUnitTimesView powerView
@@ -84,7 +94,7 @@ strictRootView = makeView f g
     g (a, b) = if b == 2 then Sqrt a else root a b
 
 
--- | Power views --------------------------------------------------------------
+-- Power views --------------------------------------------------------------
 
 strictPowerView :: View Expr (Expr, Expr)
 strictPowerView = makeView f (uncurry (.^.))
@@ -122,7 +132,7 @@ powerFactorView p = productView >>> second (f <-> id)
   where
     f = map (build productView . (,) False) . joinBy p
 
--- | Log views ----------------------------------------------------------------
+-- Log views ----------------------------------------------------------------
 
 logView :: View Expr (Expr, Expr)
 logView = makeView f (uncurry logBase)
@@ -132,7 +142,7 @@ logView = makeView f (uncurry logBase)
         _ -> Nothing
 
 
--- | Help (non-power) views ---------------------------------------------------
+-- Help (non-power) views ---------------------------------------------------
 
 unitTimes :: Num t => View a b -> View a (t, b)
 unitTimes v = v >>> ((,) 1 <-> snd)

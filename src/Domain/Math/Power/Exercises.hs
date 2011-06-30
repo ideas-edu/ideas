@@ -8,6 +8,7 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
+-- 
 -----------------------------------------------------------------------------
 
 module Domain.Math.Power.Exercises    
@@ -31,24 +32,33 @@ import Domain.Math.Power.NormViews
 import Domain.Math.Power.Views
 
 
--- | Exercises ----------------------------------------------------------------
+-- Exercises
 
-powerExercise :: LabeledStrategy (Context Expr) -> Exercise Expr
-powerExercise s = makeExercise 
+powerExercise :: Exercise Expr
+powerExercise = makeExercise 
    { status        = Provisional
    , parser        = parseExpr
    , navigation    = navigator                     
-   , strategy      = s
    }
 
+-- | Simplify an expression containing powers as far as possible. This
+-- exercise supports the following DWO-applets:
+--
+--  * HAVO B, hoofdstuk 7, activiteit 1
+--
+--  * VWO A/C, hoofdstuk 5, activiteit 3 t/m 6
+--
+--  * VWO B, hoofdstuk 4, activiteit 8, 9, part of 10
 simplifyPowerExercise :: Exercise Expr
-simplifyPowerExercise = (powerExercise simplifyPowerStrategy)
+simplifyPowerExercise = powerExercise 
    { exerciseId   = describe "simplify expression (powers)" $ 
                        newId "algebra.manipulation.exponents.simplify"
+   , strategy     = simplifyPowerStrategy
    , ready        = predicate isPowerAdd
    , suitable     = predicateView normPowerMapView
    , equivalence  = withoutContext (viewEquivalent normPowerMapView)
-   , examples     = level Medium $ concat $ simplerPowers 
+   , examples     = level Medium $ concat $ 
+                              simplerPowers 
                            ++ powers1 ++ powers2 
                            ++ negExp1 ++ negExp2
                            ++ normPower1 ++ normPower2 ++ normPower3
@@ -57,11 +67,21 @@ simplifyPowerExercise = (powerExercise simplifyPowerStrategy)
                       , mulExponents, distributePower ]
    }
 
+-- | The @powerOfExercise@ is more strict than the 'simplifyPowerExercise'.
+-- It only allows one variable experssions. This exercise supports the 
+-- following DWO-applets:
+--
+--  * HAVO B, hoofdstuk 7, activiteit 2 and 4
+--
+--  * VWO A/C, hoofdstuk 5, activiteit part of 10 and 11 and 12
+--
+--  * VWO B, hoofdstuk 4, activiteit 12 partly, and 13
 powerOfExercise :: Exercise Expr
-powerOfExercise = (powerExercise powerOfStrategy)
+powerOfExercise = powerExercise
    { exerciseId   = describe "write as a power of a" $ 
                        newId "algebra.manipulation.exponents.powerof"
    , ready        = predicate isSimplePower
+   , strategy     = simplifyPowerStrategy
    , suitable     = predicateView normPowerView
    , equivalence  = withoutContext (viewEquivalent normPowerNonNegRatio)
    , examples     = level Medium $ concat $  powersOfA ++ powersOfX 
@@ -72,10 +92,19 @@ powerOfExercise = (powerExercise powerOfStrategy)
                       ,  distributePower, reciprocalVar ]
    }
 
+-- | Rewrite power expressions so that they have any negative or broken
+-- exponents. Supported DWO-applets:
+--
+--  * HAVO B, hoofdstuk 7, activiteit 3 and 5
+--
+--  * VWO A/C, hoofdstuk 5, activiteit 8,9  and part of 10
+--
+--  * VWO B, hoofdstuk 4, activiteit 11 partly, and 12 partly
 nonNegBrokenExpExercise :: Exercise Expr
-nonNegBrokenExpExercise = (powerExercise nonNegBrokenExpStrategy)
+nonNegBrokenExpExercise = powerExercise
    { exerciseId   = describe "write with a non-negative exponent" $ 
                        newId "algebra.manipulation.exponents.nonnegative"
+   , strategy     = nonNegBrokenExpStrategy
    , ready        = predicate (isPower plainNatView)
    , suitable     = predicateView normPowerNonNegDouble
    , equivalence  = withoutContext (viewEquivalent normPowerNonNegDouble)
@@ -89,10 +118,17 @@ nonNegBrokenExpExercise = (powerExercise nonNegBrokenExpStrategy)
                                        , getId distributePower ]
    }
 
+-- | Calculate the integer number for the given power expression. Supported
+-- DWO-applets:
+--
+--  * VWO A/C, hoofdstuk 5, activiteit 7
+--
+--  * VWO B, hoofdstuk 4, activiteit 10 partly, 11 partly
 calcPowerExercise :: Exercise Expr
-calcPowerExercise = (powerExercise calcPowerStrategy)
+calcPowerExercise = powerExercise
    { exerciseId   = describe "simplify expression (powers)" $ 
                        newId "arithmetic.exponents"
+   , strategy     = calcPowerStrategy
    , ready        = predicate isPowerAdd
    , suitable     = predicateView normPowerMapView
    , equivalence  = withoutContext (viewEquivalent normPowerMapView)
@@ -100,7 +136,7 @@ calcPowerExercise = (powerExercise calcPowerStrategy)
    }
 
 
--- | Ready checks -------------------------------------------------------------
+-- Ready checks
 
 isSimplePower :: Expr -> Bool
 isSimplePower (Sym s [Var _, y]) 

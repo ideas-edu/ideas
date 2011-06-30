@@ -19,7 +19,7 @@ import Common.Rewriting
 import Domain.Math.Expr
 
 ----------------------------------------------------------
--- HAVO B applets
+-- HAVO B, hfd 7 applets
 
 simplerPowers :: [[Expr]]
 simplerPowers = [level1, level2, level3, level4]
@@ -127,7 +127,7 @@ nonNegExp2 =
    b = Var "b"
    
 ----------------------------------------------------------
--- VWO A/C applets
+-- VWO A/C applets, hfd 5
 
 -- herleid
 powers1 :: [[Expr]]

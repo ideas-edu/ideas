@@ -35,7 +35,6 @@ regexpExercise = makeExercise
    , similarity     = withoutContext equalRegExpA  -- modulo associativity
    , isReady        = deterministic
    , isSuitable     = \a -> length [ () | Atom _ <- universe a ] > 1
-   , difference     = differenceMode eqRE
    , strategy       = deterministicStrategy
    , navigation     = navigator
 --   , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy

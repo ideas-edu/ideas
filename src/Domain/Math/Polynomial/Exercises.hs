@@ -87,7 +87,6 @@ quadraticExercise = makeExercise
                     map use buggyRulesEquation ++ map use buggyRulesExpr 
    , ruleOrdering = ruleOrderingWithId $ 
                        quadraticRuleOrder ++ [getId buggySquareMultiplication]
-   , splitParts   = splitOrList
    , strategy     = quadraticStrategy
    , navigation   = termNavigator
    , examples     = mapExamples (singleton . build equationView) quadraticExamples
@@ -107,7 +106,6 @@ higherDegreeExercise = makeExercise
    , extraRules    = map use abcBuggyRules ++ buggyQuadratic ++
                      map use buggyRulesEquation ++ map use buggyRulesExpr 
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
-   , splitParts    = splitOrList
    , strategy      = higherDegreeStrategy
    , navigation    = termNavigator
    , examples      = mapExamples (singleton . build equationView) higherDegreeExamples
@@ -219,8 +217,3 @@ equivalentRelation f ra rb = fromMaybe False $ do
    a <- T.mapM (match equationView) ra
    b <- T.mapM (match equationView) rb
    return (f a b)
-   
-splitOrList :: OrList a -> [OrList a]
-splitOrList p 
-   | isTrue p  = [p]
-   | otherwise = map singleton (F.toList p)

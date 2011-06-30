@@ -32,8 +32,6 @@ cnfExercise = makeExercise
    , extraRules     = map liftToContext (relAlgRules ++ buggyRelAlgRules)
    , strategy       = toCNF
    , navigation     = navigator
-   , difference     = differenceMode probablyEqual
-   , ordering       = compare
    , ready          = predicate (myReady cnfExercise)
    , randomExercise = let ok p = let n = fromMaybe maxBound (stepsRemaining 4 p)
                                  in n >= 2 && n <= 4

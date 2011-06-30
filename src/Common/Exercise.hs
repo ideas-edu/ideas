@@ -16,9 +16,9 @@ module Common.Exercise
      Exercise, makeExercise, emptyExercise
    , exerciseId, status, parser, prettyPrinter
    , equivalence, similarity, ready, suitable, isReady, isSuitable
-   , splitParts, hasTermView
+   , hasTermView
    , strategy, navigation, canBeRestarted, extraRules, ruleOrdering
-   , difference, ordering, testGenerator, randomExercise, examples, getRule
+   , difference, testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
    , randomTerm, randomTermWith, ruleset
    , makeContext, inContext, recognizeRule, ruleIsRecognized
@@ -46,6 +46,7 @@ import Common.Id
 import Common.Navigator
 import Common.Predicate
 import Common.Rewriting.Term
+import Common.Rewriting (differenceModeWith)
 import Common.TestSuite
 import Common.Transformation
 import Common.Utils (ShowString(..), commaList)
@@ -70,11 +71,8 @@ data Exercise a = Exercise
      -- syntactic and semantic checks
    , equivalence    :: Context a -> Context a -> Bool
    , similarity     :: Context a -> Context a -> Bool -- possibly more liberal than syntactic equality
-   , ordering       :: a -> a -> Ordering  -- syntactic comparison
    , ready          :: Predicate a
    , suitable       :: Predicate a
-   , difference     :: Bool -> a -> a -> Maybe (a, a)
-   , splitParts     :: a -> [a]
    , hasTermView    :: Maybe (View Term a)
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
@@ -101,11 +99,10 @@ instance HasId (Exercise a) where
    getId = exerciseId
    changeId f ex = ex { exerciseId = f (exerciseId ex) }
 
-makeExercise :: (Show a, Ord a, IsTerm a) => Exercise a
+makeExercise :: (Show a, Eq a, IsTerm a) => Exercise a
 makeExercise = emptyExercise
    { prettyPrinter = show
    , similarity    = (==)
-   , ordering      = compare
    , hasTermView   = Just termView
    }
    
@@ -120,11 +117,8 @@ emptyExercise = Exercise
      -- syntactic and semantic checks
    , equivalence    = \_ _ -> True
    , similarity     = \_ _ -> True
-   , ordering       = \_ _ -> EQ
    , ready          = true
    , suitable       = true
-   , difference     = \_ _ _ -> Nothing
-   , splitParts     = return
    , hasTermView    = Nothing
      -- strategies and rules
    , strategy       = label "Fail" S.fail
@@ -215,6 +209,11 @@ randomTermWith rng dif ex =
          | otherwise -> 
               snd (xs !! fst (randomR (0, length xs - 1) rng))
        where xs = examples ex
+
+difference :: Exercise a -> Bool -> a -> a -> Maybe (a, a)
+difference ex mode a b = do
+   v <- hasTermView ex
+   differenceModeWith v (simpleEquivalence ex) mode a b
 
 ruleIsRecognized :: Exercise a -> Rule (Context a) -> Context a -> Context a -> Bool
 ruleIsRecognized ex r ca = not . null . recognizeRule ex r ca

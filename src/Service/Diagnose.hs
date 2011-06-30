@@ -164,7 +164,7 @@ diagnosisType = Iso (f <-> g) tp
 
 ----------------------------------------------------------------
 -- Compare answer sets (and search for missing parts/incorrect parts)
-{-
+{-  splitParts     :: a -> [a]
 compareParts :: State a -> a -> Diagnosis a
 compareParts state = answerList eq split solve (stateTerm state)
  where

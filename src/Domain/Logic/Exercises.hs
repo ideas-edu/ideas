@@ -41,7 +41,6 @@ dnfExercise = makeExercise
    , extraRules     = map liftToContext (extraLogicRules ++ buggyRules)
    , strategy       = dnfStrategyDWA
    , navigation     = navigator
-   , difference     = differenceMode eqLogic
    , testGenerator  = Just (restrictGenerator mySuitable arbitrary)
    , randomExercise = useGenerator (const True) logicExercise
    }

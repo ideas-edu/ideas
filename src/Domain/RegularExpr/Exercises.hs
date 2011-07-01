@@ -11,10 +11,8 @@
 -----------------------------------------------------------------------------
 module Domain.RegularExpr.Exercises (regexpExercise) where
 
-import Common.Exercise
-import Common.Navigator
+import Common.Library
 import Common.Uniplate
-import Common.Rewriting hiding (difference)
 import Domain.RegularExpr.Expr
 import Domain.RegularExpr.Parser
 import Domain.RegularExpr.Strategy
@@ -33,14 +31,14 @@ regexpExercise = makeExercise
    , prettyPrinter  = ppRegExp
 --   , equivalence    = eqRE
    , similarity     = withoutContext equalRegExpA  -- modulo associativity
-   , isReady        = deterministic
-   , isSuitable     = \a -> length [ () | Atom _ <- universe a ] > 1
+   , ready          = predicate deterministic
+   , suitable       = predicate $ \a -> length [ () | Atom _ <- universe a ] > 1
    , strategy       = deterministicStrategy
    , navigation     = navigator
 --   , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
    , testGenerator  = Just startFormGen -- arbitrary
    , randomExercise = simpleGenerator startFormGen -- myGen
-   , examples       = unGen (replicateM 15 startFormGen) (mkStdGen 2805) 5  
+   , examples       = map ((,) Easy) $ unGen (replicateM 15 startFormGen) (mkStdGen 2805) 5  
    }
 
 -- | Equality modulo associativity of operators

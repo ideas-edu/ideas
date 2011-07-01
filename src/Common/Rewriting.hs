@@ -11,11 +11,9 @@
 -----------------------------------------------------------------------------
 module Common.Rewriting 
    ( module Common.Rewriting.Term
-   , module Common.Rewriting.Operator
    , module Common.Rewriting.RewriteRule
    ) where
 
-import Common.Rewriting.Operator
 import Common.Rewriting.RewriteRule
 import Common.Rewriting.Term hiding (Term(..))
 import Common.Rewriting.Term (Term)

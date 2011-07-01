@@ -13,9 +13,11 @@
 --
 -----------------------------------------------------------------------------
 module Common.Rewriting.Term 
-   ( Term(..), IsTerm(..)
-   , Symbol, newSymbol
+   ( -- * Symbols
+     Symbol, newSymbol
    , isAssociative, makeAssociative
+     -- * Terms
+   , Term(..), IsTerm(..)
    , fromTermM, fromTermWith
    , getSpine, makeTerm
      -- * Functions and symbols
@@ -42,27 +44,15 @@ import qualified Data.Set as S
 import Test.QuickCheck
 
 -----------------------------------------------------------
--- * Data type for terms
-
-data Term = Var   String 
-          | Con   Symbol 
-          | Apply Term Term
-          | Num   Integer 
-          | Float Double
-          | Meta  Int
- deriving (Show, Eq, Ord, Typeable)
- 
-instance Uniplate Term where
-   uniplate (Apply f a) = ([f, a], \[g, b] -> Apply g b)
-   uniplate term        = ([], \_ -> term)
+-- Symbols
 
 data Symbol = S { isAssociative :: Bool, symbolId :: Id }
 
 instance Eq Symbol where
-   (==) = (==) `on` getId -- without associativity prop
+   (==) = (==) `on` getId -- without associativity property
 
 instance Ord Symbol where
-   compare = compareId  -- without associativity prop
+   compare = compareId    -- without associativity property
 
 instance Show Symbol where
    show = showId
@@ -76,6 +66,21 @@ newSymbol = S False . newId
 
 makeAssociative :: Symbol -> Symbol
 makeAssociative (S _ a) = S True a
+
+-----------------------------------------------------------
+-- * Data type for terms
+
+data Term = Var   String 
+          | Con   Symbol 
+          | Apply Term Term
+          | Num   Integer 
+          | Float Double
+          | Meta  Int
+ deriving (Show, Eq, Ord, Typeable)
+ 
+instance Uniplate Term where
+   uniplate (Apply f a) = ([f, a], \[g, b] -> Apply g b)
+   uniplate term        = ([], \_ -> term)
 
 -----------------------------------------------------------
 -- * Type class for conversion to/from terms

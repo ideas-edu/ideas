@@ -13,32 +13,26 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Proofs (proofExercise) where
 
-import Prelude hiding (repeat)
 import Common.Algebra.Boolean
-import Common.Context
-import Common.Rewriting
+import Common.Algebra.CoBoolean
+import Common.Library
 import Common.Rewriting.AC
-import Common.Strategy hiding (fail, not)
-import Common.Exercise
+import Common.Uniplate
 import Common.Utils
-import Common.View
-import Common.Transformation
-import Common.Navigator
-import Data.List hiding (repeat)
 import Control.Monad
+import Data.List
 import Data.Maybe
+import Domain.Logic.Examples 
 import Domain.Logic.Formula
+import Domain.Logic.GeneralizedRules
 import Domain.Logic.Generator (equalLogicA)
 import Domain.Logic.Parser
 import Domain.Logic.Rules
-import Domain.Logic.GeneralizedRules
 import Domain.Logic.Strategies (somewhereOr)
-import Domain.Logic.Examples 
 import Domain.Math.Expr ()
-import Common.Uniplate
 
 see :: Int -> IO ()
-see n = printDerivation proofExercise (examples proofExercise !! n)
+see n = printDerivation proofExercise (snd (examples proofExercise !! n))
 
 -- Currently, we use the DWA strategy
 proofExercise :: Exercise [(SLogic, SLogic)]
@@ -51,14 +45,14 @@ proofExercise = makeExercise
                       in commaList . map f
 --   , equivalence    = \(p, _) (r, s) -> eqLogic p r && eqLogic r s
 --   , similarity     = \(p, q) (r, s) -> equalLogicA p r && equalLogicA q s
-   , isSuitable     = all (uncurry eqLogic)
-   , isReady        = all (uncurry equalLogicA)
+   , suitable       = predicate $ all (uncurry eqLogic)
+   , ready          = predicate $ all (uncurry equalLogicA)
    , strategy       = proofStrategy
    , navigation     = termNavigator
-   , examples       = map return $ exampleProofs ++
+   , examples       = map (\a -> (Easy, return a)) $ 
                       let p = Var (ShowString "p") 
                           q = Var (ShowString "q")
-                      in [(q :&&: p, p :&&: (q :||: q))]
+                      in exampleProofs ++ [(q :&&: p, p :&&: (q :||: q))]
    }
 
 instance (IsTerm a, IsTerm b) => IsTerm (a, b) where
@@ -72,16 +66,16 @@ tupleSymbol = newSymbol "basic.tuple"
 
 proofStrategy :: LabeledStrategy (Context [(SLogic, SLogic)])
 proofStrategy = label "proof equivalent" $
-   repeat (
+   repeatS (
          somewhere (useC commonExprAtom)
       |> somewhere splitTop
       |> somewhere rest
       ) <*>
-   repeat (somewhere (use normLogicRule))
+   repeatS (somewhere (use normLogicRule))
  where
    splitTop =  use topIsNot  <|> use topIsAnd <|> use topIsOr
            <|> use topIsImpl <|> use topIsEquiv
-   rest =  use notDNF <*> mapRulesS useC (repeat dnfStrategyDWA)
+   rest =  use notDNF <*> mapRulesS useC (repeatS dnfStrategyDWA)
        <|> simpler
 
    simpler :: Strategy (Context [(SLogic, SLogic)])
@@ -260,12 +254,12 @@ topIsNot = makeSimpleRule "top-is-not" f
    f (Not p, Not q) = Just (p, q)
    f _ = Nothing
 
-acTopRuleFor :: IsId a => a -> BinaryOp SLogic -> Rule [(SLogic, SLogic)]
-acTopRuleFor s op = makeSimpleRuleList s f
+acTopRuleFor :: IsId a => a -> View SLogic (SLogic, SLogic) -> Rule [(SLogic, SLogic)]
+acTopRuleFor s v = makeSimpleRuleList s f
  where
    f [(lhs, rhs)] = do
-      let collect a = maybe [a] (\(x, y) -> collect x ++ collect y) (binaryOpMatch op a)
-          make    = foldr1 (binaryOp op)
+      let collect a = maybe [a] (\(x, y) -> collect x ++ collect y) (match v a)
+          make    = foldr1 (curry (build v))
           xs = collect lhs
           ys = collect rhs
       guard (length xs > 1 && length ys > 1)
@@ -275,16 +269,13 @@ acTopRuleFor s op = makeSimpleRuleList s f
    f _ = []
 
 topIsAnd :: Rule [(SLogic, SLogic)]
-topIsAnd = acTopRuleFor "top-is-and" andOperator
+topIsAnd = acTopRuleFor "top-is-and" $ makeView isAnd (uncurry (<&&>))
 
 topIsOr :: Rule [(SLogic, SLogic)]
-topIsOr = acTopRuleFor "top-is-or" orOperator
+topIsOr = acTopRuleFor "top-is-or" $ makeView isOr (uncurry (<||>))
 
 topIsEquiv :: Rule [(SLogic, SLogic)]
-topIsEquiv = acTopRuleFor "top-is-equiv" equivOperator
-
-equivOperator :: BinaryOp (Logic a)   
-equivOperator = makeBinaryOp (getId equivalentSymbol) (:<->:) isEquiv
+topIsEquiv = acTopRuleFor "top-is-equiv" $ makeView isEquiv (uncurry equivalent)
  where
    isEquiv (p :<->: q) = Just (p, q)
    isEquiv _           = Nothing

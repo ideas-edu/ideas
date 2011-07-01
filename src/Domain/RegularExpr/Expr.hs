@@ -12,7 +12,6 @@
 -----------------------------------------------------------------------------
 module Domain.RegularExpr.Expr where
 
-import Common.Id
 import Common.Rewriting
 import Common.Uniplate
 import Control.Monad
@@ -100,22 +99,7 @@ ppWith f = ($ 0) . foldRE
    parIf b s = if b then "(" ++ s ++ ")" else s
 
 --testje = ppWith (const id) (Star (Plus (Atom "P")) :*: (Option (Atom "Q" :*: Option (Atom "S")) :|: Atom "R"))
-
---------------------------------------------------------------------
--- Function for associative operators
-
-sequenceOp :: BinaryOp (RE a)
-sequenceOp = makeBinaryOp (getId sequenceSymbol) (:*:) isSequence
- where
-   isSequence (a :*: b) = Just (a, b)
-   isSequence _         = Nothing
-
-choiceOp :: BinaryOp (RE a)
-choiceOp = makeBinaryOp (getId choiceSymbol) (:|:) isChoice
- where
-   isChoice (a :|: b) = Just (a, b)
-   isChoice _         = Nothing
-
+   
 --------------------------------------------------------------------
 -- Instances for rewriting
 
@@ -155,8 +139,7 @@ instance IsTerm RegExp where
          | s == choiceSymbol   = return (x :|: y)
       f _ _ = fail "fromExpr"
 
-instance Rewrite RegExp where
-   associativeOps = [sequenceOp, choiceOp]
+instance Rewrite RegExp
    
 emptySetSymbol, epsilonSymbol, optionSymbol, starSymbol,
    plusSymbol, sequenceSymbol, choiceSymbol :: Symbol
@@ -165,8 +148,8 @@ epsilonSymbol  = regexpSymbol "Epsilon"
 optionSymbol   = regexpSymbol "Option"
 starSymbol     = regexpSymbol "Star"
 plusSymbol     = regexpSymbol "Plus"
-sequenceSymbol = regexpSymbol "Sequence"
-choiceSymbol   = regexpSymbol "Choice"
+sequenceSymbol = makeAssociative $ regexpSymbol "Sequence"
+choiceSymbol   = makeAssociative $ regexpSymbol "Choice"
 
 regexpSymbol :: String -> Symbol
 regexpSymbol a = newSymbol ["regexp", a]

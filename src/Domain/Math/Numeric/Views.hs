@@ -99,6 +99,8 @@ matchDecimal f expr =
       a :/: b  -> join (liftM2 safeDiv (f a) (f b))
       Sym s [a, b]
          | isPowerSymbol s -> join (liftM2 safePower (f a) (f b))
+      Sym s [a, b, c] 
+         | isMixedFractionSymbol s -> f (a+b/c)
       _ -> matchNum f expr
 
 -------------------------------------------------------------------
@@ -121,6 +123,8 @@ matchRational f expr =
       a :/: b  -> join (liftM2 safeDiv (f a) (f b))
       Sym s [a, b]
          | isPowerSymbol s -> join (liftM2 safePower (f a) (f b))
+      Sym s [a, b, c] 
+         | isMixedFractionSymbol s -> f (a+b/c)
       _ -> matchNum f expr 
 
 matchExact :: Expr -> Maybe (Either Double Rational)
@@ -162,12 +166,21 @@ rationalRelaxedForm = "num.rational-relaxed" @> makeView (optionNegate f) fromRa
 -- Mixed fractions
 
 mixedFractionView :: View Expr MF.MixedFraction
-mixedFractionView = "num.mixed-fraction" @> makeView f g
+mixedFractionView = "num.mixed-fraction" @> makeView f (sign g)
  where
-   f   = fmap fromRational . fix matchRational
-   g a = let sign = if a < 0 then negate else id
-             rest = fromRational (MF.fractionPart a)
-         in sign (fromInteger (MF.wholeNumber a) .+. rest)
+   f = fmap fromRational . fix matchRational
+   
+   sign k a | a < 0     = negate (k (abs a))
+            | otherwise = k a
+   
+   g mixed 
+      | frac  == 0 = fromInteger  whole
+      | whole == 0 = fromRational frac
+      | otherwise  = function mixedFractionSymbol $ map fromInteger parts
+    where
+      whole = MF.wholeNumber mixed
+      frac  = MF.fractionPart mixed
+      parts = [whole, numerator frac, denominator frac]
 
 mixedFractionNF :: View Expr MF.MixedFraction
 mixedFractionNF = describe "A normal form for mixed fractions. \
@@ -175,15 +188,16 @@ mixedFractionNF = describe "A normal form for mixed fractions. \
    \allowed." $
    "number.mixed-fraction.nf" @> makeView f (build mixedFractionView)
  where
-   f (Negate (Nat a) :-: (Nat b :/: Nat c)) = fmap negate (simple a b c)
-   f (Negate (Nat a :+: (Nat b :/: Nat c))) = fmap negate (simple a b c)
-   f (Nat a :+: (Nat b :/: Nat c)) = simple a b c
+   f (Sym s [Nat a, Nat b, Nat c]) 
+      | isMixedFractionSymbol s = simple a b c   
+   f (Negate (Sym s [Nat a, Nat b, Nat c]))
+      | isMixedFractionSymbol s = liftM negate (simple a b c)
    f expr = do r <- match rationalNF expr
                guard ((-1 < r && r < 1) || denominator r == 1)
                return (fromRational r)
    
    simple a b c = do
-      guard (a > 0 && b < c)
+      guard (a > 0 && b > 0 && b < c)
       r <- simpleRational b c
       return (fromInteger a + fromRational r)
 
@@ -208,6 +222,8 @@ matchDouble f expr =
       Sym s [a, b]
          | isPowerSymbol s -> join (liftM2 safePower (f a) (f b))
          | isRootSymbol s  -> join (liftM2 safeRoot (f a) (f b))
+      Sym s [a, b, c] 
+         | isMixedFractionSymbol s -> f (a+b/c)
       _ -> matchNum f expr
 
 -------------------------------------------------------------------

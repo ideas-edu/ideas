@@ -22,6 +22,7 @@ module Domain.Math.Expr.Symbols
      -- Matching
    , isPlus, isTimes, isMinus, isDivide, isPower, isNegate, isRoot
    , isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol
+   , isMixedFractionSymbol
    , (^), root
    ) where
 
@@ -110,12 +111,15 @@ isNegate = isUnary      negateSymbol
 isPower  = isBinary     powerSymbol
 isRoot   = isBinary     rootSymbol
 
-isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol :: Symbol -> Bool
+isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol, 
+   isMixedFractionSymbol :: Symbol -> Bool
 
 isPowerSymbol  = (== powerSymbol)
 isRootSymbol   = (== rootSymbol)
 isLogSymbol    = (== logSymbol)
 isDivideSymbol = (== divideSymbol)
+
+isMixedFractionSymbol = (== mixedFractionSymbol)
 
 infixr 8 ^
 

@@ -23,6 +23,7 @@ import Data.Char
 import Data.List
 import Text.OpenMath.Object
 import qualified Text.OpenMath.Symbol as OM
+import Text.OpenMath.Dictionary.Arith1
 import Text.OpenMath.Dictionary.Fns1
 
 -----------------------------------------------------------------------------
@@ -54,6 +55,8 @@ toOMOBJ = rec . toTerm
 
    make [OMS s, OMV x, body] | s == lambdaSymbol = 
       OMBIND (OMS s) [x] body
+   make [OMS s, a, b, c] | s == mfSymbol = -- special for mixed fraction symbol
+      OMA [OMS plusSymbol, a, OMA [OMS divideSymbol, b, c]]
    make xs = OMA xs
 
 fromOMOBJ :: (MonadPlus m, IsTerm a) => OMOBJ -> m a
@@ -84,3 +87,6 @@ idToSymbol a
         
 hasTermViewM  :: Monad m => Exercise a -> m (View Term a)
 hasTermViewM = maybe (fail "No support for terms") return . hasTermView
+
+mfSymbol :: OM.Symbol
+mfSymbol = OM.makeSymbol "extra" "mixedfraction"

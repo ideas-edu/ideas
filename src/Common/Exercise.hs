@@ -254,8 +254,8 @@ ruleOrderingWithId bs r1 r2 =
 data IsTypeable a = IT (forall b . Typeable b => a -> Maybe b) 
                        (forall b . Typeable b => b -> Maybe a)
 
-useTypeable :: Typeable a => IsTypeable a
-useTypeable = IT cast cast
+useTypeable :: Typeable a => Maybe (IsTypeable a)
+useTypeable = Just (IT cast cast)
 
 castFrom :: Typeable b => Exercise a -> a -> Maybe b
 castFrom ex a = do

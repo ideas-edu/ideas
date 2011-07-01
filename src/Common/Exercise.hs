@@ -1,3 +1,4 @@
+{-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -25,6 +26,7 @@ module Common.Exercise
    , makeContext, inContext, recognizeRule, ruleIsRecognized
    , ruleOrderingWith, ruleOrderingWithId
    , Examples, mapExamples, Difficulty(..), readDifficulty, level
+   , hasTypeable, useTypeable, castFrom, castTo
      -- * Exercise status
    , Status(..), isPublic, isPrivate
      -- * Miscellaneous
@@ -51,13 +53,14 @@ import qualified Common.Rewriting.Difference as Diff
 import Common.TestSuite
 import Common.Transformation
 import Common.Utils (ShowString(..), commaList)
-import Common.View (View, makeView, second)
+import Common.View
 import Control.Monad.Error
 import Data.Char
 import Data.Function
 import Data.List
 import Data.Maybe
 import Data.Ord
+import Data.Typeable
 import System.Random
 import Test.QuickCheck hiding (label)
 import Test.QuickCheck.Gen
@@ -75,6 +78,7 @@ data Exercise a = Exercise
    , ready          :: Predicate a
    , suitable       :: Predicate a
    , hasTermView    :: Maybe (View Term a)
+   , hasTypeable    :: Maybe (IsTypeable a)
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
    , navigation     :: a -> Navigator a
@@ -121,6 +125,7 @@ emptyExercise = Exercise
    , ready          = true
    , suitable       = true
    , hasTermView    = Nothing
+   , hasTypeable    = Nothing
      -- strategies and rules
    , strategy       = label "Fail" S.fail
    , navigation     = noNavigator
@@ -242,6 +247,25 @@ ruleOrderingWithId bs r1 r2 =
       (Just _,  Nothing) -> LT
       (Nothing, Just _ ) -> GT
       (Nothing, Nothing) -> compareId r1 r2
+
+---------------------------------------------------------------
+-- Using type representations for casts
+
+data IsTypeable a = IT (forall b . Typeable b => a -> Maybe b) 
+                       (forall b . Typeable b => b -> Maybe a)
+
+useTypeable :: Typeable a => IsTypeable a
+useTypeable = IT cast cast
+
+castFrom :: Typeable b => Exercise a -> a -> Maybe b
+castFrom ex a = do
+   IT f _ <- hasTypeable ex
+   f a
+
+castTo :: Typeable b => Exercise a -> b -> Maybe a
+castTo ex a = do
+   IT _ g <- hasTypeable ex
+   g a
 
 ---------------------------------------------------------------
 -- Exercise status

@@ -15,7 +15,6 @@ module Domain.Math.Expr.Data
    ) where
 
 import Common.Algebra.Field
-import qualified Common.Algebra.CoField as F
 import Common.Rewriting
 import Common.Uniplate
 import Common.Utils (commaList)
@@ -27,6 +26,7 @@ import Data.Typeable
 import Domain.Math.Data.Relation (relationSymbols)
 import Domain.Math.Expr.Symbols
 import Test.QuickCheck
+import qualified Common.Algebra.CoField as F
 import qualified Common.Rewriting.Term as Term
 
 -----------------------------------------------------------------------
@@ -163,6 +163,10 @@ showExpr table = rec 0
       case getFunction expr of
          Just (s1, [Sym s2 [Var x, a]]) | s1 == diffSymbol && s2 == lambdaSymbol ->
             parIf (i>10000) $ "D(" ++ x ++ ") " ++ rec 10001 a
+         Just (s, [Nat a, Nat b, Nat c]) | s == mixedFractionSymbol -> 
+            let ok  = all (>= 0) [a, b, c] 
+                err = if ok then "" else "(ERROR)" 
+            in err ++ show a ++ "[" ++ show b ++ "/" ++ show c ++ "]"
          -- To do: remove special case for sqrt
          Just (s, [a, b]) | isRootSymbol s && b == Nat 2 -> 
             parIf (i>10000) $ unwords ["sqrt", rec 10001 a]

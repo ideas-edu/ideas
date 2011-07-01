@@ -117,10 +117,20 @@ term = choice
         return (function (newSymbol a) as)
    , atom
    ] 
+
+mixed :: Parser Expr
+mixed = do
+   a      <- natural
+   P.brackets lexer $ do
+      b <- natural
+      reservedOp "/"
+      c <- natural
+      return $ function mixedFractionSymbol $ map fromInteger [a, b, c]
       
 atom :: Parser Expr
 atom = choice 
-   [ do notFollowedBy (char '-') 
+   [ try mixed
+   , do notFollowedBy (char '-') 
         either fromInteger fromDouble <$> naturalOrFloat
    , variable <$> identifier 
    , parens expr
@@ -165,6 +175,9 @@ qualId = try (P.lexeme lexer (do
  where
    idPart   = (:) <$> letter <*> many idLetter
    idLetter = alphaNum <|> oneOf "-_"
+
+natural :: Parser Integer
+natural = P.natural lexer
 
 reserved :: String -> Parser ()
 reserved = P.reserved lexer

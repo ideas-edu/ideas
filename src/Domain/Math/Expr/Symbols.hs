@@ -18,7 +18,7 @@ module Domain.Math.Expr.Symbols
    , diffSymbol, piSymbol, lambdaSymbol, listSymbol
    , absSymbol, signumSymbol, logSymbol, expSymbol, tanSymbol, asinSymbol
    , atanSymbol, acosSymbol, sinhSymbol, tanhSymbol, coshSymbol, asinhSymbol
-   , atanhSymbol, acoshSymbol, bottomSymbol, fcompSymbol
+   , atanhSymbol, acoshSymbol, bottomSymbol, fcompSymbol, mixedFractionSymbol
      -- Matching
    , isPlus, isTimes, isMinus, isDivide, isPower, isNegate, isRoot
    , isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol
@@ -80,7 +80,7 @@ piSymbol     = newSymbol OM.piSymbol
 -- Extra math symbols
 
 signumSymbol, asinSymbol, atanSymbol, acosSymbol, asinhSymbol, atanhSymbol,
-   acoshSymbol, bottomSymbol, fcompSymbol :: Symbol
+   acoshSymbol, bottomSymbol, fcompSymbol, mixedFractionSymbol :: Symbol
 
 signumSymbol = newSymbol "signum"    
 asinSymbol   = newSymbol "asin"   
@@ -91,6 +91,9 @@ atanhSymbol  = newSymbol "atanh"
 acoshSymbol  = newSymbol "acosh"  
 bottomSymbol = newSymbol "error"
 fcompSymbol  = newSymbol "compose"
+
+-- support for mixed fractions
+mixedFractionSymbol = newSymbol ("extra", "mixedfraction")
 
 -------------------------------------------------------------
 -- Some match functions
@@ -121,6 +124,9 @@ infixr 8 ^
 
 root :: WithFunctions a => a -> a -> a
 root = binary rootSymbol
+
+-------------------------------------------------------------
+-- Helper
 
 -- left-associative
 isAssoBinary :: (WithFunctions a, Monad m) => Symbol -> a -> m (a, a)

@@ -14,7 +14,7 @@ module Domain.Math.SquareRoot.Tests (tests) where
 import Common.Algebra.Group
 import Common.Algebra.Field
 import Common.Algebra.Law
-import Common.TestSuite
+import Common.Utils.TestSuite
 import Domain.Math.Data.SquareRoot
 
 -------------------------------------------------------------------

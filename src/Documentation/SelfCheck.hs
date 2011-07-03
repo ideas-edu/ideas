@@ -12,7 +12,7 @@
 module Documentation.SelfCheck (selfCheck, blackBoxTests) where
 
 import Common.Exercise
-import Common.TestSuite
+import Common.Utils.TestSuite
 import Common.Utils (useFixedStdGen, Some(..), snd3)
 import Control.Monad
 import Data.List

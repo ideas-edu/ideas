@@ -14,7 +14,7 @@
 -- interface.
 --
 -----------------------------------------------------------------------------
-module Common.TestSuite 
+module Common.Utils.TestSuite 
    ( -- * Test Suite Monad
      TestSuite, MonadIO(..)
      -- * Test suite constructors

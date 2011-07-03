@@ -11,7 +11,7 @@
 -- Exports a subset of Data.Generics.Uniplate
 --
 -----------------------------------------------------------------------------
-module Common.Uniplate
+module Common.Uniplate {-# DEPRECATED "import Data.Generics.Uniplate directly" #-}
    ( -- * Uniplate type class and utility functions
      Uniplate(..), universe, children, holes
    , transform, transformM, descend, descendM, rewrite, rewriteM

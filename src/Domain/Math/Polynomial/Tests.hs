@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Tests (tests) where
 
-import Common.TestSuite
+import Common.Utils.TestSuite
 import Common.Algebra.Field
 import Common.Algebra.Law
 import Domain.Math.Data.Polynomial

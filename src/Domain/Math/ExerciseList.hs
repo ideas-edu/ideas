@@ -16,7 +16,7 @@ module Domain.Math.ExerciseList
    ) where
 
 import Common.Library
-import Common.TestSuite
+import Common.Utils.TestSuite
 import Common.Utils (Some(..))
 import Domain.Math.Data.Interval
 import Domain.Math.Derivative.Exercises

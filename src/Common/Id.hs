@@ -22,7 +22,7 @@ import Data.Char
 import Data.List
 import Data.Monoid
 import Data.Ord
-import Common.StringRef
+import Common.Utils.StringRef
 import Common.Utils (splitsWithElem)
 
 ---------------------------------------------------------------------

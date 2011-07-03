@@ -17,7 +17,7 @@ module Common.Strategy.Tests (tests) where
 import Common.Algebra.Group
 import Common.Algebra.Law
 import Common.Library
-import Common.TestSuite
+import Common.Utils.TestSuite
 import Control.Monad
 import Data.List
 import Data.Ord

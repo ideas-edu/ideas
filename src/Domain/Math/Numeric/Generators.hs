@@ -16,7 +16,7 @@ module Domain.Math.Numeric.Generators
 
 import Control.Monad
 import Common.View
-import Common.Utils (ratioGen)
+import Data.Ratio
 import Domain.Math.Numeric.Views
 import Test.QuickCheck
 import Domain.Math.Expr
@@ -98,3 +98,11 @@ symbolGenerator extras syms = f
   
 natGenerator :: Gen Expr
 natGenerator = liftM (Nat . abs) arbitrary
+
+-- | Prevents a bias towards small numbers
+ratioGen :: Integral a => Int -> Int -> Gen (Ratio a)
+ratioGen n m = do 
+   a <- choose (-n, n)
+   b <- liftM (succ . abs) (choose (-m, m))
+   c <- choose (1-b, b-1)
+   return (fromIntegral a + (fromIntegral c / fromIntegral b))

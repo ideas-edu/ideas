@@ -15,7 +15,7 @@ module Domain.Math.Polynomial.LeastCommonMultiple
    ) where
 
 import Prelude hiding ((^))
-import Common.TestSuite
+import Common.Utils.TestSuite
 import Common.View
 import Control.Monad
 import Data.List

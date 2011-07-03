@@ -19,7 +19,7 @@ import Common.Rewriting.AC
 import Common.Rewriting.Substitution
 import Control.Arrow
 import Control.Monad
-import Common.TestSuite
+import Common.Utils.TestSuite
 
 -----------------------------------------------------------
 -- Unification (in both ways)

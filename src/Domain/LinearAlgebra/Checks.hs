@@ -14,7 +14,7 @@ module Domain.LinearAlgebra.Checks (checks) where
 import Common.Classes
 import Common.Context
 import Common.Exercise
-import Common.TestSuite
+import Common.Utils.TestSuite
 import Data.Maybe
 import Domain.LinearAlgebra hiding (getSolution)
 import Domain.Math.Expr

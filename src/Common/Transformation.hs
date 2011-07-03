@@ -382,7 +382,7 @@ smartGen r gen = frequency [(2, gen), (1, smart)]
 smartGenTrans :: a -> Transformation a -> Maybe (Gen a)
 smartGenTrans a trans =
    case trans of
-      RewriteRule r _ -> return (smartGenerator r)
+      RewriteRule r _ -> smartGenerator r
       LiftView v t -> do
          (b, c) <- matchM v a
          gen    <- smartGenTrans b t

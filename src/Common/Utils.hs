@@ -14,19 +14,16 @@
 -----------------------------------------------------------------------------
 module Common.Utils 
    ( Some(..), ShowString(..), readInt, readM
-   , stringToHex, charToHex, subsets, isSubsetOf
+   , subsets, isSubsetOf
    , cartesian, distinct, allsame
-   , safeHead, fixpoint, fixpointM
+   , safeHead, fixpoint
    , splitAtElem, splitsWithElem
-   , useFixedStdGen, fst3, snd3, thd3, commaList, ratioGen
+   , useFixedStdGen, fst3, snd3, thd3, commaList
    ) where
 
-import Control.Monad
 import Data.Char
 import Data.List
-import Data.Ratio
 import System.Random
-import Test.QuickCheck
 
 data Some f = forall a . Some (f a)
 
@@ -46,18 +43,6 @@ readM :: (Monad m, Read a) => String -> m a
 readM s = case reads s of
              [(a, xs)] | all isSpace xs -> return a
              _ -> fail ("no read: " ++ s)
-
-stringToHex :: String -> Maybe Int
-stringToHex = foldl op (Just 0)
- where
-   op (Just i) c = fmap (i*16+) (charToHex c)
-   op Nothing  _ = Nothing
-
-charToHex :: Char -> Maybe Int
-charToHex c
-   | isDigit c = return (ord c - 48)
-   | toUpper c `elem` ['A' .. 'F'] = return (ord (toUpper c) - 55)
-   | otherwise = Nothing
 
 subsets :: [a] -> [[a]]
 subsets = foldr op [[]]
@@ -88,11 +73,6 @@ fixpoint f = stop . iterate f
    stop (x:xs)
       | x == head xs = x
       | otherwise    = stop xs
-      
-fixpointM :: (Monad m, Eq a) => (a -> m a) -> a -> m a
-fixpointM f a = do
-   b <- f a
-   if a==b then return a else fixpointM f b
    
 splitAtElem :: Eq a => a -> [a] -> Maybe ([a], [a])
 splitAtElem c s =
@@ -122,11 +102,3 @@ thd3 (_, _, x) = x
 
 commaList :: [String] -> String
 commaList = intercalate ", "
-
--- | Prevents a bias towards small numbers
-ratioGen :: Integral a => Int -> Int -> Gen (Ratio a)
-ratioGen n m = do 
-   a <- choose (-n, n)
-   b <- liftM (succ . abs) (choose (-m, m))
-   c <- choose (1-b, b-1)
-   return (fromIntegral a + (fromIntegral c / fromIntegral b))

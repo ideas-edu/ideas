@@ -12,7 +12,7 @@
 module Documentation.TestsPage (makeTestsPage) where
 
 import Control.Monad
-import Common.TestSuite
+import Common.Utils.TestSuite
 import Documentation.DefaultPage
 import Documentation.SelfCheck
 import Service.DomainReasoner

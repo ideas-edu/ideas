@@ -28,7 +28,7 @@ module Service.DomainReasoner
    ) where
 
 import Common.Library
-import Common.TestSuite
+import Common.Utils.TestSuite
 import Common.Utils (Some(..))
 import Control.Monad.Error
 import Control.Monad.State

@@ -39,7 +39,7 @@ import qualified Domain.Math.Data.MixedFraction   as MF
 
 -- |Non-negative numbers only, also for intermediate results
 naturalView :: View Expr Integer
-naturalView = "num.natural" @> makeView rec fromInteger
+naturalView = "num.natural" @> makeView rec (fromInteger . abs)
  where
    rec :: Expr -> Maybe Integer
    rec expr = do
@@ -48,7 +48,7 @@ naturalView = "num.natural" @> makeView rec fromInteger
       return x
 
 naturalNF :: View Expr Integer
-naturalNF = "num.natural.nf" @> makeView f fromInteger
+naturalNF = "num.natural.nf" @> makeView f (build naturalView)
  where
    f (Nat n) = Just n
    f _       = Nothing

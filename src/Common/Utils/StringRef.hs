@@ -13,7 +13,9 @@
 -- Virutal Machine (LVM) identifiers.
 --
 -----------------------------------------------------------------------------
-module Common.StringRef (StringRef, stringRef, toString, tableStatus) where
+module Common.Utils.StringRef 
+   ( StringRef, stringRef, toString, tableStatus
+   ) where
 
 import Common.Utils (commaList)
 import Data.Bits

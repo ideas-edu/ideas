@@ -19,7 +19,7 @@ module Common.Rewriting.Substitution
 
 import Common.Uniplate
 import Common.Rewriting.Term
-import Common.TestSuite
+import Common.Utils.TestSuite
 import qualified Data.IntMap as IM
 import qualified Data.IntSet as IS
 import Data.List

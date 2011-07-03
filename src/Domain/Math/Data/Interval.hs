@@ -30,7 +30,7 @@ module Domain.Math.Data.Interval
 
 import Common.Algebra.Boolean
 import Common.Algebra.Law
-import Common.TestSuite
+import Common.Utils.TestSuite
 import Common.Utils (commaList)
 import Control.Monad
 import Data.Maybe

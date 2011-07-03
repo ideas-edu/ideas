@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Documentation.Make (DocItem(..), makeDocumentation) where
 
-import Common.TestSuite
+import Common.Utils.TestSuite
 import Common.Utils (Some(..))
 import Control.Monad
 import Data.Maybe

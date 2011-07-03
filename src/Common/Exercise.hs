@@ -50,7 +50,7 @@ import Common.Navigator
 import Common.Predicate
 import Common.Rewriting.Term
 import qualified Common.Rewriting.Difference as Diff
-import Common.TestSuite
+import Common.Utils.TestSuite
 import Common.Transformation
 import Common.Utils (ShowString(..), commaList)
 import Common.View

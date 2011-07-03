@@ -58,7 +58,7 @@ data RewriteRule a = R
    , ruleSpecTerm    :: RuleSpec Term
    , ruleShow        :: a -> String
    , ruleTermView    :: View Term a
-   , ruleGenerator   :: Gen a
+   , ruleGenerator   :: Maybe (Gen a)
    }
    
 instance Show (RewriteRule a) where
@@ -106,7 +106,7 @@ buildSpec (lhs :~> rhs) a = do
    return (s |-> extLeft (extRight rhs))
 
 rewriteRule :: (IsId n, RuleBuilder f a, Rewrite a) => n -> f -> RewriteRule a
-rewriteRule s f = R (newId s) (buildRuleSpec f 0) show termView arbitrary
+rewriteRule s f = R (newId s) (buildRuleSpec f 0) show termView (Just arbitrary)
 
 ------------------------------------------------------
 -- Using a rewrite rule
@@ -138,15 +138,15 @@ showRewriteRule sound r = do
 -----------------------------------------------------------
 -- Smart generator that creates instantiations of the left-hand side
 
-smartGenerator :: RewriteRule a -> Gen a
-smartGenerator r = do 
-   let a :~> _ = ruleSpecTerm r
-   let vs = IS.toList (metaVarSet a)
-   list <- replicateM (length vs) (ruleGenerator r)
-   let sub = listToSubst (zip vs (map (toTermRR r) list))
-   case fromTermRR r (sub |-> a) of
-      Just x  -> return x
-      Nothing -> ruleGenerator r
+smartGenerator :: RewriteRule a -> Maybe (Gen a)
+smartGenerator r = liftM make (ruleGenerator r) 
+ where
+   a :~> _ = ruleSpecTerm r
+   vs      = IS.toList (metaVarSet a)
+   make gn = do
+      list <- replicateM (length vs) gn
+      let sub = listToSubst (zip vs (map (toTermRR r) list))
+      fromTermRR r (sub |-> a)
 
 ------------------------------------------------------
 

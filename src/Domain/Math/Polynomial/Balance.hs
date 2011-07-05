@@ -21,36 +21,40 @@ import Data.Maybe
 import Domain.Math.Safe
 import Domain.Math.CleanUp
 import Domain.Math.Data.Polynomial
+import Domain.Math.Data.WithBool
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.BalanceRules
 import Domain.Math.Equation.Views
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Examples
+import Domain.Math.Polynomial.Generators
 import Domain.Math.Polynomial.Rules (conditionVarsRHS, flipEquation)
 import Domain.Math.Polynomial.Views
 import Domain.Math.Simplification (collectLikeTerms)
 import qualified Data.Traversable as T
+import Test.QuickCheck (sized)
 
 ------------------------------------------------------------
 -- Exercise
 
-balanceExercise :: Exercise (Equation Expr)
+balanceExercise :: Exercise (WithBool (Equation Expr))
 balanceExercise = makeExercise 
-   { exerciseId   = describe "Solve a linear equation using only balance rules." $ 
-                    newId "algebra.equations.linear.balance"
-   , status       = Provisional
-   , parser       = parseEqExpr
-   , similarity   = withoutContext ((==) `on` fmap cleanUpExpr)
-   , equivalence  = withoutContext (viewEquivalent linearEquationView)
-   , suitable     = predicateView linearEquationView
-   , ready        = predicateView (equationSolvedWith mixedFractionNF)
-                    <||> predicateView (equationSolvedWith rationalNF)
-                    <||> predicateView (equationSolvedWith doubleNF)
-   , strategy     = balanceStrategy
-   , ruleOrdering = ruleOrderingWithId balanceOrder
-   , navigation   = termNavigator
-   , examples     = linearExamples
+   { exerciseId    = describe "Solve a linear equation using only balance rules." $ 
+                     newId "algebra.equations.linear.balance"
+   , status        = Provisional
+   , parser        = parseBoolEqExpr
+   , similarity    = withoutContext ((==) `on` cleaner)
+   , equivalence   = withoutContext (viewEquivalent eqView)
+   , suitable      = predicateView (traverseView linearEquationView)
+   , ready         = predicateView (traverseView (equationSolvedWith mixedFractionNF))
+                     <||> predicateView (traverseView (equationSolvedWith rationalNF))
+                     <||> predicateView (traverseView (equationSolvedWith doubleNF))
+   , strategy      = balanceStrategy
+   , ruleOrdering  = ruleOrderingWithId balanceOrder
+   , navigation    = termNavigator
+   , testGenerator = Just $ liftM2 (\a b -> singleton (a :==: b)) (sized linearGen) (sized linearGen)
+   , examples      = map (mapSecond singleton) linearExamples
    }
 
 balanceOrder :: [Id]
@@ -63,12 +67,36 @@ balanceOrder =
    , getId scaleToOne, getId flipEquation
    , getId divideCommonFactor, getId distribute
    ]
-      
+
+eqView :: View (WithBool (Equation Expr)) (WithBool (String, Rational))
+eqView = makeView (either (Just . fromBool) f . fromWithBool) (fmap g)
+ where
+   f (lhs :==: rhs) = do
+      (s, p) <- match (polyViewWith rationalView) (lhs-rhs)
+      case degree p of
+         0 -> Just $ fromBool $ coefficient 0 p == 0
+         1 -> Just $ singleton $ (s, - coefficient 0 p / coefficient 1 p)
+         _ -> Nothing
+   g (s, r) = Var s :==: fromRational r
+
+
 ------------------------------------------------------------
 -- Strategy
 
-balanceStrategy :: LabeledStrategy (Context (Equation Expr))
-balanceStrategy = cleanUpStrategyAfter (applyTop (fmap cleanUpExpr)) $
+cleaner :: WithBool (Equation Expr) -> WithBool (Equation Expr)
+cleaner = join . fmap (trivial . fmap cleanUpExpr)
+
+trivial :: Equation Expr -> WithBool (Equation Expr)
+trivial eq@(lhs :==: rhs) =
+   case (match rationalView lhs, match rationalView rhs) of
+      (Just r1, Just r2)
+         | r1 == r2   -> true
+         | otherwise  -> false
+      _  | lhs == rhs -> true
+         | otherwise  -> singleton eq
+
+balanceStrategy :: LabeledStrategy (Context (WithBool (Equation Expr)))
+balanceStrategy = cleanUpStrategyAfter (applyTop cleaner) $
    label "Balance equation" $
        label "Phase 1" (repeatS 
            (  use collect
@@ -83,16 +111,17 @@ balanceStrategy = cleanUpStrategyAfter (applyTop (fmap cleanUpExpr)) $
            ))
        <*> try (use scaleToOne))
        -- flip sides of an equation (at most once)
-   <%> option (atomic (use conditionVarsRHS <*> use flipEquation))
+   <%> try (atomic (use conditionVarsRHS <*> use flipEquation))
        -- divide by a common factor (but not as final "scale-to-one" step)
    <%> many (notS (use scaleToOne) <*> use divideCommonFactor)
  where
    -- move constants to left only if there are no variables on the left
-   p1 = maybe False (hasNoVar . leftHandSide) . fromContext
+   p1 = maybe False (either (const False) (hasNoVar . leftHandSide) . fromWithBool) . fromContext
    p2 ceq = fromMaybe False $ do
-      lhs :==: rhs <- fromContext ceq
-      (x1, a, _) <- matchLin lhs
-      (x2, b, _) <- matchLin rhs
+      wb           <- fromContext ceq
+      lhs :==: rhs <- either (const Nothing) Just (fromWithBool wb)
+      (x1, a, _)   <- matchLin lhs
+      (x2, b, _)   <- matchLin rhs
       return (x1 == x2 && b > a && a /= 0)
 
 ------------------------------------------------------------
@@ -136,7 +165,7 @@ divideCommonFactor = doAfter (fmap distributeDiv) $
       let (ns, ms) = partitionEithers ps
           n = if null ns then 1 else minimum ns
           p = (==0) . (`mod` n)
-      guard (all p (ns ++ ms))
+      guard (n > 0 && all p (ns ++ ms))
       return (fromInteger n)
       
    getFactor expr

@@ -186,15 +186,17 @@ coreLabel l a = Rule (Enter l) :*: a :*: Rule (Exit l)
 coreInterleave :: StepCore l a -> StepCore l a -> StepCore l a
 coreInterleave a b = (a :!%: b) :|: (b :!%: a) :|: emptyOnly (a :*: b)
  where
-   emptyOnly (Rule step) | interleaveAfter step = Fail
-   emptyOnly core@(Not _) = core
-   emptyOnly (x :|>: y)   = emptyOnly x .|. (Not x :*: emptyOnly y)
-   emptyOnly (Repeat x)   = emptyOnly (coreRepeat x)
-   emptyOnly (x :|: y)    = emptyOnly x .|. emptyOnly y
-   emptyOnly (x :*: y)    = emptyOnly x .*. emptyOnly y
-   emptyOnly (x :%: y)    = emptyOnly x .*. emptyOnly y -- no more interleaving 
-   emptyOnly (x :!%: y)   = emptyOnly x .*. emptyOnly y -- no more interleaving 
-   emptyOnly core = descend emptyOnly core
+   emptyOnly core =
+      case core of
+         Rule step | interleaveAfter step -> Fail
+         Not _    -> core
+         x :|>: y -> emptyOnly x .|. (Not x :*: emptyOnly y)
+         Repeat x -> emptyOnly (coreRepeat x)
+         x :|: y  -> emptyOnly x .|. emptyOnly y
+         x :*: y  -> emptyOnly x .*. emptyOnly y
+         x :%: y  -> emptyOnly x .*. emptyOnly y -- no more interleaving 
+         x :!%: y -> emptyOnly x .*. emptyOnly y -- no more interleaving 
+         _        -> descend emptyOnly core
    
 ----------------------------------------------------------------------
 -- State functions

@@ -11,13 +11,13 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Parser
    ( parseExpr, parseExprM
-   , parseEqExpr, parseRelExpr
+   , parseEqExpr, parseBoolEqExpr, parseRelExpr
    , parseOrsEqExpr, parseOrsRelExpr
    , parseLogicRelExpr
    , parseExprTuple
    ) where
 
-import Common.Algebra.Boolean (BoolValue, Boolean(..), ands)
+import Common.Algebra.Boolean hiding (ors)
 import Common.Classes
 import Common.Id
 import Common.Rewriting
@@ -29,6 +29,7 @@ import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbols
+import Domain.Math.Data.WithBool
 import Prelude hiding ((^))
 import Text.Parsing
 import Test.QuickCheck (arbitrary)
@@ -42,6 +43,9 @@ parseExprM = either fail return . parseExpr
 
 parseEqExpr :: String -> Either String (Equation Expr)
 parseEqExpr = parseSimple (equation expr)
+
+parseBoolEqExpr :: String -> Either String (WithBool (Equation Expr))
+parseBoolEqExpr = parseSimple (boolAtom (equation expr))
 
 parseRelExpr :: String -> Either String (Relation Expr)
 parseRelExpr = parseSimple (relation expr)
@@ -59,18 +63,18 @@ parseExprTuple :: String -> Either String [Expr]
 parseExprTuple = parseSimple (tuple expr)
 
 ors :: Parser a -> Parser (OrList a)
-ors p = mconcat <$> sepBy1 (logicAtom p) (reserved "or")
+ors p = mconcat <$> sepBy1 (boolAtom p) (reserved "or")
 
 logic :: Parser a -> Parser (Logic a)
-logic p = buildExpressionParser table (logicAtom p)
+logic p = buildExpressionParser table (boolAtom p)
  where
    table = 
       [ [Infix ((<&&>) <$ reservedOp "and") AssocRight] 
       , [Infix ((<||>) <$ reservedOp "or" ) AssocRight] 
       ]
 
-logicAtom :: (Container f, BoolValue (f a)) => Parser a -> Parser (f a)
-logicAtom p = choice 
+boolAtom :: (Container f, BoolValue (f a)) => Parser a -> Parser (f a)
+boolAtom p = choice 
    [ true      <$  reserved "true" 
    , false     <$  reserved "false"
    , singleton <$> p

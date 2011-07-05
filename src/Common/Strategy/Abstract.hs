@@ -33,6 +33,14 @@ import Common.Uniplate hiding (rewriteM)
 import Common.Strategy.Parsing
 import Control.Monad
 import Test.QuickCheck hiding (label)
+import qualified Data.Traversable as T
+import qualified Data.Foldable as F
+
+mapRulesM :: Monad m => (Rule a -> m (Rule a)) -> Strategy a -> m (Strategy a)
+mapRulesM f = liftM S . T.mapM f . toCore
+
+instance T.Traversable (GCore l)
+instance F.Foldable (GCore l)
 
 -----------------------------------------------------------
 --- Strategy data-type

@@ -254,21 +254,8 @@ jsonRPC input handler =
 instance Arbitrary JSON where
    arbitrary = sized arbJSON
 
-instance CoArbitrary JSON where
-   coarbitrary json = 
-      case json of
-         Number a  -> variant (0 :: Int) . coarbitrary a
-         String s  -> variant (1 :: Int) . coarbitrary s
-         Boolean b -> variant (2 :: Int) . coarbitrary b
-         Array xs  -> variant (3 :: Int) . coarbitrary xs
-         Object xs -> variant (4 :: Int) . coarbitrary xs
-         Null      -> variant (5 :: Int)
-
 instance Arbitrary Number where
    arbitrary = oneof [liftM I arbitrary, liftM (D . fromInteger) arbitrary]
-instance CoArbitrary Number where
-   coarbitrary (I n) = variant (0 :: Int) . coarbitrary n
-   coarbitrary (D d) = variant (1 :: Int) . coarbitrary d
 
 arbJSON :: Int -> Gen JSON
 arbJSON n 

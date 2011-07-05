@@ -23,6 +23,7 @@ module Common.Strategy.Core
 import Common.Classes
 import Common.Transformation
 import Common.Uniplate
+import Common.Utils.QuickCheck
 
 -----------------------------------------------------------------
 -- Strategy (internal) data structure, containing a selection
@@ -97,6 +98,13 @@ instance BiFunctor GCore where
             Var n     -> Var n
             Succeed   -> Succeed
             Fail      -> Fail
+
+instance (Arbitrary l, Arbitrary a) => Arbitrary (GCore l a) where
+   arbitrary = generators
+      [ constGens [Succeed, Fail]
+      , unaryGen Atomic, arbGen Rule, unaryArbGen Label
+      , binaryGens [(:*:), (:|:), (:%:)]
+      ]
 
 -----------------------------------------------------------------
 -- Smart constructors

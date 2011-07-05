@@ -15,21 +15,22 @@ module Common.Strategy.Parsing
    ( Step(..)
    , State, makeState, stack, choices, trace, value
    , parseDerivationTree, replay, runCore
+   , firsts, Result(..), isReady
    ) where
 
 import Common.Classes
 import Common.DerivationTree
 import Common.Strategy.Core
 import Common.Transformation
-import Common.Uniplate
 import Control.Arrow
 import Control.Monad
+import Common.Uniplate
 
 ----------------------------------------------------------------------
 -- Step data type
 
 data Step l a = Enter l | Exit l | RuleStep (Rule a)
-   deriving Show
+   deriving (Show, Eq, Ord)
 
 -- A core expression where the symbols are steps instead of "only" rules
 type StepCore l a = GCore l (Step l a)
@@ -47,13 +48,13 @@ data State l a = S
    , trace   :: [Step l a]
    , timeout :: !Int
    , value   :: a
-   }
+   } deriving Show
 
 data Stack l a = Stack
    { active    :: [StepCore l a] -- the active items, performed in sequence
    , suspended :: [StepCore l a] -- suspended items, performed after a step from active
    , remainder :: [StepCore l a] -- remaining items: must be empty if there are no suspended items
-   }
+   } deriving Show
 
 makeState :: Core l a -> a -> State l a
 makeState = newState . fmap RuleStep
@@ -99,7 +100,11 @@ firsts st =
       hasStep step = [ (Result step, s) | s <- useRule step (traceStep step state) ]
 
 -- helper datatype
-data Result a = Result a | Ready
+data Result a = Result a | Ready deriving  Show
+
+instance Functor Result where
+   fmap f (Result a) = Result (f a)
+   fmap _ Ready      = Ready
 
 isReady :: Result a -> Bool
 isReady Ready = True
@@ -183,10 +188,14 @@ coreInterleave a b = (a :!%: b) :|: (b :!%: a) :|: emptyOnly (a :*: b)
  where
    emptyOnly (Rule step) | interleaveAfter step = Fail
    emptyOnly core@(Not _) = core
-   emptyOnly (x :|>: y)   = emptyOnly x :|: (Not x :*: emptyOnly y)
+   emptyOnly (x :|>: y)   = emptyOnly x .|. (Not x :*: emptyOnly y)
    emptyOnly (Repeat x)   = emptyOnly (coreRepeat x)
+   emptyOnly (x :|: y)    = emptyOnly x .|. emptyOnly y
+   emptyOnly (x :*: y)    = emptyOnly x .*. emptyOnly y
+   emptyOnly (x :%: y)    = emptyOnly x .*. emptyOnly y -- no more interleaving 
+   emptyOnly (x :!%: y)   = emptyOnly x .*. emptyOnly y -- no more interleaving 
    emptyOnly core = descend emptyOnly core
-
+   
 ----------------------------------------------------------------------
 -- State functions
    

@@ -22,8 +22,10 @@ import Data.Char
 import Data.List
 import Data.Monoid
 import Data.Ord
+import Control.Monad
 import Common.Utils.StringRef
 import Common.Utils (splitsWithElem)
+import Test.QuickCheck
 
 ---------------------------------------------------------------------
 -- Abstract data type and its instances
@@ -46,6 +48,14 @@ instance Ord Id where
 instance Monoid Id where
    mempty  = emptyId
    mappend = ( # )
+
+instance Arbitrary Id where
+   arbitrary = frequency 
+      [ (4, do n  <- choose (0, 8)
+               xs <- replicateM n (elements ['a' .. 'z']) 
+               return $ newId xs)
+      , (1, liftM2 mappend arbitrary arbitrary)
+      ]
 
 ---------------------------------------------------------------------
 -- Type class for constructing identifiers

@@ -235,6 +235,9 @@ instance Show (Rule a) where
 instance Eq (Rule a) where
    r1 == r2 = ruleId r1 == ruleId r2
 
+instance Ord (Rule a) where
+   compare = compareId
+
 instance Apply Rule where
    applyAll r a = do 
       t <- transformations r
@@ -244,6 +247,13 @@ instance Apply Rule where
 instance HasId (Rule a) where
    getId        = ruleId
    changeId f r = r { ruleId = f (ruleId r) } 
+
+instance (Arbitrary a, CoArbitrary a) => Arbitrary (Rule a) where
+   arbitrary = liftM3 make arbitrary arbitrary arbitrary
+    where
+      make minor n f
+         | minor     = minorRule $ makeSimpleRule n f
+         | otherwise = makeSimpleRule (n :: Id) f
 
 -- | Returns whether or not the rule is major (i.e., not minor)
 isMajorRule :: Rule a -> Bool

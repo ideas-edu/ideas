@@ -16,7 +16,8 @@ module Common.Utils.QuickCheck
      -- * Data type
    , ArbGen, generator, generators
      -- * Constructors
-   , arbGen, constGen, unaryGen, binaryGen, binaryGens
+   , arbGen, constGen, constGens, unaryGen, unaryGens
+   , unaryArbGen, binaryGen, binaryGens, toArbGen
      -- * Frequency combinators
    , common, uncommon, rare, changeFrequency
    ) where
@@ -62,17 +63,29 @@ arbGen f = newGen 0 (liftM (const . f) arbitrary)
 constGen :: a -> ArbGen a
 constGen = pureGen 0 . const
 
+constGens :: [a] -> ArbGen a
+constGens = mconcat . map constGen
+
 unaryGen :: (a -> a) -> ArbGen a
 unaryGen f = pureGen 1 $ \[x] -> f x
+
+unaryArbGen :: Arbitrary b => (b -> a -> a) -> ArbGen a
+unaryArbGen f = newGen 1 $ liftM (\a [x] -> f a x) arbitrary
+
+unaryGens :: [a -> a] -> ArbGen a
+unaryGens = mconcat . map unaryGen
 
 binaryGen :: (a -> a -> a) -> ArbGen a
 binaryGen f = pureGen 2 $ \[x, y] -> f x y
 
-binaryGens :: [(a -> a -> a)] -> ArbGen a
+binaryGens :: [a -> a -> a] -> ArbGen a
 binaryGens = mconcat . map binaryGen
 
 pureGen :: Int -> ([a] -> a) -> ArbGen a
 pureGen n = newGen n . return
+
+toArbGen :: Gen a -> ArbGen a
+toArbGen = newGen 0 . liftM const
 
 newGen :: Int -> Gen ([a] -> a) -> ArbGen a
 newGen n f = AG [(1, (n, f))]

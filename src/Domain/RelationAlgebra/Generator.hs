@@ -20,21 +20,9 @@ instance Rewrite RelAlg
 
 instance Arbitrary RelAlg where
    arbitrary = sized (arbRelAlg . min 8)
-instance CoArbitrary RelAlg where
-   coarbitrary term =
-      case term of
-         Var x    -> variant (0 :: Int) . coarbitrary x
-         p :.:  q -> variant (1 :: Int) . coarbitrary p . coarbitrary q
-         p :+:  q -> variant (2 :: Int) . coarbitrary p . coarbitrary q       
-         p :&&: q -> variant (3 :: Int) . coarbitrary p . coarbitrary q       
-         p :||: q -> variant (4 :: Int) . coarbitrary p . coarbitrary q       
-         Not p    -> variant (5 :: Int) . coarbitrary p
-         Inv p    -> variant (6 :: Int) . coarbitrary p  
-         V        -> variant (7 :: Int)        
-         I        -> variant (8 :: Int)
-   
+
 arbRelAlg :: Int -> Gen RelAlg
-arbRelAlg 0 = frequency [(8, liftM Var (oneof $ map return relAlgVars)), (1, return V), (1, return empty), (1, return I)]
+arbRelAlg 0 = frequency [(8, liftM Var (elements relAlgVars)), (1, return V), (1, return empty), (1, return I)]
 arbRelAlg n = oneof [ arbRelAlg 0, binop (:.:), binop (:+:), binop (:&&:), binop (:||:)
                     , unop Not, unop Inv 
                     ]

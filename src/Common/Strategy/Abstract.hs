@@ -31,6 +31,8 @@ import Common.Transformation
 import Common.DerivationTree
 import Common.Uniplate hiding (rewriteM)
 import Common.Strategy.Parsing
+import Control.Monad
+import Test.QuickCheck hiding (label)
 
 -----------------------------------------------------------
 --- Strategy data-type
@@ -44,6 +46,9 @@ instance Show (Strategy a) where
 instance Apply Strategy where
    applyAll = runCore . toCore
 
+instance (Arbitrary a, CoArbitrary a) => Arbitrary (Strategy a) where
+   arbitrary = liftM fromCore arbitrary
+
 -----------------------------------------------------------
 --- The information used as label in a strategy
 
@@ -53,6 +58,7 @@ data LabelInfo = Info
    , collapsed :: Bool
    , hidden    :: Bool
    }
+ deriving (Eq, Ord)
 
 instance Show LabelInfo where
    show info = 
@@ -65,7 +71,10 @@ instance Show LabelInfo where
 instance HasId LabelInfo where
    getId = labelId
    changeId f info = info { labelId = f (labelId info) }
-   
+
+instance Arbitrary LabelInfo where
+   arbitrary = liftM (makeInfo :: Id -> LabelInfo) arbitrary
+
 makeInfo :: IsId a => a -> LabelInfo
 makeInfo s = Info (newId s) False False False
 

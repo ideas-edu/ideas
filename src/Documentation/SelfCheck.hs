@@ -44,7 +44,7 @@ selfCheck dir = do
             addProperty "OpenMath encoding" OpenMath.propEncoding
          Substitution.tests
          Unification.unificationTests
-         --Strategy.tests
+         Strategy.tests
          suite "Field properties" $ 
             mapM_ (addProperty "field") Algebra.propsField
          suite "Boolean properties" $ 

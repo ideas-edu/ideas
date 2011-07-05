@@ -19,7 +19,7 @@ module Common.Classes
      -- * Type class BiArrow
    , BiArrow(..)
      -- * Type class BiFunctor
-   , BiFunctor, biMap, mapFirst, mapSecond
+   , BiFunctor, biMap, mapFirst, mapSecond, mapBoth
    ) where
 
 import Common.Utils (safeHead)
@@ -103,3 +103,6 @@ instance BiFunctor Either where
 
 instance BiFunctor (,) where
   biMap f g (a, b) = (f a, g b)
+  
+mapBoth :: BiFunctor f => (a -> b) -> f a a -> f b b
+mapBoth f = biMap f f

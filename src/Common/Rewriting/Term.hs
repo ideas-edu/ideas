@@ -41,7 +41,7 @@ import Data.Maybe
 import Data.Typeable
 import qualified Data.IntSet as IS
 import qualified Data.Set as S
-import Test.QuickCheck
+import Common.Utils.QuickCheck
 
 -----------------------------------------------------------
 -- Symbols
@@ -256,18 +256,10 @@ makeTerm = foldl Apply
 -- * Arbitrary term generator
 
 instance Arbitrary Term where
-   arbitrary = sized arbTerm
-    where
-      arbTerm 0 = oneof
-         [ oneof $ map (return . Var) ["x", "y", "z"]
-         , oneof [liftM Num arbitrary, liftM Float arbitrary]
-         , liftM Meta arbitrary
-         , oneof $ map (return . Con . newSymbol) ["a", "b"]
-         ]
-      arbTerm n = oneof
-         [ arbTerm 0
-         , oneof [ liftM2 (binary (newSymbol s)) rec rec | s <- ["f", "g"] ]
-         , oneof [ liftM (unary (newSymbol s)) rec | s <- ["h", "k"] ]
-         ]
-       where
-         rec = arbTerm (n `div` 2)
+   arbitrary = generators 
+      [ constGens $ map Var ["x", "y", "z"]
+      , arbGen Num, arbGen Float, arbGen Meta
+      , constGens $ map (Con . newSymbol) ["a", "b"]
+      , unaryGens $ map (unary . newSymbol) ["h", "k"]
+      , binaryGens $ map (binary . newSymbol) ["f", "g"]
+      ]

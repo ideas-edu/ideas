@@ -16,13 +16,18 @@ module Common.Strategy.Tests (tests) where
 
 import Common.Algebra.Group
 import Common.Algebra.Law
-import Common.Library
+import Common.Classes
+import Common.Id
+import Common.Strategy
+import Common.Strategy.Parsing
+import Common.Strategy.Abstract
 import Common.Utils.TestSuite
-import Control.Monad
+import Data.Function
 import Data.List
 import Data.Ord
-import Test.QuickCheck hiding (label)
+import Common.Utils.QuickCheck hiding (label, Result)
 import qualified Common.Algebra.Field as F
+import Prelude hiding (fail)
 
 ---------------------------------------------------------
 -- Properties
@@ -42,7 +47,7 @@ tests = suite "Strategy combinator properties" $ do
    assertTrue  "atomic-succeed" $ 
       atomic succeed === succeed
    assertTrue  "atomic-fail" $ 
-      atomic failS === failS
+      atomic fail === fail
    addProperty "atomic-choice" $ \a b -> 
       atomic (idS a <|> idS b) === atomic a <|> atomic b
 
@@ -57,40 +62,19 @@ tests = suite "Strategy combinator properties" $ do
    fs :: (Arbitrary a, Show a, Eq a) => [Law a] -> TestSuite
    fs = mapM_ (\p -> addProperty (show p) p)
 
--- Only a selected set of combinators is used
-instance Arbitrary (Strategy a) where
-   arbitrary = sized strategyGen
-
-strategyGen :: Int -> Gen (Strategy a)
-strategyGen n
-   | n == 0 = frequency
-        [ (1, return succeed), (1, return failS)
-        , (5, liftM toStrategy ruleGen)
-        ]
-   | otherwise = oneof
-        [ bin (<*>), bin (<|>), bin (<%>), liftM atomic rec
-        , liftM (toStrategy . label "L") rec
-        ]
- where
-   bin f = liftM2 f rec rec
-   rec   = strategyGen (n `div` 2)
-        
-ruleGen :: Gen (Rule a)
-ruleGen = elements [ makeSimpleRule [c] Just | c <- ['A' .. 'E'] ]
-   
 ---------------------------------------------------------
 -- Algebraic instances
 
-newtype Choice     = Choice     (Strategy ()) deriving (Show, Arbitrary)
-newtype Sequence   = Sequence   (Strategy ()) deriving (Show, Arbitrary)
-newtype Interleave = Interleave (Strategy ()) deriving (Show, Arbitrary)
+newtype Choice     = Choice     (Strategy Int) deriving (Show, Arbitrary)
+newtype Sequence   = Sequence   (Strategy Int) deriving (Show, Arbitrary)
+newtype Interleave = Interleave (Strategy Int) deriving (Show, Arbitrary)
 
 instance Eq Choice     where     Choice a == Choice b     = a === b
 instance Eq Sequence   where   Sequence a == Sequence b   = a === b
 instance Eq Interleave where Interleave a == Interleave b = a === b
 
 instance Monoid Choice where
-   mempty = Choice failS
+   mempty = Choice fail
    mappend (Choice a) (Choice b) = Choice (a <|> b)
 
 instance Monoid Sequence where
@@ -98,56 +82,94 @@ instance Monoid Sequence where
    mappend (Sequence a) (Sequence b) = Sequence (a <*> b)
    
 instance MonoidZero Sequence where
-   mzero = Sequence failS
+   mzero = Sequence fail
 
 instance Monoid Interleave where
    mempty = Interleave succeed
    mappend (Interleave a) (Interleave b) = Interleave (a <%> b)
    
 instance MonoidZero Interleave where
-   mzero = Interleave failS
+   mzero = Interleave fail
    
 instance F.SemiRing Sequence where
    Sequence a <+> Sequence b = Sequence (a <|> b)
-   zero  = Sequence failS
+   zero  = Sequence fail
    (<*>) = mappend
    one   = mempty
 
 instance F.SemiRing Interleave where
    Interleave a <+> Interleave b = Interleave (a <|> b)
-   zero  = Interleave failS
+   zero  = Interleave fail
    (<*>) = mappend
    one   = mempty
 
 ---------------------------------------------------------
 -- Helper functions for equality
   
-idS :: Strategy () -> Strategy ()
+idS :: Strategy Int -> Strategy Int
 idS = id
 
 infix 1 === 
 
-(===) :: Strategy () -> Strategy () -> Bool
-a === b = rec (10::Int) [(make a, make b)]
+(===) :: Strategy Int -> Strategy Int -> Bool
+s1 === s2 = rec 100 [(start s1, start s2)]
  where
-   make x = restrictHeight 2 (derivationTree x ())
+   start = return . flip makeState 0 . toCore
  
+   rec :: Int -> [([State LabelInfo Int], [State LabelInfo Int])] -> Bool
    rec _ [] = True
-   rec n ((s, t):rest)
+   rec n (pair:rest)
       | n == 0    = True
-      | otherwise = 
-           let (as, ss) = unzip (merged s)
-               (bs, ts) = unzip (merged t)
-           in (endpoint s, nub as) == (endpoint t, nub bs) && rec (n-1) (zip ss ts ++ rest)
+      | otherwise = testReady xs ys
+                 && testValue xs ys
+                 && testFirsts gxs gys
+                 && rec (n-1) (rest ++ new)
+
+    where
+      p@(xs, ys)    = mapBoth (concatMap myFirsts) pair
+      gp@(gxs, gys) = mapBoth f p
+      new           = uncurry zip (mapBoth (map snd) gp)
       
-   
-merged :: Show s => DerivationTree s a -> [(s, DerivationTree s a)]
-merged = map f . groupBy eq . sortBy cmp . branches
+      testReady  = (==) `on` any (isReady . fst)
+      testValue  = (==) `on` (nub . sort . map (value . snd))
+      testFirsts = (==) `on` map fst
+      
+      f          = map merge . groupBy eqFst . sortBy cmpFst . results
+      merge   as = (fst (head as), map snd as)
+      results as = [ (a, b) | (Result a, b) <- as ]
+      
+      cmpFst (x, _) (y, _) = x `compare` y
+      eqFst  (x, _) (y, _) = x == y
+
+myFirsts :: State l a -> [(Result (Step l a), State l a)]
+myFirsts = concatMap f . firsts
  where
-   cmp a b = comparing show (fst a) (fst b)
-   eq  a b = show (fst a) == show (fst b)
-   f xs    = (fst $ head xs, foldr1 merge (map snd xs))
+   f pair@(result, a) = 
+      case result of
+         Result (Enter _) -> myFirsts a
+         Result (Exit _)  -> myFirsts a
+         _                -> [pair]
+
+{-
+debug :: Show a => Strategy a -> a -> IO ()
+debug s = rec . makeState (toCore s)
+ where
+   rec st = do
+      print st
+      putStrLn $ "\nReady: " ++ show (any (isReady . fst) xs)
+      putStrLn $ unlines $
+         zipWith (\i y -> show i ++ ". " ++ show (fst y)) [1::Int ..] ys
+      if (null xs) then print "(no choices)" else do
+      n <- ask
+      rec (snd (ys !! n))
+    where
+      xs = firsts st
+      ys = [ (a, b) | (Result a, b) <- xs ]
       
-merge :: DerivationTree s a -> DerivationTree s a -> DerivationTree s a
-merge s t = addBranches (branches s ++ branches t)   
-          $ singleNode (root s) (endpoint s || endpoint t)
+      ask = do 
+         putStr "? "
+         input <- getLine
+         case readInt input of 
+            Just n | n > 0 && n <= length ys ->
+               return (n-1)
+            _ -> if input == "q" then error "QUIT" else ask -}

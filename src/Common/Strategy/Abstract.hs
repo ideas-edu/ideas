@@ -1,4 +1,4 @@
-
+{-# LANGUAGE FlexibleContexts, UndecidableInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -14,7 +14,7 @@ module Common.Strategy.Abstract
    ( Strategy, IsStrategy(..)
    , LabeledStrategy, label, unlabel
    , fullDerivationTree, derivationTree, rulesInStrategy
-   , mapRules, mapRulesS, cleanUpStrategy, cleanUpStrategyAfter
+   , mapRules, mapRulesS, mapRulesM, cleanUpStrategy, cleanUpStrategyAfter
      -- Accessors to the underlying representation
    , toCore, fromCore, liftCore, liftCore2, makeLabeledStrategy
    , toLabeledStrategy
@@ -31,6 +31,7 @@ import Common.Transformation
 import Common.DerivationTree
 import Common.Uniplate hiding (rewriteM)
 import Common.Strategy.Parsing
+import qualified Control.Applicative as A
 import Control.Monad
 import Test.QuickCheck hiding (label)
 import qualified Data.Traversable as T
@@ -39,8 +40,27 @@ import qualified Data.Foldable as F
 mapRulesM :: Monad m => (Rule a -> m (Rule a)) -> Strategy a -> m (Strategy a)
 mapRulesM f = liftM S . T.mapM f . toCore
 
-instance T.Traversable (GCore l)
-instance F.Foldable (GCore l)
+instance (Functor (GCore l), F.Foldable (GCore l)) => T.Traversable (GCore l) where
+   traverse f core =
+      case core of
+         a :*: b   -> (:*:)  A.<$> T.traverse f a A.<*> T.traverse f b
+         a :|: b   -> (:|:)  A.<$> T.traverse f a A.<*> T.traverse f b
+         a :|>: b  -> (:|>:) A.<$> T.traverse f a A.<*> T.traverse f b
+         a :%: b   -> (:%:)  A.<$> T.traverse f a A.<*> T.traverse f b
+         a :!%: b  -> (:!%:) A.<$> T.traverse f a A.<*> T.traverse f b
+         Many a    -> Many A.<$> T.traverse f a
+         Repeat a  -> Repeat A.<$> T.traverse f a
+         Label l a -> Label l A.<$> T.traverse f a
+         Atomic a  -> Atomic A.<$> T.traverse f a
+         Rec n a   -> Rec n A.<$> T.traverse f a
+         Not a     -> Not A.<$> T.traverse f a
+         Rule r    -> Rule A.<$> f r
+         Succeed   -> A.pure Succeed
+         Fail      -> A.pure Fail
+         Var n     -> A.pure $ Var n
+
+instance F.Foldable (GCore l) where
+   foldMap = T.foldMapDefault
 
 -----------------------------------------------------------
 --- Strategy data-type

@@ -265,11 +265,11 @@ isRewriteRule = not . null . getRewriteRules
 siblingOf :: HasId b => b -> Rule a -> Rule a 
 siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
 
-ruleList :: (IsId n, RuleBuilder f a, Rewrite a) => n -> [f] -> Rule a
+ruleList :: (IsId n, RuleBuilder f a) => n -> [f] -> Rule a
 ruleList n = makeRuleList a . map (makeRewriteTrans . rewriteRule a)
  where a = newId n
  
-rule :: (IsId n, RuleBuilder f a, Rewrite a) => n -> f -> Rule a
+rule :: (IsId n, RuleBuilder f a) => n -> f -> Rule a
 rule n = makeRule a . makeRewriteTrans . rewriteRule a
  where a = newId n
 
@@ -392,7 +392,7 @@ smartGen r gen = frequency [(2, gen), (1, smart)]
 smartGenTrans :: a -> Transformation a -> Maybe (Gen a)
 smartGenTrans a trans =
    case trans of
-      RewriteRule r _ -> smartGenerator r
+      RewriteRule r _ -> return (smartGenerator r)
       LiftView v t -> do
          (b, c) <- matchM v a
          gen    <- smartGenTrans b t

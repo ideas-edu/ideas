@@ -16,8 +16,6 @@ import Common.Rewriting
 import Control.Monad
 import Test.QuickCheck
 
-instance Rewrite RelAlg
-
 instance Arbitrary RelAlg where
    arbitrary = sized (arbRelAlg . min 8)
 

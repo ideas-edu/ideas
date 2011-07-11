@@ -58,8 +58,6 @@ instance Container OrList where
    singleton = OrList . pure . singleton
    getSingleton (OrList a) = fromWithZero a >>= getSingleton
 
-instance Rewrite a => Rewrite (OrList a)
-
 instance IsTerm a => IsTerm (OrList a) where
    toTerm = toTerm . build orListView
    fromTerm expr = fromTerm expr >>= matchM orListView

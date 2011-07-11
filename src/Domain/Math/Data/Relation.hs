@@ -99,8 +99,6 @@ instance IsTerm a => IsTerm (Relation a) where
                _    -> fail "fromTerm: relation"
          _ -> fail "fromTerm: relation"
 
-instance Rewrite a => Rewrite (Relation a)
-
 relationSymbols :: [(RelationType, (String, Symbol))]
 relationSymbols =
    [ (EqualTo,              ("==", newSymbol eqSymbol))
@@ -223,8 +221,6 @@ instance IsTerm a => IsTerm (Equation a) where
    toTerm = toTerm . build equationView
    fromTerm a = fromTerm a >>= matchM equationView
 
-instance Rewrite a => Rewrite (Equation a)
-
 equationView :: View (Relation a) (Equation a)
 equationView = makeView f g
  where
@@ -275,8 +271,6 @@ instance CoArbitrary a => CoArbitrary (Inequality a) where
 instance IsTerm a => IsTerm (Inequality a) where
    toTerm = toTerm . build inequalityView
    fromTerm a = fromTerm a >>= matchM inequalityView
-
-instance Rewrite a => Rewrite (Inequality a)
 
 inequalityView :: View (Relation a) (Inequality a)
 inequalityView = makeView f g

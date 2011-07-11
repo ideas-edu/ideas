@@ -26,10 +26,7 @@ import Common.Exercise
 import Common.Uniplate
 
 -------------------------------------------------------------
--- Code that doesn't belong here, but the arbitrary instance
--- is needed for the Rewrite instance.
-
-instance Rewrite SLogic
+-- Code that doesn't belong here
 
 -- | Equality modulo associativity of operators
 equalLogicA :: Eq a => Logic a -> Logic a -> Bool

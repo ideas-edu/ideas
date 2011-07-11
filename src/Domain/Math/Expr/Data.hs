@@ -240,8 +240,6 @@ instance F.CoField Expr where
    isRecip _  = Nothing
    isDivision = isDivide
 
-instance Rewrite Expr
-
 instance Different Expr where
    different = (Nat 0, Nat 1)
 

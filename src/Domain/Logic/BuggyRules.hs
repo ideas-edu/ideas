@@ -32,10 +32,10 @@ buggyRules =
    , buggyRuleTrueProp, buggyRuleFalseProp, buggyRuleDistr, buggyRuleDistrNot
    ]
 
-rule :: (RuleBuilder f a, Rewrite a) => String -> f -> Rule a
+rule :: RuleBuilder f a => String -> f -> Rule a
 rule = Rule.rule . ( "logic.propositional.buggy" # )
 
-ruleList :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
+ruleList :: RuleBuilder f a => String -> [f] -> Rule a
 ruleList = Rule.ruleList . ( "logic.propositional.buggy" # )
 
 -----------------------------------------------------------------------------

@@ -44,10 +44,10 @@ buggyRelAlgRules = [buggyRuleIdemComp, buggyRuleIdemAdd, buggyRuleDeMorgan
 relalg :: IsId a => a -> Id
 relalg = ( # ) "relationalgebra"
 
-rule :: (RuleBuilder f a, Rewrite a) => String -> f -> Rule a
+rule :: RuleBuilder f a => String -> f -> Rule a
 rule = Rule.rule . relalg
 
-ruleList :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
+ruleList :: RuleBuilder f a => String -> [f] -> Rule a
 ruleList = Rule.ruleList . relalg
                    
 -- | 1. Alle ~ operatoren naar binnen verplaatsen
@@ -216,7 +216,7 @@ ruleRemRedunExprs = ruleList "RemRedunExprs"
       
 -- Buggy rules:
 
-buggyGroup :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
+buggyGroup :: RuleBuilder f a => String -> [f] -> Rule a
 buggyGroup s = 
    buggyRule . Rule.ruleList ("relationalgebra.buggy." ++ s)
     

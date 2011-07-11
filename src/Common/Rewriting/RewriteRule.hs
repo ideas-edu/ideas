@@ -12,15 +12,15 @@
 --
 -----------------------------------------------------------------------------
 module Common.Rewriting.RewriteRule 
-   ( -- * Supporting type classes
-     Rewrite, Different(..)
+   ( -- * Supporting type class
+     Different(..)
      -- * Rewrite rules and specs
    , RewriteRule, ruleSpecTerm, RuleSpec(..)
      -- * Compiling rewrite rules
    , rewriteRule, RuleBuilder(..)
      -- * Using rewrite rules
    , rewrite, rewriteM, showRewriteRule, smartGenerator
-   , metaInRewriteRule, renumberRewriteRule, inverseRule
+   , metaInRewriteRule, renumberRewriteRule
    ) where
 
 import Common.Classes
@@ -33,15 +33,6 @@ import Common.Uniplate (descend)
 import Control.Monad
 import Test.QuickCheck
 import qualified Data.IntSet as IS
-   
-------------------------------------------------------
--- Supporting type classes
-
--- The arbitrary type class is a quick solution to have smart generators
--- (in combination with lifting rules). The function in the RewriteRule module
--- cannot have a type class for this reason
--- The show type class is added for pretty-printing rules
-class (IsTerm a, Arbitrary a, Show a) => Rewrite a
 
 ------------------------------------------------------
 -- Rewrite rules and specs
@@ -54,11 +45,11 @@ instance Functor RuleSpec where
    fmap f (a :~> b) = f a :~> f b
 
 data RewriteRule a = R
-   { ruleId          :: Id
-   , ruleSpecTerm    :: RuleSpec Term
-   , ruleShow        :: a -> String
-   , ruleTermView    :: View Term a
-   , ruleGenerator   :: Maybe (Gen a)
+   { ruleId         :: Id
+   , ruleSpecTerm   :: RuleSpec Term
+   , ruleShow       :: a -> String
+   , ruleTermView   :: View Term a
+   , smartGenerator :: Gen a
    }
    
 instance Show (RewriteRule a) where
@@ -74,14 +65,17 @@ instance HasId (RewriteRule a) where
 class Different a where
    different :: (a, a)
 
-class RuleBuilder t a | t -> a where
-   buildRuleSpec :: t -> Int -> RuleSpec Term
+class (IsTerm a, Show a) => RuleBuilder t a | t -> a where
+   buildRuleSpec  :: Int -> t -> RuleSpec Term
+   buildGenerator :: t -> Gen a
 
-instance IsTerm a => RuleBuilder (RuleSpec a) a where
-   buildRuleSpec = const . fmap toTerm
+instance (IsTerm a, Show a) => RuleBuilder (RuleSpec a) a where
+   buildRuleSpec  = const $ fmap toTerm
+   buildGenerator (a :~> _) = return a
 
-instance (Different a, RuleBuilder t b) => RuleBuilder (a -> t) b where
-   buildRuleSpec f i = buildFunction i (\a -> buildRuleSpec (f a) (i+1))
+instance (Arbitrary a, Different a, RuleBuilder t b) => RuleBuilder (a -> t) b where
+   buildRuleSpec i f = buildFunction i (buildRuleSpec (i+1) . f)
+   buildGenerator f  = liftM f arbitrary >>= buildGenerator
 
 buildFunction :: Different a => Int -> (a -> RuleSpec Term) -> RuleSpec Term
 buildFunction n f = fzip (fill n) ((f *** f) different)
@@ -105,8 +99,8 @@ buildSpec (lhs :~> rhs) a = do
        extRight x = if b2 then binary sym x (Meta specialRight) else x
    return (s |-> extLeft (extRight rhs))
 
-rewriteRule :: (IsId n, RuleBuilder f a, Rewrite a) => n -> f -> RewriteRule a
-rewriteRule s f = R (newId s) (buildRuleSpec f 0) show termView (Just arbitrary)
+rewriteRule :: (IsId n, RuleBuilder f a) => n -> f -> RewriteRule a
+rewriteRule s f = R (newId s) (buildRuleSpec 0 f) show termView (buildGenerator f)
 
 ------------------------------------------------------
 -- Using a rewrite rule
@@ -135,24 +129,7 @@ showRewriteRule sound r = do
    vs  = IS.toList (metaVarSet a `IS.union` metaVarSet b)
    sub = listToSubst $ zip vs [ Var [c] | c <- ['a' ..] ]
 
------------------------------------------------------------
--- Smart generator that creates instantiations of the left-hand side
-
-smartGenerator :: RewriteRule a -> Maybe (Gen a)
-smartGenerator r = liftM make (ruleGenerator r) 
- where
-   a :~> _ = ruleSpecTerm r
-   vs      = IS.toList (metaVarSet a)
-   make gn = do
-      list <- replicateM (length vs) gn
-      let sub = listToSubst (zip vs (map (toTermRR r) list))
-      fromTermRR r (sub |-> a)
-
 ------------------------------------------------------
-
-inverseRule :: RewriteRule a -> RewriteRule a
-inverseRule r = r {ruleSpecTerm = b :~> a}
- where a :~> b = ruleSpecTerm r
 
 -- some helpers
 metaInRewriteRule :: RewriteRule a -> [Int]

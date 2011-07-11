@@ -55,12 +55,14 @@ propertyLaw eq = rec . getLawSpec
    rec (Abs f)    = property (rec . f)
    rec (a :==: b) = property (eq a b)
 
-rewriteLaw :: (Rewrite a, Different a) => Law a -> RewriteRule a
+rewriteLaw :: (Different a, IsTerm a, Arbitrary a, Show a) => Law a -> RewriteRule a
 rewriteLaw (Law s l) = rewriteRule s l
 
-instance (IsTerm a, Different a) => RuleBuilder (LawSpec a) a where
-   buildRuleSpec (a :==: b) = buildRuleSpec (a :~> b)
-   buildRuleSpec (Abs f)    = buildRuleSpec f
+instance (Arbitrary a, IsTerm a, Show a, Different a) => RuleBuilder (LawSpec a) a where
+   buildRuleSpec i (a :==: b) = buildRuleSpec i (a :~> b)
+   buildRuleSpec i (Abs f)    = buildRuleSpec i f
+   buildGenerator (a :==: b)  = buildGenerator (a :~> b)
+   buildGenerator (Abs f)     = buildGenerator f
    
 getLawSpec :: Law a -> LawSpec a
 getLawSpec (Law _ l) = l

@@ -13,7 +13,7 @@
 module Domain.RegularExpr.Expr where
 
 import Common.Rewriting
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Control.Monad
 import Test.QuickCheck
 
@@ -106,14 +106,12 @@ ppWith f = ($ 0) . foldRE
 instance Uniplate (RE a) where
    uniplate regexp = 
       case regexp of
-         EmptySet -> ([],     \[] -> EmptySet)
-         Epsilon  -> ([],     \[] -> Epsilon)
-         Atom a   -> ([],     \[] -> Atom a)
-         Option r -> ([r],    \[a] -> Option a)
-         Star r   -> ([r],    \[a] -> Star a)
-         Plus r   -> ([r],    \[a] -> Plus a)
-         r :*: s  -> ([r, s], \[a, b] -> a :*: b)
-         r :|: s  -> ([r, s], \[a, b] -> a :|: b)
+         Option r -> plate Option |* r
+         Star r   -> plate Star   |* r
+         Plus r   -> plate Plus   |* r
+         r :*: s  -> plate (:*:)  |* r |* s
+         r :|: s  -> plate (:|:)  |* r |* s
+         _        -> plate regexp
 
 instance Different (RE a) where
    different = (EmptySet, Epsilon)
@@ -139,8 +137,6 @@ instance IsTerm RegExp where
          | s == choiceSymbol   = return (x :|: y)
       f _ _ = fail "fromExpr"
 
-instance Rewrite RegExp
-   
 emptySetSymbol, epsilonSymbol, optionSymbol, starSymbol,
    plusSymbol, sequenceSymbol, choiceSymbol :: Symbol
 emptySetSymbol = regexpSymbol "EmptySet"

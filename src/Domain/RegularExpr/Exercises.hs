@@ -12,7 +12,7 @@
 module Domain.RegularExpr.Exercises (regexpExercise) where
 
 import Common.Library
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Domain.RegularExpr.Expr
 import Domain.RegularExpr.Parser
 import Domain.RegularExpr.Strategy

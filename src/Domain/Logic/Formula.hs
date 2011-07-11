@@ -18,7 +18,7 @@ import Common.Algebra.Boolean
 import Common.Algebra.CoBoolean
 import Common.Classes
 import Common.Rewriting
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.Utils (ShowString, subsets)
 import Control.Monad
 import Data.Foldable (Foldable, foldMap, toList)
@@ -163,12 +163,12 @@ varsLogic = nub . toList
 instance Uniplate (Logic a) where
    uniplate this =
       case this of 
-         p :->: q  -> ([p, q], \[a, b] -> a :->:  b)
-         p :<->: q -> ([p, q], \[a, b] -> a :<->: b)
-         p :&&: q  -> ([p, q], \[a, b] -> a :&&:  b)
-         p :||: q  -> ([p, q], \[a, b] -> a :||:  b)
-         Not p     -> ([p], \[a] -> Not a)
-         _         -> ([], \[] -> this)
+         p :->: q  -> plate (:->:)  |* p |* q
+         p :<->: q -> plate (:<->:) |* p |* q
+         p :&&: q  -> plate (:&&:)  |* p |* q
+         p :||: q  -> plate (:||:)  |* p |* q
+         Not p     -> plate Not     |* p
+         _         -> plate this
 
 instance Different (Logic a) where
    different = (T, F)

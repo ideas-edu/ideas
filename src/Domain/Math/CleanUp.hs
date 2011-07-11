@@ -16,7 +16,7 @@ module Domain.Math.CleanUp
    ) where
 
 import Common.Classes
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.Utils (fixpoint)
 import Common.View
 import Control.Monad

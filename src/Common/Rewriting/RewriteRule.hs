@@ -29,7 +29,7 @@ import Common.View hiding (match)
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
 import Common.Rewriting.Unification
-import Common.Uniplate (descend)
+import Common.Utils.Uniplate (descend)
 import Control.Monad
 import Test.QuickCheck
 import qualified Data.IntSet as IS

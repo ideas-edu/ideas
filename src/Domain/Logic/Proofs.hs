@@ -17,7 +17,7 @@ import Common.Algebra.Boolean
 import Common.Algebra.CoBoolean
 import Common.Library
 import Common.Rewriting.AC
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.Utils
 import Control.Monad
 import Data.List

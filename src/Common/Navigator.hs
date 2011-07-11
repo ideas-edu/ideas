@@ -24,7 +24,7 @@ module Common.Navigator
    , replaceT
    ) where
 
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.View hiding (left, right)
 import Control.Monad
 import Data.Maybe

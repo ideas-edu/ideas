@@ -8,13 +8,17 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Exports a subset of Data.Generics.Uniplate
+-- Exports a subset of Data.Generics.Uniplate.Direct (the @Uniplate@ type
+-- class and its utility plus constructor functions)
 --
 -----------------------------------------------------------------------------
-module Common.Uniplate {-# DEPRECATED "import Data.Generics.Uniplate directly" #-}
+module Common.Utils.Uniplate
    ( -- * Uniplate type class and utility functions
-     Uniplate(..), universe, children, holes
-   , transform, transformM, descend, descendM, rewrite, rewriteM
+     Uniplate
+   , children, contexts, descend, descendM, holes, para
+   , rewrite, rewriteM, transform, transformM, uniplate, universe
+     -- * Instance constructors
+   , (|-), (|*), (||*), plate
    ) where
 
-import Data.Generics.Uniplate
+import Data.Generics.Uniplate.Direct

@@ -17,7 +17,7 @@ module Common.Rewriting.Substitution
    , tests
    ) where
 
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.Rewriting.Term
 import Common.Utils.TestSuite
 import qualified Data.IntMap as IM

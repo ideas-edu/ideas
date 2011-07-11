@@ -22,7 +22,7 @@ module Common.Strategy.Core
 
 import Common.Classes
 import Common.Transformation
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.Utils.QuickCheck
 
 -----------------------------------------------------------------
@@ -65,18 +65,18 @@ instance Functor (GCore l) where
 instance Uniplate (GCore l a) where
    uniplate core =
       case core of
-         a :*: b   -> ([a,b], \[x,y] -> x :*: y)
-         a :|: b   -> ([a,b], \[x,y] -> x :|: y)
-         a :|>: b  -> ([a,b], \[x,y] -> x :|>: y)
-         a :%: b   -> ([a,b], \[x,y] -> x :%: y)
-         a :!%: b  -> ([a,b], \[x,y] -> x :!%: y)
-         Many a    -> ([a],   \[x]   -> Many x)
-         Repeat a  -> ([a],   \[x]   -> Repeat x)
-         Label l a -> ([a],   \[x]   -> Label l x)
-         Atomic a  -> ([a],   \[x]   -> Atomic x)
-         Rec n a   -> ([a],   \[x]   -> Rec n x)
-         Not a     -> ([a],   \[x]   -> Not x)
-         _         -> ([],    \_     -> core)
+         a :*: b   -> plate (:*:)  |* a |* b
+         a :|: b   -> plate (:|:)  |* a |* b
+         a :|>: b  -> plate (:|>:) |* a |* b
+         a :%: b   -> plate (:%:)  |* a |* b
+         a :!%: b  -> plate (:!%:) |* a |* b
+         Many a    -> plate Many   |* a
+         Repeat a  -> plate Repeat |* a
+         Label l a -> plate Label  |- l |* a
+         Atomic a  -> plate Atomic |* a
+         Rec n a   -> plate Rec    |- n |* a
+         Not a     -> plate Not    |* a
+         _         -> plate core
 
 instance BiFunctor GCore where
    biMap f g = rec 

@@ -16,7 +16,7 @@ module Service.FeedbackScript.Analysis (withScripts) where
 import Common.Exercise
 import Common.Transformation
 import Common.Id
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.Utils (Some(..))
 import Control.Monad
 import Data.Either

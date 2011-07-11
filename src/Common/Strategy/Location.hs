@@ -19,7 +19,7 @@ module Common.Strategy.Location
 import Common.Id
 import Common.Strategy.Abstract
 import Common.Strategy.Core
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.Utils (safeHead)
 import Data.Maybe
 

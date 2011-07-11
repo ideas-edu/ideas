@@ -14,7 +14,7 @@ module Text.OpenMath.Object
    ( OMOBJ(..), getOMVs, xml2omobj, omobj2xml
    ) where
 
-import Data.Generics.Uniplate hiding (children)
+import Data.Generics.Uniplate.Direct hiding (children)
 import Data.Char
 import Data.List (nub)
 import Data.Maybe
@@ -38,9 +38,9 @@ instance InXML OMOBJ where
 instance Uniplate OMOBJ where
    uniplate omobj =
       case omobj of
-         OMA xs        -> (xs, OMA)
-         OMBIND a ss b -> ([a, b], \[x, y] -> OMBIND x ss y)
-         _             -> ([], \_ -> omobj)
+         OMA xs        -> plate OMA ||* xs
+         OMBIND a ss b -> plate OMBIND |* a |- ss |* b
+         _             -> plate omobj
 
 getOMVs :: OMOBJ -> [String]
 getOMVs omobj = nub [ x | OMV x <- universe omobj ]

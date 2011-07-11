@@ -12,7 +12,7 @@
 module Domain.Math.Polynomial.Balance (balanceExercise) where
 
 import Common.Library
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.Utils (fixpoint, safeHead)
 import Control.Monad
 import Data.Either

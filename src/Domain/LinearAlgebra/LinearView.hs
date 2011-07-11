@@ -17,7 +17,7 @@ module Domain.LinearAlgebra.LinearView
 import Control.Monad
 import Data.List
 import Common.Rewriting
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.View
 import Domain.Math.Expr
 import qualified Data.Map as M

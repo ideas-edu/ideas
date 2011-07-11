@@ -14,7 +14,7 @@ module Domain.Math.Polynomial.IneqExercises
    ) where
 
 import Common.Library hiding (isEmpty)
-import Common.Uniplate (descend)
+import Common.Utils.Uniplate (descend)
 import Control.Monad
 import Data.Foldable (toList)
 import Data.List

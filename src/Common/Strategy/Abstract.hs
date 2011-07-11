@@ -29,7 +29,7 @@ import Common.Classes
 import Common.Rewriting (RewriteRule)
 import Common.Transformation
 import Common.DerivationTree
-import Common.Uniplate hiding (rewriteM)
+import Common.Utils.Uniplate hiding (rewriteM)
 import Common.Strategy.Parsing
 import qualified Control.Applicative as A
 import Control.Monad

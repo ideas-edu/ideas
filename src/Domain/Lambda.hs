@@ -1,7 +1,7 @@
 module Domain.SKI where
 
 import Common.Library
-import Common.Uniplate
+import Common.Utils.Uniplate
 
 data Expr = Abs String Expr | App Expr Expr | Var String
 

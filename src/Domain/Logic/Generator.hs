@@ -23,7 +23,7 @@ import Data.List
 import Test.QuickCheck
 import Common.Rewriting
 import Common.Exercise
-import Common.Uniplate
+import Common.Utils.Uniplate
 
 -------------------------------------------------------------
 -- Code that doesn't belong here

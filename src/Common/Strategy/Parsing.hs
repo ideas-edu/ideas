@@ -24,7 +24,7 @@ import Common.Strategy.Core
 import Common.Transformation
 import Control.Arrow
 import Control.Monad
-import Common.Uniplate
+import Common.Utils.Uniplate
 
 ----------------------------------------------------------------------
 -- Step data type

@@ -18,7 +18,7 @@ module Service.ModeXML
    ) where
 
 import Common.Library hiding (exerciseId)
-import Common.Uniplate (transform)
+import Common.Utils.Uniplate (transform)
 import Common.Utils (Some(..), readM)
 import Control.Monad
 import Data.Char

@@ -33,7 +33,7 @@ module Common.Rewriting.Term
 
 import Common.Id
 import Common.Utils (ShowString(..))
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.View
 import Control.Monad
 import Data.Function
@@ -79,8 +79,8 @@ data Term = Var   String
  deriving (Show, Eq, Ord, Typeable)
  
 instance Uniplate Term where
-   uniplate (Apply f a) = ([f, a], \[g, b] -> Apply g b)
-   uniplate term        = ([], \_ -> term)
+   uniplate (Apply f a) = plate Apply |* f |* a
+   uniplate term        = plate term
 
 -----------------------------------------------------------
 -- * Type class for conversion to/from terms

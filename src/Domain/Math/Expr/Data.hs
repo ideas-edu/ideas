@@ -16,7 +16,7 @@ module Domain.Math.Expr.Data
 
 import Common.Algebra.Field
 import Common.Rewriting
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.Utils (commaList)
 import Control.Monad
 import Data.Char (isAlphaNum)
@@ -130,8 +130,8 @@ fromDouble d
 instance Uniplate Expr where 
    uniplate expr =
       case getFunction expr of
-         Just (s, as) -> (as, function s)
-         _            -> ([], const expr)
+         Just (s, as) -> plate function |- s ||* as
+         _            -> plate expr
 
 -----------------------------------------------------------------------
 -- Arbitrary instance

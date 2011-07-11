@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Formula where
 
-import Common.Uniplate (Uniplate(..))
+import Common.Utils.Uniplate
 import Common.Rewriting
 import Common.Utils
 import Control.Monad
@@ -162,17 +162,17 @@ varsRelAlg = foldRelAlg (return, union, union, union, union, id, id, [], [])
 instance Uniplate RelAlg where
    uniplate term =
       case term of 
-         s :.:  t  -> ([s, t], \[a, b] -> a :.:  b)
-         s :+:  t  -> ([s, t], \[a, b] -> a :+:  b)
-         s :&&: t  -> ([s, t], \[a, b] -> a :&&: b)
-         s :||: t  -> ([s, t], \[a, b] -> a :||: b)
-         Not s     -> ([s], \[a] -> Not a)
-         Inv s     -> ([s], \[a] -> Inv a)
-         _         -> ([], \[] -> term)
+         s :.:  t  -> plate (:.:)  |* s |* t
+         s :+:  t  -> plate (:+:)  |* s |* t
+         s :&&: t  -> plate (:&&:) |* s |* t
+         s :||: t  -> plate (:||:) |* s |* t
+         Not s     -> plate Not    |* s
+         Inv s     -> plate Inv    |* s
+         _         -> plate term
          
 instance Different RelAlg where
    different = (V, I)
-   --(var, comp, add, conj, disj, not, inverse, universe, ident)
+
 instance IsTerm RelAlg where
    toTerm = foldRelAlg 
       ( variable, binary compSymbol, binary addSymbol

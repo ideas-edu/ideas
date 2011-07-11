@@ -12,7 +12,7 @@
 module Domain.RegularExpr.Definitions where
 
 import Domain.RegularExpr.Expr
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.Utils (distinct)
 
 deterministic :: (Show a, Eq a) => RE a -> Bool

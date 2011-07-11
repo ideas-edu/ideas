@@ -16,7 +16,7 @@ module Domain.Math.Polynomial.RationalExercises
    ) where
 
 import Common.Library
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.Utils (fst3)
 import Control.Monad
 import Data.Maybe

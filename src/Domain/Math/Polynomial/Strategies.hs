@@ -16,7 +16,7 @@ module Domain.Math.Polynomial.Strategies
    , findFactorsStrategy, findFactorsStrategyG, expandStrategy
    ) where
 
-import Common.Uniplate (transform)
+import Common.Utils.Uniplate (transform)
 import Common.Library
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Polynomial.Rules

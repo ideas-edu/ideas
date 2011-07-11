@@ -21,7 +21,7 @@ import Common.Rewriting.RewriteRule
 import Common.Rewriting.Substitution
 import Common.Rewriting.Unification
 import Common.Rewriting.Term
-import Common.Uniplate hiding (rewriteM)
+import Common.Utils.Uniplate hiding (rewriteM)
 import Data.Maybe
 
 normalForm :: [RewriteRule a] -> Term -> Term

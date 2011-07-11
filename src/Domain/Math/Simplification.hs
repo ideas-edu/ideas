@@ -21,7 +21,7 @@ module Domain.Math.Simplification
 import Common.Context
 import Common.Navigator
 import Common.Transformation
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.View hiding (simplify, simplifyWith)
 import Control.Monad
 import Data.List

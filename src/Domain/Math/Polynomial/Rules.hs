@@ -23,7 +23,7 @@ module Domain.Math.Polynomial.Rules
    ) where
 
 import Common.Library hiding (terms, simplify)
-import Common.Uniplate (universe, descend)
+import Common.Utils.Uniplate (universe, descend)
 import Common.Utils
 import Control.Monad
 import Data.List

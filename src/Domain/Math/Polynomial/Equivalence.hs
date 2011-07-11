@@ -18,7 +18,7 @@ module Domain.Math.Polynomial.Equivalence
 import Common.Context
 import Common.Algebra.Boolean
 import Common.Rewriting
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.View
 import Control.Monad
 import qualified Data.Traversable as T

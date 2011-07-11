@@ -25,7 +25,7 @@ import Common.Classes
 import Control.Monad
 import Common.View
 import Common.Rewriting
-import Common.Uniplate (transform, descend, children)
+import Common.Utils.Uniplate (transform, descend, children)
 import Common.Utils (distinct)
 import Data.Foldable (foldMap, toList)
 import Data.Traversable (mapM)

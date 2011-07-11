@@ -16,7 +16,7 @@ module Domain.Math.Derivative.Exercises
    ) where
 
 import Common.Library
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Control.Monad
 import Data.List
 import Data.Maybe

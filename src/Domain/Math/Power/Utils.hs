@@ -22,7 +22,7 @@ import Common.Context
 import Common.Rewriting
 import Common.Strategy hiding (not)
 import Common.Transformation
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.View
 import Control.Monad
 import Data.Foldable (Foldable, foldMap, toList)
@@ -181,15 +181,8 @@ tryRewriteAll f x =
     [] -> [x]
     xs -> xs
 
-transformList :: Uniplate a => (a -> [a]) -> a -> [a]
-transformList f a = concatMap (f . ctx) $ g $ map (transformList f) cs
-  where 
-    (cs, ctx) = uniplate a
-    g (xs:xss) = concatMap (\x -> map (x:) (g xss)) xs
-    g []       = [[]]
-
 transformOrList :: (Traversable f, Uniplate a) => (a -> [a]) -> OrList (f a) -> OrList (f a)
-transformOrList f = foldMap (toOrList . Data.Traversable.mapM (transformList f))
+transformOrList f = foldMap (toOrList . Data.Traversable.mapM (transformM f))
 
 -- y = root n x
 takeRoot :: Integer -> Integer -> [Integer]

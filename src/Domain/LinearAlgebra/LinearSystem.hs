@@ -19,7 +19,7 @@ import Data.List
 import Data.Maybe
 import Control.Monad
 import Common.Utils
-import Common.Uniplate
+import Common.Utils.Uniplate
 import Common.Rewriting
 import qualified Data.Set as S
 

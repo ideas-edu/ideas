@@ -27,6 +27,7 @@ module Domain.Math.Numeric.Views
 
 import Common.Id
 import Common.View
+import Common.Rewriting (function)
 import Control.Monad
 import Data.Ratio
 import Domain.Math.Expr hiding ((^))

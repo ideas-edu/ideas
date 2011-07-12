@@ -21,7 +21,6 @@ import Control.Monad
 import Data.Char
 import Data.List
 import Test.QuickCheck
-import Common.Rewriting
 import Common.Exercise
 import Common.Utils.Uniplate
 

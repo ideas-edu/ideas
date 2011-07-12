@@ -4,9 +4,7 @@ module Service.Omdoc where
 
 import Data.Map(Map,empty,insert,(!))
 
-import Common.Exercise
-import Common.Id
-import Common.Rewriting.Term
+import Common.Library
 import Service.OpenMathSupport
 import qualified Main.Revision as MR
 import Text.OpenMath.Object

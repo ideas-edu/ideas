@@ -11,15 +11,11 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.EquationsRules where
 
-import Prelude hiding (repeat)
-import Common.Context
-import Common.Transformation
+import Prelude
+import Common.Library hiding (simplify)
 import Common.Utils
-import Common.Navigator
-import Common.Id
-import Common.View hiding (simplify)
 import Control.Monad
-import Data.List hiding (repeat)
+import Data.List
 import Data.Maybe
 import Domain.Math.Expr
 import Domain.Math.Data.Relation

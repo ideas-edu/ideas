@@ -85,18 +85,18 @@ buildFunction n f = fzip (fill n) ((f *** f) different)
 fill :: Int -> Term -> Term -> Term
 fill i = rec
  where
-   rec (Apply f a) (Apply g b) = Apply (rec f g) (rec a b)
+   rec (TApp f a) (TApp g b) = TApp (rec f g) (rec a b)
    rec a b 
       | a == b    = a
-      | otherwise = Meta i
+      | otherwise = TMeta i
 
 buildSpec :: RuleSpec Term -> Term -> [Term]
 buildSpec (lhs :~> rhs) a = do
    s <- matchA lhs a
    let (b1, b2) = (specialLeft `IS.member` dom s, specialRight `IS.member` dom s)
        sym      = maybe (error "buildSpec") fst (getFunction lhs)
-       extLeft  x = if b1 then binary sym (Meta specialLeft) x else x
-       extRight x = if b2 then binary sym x (Meta specialRight) else x
+       extLeft  x = if b1 then binary sym (TMeta specialLeft) x else x
+       extRight x = if b2 then binary sym x (TMeta specialRight) else x
    return (s |-> extLeft (extRight rhs))
 
 rewriteRule :: (IsId n, RuleBuilder f a) => n -> f -> RewriteRule a
@@ -127,7 +127,7 @@ showRewriteRule sound r = do
  where
    a :~> b = ruleSpecTerm r
    vs  = IS.toList (metaVarSet a `IS.union` metaVarSet b)
-   sub = listToSubst $ zip vs [ Var [c] | c <- ['a' ..] ]
+   sub = listToSubst $ zip vs [ TVar [c] | c <- ['a' ..] ]
 
 ------------------------------------------------------
 
@@ -139,8 +139,8 @@ metaInRewriteRule r = metaVars a ++ metaVars b
 renumberRewriteRule :: Int -> RewriteRule a -> RewriteRule a
 renumberRewriteRule n r = r {ruleSpecTerm = fmap f (ruleSpecTerm r)}
  where
-   f (Meta i) = Meta (i+n)
-   f term     = descend f term
+   f (TMeta i) = TMeta (i+n)
+   f term      = descend f term
    
 toTermRR :: RewriteRule a -> a -> Term
 toTermRR = build . ruleTermView

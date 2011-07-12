@@ -17,6 +17,7 @@ module Domain.Math.Derivative.Examples
    , diffSet5, diffSet6, diffSet7, diffSet8
    ) where
 
+import Common.Rewriting
 import Domain.Math.Expr
 import Prelude hiding ((^))
 import Data.Maybe

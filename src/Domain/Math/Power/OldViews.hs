@@ -11,8 +11,10 @@
 -----------------------------------------------------------------------------
 
 module Domain.Math.Power.OldViews 
-   (powerFactorView, powerFactorViewForWith, powerFactorViewWith) where
+   ( powerFactorView, powerFactorViewForWith, powerFactorViewWith
+   ) where
 
+import Common.Rewriting
 import Common.View
 import Control.Monad
 import Domain.Math.Expr hiding ( (^) )

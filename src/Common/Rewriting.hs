@@ -15,5 +15,4 @@ module Common.Rewriting
    ) where
 
 import Common.Rewriting.RewriteRule
-import Common.Rewriting.Term hiding (Term(..))
-import Common.Rewriting.Term (Term)
+import Common.Rewriting.Term

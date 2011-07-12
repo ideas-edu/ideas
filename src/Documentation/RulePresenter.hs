@@ -14,7 +14,6 @@ module Documentation.RulePresenter (ruleToHTML) where
 import Common.Library
 import Control.Monad
 import Common.Utils (Some(..), safeHead)
-import Common.Rewriting.Term
 import Data.List
 import Text.HTML
 
@@ -26,19 +25,12 @@ ruleToHTML ex r =
 rewriteRuleToHTML :: Bool -> Some Exercise -> RewriteRule a -> HTMLBuilder
 rewriteRuleToHTML sound ex r = do
    let lhs :~> rhs = ruleSpecTerm r
-   -- showRuleName (unqualified r)
-   -- spaces 3
    showTerm ex lhs
    spaces 3
    showLeadsTo sound
    spaces 3
    showTerm ex rhs
    br
-
-{-     
-showRuleName :: String -> HTMLBuilder
-showRuleName s = text ("[" ++ s ++ "]")
--}
 
 showLeadsTo :: Bool -> HTMLBuilder
 showLeadsTo sound = text (if sound then "\x21D2" else "\x21CF")
@@ -48,23 +40,23 @@ showTerm (Some ex) = text . rec
  where
    rec term =
       case term of
-         Var s   -> s
-         Num i   -> show i
-         Float a -> show a
-         Meta n  -> showMeta ex n
+         TVar s   -> s
+         TNum i   -> show i
+         TFloat a -> show a
+         TMeta n  -> showMeta ex n
          _ -> concatMap (either id recp) $  
             case getSpine term of
-               (Con s, xs) -> 
+               (TCon s, xs) -> 
                   case specialSymbol s xs of
                      Just ys -> ys
                      Nothing -> spaced (Left (show s) : map Right xs)
                (x, xs) -> spaced (map Right (x:xs))
    
-   recp term = parIf (isApply term) (rec term)
+   recp term = parIf (isApp term) (rec term)
    spaced    = intersperse (Left " ")
       
-   isApply (Apply _ _) = True
-   isApply _           = False
+   isApp (TApp _ _) = True
+   isApp _          = False
       
    parIf b s = if b then "(" ++ s ++ ")" else s           
          
@@ -104,7 +96,7 @@ specialSymbol s [a, b]
    | sameSymbol s "relalg.add"        = bin " \x2020 " -- relative addition/dagger
  where
    bin x = return [Right a, Left x, Right b]
-specialSymbol s1 [Apply (Apply (Con s2) x) a] 
+specialSymbol s1 [TApp (TApp (TCon s2) x) a] 
    | sameSymbol s1 "calculus1.diff" && sameSymbol s2 "fns1.lambda" = 
         return [Left "D(", Right x, Left ") ", Right a] 
 specialSymbol _ _ = Nothing

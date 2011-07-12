@@ -18,7 +18,7 @@ module Domain.Math.Data.WithBool
 
 import Common.Classes
 import Common.Algebra.Boolean
-import Common.Rewriting.Term
+import Common.Rewriting
 import Control.Applicative
 import Control.Monad
 import Data.Char (toLower)

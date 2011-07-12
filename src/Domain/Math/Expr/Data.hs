@@ -27,7 +27,6 @@ import Domain.Math.Data.Relation (relationSymbols)
 import Domain.Math.Expr.Symbols
 import Test.QuickCheck
 import qualified Common.Algebra.CoField as F
-import qualified Common.Rewriting.Term as Term
 
 -----------------------------------------------------------------------
 -- Expression data type
@@ -244,17 +243,17 @@ instance Different Expr where
    different = (Nat 0, Nat 1)
 
 instance IsTerm Expr where 
-   toTerm (Nat n)    = Term.Num n
-   toTerm (Number d) = Term.Float d
-   toTerm (Var v)    = Term.Var v
+   toTerm (Nat n)    = TNum n
+   toTerm (Number d) = TFloat d
+   toTerm (Var v)    = TVar v
    toTerm expr = 
       case getFunction expr of
          Just (s, xs) -> function s (map toTerm xs)
          Nothing      -> error "IsTerm Expr"
 
-   fromTerm (Term.Num n)   = return (fromInteger n)
-   fromTerm (Term.Float d) = return (fromDouble d)
-   fromTerm (Term.Var v)   = return (Var v)
+   fromTerm (TNum n)   = return (fromInteger n)
+   fromTerm (TFloat d) = return (fromDouble d)
+   fromTerm (TVar v)   = return (Var v)
    fromTerm t =
       case getFunction t of
          Just (s, xs) -> do

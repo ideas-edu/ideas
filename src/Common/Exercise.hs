@@ -48,7 +48,7 @@ import Common.DerivationTree
 import Common.Id
 import Common.Navigator
 import Common.Predicate
-import Common.Rewriting.Term
+import Common.Rewriting
 import qualified Common.Rewriting.Difference as Diff
 import Common.Utils.TestSuite
 import Common.Transformation

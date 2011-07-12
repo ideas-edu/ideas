@@ -70,17 +70,17 @@ makeAssociative (S _ a) = S True a
 -----------------------------------------------------------
 -- * Data type for terms
 
-data Term = Var   String 
-          | Con   Symbol 
-          | Apply Term Term
-          | Num   Integer 
-          | Float Double
-          | Meta  Int
+data Term = TVar   String 
+          | TCon   Symbol 
+          | TApp   Term Term
+          | TNum   Integer 
+          | TFloat Double
+          | TMeta  Int
  deriving (Show, Eq, Ord, Typeable)
  
 instance Uniplate Term where
-   uniplate (Apply f a) = plate Apply |* f |* a
-   uniplate term        = plate term
+   uniplate (TApp f a) = plate TApp |* f |* a
+   uniplate term       = plate term
 
 -----------------------------------------------------------
 -- * Type class for conversion to/from terms
@@ -99,9 +99,9 @@ instance IsTerm Term where
    fromTerm = return
 
 instance IsTerm ShowString where 
-   toTerm = Var . fromShowString
-   fromTerm (Var s) = return (ShowString s)
-   fromTerm _       = fail "fromTerm"
+   toTerm = TVar . fromShowString
+   fromTerm (TVar s) = return (ShowString s)
+   fromTerm _        = fail "fromTerm"
 
 instance (IsTerm a, IsTerm b) => IsTerm (Either a b) where
    toTerm = either toTerm toTerm
@@ -110,18 +110,18 @@ instance (IsTerm a, IsTerm b) => IsTerm (Either a b) where
       liftM Right (fromTerm expr) 
 
 instance IsTerm Int where
-   toTerm = Num . fromIntegral
+   toTerm = TNum . fromIntegral
    fromTerm = liftM fromInteger . fromTerm
 
 instance IsTerm Integer where
-   toTerm = Num
-   fromTerm (Num a) = return a
-   fromTerm _       = fail "fromTerm"
+   toTerm = TNum
+   fromTerm (TNum a) = return a
+   fromTerm _        = fail "fromTerm"
 
 instance IsTerm Double where
-   toTerm = Float
-   fromTerm (Float a) = return a
-   fromTerm _         = fail "fromTerm"
+   toTerm = TFloat
+   fromTerm (TFloat a) = return a
+   fromTerm _          = fail "fromTerm"
 
 fromTermM :: (Monad m, IsTerm a) => Term -> m a
 fromTermM = maybe (fail "fromTermM") return . fromTerm
@@ -150,11 +150,11 @@ class WithFunctions a where
          _            -> fail "Common.Term.getSymbol"
          
 instance WithFunctions Term where
-   function = makeTerm . Con
+   function = makeTerm . TCon
    getFunction a = 
       case getSpine a of
-         (Con s, xs) -> return (s, xs)
-         _           -> fail "Common.Rewriting.getFunction" 
+         (TCon s, xs) -> return (s, xs)
+         _            -> fail "Common.Rewriting.getFunction" 
    
 isSymbol :: WithFunctions a => Symbol -> a -> Bool
 isSymbol s = maybe False (==s) . getSymbol
@@ -191,9 +191,9 @@ class WithVars a where
    getVariable :: Monad m => a -> m String 
 
 instance WithVars Term where 
-   variable    = Var
-   getVariable (Var s) = return s
-   getVariable _       = fail "Common.Rewriting.getVariable"
+   variable = TVar
+   getVariable (TVar s) = return s
+   getVariable _        = fail "Common.Rewriting.getVariable"
 
 isVariable :: WithVars a => a -> Bool
 isVariable = isJust . getVariable
@@ -224,9 +224,9 @@ class WithMetaVars a where
    getMetaVar :: Monad m => a -> m Int 
 
 instance WithMetaVars Term where
-   metaVar = Meta
-   getMetaVar (Meta i) = return i
-   getMetaVar _        = fail "Common.Rewriting.getMetaVar"
+   metaVar = TMeta
+   getMetaVar (TMeta i) = return i
+   getMetaVar _         = fail "Common.Rewriting.getMetaVar"
 
 isMetaVar :: WithMetaVars a => a -> Bool
 isMetaVar = isJust . getMetaVar
@@ -246,20 +246,20 @@ hasMetaVar i = (i `elem`) . metaVars
 getSpine :: Term -> (Term, [Term])
 getSpine = rec [] 
  where
-   rec xs (Apply f a) = rec (a:xs) f
-   rec xs a           = (a, xs)
+   rec xs (TApp f a) = rec (a:xs) f
+   rec xs a          = (a, xs)
 
 makeTerm :: Term -> [Term] -> Term
-makeTerm = foldl Apply
+makeTerm = foldl TApp
 
 -----------------------------------------------------------
 -- * Arbitrary term generator
 
 instance Arbitrary Term where
    arbitrary = generators 
-      [ constGens $ map Var ["x", "y", "z"]
-      , arbGen Num, arbGen Float, arbGen Meta
-      , constGens $ map (Con . newSymbol) ["a", "b"]
+      [ constGens $ map TVar ["x", "y", "z"]
+      , arbGen TNum, arbGen TFloat, arbGen TMeta
+      , constGens $ map (TCon . newSymbol) ["a", "b"]
       , unaryGens $ map (unary . newSymbol) ["h", "k"]
       , binaryGens $ map (binary . newSymbol) ["f", "g"]
       ]

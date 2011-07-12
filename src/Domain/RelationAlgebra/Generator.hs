@@ -12,7 +12,6 @@
 module Domain.RelationAlgebra.Generator (templateGenerator) where
 
 import Domain.RelationAlgebra.Formula
-import Common.Rewriting
 import Control.Monad
 import Test.QuickCheck
 

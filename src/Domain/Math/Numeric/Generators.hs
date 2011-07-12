@@ -14,12 +14,13 @@ module Domain.Math.Numeric.Generators
    , ratioGen, ratioExprGen, ratioExprGenNonZero, nonZero
    ) where
 
-import Control.Monad
+import Common.Rewriting
 import Common.View
+import Control.Monad
 import Data.Ratio
+import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Test.QuickCheck
-import Domain.Math.Expr
 
 -------------------------------------------------------------------
 -- Generators

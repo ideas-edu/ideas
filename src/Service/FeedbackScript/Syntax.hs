@@ -19,8 +19,7 @@ module Service.FeedbackScript.Syntax
    ) where
 
 import Common.Algebra.Group ((<>))
-import Common.Rewriting.Term
-import Common.Id
+import Common.Library
 import Common.Utils.Uniplate
 import Common.Utils (commaList, safeHead)
 import Data.Char

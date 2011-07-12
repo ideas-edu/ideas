@@ -18,11 +18,8 @@ module Domain.Math.Simplification
    , mergeAlikeSum, mergeAlikeProduct
    ) where
 
-import Common.Context
-import Common.Navigator
-import Common.Transformation
+import Common.Library hiding (simplify, simplifyWith)
 import Common.Utils.Uniplate
-import Common.View hiding (simplify, simplifyWith)
 import Control.Monad
 import Data.List
 import Data.Maybe

@@ -17,8 +17,7 @@ module Domain.Math.Equation.Views
 import Domain.Math.Expr
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
-import Common.Id
-import Common.View
+import Common.Library
 import Data.Traversable
 
 relationsSolvedForm :: (Traversable f, Relational g) => 

@@ -51,7 +51,7 @@ emptySubst = S IM.empty
 -- | Returns a singleton substitution
 singletonSubst :: Int -> Term -> Substitution
 singletonSubst i a
-   | a == Meta i         = emptySubst
+   | a == TMeta i        = emptySubst
    | i `elem` metaVars a = error "Substitution: cyclic"
    | otherwise           = S (IM.singleton i a)
 
@@ -84,8 +84,8 @@ dom = IM.keysSet . unS
 (|->) :: Substitution -> Term -> Term
 s |-> term = 
    case term of
-      Meta i -> fromMaybe term (lookupVar i s)
-      _      -> descend (s |->) term
+      TMeta i -> fromMaybe term (lookupVar i s)
+      _       -> descend (s |->) term
       
 -----------------------------------------------------------
 --- * Test substitution properties

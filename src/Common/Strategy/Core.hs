@@ -24,6 +24,9 @@ import Common.Classes
 import Common.Transformation
 import Common.Utils.Uniplate
 import Common.Utils.QuickCheck
+import Control.Applicative
+import qualified Data.Foldable as F
+import qualified Data.Traversable as T
 
 -----------------------------------------------------------------
 -- Strategy (internal) data structure, containing a selection
@@ -98,6 +101,28 @@ instance BiFunctor GCore where
             Var n     -> Var n
             Succeed   -> Succeed
             Fail      -> Fail
+
+instance T.Traversable (GCore l) where
+   traverse f core =
+      case core of
+         a :*: b   -> (:*:)   <$> T.traverse f a <*> T.traverse f b
+         a :|: b   -> (:|:)   <$> T.traverse f a <*> T.traverse f b
+         a :|>: b  -> (:|>:)  <$> T.traverse f a <*> T.traverse f b
+         a :%: b   -> (:%:)   <$> T.traverse f a <*> T.traverse f b
+         a :!%: b  -> (:!%:)  <$> T.traverse f a <*> T.traverse f b
+         Many a    -> Many    <$> T.traverse f a
+         Repeat a  -> Repeat  <$> T.traverse f a
+         Label l a -> Label l <$> T.traverse f a
+         Atomic a  -> Atomic  <$> T.traverse f a
+         Rec n a   -> Rec n   <$> T.traverse f a
+         Not a     -> Not     <$> T.traverse f a
+         Rule r    -> Rule    <$> f r
+         Succeed   -> pure Succeed
+         Fail      -> pure Fail
+         Var n     -> pure $ Var n
+
+instance F.Foldable (GCore l) where
+   foldMap = T.foldMapDefault
 
 instance (Arbitrary l, Arbitrary a) => Arbitrary (GCore l a) where
    arbitrary = generators

@@ -17,7 +17,6 @@ module Service.OpenMathSupport
    ) where
 
 import Common.Library
-import Common.Rewriting.Term
 import Control.Monad
 import Data.Char
 import Data.List
@@ -45,12 +44,12 @@ toOMOBJ = rec . toTerm
  where
    rec term =
       case term of
-         Var s     -> OMV s
-         Con s     -> OMS (idToSymbol (getId s))
-         Meta i    -> OMV ('$' : show i)
-         Num n     -> OMI n
-         Float d   -> OMF d
-         Apply _ _ -> let (f, xs) = getSpine term
+         TVar s    -> OMV s
+         TCon s    -> OMS (idToSymbol (getId s))
+         TMeta i   -> OMV ('$' : show i)
+         TNum n    -> OMI n
+         TFloat d  -> OMF d
+         TApp _ _  -> let (f, xs) = getSpine term
                       in make (map rec (f:xs))
 
    make [OMS s, OMV x, body] | s == lambdaSymbol = 
@@ -65,11 +64,11 @@ fromOMOBJ = (>>= fromTerm) . rec
    rec omobj =
       case omobj of 
          OMV x -> case isMeta x of
-                     Just n  -> return (Meta n)
-                     Nothing -> return (Var x)
+                     Just n  -> return (TMeta n)
+                     Nothing -> return (TVar x)
          OMS s -> return (symbol (newSymbol (OM.dictionary s # OM.symbolName s)))
-         OMI n -> return (Num n)
-         OMF a -> return (Float a)
+         OMI n -> return (TNum n)
+         OMF a -> return (TFloat a)
          OMA (x:xs) -> liftM2 makeTerm (rec x) (mapM rec xs)
          OMBIND binder xs body ->
             rec (OMA (binder:map OMV xs++[body]))

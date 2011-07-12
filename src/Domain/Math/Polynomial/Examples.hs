@@ -19,6 +19,7 @@ module Domain.Math.Polynomial.Examples
 
 import Prelude hiding ((^))
 import Common.Exercise
+import Common.Rewriting
 import Domain.Math.Expr
 import Domain.Math.Data.Relation
 

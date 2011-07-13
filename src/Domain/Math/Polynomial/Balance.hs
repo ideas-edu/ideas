@@ -16,7 +16,9 @@ import Common.Utils.Uniplate
 import Common.Utils (fixpoint, safeHead)
 import Control.Monad
 import Data.Function
+import Data.List
 import Data.Maybe
+import Data.Ratio
 import Domain.Math.Safe
 import Domain.Math.CleanUp
 import Domain.Math.Data.Polynomial
@@ -65,7 +67,7 @@ balanceOrder =
    , getId conRightMinus, getId conRightPlus
    , getId scaleToOne, getId flipEquation
    , getId divideCommonFactor, getId distribute
-   , getId collect
+   , getId collect, getId divisionToFraction
    ]
 
 eqView :: View (WithBool (Equation Expr)) (WithBool (String, Rational))
@@ -83,7 +85,10 @@ eqView = makeView (either (Just . fromBool) f . fromWithBool) (fmap g)
 -- Strategy
 
 cleaner :: WithBool (Equation Expr) -> WithBool (Equation Expr)
-cleaner = join . fmap (trivial . fmap (fixpoint (transform f)))
+cleaner = join . fmap (trivial . fmap cleanerExpr)
+
+cleanerExpr :: Expr -> Expr
+cleanerExpr = fixpoint (transform f)
  where
    f (Nat 1 :*: a) = a -- currently not removed by views
    f (a :*: Nat 1) = a
@@ -92,10 +97,12 @@ cleaner = join . fmap (trivial . fmap (fixpoint (transform f)))
    f (a :/: Negate b) = Negate (a/b)
    f (Negate a :/: b) = Negate (a/b)
    f (Negate (Negate a)) = a
+   f (Negate a :*: b) = Negate (a*b)
+   f (a :*: Negate b) = Negate (a*b)
    f (a :/: Nat 1) = a
    f e@(a :/: (b :/: c)) = 
       case (match rationalView b, match rationalView c) of
-         (Just rb, Just rc) | b/=0 && c/=0 && c/=1 -> (c/b)*a
+         (Just rb, Just rc) | rb/=0 && rc/=0 && rc/=1 -> fromRational (rc/rb)*a
          _ -> e
    f ((a :/: b) :*: (c :/: d)) = (a*c)/(b*d)
    f e = fromMaybe e $
@@ -113,10 +120,17 @@ trivial :: Equation Expr -> WithBool (Equation Expr)
 trivial eq@(lhs :==: rhs) =
    case (match rationalView lhs, match rationalView rhs) of
       (Just r1, Just r2)
-         | r1 == r2   -> true
-         | otherwise  -> false
-      _  | lhs == rhs -> true
-         | otherwise  -> singleton eq
+         | r1 == r2                -> true
+         | otherwise               -> false
+      _  | any nonsense [lhs, rhs] -> false
+         | lhs == rhs              -> true
+         | otherwise               -> singleton eq
+
+nonsense :: Expr -> Bool
+nonsense = any p . universe
+ where
+   p (_ :/: a) = maybe False (==0) (match rationalView a)
+   p _         = False
 
 balanceStrategy :: LabeledStrategy (Context (WithBool (Equation Expr)))
 balanceStrategy = cleanUpStrategyAfter (applyTop cleaner) $
@@ -125,6 +139,7 @@ balanceStrategy = cleanUpStrategyAfter (applyTop cleaner) $
            (  use collect
           <|> use distribute 
           <|> use removeDivision
+          <|> somewhere (use divisionToFraction)
            ))
    <*> label "Phase 2" (repeatS
            (  use varLeftMinus <|> use varLeftPlus 
@@ -162,8 +177,8 @@ calculate = makeSimpleRule (linbal, "calculate") $ checkForChange $
    Just . cleaner
   
 -- factor is always positive due to lcm function
-removeDivision :: Rule (Equation Expr) -- !!!!!!!!!!!!!!! TEMP solution
-removeDivision = doAfter (fmap (cleanUpExpr . distributeLocal)) $
+removeDivision :: Rule (Equation Expr)
+removeDivision = doAfter (fmap distributeTimes) $
    describe "remove division" $ 
    makeRule (linbal, "remove-div") $ useRecognizer isTimesT $
    supply1 "factor" removeDivisionArg timesT 
@@ -173,16 +188,39 @@ removeDivision = doAfter (fmap (cleanUpExpr . distributeLocal)) $
       ys <- match simpleSumView rhs
       -- also consider parts without variables
       -- (but at least one participant should have a variable)
-      zs <- forM (xs ++ ys) $ \a -> do
-               (_, list) <- match simpleProductView a
-               return [ (hasSomeVar a, e) | e <- list ]
-      let f (b, e) = do 
-             (_, this) <- match (divView >>> second integerView) e
-             return (b, this)
-          (bs, ns) = unzip (mapMaybe f (concat zs))
-      let result = foldr1 lcm ns
+      zs <- mapM getFactor (xs ++ ys)
+      let (bs, ns) = unzip zs
+          result  = foldr1 lcm ns
       guard (or bs && result > 1)
       return (fromInteger result)
+      
+   getFactor expr = do
+      (b, c) <- match (divView >>> second integerView) expr
+      return (hasSomeVar b, c)
+    `mplus` do
+      r <- match rationalView expr
+      return (False, denominator r)
+    `mplus` do 
+      (r, c) <- match (timesView >>> first rationalView) expr
+      return (hasSomeVar c, denominator r)
+    `mplus` do 
+      (b, r) <- match (timesView >>> second rationalView) expr
+      return (hasSomeVar b, denominator r)
+    `mplus` do
+      (_, ps) <- match simpleProductView expr
+      guard (any (`belongsTo` rationalView) ps)
+      return (False, 1)
+    `mplus` do
+      guard (isVariable expr)
+      return (False, 1)
+
+divisionToFraction :: Rule Expr
+divisionToFraction = 
+   describe "turn a division into a multiplication with a fraction" $
+   makeSimpleRule (linbal, "div-to-fraction") $ \expr -> do
+      (a, r) <- match (divView >>> second rationalView) expr
+      guard (hasSomeVar a && r /= 0)
+      return (fromRational (1/r)*a)
 
 divideCommonFactor :: Rule (Equation Expr)
 divideCommonFactor = doAfter (fmap distributeDiv) $
@@ -252,7 +290,7 @@ flipped rid = liftRule flipView . changeId (const (newId rid))
  where flipView = makeView (Just . flipSides) flipSides
 
 scaleToOne :: Rule (Equation Expr)
-scaleToOne = doAfter (fmap distributeLocal) $ 
+scaleToOne = doAfter (fmap distributeDiv) $ 
    makeRule (linbal, "scale-to-one") $ useRecognizer isTimesT $ 
    supply1 "factor" scaleToOneArg divisionT
  where
@@ -266,8 +304,9 @@ scaleToOne = doAfter (fmap distributeLocal) $
       return (fromRational a1)
       
 collect :: Rule (Equation Expr)
-collect = makeSimpleRule (linbal, "collect") $ checkForChange $
-   Just . fmap collectGlobal
+collect = makeSimpleRule (linbal, "collect") $ 
+   -- don't use this rule just for cleaning up
+   checkForChange (Just . fmap collectGlobal) . fmap cleanerExpr 
    
 distribute :: Rule (Equation Expr)
 distribute = makeSimpleRule (linbal, "distribute") $ checkForChange $
@@ -295,46 +334,42 @@ matchLin expr = do
 -- Helpers
 
 collectLocal :: Expr -> Expr
-collectLocal = simplifyWith mergeAlikeSum simpleSumView
+collectLocal = simplifyWith (mapSecond f) simpleProductView
+             . simplifyWith mergeAlikeSum simpleSumView
+ where
+   f xs | length ys > 1 = ys++zs
+        | otherwise     = xs
+    where
+      (ys, zs) = partition hasNoVar xs
 
 collectGlobal :: Expr -> Expr
 collectGlobal = fixpoint (transform collectLocal)
 
-distributeLocal :: Expr -> Expr
-distributeLocal expr =
-   let (b, xs) = from simpleProductView expr 
-       yss     = map (from simpleSumView) xs
-       f a = build simpleProductView (False, a)
-       zss | b = map neg (head yss) : tail yss
-           | otherwise = yss
-   in to simpleSumView (map (timesFraction . f) (combine zss))
-
- where
-   -- (a*b)/c => (a/c)*b   (where a and c are rational)
-   timesFraction :: Expr -> Expr
-   timesFraction this = fromMaybe this $ do 
-      ((a, b), c) <- match mv this
-      guard (a /= 1 && hasSomeVar b)
-      return $ fromRational (a/c) .*. b
-
-   -- (Rat*b)/Rat
-   mv = divView >>> (timesView >>> first rationalView) *** rationalView
-
 distributeDiv :: Expr -> Expr
 distributeDiv expr = fromMaybe expr $ do
-   (a, b) <- match (divView >>> second rationalView) expr
-   let f x = fromMaybe (x/fromRational b) $ do
-          (y, z) <- match (timesView >>> first rationalView) x
-          new    <- y `safeDiv` b
-          return (fromRational new * z)
-        `mplus` do
-          (y, z) <- match (timesView >>> second rationalView) x
-          new    <- z `safeDiv` b
-          return (y * fromRational new)
-   return $ simplifyWith (map f) simpleSumView a
+   (a, r) <- match (divView >>> second rationalView) expr
+   return $ simplifyWith (map (`divide` r)) simpleSumView a
+ where
+   divide x r = fromMaybe (x/fromRational r) $ do
+      (y, z) <- match (timesView >>> first rationalView) x
+      new    <- y `safeDiv` r
+      return (fromRational new * z)
+    `mplus` do
+      (y, z) <- match (timesView >>> second rationalView) x
+      new    <- z `safeDiv` r
+      return (y * fromRational new)
 
-combine :: [[a]] -> [[a]]
-combine = foldr (\x xs -> [ a:as | a <- x, as <- xs ]) [[]]
+distributeTimes :: Expr -> Expr
+distributeTimes expr = fromMaybe expr $ do
+   (r, a) <- match (timesView >>> first rationalView) expr
+              `mplus`
+             match (timesView >>> second rationalView >>> toView swapView) expr
+   return $ simplifyWith (map (times r)) simpleSumView a
+ where
+   times r x = fromMaybe (fromRational r*x) $ do
+      (a, b) <- match (divView >>> second rationalView) x
+      guard (b /= 0)
+      return (fromRational (r/b) * a)
 
 isPlusT :: Equation Expr -> Equation Expr -> Bool
 isPlusT old new = isJust (diffPlus old new)
@@ -365,10 +400,8 @@ diffTimes old new = do
    d2 <- b2 `safeDiv` a2
    guard (d1 == d2)
    return (build myView (x, d1))
-   
+
+-- for debugging                 
 {-
-maf = let x=Var "x" in -2-x/3 :==: -4/35*x/3 
-                       -- -2-(-x)/(-3) :==: x/(-3)/(5/2)/(7/2) 
-                       -- x/1 :==: (-1)*x
-                       
-go = printDerivation balanceExercise (singleton maf) -}
+go = printDerivation balanceExercise $ singleton $ let x=Var "x" in
+   -mixed 1 2 5*x+mixed 3 1 2 :==: 3/5*x+9/10 -}

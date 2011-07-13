@@ -6,7 +6,7 @@
       </argument>
       <state>
         <prefix>
-          [4,0,1,1,1]
+          [4,0,1,1,1,0]
         </prefix>
         <expr>
           -14*x+35 == 6*x+9

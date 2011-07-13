@@ -6,10 +6,10 @@
       </argument>
       <state>
         <prefix>
-          [4,0,1,1,1]
+          [4,0,1,1,1,0]
         </prefix>
         <expr>
-          10*x-10 == x
+          10*(x-1) == x
         </expr>
       </state>
     </elem>
@@ -21,6 +21,19 @@
         <expr>
           5*x-5 == x/2
         </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.div-to-fraction" location="[2]">
+      <state>
+        <prefix>
+          [5,0,1,1,1,1,1,0,0]
+        </prefix>
+        <expr>
+          5*(x-1) == 1/2*x
+        </expr>
+        <context>
+          <item name="location" value="[2]"/>
+        </context>
       </state>
     </elem>
   </list>

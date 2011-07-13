@@ -5,6 +5,11 @@
         2
       </argument>
       <expr>
+        10*(x-1) == x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.distribute">
+      <expr>
         10*x-10 == x
       </expr>
     </elem>

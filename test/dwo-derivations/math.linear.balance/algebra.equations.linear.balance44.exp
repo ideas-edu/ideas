@@ -1,19 +1,19 @@
 <reply result="ok" version="0.7.6 (0)">
   <list>
+    <elem ruleid="algebra.equations.linear.balance.distribute">
+      <expr>
+        3/4*x-x+1 == 3+5/2*x-5/2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.collect">
+      <expr>
+        -1/4*x+1 == 1/2+5/2*x
+      </expr>
+    </elem>
     <elem ruleid="algebra.equations.linear.balance.remove-div">
       <argument description="factor">
         4
       </argument>
-      <expr>
-        3*x-4*(x-1) == 12+10*(x-1)
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.linear.balance.distribute">
-      <expr>
-        3*x-4*x+4 == 12+10*x-10
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.linear.balance.collect">
       <expr>
         -x+4 == 2+10*x
       </expr>

@@ -5,7 +5,7 @@
         30
       </argument>
       <expr>
-        60*x-6*(2*x+2) == 360+5*(x-1)
+        60*x+6*(-2*x-2) == 360+5*(x-1)
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.balance.distribute">

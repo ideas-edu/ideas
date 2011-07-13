@@ -122,18 +122,18 @@ term = choice
    , atom
    ] 
 
-mixed :: Parser Expr
-mixed = do
+pmixed :: Parser Expr
+pmixed = do
    a      <- natural
    P.brackets lexer $ do
       b <- natural
       reservedOp "/"
       c <- natural
-      return $ function mixedFractionSymbol $ map fromInteger [a, b, c]
+      return $ mixed a b c
       
 atom :: Parser Expr
 atom = choice 
-   [ try mixed
+   [ try pmixed
    , do notFollowedBy (char '-') 
         either fromInteger fromDouble <$> naturalOrFloat
    , variable <$> identifier 

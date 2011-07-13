@@ -78,6 +78,24 @@ sumView = describe "View an expression as the sum of a list of elements, \
    f _ (Nat 0)    = id
    f n e          = if n then (neg e:) else (e:)
 
+-- no distribution
+simpleSumView :: Isomorphism Expr [Expr]
+simpleSumView = sumEP
+ where
+   sumEP = (($ []) . f) <-> (foldl (.+) 0)
+
+   f (a :+: b)           = f a . f b
+   f (a :-: b)           = f a . f (-b)
+   f (Nat 0)             = id
+   f (Negate (Nat 0))    = id
+   f (Negate (Negate a)) = f a
+   f a                   = (a:)
+   
+   Nat 0 .+ b = b
+   a .+ Nat 0 = a
+   a .+ Negate b  = a :-: b
+   a .+ b = a :+: b
+
 productView :: Isomorphism Expr (Bool, [Expr])
 productView = "math.product" @> productEP
  where
@@ -101,6 +119,7 @@ simpleProductView = "math.product.simple" @> simpleProductEP
    simpleProductEP = (second ($ []) . f) <-> to productView
 
    f (a :*: b)  = f a .&&. f b
+   f (Nat 1)    = (False, id)
    f (Negate a) = first not (f a)
    f e          = (False, (e:))
    

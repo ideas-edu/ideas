@@ -61,7 +61,7 @@ superImpose r1 r2 = rec (navigator lhs1)
     lhs2 :~> _ = ruleSpecTerm (renumber r1 r2)
     
     rec ca = case current ca of
-                Just (Meta _) -> []
+                Just (TMeta _) -> []
                 Just a -> maybe [] (return . (`subTop` ca)) (unify a lhs2) ++ concatMap rec (allDowns ca)
                 Nothing -> []
     

@@ -1,13 +1,8 @@
-<reply result="ok" version="0.7.5 (0)">
+<reply result="ok" version="0.7.6 (0)">
   <list>
-    <elem ruleid="algebra.equations.linear.balance.collect">
-      <expr>
-        3*x+2 == 12+5*(x-1)
-      </expr>
-    </elem>
     <elem ruleid="algebra.equations.linear.balance.distribute">
       <expr>
-        3*x+2 == 12+5*x-5
+        4*x-x+2 == 12+5*x-5
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.balance.collect">

@@ -5,15 +5,15 @@
         10
       </argument>
       <expr>
-        -6*x+35 == 6*x+9
+        -14*x+35 == 6*x+9
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.balance.var-right-plus">
       <argument description="term">
-        6*x
+        14*x
       </argument>
       <expr>
-        35 == 12*x+9
+        35 == 20*x+9
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.balance.con-left-minus">
@@ -21,20 +21,20 @@
         9
       </argument>
       <expr>
-        26 == 12*x
+        26 == 20*x
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.balance.scale-to-one">
       <argument description="factor">
-        12
+        20
       </argument>
       <expr>
-        13/6 == x
+        13/10 == x
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.flip">
       <expr>
-        x == 13/6
+        x == 13/10
       </expr>
     </elem>
   </list>

@@ -55,17 +55,11 @@
               </OMI>
             </OMA>
             <OMA>
-              <OMS cd="arith1" name="times"/>
-              <OMA>
-                <OMS cd="arith1" name="divide"/>
-                <OMI>
-                  1
-                </OMI>
-                <OMI>
-                  2
-                </OMI>
-              </OMA>
+              <OMS cd="arith1" name="divide"/>
               <OMV name="x"/>
+              <OMI>
+                2
+              </OMI>
             </OMA>
           </OMA>
         </OMOBJ>

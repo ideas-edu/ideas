@@ -23,7 +23,7 @@ module Domain.Math.Expr.Symbols
    , isPlus, isTimes, isMinus, isDivide, isPower, isNegate, isRoot
    , isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol
    , isMixedFractionSymbol
-   , (^), root
+   , (^), root, mixed
    ) where
 
 import Common.Rewriting
@@ -128,6 +128,9 @@ infixr 8 ^
 
 root :: WithFunctions a => a -> a -> a
 root = binary rootSymbol
+
+mixed :: (Num a, WithFunctions a) => Integer -> Integer -> Integer -> a
+mixed a b c = function mixedFractionSymbol $ map fromInteger [a, b, c]
 
 -------------------------------------------------------------
 -- Helper

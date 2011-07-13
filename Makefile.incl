@@ -67,7 +67,7 @@ ifeq ($(IDEASSERVER), yes)
 GHCFLAGS   = --make -DDB -O -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
 else
 GHCFLAGS   = --make -O -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
-PROFFLAGS  = --make -prof -auto-all -iprof-src -O -i$(SRCDIR) -odir $(PROFDIR) -hidir $(PROFDIR)
+PROFFLAGS  = --make -prof -auto-all -rtsopts -iprof-src -O -i$(SRCDIR) -odir $(PROFDIR) -hidir $(PROFDIR)
 endif
 
 LHS2TEX    = lhs2TeX

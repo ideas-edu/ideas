@@ -1,3 +1,4 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-} 
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -20,7 +21,6 @@ import Data.List
 import Data.Maybe
 import Data.Ratio
 import Domain.Math.Safe
-import Domain.Math.CleanUp
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.WithBool
 import Domain.Math.Data.Relation
@@ -54,7 +54,7 @@ balanceExercise = makeExercise
    , strategy      = balanceStrategy
    , ruleOrdering  = ruleOrderingWithId balanceOrder
    , navigation    = termNavigator
-   , testGenerator = Just $ liftM2 (\a b -> cleaner (singleton (a :==: b))) (sized linearGen) (sized linearGen)
+   , testGenerator = Just $ liftM2 (\a b -> singleton (a :==: b)) (sized linearGen) (sized linearGen)
    , examples      = map (mapSecond singleton) linearExamples
    }
 
@@ -88,33 +88,23 @@ cleaner :: WithBool (Equation Expr) -> WithBool (Equation Expr)
 cleaner = join . fmap (trivial . fmap cleanerExpr)
 
 cleanerExpr :: Expr -> Expr
-cleanerExpr = fixpoint (transform f)
+cleanerExpr = transform f -- no fixpoint is needed
  where
-   f (Nat 1 :*: a) = a -- currently not removed by views
-   f (a :*: Nat 1) = a
-   f (Nat 0 :+: a) = a
-   f (a :+: Nat 0) = a
-   f (a :/: Negate b) = Negate (a/b)
-   f (Negate a :/: b) = Negate (a/b)
-   f (Negate (Negate a)) = a
-   f (Negate a :*: b) = Negate (a*b)
-   f (a :*: Negate b) = Negate (a*b)
-   f (a :/: Nat 1) = a
-   f e@(a :/: (b :/: c)) = 
-      case (match rationalView b, match rationalView c) of
-         (Just rb, Just rc) | rb/=0 && rc/=0 && rc/=1 -> fromRational (rc/rb)*a
-         _ -> e
-   f ((a :/: b) :*: (c :/: d)) = (a*c)/(b*d)
-   f e = fromMaybe e $
-      canonical rationalView e
-    `mplus` do
-      let g xs | length xs > 1 = return (assocPlus rationalView xs)
-          g _ = Nothing
-      canonicalWithM g simpleSumView e
-    `mplus` do
-      let g (b, xs) | length xs > 1 = return (b, assocTimes rationalView xs)
-          g _ = Nothing
-      canonicalWithM g simpleProductView e
+   f (a :/: Nat 1) = f $ a
+   f (a :/: Negate (Nat 1)) = f $ Negate a
+   f (Negate a :/: Negate b) = f (a/b)
+   f (a :/: Negate b) = f $ Negate (a/b)
+   f (Negate a :/: b) = f $ Negate (a/b)
+   f (Negate (Negate a)) = f $ a
+   f e = cleanSum (cleanProduct (simplify rationalView e))
+    
+   cleanSum = 
+      let g x y = canonical rationalView (x :+: y)
+      in simplifyWith (adjacent g) simpleSumView
+
+   cleanProduct = 
+      let g x y = canonical rationalView (x :*: y)
+      in simplifyWith (mapSecond (adjacent g)) simpleProductView
 
 trivial :: Equation Expr -> WithBool (Equation Expr)
 trivial eq@(lhs :==: rhs) =
@@ -188,12 +178,13 @@ removeDivision = doAfter (fmap distributeTimes) $
       ys <- match simpleSumView rhs
       -- also consider parts without variables
       -- (but at least one participant should have a variable)
-      zs <- mapM getFactor (xs ++ ys)
-      let (bs, ns) = unzip zs
-          result  = foldr1 lcm ns
-      guard (or bs && result > 1)
+      zs <- mapM getFactor (xs++ys)
+      let (b, result) = foldr op (False, 1) zs
+          op (b1, a1) (b2, a2) = (b1 || b2, a1 `lcm` a2)
+      guard (b && result > 1)
       return (fromInteger result)
       
+   getFactor (Negate a) = getFactor a
    getFactor expr = do
       (b, c) <- match (divView >>> second integerView) expr
       return (hasSomeVar b, c)
@@ -348,7 +339,7 @@ collectGlobal = fixpoint (transform collectLocal)
 distributeDiv :: Expr -> Expr
 distributeDiv expr = fromMaybe expr $ do
    (a, r) <- match (divView >>> second rationalView) expr
-   return $ simplifyWith (map (`divide` r)) simpleSumView a
+   return $ simplifyWith (fmap (`divide` r)) simpleSumView a
  where
    divide x r = fromMaybe (x/fromRational r) $ do
       (y, z) <- match (timesView >>> first rationalView) x
@@ -364,7 +355,7 @@ distributeTimes expr = fromMaybe expr $ do
    (r, a) <- match (timesView >>> first rationalView) expr
               `mplus`
              match (timesView >>> second rationalView >>> toView swapView) expr
-   return $ simplifyWith (map (times r)) simpleSumView a
+   return $ simplifyWith (fmap (times r)) simpleSumView a
  where
    times r x = fromMaybe (fromRational r*x) $ do
       (a, b) <- match (divView >>> second rationalView) x
@@ -404,4 +395,13 @@ diffTimes old new = do
 -- for debugging                 
 {-
 go = printDerivation balanceExercise $ singleton $ let x=Var "x" in
-   -mixed 1 2 5*x+mixed 3 1 2 :==: 3/5*x+9/10 -}
+   (x+2+7/2*x)/(3/2) :==: -3/2*x/4*0 -}
+
+adjacent :: (a -> a -> Maybe a) -> [a] -> [a]
+adjacent f = rec
+ where
+   rec (x:y:rest) = 
+      case f x y of
+         Just xy -> rec (xy:rest)
+         Nothing -> x:rec (y:rest)
+   rec xs = xs

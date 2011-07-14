@@ -15,6 +15,8 @@ module Domain.Math.Expr.Views
    ) where
 
 import Common.Algebra.CoField
+import Common.Algebra.Group
+import Common.Utils.Uniplate
 import Prelude hiding (recip, (^))
 import Common.Library
 import Domain.Math.Expr.Data
@@ -82,14 +84,14 @@ sumView = describe "View an expression as the sum of a list of elements, \
 simpleSumView :: Isomorphism Expr [Expr]
 simpleSumView = sumEP
  where
-   sumEP = (($ []) . f) <-> (foldl (.+) 0)
+   sumEP = f <-> (foldl (.+) 0)
 
-   f (a :+: b)           = f a . f b
-   f (a :-: b)           = f a . f (-b)
-   f (Nat 0)             = id
-   f (Negate (Nat 0))    = id
+   f (a :+: b)           = f a <> f b
+   f (a :-: b)           = f a <> f (-b)
+   f (Nat 0)             = mempty
+   f (Negate (Nat 0))    = mempty
    f (Negate (Negate a)) = f a
-   f a                   = (a:)
+   f a                   = return a
    
    Nat 0 .+ b = b
    a .+ Nat 0 = a
@@ -116,7 +118,7 @@ productView = "math.product" @> productEP
 simpleProductView :: Isomorphism Expr (Bool, [Expr])
 simpleProductView = "math.product.simple" @> simpleProductEP
  where
-   simpleProductEP = (second ($ []) . f) <-> to productView
+   simpleProductEP = (second ($ []) . f) <-> g
 
    f (a :*: b)  = f a .&&. f b
    f (Nat 1)    = (False, id)
@@ -124,6 +126,23 @@ simpleProductView = "math.product.simple" @> simpleProductEP
    f e          = (False, (e:))
    
    (n1, g1) .&&. (n2, g2) = (n1 /= n2, g1 . g2)
+   
+   g (b, xs) = (if b then myNeg else id) (foldl (.*) 1 xs)
+   
+   Nat 1 .* a = a
+   a .* Nat 1 = a
+   Nat 0 .* a | ok a = 0
+   a .* Nat 0 | ok a = 0
+   Negate a .* b = myNeg (a .* b)
+   a .* Negate b = myNeg (a .* b)
+   a .* b = a :*: b
+   
+   myNeg (Negate a) = a
+   myNeg a = Negate a
+   
+   ok (a :/: b) = b /= 0 && ok a && ok b -- to do: evaluate b before b/=0
+   ok a = all ok (children a)
+   
    
 -- helper to determine the name of the variable (move to a different module?)
 selectVar :: Expr -> Maybe String

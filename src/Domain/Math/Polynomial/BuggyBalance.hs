@@ -30,6 +30,8 @@ buggyBalanceRules =
    , rule133, rule134, rule135, rule136, rule137
    , rule201
    , rule2111, rule2112, rule2121, rule2122, rule2131, rule2132
+   , rule221, rule222, rule2231, rule2232, rule2233, rule227
+   , rule311, rule321, rule322, rule323
    ]
 
 buggyPriority :: [Id]
@@ -230,7 +232,7 @@ rule201 = describe "2.0.1: Links en rechts alleen maar verwisseld?" $
 -- ax+b=[cx]+d  -> ax=[cx]+d+b
 rule2111 :: Rule (Equation Expr)
 rule2111 = describe "2.1.1.1: Links en rechts hetzelfde optellen; links +b en rechts -b" $ 
-   buggyRule $ makeSimpleRule (bugbal, "add1") f
+   buggyRule $ makeSimpleRule (bugbal, "addbal1") f
  where
    f (lhs :==: rhs) = do
       (x, a, b) <- matchLin lhs
@@ -240,7 +242,7 @@ rule2111 = describe "2.1.1.1: Links en rechts hetzelfde optellen; links +b en re
 -- ax-b=[cx]+d  -> ax=[cx+d-b
 rule2112 :: Rule (Equation Expr)
 rule2112 = describe "2.1.1.2: Links en rechts hetzelfde optellen; links -b en rechts +b" $ 
-   buggyRule $ makeSimpleRule (bugbal, "add2") f
+   buggyRule $ makeSimpleRule (bugbal, "addbal2") f
  where
    f (lhs :==: rhs) = do
       (x, a, b) <- matchLin lhs
@@ -250,7 +252,7 @@ rule2112 = describe "2.1.1.2: Links en rechts hetzelfde optellen; links -b en re
 -- ax[+b]=cx+d  ->  (a+c)x[+b]=d
 rule2121 :: Rule (Equation Expr)
 rule2121 = describe "2.1.2.1: Links en rechts hetzelfde optellen; links +cd en rechts -cx" $ 
-   buggyRule $ makeSimpleRule (bugbal, "add3") f
+   buggyRule $ makeSimpleRule (bugbal, "addbal3") f
  where
    f (lhs :==: rhs) = do
       (x, a, b) <- matchLin lhs
@@ -261,7 +263,7 @@ rule2121 = describe "2.1.2.1: Links en rechts hetzelfde optellen; links +cd en r
 -- ax[+b]=-cx+d  -> (a-c)x[+b]=d
 rule2122 :: Rule (Equation Expr)
 rule2122 = describe "2.1.2.2: Links en rechts hetzelfde optellen; links -cx en rechts +cx" $ 
-   buggyRule $ makeSimpleRule (bugbal, "add4") f
+   buggyRule $ makeSimpleRule (bugbal, "addbal4") f
  where
    f (lhs :==: rhs) = do
       (x, a, b) <- matchLin lhs
@@ -272,7 +274,7 @@ rule2122 = describe "2.1.2.2: Links en rechts hetzelfde optellen; links -cx en r
 -- ax+b=[cx]+d  -> ax=[cx]+d
 rule2131 :: Rule (Equation Expr)
 rule2131 = describe "2.1.3.1: Links en rechts hetzelfde optellen; links -b rechts niet(s)" $ 
-   buggyRule $ makeSimpleRule (bugbal, "add5") f
+   buggyRule $ makeSimpleRule (bugbal, "addbal5") f
  where
    f (lhs :==: rhs) = do
       (x, a, b) <- matchLin lhs
@@ -282,9 +284,100 @@ rule2131 = describe "2.1.3.1: Links en rechts hetzelfde optellen; links -b recht
 -- ax-b=[cx]+d  -> ax=[cx]+d
 rule2132 :: Rule (Equation Expr)
 rule2132 = describe "2.1.3.2: Links en rechts hetzelfde optellen; links+b en rechts niet(s)" $ 
-   buggyRule $ makeSimpleRule (bugbal, "add6") f
+   buggyRule $ makeSimpleRule (bugbal, "addbal6") f
  where
    f (lhs :==: rhs) = do
       (x, a, b) <- matchLin lhs
       guard (b<0)
       return $ a*x :==: rhs
+      
+-------------------------------------------------------------------
+-- 2.2 Links en rechts hetzelfde vermenigvuldigen/delen
+
+-- ax=c  -> x=a/c
+rule221 :: Rule (Equation Expr)
+rule221 = describe "2.2.1: Links en rechts hetzelfde vermenigvuldigen; verkeerd om gedeeld" $ 
+   buggyRule $ makeSimpleRule (bugbal, "mulbal1") f
+ where
+   f (expr :==: c) = do
+      (a, x) <- match timesView expr
+      return $ x :==: a/c
+      
+-- 1/*a+b=2/c*x+d  -> x+ba  -> 2x+cd
+rule222 :: Rule (Equation Expr)
+rule222 = describe "2.2.2: Links en rechts hetzelfde vermenigvuldigen; links *a; rechts *b" $ 
+   buggyRule $ makeSimpleRule (bugbal, "mulbal2") f
+ where
+   f _ = -- (lhs :==: rhs) = do
+      Nothing
+      
+-- ax-b=cx+d  -> pax-pb=cx+d
+rule2231 :: Rule (Equation Expr)
+rule2231 = describe "2.2.3.1: Links en rechts hetzelfde vermenigvuldigen; links *p, rechts niet" $ 
+   buggyRule $ makeSimpleRule (bugbal, "mulbal3") f
+ where
+   f _ = -- (lhs :==: rhs) = do
+      Nothing
+      
+-- (x+a)/b=c  -> x+a=c
+rule2232 :: Rule (Equation Expr)
+rule2232 = describe "2.2.3.2: Links en rechts hetzelfde vermenigvuldigen; links /p, rechts niet" $ 
+   buggyRule $ makeSimpleRule (bugbal, "mulbal4") f
+ where
+   f (expr :==: c) = do
+      (a, _b) <- match divView expr
+      return $ a :==: c
+      
+-- a+b=c  -> -a-b=c
+rule2233 :: Rule (Equation Expr)
+rule2233 = describe "2.2.3.3: Links en rechts hetzelfde vermenigvuldigen; links en rechts *-1" $ 
+   buggyRule $ makeSimpleRule (bugbal, "mulbal5") f
+ where
+   f (expr :==: c) = do
+      (a, b) <- match plusView expr
+      return $ -a-b :==: c
+      
+-- pa+pb=c -> a+b=c
+rule227 :: Rule (Equation Expr)
+rule227 = describe "2.2.7: Links en rechts hetzelfde vermenigvuldigen; links en rechts delen door p" $ 
+   buggyRule $ makeSimpleRule (bugbal, "mulbal6") f
+ where
+   f _ = -- (lhs :==: rhs) = do
+      Nothing
+      
+-------------------------------------------------------------------
+-- 3.1 Doe je wat je wilt doen?
+
+-- ax-b=cx-d  -> (c-a)x-b=-d
+rule311 :: Rule (Equation Expr)
+rule311 = describe "3.1.1: Doe je wat je wilt doen?" $ 
+   buggyRule $ makeSimpleRule (bugbal, "misc1") f
+ where
+   f (lhs :==: rhs) = do
+      (x, a, b) <- matchLin lhs
+      (y, c, d) <- matchLin rhs
+      guard (x==y)
+      return ((c-a)*x+b :==: d)
+
+-- ax-b=cd+d  -> pax-b=pcx+pd
+rule321 :: Rule (Equation Expr)
+rule321 = describe "3.2.1: Doe je wat je wilt doen? vermenigvuldig de hele linkerkant met p" $ 
+   buggyRule $ makeSimpleRule (bugbal, "misc2") f
+ where
+   f _ = Nothing
+
+-- a-b=c  -> -a-b=-c
+rule322 :: Rule (Equation Expr)
+rule322 = describe "3.2.2: Doe je wat je wilt doen? neem het tegengestelde van de hele linkerkant" $ 
+   buggyRule $ makeSimpleRule (bugbal, "misc3") f
+ where
+   f (expr :==: c) = do
+      (a, b) <- match minusView expr
+      return $ -a-b :==: -c
+   
+-- pax+pb=pc  ->  ax+pb=c
+rule323 :: Rule (Equation Expr)
+rule323 = describe "3.2.3: Doe je wat je wilt doen? Deel de hele linkerkant door p" $ 
+   buggyRule $ makeSimpleRule (bugbal, "misc4") f
+ where
+   f _ = Nothing

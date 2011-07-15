@@ -1,0 +1,6 @@
+<request service="diagnose" exerciseid="algebra.equations.linear.balance" encoding="string">
+  <state>
+    <expr>x/2 == 5</expr>
+  </state>
+  <expr>x == 5</expr>
+</request>

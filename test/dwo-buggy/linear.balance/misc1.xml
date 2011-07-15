@@ -1,0 +1,6 @@
+<request service="diagnose" exerciseid="algebra.equations.linear.balance" encoding="string">
+  <state>
+    <expr>3*x +1 == 5*x - 2</expr>
+  </state>
+  <expr>2*x +1 == -2</expr>
+</request>

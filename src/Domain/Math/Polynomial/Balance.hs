@@ -161,7 +161,7 @@ linbal :: String
 linbal = "algebra.equations.linear.balance"
 
 checkForChange :: (MonadPlus m, Eq a) => (a -> m a) -> a -> m a
-checkForChange f a = mfilter (/= a) (f a)
+checkForChange f a = f a >>= \b -> guard (a /= b) >> return b
   
 calculate :: Rule (WithBool (Equation Expr))
 calculate = makeSimpleRule (linbal, "calculate") $ checkForChange $

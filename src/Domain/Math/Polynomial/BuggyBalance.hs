@@ -19,6 +19,8 @@ import Common.Library
 import Common.Utils.Uniplate
 import Domain.Math.Expr
 import Domain.Math.Data.Relation
+import Domain.Math.Data.Polynomial
+import Domain.Math.Polynomial.Views
 import Domain.Math.Numeric.Views
 
 buggyBalanceRules :: [Rule (Equation Expr)]
@@ -26,6 +28,8 @@ buggyBalanceRules =
    [ rule121, rule122, rule1231, rule1232, rule1234
    , rule1311, rule1312, rule1321, rule1322
    , rule133, rule134, rule135, rule136, rule137
+   , rule201
+   , rule2111, rule2112, rule2121, rule2122, rule2131, rule2132
    ]
 
 buggyPriority :: [Id]
@@ -42,6 +46,12 @@ minusView = makeView isMinus (uncurry (:-:))
 
 negView :: View Expr Expr
 negView = makeView isNegate Negate
+
+matchLin :: Expr -> Maybe (Expr, Expr, Expr)
+matchLin expr = do
+   (s, p) <- match (polyNormalForm rationalView) expr
+   guard (degree p == 1)
+   return (Var s, fromRational (coefficient 1 p), fromRational (coefficient 0 p))
 
 bugbal :: String
 bugbal = "algebra.equations.linear.balance.buggy"
@@ -201,3 +211,80 @@ rule137 = describe "1.3.7: fout bij haakjes wegwerken; denk aan 'voorrangsregels
       (b, (x, c)) <- match (timesView >>> second minusView) expr
       return $ (a+b)*(x-c)
    f _ = Nothing
+   
+-------------------------------------------------------------------
+-- 2.0 Links en rechts hetzelfde doen, of verwisselen
+
+-- a=b-c  ->  c-b=a
+rule201 :: Rule (Equation Expr)
+rule201 = describe "2.0.1: Links en rechts alleen maar verwisseld?" $ 
+   buggyRule $ makeSimpleRule (bugbal, "flip1") f
+ where
+   f (a :==: rhs) = do
+      (b, c) <- match minusView rhs
+      return $ c-b :==: a
+
+-------------------------------------------------------------------
+-- 2.1 Links en rechts hetzelfde optellen/aftrekken
+
+-- ax+b=[cx]+d  -> ax=[cx]+d+b
+rule2111 :: Rule (Equation Expr)
+rule2111 = describe "2.1.1.1: Links en rechts hetzelfde optellen; links +b en rechts -b" $ 
+   buggyRule $ makeSimpleRule (bugbal, "add1") f
+ where
+   f (lhs :==: rhs) = do
+      (x, a, b) <- matchLin lhs
+      guard (b>0)
+      return $ a*x :==: rhs+b
+
+-- ax-b=[cx]+d  -> ax=[cx+d-b
+rule2112 :: Rule (Equation Expr)
+rule2112 = describe "2.1.1.2: Links en rechts hetzelfde optellen; links -b en rechts +b" $ 
+   buggyRule $ makeSimpleRule (bugbal, "add2") f
+ where
+   f (lhs :==: rhs) = do
+      (x, a, b) <- matchLin lhs
+      guard (b<0)
+      return $ a*x :==: rhs+b
+   
+-- ax[+b]=cx+d  ->  (a+c)x[+b]=d
+rule2121 :: Rule (Equation Expr)
+rule2121 = describe "2.1.2.1: Links en rechts hetzelfde optellen; links +cd en rechts -cx" $ 
+   buggyRule $ makeSimpleRule (bugbal, "add3") f
+ where
+   f (lhs :==: rhs) = do
+      (x, a, b) <- matchLin lhs
+      (y, c, d) <- matchLin rhs
+      guard (c>0 && x==y) 
+      return $ (a+c)*x+b :==: d
+   
+-- ax[+b]=-cx+d  -> (a-c)x[+b]=d
+rule2122 :: Rule (Equation Expr)
+rule2122 = describe "2.1.2.2: Links en rechts hetzelfde optellen; links -cx en rechts +cx" $ 
+   buggyRule $ makeSimpleRule (bugbal, "add4") f
+ where
+   f (lhs :==: rhs) = do
+      (x, a, b) <- matchLin lhs
+      (y, c, d) <- matchLin rhs
+      guard (c<0 && x==y) 
+      return $ (a+c)*x+b :==: d
+   
+-- ax+b=[cx]+d  -> ax=[cx]+d
+rule2131 :: Rule (Equation Expr)
+rule2131 = describe "2.1.3.1: Links en rechts hetzelfde optellen; links -b rechts niet(s)" $ 
+   buggyRule $ makeSimpleRule (bugbal, "add5") f
+ where
+   f (lhs :==: rhs) = do
+      (x, a, b) <- matchLin lhs
+      guard (b>0)
+      return $ a*x :==: rhs
+   
+-- ax-b=[cx]+d  -> ax=[cx]+d
+rule2132 :: Rule (Equation Expr)
+rule2132 = describe "2.1.3.2: Links en rechts hetzelfde optellen; links+b en rechts niet(s)" $ 
+   buggyRule $ makeSimpleRule (bugbal, "add6") f
+ where
+   f (lhs :==: rhs) = do
+      (x, a, b) <- matchLin lhs
+      guard (b<0)
+      return $ a*x :==: rhs

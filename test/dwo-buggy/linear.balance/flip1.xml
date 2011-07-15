@@ -1,0 +1,6 @@
+<request service="diagnose" exerciseid="algebra.equations.linear.balance" encoding="string">
+  <state>
+    <expr>5 == 3-4*x</expr>
+  </state>
+  <expr>4*x-3 == 5</expr>
+</request>

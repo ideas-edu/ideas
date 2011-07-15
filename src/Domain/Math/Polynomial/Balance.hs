@@ -53,7 +53,7 @@ balanceExercise = makeExercise
                      <||> predicateView (traverseView (equationSolvedWith doubleNF))
    , strategy      = balanceStrategy
    , extraRules    = map use buggyBalanceRules
-   , ruleOrdering  = ruleOrderingWithId balanceOrder
+   , ruleOrdering  = ruleOrderingWithId (balanceOrder ++ buggyPriority)
    , navigation    = termNavigator
    , testGenerator = Just $ liftM2 (\a b -> singleton (a :==: b)) (sized linearGen) (sized linearGen)
    , examples      = map (mapSecond singleton) linearExamples

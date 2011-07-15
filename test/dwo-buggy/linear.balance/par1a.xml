@@ -1,0 +1,6 @@
+<request service="diagnose" exerciseid="algebra.equations.linear.balance" encoding="string">
+  <state>
+    <expr>2/3*(x-5) == 1</expr>
+  </state>
+  <expr>2/3*x-5 == 1</expr>
+</request>

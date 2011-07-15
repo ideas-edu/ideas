@@ -22,6 +22,7 @@ import Data.Ratio
 import Domain.Math.Expr
 import Domain.Math.Data.Relation
 import Domain.Math.Polynomial.BalanceUtils
+import Domain.Math.Polynomial.Views
 import Domain.Math.Numeric.Views
 
 buggyBalanceRules :: [Rule (Equation Expr)]
@@ -37,7 +38,7 @@ buggyBalanceRules =
 
 buggyPriority :: [Id]
 buggyPriority = map getId 
-   [rule1312, rule121, rule221, rule222, rule2232, rule2233, rule227]
+   [rule1312, rule121, rule221, rule222, rule2232, rule2233, rule227, rule323]
 
 toEq :: MonadPlus m => (Expr -> m Expr) -> Equation Expr -> m (Equation Expr)
 toEq f (lhs :==: rhs) = 
@@ -313,7 +314,7 @@ rule2231 :: Rule (Equation Expr)
 rule2231 = describe "2.2.3.1: Links en rechts hetzelfde vermenigvuldigen; links *p, rechts niet" $ 
    buggyRule $ makeRule (bugbal, "mulbal3") $ useRecognizer p $ 
    makeTrans $ const Nothing
- where
+ where -- currently, symmetric
    p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
       dl <- diffTimes a1 b1
       dr <- diffTimes a2 b2
@@ -342,7 +343,7 @@ rule227 :: Rule (Equation Expr)
 rule227 = describe "2.2.7: Links en rechts hetzelfde vermenigvuldigen; links en rechts delen door p" $ 
    buggyRule $ makeRule (bugbal, "mulbal6") $ useRecognizer p $ 
    makeTrans $ const Nothing
- where
+ where -- currently, symmetric
    p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
       dl <- diffTimes a1 b1
       dr <- diffTimes a2 b2
@@ -368,9 +369,17 @@ rule311 = describe "3.1.1: Doe je wat je wilt doen?" $
 -- ax-b=cd+d  -> pax-b=pcx+pd
 rule321 :: Rule (Equation Expr)
 rule321 = describe "3.2.1: Doe je wat je wilt doen? vermenigvuldig de hele linkerkant met p" $ 
-   buggyRule $ makeSimpleRule (bugbal, "misc2") f
- where
-   f _ = Nothing
+   buggyRule $ makeRule (bugbal, "misc2") $ useRecognizer p $ 
+   makeTrans $ const Nothing
+ where -- currently, not symmetric
+   p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
+      d <- diffTimes a2 b2
+      let as  = from simpleSumView a1
+      guard (d `notElem` [1, -1] && length as > 1)
+      return $ flip any (take (length as) [0..]) $ \i -> 
+         let (xs,y:ys) = splitAt i as
+             aps = to sumView $ map (d*) xs ++ [y] ++ map (d*) ys
+         in viewEquivalent (polyViewWith rationalView) aps b1
 
 -- a-b=c  -> -a-b=-c
 rule322 :: Rule (Equation Expr)
@@ -382,8 +391,18 @@ rule322 = describe "3.2.2: Doe je wat je wilt doen? neem het tegengestelde van d
       return $ -a-b :==: -c
    
 -- pax+pb=pc  ->  ax+pb=c
-rule323 :: Rule (Equation Expr)
+rule323 :: Rule (Equation Expr) 
 rule323 = describe "3.2.3: Doe je wat je wilt doen? Deel de hele linkerkant door p" $ 
-   buggyRule $ makeSimpleRule (bugbal, "misc4") f
- where
-   f _ = Nothing
+   buggyRule $ makeRule (bugbal, "misc4") $ useRecognizer p $ 
+   makeTrans $ const Nothing
+   -- REFACTOR: code copied from rule misc2
+ where -- currently, not symmetric
+   p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
+      d  <- diffTimes a2 b2
+      dr <- match rationalView d
+      let as  = from simpleSumView a1
+      guard (dr `notElem` [1, -1] && numerator dr == 1 && length as > 1)
+      return $ flip any (take (length as) [0..]) $ \i -> 
+         let (xs,y:ys) = splitAt i as
+             aps = to sumView $ map (d*) xs ++ [y] ++ map (d*) ys
+         in viewEquivalent (polyViewWith rationalView) aps b1

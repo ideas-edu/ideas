@@ -1,0 +1,6 @@
+<request service="diagnose" exerciseid="algebra.equations.linear.balance" encoding="string">
+  <state>
+    <expr>x + 1/3 == 2*(x - 1)</expr>
+  </state>
+  <expr>x + 1 == 6*x - 6</expr>
+</request>

@@ -74,6 +74,7 @@ instance Num a => Show (Polynomial a) where
 instance Fractional a => SafeDiv (Polynomial a) where
    -- polynomial division, no remainder
    safeDiv p1 p2
+      | p2==0     = Nothing
       | degree p1 < degree p2 = Nothing
       | b==0      = return a
       | otherwise = Nothing 

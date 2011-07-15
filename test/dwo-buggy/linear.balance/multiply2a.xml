@@ -1,0 +1,6 @@
+<request service="diagnose" exerciseid="algebra.equations.linear.balance" encoding="string">
+  <state>
+    <expr>4*(3*x+1) + 2 == 1</expr>
+  </state>
+  <expr>x/12+6 == 1</expr>
+</request>

@@ -1,4 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-} 
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -28,6 +27,7 @@ import Domain.Math.Equation.BalanceRules
 import Domain.Math.Equation.Views
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
+import Domain.Math.Polynomial.BuggyBalance
 import Domain.Math.Polynomial.Examples
 import Domain.Math.Polynomial.Generators
 import Domain.Math.Polynomial.Rules (conditionVarsRHS, flipEquation)
@@ -52,6 +52,7 @@ balanceExercise = makeExercise
                      <||> predicateView (traverseView (equationSolvedWith rationalNF))
                      <||> predicateView (traverseView (equationSolvedWith doubleNF))
    , strategy      = balanceStrategy
+   , extraRules    = map use buggyBalanceRules
    , ruleOrdering  = ruleOrderingWithId balanceOrder
    , navigation    = termNavigator
    , testGenerator = Just $ liftM2 (\a b -> singleton (a :==: b)) (sized linearGen) (sized linearGen)

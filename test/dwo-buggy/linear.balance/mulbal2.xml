@@ -1,0 +1,6 @@
+<request service="diagnose" exerciseid="algebra.equations.linear.balance" encoding="string">
+  <state>
+    <expr>1/3*x+4 == 2/5*x+7</expr>
+  </state>
+  <expr>x+12 == 2*x+35</expr>
+</request>

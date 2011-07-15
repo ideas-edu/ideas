@@ -1,0 +1,6 @@
+<request service="diagnose" exerciseid="algebra.equations.linear.balance" encoding="string">
+  <state>
+    <expr>2/3*x-4 == 4*x+1</expr>
+  </state>
+  <expr>x-6 == 4*x+1</expr>
+</request>

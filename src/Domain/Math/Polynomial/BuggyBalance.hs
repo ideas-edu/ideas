@@ -17,10 +17,11 @@ module Domain.Math.Polynomial.BuggyBalance
 import Control.Monad
 import Common.Library
 import Common.Utils.Uniplate
+import Data.Maybe
+import Data.Ratio
 import Domain.Math.Expr
 import Domain.Math.Data.Relation
-import Domain.Math.Data.Polynomial
-import Domain.Math.Polynomial.Views
+import Domain.Math.Polynomial.BalanceUtils
 import Domain.Math.Numeric.Views
 
 buggyBalanceRules :: [Rule (Equation Expr)]
@@ -35,7 +36,8 @@ buggyBalanceRules =
    ]
 
 buggyPriority :: [Id]
-buggyPriority = [getId rule1312]
+buggyPriority = map getId 
+   [rule1312, rule121, rule221, rule222, rule2232, rule2233, rule227]
 
 toEq :: MonadPlus m => (Expr -> m Expr) -> Equation Expr -> m (Equation Expr)
 toEq f (lhs :==: rhs) = 
@@ -43,20 +45,8 @@ toEq f (lhs :==: rhs) =
  where -- to do: deal with associativity
    rec = msum .  map (\(a,h) -> liftM h (f a)) . contexts
 
-minusView :: View Expr (Expr, Expr)
-minusView = makeView isMinus (uncurry (:-:))
-
-negView :: View Expr Expr
-negView = makeView isNegate Negate
-
-matchLin :: Expr -> Maybe (Expr, Expr, Expr)
-matchLin expr = do
-   (s, p) <- match (polyNormalForm rationalView) expr
-   guard (degree p == 1)
-   return (Var s, fromRational (coefficient 1 p), fromRational (coefficient 0 p))
-
-bugbal :: String
-bugbal = "algebra.equations.linear.balance.buggy"
+bugbal :: Id
+bugbal = linbal # "buggy"
 
 -------------------------------------------------------------------
 -- 1.2 Fout bij vermenigvuldigen
@@ -235,7 +225,7 @@ rule2111 = describe "2.1.1.1: Links en rechts hetzelfde optellen; links +b en re
    buggyRule $ makeSimpleRule (bugbal, "addbal1") f
  where
    f (lhs :==: rhs) = do
-      (x, a, b) <- matchLin lhs
+      (x, a, b) <- matchLinG lhs
       guard (b>0)
       return $ a*x :==: rhs+b
 
@@ -245,7 +235,7 @@ rule2112 = describe "2.1.1.2: Links en rechts hetzelfde optellen; links -b en re
    buggyRule $ makeSimpleRule (bugbal, "addbal2") f
  where
    f (lhs :==: rhs) = do
-      (x, a, b) <- matchLin lhs
+      (x, a, b) <- matchLinG lhs
       guard (b<0)
       return $ a*x :==: rhs+b
    
@@ -255,8 +245,8 @@ rule2121 = describe "2.1.2.1: Links en rechts hetzelfde optellen; links +cd en r
    buggyRule $ makeSimpleRule (bugbal, "addbal3") f
  where
    f (lhs :==: rhs) = do
-      (x, a, b) <- matchLin lhs
-      (y, c, d) <- matchLin rhs
+      (x, a, b) <- matchLinG lhs
+      (y, c, d) <- matchLinG rhs
       guard (c>0 && x==y) 
       return $ (a+c)*x+b :==: d
    
@@ -266,8 +256,8 @@ rule2122 = describe "2.1.2.2: Links en rechts hetzelfde optellen; links -cx en r
    buggyRule $ makeSimpleRule (bugbal, "addbal4") f
  where
    f (lhs :==: rhs) = do
-      (x, a, b) <- matchLin lhs
-      (y, c, d) <- matchLin rhs
+      (x, a, b) <- matchLinG lhs
+      (y, c, d) <- matchLinG rhs
       guard (c<0 && x==y) 
       return $ (a+c)*x+b :==: d
    
@@ -277,8 +267,8 @@ rule2131 = describe "2.1.3.1: Links en rechts hetzelfde optellen; links -b recht
    buggyRule $ makeSimpleRule (bugbal, "addbal5") f
  where
    f (lhs :==: rhs) = do
-      (x, a, b) <- matchLin lhs
-      guard (b>0)
+      (x, a, b) <- matchLinG lhs
+      guard ((b::Expr) > 0)
       return $ a*x :==: rhs
    
 -- ax-b=[cx]+d  -> ax=[cx]+d
@@ -287,8 +277,8 @@ rule2132 = describe "2.1.3.2: Links en rechts hetzelfde optellen; links+b en rec
    buggyRule $ makeSimpleRule (bugbal, "addbal6") f
  where
    f (lhs :==: rhs) = do
-      (x, a, b) <- matchLin lhs
-      guard (b<0)
+      (x, a, b) <- matchLinG lhs
+      guard ((b::Expr) < 0)
       return $ a*x :==: rhs
       
 -------------------------------------------------------------------
@@ -308,16 +298,26 @@ rule222 :: Rule (Equation Expr)
 rule222 = describe "2.2.2: Links en rechts hetzelfde vermenigvuldigen; links *a; rechts *b" $ 
    buggyRule $ makeSimpleRule (bugbal, "mulbal2") f
  where
-   f _ = -- (lhs :==: rhs) = do
-      Nothing
+   f (lhs :==: rhs) = do
+      (x, ra, b) <- matchLinG lhs
+      (y, rc, d) <- matchLinG rhs
+      let a = denom ra
+          c = denom rc
+          denom = fromInteger . denominator
+          num   = fromInteger . numerator
+      guard (a /= 1 || b /= 1)
+      return $ num ra*x+b*a :==: num rc*y+c*d
       
 -- ax-b=cx+d  -> pax-pb=cx+d
 rule2231 :: Rule (Equation Expr)
 rule2231 = describe "2.2.3.1: Links en rechts hetzelfde vermenigvuldigen; links *p, rechts niet" $ 
-   buggyRule $ makeSimpleRule (bugbal, "mulbal3") f
+   buggyRule $ makeRule (bugbal, "mulbal3") $ useRecognizer p $ 
+   makeTrans $ const Nothing
  where
-   f _ = -- (lhs :==: rhs) = do
-      Nothing
+   p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
+      dl <- diffTimes a1 b1
+      dr <- diffTimes a2 b2
+      return $ (dl == 1 && dr /= 1) || (dl /= 1 && dr == 1)
       
 -- (x+a)/b=c  -> x+a=c
 rule2232 :: Rule (Equation Expr)
@@ -340,10 +340,16 @@ rule2233 = describe "2.2.3.3: Links en rechts hetzelfde vermenigvuldigen; links 
 -- pa+pb=c -> a+b=c
 rule227 :: Rule (Equation Expr)
 rule227 = describe "2.2.7: Links en rechts hetzelfde vermenigvuldigen; links en rechts delen door p" $ 
-   buggyRule $ makeSimpleRule (bugbal, "mulbal6") f
+   buggyRule $ makeRule (bugbal, "mulbal6") $ useRecognizer p $ 
+   makeTrans $ const Nothing
  where
-   f _ = -- (lhs :==: rhs) = do
-      Nothing
+   p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
+      dl <- diffTimes a1 b1
+      dr <- diffTimes a2 b2
+      rl <- match rationalView dl
+      rr <- match rationalView dr
+      return $ (rl == 1 && rr /= 1 && numerator rr == 1)
+            || (rl /= 1 && rr == 1 && numerator rl == 1)
       
 -------------------------------------------------------------------
 -- 3.1 Doe je wat je wilt doen?
@@ -354,8 +360,8 @@ rule311 = describe "3.1.1: Doe je wat je wilt doen?" $
    buggyRule $ makeSimpleRule (bugbal, "misc1") f
  where
    f (lhs :==: rhs) = do
-      (x, a, b) <- matchLin lhs
-      (y, c, d) <- matchLin rhs
+      (x, a, b) <- matchLinG lhs
+      (y, c, d) <- matchLinG rhs
       guard (x==y)
       return ((c-a)*x+b :==: d)
 

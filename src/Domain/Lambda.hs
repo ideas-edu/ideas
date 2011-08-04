@@ -3,15 +3,26 @@ module Domain.SKI where
 import Common.Library
 import Common.Utils.Uniplate
 
-data Expr = Abs String Expr | App Expr Expr | Var String
-
+data Expr = Abs String Expr 
+          | App Expr Expr 
+          | Var String 
+          | LApp Expr
+          | Application
+          | Composition deriving Eq
+          
 instance Uniplate Expr where
-   uniplate (Abs x a) = ([a], \[a] -> Abs x a)
-   uniplate (App f a) = ([f,a], \[f,a] -> App f a)
-   uniplate (Var x)   = ([], \_ -> Var x)
+   uniplate (Abs x a)        = ([a], \[a] -> Abs x a)
+   uniplate (App f a)        = ([f,a], \[f,a] -> App f a)
+   uniplate (Var x)          = ([], \_ -> Var x)
+   uniplate (LApp l)         = ([l], \[l] -> LApp l)
+   uniplate (Application)    = ([], \_ -> Application)
+   uniplate (Composition)    = ([], \_ -> Composition)
 
 instance Show Expr where
    show (Abs x a) = "\\" ++ x ++ "." ++ show a
+   show Application = "(:@:)"
+   show Composition = "."
+   show (LApp y) = "(" ++ show y ++ " :@:) " 
    show expr      = f expr
     where
       f (App a b) = f a ++ " " ++ g b
@@ -23,6 +34,9 @@ freeVars :: Expr -> [String]
 freeVars (Abs x a) = filter (/=x) (freeVars a)
 freeVars (App a b) = freeVars a ++ freeVars b
 freeVars (Var x)   = [x]
+freeVars (LApp l)   = freeVars l
+freeVars Application = []
+freeVars Composition = []
 
 scomb, comp, flp :: Expr
 scomb = Abs "f" $ Abs "g" $ Abs "x" $ App (App (Var "f") (Var "x")) 
@@ -43,22 +57,59 @@ ski = emptyExercise
 skiStrategy :: LabeledStrategy (Context Expr)
 skiStrategy = label "ski" $ 
    repeatS $ somewhere $ alternatives $
-      map liftToContext [introS, introK, introI]
+      map liftToContext [introS, introK, introI] 
 
 introS :: Rule Expr
-introS = undefined 
+introS = makeSimpleRule "intro-S" f
+ where
+   f (Abs x (App a b)) = Just $ App (App (Var "S") (Abs x a)) (Abs x b)
+   f _ = Nothing
 
 introK :: Rule Expr
-introK = undefined
+introK = makeSimpleRule "intro-K" f
+ where
+   f (Abs x a) | x `notElem` freeVars a = Just $ App (Var "K") a
+   f _ = Nothing
 
 introI :: Rule Expr
-introI = undefined
- 
+introI = makeSimpleRule "intro-I" f
+ where
+   f (Abs x (Var y)) | x==y = Just $ Var "I"
+   f _ = Nothing   
+
 {-
 s f g x = (f x) (g x)
 k x y = x
 i x = x
 -}
   
+pf :: Exercise Expr
+pf = emptyExercise 
+   { prettyPrinter = show
+   , strategy      = pfStrategy
+   , navigation    = navigator
+   }
+
+etaReduce :: Rule Expr 
+etaReduce = makeSimpleRule "Eta_reduce" f
+  where f (Abs x (App y z)) | z == Var x && not (x `elem` freeVars y) = Just $ LApp y
+        f _ = Nothing
+
+section2prefix :: Rule Expr
+section2prefix = makeSimpleRule "Section_to_prefix" f
+  where f (LApp y) = Just $ App Application y
+        f _ = Nothing
+
+pfStrategy :: LabeledStrategy (Context Expr)
+pfStrategy = label "point-free" $ 
+   repeatS $ somewhere $ alternatives $
+      map liftToContext [etaReduce,section2prefix,introK]
+
+ex1 :: Expr
+ex1 = Abs "x" (Abs "y" (App (Var "x") (Var "y")))
+
+ex2 :: Expr
+ex2 = Abs "x" (Abs "y" (Var "x"))
+
 main :: IO () 
-main = printDerivation ski scomb
+main = printDerivation pf ex2

@@ -25,7 +25,6 @@ module Common.Exercise
    , randomTerm, randomTermWith, ruleset
    , makeContext, inContext, recognizeRule, ruleIsRecognized
    , ruleOrderingWith, ruleOrderingWithId
-   , storeNameMap, rename
    , Examples, mapExamples, Difficulty(..), readDifficulty, level
    , hasTypeable, useTypeable, castFrom, castTo
      -- * Exercise status
@@ -90,9 +89,6 @@ data Exercise a = Exercise
    , testGenerator  :: Maybe (Gen a)
    , randomExercise :: Maybe (StdGen -> Difficulty -> a)
    , examples       :: [(Difficulty, a)]
-     -- specific function for domains with binding
-   , storeNameMap   :: a -> a -> Context a -> Context a
-   , rename         :: Context a -> Context a
    }
 
 instance Eq (Exercise a) where
@@ -140,8 +136,6 @@ emptyExercise = Exercise
    , testGenerator  = Nothing
    , randomExercise = Nothing
    , examples       = []
-   , storeNameMap   = \_ _ -> id
-   , rename         = id
    }
    
 makeContext :: Exercise a -> Environment -> a -> Context a

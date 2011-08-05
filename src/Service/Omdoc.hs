@@ -2,7 +2,9 @@
 
 -- spul integreren met ideas
 -- document buggy rules for AM
--- include `for' relation and `difficulty' 
+-- generate oqmath files
+-- final diff check on files
+-- copy the other files (dtd's etc) from dir to my dir?
 
 import Data.Map(Map,empty,insert,(!))
 -- import Data.String.UTF8
@@ -168,7 +170,7 @@ recbookfile version revision sourcefiles exercisesrefs =
                     [omgroupelt "IdeasExercises" ""
                       [metadataelt "IdeasExercises-metadata"
                         [titleelt "Ideas Exercises collection"
-                        ,versionelt version (show revision)
+                        -- ,versionelt version (show revision) -- apparently not allowed
                         ]
                       ,omgroupelt "recbook_for_IdeasExercises" ""
                         (metadataelt ""
@@ -178,8 +180,7 @@ recbookfile version revision sourcefiles exercisesrefs =
                           ,creatorelt "aut" "Johan Jeuring"
                           ,sourceelt ""
                           ,formatelt "application/omdoc+xml"
-                          ,extradataelt
-                            sourcefiles
+                          -- ,extradataelt sourcefiles -- apparently not allowed
                           ]
                         :exercisesrefs
                         )
@@ -327,6 +328,7 @@ data MBExerciseInfo = MBExerciseInfo
   , cmp               :: Lang -> String
   , problemStatement  :: String
   , context           :: String
+  , difficulty        :: String
   }
 
 mBExerciseInfo :: Map Id MBExerciseInfo
@@ -365,7 +367,7 @@ mBExerciseInfo =
 calcPowerExerciseInfo :: MBExerciseInfo
 calcPowerExerciseInfo = MBExerciseInfo
   { title             = "Calculating powers"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_numbers_and_computation/_01_02_05_03_Powers"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
                           EN -> "Calculate the power "
@@ -376,12 +378,13 @@ calcPowerExerciseInfo = MBExerciseInfo
                           FI -> "Laske arvo potenssilausekkeelle "
   , problemStatement  = "Calculate the following power: "
   , context           = showId $ exerciseId calcPowerExercise
+  , difficulty        = "medium"
   }
 
 coverUpExerciseInfo :: MBExerciseInfo
 coverUpExerciseInfo = MBExerciseInfo
   { title             = "Covering up in equations"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
                           EN -> "Solve the equation "
@@ -392,12 +395,13 @@ coverUpExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise yhtälö "
   , problemStatement  = "Solve the following equation: "
   , context           = showId $ exerciseId coverUpExercise
+  , difficulty        = "medium"
   }
 
 derivativeExerciseInfo :: MBExerciseInfo
 derivativeExerciseInfo = MBExerciseInfo
   { title             = "Derivatives"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_calculus/_06_01_Single_Variable"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
                           EN -> "Calculate the derivative of the function "
@@ -408,12 +412,13 @@ derivativeExerciseInfo = MBExerciseInfo
                           FI -> "Laske derivaatta funktiolle "
   , problemStatement  = "Calculate the derivative of the following function: "
   , context           = showId $ exerciseId derivativeExercise
+  , difficulty        = "medium"
   }
 
 derivativePolyExerciseInfo :: MBExerciseInfo
 derivativePolyExerciseInfo = MBExerciseInfo
   { title             = "Differentiate polynomials"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_calculus/_06_01_Single_Variable"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
                           EN -> "Calculate the derivative of the polynomial "
@@ -424,12 +429,13 @@ derivativePolyExerciseInfo = MBExerciseInfo
                           FI -> "Laske derivaatta polynomille "
   , problemStatement  = "Calculate the derivative of the following polynomial: "
   , context           = showId $ exerciseId derivativePolyExercise
+  , difficulty        = "medium"
   }
 
 derivativeProductExerciseInfo :: MBExerciseInfo
 derivativeProductExerciseInfo = MBExerciseInfo
   { title             = "Differentiate product"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_calculus/_06_01_Single_Variable"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
                           EN -> "Calculate the derivative of the product "
@@ -440,12 +446,13 @@ derivativeProductExerciseInfo = MBExerciseInfo
                           FI -> "Laske derivaatta tulolle "
   , problemStatement  = "Calculate the derivative of the following product: "
   , context           = showId $ exerciseId derivativeProductExercise
+  , difficulty        = "medium"
   }
 
 derivativeQuotientExerciseInfo :: MBExerciseInfo
 derivativeQuotientExerciseInfo = MBExerciseInfo
   { title             = "Differentiate quotients"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_calculus/_06_01_Single_Variable"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
                           EN -> "Calculate the derivative of the quotient "
@@ -456,6 +463,7 @@ derivativeQuotientExerciseInfo = MBExerciseInfo
                           FI -> "Laske derivaatta osamäärälle "
   , problemStatement  = "Calculate the derivative of the following quotient: "
   , context           = showId $ exerciseId derivativeQuotientExercise
+  , difficulty        = "medium"
   }
 
 expEqExerciseInfo :: MBExerciseInfo
@@ -472,12 +480,13 @@ expEqExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise eksponenttiyhtälö "
   , problemStatement  = "Solve the following exponential equation: "
   , context           = showId $ exerciseId expEqExercise
+  , difficulty        = "medium"
   }
 
 findFactorsExerciseInfo :: MBExerciseInfo
 findFactorsExerciseInfo = MBExerciseInfo
   { title             = "Finding factors"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
                           EN -> "Find the factors "
@@ -488,39 +497,43 @@ findFactorsExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise kertoimet "
   , problemStatement  = "Find the factors: "
   , context           = showId $ exerciseId findFactorsExercise
+  , difficulty        = "easy"
   }
 
 fractionExerciseInfo :: MBExerciseInfo
 fractionExerciseInfo = MBExerciseInfo
   { title             = "Simplifying fractions"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_numbers_and_computation/_01_02_02_Fractions"
   , langSupported     = [EN]
   , cmp               = \l -> case l of 
                           EN -> "Simplify the fraction "
   , problemStatement  = "Simplify the following fraction: "
   , context           = showId $ exerciseId fractionExercise
+  , difficulty        = ""
   }
 
 gaussianElimExerciseInfo :: MBExerciseInfo
 gaussianElimExerciseInfo = MBExerciseInfo
   { title             = "Gaussian elimination"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_02_02_Matrix_Algebra"
   , langSupported     = [EN]
   , cmp               = \l -> case l of 
                           EN -> "Perform Gaussian elimination "
   , problemStatement  = "Perform Gaussian elimination: "
   , context           = showId $ exerciseId gaussianElimExercise
+  , difficulty        = ""
   }
 
 gramSchmidtExerciseInfo :: MBExerciseInfo
 gramSchmidtExerciseInfo = MBExerciseInfo
   { title             = "Gram Schmidt"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_02_04_Vector_Spaces"
   , langSupported     = [EN]
   , cmp               = \l -> case l of 
                           EN -> "Solve using Gram Schmidt "
   , problemStatement  = "Solve using Gram Schmidt: "
   , context           = showId $ exerciseId gramSchmidtExercise
+  , difficulty        = ""
   }
 
 higherDegreeExerciseInfo :: MBExerciseInfo
@@ -537,6 +550,7 @@ higherDegreeExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise korkeamman asteen polynomiyhätlö "
   , problemStatement  = "Solve the following higher degree polynomial equation: "
   , context           = showId $ exerciseId higherDegreeExercise
+  , difficulty        = "easy"
   }
 
 ineqHigherDegreeExerciseInfo :: MBExerciseInfo
@@ -553,6 +567,7 @@ ineqHigherDegreeExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise epäyhtälö "
   , problemStatement  = "Solve the following inequation: "
   , context           = showId $ exerciseId ineqHigherDegreeExercise
+  , difficulty        = "medium"
   }
 
 ineqLinearExerciseInfo :: MBExerciseInfo
@@ -569,6 +584,7 @@ ineqLinearExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise lineaarinen epäyhtälö "
   , problemStatement  = "Solve the following linear inequation: "
   , context           = showId $ exerciseId ineqLinearExercise
+  , difficulty        = "medium"
   }
 
 ineqQuadraticExerciseInfo :: MBExerciseInfo
@@ -585,6 +601,7 @@ ineqQuadraticExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise epäyhtälö "
   , problemStatement  = "Solve the following inequation: "
   , context           = showId $ exerciseId ineqQuadraticExercise
+  , difficulty        = "medium"
   }
 
 linearExerciseInfo :: MBExerciseInfo
@@ -601,6 +618,7 @@ linearExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise lineaarinen yhtälö "
   , problemStatement  = "Solve the following equation: "
   , context           = showId $ exerciseId linearExercise
+  , difficulty        = "easy"
   }
 
 linearMixedExerciseInfo :: MBExerciseInfo
@@ -617,6 +635,7 @@ linearMixedExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise lineaarinen yhtälö "
   , problemStatement  = "Solve the linear mixed equation: "
   , context           = showId $ exerciseId linearMixedExercise
+  , difficulty        = "easy"
   }
 
 linearSystemExerciseInfo :: MBExerciseInfo
@@ -628,6 +647,7 @@ linearSystemExerciseInfo = MBExerciseInfo
                           EN -> "Solve the system of linear equations "
   , problemStatement  = "Solve the following system of linear equations: "
   , context           = showId $ exerciseId linearSystemExercise
+  , difficulty        = ""
   }
 
 logEqExerciseInfo :: MBExerciseInfo
@@ -644,12 +664,13 @@ logEqExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise logaritmiyhtälö "
   , problemStatement  = "Solve the following logarithmic equation: "
   , context           = showId $ exerciseId logEqExercise
+  , difficulty        = "medium"
   }
 
 nonNegBrokenExpExerciseInfo :: MBExerciseInfo
 nonNegBrokenExpExerciseInfo = MBExerciseInfo
   { title             = "Writing with non-negative exponents"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
                           EN -> "Write with a non-negative exponent "
@@ -660,12 +681,13 @@ nonNegBrokenExpExerciseInfo = MBExerciseInfo
                           FI -> "Ilmaise käyttäen ei-negatiivista eksponenttia "
   , problemStatement  = "Write the following with a non-negative exponent: "
   , context           = showId $ exerciseId nonNegBrokenExpExercise
+  , difficulty        = "medium"
   }
 
 powerEqExerciseInfo :: MBExerciseInfo
 powerEqExerciseInfo = MBExerciseInfo
   { title             = "Solving power equations"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_03_Polynomial_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
                           EN -> "Solve the power equation "
@@ -676,12 +698,13 @@ powerEqExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise potenssiyhtälö "
   , problemStatement  = "Solve the following power equation: "
   , context           = showId $ exerciseId powerEqExercise
+  , difficulty        = "medium"
   }
 
 powerOfExerciseInfo :: MBExerciseInfo
 powerOfExerciseInfo = MBExerciseInfo
   { title             = "Writing as a power"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
                           EN -> "Write as a power "
@@ -692,6 +715,7 @@ powerOfExerciseInfo = MBExerciseInfo
                           FI -> "Ilmaise potenssimuodossa "
   , problemStatement  = "Write the following as a power: "
   , context           = showId $ exerciseId powerOfExercise
+  , difficulty        = "medium"
   }
 
 quadraticExerciseInfo :: MBExerciseInfo
@@ -708,6 +732,7 @@ quadraticExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise toisen asteen yhtälö "
   , problemStatement  = "Solve the following quadratic equation: "
   , context           = showId $ exerciseId quadraticExercise
+  , difficulty        = "easy"
   }
   
 quadraticNoABCExerciseInfo :: MBExerciseInfo
@@ -724,6 +749,7 @@ quadraticNoABCExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise toisen asteen yhtälö käyttämättä ratkaisukaavaa "
   , problemStatement  = "Solve, without using the quadratic formula, the following quadratic equation: "
   , context           = showId $ exerciseId quadraticNoABCExercise
+  , difficulty        = "easy"
   }
   
 quadraticWithApproximationExerciseInfo :: MBExerciseInfo
@@ -740,6 +766,7 @@ quadraticWithApproximationExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise likimääräisesti toisen asteen yhtälö "
   , problemStatement  = "Solve, with approximation allowed, the following quadratic equation: "
   , context           = showId $ exerciseId quadraticWithApproximation
+  , difficulty        = "easy"
   }
 
 rationalEquationExerciseInfo :: MBExerciseInfo
@@ -756,12 +783,13 @@ rationalEquationExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise rationaaliyhtälö "
   , problemStatement  = "Solve the following rational equation: "
   , context           = showId $ exerciseId rationalEquationExercise
+  , difficulty        = "medium"
   }
 
 simplifyPowerExerciseInfo :: MBExerciseInfo
 simplifyPowerExerciseInfo = MBExerciseInfo
   { title             = "Simplifying powers"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
                           EN -> "Simplify the power "
@@ -772,12 +800,13 @@ simplifyPowerExerciseInfo = MBExerciseInfo
                           FI -> "Sievennä potenssilauseke "
   , problemStatement  = "Simplify the following power: "
   , context           = showId $ exerciseId simplifyPowerExercise
+  , difficulty        = "medium"
   }
 
 simplifyRationalExerciseInfo :: MBExerciseInfo
 simplifyRationalExerciseInfo = MBExerciseInfo
   { title             = "Simplifying rationals"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
                           EN -> "Simplify the rational "
@@ -788,17 +817,19 @@ simplifyRationalExerciseInfo = MBExerciseInfo
                           FI -> "Sievennä murtolauseke "
   , problemStatement  = "Simplify the following rational: "
   , context           = showId $ exerciseId simplifyRationalExercise
+  , difficulty        = "medium"
   }
 
 systemWithMatrixExerciseInfo :: MBExerciseInfo
 systemWithMatrixExerciseInfo = MBExerciseInfo
   { title             = "Solving systems of linear equations using matrices"
-  , for               = ""
+  , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_02_02_Matrix_Algebra"
   , langSupported     = [EN]
   , cmp               = \l -> case l of 
                           EN -> "Solve the following system of linear equations using a matrix: "
   , problemStatement  = "Solve the following system of linear equations using a matrix:  "
   , context           = showId $ exerciseId systemWithMatrixExercise
+  , difficulty        = ""
   }
 
 --------------------------------------------------------------------------------
@@ -901,12 +932,14 @@ omdocelt identifier namespace ls =
 omgroupelt :: String -> String -> [Element] -> Element
 omgroupelt identifier namespace ls =
   Element { name         =  "omgroup"
-          , attributes   =  if null namespace 
-                            then ["id" := identifier]
-                            else if null identifier 
-                                 then ["xmlns" := namespace]
-                                 else ["id" := identifier
-                                      ,"xmlns" := namespace]
+          , attributes   = if null namespace && null identifier
+                           then []
+                           else if null namespace
+                                then ["id" := identifier]
+                                else if null identifier 
+                                     then ["xmlns" := namespace]
+                                     else ["id" := identifier
+                                          ,"xmlns" := namespace]
           , content      =  map Right ls
           }           
 
@@ -983,7 +1016,9 @@ xmldecl  =  "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
 xrefelt :: String -> String -> Element
 xrefelt xref ami =
   Element { name         =  "ref"
-          , attributes   =  ["xref" := xref, "ami:item-element-name" := ami]
+          , attributes   =  ["xref" := xref
+                            --,"ami:item-element-name" := ami -- apparently not allowed
+                            ]
           , content      =  []
           }           
 

@@ -2,9 +2,6 @@
 
 -- spul integreren met ideas
 -- document buggy rules for AM
--- generate oqmath files
--- final diff check on files
--- copy the other files (dtd's etc) from dir to my dir?
 
 import Data.Map(Map,empty,insert,(!))
 -- import Data.String.UTF8
@@ -158,7 +155,7 @@ generateallfiles =
 --------------------------------------------------------------------------------
 
 recbookfile :: String -> Int -> [Element] -> [Element] -> IO ()
-recbookfile version revision sourcefiles exercisesrefs =
+recbookfile version revision sourcefiles exercisesrefs = do
   let filestring = 
              xmldecl 
           ++ activemathdtd 
@@ -188,7 +185,8 @@ recbookfile version revision sourcefiles exercisesrefs =
                     ]
                   ]
                )
-  in writeFile (omdocpath ++ "RecBook_Exercises.omdoc") filestring
+  writeFile (omdocpath ++ "RecBook_Exercises.omdoc") filestring
+  writeFile (oqmathpath ++ "RecBook_Exercises.oqmath") filestring
   
 sourcefile :: Exercise a -> Element
 sourcefile ex = 
@@ -221,6 +219,10 @@ omdocexerciserefs ex =
 omdocpath :: String
 omdocpath = "/Users/johanj/Documents/Research/ExerciseAssistants/Feedback/math-bridge/activemath/all/activemath-ideas/content/IdeasExercises/omdoc/"
 
+oqmathpath :: String
+oqmathpath = "/Users/johanj/Documents/Research/ExerciseAssistants/Feedback/math-bridge/activemath/all/activemath-ideas/content/IdeasExercises/oqmath/"
+
+{-
 omdocexercisefile :: (IsTerm a) => String -> Int -> Exercise a -> IO ()
 omdocexercisefile version revision ex = 
   let info = mBExerciseInfo ! (exerciseId ex)
@@ -244,6 +246,32 @@ omdocexercisefile version revision ex =
                   ]
                )
   in writeFile (omdocpath ++ context info ++ ".omdoc") filestring
+-}
+
+omdocexercisefile :: (IsTerm a) => String -> Int -> Exercise a -> IO ()
+omdocexercisefile version revision ex = do
+  let info = mBExerciseInfo ! (exerciseId ex)
+  let filestring = 
+             xmldecl 
+          ++ activemathdtd 
+          ++ showXML
+               (omdocelt 
+                  (context info ++ ".omdoc")
+                  []
+                  [metadataelt 
+                    ""
+                    [dateelt "created" "2011-01-22"
+                    ,dateelt "changed" today
+                    ,titleelt (title info)
+                    ,creatorelt "aut" "Johan Jeuring"
+                    ,versionelt version (show revision)
+                    ]
+                  ,theoryelt (context info) 
+                             (omdocexercises ex)
+                  ]
+               )
+  writeFile (omdocpath ++ context info ++ ".omdoc") filestring
+  writeFile (oqmathpath ++ context info ++ ".oqmath") filestring
 
 omdocexercises :: (IsTerm a) => Exercise a -> [Element]
 omdocexercises ex = catMaybes $ zipWith make [(0::Int)..] (examples ex)
@@ -290,7 +318,7 @@ omdocexercise
     task
   = exerciseelt 
       exerciseid
-      maybefor
+      Nothing
       ([metadataelt
          ""
          [formatelt "AMEL1.0"

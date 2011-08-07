@@ -433,12 +433,12 @@ derivativeExerciseInfo = MBExerciseInfo
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_Single_Variable"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
-                          EN -> "Calculate the following derivative of a function "
-                          ES -> "Calcular la derivada de la función "
-                          DE -> "Bestimmen Sie die Ableitung der Funktion "
-                          FR -> "Calculer la dérivée de la fonction "
-                          NL -> "Bereken de volgende afgeleide van een functie "
-                          FI -> "Laske derivaatta funktiolle "
+                          EN -> "Calculate the following derivative of a function "
+                          ES -> "Calcular la derivada de la función "
+                          DE -> "Bestimmen Sie die Ableitung der Funktion "
+                          FR -> "Calculer la dérivée de la fonction "
+                          NL -> "Bereken de volgende afgeleide van een functie "
+                          FI -> "Laske derivaatta funktiolle "
   , problemStatement  = "Calculate the derivative of the following function: "
   , context           = showId $ exerciseId derivativeExercise
   , difficulty        = "medium"
@@ -450,12 +450,12 @@ derivativePolyExerciseInfo = MBExerciseInfo
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_Single_Variable"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
-                          EN -> "Calculate the following derivative of a polynomial "
-                          ES -> "Calcular la derivada del polinomio "
-                          DE -> "Bestimmen Sie die Ableitung des Polynoms "
-                          FR -> "Calculer la dérivée du polynôme "
-                          NL -> "Bereken de volgende afgeleide van een polynoom "
-                          FI -> "Laske derivaatta polynomille "
+                          EN -> "Calculate the following derivative of a polynomial "
+                          ES -> "Calcular la derivada del polinomio "
+                          DE -> "Bestimmen Sie die Ableitung des Polynoms "
+                          FR -> "Calculer la dérivée du polynôme "
+                          NL -> "Bereken de volgende afgeleide van een polynoom "
+                          FI -> "Laske derivaatta polynomille "
   , problemStatement  = "Calculate the derivative of the following polynomial: "
   , context           = showId $ exerciseId derivativePolyExercise
   , difficulty        = "medium"
@@ -467,12 +467,12 @@ derivativeProductExerciseInfo = MBExerciseInfo
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_Single_Variable"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
-                          EN -> "Calculate the following derivative of a product "
-                          ES -> "Calcular la derivada del producto "
-                          DE -> "Bestimmen Sie die Ableitung des Produkts "
-                          FR -> "Calculer la dérivée du produit "
-                          NL -> "Bereken de volgende afgeleide van een product "
-                          FI -> "Laske derivaatta tulolle "
+                          EN -> "Calculate the following derivative of a product "
+                          ES -> "Calcular la derivada del producto "
+                          DE -> "Bestimmen Sie die Ableitung des Produkts "
+                          FR -> "Calculer la dérivée du produit "
+                          NL -> "Bereken de volgende afgeleide van een product "
+                          FI -> "Laske derivaatta tulolle "
   , problemStatement  = "Calculate the derivative of the following product: "
   , context           = showId $ exerciseId derivativeProductExercise
   , difficulty        = "medium"
@@ -484,12 +484,12 @@ derivativeQuotientExerciseInfo = MBExerciseInfo
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_Single_Variable"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
   , cmp               = \l -> case l of 
-                          EN -> "Calculate the following derivative of a quotient "
-                          ES -> "Calcular la derivada del cociente "
-                          DE -> "Bestimmen Sie die Ableitung des Quotienten "
-                          FR -> "Calculer la dérivée du quotient "
-                          NL -> "Bereken de volgende afgeleide van een quotiënt "
-                          FI -> "Laske derivaatta osamäärälle "
+                          EN -> "Calculate the following derivative of a quotient "
+                          ES -> "Calcular la derivada del cociente "
+                          DE -> "Bestimmen Sie die Ableitung des Quotienten "
+                          FR -> "Calculer la dérivée du quotient "
+                          NL -> "Bereken de volgende afgeleide van een quotiënt "
+                          FI -> "Laske derivaatta osamäärälle "
   , problemStatement  = "Calculate the derivative of the following quotient: "
   , context           = showId $ exerciseId derivativeQuotientExercise
   , difficulty        = "medium"

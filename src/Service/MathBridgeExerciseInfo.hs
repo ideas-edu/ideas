@@ -1,5 +1,8 @@
 ﻿module Service.MathBridgeExerciseInfo where
 
+-- Derivative formulation corrected: EN, NL, FI
+-- Title translated: EN, NL, FI
+
 import Data.Map(Map,empty,insert)
 
 import Common.Library
@@ -86,7 +89,7 @@ calcPowerExerciseInfo = MBExerciseInfo
                           DE -> "Berechnen Sie die Potenz "
                           FR -> "Calculer la puissance "
                           NL -> "Machten berekenen"
-                          FI -> "Laske arvo potenssilausekkeelle "
+                          FI -> "Potenssien laskeminen "
                       -}
   , for               = "mbase://mb_concepts/mb_numbers_and_computation/_01_02_05_03_Powers"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -111,7 +114,7 @@ coverUpExerciseInfo = MBExerciseInfo
                           DE -> "Lösen Sie die Gleichung "
                           FR -> "Résoudre l'équation "
                           NL -> "Vergelijkingen oplossen"
-                          FI -> "Ratkaise yhtälö "
+                          FI -> "Yhtälöiden ratkaiseminen "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -136,7 +139,7 @@ derivativeExerciseInfo = MBExerciseInfo
                           DE -> "Bestimmen Sie die Ableitung der Funktion "
                           FR -> "Calculer la dérivée de la fonction "
                           NL -> "Afgeleiden"
-                          FI -> "Laske derivaatta funktiolle "
+                          FI -> "Derivaatat "
                       -}
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_Single_Variable"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -146,7 +149,7 @@ derivativeExerciseInfo = MBExerciseInfo
                           DE -> "Bestimmen Sie die Ableitung der Funktion "
                           FR -> "Calculer la dérivée de la fonction "
                           NL -> "Bereken de volgende afgeleide van een functie "
-                          FI -> "Laske derivaatta funktiolle "
+                          FI -> "Laske seuraava derivaatta "
   , problemStatement  = "Calculate the derivative of the following function: "
   , context           = showId $ exerciseId derivativeExercise
   , difficulty        = "medium"
@@ -161,7 +164,7 @@ derivativePolyExerciseInfo = MBExerciseInfo
                           DE -> "Bestimmen Sie die Ableitung des Polynoms "
                           FR -> "Calculer la dérivée du polynôme "
                           NL -> "Afgeleiden van polynomen"
-                          FI -> "Laske derivaatta polynomille "
+                          FI -> "Derivaatan laskeminen polynomille "
                       -}
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_Single_Variable"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -171,7 +174,7 @@ derivativePolyExerciseInfo = MBExerciseInfo
                           DE -> "Bestimmen Sie die Ableitung des Polynoms "
                           FR -> "Calculer la dérivée du polynôme "
                           NL -> "Bereken de volgende afgeleide van een polynoom "
-                          FI -> "Laske derivaatta polynomille "
+                          FI -> "Laske seuraava derivaatta "
   , problemStatement  = "Calculate the derivative of the following polynomial: "
   , context           = showId $ exerciseId derivativePolyExercise
   , difficulty        = "medium"
@@ -186,7 +189,7 @@ derivativeProductExerciseInfo = MBExerciseInfo
                           DE -> "Bestimmen Sie die Ableitung des Produkts "
                           FR -> "Calculer la dérivée du produit "
                           NL -> "Afgeleiden van producten"
-                          FI -> "Laske derivaatta tulolle "
+                          FI -> "Derivaatan laskeminen tulolle "
                       -}
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_Single_Variable"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -196,7 +199,7 @@ derivativeProductExerciseInfo = MBExerciseInfo
                           DE -> "Bestimmen Sie die Ableitung des Produkts "
                           FR -> "Calculer la dérivée du produit "
                           NL -> "Bereken de volgende afgeleide van een product "
-                          FI -> "Laske derivaatta tulolle "
+                          FI -> "Laske seuraava derivaatta "
   , problemStatement  = "Calculate the derivative of the following product: "
   , context           = showId $ exerciseId derivativeProductExercise
   , difficulty        = "medium"
@@ -211,7 +214,7 @@ derivativeQuotientExerciseInfo = MBExerciseInfo
                           DE -> "Bestimmen Sie die Ableitung des Quotienten "
                           FR -> "Calculer la dérivée du quotient "
                           NL -> "Afgeleiden van quotiënten"
-                          FI -> "Laske derivaatta osamäärälle "
+                          FI -> "Derivaatan laskeminen osamäärälle "
                       -}
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_Single_Variable"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -236,7 +239,7 @@ expEqExerciseInfo = MBExerciseInfo
                           DE -> "Lösen Sie die Exponentialgleichung "
                           FR -> "Résoudre l'équation exponentielle "
                           NL -> "Exponentiële vergelijking oplossen"
-                          FI -> "Ratkaise eksponenttiyhtälö "
+                          FI -> "Eksponenttiyhtälöiden ratkaiseminen "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_05_Exponential_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -261,7 +264,7 @@ findFactorsExerciseInfo = MBExerciseInfo
                           DE -> "Finden Sie die Faktoren "
                           FR -> "Trouver les facteurs "
                           NL -> "Ontbinden in factoren"
-                          FI -> "Ratkaise kertoimet "
+                          FI -> "Kertoimien ratkaiseminen "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -361,7 +364,7 @@ higherDegreeExerciseInfo = MBExerciseInfo
                           DE -> "Lösen Sie die Gleichung "
                           FR -> "Résoudre l'équation polynomiale de degré élevé "
                           NL -> "Hogeregraads polynoomvergelijkingen oplossen"
-                          FI -> "Ratkaise korkeamman asteen polynomiyhätlö "
+                          FI -> "Korkeamman asteen polynomiyhtälön ratkaiseminen "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_03_Polynomial_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -386,7 +389,7 @@ ineqHigherDegreeExerciseInfo = MBExerciseInfo
                           DE -> "Lösen Sie die Ungleichung "
                           FR -> "Résoudre l'inéquation "
                           NL -> "Hogeregraads ongelijkheden oplossen "
-                          FI -> "Ratkaise epäyhtälö "
+                          FI -> "Korkeamman asteen epäyhtälöiden ratkaiseminen "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_05_Inequalities"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -411,7 +414,7 @@ ineqLinearExerciseInfo = MBExerciseInfo
                           DE -> "Lösen Sie die lineare Ungleichung "
                           FR -> "Résoudre l'inéquation linéaire "
                           NL -> "Lineaire ongelijkheden oplossen"
-                          FI -> "Ratkaise lineaarinen epäyhtälö "
+                          FI -> "Lineaaristen epäyhtälöiden ratkaiseminen "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_05_Inequalities"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -436,7 +439,7 @@ ineqQuadraticExerciseInfo = MBExerciseInfo
                           DE -> "Lösen Sie die Ungleichung "
                           FR -> "Résoudre l'inéquation "
                           NL -> "Kwadratische ongelijkheden oplossen"
-                          FI -> "Ratkaise epäyhtälö "
+                          FI -> "Kvadraattisien epäyhtälöiden ratkaiseminen "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_05_Inequalities"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -461,7 +464,7 @@ linearExerciseInfo = MBExerciseInfo
                           DE -> "Lösen Sie die lineare Gleichung "
                           FR -> "Résoudre l'équation linéaire "
                           NL -> "Lineaire vergelijkingen oplossen"
-                          FI -> "Ratkaise lineaarinen yhtälö "
+                          FI -> "Lineaaristen yhtälöiden ratkaiseminen "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_01_Linear_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -486,7 +489,7 @@ linearMixedExerciseInfo = MBExerciseInfo
                           DE -> "Lösen Sie die lineare Gleichung "
                           FR -> "Résoudre l'équation linéaire mixte "
                           NL -> "Gemengde lineaire vergelijkingen oplossen"
-                          FI -> "Ratkaise lineaarinen yhtälö "
+                          FI -> "Lineaaristen sekayhtälöiden ratkaisu "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_01_Linear_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -536,7 +539,7 @@ logEqExerciseInfo = MBExerciseInfo
                           DE -> "Lösen Sie die Gleichung mit Logarithmen "
                           FR -> "Résoudre l'équation logarithmique "
                           NL -> "Logarithmische vergelijkingen oplossen"
-                          FI -> "Ratkaise logaritmiyhtälö "
+                          FI -> "Logaritmiyhtälöiden ratkaisu "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_06_Logarithmic_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -561,7 +564,7 @@ nonNegBrokenExpExerciseInfo = MBExerciseInfo
                           DE -> "Schreiben Sie mit nicht-negativen Exponenten "
                           FR -> "Écrire avec une puissance non-négative "
                           NL -> "Met niet-negatieve exponenten schrijven"
-                          FI -> "Ilmaise käyttäen ei-negatiivista eksponenttia "
+                          FI -> "Ilmaiseminen käyttäen ei-negatiivista eksponenttia "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -586,7 +589,7 @@ powerEqExerciseInfo = MBExerciseInfo
                           DE -> "Lösen Sie die Gleichung mit x im Exponenten "
                           FR -> "Résoudre l'équation avec puissances "
                           NL -> "Machtsvergelijkingen oplossen"
-                          FI -> "Ratkaise potenssiyhtälö "
+                          FI -> "Potenssiyhtälöiden ratkaiseminen "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_03_Polynomial_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -611,7 +614,7 @@ powerOfExerciseInfo = MBExerciseInfo
                           DE -> "Schreiben Sie als Potenz "
                           FR -> "Écrire sous la forme d'une puissance "
                           NL -> "Als een macht schrijven"
-                          FI -> "Ilmaise potenssimuodossa "
+                          FI -> "Ilmaiseminen potenssimuodossa "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -636,7 +639,7 @@ quadraticExerciseInfo = MBExerciseInfo
                           DE -> "Lösen Sie die quadratische Gleichung "
                           FR -> "Résoudre l'équation quadratique "
                           NL -> "Kwadratische vergelijkingen oplossen"
-                          FI -> "Ratkaise toisen asteen yhtälö "
+                          FI -> "Toisen asteen yhtälöiden ratkaiseminen "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_02_Quadratic_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -661,7 +664,7 @@ quadraticNoABCExerciseInfo = MBExerciseInfo
                           DE -> "Lösen Sie die quadratische Gleichung ohne Benutzung der p-q-Formel "
                           FR -> "Résoudre l'équation quadratique, sans utiliser la formule de résolution "
                           NL -> "Kwadratische vergelijkingen oplossen (geen abc)"
-                          FI -> "Ratkaise toisen asteen yhtälö käyttämättä ratkaisukaavaa "
+                          FI -> "Toisen asteen yhtälöiden ratkaiseminen käyttämättä ratkaisukaavaa "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_02_Quadratic_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -686,7 +689,7 @@ quadraticWithApproximationExerciseInfo = MBExerciseInfo
                           DE -> "Lösen Sie die quadratische Gleichung"
                           FR -> "Résoudre l'équation quadratique, approximation permise "
                           NL -> "Kwadratische vergelijkingen oplossen (met benaderingen)"
-                          FI -> "Ratkaise likimääräisesti toisen asteen yhtälö "
+                          FI -> "Toisen asteen yhtälöiden likimääräinen ratkaiseminen "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_02_Quadratic_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -711,7 +714,7 @@ rationalEquationExerciseInfo = MBExerciseInfo
                           DE -> "Lösen Sie die Bruchgleichung "
                           FR -> "Résoudre l'équation rationnelle "
                           NL -> "Gebroken vergelijkingen oplossen"
-                          FI -> "Ratkaise rationaaliyhtälö "
+                          FI -> "Rationaaliyhtälöiden ratkaiseminen "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_04_Rational_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -736,7 +739,7 @@ simplifyPowerExerciseInfo = MBExerciseInfo
                           DE -> "Vereinfachen Sie die Potenz "
                           FR -> "Simplifier la puissance "
                           NL -> "Machten vereenvoudigen"
-                          FI -> "Sievennä potenssilauseke "
+                          FI -> "Potenssilausekkeiden sieventäminen "
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI]
@@ -761,7 +764,7 @@ simplifyRationalExerciseInfo = MBExerciseInfo
                           DE -> "Vereinfachen Sie den Bruch "
                           FR -> "Simplifiez le rationnel "
                           NL -> "Breuken vereenvoudigen"
-                          FI -> "Sievennä murtolauseke "
+                          FI -> "Murtolausekkeiden sieventäminen"
                       -}
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI]

@@ -87,7 +87,7 @@ calcPowerExerciseInfo = MBExerciseInfo
                           EN -> "Calculating powers"
                           ES -> "Calcular la potencia "
                           DE -> "Berechnen Sie die Potenz "
-                          FR -> "Calculer la puissance "
+                          FR -> "Calculer avec des puissances "
                           NL -> "Machten berekenen"
                           FI -> "Potenssien laskeminen "
                       -}
@@ -112,7 +112,7 @@ coverUpExerciseInfo = MBExerciseInfo
                           EN -> "Solving equations"
                           ES -> "Resolver la ecuación "
                           DE -> "Lösen Sie die Gleichung "
-                          FR -> "Résoudre l'équation "
+                          FR -> "Résoudre des équations "
                           NL -> "Vergelijkingen oplossen"
                           FI -> "Yhtälöiden ratkaiseminen "
                       -}
@@ -137,7 +137,7 @@ derivativeExerciseInfo = MBExerciseInfo
                           EN -> "Derivatives"
                           ES -> "Calcular la derivada de la función "
                           DE -> "Bestimmen Sie die Ableitung der Funktion "
-                          FR -> "Calculer la dérivée de la fonction "
+                          FR -> "Dérivées "
                           NL -> "Afgeleiden"
                           FI -> "Derivaatat "
                       -}
@@ -162,7 +162,7 @@ derivativePolyExerciseInfo = MBExerciseInfo
                           EN -> "Differentiate polynomials"
                           ES -> "Calcular la derivada del polinomio "
                           DE -> "Bestimmen Sie die Ableitung des Polynoms "
-                          FR -> "Calculer la dérivée du polynôme "
+                          FR -> "Dérivée d'un polynôme "
                           NL -> "Afgeleiden van polynomen"
                           FI -> "Derivaatan laskeminen polynomille "
                       -}
@@ -187,7 +187,7 @@ derivativeProductExerciseInfo = MBExerciseInfo
                           EN -> "Differentiate product"
                           ES -> "Calcular la derivada del producto "
                           DE -> "Bestimmen Sie die Ableitung des Produkts "
-                          FR -> "Calculer la dérivée du produit "
+                          FR -> "Dérivée d'un produit "
                           NL -> "Afgeleiden van producten"
                           FI -> "Derivaatan laskeminen tulolle "
                       -}
@@ -212,7 +212,7 @@ derivativeQuotientExerciseInfo = MBExerciseInfo
                           EN -> "Differentiate quotients"
                           ES -> "Calcular la derivada del cociente "
                           DE -> "Bestimmen Sie die Ableitung des Quotienten "
-                          FR -> "Calculer la dérivée du quotient "
+                          FR -> "Dérivée d'un quotient "
                           NL -> "Afgeleiden van quotiënten"
                           FI -> "Derivaatan laskeminen osamäärälle "
                       -}
@@ -237,7 +237,7 @@ expEqExerciseInfo = MBExerciseInfo
                           EN -> "Solving exponential equations"
                           ES -> "Resolver la ecuación exponencial "
                           DE -> "Lösen Sie die Exponentialgleichung "
-                          FR -> "Résoudre l'équation exponentielle "
+                          FR -> "Équation exponentielle "
                           NL -> "Exponentiële vergelijking oplossen"
                           FI -> "Eksponenttiyhtälöiden ratkaiseminen "
                       -}
@@ -262,7 +262,7 @@ findFactorsExerciseInfo = MBExerciseInfo
                           EN -> "Finding factors"
                           ES -> "Encontrar los factores "
                           DE -> "Finden Sie die Faktoren "
-                          FR -> "Trouver les facteurs "
+                          FR -> "Trouver des facteurs "
                           NL -> "Ontbinden in factoren"
                           FI -> "Kertoimien ratkaiseminen "
                       -}
@@ -362,7 +362,7 @@ higherDegreeExerciseInfo = MBExerciseInfo
                           EN -> "Solving higher degree polynomial equations"
                           ES -> "Resolver la ecuación de orden superior "
                           DE -> "Lösen Sie die Gleichung "
-                          FR -> "Résoudre l'équation polynomiale de degré élevé "
+                          FR -> "Équation polynomiale "
                           NL -> "Hogeregraads polynoomvergelijkingen oplossen"
                           FI -> "Korkeamman asteen polynomiyhtälön ratkaiseminen "
                       -}
@@ -387,7 +387,7 @@ ineqHigherDegreeExerciseInfo = MBExerciseInfo
                           EN -> "Solving inequations of higher degree"
                           ES -> "Resolver la inecuación "
                           DE -> "Lösen Sie die Ungleichung "
-                          FR -> "Résoudre l'inéquation "
+                          FR -> "Inéquation de degré supérieur "
                           NL -> "Hogeregraads ongelijkheden oplossen "
                           FI -> "Korkeamman asteen epäyhtälöiden ratkaiseminen "
                       -}
@@ -412,7 +412,7 @@ ineqLinearExerciseInfo = MBExerciseInfo
                           EN -> "Solving linear inequations"
                           ES -> "Resolver la inecuación linea "
                           DE -> "Lösen Sie die lineare Ungleichung "
-                          FR -> "Résoudre l'inéquation linéaire "
+                          FR -> "Inéquations linéaires "
                           NL -> "Lineaire ongelijkheden oplossen"
                           FI -> "Lineaaristen epäyhtälöiden ratkaiseminen "
                       -}
@@ -437,7 +437,7 @@ ineqQuadraticExerciseInfo = MBExerciseInfo
                           EN -> "Solving quadratic inequations"
                           ES -> "Resolver la inecuación "
                           DE -> "Lösen Sie die Ungleichung "
-                          FR -> "Résoudre l'inéquation "
+                          FR -> "Inéquation du second degré "
                           NL -> "Kwadratische ongelijkheden oplossen"
                           FI -> "Kvadraattisien epäyhtälöiden ratkaiseminen "
                       -}
@@ -462,7 +462,7 @@ linearExerciseInfo = MBExerciseInfo
                           EN -> "Solving linear equations"
                           ES -> "Resolver la ecuación lineal "
                           DE -> "Lösen Sie die lineare Gleichung "
-                          FR -> "Résoudre l'équation linéaire "
+                          FR -> "Équation linéaire "
                           NL -> "Lineaire vergelijkingen oplossen"
                           FI -> "Lineaaristen yhtälöiden ratkaiseminen "
                       -}
@@ -487,7 +487,7 @@ linearMixedExerciseInfo = MBExerciseInfo
                           EN -> "Solving linear mixed equations"
                           ES -> "Resolver la ecuación lineal compuesta "
                           DE -> "Lösen Sie die lineare Gleichung "
-                          FR -> "Résoudre l'équation linéaire mixte "
+                          FR -> "Équation linéaire mixte "
                           NL -> "Gemengde lineaire vergelijkingen oplossen"
                           FI -> "Lineaaristen sekayhtälöiden ratkaisu "
                       -}
@@ -537,7 +537,7 @@ logEqExerciseInfo = MBExerciseInfo
                           EN -> "Solving logarithmic equations"
                           ES -> "Resolver la ecuación logarítmica "
                           DE -> "Lösen Sie die Gleichung mit Logarithmen "
-                          FR -> "Résoudre l'équation logarithmique "
+                          FR -> "Équation logarithmique "
                           NL -> "Logarithmische vergelijkingen oplossen"
                           FI -> "Logaritmiyhtälöiden ratkaisu "
                       -}
@@ -562,7 +562,7 @@ nonNegBrokenExpExerciseInfo = MBExerciseInfo
                           EN -> "Writing with non-negative exponents"
                           ES -> "Expresar con exponente no negativo "
                           DE -> "Schreiben Sie mit nicht-negativen Exponenten "
-                          FR -> "Écrire avec une puissance non-négative "
+                          FR -> "Écrire avec une puissance positive "
                           NL -> "Met niet-negatieve exponenten schrijven"
                           FI -> "Ilmaiseminen käyttäen ei-negatiivista eksponenttia "
                       -}
@@ -587,7 +587,7 @@ powerEqExerciseInfo = MBExerciseInfo
                           EN -> "Solving power equations"
                           ES -> "Resolver la ecuación con potencias "
                           DE -> "Lösen Sie die Gleichung mit x im Exponenten "
-                          FR -> "Résoudre l'équation avec puissances "
+                          FR -> "Équation avec puissances "
                           NL -> "Machtsvergelijkingen oplossen"
                           FI -> "Potenssiyhtälöiden ratkaiseminen "
                       -}
@@ -637,7 +637,7 @@ quadraticExerciseInfo = MBExerciseInfo
                           EN -> "Solving quadratic equations"
                           ES -> "Resolver la ecuación cuadrática "
                           DE -> "Lösen Sie die quadratische Gleichung "
-                          FR -> "Résoudre l'équation quadratique "
+                          FR -> "Équation du second degré "
                           NL -> "Kwadratische vergelijkingen oplossen"
                           FI -> "Toisen asteen yhtälöiden ratkaiseminen "
                       -}
@@ -662,7 +662,7 @@ quadraticNoABCExerciseInfo = MBExerciseInfo
                           EN -> "Solving quadratic equations (no abc)"
                           ES -> "Resolver la ecuación cuadrática sin utilizar la fórmula cuadrática "
                           DE -> "Lösen Sie die quadratische Gleichung ohne Benutzung der p-q-Formel "
-                          FR -> "Résoudre l'équation quadratique, sans utiliser la formule de résolution "
+                          FR -> "Résoudre une équation quadratique, sans utiliser la formule de résolution "
                           NL -> "Kwadratische vergelijkingen oplossen (geen abc)"
                           FI -> "Toisen asteen yhtälöiden ratkaiseminen käyttämättä ratkaisukaavaa "
                       -}
@@ -687,7 +687,7 @@ quadraticWithApproximationExerciseInfo = MBExerciseInfo
                           EN -> "Solving quadratic equations (with approximation)"
                           ES -> "Resolver la ecuación cuadrática, con aproximación permitida "
                           DE -> "Lösen Sie die quadratische Gleichung"
-                          FR -> "Résoudre l'équation quadratique, approximation permise "
+                          FR -> "Résoudre numériquement une équation quadratique "
                           NL -> "Kwadratische vergelijkingen oplossen (met benaderingen)"
                           FI -> "Toisen asteen yhtälöiden likimääräinen ratkaiseminen "
                       -}
@@ -712,7 +712,7 @@ rationalEquationExerciseInfo = MBExerciseInfo
                           EN -> "Solving rational equations"
                           ES -> "Resolver la ecuación racional "
                           DE -> "Lösen Sie die Bruchgleichung "
-                          FR -> "Résoudre l'équation rationnelle "
+                          FR -> "Équation rationnelle "
                           NL -> "Gebroken vergelijkingen oplossen"
                           FI -> "Rationaaliyhtälöiden ratkaiseminen "
                       -}
@@ -737,7 +737,7 @@ simplifyPowerExerciseInfo = MBExerciseInfo
                           EN -> "Simplifying powers"
                           ES -> "Simplificar las potencias "
                           DE -> "Vereinfachen Sie die Potenz "
-                          FR -> "Simplifier la puissance "
+                          FR -> "Simplification de puissance "
                           NL -> "Machten vereenvoudigen"
                           FI -> "Potenssilausekkeiden sieventäminen "
                       -}
@@ -762,7 +762,7 @@ simplifyRationalExerciseInfo = MBExerciseInfo
                           EN -> "Simplifying rationals"
                           ES -> "Simplificar el racional "
                           DE -> "Vereinfachen Sie den Bruch "
-                          FR -> "Simplifiez le rationnel "
+                          FR -> "Simplification de rationnel "
                           NL -> "Breuken vereenvoudigen"
                           FI -> "Murtolausekkeiden sieventäminen"
                       -}

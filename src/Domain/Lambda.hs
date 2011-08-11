@@ -11,12 +11,12 @@ data Expr = Abs String Expr
           | Composition deriving Eq
           
 instance Uniplate Expr where
-   uniplate (Abs x a)        = ([a], \[a] -> Abs x a)
-   uniplate (App f a)        = ([f,a], \[f,a] -> App f a)
-   uniplate (Var x)          = ([], \_ -> Var x)
-   uniplate (LApp l)         = ([l], \[l] -> LApp l)
-   uniplate (Application)    = ([], \_ -> Application)
-   uniplate (Composition)    = ([], \_ -> Composition)
+   uniplate (Abs x a)        = plate Abs |- x |* a -- ([a], \[b] -> Abs x b)
+   uniplate (App f a)        = plate App |* f |* a -- ([f,a], \[f,a] -> App f a)
+   uniplate (Var x)          = plate Var |- x          -- ([], \_ -> Var x)
+   uniplate (LApp l)         = plate LApp |* l          -- ([l], \[l] -> LApp l)
+   uniplate (Application)    = plate Application -- ([], \_ -> Application)
+   uniplate (Composition)    = plate Composition -- ([], \_ -> Composition)
 
 instance Show Expr where
    show (Abs x a) = "\\" ++ x ++ "." ++ show a

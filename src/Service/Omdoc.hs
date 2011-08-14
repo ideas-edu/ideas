@@ -2,6 +2,12 @@
 
 -- spul integreren met ideas
 -- document buggy rules for AM
+-- include problemstatement translations 
+-- second for ref?
+-- if HU translations are provided, switch them on
+-- feedbacktexts
+
+import Debug.Trace
 
 import Common.Library
 import Service.OpenMathSupport
@@ -150,19 +156,20 @@ recbookfile version revision sourcefiles exercisesrefs = do
                   [omgroupelt "" "http://www.mathweb.org/omdoc"
                     [omgroupelt "IdeasExercises" ""
                       [metadataelt "IdeasExercises-metadata"
-                        [titleelt "Ideas Exercises collection"
-                        -- ,versionelt version (show revision) -- apparently not allowed
-                        ]
+                        (titleelts [EN,NL] ["Ideas Exercises collection","Ideas opgaven"])
+                        -- versionelt version (show revision) -- apparently not allowed
                       ,omgroupelt "recbook_for_IdeasExercises" ""
                         (metadataelt ""
-                          [titleelt "Complete Ideas Exercises Recbook"
-                          ,dateelt "created" "2011-01-22"
-                          ,dateelt "changed" today
-                          ,creatorelt "aut" "Johan Jeuring"
-                          ,sourceelt ""
-                          ,formatelt "application/omdoc+xml"
-                          -- ,extradataelt sourcefiles -- apparently not allowed
-                          ]
+                          (titleelts [EN,NL] ["Complete Ideas Exercises Recbook","Recbook voor alle Ideas opgaven"] 
+                           ++
+                           [dateelt "created" "2011-01-22"
+                           ,dateelt "changed" today
+                           ,creatorelt "aut" "Johan Jeuring"
+                           ,sourceelt ""
+                           ,formatelt "application/omdoc+xml"
+                           -- ,extradataelt sourcefiles -- apparently not allowed
+                           ]
+                          )
                         :exercisesrefs
                         )
                       ]
@@ -185,6 +192,8 @@ omdocrefpath  =  ""
 omdocexerciserefs :: Exercise a -> Element
 omdocexerciserefs ex = 
   let info             = mBExerciseInfo ! (exerciseId ex)
+      langs            = langSupported info
+      titleCmps        =  map (\l -> title info l) langs
       len              = length (examples ex)
       refs             = map (\i -> omdocrefpath  -- relative dir (the same right now)
                                 ++  context info  -- filename
@@ -193,48 +202,33 @@ omdocexerciserefs ex =
                                 ++  show i)       -- and nr
                              [0..len-1]
       exercises        = map (`xrefelt` "exercise") refs
-  in omgroupelt "" "" (metadataelt "" [titleelt (title info)]:exercises)
+  in omgroupelt "" "" (metadataelt "" [titleeltMultLang langs titleCmps]:exercises)
 
 --------------------------------------------------------------------------------
 {- Generating an omdoc file for an exercise
 -}
 --------------------------------------------------------------------------------
 
+{- -- For testing purposes
 omdocpath :: String
 omdocpath = "/Users/johanj/Documents/Research/ExerciseAssistants/Feedback/math-bridge/activemath/all/activemath-ideas/content/IdeasExercises/omdoc/"
 
 oqmathpath :: String
 oqmathpath = "/Users/johanj/Documents/Research/ExerciseAssistants/Feedback/math-bridge/activemath/all/activemath-ideas/content/IdeasExercises/oqmath/"
-
-{-
-omdocexercisefile :: (IsTerm a) => String -> Int -> Exercise a -> IO ()
-omdocexercisefile version revision ex = 
-  let info = mBExerciseInfo ! (exerciseId ex)
-      filestring = 
-             xmldecl 
-          ++ activemathdtd 
-          ++ showXML
-               (omdocelt 
-                  (context info ++ ".omdoc")
-                  []
-                  [metadataelt 
-                    ""
-                    [dateelt "created" "2011-01-22"
-                    ,dateelt "changed" today
-                    ,titleelt (title info)
-                    ,creatorelt "aut" "Johan Jeuring"
-                    ,versionelt version (show revision)
-                    ]
-                  ,theoryelt (context info) 
-                             (omdocexercises ex)
-                  ]
-               )
-  in writeFile (omdocpath ++ context info ++ ".omdoc") filestring
 -}
+
+-- For committing purposes
+omdocpath :: String
+omdocpath = "/Users/johanj/Documents/Research/ExerciseAssistants/Feedback/math-bridge/private/Content/Intermediate/IdeasExercises/omdoc/"
+
+oqmathpath :: String
+oqmathpath = "/Users/johanj/Documents/Research/ExerciseAssistants/Feedback/math-bridge/private/Content/Intermediate/IdeasExercises/oqmath/"
 
 omdocexercisefile :: (IsTerm a) => String -> Int -> Exercise a -> IO ()
 omdocexercisefile version revision ex = do
   let info = mBExerciseInfo ! (exerciseId ex)
+  let langs = langSupported info
+  let titleCmps =  map (\l -> title info l) langs
   let filestring = 
              xmldecl 
           ++ activemathdtd 
@@ -246,7 +240,7 @@ omdocexercisefile version revision ex = do
                     ""
                     [dateelt "created" "2011-01-22"
                     ,dateelt "changed" today
-                    ,titleelt (title info)
+                    ,titleeltMultLang langs titleCmps
                     ,creatorelt "aut" "Johan Jeuring"
                     ,versionelt version (show revision)
                     ]
@@ -258,7 +252,7 @@ omdocexercisefile version revision ex = do
   writeFile (oqmathpath ++ context info ++ ".oqmath") filestring
 
 omdocexercises :: (IsTerm a) => Exercise a -> [Element]
-omdocexercises ex = catMaybes $ zipWith make [(0::Int)..] (examples ex)
+omdocexercises ex = catMaybes $ zipWith make [(0::Int)..] (trace (show (length (examples ex))) $ (examples ex))
  where
    info = mBExerciseInfo ! (exerciseId ex)
    langs = langSupported info
@@ -498,6 +492,23 @@ titleelt titletext =
   Element { name        =  "Title"
           , attributes  =  []
           , content     =  [Left titletext]
+          }
+
+titleeltlang :: Lang -> String -> Element
+titleeltlang lang titletext = 
+  Element { name        =  "Title"
+          , attributes  =  ["xml:lang" := show lang]
+          , content     =  [Left titletext]
+          }
+
+titleelts :: [Lang] -> [String] -> [Element]
+titleelts langs texts = zipWith titleeltlang langs texts 
+
+titleeltMultLang :: [Lang] -> [String] -> Element
+titleeltMultLang langs texts = 
+  Element { name        =  "Title"
+          , attributes  =  []
+          , content     =  map Right (cmpelts langs texts)
           }
 
 versionelt :: String -> String -> Element

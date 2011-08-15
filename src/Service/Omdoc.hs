@@ -7,8 +7,6 @@
 -- if HU translations are provided, switch them on
 -- feedbacktexts
 
-import Debug.Trace
-
 import Common.Library
 import Service.OpenMathSupport
 import Service.MathBridgeExerciseInfo
@@ -252,7 +250,7 @@ omdocexercisefile version revision ex = do
   writeFile (oqmathpath ++ context info ++ ".oqmath") filestring
 
 omdocexercises :: (IsTerm a) => Exercise a -> [Element]
-omdocexercises ex = catMaybes $ zipWith make [(0::Int)..] (trace (show (length (examples ex))) $ (examples ex))
+omdocexercises ex = catMaybes $ zipWith make [(0::Int)..] (examples ex)
  where
    info = mBExerciseInfo ! (exerciseId ex)
    langs = langSupported info

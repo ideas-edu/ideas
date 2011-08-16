@@ -9,7 +9,7 @@
 -- Portability :  unknown
 --
 -- This file produces a cgi binary that generates web pages that show the
--- log data of the service databases. The binary can also be used from th
+-- log data of the services database. The binary can also be used from th
 -- command line.
 --
 -----------------------------------------------------------------------------
@@ -20,12 +20,11 @@ import Control.Monad.Trans
 import Data.Char (toUpper)
 import Data.List
 import Data.Map hiding (null, map, (!))
-import qualified Data.Map as DM
+import qualified Data.Map as M
 import Data.Maybe
 import Database.HDBC
 import Database.HDBC.Sqlite3 (connectSqlite3)
 import Network.CGI
-import Prelude hiding (lookup)
 import System.Environment (getArgs)
 import System.Posix.Env
 import Text.XHtml
@@ -79,16 +78,16 @@ processRequest = do
 requestQuery id = do 
   (r:_) <- query $ "SELECT * FROM log WHERE id = " ++ id ++ ";"
   return r
-lastQuery = query $ "SELECT id, service, exerciseID, source, dataformat, "
-                 ++        "encoding, ipaddress, time, responsetime "
-                 ++ "FROM log ORDER BY time DESC LIMIT 10;"
-allQuery = query $ "SELECT id, service, exerciseID, source, dataformat, "
-                ++        "encoding, ipaddress, time, responsetime "
-                ++ "FROM log;"
-freqQuery = query $ "SELECT DISTINCT source, exerciseID, service, "
-                 ++                 "avg(responsetime), min(responsetime), "
-                 ++                 "max(responsetime), count(source) "
-                 ++ "FROM log GROUP BY source, exerciseID, service;"
+lastQuery = query $ "SELECT id, service, exerciseID, source, dataformat, \
+                    \       encoding, ipaddress, time, responsetime \
+                    \FROM log ORDER BY time DESC LIMIT 10;"
+allQuery = query $ "SELECT id, service, exerciseID, source, dataformat, \
+                   \       encoding, ipaddress, time, responsetime \
+                   \FROM log;"
+freqQuery = query $ "SELECT DISTINCT source, exerciseID, service, \
+                    \                avg(responsetime), min(responsetime), \
+                    \                max(responsetime), count(source) \
+                    \FROM log GROUP BY source, exerciseID, service;"
 
 -- | Web pages
 requestPage :: Row -> Html 
@@ -98,25 +97,25 @@ requestPage row =  body << h1 << "Request"
   where
     (cs, ps) = partitionWithKey (\k _ -> k /= "input" && k /= "output") row
     paras = let p title txt = h1 << capiFst title +++ pre << txt 
-            in  foldWithKey (\c -> (+++) . p c) noHtml ps
-    cells = foldWithKey (\c v -> (:) [bold (toHtml c), toHtml v]) [] cs
+            in  foldrWithKey (\c -> (+++) . p c) noHtml ps
+    cells = foldrWithKey (\c v -> (:) [bold (toHtml c), toHtml v]) [] cs
 
 lastPage = tablePage "Service calls"
-                     (  "The table show all service calls, with its details, "
-                     ++ "from the last month. You can click on the service name "
-                     ++ "to see the corresponding in- and output. You can also "
-                     ++ "view some statistics of the service calls.")
+                     (  "The table show all service calls, with its details, \
+                       \from the last month. You can click on the service name \
+                       \to see the corresponding in- and output. You can also \
+                       \view some statistics of the service calls.")
 
 allPage = tablePage "Service calls"
-                     (  "The table show all service calls, with its details. "
-                     ++ "You can click on the service name "
-                     ++ "to see the corresponding in- and output. You can also "
-                     ++ "view some statistics of the service calls.")
+                     (  "The table show all service calls, with its details. \
+                        \You can click on the service name \
+                        \to see the corresponding in- and output. You can also \
+                        \view some statistics of the service calls.")
 
 freqPage :: Rows -> Html
 freqPage rows =  body << h1 << "Service statistics"
-             +++ p << (  "The table shows how frequent a service call is made. You "
-                      ++ "can also view all service calls of the last month.")
+             +++ p << ( "The table shows how frequent a service call is made. You \
+                        \can also view all service calls of the last month.")
              +++ myTable (header : cells)
   where
     header = map (bold . toHtml) [ "Source", "ExerciseID", "Service"
@@ -126,8 +125,8 @@ freqPage rows =  body << h1 << "Service statistics"
 
 mainPage :: String -> Html
 mainPage cgi =  body << h1 << "Ideas Log Analysis" 
-            +++ p << (  "You can view a number of predefined queries on the log database, "
-                     ++ "by clicking on one of the links below.")
+            +++ p << ( "You can view a number of predefined queries on the log database, \
+                       \by clicking on one of the links below.")
             +++ unordList (let link page = self cgi page << page
                            in  map link ["last", "all", "frequency"])
 
@@ -147,7 +146,7 @@ tablePage title msg rows cgi =  body << h1 << title +++ p << msg
                             +++ myTable (header:cells)
   where
     header = map (bold . toHtml . capiFst) $ keys $ head rows
-    cells  = map (elems . linkId . DM.map toHtml) rows
+    cells  = map (elems . linkId . M.map toHtml) rows
     linkId = let f id = Just $ toHtml $ self cgi ("request&id=" ++ show id) << show id
              in update f "id"
 	

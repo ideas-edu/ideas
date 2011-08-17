@@ -1,0 +1,6 @@
+<request service="diagnose" exerciseid="algebra.equations.linear.balance" encoding="string">
+  <state>
+    <expr>-2*(x-8) == 9</expr>
+  </state>
+  <expr>-2*x-8 == 9</expr>
+</request>

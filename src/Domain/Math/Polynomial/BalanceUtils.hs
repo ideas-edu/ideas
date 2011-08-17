@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.BalanceUtils
    ( eqView, minusView, negView
-   , matchLin, matchLinG
+   , matchLin, matchPlusCon
    , cleaner, cleanerExpr
    , linbal, checkForChange
    , collectLocal, collectGlobal
@@ -53,13 +53,16 @@ negView :: View Expr Expr
 negView = makeView isNegate Negate
 
 matchLin :: Expr -> Maybe (Expr, Rational, Rational)
-matchLin = matchLinG
-
-matchLinG :: (Fractional a, Fractional b) => Expr -> Maybe (Expr, a, b)
-matchLinG expr = do
+matchLin expr = do
    (s, p) <- match (polyNormalForm rationalView) expr
    guard (degree p == 1)
-   return (Var s, fromRational (coefficient 1 p), fromRational (coefficient 0 p))
+   return (Var s, coefficient 1 p, coefficient 0 p)
+   
+matchPlusCon :: Expr -> Maybe (Expr, Rational)
+matchPlusCon expr = 
+   match (plusView >>> second rationalView) expr 
+ `mplus`
+   match (plusView >>> toView swapView >>> second rationalView) expr 
 
 ------------------------------------------------------------
 -- Strategy

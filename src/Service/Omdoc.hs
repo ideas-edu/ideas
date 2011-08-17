@@ -3,8 +3,9 @@
 -- spul integreren met ideas
 -- document buggy rules for AM
 -- include problemstatement translations 
--- second for ref?
+-- second ``for'' ref?
 -- if HU translations are provided, switch them on
+-- ref and xrefelt are now the same, I think
 -- feedbacktexts
 
 import Common.Library
@@ -215,12 +216,13 @@ oqmathpath :: String
 oqmathpath = "/Users/johanj/Documents/Research/ExerciseAssistants/Feedback/math-bridge/activemath/all/activemath-ideas/content/IdeasExercises/oqmath/"
 -}
 
--- For committing purposes
+-- {- -- For committing purposes
 omdocpath :: String
 omdocpath = "/Users/johanj/Documents/Research/ExerciseAssistants/Feedback/math-bridge/private/Content/Intermediate/IdeasExercises/omdoc/"
 
 oqmathpath :: String
 oqmathpath = "/Users/johanj/Documents/Research/ExerciseAssistants/Feedback/math-bridge/private/Content/Intermediate/IdeasExercises/oqmath/"
+-- -}
 
 omdocexercisefile :: (IsTerm a) => String -> Int -> Exercise a -> IO ()
 omdocexercisefile version revision ex = do
@@ -449,7 +451,7 @@ parameterelt parametername ls =
 refelt :: String -> Element
 refelt ref =
   Element { name         =  "ref"
-          , attributes   =  ["ref" := ref]
+          , attributes   =  ["xref" := ref]
           , content      =  []
           }           
 

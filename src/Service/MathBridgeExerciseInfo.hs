@@ -92,7 +92,7 @@ calcPowerExerciseInfo = MBExerciseInfo
                           FI -> "Potenssien laskeminen "
                           HU -> ""
   , for               = "mbase://mb_concepts/mb_numbers_and_computation/_01_02_05_03_Powers"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Calculate the power "
                           ES -> "Calcular la potencia "
@@ -100,7 +100,7 @@ calcPowerExerciseInfo = MBExerciseInfo
                           FR -> "Calculer la puissance "
                           NL -> "Bereken de macht "
                           FI -> "Laske arvo potenssilausekkeelle "
-                          HU -> ""
+                          HU -> "Számítsa ki a kitevőt"
   , problemStatement  = "Calculate the following power: "
   , context           = showId $ exerciseId calcPowerExercise
   , difficulty        = "medium"
@@ -115,9 +115,9 @@ coverUpExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre des équations "
                           NL -> "Vergelijkingen oplossen"
                           FI -> "Yhtälöiden ratkaiseminen "
-                          HU -> ""
+                          HU -> "Bevezető feladat algebrai egyenletekhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_Equations"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Solve the equation "
                           ES -> "Resolver la ecuación "
@@ -125,7 +125,7 @@ coverUpExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre l'équation "
                           NL -> "Los de volgende vergelijking op "
                           FI -> "Ratkaise yhtälö "
-                          HU -> ""
+                          HU -> "Oldja meg az egyenletet "
   , problemStatement  = "Solve the following equation: "
   , context           = showId $ exerciseId coverUpExercise
   , difficulty        = "medium"
@@ -140,9 +140,9 @@ derivativeExerciseInfo = MBExerciseInfo
                           FR -> "Dérivées "
                           NL -> "Afgeleiden"
                           FI -> "Derivaatat "
-                          HU -> ""
+                          HU -> "Feladat deriválásához"
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_04_Differentiation"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Calculate the following derivative of a function "
                           ES -> "Calcular la derivada de la función "
@@ -150,7 +150,7 @@ derivativeExerciseInfo = MBExerciseInfo
                           FR -> "Calculer la dérivée de la fonction "
                           NL -> "Bereken de volgende afgeleide van een functie "
                           FI -> "Laske seuraava derivaatta "
-                          HU -> ""
+                          HU -> "Deriválja a függvényt"
   , problemStatement  = "Calculate the derivative of the following function: "
   , context           = showId $ exerciseId derivativeExercise
   , difficulty        = "medium"
@@ -165,9 +165,9 @@ derivativePolyExerciseInfo = MBExerciseInfo
                           FR -> "Dérivée d'un polynôme "
                           NL -> "Afgeleiden van polynomen"
                           FI -> "Derivaatan laskeminen polynomille "
-                          HU -> ""
+                          HU -> "Feladat polinomok deriválásához"
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_04_Differentiation"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Calculate the following derivative of a polynomial "
                           ES -> "Calcular la derivada del polinomio "
@@ -175,7 +175,7 @@ derivativePolyExerciseInfo = MBExerciseInfo
                           FR -> "Calculer la dérivée du polynôme "
                           NL -> "Bereken de volgende afgeleide van een polynoom "
                           FI -> "Laske seuraava derivaatta "
-                          HU -> ""
+                          HU -> "Deriválja a polinomot"
   , problemStatement  = "Calculate the derivative of the following polynomial: "
   , context           = showId $ exerciseId derivativePolyExercise
   , difficulty        = "medium"
@@ -190,9 +190,9 @@ derivativeProductExerciseInfo = MBExerciseInfo
                           FR -> "Dérivée d'un produit "
                           NL -> "Afgeleiden van producten"
                           FI -> "Derivaatan laskeminen tulolle "
-                          HU -> ""
+                          HU -> "Feladat szorzat deriválásához"
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_04_Differentiation"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Calculate the following derivative of a product "
                           ES -> "Calcular la derivada del producto "
@@ -200,7 +200,7 @@ derivativeProductExerciseInfo = MBExerciseInfo
                           FR -> "Calculer la dérivée du produit "
                           NL -> "Bereken de volgende afgeleide van een product "
                           FI -> "Laske seuraava derivaatta "
-                          HU -> ""
+                          HU -> "Deriválja a szorzatot"
   , problemStatement  = "Calculate the derivative of the following product: "
   , context           = showId $ exerciseId derivativeProductExercise
   , difficulty        = "medium"
@@ -215,9 +215,9 @@ derivativeQuotientExerciseInfo = MBExerciseInfo
                           FR -> "Dérivée d'un quotient "
                           NL -> "Afgeleiden van quotiënten"
                           FI -> "Derivaatan laskeminen osamäärälle "
-                          HU -> ""
+                          HU -> "Feladat tört deriválásához"
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_04_Differentiation"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Calculate the following derivative of a quotient "
                           ES -> "Calcular la derivada del cociente "
@@ -225,7 +225,7 @@ derivativeQuotientExerciseInfo = MBExerciseInfo
                           FR -> "Calculer la dérivée du quotient "
                           NL -> "Bereken de volgende afgeleide van een quotiënt "
                           FI -> "Laske derivaatta osamäärälle "
-                          HU -> ""
+                          HU -> "Deriválja a törtet"
   , problemStatement  = "Calculate the derivative of the following quotient: "
   , context           = showId $ exerciseId derivativeQuotientExercise
   , difficulty        = "medium"
@@ -240,9 +240,9 @@ expEqExerciseInfo = MBExerciseInfo
                           FR -> "Équation exponentielle "
                           NL -> "Exponentiële vergelijking oplossen"
                           FI -> "Eksponenttiyhtälöiden ratkaiseminen "
-                          HU -> ""
+                          HU -> "Feladat exponenciális egyenletekhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_05_Exponential_Equations"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Solve the exponential equation "
                           ES -> "Resolver la ecuación exponencial "
@@ -250,7 +250,7 @@ expEqExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre l'équation exponentielle "
                           NL -> "Los de volgende exponentiële vergelijking op "
                           FI -> "Ratkaise eksponenttiyhtälö "
-                          HU -> ""
+                          HU -> "Oldja meg az exponenciális egyenetet "
   , problemStatement  = "Solve the following exponential equation: "
   , context           = showId $ exerciseId expEqExercise
   , difficulty        = "medium"
@@ -265,9 +265,9 @@ findFactorsExerciseInfo = MBExerciseInfo
                           FR -> "Trouver des facteurs "
                           NL -> "Ontbinden in factoren"
                           FI -> "Kertoimien ratkaiseminen "
-                          HU -> ""
+                          HU -> "Feladat polinomok szorzattá alakításához"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Find the factors "
                           ES -> "Encontrar los factores "
@@ -275,7 +275,7 @@ findFactorsExerciseInfo = MBExerciseInfo
                           FR -> "Trouver les facteurs "
                           NL -> "Ontbind in factoren "
                           FI -> "Ratkaise kertoimet "
-                          HU -> ""
+                          HU -> "Keresse meg gyöktényezőket"
   , problemStatement  = "Find the factors: "
   , context           = showId $ exerciseId findFactorsExercise
   , difficulty        = "easy"
@@ -292,7 +292,7 @@ fractionExerciseInfo = MBExerciseInfo
                           FI -> "" 
                           HU -> ""
   , for               = "mbase://mb_concepts/mb_numbers_and_computation/_01_02_02_Fractions"
-  , langSupported     = [EN]
+  , langSupported     = [EN,NL]
   , cmp               = \l -> case l of 
                           EN -> "Simplify the fraction "
                           ES -> ""
@@ -315,9 +315,9 @@ gaussianElimExerciseInfo = MBExerciseInfo
                           FR -> ""
                           NL -> "Matrix vegen"
                           FI -> "" 
-                          HU -> ""
+                          HU -> "Feladat mátrixegyenletek Gauss módszerrel történő megoldásához"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_02_02_Matrix_Algebra"
-  , langSupported     = [EN]
+  , langSupported     = [EN,NL]
   , cmp               = \l -> case l of 
                           EN -> "Perform Gaussian elimination on "
                           ES -> ""
@@ -342,7 +342,7 @@ gramSchmidtExerciseInfo = MBExerciseInfo
                           FI -> "" 
                           HU -> ""
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_02_04_Vector_Spaces"
-  , langSupported     = [EN]
+  , langSupported     = [EN,NL]
   , cmp               = \l -> case l of 
                           EN -> "Solve using Gram Schmidt "
                           ES -> ""
@@ -365,9 +365,9 @@ higherDegreeExerciseInfo = MBExerciseInfo
                           FR -> "Équation polynomiale "
                           NL -> "Hogeregraads polynoomvergelijkingen oplossen"
                           FI -> "Korkeamman asteen polynomiyhtälön ratkaiseminen "
-                          HU -> ""
+                          HU -> "Feladat ásodfokú egyenletekhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_03_Polynomial_Equations"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Solve the higher degree polynomial equation "
                           ES -> "Resolver la ecuación de orden superior "
@@ -375,7 +375,7 @@ higherDegreeExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre l'équation polynomiale de degré élevé "
                           NL -> "Los de volgende hogeregraads polynoomvergelijking op "
                           FI -> "Ratkaise korkeamman asteen polynomiyhätlö "
-                          HU -> ""
+                          HU -> "Oldja meg a magasabb fokú egyenletet "
   , problemStatement  = "Solve the following higher degree polynomial equation: "
   , context           = showId $ exerciseId higherDegreeExercise
   , difficulty        = "easy"
@@ -390,9 +390,9 @@ ineqHigherDegreeExerciseInfo = MBExerciseInfo
                           FR -> "Inéquation de degré supérieur "
                           NL -> "Hogeregraads ongelijkheden oplossen "
                           FI -> "Korkeamman asteen epäyhtälöiden ratkaiseminen "
-                          HU -> ""
+                          HU -> "Feladat másodfokú egyenlőtlenségekhez "
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_05_Inequalities"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Solve the inequation "
                           ES -> "Resolver la inecuación "
@@ -415,9 +415,9 @@ ineqLinearExerciseInfo = MBExerciseInfo
                           FR -> "Inéquations linéaires "
                           NL -> "Lineaire ongelijkheden oplossen"
                           FI -> "Lineaaristen epäyhtälöiden ratkaiseminen "
-                          HU -> ""
+                          HU -> "Feladat magasabb fokú egyenlőtlenségekhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_05_Inequalities"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Solve the linear inequation "
                           ES -> "Resolver la inecuación linea "
@@ -425,7 +425,7 @@ ineqLinearExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre l'inéquation linéaire "
                           NL -> "Los de volgende lineaire ongelijkheid op "
                           FI -> "Ratkaise lineaarinen epäyhtälö "
-                          HU -> ""
+                          HU -> "Oldja meg az elsőfokú egyenlőtlenséget "
   , problemStatement  = "Solve the following linear inequation: "
   , context           = showId $ exerciseId ineqLinearExercise
   , difficulty        = "medium"
@@ -440,9 +440,9 @@ ineqQuadraticExerciseInfo = MBExerciseInfo
                           FR -> "Inéquation du second degré "
                           NL -> "Kwadratische ongelijkheden oplossen"
                           FI -> "Kvadraattisien epäyhtälöiden ratkaiseminen "
-                          HU -> ""
+                          HU -> "Feladat másodfokú egyenlőtlenségekhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_05_Inequalities"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Solve the inequation "
                           ES -> "Resolver la inecuación "
@@ -450,7 +450,7 @@ ineqQuadraticExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre l'inéquation "
                           NL -> "Los de volgende ongelijkheid op "
                           FI -> "Ratkaise epäyhtälö "
-                          HU -> ""
+                          HU -> "Oldja meg az egyenlőtlenséget "
   , problemStatement  = "Solve the following inequation: "
   , context           = showId $ exerciseId ineqQuadraticExercise
   , difficulty        = "medium"
@@ -465,9 +465,9 @@ linearExerciseInfo = MBExerciseInfo
                           FR -> "Équation linéaire "
                           NL -> "Lineaire vergelijkingen oplossen"
                           FI -> "Lineaaristen yhtälöiden ratkaiseminen "
-                          HU -> ""
+                          HU -> "Könnyű feladat elsőfokú egyenletekhez "
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_01_Linear_Equations"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Solve the linear equation "
                           ES -> "Resolver la ecuación lineal "
@@ -475,7 +475,7 @@ linearExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre l'équation linéaire "
                           NL -> "Los de volgende lineaire vergelijking op "
                           FI -> "Ratkaise lineaarinen yhtälö "
-                          HU -> ""
+                          HU -> "Oldja meg az elsőfokú egyenletet "
   , problemStatement  = "Solve the following equation: "
   , context           = showId $ exerciseId linearExercise
   , difficulty        = "easy"
@@ -490,9 +490,9 @@ linearMixedExerciseInfo = MBExerciseInfo
                           FR -> "Équation linéaire mixte "
                           NL -> "Gemengde lineaire vergelijkingen oplossen"
                           FI -> "Lineaaristen sekayhtälöiden ratkaisu "
-                          HU -> ""
+                          HU -> "Feladatk magasabb fokú egyenletekhez "
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_01_Linear_Equations"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Solve the linear mixed equation "
                           ES -> "Resolver la ecuación lineal compuesta "
@@ -500,7 +500,7 @@ linearMixedExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre l'équation linéaire mixte "
                           NL -> "Los de volgende gemengde lineaire vergelijking op "
                           FI -> "Ratkaise lineaarinen yhtälö "
-                          HU -> ""
+                          HU -> "Oldja meg az elsőfokú egyenletet "
   , problemStatement  = "Solve the linear mixed equation: "
   , context           = showId $ exerciseId linearMixedExercise
   , difficulty        = "easy"
@@ -517,7 +517,7 @@ linearSystemExerciseInfo = MBExerciseInfo
                           FI -> "" 
                           HU -> ""
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_07_Systems_of_Equations"
-  , langSupported     = [EN]
+  , langSupported     = [EN,NL]
   , cmp               = \l -> case l of 
                           EN -> "Solve the system of linear equations "
                           ES -> ""
@@ -540,9 +540,9 @@ logEqExerciseInfo = MBExerciseInfo
                           FR -> "Équation logarithmique "
                           NL -> "Logarithmische vergelijkingen oplossen"
                           FI -> "Logaritmiyhtälöiden ratkaisu "
-                          HU -> ""
+                          HU -> "Feladat logaritmikus egyenletekhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_06_Logarithmic_Equations"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Solve the logarithmic equation "
                           ES -> "Resolver la ecuación logarítmica "
@@ -550,7 +550,7 @@ logEqExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre l'équation logarithmique "
                           NL -> "Los de volgende logaritmische vergelijking op "
                           FI -> "Ratkaise logaritmiyhtälö "
-                          HU -> ""
+                          HU -> "Oldja meg a logaritmusos egyenletet"
   , problemStatement  = "Solve the following logarithmic equation: "
   , context           = showId $ exerciseId logEqExercise
   , difficulty        = "medium"
@@ -565,17 +565,17 @@ nonNegBrokenExpExerciseInfo = MBExerciseInfo
                           FR -> "Écrire avec une puissance positive "
                           NL -> "Met niet-negatieve exponenten schrijven"
                           FI -> "Ilmaiseminen käyttäen ei-negatiivista eksponenttia "
-                          HU -> ""
+                          HU -> "Feladat nemnegatív kitevőt tartalmazó kifejezésekhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Write with a non-negative exponent "
                           ES -> "Expresar con exponente no negativo "
                           DE -> "Schreiben Sie mit nicht-negativen Exponenten "
-                          FR -> "Écrire avec une puissance non-négative <"
+                          FR -> "Écrire avec une puissance non-négative "
                           NL -> "Schrijf met niet-negatieve exponenten "
                           FI -> "Ilmaise käyttäen ei-negatiivista eksponenttia "
-                          HU -> ""
+                          HU -> "Írja fel nemnegatív hatvány segítségével"
   , problemStatement  = "Write the following with a non-negative exponent: "
   , context           = showId $ exerciseId nonNegBrokenExpExercise
   , difficulty        = "medium"
@@ -590,9 +590,9 @@ powerEqExerciseInfo = MBExerciseInfo
                           FR -> "Équation avec puissances "
                           NL -> "Machtsvergelijkingen oplossen"
                           FI -> "Potenssiyhtälöiden ratkaiseminen "
-                          HU -> ""
+                          HU -> "Feladat exponenciális egyenletekhez (x > 0)"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_03_Polynomial_Equations"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Solve the power equation "
                           ES -> "Resolver la ecuación con potencias "
@@ -600,7 +600,7 @@ powerEqExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre l'équation avec puissances "
                           NL -> "Los de volgende machtsvergelijking op "
                           FI -> "Ratkaise potenssiyhtälö "
-                          HU -> ""
+                          HU -> "Oldja meg az egyenletet "
   , problemStatement  = "Solve the following power equation: "
   , context           = showId $ exerciseId powerEqExercise
   , difficulty        = "medium"
@@ -615,9 +615,9 @@ powerOfExerciseInfo = MBExerciseInfo
                           FR -> "Écrire sous la forme d'une puissance "
                           NL -> "Als een macht schrijven"
                           FI -> "Ilmaiseminen potenssimuodossa "
-                          HU -> ""
+                          HU -> "Feladat kifejezés felírására ... hatványaként"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Write as a power "
                           ES -> "Expresar como potencia "
@@ -625,7 +625,7 @@ powerOfExerciseInfo = MBExerciseInfo
                           FR -> "Écrire sous la forme d'une puissance "
                           NL -> "Schrijf als een macht "
                           FI -> "Ilmaise potenssimuodossa "
-                          HU -> ""
+                          HU -> "Írja fel hatvány alakban"
   , problemStatement  = "Write the following as a power: "
   , context           = showId $ exerciseId powerOfExercise
   , difficulty        = "medium"
@@ -640,9 +640,9 @@ quadraticExerciseInfo = MBExerciseInfo
                           FR -> "Équation du second degré "
                           NL -> "Kwadratische vergelijkingen oplossen"
                           FI -> "Toisen asteen yhtälöiden ratkaiseminen "
-                          HU -> ""
+                          HU -> "Feladat tört egyenletekhez "
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_02_Quadratic_Equations"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Solve the quadratic equation "
                           ES -> "Resolver la ecuación cuadrática "
@@ -650,7 +650,7 @@ quadraticExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre l'équation quadratique "
                           NL -> "Los de volgende kwadratische vergelijking op "
                           FI -> "Ratkaise toisen asteen yhtälö "
-                          HU -> ""
+                          HU -> "Oldja meg a másodfokú egyenletet "
   , problemStatement  = "Solve the following quadratic equation: "
   , context           = showId $ exerciseId quadraticExercise
   , difficulty        = "easy"
@@ -659,15 +659,15 @@ quadraticExerciseInfo = MBExerciseInfo
 quadraticNoABCExerciseInfo :: MBExerciseInfo
 quadraticNoABCExerciseInfo = MBExerciseInfo
   { title             = \l -> case l of
-                          EN -> "Solving quadratic equations (no abc)"
+                          EN -> "Solving quadratic equations (no quadratic formula)"
                           ES -> "Resolver la ecuación cuadrática sin utilizar la fórmula cuadrática "
                           DE -> "Aufgaben zum Lösen von quadratischen Gleichungen ohne die p-q-Formel "
                           FR -> "Résoudre une équation quadratique, sans utiliser la formule de résolution "
                           NL -> "Kwadratische vergelijkingen oplossen (geen abc)"
                           FI -> "Toisen asteen yhtälöiden ratkaiseminen käyttämättä ratkaisukaavaa "
-                          HU -> ""
+                          HU -> "Feladat tört egyenletekhez "
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_02_Quadratic_Equations"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Solve, without using the quadratic formula, the quadratic equation "
                           ES -> "Resolver la ecuación cuadrática sin utilizar la fórmula cuadrática "
@@ -675,7 +675,7 @@ quadraticNoABCExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre l'équation quadratique, sans utiliser la formule de résolution "
                           NL -> "Los de volgende kwadratische vergelijking op, zonder gebruik te maken van de abc-formule "
                           FI -> "Ratkaise toisen asteen yhtälö käyttämättä ratkaisukaavaa "
-                          HU -> ""
+                          HU -> "Oldja meg a másodfokú egyenlet megoldóképlete nélkül az egyenletet "
   , problemStatement  = "Solve, without using the quadratic formula, the following quadratic equation: "
   , context           = showId $ exerciseId quadraticNoABCExercise
   , difficulty        = "easy"
@@ -690,9 +690,9 @@ quadraticWithApproximationExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre numériquement une équation quadratique "
                           NL -> "Kwadratische vergelijkingen oplossen (met benaderingen)"
                           FI -> "Toisen asteen yhtälöiden likimääräinen ratkaiseminen "
-                          HU -> ""
+                          HU -> "Feladat tört egyenletekhez "
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_02_Quadratic_Equations"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Solve, with approximation allowed, the quadratic equation "
                           ES -> "Resolver la ecuación cuadrática, con aproximación permitida "
@@ -700,7 +700,7 @@ quadraticWithApproximationExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre l'équation quadratique, approximation permise "
                           NL -> "Los de volgende kwadratische vergelijking op, een benadering is toegestaan "
                           FI -> "Ratkaise likimääräisesti toisen asteen yhtälö "
-                          HU -> ""
+                          HU -> "Oldja meg a másodfokú egyenletet, közelítő módszer megengedett "
   , problemStatement  = "Solve, with approximation allowed, the following quadratic equation: "
   , context           = showId $ exerciseId quadraticWithApproximation
   , difficulty        = "easy"
@@ -715,9 +715,9 @@ rationalEquationExerciseInfo = MBExerciseInfo
                           FR -> "Équation rationnelle "
                           NL -> "Gebroken vergelijkingen oplossen"
                           FI -> "Rationaaliyhtälöiden ratkaiseminen "
-                          HU -> ""
+                          HU -> "Feladat elsőfokú egyenlőtlenségekhez "
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_04_Rational_Equations"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Solve the rational equation "
                           ES -> "Resolver la ecuación racional "
@@ -725,7 +725,7 @@ rationalEquationExerciseInfo = MBExerciseInfo
                           FR -> "Résoudre l'équation rationnelle "
                           NL -> "Los de volgende gebroken vergelijking op "
                           FI -> "Ratkaise rationaaliyhtälö "
-                          HU -> ""
+                          HU -> "Oldja meg a törtegyütthatós egyenletet "
   , problemStatement  = "Solve the following rational equation: "
   , context           = showId $ exerciseId rationalEquationExercise
   , difficulty        = "medium"
@@ -740,9 +740,9 @@ simplifyPowerExerciseInfo = MBExerciseInfo
                           FR -> "Simplification de puissance "
                           NL -> "Machten vereenvoudigen"
                           FI -> "Potenssilausekkeiden sieventäminen "
-                          HU -> ""
+                          HU -> "Feladat hatványokat tartalmazó kifejezések egyszerűsítéséhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Simplify the power "
                           ES -> "Simplificar las potencias "
@@ -750,7 +750,7 @@ simplifyPowerExerciseInfo = MBExerciseInfo
                           FR -> "Simplifier la puissance "
                           NL -> "Vereenvoudig de macht "
                           FI -> "Sievennä potenssilauseke "
-                          HU -> ""
+                          HU -> "Egyszerűsítse a kitevőt "
   , problemStatement  = "Simplify the following power: "
   , context           = showId $ exerciseId simplifyPowerExercise
   , difficulty        = "medium"
@@ -767,7 +767,7 @@ simplifyRationalExerciseInfo = MBExerciseInfo
                           FI -> "Murtolausekkeiden sieventäminen"
                           HU -> ""
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
-  , langSupported     = [EN,ES,DE,FR,NL,FI]
+  , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of 
                           EN -> "Simplify the rational "
                           ES -> "Simplificar el racional "
@@ -775,7 +775,7 @@ simplifyRationalExerciseInfo = MBExerciseInfo
                           FR -> "Simplifiez le rationnel "
                           NL -> "Vereenvoudig de breuk "
                           FI -> "Sievennä murtolauseke "
-                          HU -> ""
+                          HU -> "Egyszerűsítse a törtet"
   , problemStatement  = "Simplify the following rational: "
   , context           = showId $ exerciseId simplifyRationalExercise
   , difficulty        = "medium"
@@ -792,7 +792,7 @@ systemWithMatrixExerciseInfo = MBExerciseInfo
                           FI -> "" 
                           HU -> ""
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_02_02_Matrix_Algebra"
-  , langSupported     = [EN]
+  , langSupported     = [EN,NL]
   , cmp               = \l -> case l of 
                           EN -> "Solve the following system of linear equations using a matrix "
                           ES -> ""

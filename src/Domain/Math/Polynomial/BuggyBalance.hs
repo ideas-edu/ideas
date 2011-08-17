@@ -16,7 +16,6 @@ module Domain.Math.Polynomial.BuggyBalance
 
 import Control.Monad
 import Common.Library
-import Common.Utils.Uniplate
 import Data.Maybe
 import Data.Ratio
 import Domain.Math.Expr
@@ -41,22 +40,13 @@ buggyPriority :: [Id]
 buggyPriority = map getId 
    [rule1312, rule121, rule221, rule222, rule2232, rule2233, rule227, rule323]
 
-toEq :: MonadPlus m => (Expr -> m Expr) -> Equation Expr -> m (Equation Expr)
-toEq f (lhs :==: rhs) = 
-   liftM (:==: rhs) (rec lhs) `mplus` liftM (lhs :==:) (rec rhs)
- where -- to do: deal with associativity
-   rec = msum .  map (\(a,h) -> liftM h (f a)) . contexts
-
-bugbal :: Id
-bugbal = linbal # "buggy"
-
 -------------------------------------------------------------------
 -- 1.2 Fout bij vermenigvuldigen
 
 -- (a*b)/c  ->  a/(b*c)
 rule121 :: Rule (Equation Expr)
 rule121 = describe "1.2.1: fout bij vermenigvuldigen" $ 
-   buggyRule $ makeSimpleRule (bugbal, "multiply1") (toEq f)
+   buggyBalanceExprRule "multiply1" f
  where 
    f (expr :/: c) = do
       (a, b) <- match timesView expr
@@ -66,7 +56,7 @@ rule121 = describe "1.2.1: fout bij vermenigvuldigen" $
 -- a*(bx+c)  ->  x/(ab) + ac
 rule122 :: Rule (Equation Expr)
 rule122 = describe "1.2.2: fout bij vermenigvuldigen" $ 
-   buggyRule $ makeSimpleRule (bugbal, "multiply2") (toEq f)
+   buggyBalanceExprRule "multiply2" f
  where 
    f (a :*: expr) = do
       ((b, x), c) <- match (plusView >>> first timesView) expr
@@ -76,7 +66,7 @@ rule122 = describe "1.2.2: fout bij vermenigvuldigen" $
 -- a(b-cx)  -> ab+acx
 rule1231 :: Rule (Equation Expr)
 rule1231 = describe "1.2.3.1: fout bij vermenigvuldigen; min raakt kwijt" $ 
-   buggyRule $ makeSimpleRule (bugbal, "multiply3") (toEq f)
+   buggyBalanceExprRule "multiply3" f
  where 
    f (a :*: expr) = do
       (b, (c, x)) <- match (minusView >>> second timesView) expr
@@ -86,7 +76,7 @@ rule1231 = describe "1.2.3.1: fout bij vermenigvuldigen; min raakt kwijt" $
 -- -a*(x-b)  -> -ax-ab
 rule1232 :: Rule (Equation Expr)
 rule1232 = describe "1.2.3.2: fout bij vermenigvuldigen; min te veel" $ 
-   buggyRule $ makeSimpleRule (bugbal, "multiply4") (toEq f)
+   buggyBalanceExprRule "multiply4" f
  where 
    f expr = do
       (a, (x, b)) <- match (timesView >>> negView *** minusView) expr
@@ -95,7 +85,7 @@ rule1232 = describe "1.2.3.2: fout bij vermenigvuldigen; min te veel" $
 -- -ax=b  ->  x=b/a
 rule1234 :: Rule (Equation Expr)
 rule1234 = describe "1.2.3.4: fout bij vermenigvuldigen; delen door negatief getal" $ 
-   buggyRule $ makeSimpleRule (bugbal, "multiply5") f
+   buggyBalanceRule "multiply5" f
  where 
    f (expr :==: b) = do
       (a, x) <- match (timesView >>> first negView) expr
@@ -107,7 +97,7 @@ rule1234 = describe "1.2.3.4: fout bij vermenigvuldigen; delen door negatief get
 -- a(x-b)  ->  ax-b    (verruimt naar +)
 rule1311 :: Rule (Equation Expr)
 rule1311 = describe "1.3.1.1: fout bij haakjes wegwerken; haakjes staan er niet voor niets" $ 
-   buggyRule $ makeSimpleRule (bugbal, "par1") (toEq f)
+   buggyBalanceExprRule "par1" f
  where
    f expr = do
       (a, (x, b)) <- match (timesView >>> second plusView) expr
@@ -116,7 +106,7 @@ rule1311 = describe "1.3.1.1: fout bij haakjes wegwerken; haakjes staan er niet 
 -- 1/a*(x-b)  -> 1/a*x-b   (specialized version of par1)
 rule1312 :: Rule (Equation Expr)
 rule1312 = describe "1.3.1.2: fout bij haakjes wegwerken; haakjes staan er niet voor niets" $ 
-   buggyRule $ makeSimpleRule (bugbal, "par2") (toEq f)
+   buggyBalanceExprRule "par2" f
  where
    f (e1 :*: e2) = do
       (n, a) <- match (divView >>> first integerView) e1
@@ -130,7 +120,8 @@ rule1312 = describe "1.3.1.2: fout bij haakjes wegwerken; haakjes staan er niet 
 rule1313 :: Rule (Equation Expr)
 rule1313 = describe "1.3.1.3: fout bij haakjes wegwerken; haakjes staan e
 r niet voor niets" $ 
-   buggyRule $ makeSimpleRule (bugbal, "par3") (toEq f)
+
+   buggyBalanceExprRule "par3") f
  where
    f (a :*: expr) = do
       (b, (c, x)) <- match (minusView >>> second timesView) expr
@@ -140,7 +131,7 @@ r niet voor niets" $
 -- -(a+b)  ->  -a+b
 rule1314 :: Rule (Equation Expr)
 rule1314 = describe "1.3.1.4: fout bij haakjes wegwerken met unaire min; haakjes staan er niet voor niets" $ 
-   buggyRule $ makeSimpleRule (bugbal, "par11") (toEq f)
+   buggyBalanceExprRule "par11" f
  where
    f expr = do
       (a, b) <- match (negView >>> plusView) expr
@@ -149,7 +140,7 @@ rule1314 = describe "1.3.1.4: fout bij haakjes wegwerken met unaire min; haakjes
 -- a(bx+c)  ->  ax+ac
 rule1321 :: Rule (Equation Expr)
 rule1321 = describe "1.3.2.1: fout bij haakjes wegwerken; haakjes goed uitwerken" $ 
-   buggyRule $ makeSimpleRule (bugbal, "par4") (toEq f)
+   buggyBalanceExprRule "par4" f
  where
    f (a :*: expr) = do
       ((_, x), c) <- match (plusView >>> first timesView) expr
@@ -159,7 +150,7 @@ rule1321 = describe "1.3.2.1: fout bij haakjes wegwerken; haakjes goed uitwerken
 -- a(b-cx)  -> ab-ax
 rule1322 :: Rule (Equation Expr)
 rule1322 = describe "1.3.2.2: fout bij haakjes wegwerken; haakjes goed uitwerken" $ 
-   buggyRule $ makeSimpleRule (bugbal, "par5") (toEq f)
+   buggyBalanceExprRule "par5" f
  where
    f (a :*: expr) = do
       (b, (_, x)) <- match (minusView >>> second timesView) expr
@@ -169,7 +160,7 @@ rule1322 = describe "1.3.2.2: fout bij haakjes wegwerken; haakjes goed uitwerken
 -- a(bx+c)  -> bx+ac
 rule133 :: Rule (Equation Expr)
 rule133 = describe "1.3.3: fout bij haakjes wegwerken; haakjes goed uitwerken" $ 
-   buggyRule $ makeSimpleRule (bugbal, "par6") (toEq f)
+   buggyBalanceExprRule "par6" f
  where
    f (a :*: expr) = do
       ((b, x), c) <- match (plusView >>> first timesView) expr
@@ -179,7 +170,7 @@ rule133 = describe "1.3.3: fout bij haakjes wegwerken; haakjes goed uitwerken" $
 -- a-(b+c)  -> a-b+c
 rule134 :: Rule (Equation Expr)
 rule134 = describe "1.3.4: fout bij haakjes wegwerken; haakjes goed uitwerken" $ 
-   buggyRule $ makeSimpleRule (bugbal, "par7") (toEq f)
+   buggyBalanceExprRule "par7" f
  where
    f expr = do 
       (a, (b, c)) <- match (minusView >>> second plusView) expr
@@ -188,7 +179,7 @@ rule134 = describe "1.3.4: fout bij haakjes wegwerken; haakjes goed uitwerken" $
 -- a*(b-c)-d  ->  ab-ac-ad
 rule135 :: Rule (Equation Expr)
 rule135 = describe "1.3.5: fout bij haakjes wegwerken; kijk goed waar de haakjes staan" $ 
-   buggyRule $ makeSimpleRule (bugbal, "par8") (toEq f)
+   buggyBalanceExprRule "par8" f
  where
    f expr = do 
       ((a, (b, c)), d) <- match (minusView >>> first (timesView >>> second minusView)) expr
@@ -197,7 +188,7 @@ rule135 = describe "1.3.5: fout bij haakjes wegwerken; kijk goed waar de haakjes
 --  a(bx+c)  ->  (a+b)x+ac
 rule136 :: Rule (Equation Expr)
 rule136 = describe "1.3.6: fout bij haakjes wegwerken; haakjes goed uitwerken" $ 
-   buggyRule $ makeSimpleRule (bugbal, "par9") (toEq f)
+   buggyBalanceExprRule "par9" f
  where
    f (a :*: expr) = do
       ((b, x), c) <- match (plusView >>> first timesView) expr
@@ -207,7 +198,7 @@ rule136 = describe "1.3.6: fout bij haakjes wegwerken; haakjes goed uitwerken" $
 -- a+b(x-c)  -> (a+b)(x-c)
 rule137 :: Rule (Equation Expr)
 rule137 = describe "1.3.7: fout bij haakjes wegwerken; denk aan 'voorrangsregels'" $ 
-   buggyRule $ makeSimpleRule (bugbal, "par10") (toEq f)
+   buggyBalanceExprRule "par10" f
  where
    f (a :+: expr) = do
       (b, (x, c)) <- match (timesView >>> second minusView) expr
@@ -220,7 +211,7 @@ rule137 = describe "1.3.7: fout bij haakjes wegwerken; denk aan 'voorrangsregels
 -- a=b-c  ->  c-b=a
 rule201 :: Rule (Equation Expr)
 rule201 = describe "2.0.1: Links en rechts alleen maar verwisseld?" $ 
-   buggyRule $ makeSimpleRule (bugbal, "flip1") f
+   buggyBalanceRule "flip1" f
  where
    f (a :==: rhs) = do
       (b, c) <- match minusView rhs
@@ -228,15 +219,6 @@ rule201 = describe "2.0.1: Links en rechts alleen maar verwisseld?" $
 
 -------------------------------------------------------------------
 -- 2.1 Links en rechts hetzelfde optellen/aftrekken
-
-buggyBalanceRule :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr)) -> Rule (Equation Expr)
-buggyBalanceRule n f = 
-   buggyRule $ makeRule (bugbal, n) $ useRecognizer eq $ makeTrans f
- where
-   eq old (a1 :==: a2) = 
-      let g (b1 :==: b2) = h a1 b1 && h a2 b2
-          h = viewEquivalent (polyViewWith rationalView)
-      in maybe False g (f old)
 
 -- ax+b=[cx]+d  -> ax=[cx]+d+b
 rule2111 :: Rule (Equation Expr)
@@ -328,7 +310,7 @@ rule2142 = describe "2.1.4.2: Links en rechts hetzelfde optellen; links -cx en r
 -- ax=c  -> x=a/c
 rule221 :: Rule (Equation Expr)
 rule221 = describe "2.2.1: Links en rechts hetzelfde vermenigvuldigen; verkeerd om gedeeld" $ 
-   buggyRule $ makeSimpleRule (bugbal, "mulbal1") f
+   buggyBalanceRule "mulbal1" f
  where
    f (expr :==: c) = do
       (a, x) <- match timesView expr
@@ -337,7 +319,7 @@ rule221 = describe "2.2.1: Links en rechts hetzelfde vermenigvuldigen; verkeerd 
 -- 1/*a+b=2/c*x+d  -> x+ba  -> 2x+cd
 rule222 :: Rule (Equation Expr)
 rule222 = describe "2.2.2: Links en rechts hetzelfde vermenigvuldigen; links *a; rechts *b" $ 
-   buggyRule $ makeSimpleRule (bugbal, "mulbal2") f
+   buggyBalanceRule "mulbal2" f
  where
    f (lhs :==: rhs) = do
       (x, ra, b) <- matchLin lhs
@@ -352,8 +334,7 @@ rule222 = describe "2.2.2: Links en rechts hetzelfde vermenigvuldigen; links *a;
 -- ax-b=cx+d  -> pax-pb=cx+d
 rule2231 :: Rule (Equation Expr)
 rule2231 = describe "2.2.3.1: Links en rechts hetzelfde vermenigvuldigen; links *p, rechts niet" $ 
-   buggyRule $ makeRule (bugbal, "mulbal3") $ useRecognizer p $ 
-   makeTrans $ const Nothing
+   buggyBalanceRecognizer "mulbal3" p
  where -- currently, symmetric
    p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
       dl <- diffTimes a1 b1
@@ -363,7 +344,7 @@ rule2231 = describe "2.2.3.1: Links en rechts hetzelfde vermenigvuldigen; links 
 -- (x+a)/b=c  -> x+a=c
 rule2232 :: Rule (Equation Expr)
 rule2232 = describe "2.2.3.2: Links en rechts hetzelfde vermenigvuldigen; links /p, rechts niet" $ 
-   buggyRule $ makeSimpleRule (bugbal, "mulbal4") f
+   buggyBalanceRule "mulbal4" f
  where
    f (expr :==: c) = do
       (a, _b) <- match divView expr
@@ -372,7 +353,7 @@ rule2232 = describe "2.2.3.2: Links en rechts hetzelfde vermenigvuldigen; links 
 -- a+b=c  -> -a-b=c
 rule2233 :: Rule (Equation Expr)
 rule2233 = describe "2.2.3.3: Links en rechts hetzelfde vermenigvuldigen; links en rechts *-1" $ 
-   buggyRule $ makeSimpleRule (bugbal, "mulbal5") f
+   buggyBalanceRule "mulbal5" f
  where
    f (expr :==: c) = do
       (a, b) <- match plusView expr
@@ -381,8 +362,7 @@ rule2233 = describe "2.2.3.3: Links en rechts hetzelfde vermenigvuldigen; links 
 -- pa+pb=c -> a+b=c
 rule227 :: Rule (Equation Expr)
 rule227 = describe "2.2.7: Links en rechts hetzelfde vermenigvuldigen; links en rechts delen door p" $ 
-   buggyRule $ makeRule (bugbal, "mulbal6") $ useRecognizer p $ 
-   makeTrans $ const Nothing
+   buggyBalanceRecognizer "mulbal6" p
  where -- currently, symmetric
    p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
       dl <- diffTimes a1 b1
@@ -398,7 +378,7 @@ rule227 = describe "2.2.7: Links en rechts hetzelfde vermenigvuldigen; links en 
 -- ax-b=cx-d  -> (c-a)x-b=-d
 rule311 :: Rule (Equation Expr)
 rule311 = describe "3.1.1: Doe je wat je wilt doen?" $ 
-   buggyRule $ makeSimpleRule (bugbal, "misc1") f
+   buggyBalanceRule "misc1" f
  where
    f (lhs :==: rhs) = do
       (x, a, b) <- matchLin lhs
@@ -409,8 +389,7 @@ rule311 = describe "3.1.1: Doe je wat je wilt doen?" $
 -- ax-b=cd+d  -> pax-b=pcx+pd
 rule321 :: Rule (Equation Expr)
 rule321 = describe "3.2.1: Doe je wat je wilt doen? vermenigvuldig de hele linkerkant met p" $ 
-   buggyRule $ makeRule (bugbal, "misc2") $ useRecognizer p $ 
-   makeTrans $ const Nothing
+   buggyBalanceRecognizer "misc2" p
  where -- currently, not symmetric
    p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
       d <- diffTimes a2 b2
@@ -424,7 +403,7 @@ rule321 = describe "3.2.1: Doe je wat je wilt doen? vermenigvuldig de hele linke
 -- a-b=c  -> -a-b=-c
 rule322 :: Rule (Equation Expr)
 rule322 = describe "3.2.2: Doe je wat je wilt doen? neem het tegengestelde van de hele linkerkant" $ 
-   buggyRule $ makeSimpleRule (bugbal, "misc3") f
+   buggyBalanceRule "misc3" f
  where
    f (expr :==: c) = do
       (a, b) <- match minusView expr
@@ -433,8 +412,7 @@ rule322 = describe "3.2.2: Doe je wat je wilt doen? neem het tegengestelde van d
 -- pax+pb=pc  ->  ax+pb=c
 rule323 :: Rule (Equation Expr) 
 rule323 = describe "3.2.3: Doe je wat je wilt doen? Deel de hele linkerkant door p" $ 
-   buggyRule $ makeRule (bugbal, "misc4") $ useRecognizer p $ 
-   makeTrans $ const Nothing
+   buggyBalanceRecognizer "misc4" p
    -- REFACTOR: code copied from rule misc2
  where -- currently, not symmetric
    p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do

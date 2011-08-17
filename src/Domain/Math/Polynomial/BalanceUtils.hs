@@ -14,6 +14,7 @@ module Domain.Math.Polynomial.BalanceUtils
    , matchLin, matchPlusCon
    , cleaner, cleanerExpr
    , linbal, checkForChange
+   , buggyBalanceRule, buggyBalanceExprRule, buggyBalanceRecognizer
    , collectLocal, collectGlobal
    , distributeDiv, distributeTimes
    , isPlusT, diffPlus
@@ -122,7 +123,27 @@ linbal = newId "algebra.equations.linear.balance"
 
 checkForChange :: (MonadPlus m, Eq a) => (a -> m a) -> a -> m a
 checkForChange f a = f a >>= \b -> guard (a /= b) >> return b
-     
+
+buggyBalanceRule :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr)) -> Rule (Equation Expr)
+buggyBalanceRule n f = bugbalRule n f $ \old (a1 :==: a2) ->
+   let g (b1 :==: b2) = h a1 b1 && h a2 b2
+       h = viewEquivalent (polyViewWith rationalView)
+   in maybe False g (f old)
+
+buggyBalanceExprRule :: IsId n => n -> (Expr -> Maybe Expr) -> Rule (Equation Expr)
+buggyBalanceExprRule n f = buggyBalanceRule n $ \(lhs :==: rhs) ->
+   let -- to do: deal with associativity 
+       rec = msum .  map (\(a,h) -> liftM h (f a)) . contexts
+   in liftM (:==: rhs) (rec lhs) `mplus` liftM (lhs :==:) (rec rhs)
+
+buggyBalanceRecognizer :: IsId n => n -> (a -> a -> Bool) -> Rule a
+buggyBalanceRecognizer n = bugbalRule n (const Nothing)
+
+-- generalized helper
+bugbalRule :: IsId n => n -> (a -> Maybe a) -> (a -> a -> Bool) -> Rule a
+bugbalRule n f p = 
+   buggyRule $ makeRule (linbal, "buggy", n) $ useRecognizer p $ makeTrans f
+
 ------------------------------------------------------------
 -- Helpers
 

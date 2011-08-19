@@ -19,7 +19,7 @@ module Common.Transformation
    ( -- * Transformations
      Transformation, makeTrans, makeTransList, makeRewriteTrans
      -- * Arguments
-   , ArgDescr(..), defaultArgDescr, Argument(..), ArgValue(..)
+   , ArgDescr(..), defaultArgDescr, Argument(..), ArgValue(..), ArgValues
    , supply1, supply2, supply3
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
@@ -53,7 +53,7 @@ data Transformation a
    | RewriteRule (RewriteRule a) (a -> [a])
    | forall b . Abstraction (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
    | forall b c . LiftView (View a (b, c)) (Transformation b)
-   | Recognizer (a -> a -> Bool) (Transformation a)
+   | Recognizer (a -> a -> Maybe ArgValues) (Transformation a)
    
 instance Apply Transformation where
    applyAll (Function f)        = f
@@ -89,6 +89,9 @@ data ArgDescr a = ArgDescr
 
 -- | An argument descriptor, paired with a value
 data ArgValue = forall a . ArgValue (ArgDescr a) a
+
+-- | List of argument values
+type ArgValues = [ArgValue]
 
 instance Show ArgValue where
    show (ArgValue descr a) = showArgument descr a
@@ -156,13 +159,13 @@ getDescriptors r =
 -- | Returns a list of pretty-printed expected arguments. 
 -- Nothing indicates that there are no such arguments (or the arguments
 -- are not applicable for the current value)
-expectedArguments :: Rule a -> a -> Maybe [ArgValue]
+expectedArguments :: Rule a -> a -> Maybe ArgValues
 expectedArguments r =
    case transformations r of
       [t] -> rec t
       _   -> const Nothing
  where
-    rec :: Transformation a -> a -> Maybe [ArgValue]
+    rec :: Transformation a -> a -> Maybe ArgValues
     rec trans a =  
        case trans of
           Abstraction args f _ -> 
@@ -209,7 +212,7 @@ someArguments :: ArgumentList a -> [Some ArgDescr]
 someArguments (Single a) = [Some a]
 someArguments (Pair a b) = someArguments a ++ someArguments b
 
-argumentValues :: ArgumentList a -> a -> [ArgValue]
+argumentValues :: ArgumentList a -> a -> ArgValues
 argumentValues (Single a) x      = [ArgValue a x]
 argumentValues (Pair a b) (x, y) = argumentValues a x ++ argumentValues b y
 
@@ -325,25 +328,27 @@ getRewriteRules r = concatMap f (transformations r)
          LiftView _ t     -> f t
          _                -> []
 
-ruleRecognizer :: (a -> a -> Bool) -> Rule a -> a -> a -> Bool
-ruleRecognizer eq r a b = or 
+ruleRecognizer :: (a -> a -> Bool) -> Rule a -> a -> a -> Maybe ArgValues
+ruleRecognizer eq r a b = msum
    [ transRecognizer eq t a b | t <- transformations r ]
 
-transRecognizer :: (a -> a -> Bool) -> Transformation a -> a -> a -> Bool
+transRecognizer :: (a -> a -> Bool) -> Transformation a -> a -> a -> Maybe ArgValues
 transRecognizer eq trans a b =
    case trans of
-      Recognizer f t -> f a b || transRecognizer eq t a b
-      LiftView v t   -> 
-         any (`eq` b) (applyAll trans a) || or  -- ?? Quick Fix
+      Recognizer f t -> f a b `mplus` transRecognizer eq t a b
+      LiftView v t   ->
+         noArg (any (`eq` b) (applyAll trans a)) `mplus` msum  -- ?? Quick Fix
          [ transRecognizer (\x y -> eq (f x) (f y)) t av bv
          | (av, c) <- matchM v a 
          , (bv, _) <- matchM v b
          , let f z = build v (z, c)
          ]
-      _ -> any (`eq` b) (applyAll trans a)
+      _ -> noArg $ any (`eq` b) (applyAll trans a)
+ where
+   noArg c = if c then Just [] else Nothing 
 
 useRecognizer :: (a -> a -> Bool) -> Transformation a -> Transformation a
-useRecognizer = Recognizer
+useRecognizer p = Recognizer (\x y -> guard (p x y) >> return [])
 
 -----------------------------------------------------------
 --- Lifting

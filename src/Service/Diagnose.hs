@@ -29,36 +29,36 @@ import Service.Types
 -- Result types for diagnose service
 
 data Diagnosis a
-   = Buggy          (Rule (Context a))
+   = Buggy          ArgValues (Rule (Context a))
 --   | Missing
 --   | IncorrectPart  [a]
    | NotEquivalent  
    | Similar        Bool (State a)
    | Expected       Bool (State a) (Rule (Context a))
-   | Detour         Bool (State a) (Rule (Context a))
+   | Detour         Bool (State a) ArgValues (Rule (Context a))
    | Correct        Bool (State a)
 
 instance Show (Diagnosis a) where
    show diagnosis = 
       case diagnosis of
-         Buggy r          -> "Buggy rule " ++ show (show r)
+         Buggy _ r        -> "Buggy rule " ++ show (show r)
 --         Missing          -> "Missing solutions"
 --         IncorrectPart xs -> "Incorrect parts (" ++ show (length xs) ++ " items)"
          NotEquivalent    -> "Unknown mistake" 
          Similar _ _      -> "Very similar"
          Expected _ _ r   -> "Rule " ++ show (show r) ++ ", expected by strategy"
-         Detour _ _ r     -> "Rule " ++ show (show r) ++ ", not following strategy"
+         Detour _ _ _ r   -> "Rule " ++ show (show r) ++ ", not following strategy"
          Correct _ _      -> "Unknown step"
 
 newState :: Diagnosis a -> Maybe (State a)
 newState diagnosis = 
    case diagnosis of
-      Buggy _        -> Nothing
-      NotEquivalent  -> Nothing
-      Similar  _ s   -> Just s
-      Expected _ s _ -> Just s
-      Detour   _ s _ -> Just s
-      Correct  _ s   -> Just s
+      Buggy _ _        -> Nothing
+      NotEquivalent    -> Nothing
+      Similar  _ s     -> Just s
+      Expected _ s _   -> Just s
+      Detour   _ s _ _ -> Just s
+      Correct  _ s     -> Just s
 
 ----------------------------------------------------------------
 -- The diagnose service
@@ -69,8 +69,8 @@ diagnose state new
    | not (equivalence ex (stateContext state) newc) =
         -- Is the rule used discoverable by trying all known buggy rules?
         case discovered True of
-           Just r  -> Buggy r -- report the buggy rule
-           Nothing -> NotEquivalent -- compareParts state new
+           Just (r, as) -> Buggy as r -- report the buggy rule
+           Nothing      -> NotEquivalent -- compareParts state new
               
    -- Is the submitted term (very) similar to the previous one? 
    | similarity ex (stateContext state) newc =
@@ -87,8 +87,8 @@ diagnose state new
    | otherwise =
         let ns = restartIfNeeded (makeState ex Nothing newc)
         in case discovered False of
-              Just r ->  -- If yes, report the found rule as a detour
-                 Detour (ready ns) ns r
+              Just (r, as) ->  -- If yes, report the found rule as a detour
+                 Detour (ready ns) ns as r
               Nothing -> -- If not, we give up
                  Correct (ready ns) ns
  where
@@ -101,10 +101,10 @@ diagnose state new
       safeHead (filter p xs)
 
    discovered searchForBuggy = safeHead
-      [ r
+      [ (r, as)
       | r <- sortBy (ruleOrdering ex) (ruleset ex)
       , isBuggyRule r == searchForBuggy
-      , ruleIsRecognized ex r sub1 sub2
+      , (_, as) <- recognizeRule ex r sub1 sub2
       ]
     where 
       diff = if searchForBuggy then difference else differenceEqual
@@ -130,26 +130,26 @@ restartIfNeeded state
 diagnosisType :: Type a (Diagnosis a)
 diagnosisType = Iso (f <-> g) tp
  where
-   f (Left (Left r)) = Buggy r
+   f (Left (Left (as, r))) = Buggy as r
 --   f (Left (Right (Left ()))) = Missing
 --   f (Left (Right (Right (Left xs)))) = IncorrectPart xs
    f (Left (Right ())) = NotEquivalent
    f (Right (Left (b, s))) = Similar b s
    f (Right (Right (Left (b, s, r)))) = Expected b s r
-   f (Right (Right (Right (Left (b, s, r))))) = Detour b s r
+   f (Right (Right (Right (Left (b, s, as, r))))) = Detour b s as r
    f (Right (Right (Right (Right (b, s))))) = Correct b s
 
-   g (Buggy r)          = Left (Left r)
+   g (Buggy as r)       = Left (Left (as, r))
 --   g Missing            = Left (Right (Left ()))
 --   g (IncorrectPart xs) = Left (Right (Right (Left xs)))
    g NotEquivalent      = Left (Right ())
    g (Similar b s)      = Right (Left (b, s))
    g (Expected b s r)   = Right (Right (Left (b, s, r)))
-   g (Detour b s r)     = Right (Right (Right (Left (b, s, r))))
+   g (Detour b s as r)  = Right (Right (Right (Left (b, s, as, r))))
    g (Correct b s)      = Right (Right (Right (Right (b, s))))
    
    tp  =  
-       (  Tag "buggy"         Rule
+       (  Tag "buggy"         (Pair (List ArgValueTp) Rule)
 --      :|: Tag "missing"       Unit
 --      :|: Tag "incorrectpart" (List Term)
       :|: Tag "notequiv"      Unit
@@ -157,7 +157,7 @@ diagnosisType = Iso (f <-> g) tp
       :|: 
        (  Tag "similar"  (Pair   readyBool stateType)
       :|: Tag "expected" (tuple3 readyBool stateType Rule)
-      :|: Tag "detour"   (tuple3 readyBool stateType Rule)
+      :|: Tag "detour"   (tuple4 readyBool stateType (List ArgValueTp) Rule)
       :|: Tag "correct"  (Pair   readyBool stateType)
        )
       

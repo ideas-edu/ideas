@@ -58,11 +58,11 @@ submittext script old input =
 feedbacktext :: Script -> State a -> a -> (Bool, Text, State a)
 feedbacktext script old a =
    case diagnosis of
-      Buggy _        -> (False, output, old)
+      Buggy _ _      -> (False, output, old)
       NotEquivalent  -> (False, output, old)
       Expected _ s _ -> (True,  output, s)
       Similar _ s    -> (True,  output, s)
-      Detour _ s _   -> (True,  output, s)
+      Detour _ s _ _ -> (True,  output, s)
       Correct _ s    -> (False, output, s)
  where
    diagnosis = diagnose old a

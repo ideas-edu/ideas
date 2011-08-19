@@ -68,7 +68,7 @@ runPrefixLocation loc p0 =
     where
       rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
 
-firstMajorInPrefix :: Prefix a -> Prefix a -> a -> Maybe (Id, [ArgValue])
+firstMajorInPrefix :: Prefix a -> Prefix a -> a -> Maybe (Id, ArgValues)
 firstMajorInPrefix p0 p a = do
    let newSteps = drop (length $ prefixToSteps p0) (prefixToSteps p)
    is <- firstLocation newSteps
@@ -79,7 +79,7 @@ firstMajorInPrefix p0 p a = do
    firstLocation (Enter info:RuleStep r:_) | isMajorRule r = Just (getId info)
    firstLocation (_:rest) = firstLocation rest
  
-argumentsForSteps :: a -> [Step l a] -> [ArgValue]
+argumentsForSteps :: a -> [Step l a] -> ArgValues
 argumentsForSteps a0 = flip rec a0 . stepsToRules
  where
    rec [] _ = []
@@ -111,7 +111,7 @@ runPrefixMajor p0 =
 -- Data types for replies
 
 data Reply a = Ok Id (State a)
-             | Incorrect Bool Id (State a) [ArgValue]
+             | Incorrect Bool Id (State a) ArgValues
 
 ------------------------------------------------------------------------
 -- Type definition

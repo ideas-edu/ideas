@@ -115,11 +115,11 @@ feedbackDiagnosis :: Diagnosis a -> Environment a -> Script -> Text
 feedbackDiagnosis diagnosis env = 
    fromMaybe (TextString "ERROR") .
    case diagnosis of
-      Buggy r        -> make "buggy"   env {recognized = Just r}
+      Buggy _ r      -> make "buggy"   env {recognized = Just r}
       NotEquivalent  -> make "noteq"   env
       Expected _ _ r -> make "ok"      env {recognized = Just r}
       Similar _ _    -> make "same"    env
-      Detour _ _ r   -> make "detour"  env {recognized = Just r}
+      Detour _ _ _ r -> make "detour"  env {recognized = Just r}
       Correct _ _    -> make "unknown" env
   
 feedbackHint :: Bool -> Environment a -> Script -> Text

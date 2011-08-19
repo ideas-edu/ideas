@@ -230,11 +230,15 @@ ruleIsRecognized :: Exercise a -> Rule (Context a) -> Context a -> Context a -> 
 ruleIsRecognized ex r ca = not . null . recognizeRule ex r ca
 
 -- Recognize a rule at (possibly multiple) locations
-recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [Location]
+recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [(Location, ArgValues)]
 recognizeRule ex r ca cb = rec (fromMaybe ca (top ca))
  where
-   rec x = [ location x | here r x cb ] ++ concatMap rec (allDowns x)
-   here  = ruleRecognizer (similarity ex)
+   rec x = 
+      let here = case ruleRecognizer (similarity ex) r x cb of
+                    Just as -> [(location x, as)]
+                    Nothing -> []
+      in here ++ concatMap rec (allDowns x)
+   
 
 ruleOrderingWith :: [Rule a] -> Rule a -> Rule a -> Ordering
 ruleOrderingWith = ruleOrderingWithId . map getId

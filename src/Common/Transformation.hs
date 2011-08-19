@@ -336,13 +336,14 @@ transRecognizer :: (a -> a -> Bool) -> Transformation a -> a -> a -> Maybe ArgVa
 transRecognizer eq trans a b =
    case trans of
       Recognizer f t -> f a b `mplus` transRecognizer eq t a b
-      LiftView v t   ->
-         noArg (any (`eq` b) (applyAll trans a)) `mplus` msum  -- ?? Quick Fix
+      LiftView v t   -> msum
          [ transRecognizer (\x y -> eq (f x) (f y)) t av bv
          | (av, c) <- matchM v a 
          , (bv, _) <- matchM v b
          , let f z = build v (z, c)
-         ]
+         ] 
+       `mplus` 
+         noArg (any (`eq` b) (applyAll trans a)) -- is this really needed?
       _ -> noArg $ any (`eq` b) (applyAll trans a)
  where
    noArg c = if c then Just [] else Nothing 

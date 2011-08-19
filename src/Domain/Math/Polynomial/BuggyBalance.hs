@@ -220,89 +220,100 @@ rule201 = describe "2.0.1: Links en rechts alleen maar verwisseld?" $
 -------------------------------------------------------------------
 -- 2.1 Links en rechts hetzelfde optellen/aftrekken
 
+termArg :: Expr -> ArgValues
+termArg expr = [ArgValue (makeArgDescr "term") expr]
+
 -- ax+b=[cx]+d  -> ax=[cx]+d+b
 rule2111 :: Rule (Equation Expr)
 rule2111 = describe "2.1.1.1: Links en rechts hetzelfde optellen; links +b en rechts -b" $ 
-   buggyBalanceRule "addbal1" f
+   buggyBalanceRuleArgs "addbal1" f
  where
    f (lhs :==: rhs) = do
       (ax, b) <- matchPlusCon lhs
       guard (b>0)
-      return $ ax :==: rhs+fromRational b
+      return (ax :==: rhs+fromRational b, termArg (fromRational b))
 
 -- ax-b=[cx]+d  -> ax=[cx+d-b
 rule2112 :: Rule (Equation Expr)
 rule2112 = describe "2.1.1.2: Links en rechts hetzelfde optellen; links -b en rechts +b" $ 
-   buggyBalanceRule "addbal2" f
+   buggyBalanceRuleArgs "addbal2" f
  where
    f (lhs :==: rhs) = do
       (ax, b) <- matchPlusCon lhs
       guard (b<0)
-      return $ ax :==: rhs+fromRational b
+      return (ax :==: rhs+fromRational b, termArg (fromRational (abs b)))
    
 -- ax[+b]=cx+d  ->  (a+c)x[+b]=d
 rule2121 :: Rule (Equation Expr)
 rule2121 = describe "2.1.2.1: Links en rechts hetzelfde optellen; links +cx en rechts -cx" $ 
-   buggyBalanceRule "addbal3" f
+   buggyBalanceRuleArgs "addbal3" f
  where
    f (lhs :==: rhs) = do
       (x, a, b) <- matchLin lhs
       (y, c, d) <- matchLin rhs
       guard (c>0 && x==y) 
-      return $ fromRational (a+c)*x+fromRational b :==: fromRational d
+      return ( fromRational (a+c)*x+fromRational b :==: fromRational d
+             , termArg (fromRational c*x)
+             )
    
 -- ax[+b]=-cx+d  -> (a-c)x[+b]=d
 rule2122 :: Rule (Equation Expr)
 rule2122 = describe "2.1.2.2: Links en rechts hetzelfde optellen; links -cx en rechts +cx" $ 
-   buggyBalanceRule "addbal4" f
+   buggyBalanceRuleArgs "addbal4" f
  where
    f (lhs :==: rhs) = do
       (x, a, b) <- matchLin lhs
       (y, c, d) <- matchLin rhs
       guard (c<0 && x==y) 
-      return $ fromRational (a+c)*x+fromRational b :==: fromRational d
+      return ( fromRational (a+c)*x+fromRational b :==: fromRational d
+             , termArg (fromRational (abs c)*x)
+             )
    
 -- ax+b=[cx]+d  -> ax=[cx]+d
 rule2131 :: Rule (Equation Expr)
 rule2131 = describe "2.1.3.1: Links en rechts hetzelfde optellen; links -b rechts niet(s)" $ 
-   buggyBalanceRule "addbal5" f
+   buggyBalanceRuleArgs "addbal5" f
  where
    f (lhs :==: rhs) = do
       (ax, b) <- matchPlusCon lhs
       guard (b > 0)
-      return $ ax :==: rhs
+      return (ax :==: rhs, termArg (fromRational b))
    
 -- ax-b=[cx]+d  -> ax=[cx]+d
 rule2132 :: Rule (Equation Expr)
 rule2132 = describe "2.1.3.2: Links en rechts hetzelfde optellen; links+b en rechts niet(s)" $ 
-   buggyBalanceRule "addbal6" f
+   buggyBalanceRuleArgs "addbal6" f
  where
    f (lhs :==: rhs) = do
       (ax, b) <- matchPlusCon lhs
       guard (b < 0)
-      return $ ax :==: rhs
+      return (ax :==: rhs, termArg (fromRational (abs b)))
 
 -- ax+b=cx+d  ->  b=(a+c)*x+d
 rule2141 :: Rule (Equation Expr)
 rule2141 = describe "2.1.4.1: Links en rechts hetzelfde optellen; links -ax en rechts +ax" $ 
-   buggyBalanceRule "addbal7" f
+   buggyBalanceRuleArgs "addbal7" f
  where
    f (lhs :==: rhs) = do
       (x, a, b) <- matchLin lhs
       (y, c, d) <- matchLin rhs
       guard (a>0 && x==y) 
-      return $ fromRational b :==: fromRational (a+c)*x+fromRational d
+      return ( fromRational b :==: fromRational (a+c)*x+fromRational d
+             , termArg (fromRational a*x)
+             )
    
 -- -ax+b=cx+d  ->  b=(-a+c)*x+d
 rule2142 :: Rule (Equation Expr)
 rule2142 = describe "2.1.4.2: Links en rechts hetzelfde optellen; links -cx en rechts +cx" $ 
-   buggyBalanceRule "addbal8" f
+   buggyBalanceRuleArgs "addbal8" f
  where
    f (lhs :==: rhs) = do
       (x, a, b) <- matchLin lhs
       (y, c, d) <- matchLin rhs
       guard (a<0 && x==y) 
-      return $ fromRational b :==: fromRational (a+c)*x+fromRational d
+      return ( fromRational b :==: fromRational (a+c)*x+fromRational d
+             , termArg (fromRational (abs a)*x)
+             )
 
 -------------------------------------------------------------------
 -- 2.2 Links en rechts hetzelfde vermenigvuldigen/delen
@@ -334,7 +345,7 @@ rule222 = describe "2.2.2: Links en rechts hetzelfde vermenigvuldigen; links *a;
 -- ax-b=cx+d  -> pax-pb=cx+d
 rule2231 :: Rule (Equation Expr)
 rule2231 = describe "2.2.3.1: Links en rechts hetzelfde vermenigvuldigen; links *p, rechts niet" $ 
-   buggyBalanceRecognizer "mulbal3" p
+   buggyBalanceSimpleRecognizer "mulbal3" p
  where -- currently, symmetric
    p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
       dl <- diffTimes a1 b1
@@ -362,7 +373,7 @@ rule2233 = describe "2.2.3.3: Links en rechts hetzelfde vermenigvuldigen; links 
 -- pa+pb=c -> a+b=c
 rule227 :: Rule (Equation Expr)
 rule227 = describe "2.2.7: Links en rechts hetzelfde vermenigvuldigen; links en rechts delen door p" $ 
-   buggyBalanceRecognizer "mulbal6" p
+   buggyBalanceSimpleRecognizer "mulbal6" p
  where -- currently, symmetric
    p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
       dl <- diffTimes a1 b1
@@ -389,7 +400,7 @@ rule311 = describe "3.1.1: Doe je wat je wilt doen?" $
 -- ax-b=cd+d  -> pax-b=pcx+pd
 rule321 :: Rule (Equation Expr)
 rule321 = describe "3.2.1: Doe je wat je wilt doen? vermenigvuldig de hele linkerkant met p" $ 
-   buggyBalanceRecognizer "misc2" p
+   buggyBalanceSimpleRecognizer "misc2" p
  where -- currently, not symmetric
    p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
       d <- diffTimes a2 b2
@@ -412,7 +423,7 @@ rule322 = describe "3.2.2: Doe je wat je wilt doen? neem het tegengestelde van d
 -- pax+pb=pc  ->  ax+pb=c
 rule323 :: Rule (Equation Expr) 
 rule323 = describe "3.2.3: Doe je wat je wilt doen? Deel de hele linkerkant door p" $ 
-   buggyBalanceRecognizer "misc4" p
+   buggyBalanceSimpleRecognizer "misc4" p
    -- REFACTOR: code copied from rule misc2
  where -- currently, not symmetric
    p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do

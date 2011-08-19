@@ -28,7 +28,7 @@ module Common.Transformation
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doAfter
    , siblingOf, transformations, getRewriteRules
-   , ruleRecognizer, useRecognizer
+   , ruleRecognizer, useRecognizer, useSimpleRecognizer
      -- * Lifting
    , liftRule, liftTrans, liftRuleIn, liftTransIn
      -- * QuickCheck
@@ -347,8 +347,11 @@ transRecognizer eq trans a b =
  where
    noArg c = if c then Just [] else Nothing 
 
-useRecognizer :: (a -> a -> Bool) -> Transformation a -> Transformation a
-useRecognizer p = Recognizer (\x y -> guard (p x y) >> return [])
+useRecognizer :: (a -> a -> Maybe ArgValues) -> Transformation a -> Transformation a
+useRecognizer = Recognizer
+
+useSimpleRecognizer :: (a -> a -> Bool) -> Transformation a -> Transformation a
+useSimpleRecognizer p = useRecognizer $ \x y -> guard (p x y) >> return []
 
 -----------------------------------------------------------
 --- Lifting

@@ -112,7 +112,7 @@ calculate = makeSimpleRule (linbal, "calculate") $ checkForChange $
 removeDivision :: Rule (Equation Expr)
 removeDivision = doAfter (fmap distributeTimes) $
    describe "remove division" $ 
-   makeRule (linbal, "remove-div") $ useRecognizer isTimesT $
+   makeRule (linbal, "remove-div") $ useSimpleRecognizer isTimesT $
    supply1 "factor" removeDivisionArg timesT 
  where
    removeDivisionArg (lhs :==: rhs) = do
@@ -158,7 +158,7 @@ divisionToFraction =
 divideCommonFactor :: Rule (Equation Expr)
 divideCommonFactor = doAfter (fmap distributeDiv) $
    describe "divide by common factor" $ 
-   makeRule (linbal, "smart-div") $ useRecognizer isTimesT $
+   makeRule (linbal, "smart-div") $ useSimpleRecognizer isTimesT $
    supply1 "factor" getArg divisionT
  where
    getArg (lhs :==: rhs) 
@@ -184,7 +184,7 @@ varLeftPlus  = varLeft False (linbal, "var-left-plus")
 
 varLeft :: IsId a => Bool -> a -> Rule (Equation Expr)
 varLeft useMinus rid = doAfter (fmap collectLocal) $
-   makeRule rid $ useRecognizer isPlusT $
+   makeRule rid $ useSimpleRecognizer isPlusT $
    supply1 "term" varLeftArg (if useMinus then minusT else plusT)
  where
     varLeftArg :: Equation Expr -> Maybe Expr
@@ -200,7 +200,7 @@ conRightPlus  = conRight False (linbal, "con-right-plus")
 
 conRight :: IsId a => Bool -> a -> Rule (Equation Expr)
 conRight useMinus rid = doAfter (fmap collectLocal) $
-   makeRule rid $ useRecognizer isPlusT $
+   makeRule rid $ useSimpleRecognizer isPlusT $
    supply1 "term" conRightArg (if useMinus then minusT else plusT)
  where
     conRightArg :: Equation Expr -> Maybe Expr
@@ -224,7 +224,7 @@ flipped rid = liftRule flipView . changeId (const (newId rid))
 
 scaleToOne :: Rule (Equation Expr)
 scaleToOne = doAfter (fmap distributeDiv) $ 
-   makeRule (linbal, "scale-to-one") $ useRecognizer isTimesT $ 
+   makeRule (linbal, "scale-to-one") $ useSimpleRecognizer isTimesT $ 
    supply1 "factor" scaleToOneArg divisionT
  where
    scaleToOneArg :: Equation Expr -> Maybe Expr

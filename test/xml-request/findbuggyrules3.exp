@@ -1,6 +1,6 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.7.7 (0)">
   <list>
-    <elem ruleid="algebra.equations.buggy.abc.minus-b"/>
+    <elem ruleid="algebra.equations.buggy.abc.minus-b" location="[]"/>
   </list>
 </reply>
 

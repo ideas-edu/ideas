@@ -23,7 +23,7 @@ module Common.Exercise
    , testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
    , randomTerm, randomTermWith, ruleset
-   , makeContext, inContext, recognizeRule, ruleIsRecognized
+   , makeContext, inContext, recognizeRule
    , ruleOrderingWith, ruleOrderingWithId
    , Examples, mapExamples, Difficulty(..), readDifficulty, level
    , hasTypeable, useTypeable, castFrom, castTo
@@ -225,9 +225,6 @@ differenceEqual :: Exercise a -> a -> a -> Maybe (a, a)
 differenceEqual ex a b = do
    v <- hasTermView ex
    Diff.differenceEqualWith v (simpleEquivalence ex) a b
-
-ruleIsRecognized :: Exercise a -> Rule (Context a) -> Context a -> Context a -> Bool
-ruleIsRecognized ex r ca = not . null . recognizeRule ex r ca
 
 -- Recognize a rule at (possibly multiple) locations
 recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [(Location, ArgValues)]

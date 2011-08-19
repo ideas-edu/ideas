@@ -149,9 +149,11 @@ ready state = isReady (exercise state) (stateTerm state)
 stepsremaining :: State a -> Either String Int
 stepsremaining = mapSecond derivationLength . derivation Nothing
 
-findbuggyrules :: State a -> a -> [Rule (Context a)]
+findbuggyrules :: State a -> a -> [(Rule (Context a), Location, ArgValues)]
 findbuggyrules state a =
-   let ex      = exercise state
-       buggies = filter isBuggyRule (ruleset ex)
-       p r     = ruleIsRecognized ex r (stateContext state) (inContext ex a)
-   in filter p buggies
+   [ (r, loc, as) 
+   | r         <- filter isBuggyRule (ruleset ex)
+   , (loc, as) <- recognizeRule ex r (stateContext state) (inContext ex a)
+   ]
+ where
+   ex = exercise state

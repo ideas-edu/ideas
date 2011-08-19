@@ -142,7 +142,8 @@ buggyBalanceRecognizer n = bugbalRule n (const Nothing)
 -- generalized helper
 bugbalRule :: IsId n => n -> (a -> Maybe a) -> (a -> a -> Bool) -> Rule a
 bugbalRule n f p = 
-   buggyRule $ makeRule (linbal, "buggy", n) $ useRecognizer p $ makeTrans f
+   let -- g x y = if p x y then Just [ArgValue (makeArgDescr "the answer") (42 :: Int)] else Nothing
+   in buggyRule $ makeRule (linbal, "buggy", n) $ useSimpleRecognizer p $ makeTrans f
 
 ------------------------------------------------------------
 -- Helpers

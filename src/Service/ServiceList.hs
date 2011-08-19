@@ -123,7 +123,7 @@ findbuggyrulesS = makeService "findbuggyrules"
    "Search for common misconceptions (buggy rules) in an expression (compared \
    \to the current state). It is assumed that the expression is indeed not \
    \correct. This service has been superseded by the diagnose service." $ 
-   findbuggyrules ::: stateType :-> Term :-> listType Rule
+   findbuggyrules ::: stateType :-> Term :-> listType (tuple3 Rule Location (List ArgValueTp))
 
 submitS :: Service
 submitS = deprecate $ makeService "submit" 

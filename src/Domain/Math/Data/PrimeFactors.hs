@@ -85,7 +85,6 @@ instance Num PrimeFactors where
       | a==0         = PF b m2 -- prevent recomputing prime factors
       | b==0         = PF a m1
       | otherwise    = fromInteger (a+b)
-   a - b             = a + negate b
    PF a m1 * PF b m2
       | a==0 || b==0 = 0
       | otherwise    = PF (a*b) (IM.unionWith (+) m1 m2)

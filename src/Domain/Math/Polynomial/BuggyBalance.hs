@@ -348,9 +348,9 @@ rule2231 = describe "2.2.3.1: Links en rechts hetzelfde vermenigvuldigen; links 
    p (a1 :==: a2) (b1 :==: b2) = do
       dl <- diffTimes a1 b1
       dr <- diffTimes a2 b2
-      if (dl == 1 && dr /= 1)
+      if dl == 1 && dr /= 1
         then return (factorArg dr)
-        else if (dl /= 1 && dr == 1)
+        else if dl /= 1 && dr == 1
                then return (factorArg dl)
                else Nothing
       
@@ -382,9 +382,9 @@ rule227 = describe "2.2.7: Links en rechts hetzelfde vermenigvuldigen; een kant 
       dr <- diffTimes a2 b2
       rl <- match rationalView dl
       rr <- match rationalView dr
-      if (rl == 1 && rr /= 1 && numerator rr == 1)
+      if rl == 1 && rr /= 1 && numerator rr == 1
         then return (factorArg (fromIntegral (denominator rr)))
-        else if (rl /= 1 && rr == 1 && numerator rl == 1)
+        else if rl /= 1 && rr == 1 && numerator rl == 1
                 then return (factorArg (fromIntegral (denominator rl)))
                 else Nothing
       

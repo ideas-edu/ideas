@@ -15,6 +15,7 @@ import Common.Library
 import Control.Monad
 import Common.Utils (Some(..), safeHead)
 import Data.List
+import Data.Maybe
 import Text.HTML
 
 ruleToHTML :: Some Exercise -> Rule a -> HTMLBuilder
@@ -47,9 +48,8 @@ showTerm (Some ex) = text . rec
          _ -> concatMap (either id recp) $  
             case getSpine term of
                (TCon s, xs) -> 
-                  case specialSymbol s xs of
-                     Just ys -> ys
-                     Nothing -> spaced (Left (show s) : map Right xs)
+                  let txt = spaced (Left (show s) : map Right xs)
+                  in fromMaybe txt (specialSymbol s xs)
                (x, xs) -> spaced (map Right (x:xs))
    
    recp term = parIf (isApp term) (rec term)

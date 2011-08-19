@@ -45,7 +45,7 @@ eqView = makeView (either (Just . fromBool) f . fromWithBool) (fmap g)
       (s, p) <- match (polyViewWith rationalView) (lhs-rhs)
       case degree p of
          0 -> Just $ fromBool $ coefficient 0 p == 0
-         1 -> Just $ singleton $ (s, - coefficient 0 p / coefficient 1 p)
+         1 -> Just $ singleton (s, - coefficient 0 p / coefficient 1 p)
          _ -> Nothing
    g (s, r) = Var s :==: fromRational r
 
@@ -76,12 +76,12 @@ cleaner = join . fmap (trivial . fmap cleanerExpr)
 cleanerExpr :: Expr -> Expr
 cleanerExpr = transform f -- no fixpoint is needed
  where
-   f (a :/: Nat 1) = f $ a
+   f (a :/: Nat 1) = f a
    f (a :/: Negate (Nat 1)) = f $ Negate a
    f (Negate a :/: Negate b) = f (a/b)
    f (a :/: Negate b) = f $ Negate (a/b)
    f (Negate a :/: b) = f $ Negate (a/b)
-   f (Negate (Negate a)) = f $ a
+   f (Negate (Negate a)) = f a
    f e = cleanSum (cleanProduct (simplify rationalView e))
     
    cleanSum = 

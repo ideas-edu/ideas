@@ -1,4 +1,4 @@
-{-# OPTIONS -XTypeSynonymInstances #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -53,7 +53,7 @@ instance Functor RE where
    fmap f = foldRE (EmptySet, Epsilon, Atom . f, Option, Star, Plus, (:*:), (:|:))
 
 instance Arbitrary RegExp where
-   arbitrary = sized (arbRE $ oneof $ map return ["a", "b", "c", "d"])
+   arbitrary = sized $ arbRE $ elements ["a", "b", "c", "d"]
 
 instance CoArbitrary RegExp where
    coarbitrary = foldRE 

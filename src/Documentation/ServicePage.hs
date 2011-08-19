@@ -1,4 +1,4 @@
-{-# OPTIONS -XRankNTypes #-}
+{-# LANGUAGE RankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -56,7 +56,7 @@ servicePage xs s = do
             bold $ text "Reply:"
             highlightXML True xmlReply
             unless xmlTest $ 
-               spanClass "error" $ do
+               spanClass "error" $
                   bold $ text "Error: invalid request/reply pair"
 
 -----------------------------------------------------------------------
@@ -100,7 +100,7 @@ tryAll xs =
    in liftM concat (mapM f xs)
       
 newState :: Monad m => Exercise a -> String -> m (TypedValue a)
-newState ex s = do
+newState ex s =
    case parser ex s of
       Left msg -> fail ("newState: " ++ msg)
       Right a  -> return (emptyState ex a ::: stateType)

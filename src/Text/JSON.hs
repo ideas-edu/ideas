@@ -22,7 +22,7 @@ module Text.JSON
 
 import qualified Text.ParserCombinators.Parsec.Token as P
 import qualified Text.UTF8 as UTF8
-import Data.List (intersperse)
+import Data.List (intercalate)
 import Data.Maybe
 import Control.Monad.Error
 import Test.QuickCheck
@@ -50,9 +50,9 @@ showCompact json =
       Number n  -> show n
       String s  -> "\"" ++ escape s ++ "\""
       Boolean b -> if b then "true" else "false"
-      Array xs  -> squareBrackets $ concat $ intersperse ", " $ map showCompact xs
+      Array xs  -> squareBrackets $ intercalate ", " $ map showCompact xs
       Object xs -> let f (k, v) = show k ++ ": " ++ showCompact v
-                   in curlyBrackets  $ concat $ intersperse ", " $ map f xs
+                   in curlyBrackets  $ intercalate ", " $ map f xs
       Null      -> "null"
   
 -- Escape double quote and backslash, and convert to UTF8 encoding
@@ -279,7 +279,7 @@ arbJSON n
 myStringGen :: Gen String
 myStringGen = do 
    n <- choose (1, 10)
-   replicateM n $ oneof $ map return $ 
+   replicateM n $ elements $
       ['A' .. 'Z'] ++ ['a' .. 'z'] ++ ['0' .. '9']
    
 propEncoding :: Property

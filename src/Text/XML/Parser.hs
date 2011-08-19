@@ -54,7 +54,7 @@ document = do
           case mxml of
              Just (a, b, c) -> (Just a, b, c)
              Nothing        -> (Nothing, Nothing, Nothing)
-   return $ XMLDoc
+   return XMLDoc
       { D.versionInfo = ver
       , D.encoding    = enc
       , D.standalone  = sa

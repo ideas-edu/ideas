@@ -413,7 +413,7 @@ smartApplyRule r a = do
    xss <- mapM (`smartApplyTrans` a) (transformations r)
    case concat xss of
       [] -> return Nothing
-      xs -> oneof $ map (return . Just) xs
+      xs -> elements $ map Just xs
 
 smartApplyTrans :: Transformation a -> a -> Gen [a]
 smartApplyTrans trans a =

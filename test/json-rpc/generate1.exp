@@ -2,11 +2,11 @@
    "result": [
       "relationalgebra.cnf",
       "[]",
-      "I \\/ (V- ; (q /\\ r) ; (s ! q)) /\\ q ! r",
+      "I \\/ (V- ; (s /\\ q) ; (s ! q)) /\\ r ! q",
       {
       }
    ],
    "error": null,
    "id": 421,
-   "version": "0.6.3 (0)"
+   "version": "0.7.7 (0)"
 }

@@ -133,7 +133,7 @@ gramSchmidt (VS xs) = VS (reverse (foldr op [] xs))
 -- Vector operations
 
 showVectorWith :: (a -> String) -> Vector a -> String
-showVectorWith f (V xs) = "(" ++ concat (intersperse "," (map f xs)) ++ ")"
+showVectorWith f (V xs) = "(" ++ intercalate "," (map f xs) ++ ")"
 
 toList :: Vector a -> [a]
 toList (V xs) = xs

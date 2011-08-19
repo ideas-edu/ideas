@@ -56,8 +56,8 @@ selfCheck dir = do
          forM_ list $ \(Some ex) ->
             exerciseTestSuite ex
       
-      suite "Black box tests" $ do 
-         liftIO (blackBoxTests run dir) >>= id
+      suite "Black box tests" $
+         join (liftIO (blackBoxTests run dir))
 
 -- Returns the number of tests performed
 blackBoxTests :: (DomainReasoner Bool -> IO Bool) -> String -> IO TestSuite

@@ -66,7 +66,7 @@ makeSymbolList :: ContentDictionary -> String
 makeSymbolList cd = unlines 
    [ "-- | List of symbols defined in " ++ dictionaryName cd ++ " dictionary" 
    , name ++ " :: [Symbol]"
-   , name ++ " = [" ++ concat (intersperse ", " list) ++ "]"
+   , name ++ " = [" ++ intercalate ", " list ++ "]"
    ]
  where
    name = dictionaryName cd ++ "List"

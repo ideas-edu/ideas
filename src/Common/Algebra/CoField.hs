@@ -13,7 +13,7 @@
 module Common.Algebra.CoField 
    ( CoSemiRing(..), CoRing(..), CoField(..)
    , SmartField(..)
-   , (.+.), (.-.), neg, (.*.), (./.), recip
+   , (.+.), (.-.), neg, (.*.), (./.)
    ) where
 
 import Common.Algebra.Group
@@ -22,7 +22,6 @@ import Common.Algebra.CoGroup
 import Common.Algebra.SmartGroup
 import Control.Arrow ((***))
 import Control.Monad
-import Data.Maybe
 import qualified Control.Applicative as A
 
 class CoSemiRing a where
@@ -130,5 +129,5 @@ a .*. b = fromSmartField $ SmartField a <*> SmartField b
 (./.) :: (CoField a, Field a) => a -> a -> a
 a ./. b = fromSmartField $ SmartField a </> SmartField b
 
-myrecip :: (CoField a, Field a) => a -> a
-myrecip = fromSmartField . timesInverse . SmartField
+-- myrecip :: (CoField a, Field a) => a -> a
+-- myrecip = fromSmartField . timesInverse . SmartField

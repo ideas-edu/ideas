@@ -55,10 +55,10 @@ equalRegExpA p q = rec p == rec q
 
 startFormGen :: Gen RegExp
 startFormGen = do
-   i  <- oneof $ map return [1..10]
+   i  <- elements [1..10]
    xs <- replicateM i $ do
-      j  <- oneof $ map return [1..5]
-      ys <- replicateM j $ oneof $ map (return . Atom . return) "abcd"
+      j  <- elements [1..5]
+      ys <- replicateM j $ elements $ map (Atom . return) "abcd"
       return $ foldr1 (:*:) ys
    return $ foldr1 (:|:) xs   
 

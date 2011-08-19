@@ -36,7 +36,7 @@ integerGenerator = symbolGenerator extras numSymbols
       e2 <- integerGenerator (n `div` 2)
       case (match integerView e1, match integerView e2) of
          (Just a, Just b) 
-            | b == 0 -> oneof $ map return
+            | b == 0 -> elements
                  [ e1 :/: (e2 + 1), e1 :/: (e2 - 1)
                  , e1 :/: (1 + e2), e1 :/: (1 - e2) 
                  ]
@@ -46,7 +46,7 @@ integerGenerator = symbolGenerator extras numSymbols
                 i <- arbitrary
                 let m1 = fromInteger ((a `mod` b) + i*b)
                     m2 = fromInteger (b - (a `mod` b) + i*b)
-                oneof $ map return 
+                elements 
                    [ (e1 - m1) :/: e2, (m1 - e1) :/: e2
                    , (e1 + m2) :/: e2, (m2 + e1) :/: e2
                    ]

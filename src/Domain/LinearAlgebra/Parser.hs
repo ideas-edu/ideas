@@ -79,4 +79,4 @@ ppStringMatrix = format . rows
    format m = let ws = foldr (zipWith max . map length) (repeat 0) m 
                   align i s = take i (s ++ repeat ' ')
                   par s = "(" ++ s ++ ")"
-              in unlines $ map (par . concat . intersperse ", " . zipWith align ws) m
+              in unlines $ map (par . intercalate ", " . zipWith align ws) m

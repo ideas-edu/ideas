@@ -40,15 +40,19 @@ makeRulePages dir = do
           | Some ex <- exs
           , r <- ruleset ex
           ]
-   forM_ (M.toList ruleMap) $ \(ruleId, list@(Some ex:_)) -> do
-      let noExamples = Some (EI ex M.empty) 
-          level      = length (qualifiers ruleId) + 1
-          usedIn     = sortBy compareId [ getId ex1 | Some ex1 <- list ]
-      case M.findWithDefault noExamples (getId ex) exMap of
-         Some (EI ex1 e) -> do
-            forM_ (getRule ex1 ruleId) $ \r ->
-               generatePageAt level dir (ruleFile ruleId) $
-                  rulePage ex1 e usedIn r
+   forM_ (M.toList ruleMap) $ \(ruleId, list) -> 
+      case list of
+         [] -> return ()
+         Some ex:_ -> 
+            case M.findWithDefault noExamples (getId ex) exMap of
+               Some (EI ex1 e) ->
+                  forM_ (getRule ex1 ruleId) $ \r ->
+                     generatePageAt lev dir (ruleFile ruleId) $
+                        rulePage ex1 e usedIn r
+          where
+            noExamples = Some (EI ex M.empty) 
+            lev        = length (qualifiers ruleId) + 1
+            usedIn     = sortBy compareId [ getId ex1 | Some ex1 <- list ]
 
 rulePage :: Exercise a -> ExampleMap a -> [Id] ->  Rule (Context a) -> HTMLBuilder
 rulePage ex exMap usedIn r = do
@@ -63,8 +67,8 @@ rulePage ex exMap usedIn r = do
       ruleToHTML (Some ex) r
 
    h3 "Used in exercises"
-   let f a = link (up ups ++ exercisePageFile a) (tt $ text $ show a)
-       ups = length (qualifiers r) + 1
+   let f a = link (up upn ++ exercisePageFile a) (tt $ text $ show a)
+       upn = length (qualifiers r) + 1
    ul $ map f usedIn
 
    -- Examples
@@ -73,7 +77,7 @@ rulePage ex exMap usedIn r = do
       h3 "Examples"
       forM_ (take 3 ys) $ \(a, b) -> para $ divClass "step" $ pre $ do 
          forTerm ex (inContext ex a)
-         forStep ups (getId r, emptyEnv)
+         forStep upn (getId r, emptyEnv)
          forTerm ex (inContext ex b)
          
    -- FMPS

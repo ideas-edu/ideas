@@ -17,7 +17,7 @@ module Domain.Math.Expr.Views
 import Common.Algebra.CoField
 import Common.Algebra.Group
 import Common.Utils.Uniplate
-import Prelude hiding (recip, (^))
+import Prelude hiding ((^))
 import Common.Library
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbols
@@ -72,7 +72,7 @@ sumView = describe "View an expression as the sum of a list of elements, \
    \inverse (both unary negation, and binary subtraction)." $
    "math.sum" @> sumEP
  where
-   sumEP = (($ []) . f False) <-> (foldl (.+.) 0)
+   sumEP = (($ []) . f False) <-> foldl (.+.) 0
 
    f n (a :+: b)  = f n a . f n b
    f n (a :-: b)  = f n a . f (not n) b
@@ -84,7 +84,7 @@ sumView = describe "View an expression as the sum of a list of elements, \
 simpleSumView :: Isomorphism Expr [Expr]
 simpleSumView = sumEP
  where
-   sumEP = f <-> (foldl (.+) 0)
+   sumEP = f <-> foldl (.+) 0
 
    f (a :+: b)           = f a <> f b
    f (a :-: b)           = f a <> f (-b)

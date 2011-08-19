@@ -188,7 +188,7 @@ transformOrList f = foldMap (toOrList . Data.Traversable.mapM (transformM f))
 takeRoot :: Integer -> Integer -> [Integer]
 takeRoot n x | n == 0    = [0]
              | n == 1    = if x > 0 && odd x then [1] else [1, -1]
-             | n == (-1) = if x > 0 && odd x then [-1] else []
+             | n == (-1) = [-1 | x > 0 && odd x]
              | x == 1    = [n]
              | x > 0     = maybe [] roots $ lookup x $ map swap $ PF.allPowers (abs n) 
              | otherwise = []

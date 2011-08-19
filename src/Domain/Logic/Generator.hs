@@ -64,7 +64,7 @@ generateLevel dif
 -- Use the propositions with 3-6 steps
 easyGenerator :: Gen SLogic 
 easyGenerator = do
-   n  <- oneof [return 2, return 4] -- , return 8]
+   n  <- elements [2, 4] -- , return 8]
    sizedGen True varGen n
 
 -- Use the propositions with 4-12 steps
@@ -78,7 +78,7 @@ normalGenerator = do
 difficultGenerator :: Gen SLogic
 difficultGenerator = do
    let vs = ShowString "s" : varList
-   p0 <- sizedGen False (oneof $ map return vs) 4
+   p0 <- sizedGen False (elements vs) 4
    p1 <- preventSameVar vs p0
    return (removePartsInDNF p1)
 
@@ -86,7 +86,7 @@ varList :: [ShowString]
 varList = map ShowString ["p", "q", "r"]
 
 varGen :: Gen ShowString
-varGen = oneof $ map return varList
+varGen = elements varList
 
 sizedGen :: Bool -> Gen a -> Int -> Gen (Logic a)
 sizedGen constants gen = go 
@@ -115,7 +115,7 @@ preventSameVar xs = rec
  where
    rec p = case holes p of
               [(Var a, _), (Var b, update)] | a==b -> do
-                 c <- oneof $ map return $ filter (/=a) xs
+                 c <- elements $ filter (/=a) xs
                  return $ update (Var c)
               _ -> descendM rec p
 

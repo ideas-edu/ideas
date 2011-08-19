@@ -31,23 +31,23 @@ import Text.HTML
 makeExercisePage :: String -> Exercise a -> DomainReasoner ()
 makeExercisePage dir ex = do
    let make     = makeId ex
-       makeId a = generatePageAt (length (qualifiers a)) dir . ($ (getId a))
+       makeId a = generatePageAt (length (qualifiers a)) dir . ($ getId a)
        exFile   = dir ++ "/" ++ diagnosisExampleFile (getId ex)
 
    exampleFileExists <- liftIO (doesFileExist exFile)
 
-   make exercisePageFile     (exercisePage exampleFileExists dir ex)
+   make exercisePageFile     (exercisePage exampleFileExists ex)
    make exerciseStrategyFile (strategyPage ex)
    unless (null (examples ex)) $ do
-       make exerciseDerivationsFile (derivationsPage dir ex)
+       make exerciseDerivationsFile (derivationsPage ex)
        liftIO $ makeOpenMathDerivations dir ex
-   when (exampleFileExists) $ do
+   when exampleFileExists $ do
       ef <- liftIO (readExampleFile exFile)
       make exerciseDiagnosisFile (diagnosisPage ef ex)
     `catchError` \_ -> return ()
 
-exercisePage :: Bool -> String -> Exercise a -> HTMLBuilder
-exercisePage exampleFileExists dir ex = do
+exercisePage :: Bool -> Exercise a -> HTMLBuilder
+exercisePage exampleFileExists ex = do
    idboxHTML "exercise" exid
    
    h2 "1. General information"
@@ -80,22 +80,22 @@ exercisePage exampleFileExists dir ex = do
       ]
 
    h2 "2. Rules"
-   let rs  = rulesInStrategy (strategy ex)
-       ups = up (length (qualifiers ex)) 
-       f r = [ link (ups ++ ruleFile r) $ ttText (showId r)
-             , text $ showBool $ isBuggyRule r
-             , text $ showBool $ hasArguments r
-             , text $ showBool $ r `elem` rs
-             , when (isRewriteRule r) $
-                  ruleToHTML (Some ex) r
-             ]
+   let rs   = rulesInStrategy (strategy ex)
+       goUp = up (length (qualifiers ex)) 
+       f r  = [ link (goUp ++ ruleFile r) $ ttText (showId r)
+              , text $ showBool $ isBuggyRule r
+              , text $ showBool $ hasArguments r
+              , text $ showBool $ r `elem` rs
+              , when (isRewriteRule r) $
+                   ruleToHTML (Some ex) r
+              ]
    table True 
       ( [ text "Rule name", text "Buggy", text "Args" 
         , text "Used", text "Rewrite rule"
         ]
       : map f (ruleset ex)
       )
-   when exampleFileExists $ do
+   when exampleFileExists $
       para $ link (up len ++ exerciseDiagnosisFile exid) $ do
          br
          text "See diagnosis examples"
@@ -109,9 +109,10 @@ exercisePage exampleFileExists dir ex = do
  where
    exid  = getId ex
    len   = length (qualifiers ex)
+   {- 
    trees = [ mapFirst getId (derivationTree (strategy ex) (inContext ex a)) 
            | (_, a) <- examples ex 
-           ]
+           ] -}
 
 strategyPage :: Exercise a -> HTMLBuilder
 strategyPage ex = do
@@ -129,8 +130,8 @@ strategyPage ex = do
  where
    title = "Strategy for " ++ showId ex
 
-derivationsPage :: String -> Exercise a -> HTMLBuilder
-derivationsPage dir ex = do
+derivationsPage :: Exercise a -> HTMLBuilder
+derivationsPage ex = do
    h1 "Examples"
    forM_ (zip [1::Int ..] (examples ex)) $ \(i, (_, a)) -> do
       h2 (show i ++ ".")
@@ -139,13 +140,13 @@ derivationsPage dir ex = do
 derivationHTML :: Exercise a -> a -> HTMLBuilder
 derivationHTML ex a = divClass "derivation" $ do 
    when (isJust (hasTermView ex)) $ 
-      let file = up ups ++ "derivations/" ++ showId ex ++ ".xml"
+      let file = up upn ++ "derivations/" ++ showId ex ++ ".xml"
       in divClass "mathml" $ link file $ text "MathML"
-   pre $ derivationM (forStep ups) (forTerm ex) der
+   pre $ derivationM (forStep upn) (forTerm ex) der
    unless (ok der) $
       divClass "error" $ text "<<not ready>>"
  where
-   ups = length (qualifiers ex)
+   upn = length (qualifiers ex)
    der = derivationPrevious (derivationDiffEnv (defaultDerivation ex a))
    ok  = maybe False (isReady ex) . fromContext . lastTerm
 
@@ -177,15 +178,14 @@ diagnosisPage ef ex = do
    diagnoseItem i (t0, t1, expl) = do
       h2 (show i ++ ".")
       preText (t0 ++ "\n  =>\n" ++ t1)
-      para $ do
-         unless (null expl) $ do 
-            bold $ text "Description:"
-            space
-            text expl
-            br
-            bold $ text "Diagnosis:"
-            space
-            text (getDiagnosis t0 t1)
+      unless (null expl) $ para $ do 
+         bold $ text "Description:"
+         space
+         text expl
+         br
+         bold $ text "Diagnosis:"
+         space
+         text (getDiagnosis t0 t1)
       
    getDiagnosis t0 t1 = 
       case (parser ex t0, parser ex t1) of

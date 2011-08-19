@@ -81,7 +81,7 @@ hulpgen2 :: Int -> Gen RelAlg
 hulpgen2 n = liftM3 template7 (arbInvNotMol 1) (arbRelAlg n) (arbRelAlg n)
 
 arbInvNotMol :: Int -> Gen RelAlg
-arbInvNotMol 0 = frequency [(10, liftM Var (oneof $ map return relAlgVars)), (1, return V), (1, return empty), (1, return I)]
+arbInvNotMol 0 = frequency [(10, liftM Var (elements relAlgVars)), (1, return V), (1, return empty), (1, return I)]
 arbInvNotMol n = frequency [ (10, arbInvNotMol 0), (4, binop (:.:)), (4, binop (:+:)), (2, unop Not), (2, unop Inv) ]
  where
    binop op = liftM2 op rec rec
@@ -92,4 +92,4 @@ arbMaybeInvNotMol :: Int -> Gen (Maybe RelAlg)
 arbMaybeInvNotMol n = frequency [(3, liftM Just (arbInvNotMol n)), (1, return Nothing)]
 
 arbVar :: Gen RelAlg
-arbVar = liftM Var (oneof $ map return relAlgVars)
+arbVar = liftM Var (elements relAlgVars)

@@ -421,11 +421,11 @@ exposeSameFactor :: Rule (Equation Expr)
 exposeSameFactor = describe "expose same factor" $ 
    liftRule (bothSidesView (toView productView)) $ 
    makeSimpleRuleList (polyeq, "expose-factor") $ \((bx, xs) :==: (by, ys)) -> do 
-      (nx, ny) <- [ (xs, new) | x <- xs, suitable x, new <- exposeList x ys ] ++
-                  [ (new, ys) | y <- ys, suitable y, new <- exposeList y xs ]
+      (nx, ny) <- [ (xs, new) | x <- xs, isOk x, new <- exposeList x ys ] ++
+                  [ (new, ys) | y <- ys, isOk y, new <- exposeList y xs ]
       return ((bx, nx) :==: (by, ny))
  where
-   suitable p = fromMaybe False $ do 
+   isOk p = fromMaybe False $ do 
       (_, _, b) <- match (linearViewWith rationalView) p
       guard (b /= 0)
       return True

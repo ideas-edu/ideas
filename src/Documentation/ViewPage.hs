@@ -70,6 +70,5 @@ viewPage list (ViewPackage f v) = do
       g (_, _, _, c, _) = c
    
    present (ok, t, b, c, descr) = 
-      let m x  = maybe "-" show x 
-          mark = if ok then id else spanClass "error"
-      in map (mark . text) [t, m b, m c, descr]
+      let mark = if ok then id else spanClass "error"
+      in map (mark . text) [t, maybe "-" show b, maybe "-" show c, descr]

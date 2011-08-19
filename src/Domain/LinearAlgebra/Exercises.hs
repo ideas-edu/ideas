@@ -124,19 +124,17 @@ arbMatrix :: Num a => Gen (Matrix a)
 arbMatrix = fmap (fmap fromInteger) arbNiceMatrix
    
 arbUpperMatrix :: (Enum a, Num a) => Gen (Matrix a)
-arbUpperMatrix = do
-   a <- oneof $ map return [-5 .. 5]
-   b <- oneof $ map return [-5 .. 5]
-   c <- oneof $ map return [-5 .. 5]
-   return $ makeMatrix [[1, a, b], [0, 1, c], [0, 0, 1]]
+arbUpperMatrix = threeNums $ \a b c ->  
+   makeMatrix [[1, a, b], [0, 1, c], [0, 0, 1]]
 
 arbAugmentedMatrix :: (Enum a, Num a) => Gen (Matrix a)
-arbAugmentedMatrix = do
-   a <- oneof $ map return [-5 .. 5]
-   b <- oneof $ map return [-5 .. 5]
-   c <- oneof $ map return [-5 .. 5]
-   return $ makeMatrix [[1, 0, 0, 1], [a, 1, 0, 1], [b, c, 1, 1]]
-   
+arbAugmentedMatrix = threeNums $ \a b c -> 
+   makeMatrix [[1, 0, 0, 1], [a, 1, 0, 1], [b, c, 1, 1]]
+
+threeNums :: (Enum a, Num a) => (a -> a -> a -> b) -> Gen b
+threeNums f = let m = elements [-5 .. 5]
+              in liftM3 f m m m
+
 arbNiceMatrix :: (Enum a, Num a) => Gen (Matrix a)
 arbNiceMatrix = do
    m1 <- arbUpperMatrix

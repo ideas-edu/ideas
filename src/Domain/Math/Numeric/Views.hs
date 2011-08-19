@@ -174,13 +174,13 @@ mixedFractionView = "num.mixed-fraction" @> makeView f (sign g)
    sign k a | a < 0     = negate (k (abs a))
             | otherwise = k a
    
-   g mixed 
+   g a 
       | frac  == 0 = fromInteger  whole
       | whole == 0 = fromRational frac
       | otherwise  = function mixedFractionSymbol $ map fromInteger parts
     where
-      whole = MF.wholeNumber mixed
-      frac  = MF.fractionPart mixed
+      whole = MF.wholeNumber a
+      frac  = MF.fractionPart a
       parts = [whole, numerator frac, denominator frac]
 
 mixedFractionNF :: View Expr MF.MixedFraction

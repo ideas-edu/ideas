@@ -2,11 +2,11 @@
    "result": [
       "logic.propositional.dnf",
       "[]",
-      "(r /\\ q) -> (q -> F)",
+      "(p || (q -> p)) -> (p || r || r)",
       {
       }
    ],
    "error": null,
    "id": 421,
-   "version": "0.6.3 (0)"
+   "version": "0.7.7 (0)"
 }

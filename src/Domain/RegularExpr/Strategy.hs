@@ -37,7 +37,7 @@ ruleLeftFactor1 = rule "LeftFactor1" $ \a x y ->
    (a :*: x) :|: (a :*: y)  :~>  a :*: (x :|: y)
    
 ruleLeftFactor2 :: Rule RegExp
-ruleLeftFactor2 = ruleList "LeftFactor2" $
+ruleLeftFactor2 = ruleList "LeftFactor2"
    [ \a x -> (a :*: x) :|: a  :~>  a :*: Option x
    , \a x -> a :|: (a :*: x)  :~>  a :*: Option x
    ]

@@ -193,4 +193,4 @@ expandStrategy = cleanUpStrategyAfter (applyTop f . change g) $
  where -- mergeAlike
    f = transform (simplify (listOfPowerFactors "x" rationalView)) 
      -- . cleanUpSimple
-   g a = simplify (polyRelaxedForm rationalView) a
+   g = simplify (polyRelaxedForm rationalView)

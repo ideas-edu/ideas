@@ -42,14 +42,14 @@ polynomialDegreeGen d n
       d1 <- choose (0, d)
       a <- rec d1
       b <- rec d
-      oneof $ map return [a :+: b, b :+: a, a :-: b, b :-: a, Negate b]
+      elements [a :+: b, b :+: a, a :-: b, b :-: a, Negate b]
    timesGen = do
       d1 <- choose (0, d)
       a  <- rec d1
       b  <- rec (d-d1)
       return (a :*: b)
    powerGen = do
-      i <- oneof [ return i | i <- [2..d], d `mod` i == 0 ]
+      i <- elements [ i | i <- [2..d], d `mod` i == 0 ]
       a <- rec (d `div` i)
       return (a ^ fromIntegral i)
       

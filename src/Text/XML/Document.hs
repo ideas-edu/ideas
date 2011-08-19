@@ -159,15 +159,15 @@ instance Show ContentSpec where
          Empty -> "EMPTY"
          Any   -> "ANY"
          Mixed b ns -> 
-            let txt = concat (intersperse "|" ("#PCDATA":ns))
+            let txt = intercalate "|" ("#PCDATA":ns)
             in parenthesize txt ++ (if b then "*" else "")
          Children cp -> show cp
 
 instance Show CP where
    show cp =
       case cp of
-         Choice xs      -> parenthesize (concat (intersperse "|" (map show xs)))
-         Sequence xs    -> parenthesize (concat (intersperse "," (map show xs)))
+         Choice xs      -> parenthesize (intercalate "|" (map show xs))
+         Sequence xs    -> parenthesize (intercalate "," (map show xs))
          QuestionMark c -> show c ++ "?"
          Star c         -> show c ++ "*"
          Plus c         -> show c ++ "+"
@@ -184,8 +184,8 @@ instance Show AttType where
          NmTokenType  -> "NMTOKEN"
          NmTokensType -> "NMTOKENS"
          StringType   -> "CDATA"
-         EnumerationType xs -> parenthesize (concat (intersperse "|" xs))
-         NotationType xs    -> "NOTATION " ++ parenthesize (concat (intersperse "|" xs))
+         EnumerationType xs -> parenthesize (intercalate "|" xs)
+         NotationType xs    -> "NOTATION " ++ parenthesize (intercalate "|" xs)
 
 instance Show DefaultDecl where
    show defaultDecl =

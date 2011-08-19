@@ -136,7 +136,7 @@ arbRelations as = promote (\s -> coarbitrary s (arbRelation as))
 -- Suitable for small domains (e.g., with just 2 elements)
 arbRelation :: Eq a => [a] -> Gen (Relation a)
 arbRelation as = do
-   let f _ = oneof $ map return [True, False]
+   let f _ = elements [True, False]
    xs <- filterM f (cartesian as as)
    return (S.fromAscList xs)
 

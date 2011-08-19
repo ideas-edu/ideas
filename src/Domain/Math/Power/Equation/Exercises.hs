@@ -95,7 +95,7 @@ higherPowerEqExercise = makeExercise
                        higherPowerEquations ++ take 3 rootEquations
   , ready          = predicateView relationsSolvedForm
   , suitable       = predicateView (traverseView normPowerEqView)
-  , equivalence    = withoutContext (viewEquivalent ((normPowerEqView' hasSomeVar) >>> higherDegreeEquationsView))
+  , equivalence    = withoutContext (viewEquivalent (normPowerEqView' hasSomeVar >>> higherDegreeEquationsView))
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]
   }

@@ -121,7 +121,7 @@ testLCM = suite "lcmExpr" $ do
    genTerm = frequency [(3, genAtom), (1, liftM fromInteger arbitrary)]
    
    genAtom = do
-      v <- oneof $ map (return . Var) ["a", "b", "c"]
+      v <- elements $ map Var ["a", "b", "c"]
       i <- choose (-10, 10)
       n <- choose (0, 10)
       p <- frequency [(3, return v), (1, return (v .+. fromInteger i))]

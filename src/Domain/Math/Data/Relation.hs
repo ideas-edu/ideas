@@ -160,7 +160,7 @@ instance CoArbitrary a => CoArbitrary (Relation a) where
    coarbitrary p = coarbitrary (relationType p) . coarbitrary (toList p)
    
 instance Arbitrary RelationType where
-   arbitrary = oneof $ map return [EqualTo .. Approximately]
+   arbitrary = elements [EqualTo .. Approximately]
    
 instance CoArbitrary RelationType where
    coarbitrary op = variant (fromEnum op)
@@ -262,7 +262,7 @@ instance Relational Inequality where
 
 instance Arbitrary a => Arbitrary (Inequality a) where
    arbitrary = do 
-      op <- oneof $ map (return . fst . snd) inequalityTable
+      op <- elements $ map (fst . snd) inequalityTable
       liftM2 op arbitrary arbitrary
 
 instance CoArbitrary a => CoArbitrary (Inequality a) where

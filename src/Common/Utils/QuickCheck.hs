@@ -67,16 +67,16 @@ constGens :: [a] -> ArbGen a
 constGens = mconcat . map constGen
 
 unaryGen :: (a -> a) -> ArbGen a
-unaryGen f = pureGen 1 $ \[x] -> f x
+unaryGen f = pureGen 1 (f . head)
 
 unaryArbGen :: Arbitrary b => (b -> a -> a) -> ArbGen a
-unaryArbGen f = newGen 1 $ liftM (\a [x] -> f a x) arbitrary
+unaryArbGen f = newGen 1 $ liftM (\a -> f a . head) arbitrary
 
 unaryGens :: [a -> a] -> ArbGen a
 unaryGens = mconcat . map unaryGen
 
 binaryGen :: (a -> a -> a) -> ArbGen a
-binaryGen f = pureGen 2 $ \[x, y] -> f x y
+binaryGen f = pureGen 2 (\xs -> f (head xs) (xs !! 1))
 
 binaryGens :: [a -> a -> a] -> ArbGen a
 binaryGens = mconcat . map binaryGen

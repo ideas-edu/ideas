@@ -66,9 +66,8 @@ normPowerEqView = makeView f (uncurry (:==:))
 normPowerEqView' :: (Expr -> Bool) -> View (OrList (Equation Expr)) (OrList (Equation Expr))
 normPowerEqView' isVar = makeView f id
   where
-    f = liftM clean                        -- general clean up
-      . liftM root2power                   -- write root as power
-      . liftM simplifyPowers               -- try to simplify powers
+    f = -- -- general clean up, write root as power, try to simplify powers
+        liftM (clean . root2power . simplifyPowers)
       . fmap catOrList . T.mapM takeRoot'   -- power to left and take root
     
     clean = fmap $ fmap cleanUpExpr
@@ -98,8 +97,8 @@ tr n x | odd x     = case n of
                        Negate n' -> Just [neg (n' .^. (1 ./. x'))]
                        _         -> Just [n .^. (1 ./. x')]
        | otherwise = case n of 
-                       Negate n' -> Nothing
-                       _         -> Just $ let e = n .^. (1 ./. x') in [e, neg e]
+                       Negate _ -> Nothing
+                       _        -> Just $ let e = n .^. (1 ./. x') in [e, neg e]
   where x' = fromInteger x
 
 constRight :: (Expr -> Bool) -> Equation Expr -> Maybe (Equation Expr)

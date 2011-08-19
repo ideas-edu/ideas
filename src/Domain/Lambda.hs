@@ -1,4 +1,4 @@
-module Domain.SKI where
+module Domain.Lambda where
 
 import Common.Library
 import Common.Utils.Uniplate
@@ -92,7 +92,7 @@ pf = emptyExercise
 
 etaReduce :: Rule Expr 
 etaReduce = makeSimpleRule "Eta_reduce" f
-  where f (Abs x (App y z)) | z == Var x && not (x `elem` freeVars y) = Just $ LApp y
+  where f (Abs x (App y z)) | z == Var x && x `notElem` freeVars y = Just $ LApp y
         f _ = Nothing
 
 section2prefix :: Rule Expr

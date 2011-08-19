@@ -1,4 +1,11 @@
-<reply result="ok" version="0.7.6 (0)">
-  <buggy ruleid="algebra.equations.linear.balance.buggy.mulbal2"/>
+<reply result="ok" version="0.7.7 (0)">
+  <buggy ruleid="algebra.equations.linear.balance.buggy.mulbal2">
+    <argument description="factor1">
+      3
+    </argument>
+    <argument description="factor2">
+      5
+    </argument>
+  </buggy>
 </reply>
 

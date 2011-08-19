@@ -14,8 +14,9 @@ module Domain.Math.Polynomial.BalanceUtils
    , matchLin, matchPlusCon
    , cleaner, cleanerExpr
    , linbal, checkForChange
-   , buggyBalanceRule, buggyBalanceRuleArgs, buggyBalanceExprRule
-   , buggyBalanceRecognizer, buggyBalanceSimpleRecognizer
+   , termArg, factorArg, factorArgs
+   , buggyBalanceRule, buggyBalanceRuleArgs
+   , buggyBalanceExprRule, buggyBalanceRecognizer
    , collectLocal, collectGlobal
    , distributeDiv, distributeTimes
    , isPlusT, diffPlus
@@ -117,6 +118,20 @@ nonsense = any p . universe
    p _         = False
 
 ------------------------------------------------------------
+-- Arguments
+
+termArg :: Expr -> ArgValues
+termArg expr = [ArgValue (makeArgDescr "term") expr]
+
+factorArg :: Expr -> ArgValues
+factorArg expr = [ArgValue (makeArgDescr "factor") expr]
+
+factorArgs :: [Expr] -> ArgValues
+factorArgs = 
+   let f = ArgValue . makeArgDescr . ("factor" ++) . show
+   in zipWith f [1::Int ..]
+
+------------------------------------------------------------
 -- Rules
 
 linbal :: Id
@@ -126,11 +141,7 @@ checkForChange :: (MonadPlus m, Eq a) => (a -> m a) -> a -> m a
 checkForChange f a = f a >>= \b -> guard (a /= b) >> return b
 
 buggyBalanceRule :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr)) -> Rule (Equation Expr)
-buggyBalanceRule n f = bugbalRule n f $ \old (a1 :==: a2) -> do
-   b1 :==: b2 <- f old
-   let h = viewEquivalent (polyViewWith rationalView)
-   guard (h a1 b1 && h a2 b2)
-   return []
+buggyBalanceRule n f = buggyBalanceRuleArgs n (fmap (\x -> (x, [])) . f)
 
 buggyBalanceRuleArgs :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr, ArgValues)) -> Rule (Equation Expr)
 buggyBalanceRuleArgs n f = bugbalRule n (fmap fst . f) $ \old (a1 :==: a2) -> do
@@ -146,12 +157,8 @@ buggyBalanceExprRule n f = buggyBalanceRule n $ \(lhs :==: rhs) ->
    in liftM (:==: rhs) (rec lhs) `mplus` liftM (lhs :==:) (rec rhs)
 
 buggyBalanceRecognizer :: IsId n => n -> (a -> a -> Maybe ArgValues) -> Rule a
-buggyBalanceRecognizer n = bugbalRule n (const Nothing)
-
-buggyBalanceSimpleRecognizer :: IsId n => n -> (a -> a -> Bool) -> Rule a
-buggyBalanceSimpleRecognizer n p = buggyBalanceRecognizer n $ \x y ->
-   guard (p x y) >> return []
-
+buggyBalanceRecognizer n = bugbalRule n(const Nothing)
+ 
 -- generalized helper
 bugbalRule :: IsId n => n -> (a -> Maybe a) -> (a -> a -> Maybe ArgValues) -> Rule a
 bugbalRule n f p = 

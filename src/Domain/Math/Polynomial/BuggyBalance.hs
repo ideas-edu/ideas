@@ -16,7 +16,6 @@ module Domain.Math.Polynomial.BuggyBalance
 
 import Control.Monad
 import Common.Library
-import Data.Maybe
 import Data.Ratio
 import Domain.Math.Expr
 import Domain.Math.Data.Relation
@@ -220,9 +219,6 @@ rule201 = describe "2.0.1: Links en rechts alleen maar verwisseld?" $
 -------------------------------------------------------------------
 -- 2.1 Links en rechts hetzelfde optellen/aftrekken
 
-termArg :: Expr -> ArgValues
-termArg expr = [ArgValue (makeArgDescr "term") expr]
-
 -- ax+b=[cx]+d  -> ax=[cx]+d+b
 rule2111 :: Rule (Equation Expr)
 rule2111 = describe "2.1.1.1: Links en rechts hetzelfde optellen; links +b en rechts -b" $ 
@@ -330,7 +326,7 @@ rule221 = describe "2.2.1: Links en rechts hetzelfde vermenigvuldigen; verkeerd 
 -- 1/*a+b=2/c*x+d  -> x+ba  -> 2x+cd
 rule222 :: Rule (Equation Expr)
 rule222 = describe "2.2.2: Links en rechts hetzelfde vermenigvuldigen; links *a; rechts *b" $ 
-   buggyBalanceRule "mulbal2" f
+   buggyBalanceRuleArgs "mulbal2" f
  where
    f (lhs :==: rhs) = do
       (x, ra, b) <- matchLin lhs
@@ -340,26 +336,32 @@ rule222 = describe "2.2.2: Links en rechts hetzelfde vermenigvuldigen; links *a;
           denom = fromInteger . denominator
           num   = fromInteger . numerator
       guard (a /= 1 || b /= 1)
-      return $ num ra*x+fromRational b*a :==: num rc*y+c*fromRational d
+      return ( num ra*x+fromRational b*a :==: num rc*y+c*fromRational d
+             , factorArgs [a, c]
+             )
       
 -- ax-b=cx+d  -> pax-pb=cx+d
 rule2231 :: Rule (Equation Expr)
-rule2231 = describe "2.2.3.1: Links en rechts hetzelfde vermenigvuldigen; links *p, rechts niet" $ 
-   buggyBalanceSimpleRecognizer "mulbal3" p
+rule2231 = describe "2.2.3.1: Links en rechts hetzelfde vermenigvuldigen; links *p, rechts niet (of andersom)" $ 
+   buggyBalanceRecognizer "mulbal3" p
  where -- currently, symmetric
-   p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
+   p (a1 :==: a2) (b1 :==: b2) = do
       dl <- diffTimes a1 b1
       dr <- diffTimes a2 b2
-      return $ (dl == 1 && dr /= 1) || (dl /= 1 && dr == 1)
+      if (dl == 1 && dr /= 1)
+        then return (factorArg dr)
+        else if (dl /= 1 && dr == 1)
+               then return (factorArg dl)
+               else Nothing
       
 -- (x+a)/b=c  -> x+a=c
 rule2232 :: Rule (Equation Expr)
 rule2232 = describe "2.2.3.2: Links en rechts hetzelfde vermenigvuldigen; links /p, rechts niet" $ 
-   buggyBalanceRule "mulbal4" f
+   buggyBalanceRuleArgs "mulbal4" f
  where
    f (expr :==: c) = do
-      (a, _b) <- match divView expr
-      return $ a :==: c
+      (a, b) <- match divView expr
+      return (a :==: c, factorArg b)
       
 -- a+b=c  -> -a-b=c
 rule2233 :: Rule (Equation Expr)
@@ -372,16 +374,19 @@ rule2233 = describe "2.2.3.3: Links en rechts hetzelfde vermenigvuldigen; links 
       
 -- pa+pb=c -> a+b=c
 rule227 :: Rule (Equation Expr)
-rule227 = describe "2.2.7: Links en rechts hetzelfde vermenigvuldigen; links en rechts delen door p" $ 
-   buggyBalanceSimpleRecognizer "mulbal6" p
+rule227 = describe "2.2.7: Links en rechts hetzelfde vermenigvuldigen; een kant door p delen, andere kant niets" $ 
+   buggyBalanceRecognizer "mulbal6" p
  where -- currently, symmetric
-   p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
+   p (a1 :==: a2) (b1 :==: b2) = do
       dl <- diffTimes a1 b1
       dr <- diffTimes a2 b2
       rl <- match rationalView dl
       rr <- match rationalView dr
-      return $ (rl == 1 && rr /= 1 && numerator rr == 1)
-            || (rl /= 1 && rr == 1 && numerator rl == 1)
+      if (rl == 1 && rr /= 1 && numerator rr == 1)
+        then return (factorArg (fromIntegral (denominator rr)))
+        else if (rl /= 1 && rr == 1 && numerator rl == 1)
+                then return (factorArg (fromIntegral (denominator rl)))
+                else Nothing
       
 -------------------------------------------------------------------
 -- 3.1 Doe je wat je wilt doen?
@@ -400,17 +405,18 @@ rule311 = describe "3.1.1: Doe je wat je wilt doen?" $
 -- ax-b=cd+d  -> pax-b=pcx+pd
 rule321 :: Rule (Equation Expr)
 rule321 = describe "3.2.1: Doe je wat je wilt doen? vermenigvuldig de hele linkerkant met p" $ 
-   buggyBalanceSimpleRecognizer "misc2" p
+   buggyBalanceRecognizer "misc2" p
  where -- currently, not symmetric
-   p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
+   p (a1 :==: a2) (b1 :==: b2) = do
       d <- diffTimes a2 b2
       let as  = from simpleSumView a1
       guard (d `notElem` [1, -1] && length as > 1)
-      return $ flip any (take (length as) [0..]) $ \i -> 
+      guard $ flip any (take (length as) [0..]) $ \i -> 
          let (xs,y:ys) = splitAt i as
              aps = to sumView $ map (d*) xs ++ [y] ++ map (d*) ys
          in viewEquivalent (polyViewWith rationalView) aps b1
-
+      return (factorArg d)
+         
 -- a-b=c  -> -a-b=-c
 rule322 :: Rule (Equation Expr)
 rule322 = describe "3.2.2: Doe je wat je wilt doen? neem het tegengestelde van de hele linkerkant" $ 
@@ -423,15 +429,16 @@ rule322 = describe "3.2.2: Doe je wat je wilt doen? neem het tegengestelde van d
 -- pax+pb=pc  ->  ax+pb=c
 rule323 :: Rule (Equation Expr) 
 rule323 = describe "3.2.3: Doe je wat je wilt doen? Deel de hele linkerkant door p" $ 
-   buggyBalanceSimpleRecognizer "misc4" p
+   buggyBalanceRecognizer "misc4" p
    -- REFACTOR: code copied from rule misc2
  where -- currently, not symmetric
-   p (a1 :==: a2) (b1 :==: b2) = fromMaybe False $ do
+   p (a1 :==: a2) (b1 :==: b2) = do
       d  <- diffTimes a2 b2
       dr <- match rationalView d
       let as  = from simpleSumView a1
-      guard (dr `notElem` [1, -1] && numerator dr == 1 && length as > 1)
-      return $ flip any (take (length as) [0..]) $ \i -> 
+      guard (dr `notElem` [0, 1, -1] && numerator dr == 1 && length as > 1)
+      guard $ flip any (take (length as) [0..]) $ \i -> 
          let (xs,y:ys) = splitAt i as
              aps = to sumView $ map (d*) xs ++ [y] ++ map (d*) ys
          in viewEquivalent (polyViewWith rationalView) aps b1
+      return (factorArg (fromRational (1/dr)))

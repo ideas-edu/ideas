@@ -1,4 +1,8 @@
-<reply result="ok" version="0.7.6 (0)">
-  <buggy ruleid="algebra.equations.linear.balance.buggy.misc4"/>
+<reply result="ok" version="0.7.7 (0)">
+  <buggy ruleid="algebra.equations.linear.balance.buggy.misc4">
+    <argument description="factor">
+      2
+    </argument>
+  </buggy>
 </reply>
 

@@ -12,29 +12,24 @@
 --
 -----------------------------------------------------------------------------
 module Common.Library 
-   ( module Common.Classes, module Common.Transformation
-   , module Common.Context, module Common.Navigator, module Common.Predicate
-   , module Common.Derivation, module Common.DerivationTree, module Common.Id
-   , module Common.Rewriting, module Common.Exercise
-   , module Common.Strategy, module Common.View
+   ( module Export
    , failS, notS, repeatS, replicateS, sequenceS, untilS
    ) where
 
-import Common.Classes
-import Common.Context
-import Common.Derivation
-import Common.DerivationTree
-import Common.Exercise
-import Common.Id
-import Common.Navigator hiding (left, right)
-import Common.Predicate
-import Common.Rewriting
-import Common.Strategy  hiding (fail, not, repeat, replicate, sequence, until)
-import Common.Transformation
-import Common.View
+import Common.Classes as Export
+import Common.Context as Export
+import Common.Derivation as Export
+import Common.DerivationTree as Export
+import Common.Exercise as Export
+import Common.Id as Export
+import Common.Navigator as Export hiding (left, right)
+import Common.Predicate as Export
+import Common.Rewriting as Export
+import Common.Strategy       as Export hiding (fail, not, repeat, replicate, sequence, until)
+import Common.Transformation as Export
+import Common.View as Export
 
 import qualified Common.Strategy as S
--- import Prelude (Bool, Int)
 
 -- | Alias for strategy combinator @fail@
 failS :: Strategy a

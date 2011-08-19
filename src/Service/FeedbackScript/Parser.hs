@@ -58,7 +58,7 @@ decl :: Parser Decl
 decl = do
    dt <- declType
    a  <- identifiers
-   f  <- (simpleDecl <|> guardedDecl)
+   f  <- simpleDecl <|> guardedDecl
    return (f dt a)
  <|>
    NameSpace <$ lexString "namespace" <*>  identifiers

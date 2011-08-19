@@ -12,9 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Text.Parsing
-   ( module Text.ParserCombinators.Parsec
-   , module Text.ParserCombinators.Parsec.Expr
-   , module Text.ParserCombinators.Parsec.Language
+   ( module Export
    , (<*>), (*>), (<*), (<$>), (<$), (<**>)
    , parseSimple, complete, accepts, skip, (<..>), ranges, stopOn
    , naturalOrFloat, float
@@ -24,10 +22,10 @@ import Control.Arrow
 import Control.Applicative hiding ((<|>))
 import Data.Char
 import Data.List
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Expr
-import Text.ParserCombinators.Parsec.Language
-
+import Text.ParserCombinators.Parsec as Export
+import Text.ParserCombinators.Parsec.Expr as Export
+import Text.ParserCombinators.Parsec.Language as Export
+ 
 parseSimple :: Parser a -> String -> Either String a
 parseSimple p = left show . runParser (complete p) () ""
 

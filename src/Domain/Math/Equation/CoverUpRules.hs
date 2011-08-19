@@ -115,7 +115,7 @@ coverUpPowerWith = coverUpBinaryOrRule "power" (isBinary powerSymbol) fb
       n <- isNat e2
       guard (n > 0)
       let new1 = root rhs (fromIntegral n)
-          new2 = (neg new1)
+          new2 = neg new1
       return $ singleton new1 <> 
          if even n && new1 /= new2 then singleton new2 else false
       

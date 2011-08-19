@@ -9,20 +9,12 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra
-   ( module Domain.LinearAlgebra.Matrix
-   , module Domain.LinearAlgebra.Parser
-   , module Domain.LinearAlgebra.MatrixRules
-   , module Domain.LinearAlgebra.EquationsRules
-   , module Domain.LinearAlgebra.Strategies
-   , module Domain.LinearAlgebra.LinearSystem
-   , module Domain.LinearAlgebra.Exercises
-   ) where
+module Domain.LinearAlgebra (module Export) where
    
-import Domain.LinearAlgebra.Matrix
-import Domain.LinearAlgebra.Parser
-import Domain.LinearAlgebra.MatrixRules
-import Domain.LinearAlgebra.EquationsRules hiding (changeCover, findIndexM)
-import Domain.LinearAlgebra.Strategies
-import Domain.LinearAlgebra.LinearSystem
-import Domain.LinearAlgebra.Exercises
+import Domain.LinearAlgebra.Matrix as Export
+import Domain.LinearAlgebra.Parser as Export
+import Domain.LinearAlgebra.MatrixRules as Export
+import Domain.LinearAlgebra.EquationsRules as Export hiding (changeCover, findIndexM)
+import Domain.LinearAlgebra.Strategies as Export
+import Domain.LinearAlgebra.LinearSystem as Export
+import Domain.LinearAlgebra.Exercises as Export

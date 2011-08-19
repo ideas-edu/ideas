@@ -16,6 +16,7 @@ module Domain.LinearAlgebra.Exercises
 
 import Common.Library hiding (simplify)
 import Control.Monad
+import Data.Function
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.LinearSystem
@@ -79,9 +80,7 @@ gaussianElimExercise = makeExercise
                                Right a  -> Right (simplify a)
                                Left msg -> Left msg
    , prettyPrinter  = ppMatrixWith show
-   , equivalence    = withoutContext $
-                      let f = fmap simplified
-                      in \x y -> eqMatrix (f x) (f y)
+   , equivalence    = withoutContext (eqMatrix `on` fmap simplified)
    , extraRules     = matrixRules
    , ready          = predicate inRowReducedEchelonForm
    , strategy       = gaussianElimStrategy

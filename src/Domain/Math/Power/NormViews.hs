@@ -20,6 +20,7 @@ import Prelude hiding ((^), recip)
 import qualified Prelude
 import Control.Monad
 import Common.View
+import Data.Function
 import Data.List
 import qualified Data.Map as M
 import Domain.Math.Expr
@@ -111,7 +112,7 @@ normPowerMapView = makeView (liftM h . f) g
     f = (mapM (match normPowerNonNegRatio) =<<) . match sumView
     g = build sumView . map (build normPowerNonNegRatio)
     h :: [PowerMap] -> [PowerMap]
-    h = map (foldr1 (\(x,y) (_,q) -> (x,y+q))) . groupBy (\x y -> fst x == fst y) . sort
+    h = map (foldr1 (\(x,y) (_,q) -> (x,y+q))) . groupBy ((==) `on` fst) . sort
 
 normPowerView :: View Expr (String, Rational)
 normPowerView = makeView f g

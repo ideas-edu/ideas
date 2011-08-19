@@ -62,7 +62,7 @@ jsonRequest json = do
    srv  <- case lookupM "method" json of
               Just (String s) -> return s
               _               -> fail "Invalid method"
-   let a = (lookupM "params" json >>= extractExerciseId)
+   let a = lookupM "params" json >>= extractExerciseId
    enc  <- case lookupM "encoding" json of
               Nothing         -> return Nothing
               Just (String s) -> liftM Just (readEncoding s)

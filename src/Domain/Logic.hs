@@ -9,22 +9,13 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic
-   ( module Domain.Logic.BuggyRules
-   , module Domain.Logic.Exercises
-   , module Domain.Logic.Formula
-   , module Domain.Logic.GeneralizedRules
-   , module Domain.Logic.Generator
-   , module Domain.Logic.Parser
-   , module Domain.Logic.Rules
-   , module Domain.Logic.Strategies
-   ) where
+module Domain.Logic (module Export) where
 
-import Domain.Logic.BuggyRules
-import Domain.Logic.Exercises
-import Domain.Logic.Formula
-import Domain.Logic.GeneralizedRules
-import Domain.Logic.Generator
-import Domain.Logic.Parser
-import Domain.Logic.Rules
-import Domain.Logic.Strategies
+import Domain.Logic.BuggyRules as Export
+import Domain.Logic.Exercises as Export
+import Domain.Logic.Formula as Export
+import Domain.Logic.GeneralizedRules as Export
+import Domain.Logic.Generator as Export
+import Domain.Logic.Parser as Export
+import Domain.Logic.Rules as Export
+import Domain.Logic.Strategies as Export

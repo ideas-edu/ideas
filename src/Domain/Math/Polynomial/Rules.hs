@@ -539,7 +539,7 @@ simplerLinearFactor = describe "simpler linear factor" $
    let myView = polyNormalForm rationalView >>> second linearPolyView
    (x, (a, b)) <- match myView expr
    let d = (if a<0 then negate else id) (gcdFrac a b)
-   guard (a /= 0 && b /= 0 && d /= 1 && d /= -1)
+   guard (a /= 0 && b /= 0 && d `notElem` [1, -1])
    return $ fromRational d * build myView (x, (a/d, b/d))
    
 ruleFromView :: (IsId n, Eq a) => n -> View a b -> Rule a

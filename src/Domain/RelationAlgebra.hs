@@ -9,21 +9,14 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.RelationAlgebra 
-   ( module Domain.RelationAlgebra.Formula
-   , module Domain.RelationAlgebra.Rules
-   , module Domain.RelationAlgebra.Exercises
-   , module Domain.RelationAlgebra.Strategies
-   , module Domain.RelationAlgebra.Generator
-   , module Domain.RelationAlgebra.Parser
-   ) where
+module Domain.RelationAlgebra (module Export) where
    
-import Domain.RelationAlgebra.Formula
-import Domain.RelationAlgebra.Rules
-import Domain.RelationAlgebra.Exercises
-import Domain.RelationAlgebra.Strategies
-import Domain.RelationAlgebra.Generator
-import Domain.RelationAlgebra.Parser
+import Domain.RelationAlgebra.Formula as Export
+import Domain.RelationAlgebra.Rules as Export
+import Domain.RelationAlgebra.Exercises as Export
+import Domain.RelationAlgebra.Strategies as Export
+import Domain.RelationAlgebra.Generator as Export
+import Domain.RelationAlgebra.Parser as Export
 -- import Domain.RelationAlgebra.Equivalence
 
 {-

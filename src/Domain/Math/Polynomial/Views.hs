@@ -148,7 +148,7 @@ buildList = buildPairs . flip zip [0..] . reverse
 buildPairs :: Num a => [(a, Int)] -> Polynomial a
 buildPairs as 
    | null as   = 0
-   | otherwise = foldl1 (+) (map f as)
+   | otherwise = sum (map f as)
  where
    f (a, n) = con a * var Prelude.^ n
  

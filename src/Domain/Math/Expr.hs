@@ -9,16 +9,10 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Expr 
-   ( module Domain.Math.Expr.Clipboard
-   , module Domain.Math.Expr.Data
-   , module Domain.Math.Expr.Parser
-   , module Domain.Math.Expr.Symbols
-   , module Domain.Math.Expr.Views
-   ) where
+module Domain.Math.Expr (module Export) where
 
-import Domain.Math.Expr.Clipboard
-import Domain.Math.Expr.Data
-import Domain.Math.Expr.Parser
-import Domain.Math.Expr.Symbols
-import Domain.Math.Expr.Views
+import Domain.Math.Expr.Clipboard as Export
+import Domain.Math.Expr.Data as Export
+import Domain.Math.Expr.Parser as Export
+import Domain.Math.Expr.Symbols as Export
+import Domain.Math.Expr.Views as Export

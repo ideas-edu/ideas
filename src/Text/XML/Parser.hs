@@ -388,7 +388,7 @@ multi =  (char '?' >> return QuestionMark)
 -- [48]   	cp	   ::=   	(Name | choice | seq) ('?' | '*' | '+')?
 cp :: Parser CP
 cp = do 
-   a <- (fmap CPName name <|> try cpChoice <|> cpSeq) 
+   a <- fmap CPName name <|> try cpChoice <|> cpSeq
    f <- option id multi
    return (f a)
 

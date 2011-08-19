@@ -25,7 +25,7 @@ problemDecomposition msloc state answer
         Left "request error: invalid location for strategy"
    | otherwise =
    let pr = fromMaybe (emptyPrefix $ strategy ex) (statePrefix state) in
-         case (runPrefixLocation sloc pr requestedTerm, maybe Nothing (Just . inContext ex) answer) of            
+         case (runPrefixLocation sloc pr requestedTerm, fmap (inContext ex) answer) of            
             ([], _) -> Left "strategy error: not able to compute an expected answer"
             (answers, Just answeredTerm)
                | not (null witnesses) -> Right $

@@ -75,7 +75,7 @@ runTest base e
            Just "XML1.0-errata3e" -> return ()
            Just "XML1.0-errata4e" -> return ()
            Just "NS1.0-errata1e" -> return () -}
-        if reccom /= Nothing then return True else do
+        if isJust reccom then return True else do
         putChar '.'
         mdoc <- (do a <- parseIO filename; return (Just a)) 
                    `catch` (\_ -> return Nothing)

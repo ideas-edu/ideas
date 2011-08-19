@@ -41,6 +41,7 @@ import Common.Rewriting
 import Common.Utils
 import Common.View
 import Control.Monad
+import Data.Function
 import Data.Maybe
 import Test.QuickCheck
 
@@ -337,7 +338,7 @@ transRecognizer eq trans a b =
    case trans of
       Recognizer f t -> f a b `mplus` transRecognizer eq t a b
       LiftView v t   -> msum
-         [ transRecognizer (\x y -> eq (f x) (f y)) t av bv
+         [ transRecognizer (eq `on` f) t av bv
          | (av, c) <- matchM v a 
          , (bv, _) <- matchM v b
          , let f z = build v (z, c)

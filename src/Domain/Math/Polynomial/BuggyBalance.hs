@@ -110,8 +110,8 @@ rule1312 = describe "1.3.1.2: fout bij haakjes wegwerken; haakjes staan er niet 
    f (e1 :*: e2) = do
       (n, a) <- match (divView >>> first integerView) e1
       guard (n==1)
-      (x, b) <- match minusView e2
-      return $ 1/a*x-b
+      (x, b) <- match plusView e2
+      return $ 1/a*x+b
    f _ = Nothing
    
 -- a(b-cx)  -> ab-cx
@@ -200,8 +200,8 @@ rule137 = describe "1.3.7: fout bij haakjes wegwerken; denk aan 'voorrangsregels
    buggyBalanceExprRule "par10" f
  where
    f (a :+: expr) = do
-      (b, (x, c)) <- match (timesView >>> second minusView) expr
-      return $ (a+b)*(x-c)
+      (b, (x, c)) <- match (timesView >>> second plusView) expr
+      return $ (a+b)*(x+c)
    f _ = Nothing
    
 -------------------------------------------------------------------
@@ -335,7 +335,7 @@ rule222 = describe "2.2.2: Links en rechts hetzelfde vermenigvuldigen; links *a;
           c = denom rc
           denom = fromInteger . denominator
           num   = fromInteger . numerator
-      guard (a /= 1 || b /= 1)
+      guard (a /= c && (a /= 1 || c /= 1))
       return ( num ra*x+fromRational b*a :==: num rc*y+c*fromRational d
              , factorArgs [a, c]
              )

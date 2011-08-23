@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,31 +12,31 @@
 -- Services using XML notation
 --
 -----------------------------------------------------------------------------
-module Service.ModeXML 
+module Service.ModeXML
    ( processXML, xmlRequest, openMathConverterTp, stringFormatConverterTp
    , resultOk, resultError, addVersion
    ) where
 
 import Common.Library hiding (exerciseId)
-import Common.Utils.Uniplate (transform)
 import Common.Utils (Some(..), readM)
+import Common.Utils.Uniplate (transform)
 import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
+import Service.DomainReasoner
+import Service.Evaluator
+import Service.FeedbackScript.Syntax
 import Service.OpenMathSupport
 import Service.Request
 import Service.RulesInfo (rulesInfoXML)
-import Service.StrategyInfo
-import Service.FeedbackScript.Syntax
 import Service.State
+import Service.StrategyInfo
 import Service.Types
-import qualified Service.Types as Tp
-import Service.Evaluator
 import Text.OpenMath.Object
 import Text.OpenMath.Symbol
 import Text.XML
-import Service.DomainReasoner
+import qualified Service.Types as Tp
 
 processXML :: String -> DomainReasoner (Request, String, String)
 processXML input = do
@@ -49,20 +49,20 @@ processXML input = do
    return (req, out, "application/xml")
 
 addVersion :: String -> XML -> XML
-addVersion s xml = 
+addVersion s xml =
    let info = [ "version" := s ]
    in xml { attributes = attributes xml ++ info }
 
 xmlRequest :: XML -> Either String Request
-xmlRequest xml = do   
+xmlRequest xml = do
    unless (name xml == "request") $
       fail "expected xml tag request"
    srv  <- findAttribute "service" xml
    let a = extractExerciseId xml
    enc  <- case findAttribute "encoding" xml of
               Just s  -> liftM Just (readEncoding s)
-              Nothing -> return Nothing 
-   return Request 
+              Nothing -> return Nothing
+   return Request
       { service    = srv
       , exerciseId = a
       , source     = findAttribute "source" xml
@@ -73,13 +73,13 @@ xmlRequest xml = do
 xmlReply :: Request -> XML -> DomainReasoner XML
 xmlReply request xml = do
    srv <- findService (service request)
-   ex  <- 
+   ex  <-
       case exerciseId request of
          Just code -> findExercise code
-         Nothing   
+         Nothing
             | service request == "exerciselist" ->
                  return (Some emptyExercise)
-            | otherwise -> 
+            | otherwise ->
                  fail "unknown exercise code"
    Some conv <-
       case encoding request of
@@ -93,12 +93,12 @@ extractExerciseId :: Monad m => XML -> m Id
 extractExerciseId = liftM newId . findAttribute "exerciseid"
 
 resultOk :: XMLBuilder -> XML
-resultOk body = makeXML "reply" $ do 
+resultOk body = makeXML "reply" $ do
    "result" .=. "ok"
    body
 
 resultError :: String -> XML
-resultError txt = makeXML "reply" $ do 
+resultError txt = makeXML "reply" $ do
    "result" .=. "error"
    element "message" (text txt)
 
@@ -109,7 +109,7 @@ stringFormatConverter :: Some Exercise -> Some (Evaluator XML XMLBuilder)
 stringFormatConverter (Some ex) = Some (stringFormatConverterTp ex)
 
 stringFormatConverterTp :: Exercise a -> Evaluator XML XMLBuilder a
-stringFormatConverterTp ex = 
+stringFormatConverterTp ex =
    Evaluator (xmlEncoder False f ex) (xmlDecoder False g ex)
  where
    f  = liftM (element "expr" . text . prettyPrinter ex) . fromContext
@@ -121,7 +121,7 @@ stringFormatConverterTp ex =
 
 openMathConverter :: Bool -> Some Exercise -> Some (Evaluator XML XMLBuilder)
 openMathConverter useFocus (Some ex) = Some (openMathConverterTp useFocus ex)
-        
+
 openMathConverterTp :: Bool -> Exercise a -> Evaluator XML XMLBuilder a
 openMathConverterTp useFocus ex =
    Evaluator (xmlEncoder True f ex) (xmlDecoder True g ex)
@@ -130,7 +130,7 @@ openMathConverterTp useFocus ex =
       case changeT (return . markFocus) ctx >>= leaveT of
          Just term | useFocus ->
             return (toOMOBJ (term :: Term))
-         _ -> 
+         _ ->
             fromContext ctx >>= toOpenMath ex
    g xml = do
       xob   <- findChild "OMOBJ" xml
@@ -162,7 +162,7 @@ xmlEncodeType b enc ex serviceType =
       Tp.Tag s t1
          | s == "RulesInfo" -> \_ ->
               rulesInfoXML ex (encodeTerm enc)
-         | otherwise ->  
+         | otherwise ->
               case useAttribute t1 of
                  Just f | s /= "message" -> return . (s .=.) . f
                  _  -> liftM (element s) . xmlEncodeType b enc ex t1
@@ -198,15 +198,15 @@ xmlDecodeType b dec serviceType =
       Tp.Script      -> keep $ \xml ->
                            case findAttribute "script" xml of
                               Just s  -> readScript s
-                              Nothing -> 
+                              Nothing ->
                                  defaultScript (getId (decoderExercise dec))
       Tp.Tag s t
-         | s == "state" -> keep $ \xml -> do 
+         | s == "state" -> keep $ \xml -> do
               g  <- equalM stateType serviceType
               st <- decodeState b (decoderExercise dec) (decodeTerm dec) xml
               return (g st)
          | s == "answer" -> keep $ \xml -> do
-              c <- findChild "answer" xml 
+              c <- findChild "answer" xml
               (a, _) <- xmlDecodeType b dec t c
               return a
          | s == "difficulty" -> keep $ \xml -> do
@@ -220,9 +220,9 @@ xmlDecodeType b dec serviceType =
               return (f s, xml) -}
          | otherwise -> keep $ \xml ->
               findChild s xml >>= liftM fst . xmlDecodeType b dec t
-              
+
       _ -> decodeDefault dec serviceType
- where         
+ where
    keep :: Monad m => (XML -> m a) -> XML -> m (a, XML)
    keep f xml = liftM (\a -> (a, xml)) (f xml)
 
@@ -230,7 +230,7 @@ useAttribute :: Type a t -> Maybe (t -> String)
 useAttribute String = Just id
 useAttribute Bool   = Just (map toLower . show)
 useAttribute _      = Nothing
-         
+
 decodeState :: Monad m => Bool -> Exercise a -> (XML -> m a) -> XML -> m (State a)
 decodeState b ex f xmlTop = do
    xml  <- findChild "state" xmlTop
@@ -243,7 +243,7 @@ decodePrefix ex xml
    | all isSpace prefixText =
         return (Just (emptyPrefix str))
    | prefixText ~= "no prefix" =
-        return Nothing 
+        return Nothing
    | otherwise = do
         a  <- readM prefixText
         pr <- makePrefix a str
@@ -253,7 +253,7 @@ decodePrefix ex xml
    str = strategy ex
    a ~= b = g a == g b
    g = map toLower . filter (not . isSpace)
-   
+
 decodeContext :: Monad m => Bool -> Exercise a -> (XML -> m a) -> XML -> m (Context a)
 decodeContext b ex f xml = do
    expr <- f xml
@@ -262,12 +262,12 @@ decodeContext b ex f xml = do
 
 decodeEnvironment :: Monad m => Bool -> XML -> m Environment
 decodeEnvironment b xml =
-   case findChild "context" xml of 
+   case findChild "context" xml of
       Just this -> foldM add emptyEnv (children this)
       Nothing   -> return emptyEnv
  where
-   add env item = do 
-      unless (name item == "item") $ 
+   add env item = do
+      unless (name item == "item") $
          fail $ "expecting item tag, found " ++ name item
       n  <- findAttribute "name"  item
       case findChild "OMOBJ" item of
@@ -275,7 +275,7 @@ decodeEnvironment b xml =
          Just this | b ->
             case xml2omobj this >>= fromOMOBJ of
                Left err -> fail err
-               Right term -> 
+               Right term ->
                   return (storeEnv n (term :: Term) env)
          -- Simple value in attribute
          _ -> do
@@ -286,25 +286,25 @@ decodeConfiguration :: MonadPlus m => XML -> m StrategyConfiguration
 decodeConfiguration xml =
    case findChild "configuration" xml of
       Just this -> mapM decodeAction (children this)
-      Nothing   -> fail "no strategy configuration" 
+      Nothing   -> fail "no strategy configuration"
  where
-   decodeAction item = do 
+   decodeAction item = do
       guard (null (children item))
-      action <- 
+      action <-
          case find (\a -> map toLower (show a) == name item) configActions of
             Just a  -> return a
             Nothing -> fail $ "unknown action " ++ show (name item)
       cfgloc <- findAttribute "name" item
       return (byName (newId cfgloc), action)
-   
+
 encodeEnvironment :: Bool -> Location -> Environment -> XMLBuilder
 encodeEnvironment b loc env0
    | nullEnv env = return ()
    | otherwise   = element "context" $
         forM_ (keysEnv env) $ \k ->
-           element "item" $ do 
+           element "item" $ do
               "name"  .=. k
-              case lookupEnv k env of 
+              case lookupEnv k env of
                  Just term | b -> builder (omobj2xml (toOMOBJ (term :: Term)))
                  _             -> "value" .=. fromMaybe "" (lookupEnv k env)
  where
@@ -321,10 +321,10 @@ encodeArgValue b (ArgValue descr a) = element "argument" $ do
    "description" .=. labelArgument descr
    showValue a
  where
-   showValue 
+   showValue
       | b         = builder . omobj2xml . toOMOBJ . build (termViewArgument descr)
       | otherwise = text . showArgument descr
-   
+
 encodeText :: Encoder s a -> Exercise a -> Text -> DomainReasoner s
 encodeText enc ex = liftM (encodeTuple enc) . mapM f . textItems
  where

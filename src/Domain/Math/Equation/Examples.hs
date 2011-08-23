@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -15,15 +15,15 @@ module Domain.Math.Equation.Examples
    ( fillInResult, coverUpEquations
    ) where
 
-import Prelude hiding ((^))
 import Common.Rewriting
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
+import Prelude hiding ((^))
 
 fillInResult :: [[Equation Expr]]
 fillInResult = [level1, level2, level3]
  where
-   level1 = 
+   level1 =
       let x = variable "x" in
       [ x-2    :==: 2
       , -4*x   :==: -28
@@ -34,8 +34,8 @@ fillInResult = [level1, level2, level3]
       , x/(-8) :==: -3
       , 11-x   :==: 14
       ]
-      
-   level2 = 
+
+   level2 =
       let x = variable "x" in
       [ -5-3*x      :==: -23
       , 21/x - 4    :==: 3
@@ -47,7 +47,7 @@ fillInResult = [level1, level2, level3]
       , -18/(-3+x)  :==: 3
       ]
 
-   level3 = 
+   level3 =
       let x = variable "x" in
       [ -5*(5-(3-x))    :==: -20
       , (-20-x)/(-5)-2  :==: 3
@@ -62,12 +62,12 @@ fillInResult = [level1, level2, level3]
 coverUpEquations :: [[Equation Expr]]
 coverUpEquations = [level1, level2]
  where
-   level1 = 
+   level1 =
       let x = variable "x" in
       [ 38-7*x       :==: 3
       , sqrt (125/x) :==: 5
       , 4*(12-x) + 7 :==: 35
-      , 5*x^2        :==: 80 
+      , 5*x^2        :==: 80
       , 5*(5-x)      :==: 35
       , 32/sqrt x    :==: 8
       , (21/x)-8     :==: -1
@@ -75,8 +75,8 @@ coverUpEquations = [level1, level2]
       , 3*(x-8)^2    :==: 12
       , (8-x)/3 + 7  :==: 9
       ]
-   
-   level2 = 
+
+   level2 =
       let x = variable "x" in
       [ sqrt (x+9)/2       :==: 3
       , (4*x-18)^2         :==: 4

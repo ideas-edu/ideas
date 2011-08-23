@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -22,9 +22,9 @@ import Common.Classes
 import Common.DerivationTree
 import Common.Strategy.Core
 import Common.Transformation
+import Common.Utils.Uniplate
 import Control.Arrow
 import Control.Monad
-import Common.Utils.Uniplate
 
 ----------------------------------------------------------------------
 -- Step data type
@@ -66,7 +66,7 @@ newState core a = push core (S emptyStack [] [] 0 a)
 -- Parse derivation tree
 
 parseDerivationTree :: State l a -> DerivationTree (Step l a) (State l a)
-parseDerivationTree = makeTree $ \state -> 
+parseDerivationTree = makeTree $ \state ->
    let xs = firsts state
    in ( any (isReady . fst) xs
       , [ (step, s) | (Result step, s) <- xs ]
@@ -74,7 +74,7 @@ parseDerivationTree = makeTree $ \state ->
 
 firsts :: State l a -> [(Result (Step l a), State l a)]
 firsts st =
-   case pop st of 
+   case pop st of
       Nothing        -> [(Ready, st)]
       Just (core, s) -> firstsStep core s
  where
@@ -122,7 +122,7 @@ runState st =
       Nothing        -> [value st]
       Just (core, s) -> runStep core s
  where
-   runStep core state = 
+   runStep core state =
       case core of
          a :*: b   -> runStep a (push b state)
          a :|: b   -> runStep a state ++ runStep b state
@@ -148,13 +148,13 @@ replay :: Monad m => Int -> [Bool] -> Core l a -> m (State l a)
 replay n0 bs0 = replayState n0 bs0 . flip makeState noValue
  where
    noValue = error "no value in replay"
- 
-   replayState n bs state = 
+
+   replayState n bs state =
       case pop state of
          _ | n==0       -> return state
          Nothing        -> return state
          Just (core, s) -> replayStep n bs core s
-             
+
    replayStep n bs core state =
       case core of
          _ | n==0  -> return state
@@ -194,13 +194,13 @@ coreInterleave a b = (a :!%: b) :|: (b :!%: a) :|: emptyOnly (a :*: b)
          Repeat x -> emptyOnly (coreRepeat x)
          x :|: y  -> emptyOnly x .|. emptyOnly y
          x :*: y  -> emptyOnly x .*. emptyOnly y
-         x :%: y  -> emptyOnly x .*. emptyOnly y -- no more interleaving 
-         x :!%: y -> emptyOnly x .*. emptyOnly y -- no more interleaving 
+         x :%: y  -> emptyOnly x .*. emptyOnly y -- no more interleaving
+         x :!%: y -> emptyOnly x .*. emptyOnly y -- no more interleaving
          _        -> descend emptyOnly core
-   
+
 ----------------------------------------------------------------------
 -- State functions
-   
+
 push :: StepCore l a -> State l a -> State l a
 push = changeStack . pushStack
 
@@ -213,7 +213,7 @@ useAtomic = changeStack interleaveStack
 pop :: State l a -> Maybe (StepCore l a, State l a)
 pop s = fmap (second f) (popStack (stack s))
  where f new = s {stack = new}
-   
+
 makeChoice :: Bool -> State l a -> State l a
 makeChoice b s = s {choices = b : choices s}
 
@@ -232,7 +232,7 @@ freeCoreVar caller = error $ "Free var in core expression: " ++ caller
 
 incrTimer :: Monad m => State l a -> m (State l a)
 incrTimer s
-   | timeout s >= 20 = fail "timeout after 20 fixpoints" 
+   | timeout s >= 20 = fail "timeout after 20 fixpoints"
    | otherwise       = return (s {timeout = timeout s + 1})
 
 resetTimer :: State l a -> State l a
@@ -244,10 +244,10 @@ interleaveAfter _            = False
 
 interleave :: Step l a -> State l a -> State l a
 interleave step = if interleaveAfter step then useAtomic else id
-   
+
 changeStack :: (Stack l a -> Stack l a) -> State l a -> State l a
 changeStack f s = s {stack = f (stack s)}
-   
+
 ----------------------------------------------------------------------
 -- Stack functions
 
@@ -258,12 +258,12 @@ pushStack :: StepCore l a -> Stack l a -> Stack l a
 pushStack core s = s {active = core : active s}
 
 suspendStack :: StepCore l a -> Stack l a -> Stack l a
-suspendStack core s 
+suspendStack core s
    | null (active s) = s {suspended = core : suspended s}
    | otherwise = emptyStack {suspended = [core], remainder = combineStack s}
 
 popStack :: Stack l a -> Maybe (StepCore l a, Stack l a)
-popStack s = 
+popStack s =
    case active s of
       x:xs -> Just (x, s {active = xs})
       [] | null (suspended s) -> Nothing
@@ -271,11 +271,11 @@ popStack s =
 
 interleaveStack :: Stack l a -> Stack l a
 interleaveStack s = emptyStack {active = combineStack s}
-   
+
 combineStack :: Stack l a -> [StepCore l a]
 combineStack s
-   | null (suspended s) = active s 
+   | null (suspended s) = active s
    | otherwise = front : remainder s
- where 
+ where
    actives = foldr (.*.) Succeed (active s)
    front   = foldr (.%.) Succeed (actives:suspended s)

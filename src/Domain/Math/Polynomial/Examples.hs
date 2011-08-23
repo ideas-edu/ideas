@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,17 +11,17 @@
 -- Example exercises from the Digital Mathematics Environment (DWO)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Polynomial.Examples 
+module Domain.Math.Polynomial.Examples
    ( linearExamples, quadraticExamples, higherDegreeExamples
    , factorizeExamples, expandExamples
    , ineqLin1, ineqQuad1, ineqQuad2, extraIneqQuad, ineqHigh
    ) where
 
-import Prelude hiding ((^))
 import Common.Exercise
 import Common.Rewriting
-import Domain.Math.Expr
 import Domain.Math.Data.Relation
+import Domain.Math.Expr
+import Prelude hiding ((^))
 
 x :: Expr
 x = variable "x"
@@ -105,7 +105,7 @@ quadraticExamples =
       ] ++
    level Medium -- applet level 2
       [ (x-7)^2 + 3      :==: 11
-      , (6-2*x)^2        :==: 81 
+      , (6-2*x)^2        :==: 81
       , (1/2)*(x+9)^2    :==: 4
       , (3-x^2)/10       :==: 2
       , 5*x^2 + 3*x      :==: 3*x + 2
@@ -140,7 +140,7 @@ quadraticExamples =
       , x^2+14*x+24 :==: 0
       ] ++
    level Difficult -- applet level 5
-      [ (3*x+5)^2+(x-5)^2 :==: 40 
+      [ (3*x+5)^2+(x-5)^2 :==: 40
       , 4*(10-x^2)        :==: -2*x*(2*x + 10)
       , x*(x+12)          :==: 2*x^2
       , 3*(x-2)*(x+6)     :==: 12*x
@@ -165,8 +165,8 @@ quadraticExamples =
       ]
 
 factorizeExamples :: Examples Expr
-factorizeExamples = 
-   level Easy 
+factorizeExamples =
+   level Easy
       [ -- (buiten haakjes brengen)
        4*x^2 -4*x
       , 36*x^2+30*x
@@ -197,17 +197,17 @@ higherDegreeExamples =
    -- Havo B hoofdstuk 3, Hogeregraadsvgl.
    level Easy
       [ -- level 1
-        (1/3)*x^3 :==: 9 
+        (1/3)*x^3 :==: 9
       , x^5 - 12 :==: 20
       , 1 - 8*x^3 :==: -124
       , 16 - 32*x^5 :==: - 227
         -- level 2
-      , 3*x^4 :==: 48 
+      , 3*x^4 :==: 48
       , (1/9)*x^6 + 12 :==: 93
       , 39 - 8*x^2 :==: 21
       , (1/2)*x^4 - 13 :==: 27.5
         -- level 3
-      , 3*(2*x-1)^3 + 11 :==: 659 
+      , 3*(2*x-1)^3 + 11 :==: 659
       , 0.5*(3*x-4)^5 + 7 :==: 23
       , 2*(0.5*x+3)^7 - 11 :==: -9
       , 5*(1-4*x)^3 + 4 :==: -621
@@ -217,7 +217,7 @@ higherDegreeExamples =
       , -2*(4*x-5)^4 + 192 :==: -8000
       , (3-2*x)^4 + 23 :==: 279
       ] ++
-   level Easy 
+   level Easy
       [ -- level 1
         2*x^3 + 9 :==: 19
       , 4*x^5 - 17 :==: 27
@@ -260,7 +260,7 @@ higherDegreeExamples =
       , 4*(0.5*x+2)^6 + 5 :==: 9
       , 3*(2*x + 7)^3 + 11 :==: 35
       ] ++
-   level Medium 
+   level Medium
       -- (Ontbinden applet)
       [ -- level 1
         x^3 - 5*x^2 + 4*x :==: 0
@@ -337,7 +337,7 @@ ineqLin1 =
      ]
    ]
 
--- Havo B Voorkennis: kwadratische ongelijkheden 
+-- Havo B Voorkennis: kwadratische ongelijkheden
 -- (door eerst gelijkheid op te lossen)
 -- (level 2 uit Hoofdstuk 3)
 ineqQuad1 :: [[Inequality Expr]]
@@ -361,7 +361,7 @@ ineqQuad1 =
 -- Havo B hoofdstuk 3, hogeregraadsongelijkheid exact
 -- (door eerst gelijkheid op te lossen)
 ineqHigh :: [Inequality Expr]
-ineqHigh = 
+ineqHigh =
    [ 2*x^3 :>: 54
    , -0.5*x^4 :<: -40.5
    , 1 - 2*x^5 :<: -485
@@ -388,7 +388,7 @@ ineqQuad2 =
 -- Extra test cases
 
 extraIneqQuad :: [Inequality Expr]
-extraIneqQuad = 
-   [ x^2-x-7 :>: -100, x^2-x-7 :<: -100, x^2 :<: x^2, x :>=: x 
+extraIneqQuad =
+   [ x^2-x-7 :>: -100, x^2-x-7 :<: -100, x^2 :<: x^2, x :>=: x
    , x^2 :>=: 0, x^2 :>: 0, x^2 :<: 0, x^2 :<=: 0
    ]

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,17 +11,12 @@
 -- A set of example proofs
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Examples 
+module Domain.Logic.Examples
    ( exampleProofs
    ) where
 
-
-import Domain.Logic.Formula
 import Common.Utils (ShowString(..))
-
-
-
-
+import Domain.Logic.Formula
 
 exampleProofs :: [(SLogic, SLogic)]
 exampleProofs = [(Not(p :||: (Not p :&&: q)), Not(p :||: q)),
@@ -38,12 +33,9 @@ exampleProofs = [(Not(p :||: (Not p :&&: q)), Not(p :||: q)),
                  ((p :->: q):->: (p :->: s), (Not q :->: Not p) :->: (Not s :->: Not p)),
                 (Not((p :->:q) :->: (p:&&:q)), (p :->: q) :&&: (Not p :||: Not q)),
                 (Not((p :<->: q) :->: (p :||: (p :<->: q))), F)]
-                
+
  where
    p = Var (ShowString "p")
    q = Var (ShowString "q")
    s = Var (ShowString "s")
    r = Var (ShowString "r")
-
-
-

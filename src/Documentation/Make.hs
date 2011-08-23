@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,18 +11,18 @@
 -----------------------------------------------------------------------------
 module Documentation.Make (DocItem(..), makeDocumentation) where
 
-import Common.Utils.TestSuite
 import Common.Utils (Some(..))
+import Common.Utils.TestSuite
 import Control.Monad
 import Data.Maybe
-import Service.DomainReasoner
-import Documentation.SelfCheck
 import Documentation.ExercisePage
-import Documentation.RulePage
-import Documentation.TestsPage
-import Documentation.ServicePage
 import Documentation.OverviewPages
+import Documentation.RulePage
+import Documentation.SelfCheck
+import Documentation.ServicePage
+import Documentation.TestsPage
 import Documentation.ViewPage
+import Service.DomainReasoner
 
 data DocItem = Pages | SelfCheck | BlackBox (Maybe String)
    deriving Eq
@@ -30,13 +30,13 @@ data DocItem = Pages | SelfCheck | BlackBox (Maybe String)
 makeDocumentation :: String -> String -> DocItem -> DomainReasoner ()
 makeDocumentation docDir testDir item =
    case item of
-      Pages -> do 
+      Pages -> do
          report "Generating overview pages"
          makeOverviewExercises docDir
          makeOverviewServices  docDir
          report "Generating exercise pages"
          exs <- getExercises
-         forM_ exs $ \(Some ex) -> 
+         forM_ exs $ \(Some ex) ->
             makeExercisePage docDir ex
          report "Generating view pages"
          makeViewPages docDir
@@ -48,7 +48,7 @@ makeDocumentation docDir testDir item =
          makeTestsPage docDir testDir
          {- report "Status hashtable"
          let file = docDir ++ "/hashtable.out"
-         liftIO $ do 
+         liftIO $ do
             putStrLn $ "Generating " ++ show file
             tableStatus >>= writeFile file -}
       SelfCheck -> do
@@ -60,7 +60,7 @@ makeDocumentation docDir testDir item =
          checks <- liftIO $ blackBoxTests run (fromMaybe testDir mdir)
          result <- liftIO $ runTestSuiteResult checks
          liftIO (printSummary result)
-         
+
 report :: String -> DomainReasoner ()
 report s = liftIO $ do
    let line = replicate 75 '-'

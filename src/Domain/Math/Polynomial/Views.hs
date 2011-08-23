@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -20,31 +20,31 @@ module Domain.Math.Polynomial.Views
    , higherDegreeEquationsView, listOfPowerFactors
    ) where
 
-import Prelude hiding ((^))
 import Common.Classes
-import Control.Monad
-import Common.View
 import Common.Rewriting
-import Common.Utils.Uniplate (transform, descend, children)
 import Common.Utils (distinct)
+import Common.Utils.Uniplate (transform, descend, children)
+import Common.View
+import Control.Monad
 import Data.Foldable (foldMap, toList)
+import Data.Maybe
 import Data.Traversable (mapM)
+import Domain.Math.CleanUp
+import Domain.Math.Data.OrList
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
-import Domain.Math.Data.OrList
+import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.CleanUp
-import Domain.Math.Equation.CoverUpRules
-import Data.Maybe
+import Domain.Math.Power.OldViews (powerFactorViewForWith)
+import Domain.Math.SquareRoot.Views
+import Prelude hiding ((^))
 import qualified Domain.Math.Data.SquareRoot as SQ
 import qualified Prelude
-import Domain.Math.SquareRoot.Views
-import Domain.Math.Power.OldViews (powerFactorViewForWith)
 
 polyViewWithNew :: View (String, Expr) (String, Polynomial Expr)
 polyViewWithNew = makeView matchPoly buildPoly
- where 
+ where
    matchPoly (s, expr) = liftM ((,) s) (matchPolyFor s expr)
    buildPoly (s, p)    = (s, buildPolyFor s p)
 
@@ -64,16 +64,16 @@ polyViewWithNew = makeView matchPoly buildPoly
             return (fmap (/fromRational d) p)
          Sym s [a, n] | isPowerSymbol s ->
            liftM2 (Prelude.^) (f a) (matchNat n)
-         _ -> do 
+         _ -> do
             guard (withoutVar pv expr)
             return (con expr)
     where
       f = matchPolyFor pv
-   
-   buildPolyFor pv = 
+
+   buildPolyFor pv =
       let f (a, n) = a .*. (Var pv .^. fromIntegral n)
       in build sumView . map f . reverse . terms
-   
+
    matchNat expr = do
       n <- match integerView expr
       guard (n >= 0)
@@ -119,13 +119,13 @@ linearViewWith v = polyViewWith v >>> second linearPolyView >>> (f <-> g)
 
 constantPolyView :: Num a => View (Polynomial a) a
 constantPolyView = makeView (isList1 . polynomialList) (buildList . list1)
-    
+
 linearPolyView :: Num a => View (Polynomial a) (a, a)
 linearPolyView = makeView (isList2 . polynomialList) (buildList . list2)
- 
+
 quadraticPolyView :: Num a => View (Polynomial a) (a, a, a)
 quadraticPolyView = makeView (isList3 . polynomialList) (buildList . list3)
-    
+
 cubicPolyView :: Num a => View (Polynomial a) (a, a, a, a)
 cubicPolyView = makeView (isList4 . polynomialList) (buildList . list4)
 
@@ -146,12 +146,12 @@ buildList :: Num a => [a] -> Polynomial a
 buildList = buildPairs . flip zip [0..] . reverse
 
 buildPairs :: Num a => [(a, Int)] -> Polynomial a
-buildPairs as 
+buildPairs as
    | null as   = 0
    | otherwise = sum (map f as)
  where
    f (a, n) = con a * var Prelude.^ n
- 
+
 polynomialList :: Num a => Polynomial a -> [a]
 polynomialList p = map (`coefficient` p) [d, d-1 .. 0]
  where d = degree p
@@ -188,7 +188,7 @@ isList4 _            = Nothing
 -- Normal form, and list of power factors
 
 listOfPowerFactors :: Num a => String -> View Expr a -> View Expr [(a, Int)]
-listOfPowerFactors pv v = 
+listOfPowerFactors pv v =
    toView sumView >>> listView (powerFactorViewForWith pv v)
 
 -- Generalization
@@ -208,7 +208,7 @@ polyNormalForm = polyForm False
 -- relaxes the condition that all powers should be distinct
 polyRelaxedForm :: Num a => View Expr a -> View Expr (String, Polynomial a)
 polyRelaxedForm = polyForm True
-   
+
 -------------------------------------------------------------------
 -- Normal forms for equations
 
@@ -216,11 +216,11 @@ polyRelaxedForm = polyForm True
 linearEquationViewWith :: Fractional a => View Expr a -> View (Equation Expr) (String, a)
 linearEquationViewWith v = makeView f g
  where
-   f (lhs :==: rhs) = do 
+   f (lhs :==: rhs) = do
       (x, a, b) <- match (linearViewWith v) (lhs - rhs)
       return (x, -b/a)
    g (x, r) = Var x :==: build v r
-   
+
 linearEquationView :: View (Equation Expr) (String, Rational)
 linearEquationView = linearEquationViewWith rationalView
 
@@ -228,7 +228,7 @@ quadraticEquationsView:: View (OrList (Equation Expr)) (OrList (String, SQ.Squar
 quadraticEquationsView = makeView f (fmap g)
  where
    f = liftM (simplify orSetView . foldMap id)
-          . Data.Traversable.mapM (match quadraticEquationView) 
+          . Data.Traversable.mapM (match quadraticEquationView)
 
    g (x, a) = Var x :==: build (squareRootViewWith rationalView) a
 
@@ -251,7 +251,7 @@ quadraticEquationView = makeView f g
             [a, b]     -> return $ singleton (-b/a)
             [a] | a==0 -> return true
             _          -> return false
-   
+
    g xs | isTrue xs = 0 :==: 0
         | otherwise = build productView (False, map make (toList xs)) :==: 0
     where
@@ -261,7 +261,7 @@ higherDegreeEquationsView :: View (OrList (Equation Expr)) (OrList Expr)
 higherDegreeEquationsView = f <-> fmap (:==: 0)
  where
    f    = simplify orSetView . foldMap make . coverUpOrs
-   make = toOrList . filter (not . hasNegSqrt) 
+   make = toOrList . filter (not . hasNegSqrt)
         . map (cleanUpExpr . distr) . normHDE . sub
    sub (a :==: b) = a-b
 
@@ -272,15 +272,15 @@ higherDegreeEquationsView = f <-> fmap (:==: 0)
       g a = a
 
 hasNegSqrt :: Expr -> Bool
-hasNegSqrt (Sqrt a) = 
+hasNegSqrt (Sqrt a) =
    case match rationalView a of
       Just r | r < 0 -> True
       _ -> hasNegSqrt a
-hasNegSqrt (Sym s [a, b]) | isRootSymbol s = 
+hasNegSqrt (Sym s [a, b]) | isRootSymbol s =
    case (match rationalView a, match integerView b) of
       (Just r, Just n) | r < 0 && even n -> True
       _ -> hasNegSqrt a || hasNegSqrt b
-hasNegSqrt a = 
+hasNegSqrt a =
    any hasNegSqrt (children a)
 
 normHDE :: Expr -> [Expr]
@@ -289,42 +289,42 @@ normHDE e =
       Just (x, p)  -> normPolynomial x p
       Nothing -> fromMaybe [e] $ do
          (x, a) <- match (linearEquationViewWith (squareRootViewWith rationalView)) (e :==: 0)
-         return [ Var x .+. build (squareRootViewWith rationalView) (-a) ] 
+         return [ Var x .+. build (squareRootViewWith rationalView) (-a) ]
 
 normPolynomial :: String -> Polynomial Rational -> [Expr]
-normPolynomial x p 
-   | degree p == 0 = 
+normPolynomial x p
+   | degree p == 0 =
         []
-   | length (terms p) <= 1 = 
+   | length (terms p) <= 1 =
         [Var x]
-   | degree p == 1 = 
+   | degree p == 1 =
         [Var x .+. fromRational (coefficient 0 p / coefficient 1 p)]
-   | degree p == 2 = 
+   | degree p == 2 =
         let [a,b,c] = [ coefficient n p | n <- [2,1,0] ]
             discr   = b*b - 4*a*c
             sdiscr  = SQ.sqrtRational discr
-        in if discr < 0 then [] else 
+        in if discr < 0 then [] else
            map ((Var x .+.) . build (squareRootViewWith rationalView))
            [ SQ.scale (1/(2*a)) (SQ.con b + sdiscr)
            , SQ.scale (1/(2*a)) (SQ.con b - sdiscr)
            ]
-   | otherwise = 
-        case terms p of 
-           [(c, 0), (b, e1), (a, e2)] | e1 > 1 && e2 `mod` e1 == 0 -> 
+   | otherwise =
+        case terms p of
+           [(c, 0), (b, e1), (a, e2)] | e1 > 1 && e2 `mod` e1 == 0 ->
               let list = [(c, 0), (b, 1), (a, e2 `div` e1)]
                   newp = sum (map (\(y, z) -> con y * (var Prelude.^ z)) list)
                   sub  = map (substitute (x, Var x^fromIntegral e1))
               in concatMap normHDE (sub (normPolynomial x newp))
            [(c, 0), (a, n)]
-              | odd n  -> if c/a >= 0 
+              | odd n  -> if c/a >= 0
                           then [Var x + root (fromRational (c/a)) (fromIntegral n)]
                           else [Var x - root (fromRational (abs (c/a))) (fromIntegral n)]
               | even n -> if c/a > 0
                           then []
-                          else [ Var x + root (fromRational (abs (c/a))) (fromIntegral n) 
+                          else [ Var x + root (fromRational (abs (c/a))) (fromIntegral n)
                                , Var x - root (fromRational (abs (c/a))) (fromIntegral n)
                                ]
-           _ -> 
+           _ ->
               case factorize p of
                  ps | length ps > 1 -> concatMap (normPolynomial x) ps
                  _ -> [build (polyViewWith rationalView) (x, p)]

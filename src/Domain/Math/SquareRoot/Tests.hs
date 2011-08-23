@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,17 +11,17 @@
 -----------------------------------------------------------------------------
 module Domain.Math.SquareRoot.Tests (tests) where
 
-import Common.Algebra.Group
 import Common.Algebra.Field
+import Common.Algebra.Group
 import Common.Algebra.Law
 import Common.Utils.TestSuite
 import Domain.Math.Data.SquareRoot
 
 -------------------------------------------------------------------
 -- Testing
- 
+
 tests :: TestSuite
-tests = mapM_ f $ commutativeRingLaws ++ 
+tests = mapM_ f $ commutativeRingLaws ++
                   distributiveSubtractionLaws ++
                   map fromAdditiveLaw appendInverseLaws
  where

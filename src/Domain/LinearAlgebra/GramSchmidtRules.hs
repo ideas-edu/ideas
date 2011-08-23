@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,11 +12,11 @@
 module Domain.LinearAlgebra.GramSchmidtRules where
 
 import Common.Context
-import Common.Transformation
 import Common.Navigator hiding (current)
+import Common.Transformation
 import Common.Utils
-import Domain.LinearAlgebra.Vector
 import Control.Monad
+import Domain.LinearAlgebra.Vector
 
 varI, varJ :: Var Int
 varI = newVar "considered" 0
@@ -45,7 +45,7 @@ ruleOrthogonal = makeRule "Make orthogonal" $ supply2 descr args transOrthogonal
               guard (i>j)
               return (j, i)
 
--- Variable "j" is for administrating which vectors are already orthogonal 
+-- Variable "j" is for administrating which vectors are already orthogonal
 ruleNextOrthogonal :: Rule (Context (VectorSpace a))
 ruleNextOrthogonal = minorRule $ makeSimpleRule "Orthogonal to next" $ withCM $ \vs -> do
    i <- readVar varI
@@ -54,7 +54,7 @@ ruleNextOrthogonal = minorRule $ makeSimpleRule "Orthogonal to next" $ withCM $ 
    writeVar varJ j
    return vs
 
--- Consider the next vector 
+-- Consider the next vector
 -- This rule should fail if there are no vectors left
 ruleNext :: Rule (Context (VectorSpace a))
 ruleNext = minorRule $ makeSimpleRule "Consider next vector" $ withCM $ \vs -> do
@@ -73,7 +73,7 @@ current vs = do
 
 setCurrent :: Vector a -> VectorSpace a -> ContextMonad (VectorSpace a)
 setCurrent v vs = do
-   i <- readVar varI 
+   i <- readVar varI
    case splitAt (i-1) (vectors vs) of
       (xs, _:ys) -> return $ makeVectorSpace (xs ++ v:ys)
       _          -> mzero
@@ -87,7 +87,7 @@ transOrthogonal i j = contextTrans $ \xs ->
       guard (isUnit u)
       case splitAt j (vectors xs) of
          (begin, v:end) -> Just $ makeVectorSpace $ begin ++ makeOrthogonal u v:end
-         _ -> Nothing 
+         _ -> Nothing
 
 -- Find proper abstraction, and move this function to transformation module
 contextTrans :: (a -> Maybe a) -> Transformation (Context a)

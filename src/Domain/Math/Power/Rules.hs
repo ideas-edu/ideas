@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Domain.Math.Power.Rules 
+module Domain.Math.Power.Rules
   ( -- * Power rules
     calcPower, calcPowerPlus, calcPowerMinus, addExponents, mulExponents
   , subExponents, distributePower, distributePowerDiv, reciprocal
@@ -29,28 +29,26 @@ import Prelude hiding ( (^) )
 import qualified Prelude
 
 import Common.Classes
-import Control.Arrow ( (>>^) )
 import Common.Id
 import Common.Transformation
 import Common.View
+import Control.Arrow ( (>>^) )
 import Control.Monad
 import Data.List
 import Data.Maybe
-import qualified Domain.Math.Data.PrimeFactors as PF
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
-
+import qualified Domain.Math.Data.PrimeFactors as PF
 
 -- Identifier prefixes ------------------------------------------------------
 
 power, logarithmic :: String
 power       = "algebra.manipulation.exponents"
 logarithmic = "algebra.manipulation.logarithmic"
-
 
 -- Power rules --------------------------------------------------------------
 
@@ -66,8 +64,8 @@ factorAsPower = makeSimpleRuleList (power, "factor-as-power") $ \ expr -> do
       else fail "Could not factorise number."
 
 -- | Calculate power, e.g., 2^2 => 4
-calcPower :: Rule Expr 
-calcPower = makeSimpleRule "arithmetic.operation.rational.power" $ \ expr -> do 
+calcPower :: Rule Expr
+calcPower = makeSimpleRule "arithmetic.operation.rational.power" $ \ expr -> do
   (a, x) <- match (powerViewWith rationalView plainNatView) expr
   return $ fromRational $ a Prelude.^ x
 
@@ -81,7 +79,7 @@ calcPowerRatio = makeSimpleRule (power, "power-ratio") $ \ expr -> do
 
 -- | root n x
 calcPlainRoot :: Rule (OrList Expr)
-calcPlainRoot = makeSimpleRuleList (power, "root") $ 
+calcPlainRoot = makeSimpleRuleList (power, "root") $
    oneDisjunct $ \expr -> do
      (n, x) <- matchM (rootView >>> (integerView *** integerView)) expr
      return $ toOrList $ map fromInteger $ takeRoot n x
@@ -99,12 +97,12 @@ calcRoot = makeSimpleRule (power, "root") $
       roots  <- toMaybe (not. null) ys
       return $ toOrList roots
 
-calcPowerPlus :: Rule Expr 
-calcPowerPlus = 
-  makeCommutative sumView (.+.) $ calcBinPowerRule "plus" (.+.) isPlus 
+calcPowerPlus :: Rule Expr
+calcPowerPlus =
+  makeCommutative sumView (.+.) $ calcBinPowerRule "plus" (.+.) isPlus
 
-calcPowerMinus :: Rule Expr 
-calcPowerMinus = 
+calcPowerMinus :: Rule Expr
+calcPowerMinus =
    makeCommutative sumView (.+.) $ calcBinPowerRule "minus" (.-.) isMinus
 
 addExponents :: Rule Expr
@@ -115,11 +113,11 @@ addExponents = makeSimpleRuleList (power, "add-exponents") $ \ expr -> do
   return $ build productView (sign, fill prod)
 
 isPow :: Expr -> Expr -> Bool
-isPow x y = x `belongsTo` myIntegerView && 
-             (y `belongsTo` varView || y `belongsTo` powerView) 
+isPow x y = x `belongsTo` myIntegerView &&
+             (y `belongsTo` varView || y `belongsTo` powerView)
 
 -- | a*x^y * b*x^q = a*b * x^(y+q)
-addExponentsT :: Transformation Expr 
+addExponentsT :: Transformation Expr
 addExponentsT = makeTrans $ \ expr -> do
   (e1, e2)     <- match timesView expr
   (a, (x,  y)) <- match unitPowerView e1
@@ -140,7 +138,7 @@ subExponents = makeSimpleRule (power, "sub-exponents") $ \ expr -> do
   return $ build unitPowerView (a ./. b, (x, y .-. q))
 
 -- | (a^x)^y = a^(x*y)
-mulExponents :: Rule Expr 
+mulExponents :: Rule Expr
 mulExponents = makeSimpleRule (power, "mul-exponents") $ \ expr -> do
   ((a, x), y) <- match (strictPowerView >>> first powerView) expr
   return $ build powerView (a, x .*. y)
@@ -151,7 +149,7 @@ distributePower = makeSimpleRule (power, "distr-power") $ \ expr -> do
   ((sign, as), x) <- match (powerViewWith (toView productView) identity) expr
   guard $ length as > 1
   let y = build productView (False, map (\a -> build powerView (a, x)) as)
-  return $ 
+  return $
     maybe y (\n -> if odd n && sign then neg y else y) $ match integerView x
 
 -- | (a/b)^y = (a^y / b^y)
@@ -206,7 +204,7 @@ reciprocalPower = makeSimpleRule (power, "reciprocal-power") $ \ expr -> do
   return $ (e .*. build consPowerView (1, (a, neg x))) ./. c
 
 -- | Use with care, will match any fraction!
-reciprocal :: Rule Expr  
+reciprocal :: Rule Expr
 reciprocal = makeSimpleRule (power, "reciprocal") $
   apply (reciprocalForT identity)
 
@@ -254,7 +252,6 @@ pushNegOut = makeSimpleRule (power, "push-negation-out") $ \ expr -> do
   a'     <- isNegate a
   return $ (if odd x then neg else id) $ build powerView (a', fromInteger x)
 
-
 -- | Root rules ----------------------------------------------------------------
 
 -- | a^(p/q) = root (a^p) q
@@ -263,13 +260,12 @@ power2root = makeSimpleRule (power, "write-as-root") $ \ expr -> do
   (a, (p, q)) <- match (strictPowerView >>> second divView) expr
   guard $ q /= 1
   return $ root (a .^. p) q
-  
+
 -- | root a q = a^(1/q)
-root2power :: Rule Expr 
+root2power :: Rule Expr
 root2power = makeSimpleRule (power, "write-as-power") $ \ expr -> do
   (a, q) <- match strictRootView expr
   return $ a .^. (1 ./. q)
-
 
 -- | Logarithmic relation rules -----------------------------------------------
 
@@ -278,10 +274,9 @@ logarithm = makeSimpleRule (logarithmic, "logarithm") $ \(lhs :==: rhs) -> do
     (b, x) <- match logView lhs
     return $ x :==: build powerView (b, rhs)
 
-
 -- | Common rules --------------------------------------------------------------
 
--- | a/b * c/d = a*c / b*d  (b or d may be one)  
+-- | a/b * c/d = a*c / b*d  (b or d may be one)
 myFractionTimes :: Rule Expr
 myFractionTimes = smartRule $ makeSimpleRule (power, "fraction-times") $ \ expr -> do
   (e1, e2) <- match timesView expr
@@ -290,11 +285,10 @@ myFractionTimes = smartRule $ makeSimpleRule (power, "fraction-times") $ \ expr 
   (c, d)   <- match (divView <&> (identity >>^ \e -> (e,1))) e2
   return $ build divView (a .*. c, b .*. d)
 
-
 -- | Help functions -----------------------------------------------------------
 
-calcBinPowerRule :: String -> (Expr -> Expr -> Expr) -> (Expr -> Maybe (Expr, Expr)) -> Rule Expr   
-calcBinPowerRule opName op m = 
+calcBinPowerRule :: String -> (Expr -> Expr -> Expr) -> (Expr -> Maybe (Expr, Expr)) -> Rule Expr
+calcBinPowerRule opName op m =
   makeSimpleRule (power, "calc-power", opName) $ \e -> do
     (e1, e2)     <- m e
     (c1, (a, x)) <- match unitPowerViewVar e1
@@ -304,7 +298,7 @@ calcBinPowerRule opName op m =
 
 -- use twoNonAdHoles instead of split ???
 makeCommutative :: IsView f => f Expr [Expr] -> (Expr -> Expr -> Expr) -> Rule Expr -> Rule Expr
-makeCommutative view op r = 
+makeCommutative view op r =
   makeSimpleRuleList (getId r) $ \ expr ->
     case match view expr of
       Just factors -> do
@@ -315,5 +309,5 @@ makeCommutative view op r =
       Nothing -> []
 
 hasNegExp :: Expr -> Bool
-hasNegExp expr = fromMaybe False $ 
+hasNegExp expr = fromMaybe False $
   fmap ((< 0) . snd . snd) (match consPowerView expr)

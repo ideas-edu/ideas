@@ -1,7 +1,7 @@
 {-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,7 +12,7 @@
 -- This module defines the concept of an exercise
 --
 -----------------------------------------------------------------------------
-module Common.Exercise 
+module Common.Exercise
    ( -- * Exercises
      Exercise, makeExercise, emptyExercise
    , exerciseId, status, parser, prettyPrinter
@@ -41,18 +41,16 @@ module Common.Exercise
 
 import Common.Classes
 import Common.Context
-import Common.Strategy hiding (not, fail, repeat, replicate)
-import qualified Common.Strategy as S
 import Common.Derivation
 import Common.DerivationTree
 import Common.Id
 import Common.Navigator
 import Common.Predicate
 import Common.Rewriting
-import qualified Common.Rewriting.Difference as Diff
-import Common.Utils.TestSuite
+import Common.Strategy hiding (not, fail, repeat, replicate)
 import Common.Transformation
 import Common.Utils (ShowString(..), commaList)
+import Common.Utils.TestSuite
 import Common.View
 import Control.Monad.Error
 import Data.Char
@@ -64,6 +62,8 @@ import Data.Typeable
 import System.Random
 import Test.QuickCheck hiding (label)
 import Test.QuickCheck.Gen
+import qualified Common.Rewriting.Difference as Diff
+import qualified Common.Strategy as S
 
 data Exercise a = Exercise
    { -- identification and meta-information
@@ -110,9 +110,9 @@ makeExercise = emptyExercise
    , similarity    = (==)
    , hasTermView   = Just termView
    }
-   
+
 emptyExercise :: Exercise a
-emptyExercise = Exercise 
+emptyExercise = Exercise
    { -- identification and meta-information
      exerciseId     = error "no exercise code"
    , status         = Experimental
@@ -137,7 +137,7 @@ emptyExercise = Exercise
    , randomExercise = Nothing
    , examples       = []
    }
-   
+
 makeContext :: Exercise a -> Environment -> a -> Context a
 makeContext ex env = newContext env . navigation ex
 
@@ -155,10 +155,10 @@ mapExamples f = map (second f)
 
 data Difficulty = VeryEasy | Easy | Medium | Difficult | VeryDifficult
    deriving (Eq, Ord, Enum)
-   
+
 instance Show Difficulty where
-   show = (xs !!) . fromEnum 
-    where 
+   show = (xs !!) . fromEnum
+    where
       xs = ["very_easy", "easy", "medium", "difficult", "very_difficult"]
 
 readDifficulty :: String -> Maybe Difficulty
@@ -179,13 +179,13 @@ level = zip . repeat
 -- returns a sorted list of rules (no duplicates)
 ruleset :: Exercise a -> [Rule (Context a)]
 ruleset ex = nub (sortBy compareId list)
- where 
+ where
    list = rulesInStrategy (strategy ex) ++ extraRules ex
- 
-simpleGenerator :: Gen a -> Maybe (StdGen -> Difficulty -> a) 
+
+simpleGenerator :: Gen a -> Maybe (StdGen -> Difficulty -> a)
 simpleGenerator = useGenerator (const True) . const
 
-useGenerator :: (a -> Bool) -> (Difficulty -> Gen a) -> Maybe (StdGen -> Difficulty -> a) 
+useGenerator :: (a -> Bool) -> (Difficulty -> Gen a) -> Maybe (StdGen -> Difficulty -> a)
 useGenerator p makeGen = Just (\rng -> rec rng . makeGen)
  where
    rec rng gen@(MkGen f)
@@ -197,8 +197,8 @@ useGenerator p makeGen = Just (\rng -> rec rng . makeGen)
 
 restrictGenerator :: (a -> Bool) -> Gen a -> Gen a
 restrictGenerator p g = do
-   a <- g 
-   if p a then return a 
+   a <- g
+   if p a then return a
           else restrictGenerator p g
 
 randomTerm :: Difficulty -> Exercise a -> IO a
@@ -211,8 +211,8 @@ randomTermWith rng dif ex =
    case randomExercise ex of
       Just f  -> f rng dif
       Nothing
-         | null xs   -> error "randomTermWith: no generator" 
-         | otherwise -> 
+         | null xs   -> error "randomTermWith: no generator"
+         | otherwise ->
               snd (xs !! fst (randomR (0, length xs - 1) rng))
        where xs = examples ex
 
@@ -230,16 +230,15 @@ differenceEqual ex a b = do
 recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [(Location, ArgValues)]
 recognizeRule ex r ca cb = rec (fromMaybe ca (top ca))
  where
-   rec x = 
+   rec x =
       let here = case ruleRecognizer (similarity ex) r x cb of
                     Just as -> [(location x, as)]
                     Nothing -> []
       in here ++ concatMap rec (allDowns x)
-   
 
 ruleOrderingWith :: [Rule a] -> Rule a -> Rule a -> Ordering
 ruleOrderingWith = ruleOrderingWithId . map getId
- 
+
 ruleOrderingWithId :: HasId b => [b] -> Rule a -> Rule a -> Ordering
 ruleOrderingWithId bs r1 r2 =
    let xs = map getId bs in
@@ -252,7 +251,7 @@ ruleOrderingWithId bs r1 r2 =
 ---------------------------------------------------------------
 -- Using type representations for casts
 
-data IsTypeable a = IT (forall b . Typeable b => a -> Maybe b) 
+data IsTypeable a = IT (forall b . Typeable b => a -> Maybe b)
                        (forall b . Typeable b => b -> Maybe a)
 
 useTypeable :: Typeable a => Maybe (IsTypeable a)
@@ -271,7 +270,7 @@ castTo ex a = do
 ---------------------------------------------------------------
 -- Exercise status
 
-data Status 
+data Status
    = Stable       -- ^ A released exercise that has undergone some thorough testing
    | Provisional  -- ^ A released exercise, possibly with some deficiencies
    | Alpha        -- ^ An exercise that is under development
@@ -290,7 +289,7 @@ isPrivate = not . isPublic
 -- Rest
 
 -- | Function for defining equivalence or similarity without taking
--- the context into account. 
+-- the context into account.
 withoutContext :: (a -> a -> Bool) -> Context a -> Context a -> Bool
 withoutContext f a b = fromMaybe False (fromContextWith2 f a b)
 
@@ -309,12 +308,12 @@ simpleEquivalence :: Exercise a -> a -> a -> Bool
 simpleEquivalence ex = equivalence ex `on` inContext ex
 
 prettyPrinterContext :: Exercise a -> Context a -> String
-prettyPrinterContext ex = 
+prettyPrinterContext ex =
    maybe "<<invalid term>>" (prettyPrinter ex) . fromContext
-    
+
 getRule :: Monad m => Exercise a -> Id -> m (Rule (Context a))
-getRule ex a = 
-   case filter ((a ==) . getId) (ruleset ex) of 
+getRule ex a =
+   case filter ((a ==) . getId) (ruleset ex) of
       [hd] -> return hd
       []   -> fail $ "Could not find ruleid " ++ showId a
       _    -> fail $ "Ambiguous ruleid " ++ showId a
@@ -332,13 +331,13 @@ showDerivation ex a = show (present der) ++ extra
                 | otherwise    -> "<<not ready>>"
    present = biMap (ShowString . f) (ShowString . prettyPrinterContext ex)
    f ((b, env), old) = showId b ++ part1 ++ part2
-    where 
+    where
       newl = "\n      "
       g (ArgValue descr x) = labelArgument descr ++ "=" ++ showArgument descr x
       part1 = case expectedArguments b old of
                  Just xs -> newl ++ commaList (map g xs)
                  Nothing -> ""
-      part2 | nullEnv env = "" 
+      part2 | nullEnv env = ""
             | otherwise   = newl ++ show env
 
 type ExerciseDerivation a = Derivation (Rule (Context a)) (Context a)
@@ -351,7 +350,7 @@ defaultDerivation ex a =
    in fromMaybe single (derivation tree)
 
 derivationDiffEnv :: Derivation s (Context a) -> Derivation (s, Environment) (Context a)
-derivationDiffEnv = updateSteps $ \y b x -> 
+derivationDiffEnv = updateSteps $ \y b x ->
    let env = diffEnv (getEnvironment x) (getEnvironment y)
    in (b, deleteEnv "location" env)
 
@@ -361,7 +360,7 @@ derivationPrevious = updateSteps $ \a s _ -> (s, a)
 
 printDerivation :: Exercise a -> a -> IO ()
 printDerivation ex = putStrLn . showDerivation ex
-         
+
 ---------------------------------------------------------------
 -- Checks for an exercise
 
@@ -383,7 +382,7 @@ exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseId ex)) $ do
       let sim a b = similarity ex (inContext ex a) (inContext ex b)
       in length (nubBy sim xs) > 1
    checkExamples ex
-   case testGenerator ex of 
+   case testGenerator ex of
       Nothing  -> return ()
       Just gen -> do
          let showAsGen = showAs (prettyPrinter ex) gen
@@ -391,15 +390,15 @@ exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseId ex)) $ do
             checkParserPrettyEx ex . inContext ex . fromS
 
          suite "Soundness non-buggy rules" $
-            forM_ (filter (not . isBuggyRule) $ ruleset ex) $ \r -> 
+            forM_ (filter (not . isBuggyRule) $ ruleset ex) $ \r ->
                let eq a b = equivalence ex (fromS a) (fromS b)
                    myGen  = showAs (prettyPrinterContext ex) (liftM (inContext ex) gen)
                    myView = makeView (return . fromS) (S (prettyPrinterContext ex))
                    args   = stdArgs {maxSize = 10, maxSuccess = 10, maxDiscard = 100}
-               in addPropertyWith (showId r) args $ 
-                     propRuleSmart eq (liftRule myView r) myGen 
- 
-         addProperty "soundness strategy/generator" $ 
+               in addPropertyWith (showId r) args $
+                     propRuleSmart eq (liftRule myView r) myGen
+
+         addProperty "soundness strategy/generator" $
             forAll showAsGen $
                maybe False (isReady ex) . fromContext
                . applyD (strategy ex) . inContext ex . fromS
@@ -414,11 +413,11 @@ showAs f = liftM (S f)
 
 -- check combination of parser and pretty-printer
 checkParserPretty :: (a -> a -> Bool) -> (String -> Either String a) -> (a -> String) -> a -> Bool
-checkParserPretty eq p pretty a = 
+checkParserPretty eq p pretty a =
    either (const False) (eq a) (p (pretty a))
 
 checkParserPrettyEx :: Exercise a -> Context a -> Bool
-checkParserPrettyEx ex = 
+checkParserPrettyEx ex =
    let f = either Left (Right . inContext ex) . parser ex
    in checkParserPretty (similarity ex) f (prettyPrinterContext ex)
 
@@ -435,14 +434,14 @@ checksForTerm leftMost ex a = do
    when leftMost $
       case derivation tree of
          Just d  -> checksForDerivation ex d
-         Nothing -> 
+         Nothing ->
             fail $ "no derivation for " ++ prettyPrinter ex a
    -- Random derivation
    g <- liftIO getStdGen
    case randomDerivation g tree of
       Just d  -> checksForDerivation ex d
-      Nothing -> return () 
-         
+      Nothing -> return ()
+
 checksForDerivation :: Exercise a -> Derivation (Rule (Context a)) (Context a) -> TestSuite
 checksForDerivation ex d = do
    -- Conditions on starting term
@@ -450,33 +449,32 @@ checksForDerivation ex d = do
    assertTrue
       ("start term not suitable: " ++ prettyPrinterContext ex start) $
       maybe False (isSuitable ex) (fromContext start)
-   
+
    {-
    b2 <- do let b = False -- maybe True (isReady ex) (fromContext start)
-            when b $ report $ 
+            when b $ report $
                "start term is ready: " ++ prettyPrinterContext ex start
             return b-}
    -- Conditions on final term
    let final = lastTerm d
    {-
    b3 <- do let b = False -- maybe True (isSuitable ex) (fromContext final)
-            when b $ report $ 
+            when b $ report $
                "final term is suitable: " ++ prettyPrinterContext ex start
                ++ "  =>  " ++ prettyPrinterContext ex final
             return b -}
    assertTrue
       ("final term not ready: " ++ prettyPrinterContext ex start
-               ++ "  =>  " ++ prettyPrinterContext ex final) $ 
+               ++ "  =>  " ++ prettyPrinterContext ex final) $
       maybe False (isReady ex) (fromContext final)
 
    -- Parser/pretty printer on terms
    let ts  = terms d
        p1  = not . checkParserPrettyEx ex
-   assertNull "parser/pretty-printer" $ take 1 $ flip map (filter p1 ts) $ \hd -> 
-      let s = prettyPrinterContext ex hd 
-      in "parse error for " ++ s ++ ": parsed as " 
+   assertNull "parser/pretty-printer" $ take 1 $ flip map (filter p1 ts) $ \hd ->
+      let s = prettyPrinterContext ex hd
+      in "parse error for " ++ s ++ ": parsed as "
          ++ either show (prettyPrinter ex) (parser ex s)
-
 
    -- Equivalences between terms
    let pairs    = [ (x, y) | x <- ts, y <- ts ]
@@ -487,11 +485,11 @@ checksForDerivation ex d = do
 
    -- Similarity of terms
    let p3 (x, _, y) = similarity ex x y
-   assertNull  "similars" $ take 1 $ flip map (filter p3 (triples d)) $ \(x, r, y) -> 
+   assertNull  "similars" $ take 1 $ flip map (filter p3 (triples d)) $ \(x, r, y) ->
       "similar subsequent terms: " ++ prettyPrinterContext ex x
       ++ "  with  " ++ prettyPrinterContext ex y
       ++ "  using  " ++ show r
-               
+
    let xs = [ x | x <- terms d, not (similarity ex x x) ]
-   assertNull "self similarity" $ take 1 $ flip map xs $ \hd -> 
+   assertNull "self similarity" $ take 1 $ flip map xs $ \hd ->
       "term not similar to itself: " ++ prettyPrinterContext ex hd

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,42 +9,42 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.Strategies 
+module Domain.LinearAlgebra.Strategies
    ( gaussianElimStrategy, linearSystemStrategy
    , gramSchmidtStrategy, systemWithMatrixStrategy
    , forwardPass
    ) where
 
-import Prelude hiding (repeat)
-import Domain.Math.Expr
-import Domain.Math.Simplification
-import Domain.LinearAlgebra.Matrix
-import Domain.LinearAlgebra.MatrixRules
+import Common.Context
+import Common.Id
+import Common.Strategy hiding (not)
+import Common.Transformation
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.LinearSystem
-import Common.Strategy hiding (not)
-import Common.Transformation
-import Common.Context
-import Common.Id
+import Domain.LinearAlgebra.Matrix
+import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.Vector
+import Domain.Math.Expr
+import Domain.Math.Simplification
+import Prelude hiding (repeat)
 
 gaussianElimStrategy :: LabeledStrategy (Context (Matrix Expr))
-gaussianElimStrategy = label "Gaussian elimination" $ 
+gaussianElimStrategy = label "Gaussian elimination" $
    forwardPass <*> backwardPass
 
 forwardPass :: LabeledStrategy (Context (Matrix Expr))
-forwardPass = label "Forward pass" $ 
+forwardPass = label "Forward pass" $
    simplifyRule <*>
-   repeat   (   label "Find j-th column"      ruleFindColumnJ 
+   repeat   (   label "Find j-th column"      ruleFindColumnJ
            <*>  label "Exchange rows"         (try ruleExchangeNonZero)
            <*>  label "Scale row"             (try ruleScaleToOne)
            <*>  label "Zeros in j-th column"  (repeat ruleZerosFP)
            <*>  label "Cover up top row"      ruleCoverRow
             )
-  
+
 backwardPass :: LabeledStrategy (Context (Matrix Expr))
-backwardPass = label "Backward pass" $ 
+backwardPass = label "Backward pass" $
    simplifyRule <*>
    repeat   (   label "Uncover row"  ruleUncoverRow
            <*>  label "Sweep"        (repeat ruleZerosBP)
@@ -61,9 +61,9 @@ backSubstitutionSimple =
               )
 
 backSubstitution :: LabeledStrategy (Context (LinearSystem Expr))
-backSubstitution = label "Back substitution" $ 
+backSubstitution = label "Back substitution" $
    ruleIdentifyFreeVariables <*> backSubstitutionSimple
-   
+
 systemToEchelonWithEEO :: LabeledStrategy (Context (LinearSystem Expr))
 systemToEchelonWithEEO =
    label "System to Echelon Form (EEO)" $
@@ -88,17 +88,17 @@ linearSystemStrategy = label "General solution to a linear system" $
 
 systemWithMatrixStrategy :: LabeledStrategy (Context Expr)
 systemWithMatrixStrategy = label "General solution to a linear system (matrix approach)" $
-       repeat (mapRules useC dropEquation) 
-   <*> conv1 
-   <*> mapRules useC gaussianElimStrategy 
-   <*> conv2 
+       repeat (mapRules useC dropEquation)
+   <*> conv1
+   <*> mapRules useC gaussianElimStrategy
+   <*> conv2
    <*> repeat (mapRules useC dropEquation)
 
 gramSchmidtStrategy :: LabeledStrategy (Context (VectorSpace (Simplified Expr)))
 gramSchmidtStrategy =
    label "Gram-Schmidt" $ repeat $ label "Iteration" $
-       label "Consider next vector"   ruleNext 
-   <*> label "Make vector orthogonal" (repeat (ruleNextOrthogonal <*> try ruleOrthogonal)) 
+       label "Consider next vector"   ruleNext
+   <*> label "Make vector orthogonal" (repeat (ruleNextOrthogonal <*> try ruleOrthogonal))
    <*> label "Normalize"              (try ruleNormalize)
 
 varVars :: Var [String]
@@ -114,9 +114,9 @@ conv1 = describe "Convert linear system to matrix" $
       let (m, vs) = systemToMatrix ls
       writeVar varVars vs
       return (toExpr (simplify (m :: Matrix Expr)))
- 
+
 conv2 :: Rule (Context Expr)
-conv2 = describe "Convert matrix to linear system" $ 
+conv2 = describe "Convert matrix to linear system" $
    makeSimpleRule "linearalgebra.linsystem.frommatrix" $ withCM $ \expr -> do
       vs <- readVar varVars
       m  <- fromExpr expr

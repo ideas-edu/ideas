@@ -20,4 +20,3 @@ argument is the bound variables (placed within an OMBVAR element), and the
 second is an expression. -}
 existsSymbol :: Symbol
 existsSymbol = makeSymbol "quant1" "exists"
-

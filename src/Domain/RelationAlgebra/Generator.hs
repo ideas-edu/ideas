@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,8 +11,8 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Generator (templateGenerator) where
 
-import Domain.RelationAlgebra.Formula
 import Control.Monad
+import Domain.RelationAlgebra.Formula
 import Test.QuickCheck
 
 instance Arbitrary RelAlg where
@@ -21,20 +21,20 @@ instance Arbitrary RelAlg where
 arbRelAlg :: Int -> Gen RelAlg
 arbRelAlg 0 = frequency [(8, liftM Var (elements relAlgVars)), (1, return V), (1, return empty), (1, return I)]
 arbRelAlg n = oneof [ arbRelAlg 0, binop (:.:), binop (:+:), binop (:&&:), binop (:||:)
-                    , unop Not, unop Inv 
+                    , unop Not, unop Inv
                     ]
  where
    binop op = liftM2 op rec rec
    unop op  = liftM op rec
-   rec      = arbRelAlg (n `div` 2)  
+   rec      = arbRelAlg (n `div` 2)
 
 relAlgVars :: [String]
 relAlgVars = ["q", "r", "s"]
-  
+
 -------------------------------------------------------------------
 -- Templates
 
-template1, template2, template3, template4, template7, template8 :: 
+template1, template2, template3, template4, template7, template8 ::
    RelAlg -> RelAlg -> RelAlg -> RelAlg
 
 template5 :: RelAlg -> RelAlg -> RelAlg -> RelAlg -> RelAlg
@@ -44,11 +44,11 @@ template1 x y z = x :||: (y :&&: z)
 template2 x y z = Not(x :&&: (y :||: z))
 template3 x y z = Inv(x :||: (y :&&: z))
 template4 x y z = Inv (Not(x :&&: (y :||: z)))
-template5 x y z v = Inv (Not((x :||: v) :&&: (y :||: z))) 
+template5 x y z v = Inv (Not((x :||: v) :&&: (y :||: z)))
 template6 mp a b mq = f1 (f2 (a :&&: b))
  where f1 x = maybe x (:.: x) mp
-       f2 x = maybe x (x :.:) mq 
-template7 x y z = x :.: (y :||:z) 
+       f2 x = maybe x (x :.:) mq
+template7 x y z = x :.: (y :||:z)
 template8 x y z = x :||: Not (Inv (y :.: z) :&&: Not (Inv y :.: Inv z))
 
 -------------------------------------------------------------------
@@ -70,7 +70,7 @@ gen9 = use3 template8 hulpgen2 arbInvNotMol arbInvNotMol
 
 use3 :: (a -> b -> c -> d) -> (t -> Gen a) -> (t -> Gen b) -> (t -> Gen c) -> t -> Gen d
 use3 temp f g h   n = liftM3 temp (f n) (g n) (h n)
-     
+
 use4 :: (a -> b -> c -> d -> e) -> (t -> Gen a) -> (t -> Gen b) -> (t -> Gen c) -> (t -> Gen d) -> t -> Gen e
 use4 temp f g h k n = liftM4 temp (f n) (g n) (h n) (k n)
 

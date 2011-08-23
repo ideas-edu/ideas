@@ -1,7 +1,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,7 +12,7 @@
 -- Representation for predicates
 --
 -----------------------------------------------------------------------------
-module Common.Predicate 
+module Common.Predicate
    ( -- * Predicate representation
      Predicate, predicate, predicateView
    , evalPredicate
@@ -25,7 +25,7 @@ import Common.Algebra.Boolean
 import Common.Id
 import Common.View
 
-data Predicate a 
+data Predicate a
    = Const Bool
    | Prim (a -> Bool)
    | forall b . PView (View a b)
@@ -37,7 +37,7 @@ data Predicate a
 instance BoolValue (Predicate a) where
    fromBool = Const
    isTrue  (Const b) = b
-   isTrue  _         = False 
+   isTrue  _         = False
    isFalse (Const b) = not b
    isFalse _         = False
 
@@ -48,7 +48,7 @@ instance Boolean (Predicate a) where
    Const b <||> y       = if b then true else y
    x       <||> Const b = if b then true else x
    x       <||> y       = x :||: y
-   complement (Const b) = Const (not b) 
+   complement (Const b) = Const (not b)
    complement x         = Compl x
 
 instance HasId (Predicate a) where
@@ -78,5 +78,5 @@ evalPredicate p a = rec p
    rec (PView v)  = a `belongsTo` v
    rec (Compl x)  = not (rec x)
    rec (x :&&: y) = rec x && rec y
-   rec (x :||: y) = rec x || rec y 
+   rec (x :||: y) = rec x || rec y
    rec (_ :@ x)   = rec x

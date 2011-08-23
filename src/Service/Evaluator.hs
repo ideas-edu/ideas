@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs, Rank2Types #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -14,34 +14,34 @@ module Service.Evaluator where
 
 import Common.Library
 import Control.Monad
-import Service.Types
 import Service.DomainReasoner
+import Service.Types
 import System.Random
 
 evalService :: Evaluator inp out a -> Service -> inp -> DomainReasoner out
 evalService f = eval f . serviceFunction
 
-data Evaluator inp out a = Evaluator 
+data Evaluator inp out a = Evaluator
    { encoder :: Encoder out a
    , decoder :: Decoder inp a
    }
 
-data Encoder s a = Encoder 
+data Encoder s a = Encoder
    { encodeType    :: forall t . Type a t -> t -> DomainReasoner s
    , encodeCtxTerm :: Context a -> DomainReasoner s
    , encodeTerm    :: a -> DomainReasoner s
    , encodeTuple   :: [s] -> s
    }
 
-data Decoder s a = Decoder 
+data Decoder s a = Decoder
    { decodeType      :: forall t . Type a t -> s -> DomainReasoner (t, s)
    , decodeTerm      :: s -> DomainReasoner a
    , decoderExercise :: Exercise a
-   } 
+   }
 
 eval :: Evaluator inp out a -> TypedValue a -> inp -> DomainReasoner out
-eval f (tv ::: tp) s = 
-   case tp of 
+eval f (tv ::: tp) s =
+   case tp of
       t1 :-> t2 -> do
          (a, s1) <- decodeType (decoder f) t1 s
          eval f (tv a ::: t2) s1
@@ -59,7 +59,7 @@ decodeDefault dec tp s =
       t1 :|: t2 ->
          liftM (first Left)  (decodeType dec t1 s) `mplus`
          liftM (first Right) (decodeType dec t2 s)
-      Unit -> 
+      Unit ->
          return ((), s)
       Tag _ t1 ->
          decodeType dec t1 s

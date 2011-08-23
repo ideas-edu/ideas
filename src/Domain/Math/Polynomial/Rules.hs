@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Polynomial.Rules 
+module Domain.Math.Polynomial.Rules
    ( sameConFactor, abcFormula, allPowerFactors, bringAToOne, cancelTerms
    , commonFactorVar, commonFactorVarNew, defPowerNat, distributeDivision
    , distributeTimes, distributionSquare, exposeSameFactor, factorLeftAsSquare
@@ -23,15 +23,14 @@ module Domain.Math.Polynomial.Rules
    ) where
 
 import Common.Library hiding (terms, simplify)
-import Common.Utils.Uniplate (universe, descend)
 import Common.Utils
+import Common.Utils.Uniplate (universe, descend)
 import Control.Monad
 import Data.List
 import Data.Maybe
 import Data.Ord
 import Data.Ratio
 import Domain.Math.Approximation (precision)
-import Domain.Math.Safe
 import Domain.Math.CleanUp
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Polynomial
@@ -42,13 +41,14 @@ import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.OldViews (powerFactorView)
+import Domain.Math.Safe
 import Domain.Math.Simplification hiding (simplifyWith)
-import Domain.Math.SquareRoot.Views 
+import Domain.Math.SquareRoot.Views
 import Prelude hiding ( (^) )
 import qualified Prelude
 
 quadraticRuleOrder :: [Id]
-quadraticRuleOrder = 
+quadraticRuleOrder =
    [ getId coverUpTimes, getId (coverUpMinusRightWith oneVar)
    , getId (coverUpMinusLeftWith oneVar), getId (coverUpPlusWith oneVar)
    , getId coverUpPower
@@ -69,13 +69,13 @@ polyeq  = "algebra.equations.polynomial"
 quadraticNF :: View Expr (String, (Rational, Rational, Rational))
 quadraticNF = polyNormalForm rationalView >>> second quadraticPolyView
 
--- ax^2 + bx = 0 
-commonFactorVar :: Rule (Equation Expr) 
+-- ax^2 + bx = 0
+commonFactorVar :: Rule (Equation Expr)
 commonFactorVar = rhsIsZero commonFactorVarNew
 
 -- Maybe to be replaced by more general factorVariablePower??
 commonFactorVarNew :: Rule Expr
-commonFactorVarNew = describe "Common factor variable" $ 
+commonFactorVarNew = describe "Common factor variable" $
    makeSimpleRule (quadreq, "common-factor") $ \expr -> do
       (x, (a, b, c)) <- match quadraticNF expr
       guard (b /= 0 && c == 0)
@@ -85,14 +85,14 @@ commonFactorVarNew = describe "Common factor variable" $
       return (fromRational d .*. Var x .*. (fromRational (a/d) .*. Var x .+. fromRational (b/d)))
 
 gcdFrac :: Rational -> Rational -> Rational
-gcdFrac r1 r2 = 
+gcdFrac r1 r2 =
    if denominator r1 == 1 && denominator r2 == 1
    then fromInteger (numerator r1 `gcd` numerator r2)
    else 1
 
 -- ax^2 + c = 0
 noLinFormula :: Rule (Equation Expr)
-noLinFormula = describe "No linear term ('b=0')" $ liftRule myView $ 
+noLinFormula = describe "No linear term ('b=0')" $ liftRule myView $
    makeSimpleRule (quadreq, "no-lin") $ \((x, (a, b, c)), rhs) -> do
       guard (rhs == 0 && b == 0 && c /= 0)
       return $ if a>0 then ((x, (a, 0, 0)), -c)
@@ -100,19 +100,19 @@ noLinFormula = describe "No linear term ('b=0')" $ liftRule myView $
  where
    myView = constantRight quadraticNF
 
--- search for (X+A)*(X+B) decomposition 
+-- search for (X+A)*(X+B) decomposition
 niceFactors :: Rule (Equation Expr)
 niceFactors = rhsIsZero niceFactorsNew
 
--- search for (X+A)*(X+B) decomposition 
+-- search for (X+A)*(X+B) decomposition
 niceFactorsNew :: Rule Expr
-niceFactorsNew = describe "Find a nice decomposition" $ 
+niceFactorsNew = describe "Find a nice decomposition" $
    makeSimpleRuleList (quadreq, "nice-factors") $ \expr -> do
-   let sign t@(x, (a, b, c)) = if a== -1 then (x, (1, -b, -c)) else t 
+   let sign t@(x, (a, b, c)) = if a== -1 then (x, (1, -b, -c)) else t
    (x, (a, b, c)) <- liftM sign (matchM (polyNormalForm integerView >>> second quadraticPolyView) expr)
    guard (a==1)
    let ok (i, j) = i+j == b
-       f  (i, j) 
+       f  (i, j)
           | i == j = -- special case
               (Var x + fromInteger i) ^ 2
           | otherwise =
@@ -122,8 +122,8 @@ niceFactorsNew = describe "Find a nice decomposition" $
    factors :: Integer -> [(Integer, Integer)]
    factors n = [ pair
                | let h = (floor :: Double -> Integer) (sqrt (abs (fromIntegral n)))
-               , a <- [1..h], let b = n `div` a, a*b == n 
-               , pair <- [(a, b), (negate a, negate b)] 
+               , a <- [1..h], let b = n `div` a, a*b == n
+               , pair <- [(a, b), (negate a, negate b)]
                ]
 
 -- Simplify polynomial by multiplying (or dividing) the terms:
@@ -132,18 +132,18 @@ niceFactorsNew = describe "Find a nice decomposition" $
 -- 3) If a<0, then also suggest to change sign (return two solutions)
 simplerPolynomial :: Rule (Equation Expr)
 simplerPolynomial = describe "simpler polynomial" $
-   rhsIsZero $ liftRuleIn (quadraticNF >>> toView swapView) $ 
+   rhsIsZero $ liftRuleIn (quadraticNF >>> toView swapView) $
    makeSimpleRuleList (quadreq, "simpler-poly") $ \(a, b, c) -> do
       r <- findFactor (filter (/=0) [a, b, c])
       d <- if a >= 0 then [r] else [-r, r]
       guard (d `notElem` [0, 1])
       return (a*d, b*d, c*d)
- 
+
 -- Simplified variant of simplerPoly: just bring a to 1.
 -- Needed for quadratic strategy without square formula
 bringAToOne :: Rule (Equation Expr)
-bringAToOne = rhsIsZero $ liftRuleIn (quadraticNF >>> toView swapView) $ 
-   describe "Bring 'a' to one" $ 
+bringAToOne = rhsIsZero $ liftRuleIn (quadraticNF >>> toView swapView) $
+   describe "Bring 'a' to one" $
    makeSimpleRule (quadreq, "scale") $ \(a, b, c) -> do
    guard (a `notElem` [0, 1])
    return (1, b/a, c/a)
@@ -153,7 +153,7 @@ bringAToOne = rhsIsZero $ liftRuleIn (quadraticNF >>> toView swapView) $
 
 -- Rule must be symmetric in side of equation
 mulZero :: Rule (OrList (Equation Expr))
-mulZero = describe "multiplication is zero" $ 
+mulZero = describe "multiplication is zero" $
    makeSimpleRuleList (quadreq, "product-zero") $ oneDisjunct bothSides
  where
    bothSides eq = oneSide eq `mplus` oneSide (flipSides eq)
@@ -164,12 +164,12 @@ mulZero = describe "multiplication is zero" $
       return $ toOrList $ flip map xs $ \e ->
          case match (polyNormalForm rationalView >>> second linearPolyView) e of
             -- special cases (simplify immediately, as in G&R)
-            Just (x, (a, b)) 
-               | a == 1 -> 
+            Just (x, (a, b))
+               | a == 1 ->
                     Var x :==: fromRational (-b)
-               | a == -1 -> 
+               | a == -1 ->
                     Var x :==: fromRational b
-            _ -> e :==: 0 
+            _ -> e :==: 0
 
 ------------------------------------------------------------
 -- Constant form rules: expr = constant
@@ -184,7 +184,7 @@ oneVar = configCoverUp
    , coverLHS          = True
    , coverRHS          = True
    }
- where 
+ where
    p1 = (==1) . length . vars
    -- predicate p2 tests for cases such as 12*(x^2-3*x)+8 == 56
    p2 a = fromMaybe False $ do
@@ -196,7 +196,7 @@ oneVar = configCoverUp
 
 -- Do not simplify (5+sqrt 53)/2
 simplerSquareRoot :: Rule Expr
-simplerSquareRoot = describe "simpler square root" $ 
+simplerSquareRoot = describe "simpler square root" $
    makeSimpleRule (quadreq, "simpler-sqrt") $ \e -> do
       xs <- f e
       guard (not (null xs))
@@ -210,7 +210,7 @@ simplerSquareRoot = describe "simpler square root" $
    f e = liftM sort $ sequence [ match rationalView a | Sqrt a <- universe e ]
 
 cancelTerms :: Rule (Equation Expr)
-cancelTerms = describe "Cancel terms" $ 
+cancelTerms = describe "Cancel terms" $
    makeSimpleRule (quadreq, "cancel") $ \(lhs :==: rhs) -> do
    xs <- match sumView lhs
    ys <- match sumView rhs
@@ -231,13 +231,13 @@ distributionSquare = describe "distribution for special products" $
 
 -- a^2 == b^2
 squareBothSides :: Rule (OrList (Equation Expr))
-squareBothSides = describe "square both sides" $ 
-   rule (quadreq, "square-both") $ \a b -> 
+squareBothSides = describe "square both sides" $
+   rule (quadreq, "square-both") $ \a b ->
    singleton (a^2 :==: b^2) :~> toOrList [a :==: b, a :==: -b]
 
 -- prepare splitting a square; turn lhs into x^2+bx+c such that (b/2)^2 is c
 prepareSplitSquare :: Rule (Equation Expr)
-prepareSplitSquare = describe "prepare split square" $ 
+prepareSplitSquare = describe "prepare split square" $
    liftRule myView $
    makeSimpleRule (quadreq, "prepare-split") $ \((x, (a, b, c)), r) -> do
       let newC   = (b/2)*(b/2)
@@ -255,7 +255,7 @@ factorLeftAsSquare = describe "factor left as square" $
       (x, (a, b, c)) <- match quadraticNF lhs
       let h = b/2
       guard (a==1 && b/=0 && h*h == c)
-      return ((Var x + build rationalView h)^2 :==: rhs) 
+      return ((Var x + build rationalView h)^2 :==: rhs)
 
 -- flip the two sides of an equation
 flipEquation :: Rule (Equation Expr)
@@ -264,8 +264,8 @@ flipEquation = describe "flip equation" $
       (a :==: b) :~> (b :==: a)
 
 conditionVarsRHS :: Rule (Equation Expr)
-conditionVarsRHS = describe "All variables are in the right-hand side" $ 
-   checkRule $ \(lhs :==: rhs) -> 
+conditionVarsRHS = describe "All variables are in the right-hand side" $
+   checkRule $ \(lhs :==: rhs) ->
       hasSomeVar rhs && hasNoVar lhs
 
 -- Afterwards, merge and sort
@@ -275,9 +275,9 @@ moveToLeft = describe "Move to left" $
       guard (rhs /= 0 && hasSomeVar lhs && (hasSomeVar rhs || isComplex lhs))
       return (collectLikeTerms (sorted (lhs - rhs)) :==: 0)
  where
-   isComplex = maybe False ((>= 2) . length . filter hasSomeVar) 
+   isComplex = maybe False ((>= 2) . length . filter hasSomeVar)
              . match sumView . applyD merge
- 
+
    -- high exponents first, non power-factor terms at the end
    sorted = simplifyWith (sortBy (comparing toPF)) sumView
    toPF   = fmap (negate . thd3) . match powerFactorView
@@ -294,11 +294,11 @@ ruleApproximate = describe "Approximate irrational number" $
 
 ruleNormalizeRational :: Rule Expr
 ruleNormalizeRational =
-   describe "normalize rational number" $ 
+   describe "normalize rational number" $
    ruleFromView (lineq, "norm-rational") rationalView
 
 ruleNormalizeMixedFraction :: Rule Expr
-ruleNormalizeMixedFraction = 
+ruleNormalizeMixedFraction =
    describe "normalize mixed fraction" $
    ruleFromView (lineq, "norm-mixed") mixedFractionView
 
@@ -316,21 +316,21 @@ ruleNormalizePolynomial =
 
 allPowerFactors :: Rule (OrList (Equation Expr))
 allPowerFactors = describe "all power factors" $
-   makeSimpleRule (polyeq, "power-factors") $ oneDisjunct $ 
+   makeSimpleRule (polyeq, "power-factors") $ oneDisjunct $
    \(lhs :==: rhs) -> do
       let myView = polyNormalForm rationalView
       (s1, p1) <- match myView lhs
       (s2, p2) <- match myView rhs
       let n | p1 == 0   = lowestDegree p2
-            | p2 == 0   = lowestDegree p1 
+            | p2 == 0   = lowestDegree p1
             | otherwise = lowestDegree p1 `min` lowestDegree p2
           ts  = terms p1 ++ terms p2
           f p = build myView (s1, raise (-n) p)
       guard ((s1==s2 || p1==0 || p2==0) && n > 0 && length ts > 1)
-      return $ toOrList [Var s1 :==: 0, f p1 :==: f p2] 
+      return $ toOrList [Var s1 :==: 0, f p1 :==: f p2]
 
 factorVariablePower :: Rule Expr
-factorVariablePower = describe "factor variable power" $ 
+factorVariablePower = describe "factor variable power" $
    makeSimpleRule (polyeq, "factor-varpower") $ \expr -> do
    let myView = polyNormalForm rationalView
    (s, p) <- match (polyNormalForm rationalView) expr
@@ -341,7 +341,7 @@ factorVariablePower = describe "factor variable power" $
 
 -- A*B = A*C  implies  A=0 or B=C
 sameFactor :: Rule (OrList (Equation Expr))
-sameFactor = describe "same factor" $ 
+sameFactor = describe "same factor" $
    makeSimpleRule (quadreq, "same-factor") $ oneDisjunct $ \(lhs :==: rhs) -> do
       (b1, xs) <- match productView lhs
       (b2, ys) <- match productView rhs
@@ -351,9 +351,9 @@ sameFactor = describe "same factor" $
 -- N*(A+B) = N*C + N*D   recognize a constant factor on both sides
 -- Example: 3(x^2+1/2) = 6+6x
 sameConFactor :: Rule (Equation Expr)
-sameConFactor = 
+sameConFactor =
    describe "same constant factor" $
-   liftRule myView $ 
+   liftRule myView $
    makeSimpleRule (quadreq, "same-con-factor") $ \(ps1 :==: ps2) -> do
       let (bs, zs) = unzip (ps1 ++ ps2)
           (rs, es) = unzip (map (f 1 []) zs)
@@ -368,15 +368,15 @@ sameConFactor =
       return (newLeft :==: newRight)
  where
    myView = bothSidesView (toView sumView >>> listView (toView productView))
- 
+
    whichCon :: [Rational] -> Maybe Rational
-   whichCon xs 
+   whichCon xs
       | all (\x -> denominator x == 1 && x /= 0) xs =
            Just (fromInteger (foldr1 gcd (map numerator xs)))
       | otherwise = Nothing
 
 abcFormula :: Rule (Context (OrList (Equation Expr)))
-abcFormula = describe "quadratic formula (abc formule)" $ 
+abcFormula = describe "quadratic formula (abc formule)" $
    makeSimpleRule (quadreq, "abc") $ withCM $ oneDisjunct $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (x, (a, b, c)) <- matchM quadraticNF lhs
@@ -386,7 +386,7 @@ abcFormula = describe "quadratic formula (abc formule)" $
    addToClipboard "D" (fromRational discr)
    case compare discr 0 of
       LT -> return false
-      EQ -> return $ singleton $ 
+      EQ -> return $ singleton $
          Var x :==: (-fromRational b) / (2 * fromRational a)
       GT -> return $ toOrList
          [ Var x :==: (-fromRational b + sqD) / (2 * fromRational a)
@@ -405,7 +405,7 @@ higherSubst = describe "Substitute variable" $
    return (new :==: 0)
 
 substBackVar :: Rule (Context Expr)
-substBackVar = describe "Substitute back a variable" $ 
+substBackVar = describe "Substitute back a variable" $
    makeSimpleRule (polyeq, "back-subst") $ withCM $ \a -> do
    expr <- lookupClipboard "subst"
    case fromExpr expr of
@@ -418,21 +418,21 @@ substBackVar = describe "Substitute back a variable" $
    subst a b expr = descend (subst a b) expr
 
 exposeSameFactor :: Rule (Equation Expr)
-exposeSameFactor = describe "expose same factor" $ 
-   liftRule (bothSidesView (toView productView)) $ 
-   makeSimpleRuleList (polyeq, "expose-factor") $ \((bx, xs) :==: (by, ys)) -> do 
+exposeSameFactor = describe "expose same factor" $
+   liftRule (bothSidesView (toView productView)) $
+   makeSimpleRuleList (polyeq, "expose-factor") $ \((bx, xs) :==: (by, ys)) -> do
       (nx, ny) <- [ (xs, new) | x <- xs, isOk x, new <- exposeList x ys ] ++
                   [ (new, ys) | y <- ys, isOk y, new <- exposeList y xs ]
       return ((bx, nx) :==: (by, ny))
  where
-   isOk p = fromMaybe False $ do 
+   isOk p = fromMaybe False $ do
       (_, _, b) <- match (linearViewWith rationalView) p
       guard (b /= 0)
       return True
-   
+
    exposeList _ [] = []
    exposeList a (b:bs) = map (++bs) (expose a b) ++ map (b:) (exposeList a bs)
-   
+
    expose a b = do
       (s1, p1) <- matchM (polyViewWith rationalView) a
       (s2, p2) <- matchM (polyViewWith rationalView) b
@@ -446,15 +446,15 @@ exposeSameFactor = describe "expose same factor" $
 
 -- Only used for cleaning up
 distributeAll :: Expr -> Expr
-distributeAll expr = 
-   case expr of 
+distributeAll expr =
+   case expr of
       e1 :*: e2 -> let as = fromMaybe [e1] (match sumView e1)
                        bs = fromMaybe [e2] (match sumView e2)
                    in build sumView [ a .*. b | a <- as, b <- bs ]
       _ -> expr
 
 -- This rule should consider the associativity of multiplication
--- Combine bottom-up, for example:  5*(x-5)*(x+5) 
+-- Combine bottom-up, for example:  5*(x-5)*(x+5)
 -- However, in  -2x(2x+10)   (-2x) should be seen as "one term"
 distributionT :: Transformation Expr
 distributionT = makeTransList f
@@ -463,20 +463,20 @@ distributionT = makeTransList f
       (b, xs) <- matchM simpleProductView expr
       ys      <- rec (combine xs)
       return $ build simpleProductView (b, ys)
-   
+
    combine :: [Expr] -> [Expr]
    combine (x:y:rest) | p x && p y = combine ((x*y):rest)
     where p = maybe False ((==1) . length) . match sumView
    combine []     = []
    combine (x:xs) = x : combine xs
-   
+
    rec :: [Expr] -> [[Expr]]
    rec (a:b:xs) = map (:xs) (g a b) ++ map (a:) (rec (b:xs))
    rec _        = []
-   
+
    g :: Expr -> Expr -> [Expr]
-   g e1 e2 = do 
-      as <- matchM sumView e1 
+   g e1 e2 = do
+      as <- matchM sumView e1
       bs <- matchM sumView e2
       guard (length as > 1 || length bs > 1)
       return $ build sumView [ a .*. b | a <- as, b <- bs ]
@@ -485,8 +485,8 @@ distributionT = makeTransList f
 -- Rewrite Rules
 
 varToLeft :: Rule (Relation Expr)
-varToLeft = doAfter (fmap collectLikeTerms) $ 
-   describe "variable to left" $ 
+varToLeft = doAfter (fmap collectLikeTerms) $
+   describe "variable to left" $
    makeRule (lineq, "var-left") $ flip (supply1 "term") minusT $ \eq -> do
       (x, a, _) <- match (linearViewWith rationalView) (rightHandSide eq)
       guard (a/=0)
@@ -495,7 +495,7 @@ varToLeft = doAfter (fmap collectLikeTerms) $
 -- factor is always positive due to lcm function
 removeDivision :: Rule (Relation Expr)
 removeDivision = doAfter (fmap (collectLikeTerms . distributeAll)) $
-   describe "remove division" $ 
+   describe "remove division" $
    makeRule (lineq, "remove-div") $ flip (supply1 "factor") timesT $ \eq -> do
       xs <- match sumView (leftHandSide eq)
       ys <- match sumView (rightHandSide eq)
@@ -504,7 +504,7 @@ removeDivision = doAfter (fmap (collectLikeTerms . distributeAll)) $
       zs <- forM (xs ++ ys) $ \a -> do
                (_, list) <- match productView a
                return [ (hasSomeVar a, e) | e <- list ]
-      let f (b, e) = do 
+      let f (b, e) = do
              (_, this) <- match (divView >>> second integerView) e
              return (b, this)
           (bs, ns) = unzip (mapMaybe f (concat zs))
@@ -512,7 +512,7 @@ removeDivision = doAfter (fmap (collectLikeTerms . distributeAll)) $
       return (fromInteger (foldr1 lcm ns))
 
 distributeTimes :: Rule Expr
-distributeTimes = describe "distribution multiplication" $ 
+distributeTimes = describe "distribution multiplication" $
    makeSimpleRuleList (lineq, "distr-times") $
       liftM collectLikeTerms . applyAll distributionT
 
@@ -525,7 +525,7 @@ distributeDivision = describe "distribution division" $
       return $ build sumView ys
 
 merge :: Rule Expr
-merge = describe "merge similar terms" $ 
+merge = describe "merge similar terms" $
    makeSimpleRule (lineq, "merge") $ \old -> do
       let norm = cleanUpSimple old -- don't use rule just for cleaning up
           new  = collectLikeTerms norm
@@ -534,26 +534,26 @@ merge = describe "merge similar terms" $
       return new
 
 simplerLinearFactor :: Rule Expr
-simplerLinearFactor = describe "simpler linear factor" $ 
+simplerLinearFactor = describe "simpler linear factor" $
    makeSimpleRule (polyeq, "simpler-linfactor") $ \expr -> do
    let myView = polyNormalForm rationalView >>> second linearPolyView
    (x, (a, b)) <- match myView expr
    let d = (if a<0 then negate else id) (gcdFrac a b)
    guard (a /= 0 && b /= 0 && d `notElem` [1, -1])
    return $ fromRational d * build myView (x, (a/d, b/d))
-   
+
 ruleFromView :: (IsId n, Eq a) => n -> View a b -> Rule a
 ruleFromView s v = makeSimpleRule s $ \a -> do
    b <- canonical v a
    guard (a /= b)
    return b
-   
+
 rhsIsZero :: Rule Expr -> Rule (Equation Expr)
 rhsIsZero r = makeSimpleRuleList (showId r) $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    a <- applyAll r lhs
    return (a :==: rhs)
-   
+
 constantRight :: View Expr a -> View (Equation Expr) (a, Rational)
 constantRight v = makeView f g
  where
@@ -567,36 +567,36 @@ bothSidesView v = makeView f (fmap (build v))
 
 findFactor :: Monad m => [Rational] -> m Rational
 findFactor rs
-   | null rs = 
+   | null rs =
         fail "no factor"
-   | all ((==1) . denominator) rs = 
+   | all ((==1) . denominator) rs =
         return $ Prelude.recip $ fromIntegral $ foldr1 gcd $ map numerator rs
-   | otherwise = 
+   | otherwise =
         return $ fromIntegral $ foldr1 lcm $ map denominator rs
-        
+
 parentNotNegCheck :: Rule (Context Expr)
-parentNotNegCheck = minorRule $ makeSimpleRule "parent not negate check" $ \c -> 
+parentNotNegCheck = minorRule $ makeSimpleRule "parent not negate check" $ \c ->
    case up c >>= current of
       Just (Negate _) -> Nothing
       _               -> Just c
-      
+
 noDivisionConstant :: Rule Expr
 noDivisionConstant = makeSimpleRule (lineq, "no-div-con") f
  where
-   f (a :/: b) | hasNoVar b && hasSomeVar a = 
+   f (a :/: b) | hasNoVar b && hasSomeVar a =
       return ((1/b) * a)
    f _ = Nothing
-   
+
 -- (a/b) * (c/d) = (a*c)/(b*d)
 fractionProduct :: Rule Expr
 fractionProduct = makeSimpleRule (polyeq, "fraction-product") $ \expr -> do
    ((a, b), (c, d)) <- match (timesView >>> divView *** divView) expr
    return ((a .*. c) ./. (b .*. d))
-   
+
 defPowerNat :: Rule Expr
 defPowerNat = makeSimpleRule (polyeq, "def-power-nat") f
  where
    f (Sym _ [Var _, _]) = Nothing -- should not work on x^5
-   f (Sym s [a, Nat n]) | isPowerSymbol s = 
+   f (Sym s [a, Nat n]) | isPowerSymbol s =
       return (build productView (False, replicate (fromInteger n) a))
    f _ = Nothing

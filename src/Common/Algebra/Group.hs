@@ -1,7 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -10,7 +10,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Algebra.Group 
+module Common.Algebra.Group
    ( -- * Monoids
      module Data.Monoid, (<>), associative, leftIdentity
    , rightIdentity, identityLaws, monoidLaws, commutativeMonoidLaws
@@ -30,11 +30,11 @@ module Common.Algebra.Group
    ) where
 
 import Common.Algebra.Law
-import Control.Applicative  (Applicative)
-import Control.Monad        (liftM2)
-import Data.Foldable        (Foldable)
+import Control.Applicative (Applicative)
+import Control.Monad (liftM2)
+import Data.Foldable (Foldable)
 import Data.Monoid
-import Data.Traversable     (Traversable)
+import Data.Traversable (Traversable)
 
 --------------------------------------------------------
 -- Monoids
@@ -63,7 +63,7 @@ commutativeMonoidLaws :: Monoid a => [Law a]
 commutativeMonoidLaws = monoidLaws ++ [commutative]
 
 -- | Not all monoids are idempotent (see: idempotentFor)
-idempotent :: Monoid a => Law a 
+idempotent :: Monoid a => Law a
 idempotent = idempotentFor (<>)
 
 --------------------------------------------------------
@@ -95,7 +95,7 @@ inverseIdentity :: Group a => Law a
 inverseIdentity = law "inverse-identity" $ inverse mempty :==: mempty
 
 inverseDistrFlipped :: Group a => Law a
-inverseDistrFlipped = law "inverse-distr-flipped" $ \a b -> 
+inverseDistrFlipped = law "inverse-distr-flipped" $ \a b ->
    inverse (a <> b) :==: inverse b <> inverse a
 
 inverseLaws :: Group a => [Law a]
@@ -106,7 +106,7 @@ groupLaws = monoidLaws ++ inverseLaws ++
    [doubleInverse, inverseIdentity, inverseDistrFlipped]
 
 appendInverseLaws :: Group a => [Law a]
-appendInverseLaws = 
+appendInverseLaws =
    [ make 1 $ \a b   ->           a <>- b :==: a <> inverse b
    , make 2 $ \a     ->           a <>- a :==: mempty
    , make 3 $ \a     ->      a <>- mempty :==: a
@@ -156,7 +156,7 @@ monoidZeroLaws = monoidLaws ++ zeroLaws
 -- Type that adds a zero element
 newtype WithZero a = WZ { fromWithZero :: Maybe a }
    deriving (Eq, Ord, Functor, Foldable, Traversable, Applicative)
-  
+
 instance Monoid a => Monoid (WithZero a) where
    mempty = WZ (Just mempty)
    mappend x y = WZ (liftM2 mappend (fromWithZero x) (fromWithZero y))
@@ -168,7 +168,7 @@ instance Monoid a => MonoidZero (WithZero a) where
 -- Generalized laws
 
 associativeFor :: (a -> a -> a) -> Law a
-associativeFor (?) = law "associative" $ \a b c -> 
+associativeFor (?) = law "associative" $ \a b c ->
    a ? (b ? c) :==: (a ? b) ? c
 
 commutativeFor :: (a -> a -> a) -> Law a

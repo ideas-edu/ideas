@@ -1,8 +1,8 @@
-{-# LANGUAGE ExistentialQuantification, MultiParamTypeClasses, 
+{-# LANGUAGE ExistentialQuantification, MultiParamTypeClasses,
        FunctionalDependencies, FlexibleInstances, UndecidableInstances #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,7 +11,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Rewriting.RewriteRule 
+module Common.Rewriting.RewriteRule
    ( -- * Supporting type class
      Different(..)
      -- * Rewrite rules and specs
@@ -25,11 +25,11 @@ module Common.Rewriting.RewriteRule
 
 import Common.Classes
 import Common.Id
-import Common.View hiding (match)
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
 import Common.Rewriting.Unification
 import Common.Utils.Uniplate (descend)
+import Common.View hiding (match)
 import Control.Monad
 import Test.QuickCheck
 import qualified Data.IntSet as IS
@@ -38,7 +38,7 @@ import qualified Data.IntSet as IS
 -- Rewrite rules and specs
 
 infixl 1 :~>
-   
+
 data RuleSpec a = a :~> a deriving Show
 
 instance Functor RuleSpec where
@@ -51,7 +51,7 @@ data RewriteRule a = R
    , ruleTermView   :: View Term a
    , smartGenerator :: Gen a
    }
-   
+
 instance Show (RewriteRule a) where
    show = showId
 
@@ -79,14 +79,14 @@ instance (Arbitrary a, Different a, RuleBuilder t b) => RuleBuilder (a -> t) b w
 
 buildFunction :: Different a => Int -> (a -> RuleSpec Term) -> RuleSpec Term
 buildFunction n f = fzip (fill n) ((f *** f) different)
- where 
+ where
    fzip g (a :~> b, c :~> d) = g a c :~> g b d
- 
+
 fill :: Int -> Term -> Term -> Term
 fill i = rec
  where
    rec (TApp f a) (TApp g b) = TApp (rec f g) (rec a b)
-   rec a b 
+   rec a b
       | a == b    = a
       | otherwise = TMeta i
 
@@ -105,13 +105,13 @@ rewriteRule s f = R (newId s) (buildRuleSpec 0 f) show termView (buildGenerator 
 ------------------------------------------------------
 -- Using a rewrite rule
 
-instance Apply RewriteRule where 
+instance Apply RewriteRule where
    applyAll = rewrite
 
 rewrite :: RewriteRule a -> a -> [a]
-rewrite r a = 
+rewrite r a =
    concatMap (fromTermRR r) $ buildSpec (ruleSpecTerm r) $ toTermRR r a
- 
+
 rewriteM :: MonadPlus m => RewriteRule a -> a -> m a
 rewriteM r = msum . map return . rewrite r
 
@@ -122,7 +122,7 @@ showRewriteRule :: Bool -> RewriteRule a -> Maybe String
 showRewriteRule sound r = do
    x <- fromTermRR r (sub |-> a)
    y <- fromTermRR r (sub |-> b)
-   let op = if sound then "~>" else "/~>" 
+   let op = if sound then "~>" else "/~>"
    return (ruleShow r x ++ " " ++ op ++ " " ++ ruleShow r y)
  where
    a :~> b = ruleSpecTerm r
@@ -141,7 +141,7 @@ renumberRewriteRule n r = r {ruleSpecTerm = fmap f (ruleSpecTerm r)}
  where
    f (TMeta i) = TMeta (i+n)
    f term      = descend f term
-   
+
 toTermRR :: RewriteRule a -> a -> Term
 toTermRR = build . ruleTermView
 

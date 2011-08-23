@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -10,13 +10,13 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Algebra.Law 
+module Common.Algebra.Law
    ( Law, LawSpec((:==:)), law, mapLaw
    , propertyLaw, rewriteLaw
    ) where
 
-import Test.QuickCheck
 import Common.Rewriting
+import Test.QuickCheck
 
 infix 1 :==:
 
@@ -38,7 +38,7 @@ instance LawBuilder (LawSpec a) a where
 
 instance LawBuilder b a => LawBuilder (a -> b) a where
    lawSpec f = Abs (lawSpec . f)
-   
+
 instance (Show a, Eq a, Arbitrary a) => Testable (Law a) where
    property = propertyLaw (==)
 
@@ -62,6 +62,6 @@ instance (Arbitrary a, IsTerm a, Show a, Different a) => RuleBuilder (LawSpec a)
    buildRuleSpec i (Abs f)    = buildRuleSpec i f
    buildGenerator (a :==: b)  = buildGenerator (a :~> b)
    buildGenerator (Abs f)     = buildGenerator f
-   
+
 getLawSpec :: Law a -> LawSpec a
 getLawSpec (Law _ l) = l

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -14,20 +14,20 @@
 module Text.XML.Interface where
 
 import Control.Arrow
-import Text.XML.Document (Name)
-import Text.XML.Unicode (decoding)
-import Text.XML.Parser (document, extParsedEnt)
-import Text.Parsing (parseSimple)
-import qualified Text.XML.Document as D
-import System.FilePath (takeDirectory, pathSeparator)
 import Data.Char (chr, ord)
 import Data.Maybe
+import System.FilePath (takeDirectory, pathSeparator)
+import Text.Parsing (parseSimple)
+import Text.XML.Document (Name)
+import Text.XML.Parser (document, extParsedEnt)
+import Text.XML.Unicode (decoding)
+import qualified Text.XML.Document as D
 
 data Element = Element
    { name       :: Name
    , attributes :: Attributes
    , content    :: Content
-   } 
+   }
 
 instance Show Element where
    show = show . extend
@@ -41,13 +41,13 @@ normalize :: D.XMLDoc -> Element
 normalize doc = toElement (D.root doc)
  where
    toElement :: D.Element -> Element
-   toElement (D.Element n as c) = 
+   toElement (D.Element n as c) =
       Element n (map toAttribute as) (toContent c)
-   
+
    toAttribute :: D.Attribute -> Attribute
-   toAttribute (n D.:= v) = 
+   toAttribute (n D.:= v) =
       n := concatMap (either return refToString) v
-   
+
    toContent :: D.Content -> Content
    toContent = merge . concatMap f
     where
@@ -56,28 +56,28 @@ normalize doc = toElement (D.root doc)
       f (D.CharData s)  = [Left s]
       f (D.CDATA s)     = [Left s]
       f (D.Reference r) = refToContent r
-   
+
    refToString :: D.Reference -> String
    refToString (D.CharRef i)   = [chr i]
    refToString (D.EntityRef _) = "" -- error
-   
+
    refToContent :: D.Reference -> Content
    refToContent (D.CharRef i)   = [Left [chr i]]
-   refToContent (D.EntityRef s) = 
+   refToContent (D.EntityRef s) =
       fromJust (lookup s entities)
 
    entities :: [(String, Content)]
-   entities = 
-      [ (n, toContent (snd ext)) | (n, ext) <- D.externals doc ] ++ 
+   entities =
+      [ (n, toContent (snd ext)) | (n, ext) <- D.externals doc ] ++
       -- predefined entities
       map (second (return . Left . return))
          [("lt",'<'), ("gt",'>'), ("amp",'&'), ("apos",'\''), ("quot",'"')]
-   
+
    merge :: Content -> Content
    merge (Left s:Left t:rest) = merge (Left (s++t) : rest)
    merge (x:xs) = x:merge xs
    merge []     = []
-   
+
 extend :: Element -> D.XMLDoc
 extend e = D.XMLDoc
    { D.versionInfo = Nothing
@@ -91,16 +91,16 @@ extend e = D.XMLDoc
    toElement :: Element -> D.Element
    toElement (Element n as c) =
       D.Element n (map toAttribute as) (concatMap toXML c)
-   
+
    toAttribute :: Attribute -> D.Attribute
    toAttribute (n := s) = (D.:=) n (map Left s)
-   
+
    toXML :: Either String Element -> [D.XML]
    toXML = either fromString (return . D.Tagged . toElement)
-   
+
    fromString :: String -> [D.XML]
    fromString [] = []
-   fromString xs@(hd:tl) 
+   fromString xs@(hd:tl)
       | null xs1  = D.Reference (D.CharRef (ord hd)) : fromString tl
       | otherwise = D.CharData xs1 : fromString xs2
     where
@@ -127,14 +127,14 @@ parseIO baseFile = do
          let new = doc { D.externals = zip (map fst exts) rs }
          return (normalize new)
 
- where 
+ where
    getExternals :: D.XMLDoc -> [(String, String)]
    getExternals doc =
-      case D.dtd doc of 
+      case D.dtd doc of
          Just (D.DTD _ _ decls) ->
-            [ (n, s) | D.EntityDecl True n (Right (D.System s, Nothing)) <- decls ]  
+            [ (n, s) | D.EntityDecl True n (Right (D.System s, Nothing)) <- decls ]
          Nothing -> []
- 
+
    parseExternal :: String -> IO D.External
    parseExternal extFile = do
       let full = takeDirectory baseFile ++ [pathSeparator] ++ extFile
@@ -157,7 +157,7 @@ findAttribute s (Element _ as _) =
       _    -> fail $ "Invalid attribute: " ++ show s
 
 findChild :: Monad m => String -> Element -> m Element
-findChild s e = 
+findChild s e =
    case filter ((==s) . name) (children e) of
       [a] -> return a
       _   -> fail $ "Child not found: " ++ show s
@@ -173,9 +173,9 @@ children :: D.Element -> [D.Element]
 children (D.Element _ _ c) = [ e | D.Tagged e <- c ]
 
 getAttributes :: D.Element -> [(String, String)]
-getAttributes (D.Element _ as _) = 
+getAttributes (D.Element _ as _) =
    [ (n, concatMap f av) | n D.:= av <- as ]
- where 
+ where
    f :: Either Char D.Reference -> String
    f (Left c)              = [c]
    f (Right (D.CharRef n))   = [chr $ fromIntegral n]

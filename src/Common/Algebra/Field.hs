@@ -1,7 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -10,7 +10,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Algebra.Field 
+module Common.Algebra.Field
    ( -- * Semi-ring
      SemiRing(..), leftDistributive, rightDistributive
    , distributiveLaws, semiRingLaws
@@ -29,11 +29,11 @@ module Common.Algebra.Field
    , propsField
    ) where
 
-import Common.Algebra.Law
 import Common.Algebra.Group
+import Common.Algebra.Law
 import Control.Monad
-import qualified Control.Applicative as A
 import Test.QuickCheck
+import qualified Control.Applicative as A
 
 --------------------------------------------------------
 -- Semi-ring
@@ -59,7 +59,7 @@ distributiveLaws :: SemiRing a => [Law a]
 distributiveLaws = [leftDistributive, rightDistributive]
 
 semiRingLaws :: SemiRing a => [Law a]
-semiRingLaws = 
+semiRingLaws =
    map fromAdditiveLaw commutativeMonoidLaws ++
    map fromMultiplicativeLaw monoidZeroLaws ++
    distributiveLaws
@@ -78,35 +78,35 @@ class SemiRing a => Ring a where
    a <-> b     = a <+> plusInverse b
 
 leftNegateTimes :: Ring a => Law a
-leftNegateTimes = law "left-negate-times" $ \a b -> 
+leftNegateTimes = law "left-negate-times" $ \a b ->
    plusInverse a <*> b :==: plusInverse (a <*> b)
 
 rightNegateTimes :: Ring a => Law a
-rightNegateTimes = law "right-negate-times" $ \a b -> 
+rightNegateTimes = law "right-negate-times" $ \a b ->
    a <*> plusInverse b :==: plusInverse (a <*> b)
 
 negateTimesLaws :: Ring a => [Law a]
 negateTimesLaws = [leftNegateTimes, rightNegateTimes]
 
 ringLaws :: Ring a => [Law a]
-ringLaws = 
+ringLaws =
    map fromAdditiveLaw abelianGroupLaws ++
    map fromMultiplicativeLaw monoidZeroLaws ++
    distributiveLaws ++ negateTimesLaws
 
 commutativeRingLaws :: Ring a => [Law a]
-commutativeRingLaws = 
+commutativeRingLaws =
    fromMultiplicativeLaw commutative : ringLaws
 
 distributiveSubtractionLaws :: Ring a => [Law a]
-distributiveSubtractionLaws = 
+distributiveSubtractionLaws =
    [leftDistributiveFor (<*>) (<->), rightDistributiveFor (<*>) (<->)]
 
 --------------------------------------------------------
 -- Field
-   
+
 infixl 7 </>
-   
+
 -- Minimal complete definition: mulInverse or </>
 class Ring a => Field a where
    timesInverse :: a -> a
@@ -115,8 +115,8 @@ class Ring a => Field a where
    timesInverse = (one </>)
    a </> b      = a <*> timesInverse b
 
-exchangeInverses :: Field a => Law a 
-exchangeInverses = law "exchange-inverses" $ \a -> 
+exchangeInverses :: Field a => Law a
+exchangeInverses = law "exchange-inverses" $ \a ->
    timesInverse (plusInverse a) :==: plusInverse (timesInverse a)
 
 fieldLaws :: Field a => [Law a]
@@ -141,7 +141,7 @@ instance A.Applicative Additive where
 instance SemiRing a => Monoid (Additive a) where
    mempty  = A.pure zero
    mappend = A.liftA2 (<+>)
- 
+
 instance Ring a => Group (Additive a) where
    inverse   = A.liftA plusInverse
    appendInv = A.liftA2 (<->)
@@ -165,12 +165,12 @@ instance A.Applicative Multiplicative where
 instance SemiRing a => Monoid (Multiplicative a) where
    mempty  = A.pure one
    mappend = A.liftA2 (<*>)
-   
+
 instance Field a => Group (Multiplicative a) where
    inverse   = A.liftA timesInverse
    appendInv = A.liftA2 (</>)
-   
-instance SemiRing a => MonoidZero (Multiplicative a) where 
+
+instance SemiRing a => MonoidZero (Multiplicative a) where
    mzero = Multiplicative zero
 
 fromMultiplicativeLaw :: Law (Multiplicative a) -> Law a
@@ -201,12 +201,12 @@ instance Show a => Show (SafeNum a) where
 
 instance Functor SafeNum where
    fmap f = either Exception (return . f) . safeNum
-  
+
 instance Monad SafeNum where
    return  = Ok
    fail    = Exception
    m >>= f = either Exception f (safeNum m)
-   
+
 instance Num a => Num (SafeNum a) where
    (+) = liftM2 (+)
    (*) = liftM2 (*)
@@ -215,7 +215,7 @@ instance Num a => Num (SafeNum a) where
    abs    = liftM abs
    signum = liftM signum
    fromInteger = return . fromInteger
-   
+
 instance Fractional a => Fractional (SafeNum a) where
    a / b = liftM2 (/) a (safeDivisor b)
    recip = liftM recip . safeDivisor
@@ -226,18 +226,18 @@ instance Num a => SemiRing (SafeNum a) where
    (<*>) = (*)
    zero  = 0
    one   = 1
-   
+
 instance Num a => Ring (SafeNum a) where
    plusInverse = negate
    (<->)       = (-)
-   
+
 instance Fractional a => Field (SafeNum a) where
    timesInverse = recip
    (</>)        = (/)
-   
+
 safeDivisor :: Num a => SafeNum a -> SafeNum a
-safeDivisor m = m >>= \a -> 
+safeDivisor m = m >>= \a ->
    if a == 0 then fail "division by zero" else return a
-   
+
 propsField :: [Property]
-propsField = map property (fieldLaws :: [Law (SafeNum Rational)]) 
+propsField = map property (fieldLaws :: [Law (SafeNum Rational)])

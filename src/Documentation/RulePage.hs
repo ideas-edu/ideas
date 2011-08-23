@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -30,27 +30,27 @@ data ExItem a = EI (Exercise a) (ExampleMap a)
 
 makeRulePages :: String -> DomainReasoner ()
 makeRulePages dir = do
-   exs <- getExercises 
-   let exMap = M.fromList 
+   exs <- getExercises
+   let exMap = M.fromList
           [ (getId ex, Some (EI ex (collectExamples ex)))
           | Some ex <- exs
           ]
        ruleMap = M.fromListWith (++)
-          [ (getId r, [Some ex]) 
+          [ (getId r, [Some ex])
           | Some ex <- exs
           , r <- ruleset ex
           ]
-   forM_ (M.toList ruleMap) $ \(ruleId, list) -> 
+   forM_ (M.toList ruleMap) $ \(ruleId, list) ->
       case list of
          [] -> return ()
-         Some ex:_ -> 
+         Some ex:_ ->
             case M.findWithDefault noExamples (getId ex) exMap of
                Some (EI ex1 e) ->
                   forM_ (getRule ex1 ruleId) $ \r ->
                      generatePageAt lev dir (ruleFile ruleId) $
                         rulePage ex1 e usedIn r
           where
-            noExamples = Some (EI ex M.empty) 
+            noExamples = Some (EI ex M.empty)
             lev        = length (qualifiers ruleId) + 1
             usedIn     = sortBy compareId [ getId ex1 | Some ex1 <- list ]
 
@@ -61,7 +61,7 @@ rulePage ex exMap usedIn r = do
    para $ table False
       [ [bold $ text "Buggy", text $ showBool (isBuggyRule r)]
       , [bold $ text "Rewrite rule", text $ showBool (isRewriteRule r)]
-      , [bold $ text "Siblings", idList $ ruleSiblings r] 
+      , [bold $ text "Siblings", idList $ ruleSiblings r]
       ]
    when (isRewriteRule r) $ para $
       ruleToHTML (Some ex) r
@@ -75,22 +75,22 @@ rulePage ex exMap usedIn r = do
    let ys  = M.findWithDefault [] (getId r) exMap
    unless (null ys) $ do
       h3 "Examples"
-      forM_ (take 3 ys) $ \(a, b) -> para $ divClass "step" $ pre $ do 
+      forM_ (take 3 ys) $ \(a, b) -> para $ divClass "step" $ pre $ do
          forTerm ex (inContext ex a)
          forStep upn (getId r, emptyEnv)
          forTerm ex (inContext ex b)
-         
+
    -- FMPS
    let xs = getRewriteRules r
    unless (null xs) $ do
       h3 "Formal Mathematical Properties"
       forM_ xs $ \(Some rr, b) -> para $ do
          let fmp = rewriteRuleToFMP b rr
-         highlightXML False $ XML.makeXML "FMP" $ 
+         highlightXML False $ XML.makeXML "FMP" $
             XML.builder (omobj2xml (toObject fmp))
 
-forStep :: Int -> (Id, Environment) -> HTMLBuilder  
-forStep n (i, env) = do 
+forStep :: Int -> (Id, Environment) -> HTMLBuilder
+forStep n (i, env) = do
       spaces 3
       text "=>"
       space

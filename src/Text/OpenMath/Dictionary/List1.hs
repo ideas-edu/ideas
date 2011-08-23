@@ -26,4 +26,3 @@ suchthatSymbol = makeSymbol "list1" "suchthat"
 list entries must be given explicitly. -}
 listSymbol :: Symbol
 listSymbol = makeSymbol "list1" "list"
-

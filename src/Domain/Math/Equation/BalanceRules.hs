@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,16 +9,16 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Equation.BalanceRules 
-   ( plusT, minusT, timesT, divisionT 
+module Domain.Math.Equation.BalanceRules
+   ( plusT, minusT, timesT, divisionT
    ) where
 
 import Common.Transformation
 import Common.View
 import Control.Monad
 import Domain.Math.Data.Relation
-import Domain.Math.Numeric.Views
 import Domain.Math.Expr
+import Domain.Math.Numeric.Views
 
 plusT, minusT :: Functor f => Expr -> Transformation (f Expr)
 plusT  e = makeTrans $ return . fmap (:+: e)

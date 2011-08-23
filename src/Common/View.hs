@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs, GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -13,7 +13,7 @@
 -- in Interactive Exercise Assistants"
 --
 -----------------------------------------------------------------------------
-module Common.View 
+module Common.View
    ( Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)
    , Control.Arrow.ArrowZero(..), Control.Arrow.ArrowPlus(..)
    , (>>>), (<<<)
@@ -35,9 +35,9 @@ module Common.View
    , propIdempotence, propSoundness, propNormalForm
    ) where
 
+import Common.Classes
 import Common.Id
 import Control.Arrow
-import Common.Classes
 import Control.Monad
 import Data.Maybe
 import Test.QuickCheck
@@ -45,7 +45,7 @@ import qualified Control.Category as C
 import qualified Data.Traversable as T
 
 ----------------------------------------------------------------------------------
--- @IsMatch@ type class 
+-- @IsMatch@ type class
 
 class IsMatch f where
    match   :: f a b -> a -> Maybe b
@@ -80,7 +80,7 @@ makeMatch :: (a -> Maybe b) -> Match a b
 makeMatch = M . Kleisli
 
 ----------------------------------------------------------------------------------
--- @IsView@ type class 
+-- @IsView@ type class
 
 -- |Minimal complete definition: @toView@ or both @match@ and @build@.
 class IsMatch f => IsView f where
@@ -97,12 +97,12 @@ canonicalWith :: IsView f => (b -> b) -> f a b -> a -> Maybe a
 canonicalWith f = canonicalWithM (return . f)
 
 canonicalWithM :: IsView f => (b -> Maybe b) -> f a b -> a -> Maybe a
-canonicalWithM f view a = 
+canonicalWithM f view a =
    match view a >>= liftM (build view) . f
 
 isCanonical :: (IsView f, Eq a) => f a b -> a -> Bool
 isCanonical = isCanonicalWith (==)
-      
+
 isCanonicalWith :: IsView f => (a -> a -> Bool) -> f a b -> a -> Bool
 isCanonicalWith eq v a = maybe False (eq a) (canonical v a)
 
@@ -118,7 +118,7 @@ simplifyWith f view a = fromMaybe a (canonicalWith f view a)
 data View a b where
    Prim    :: Match a b -> (b -> a) -> View a b
    (:@)    :: Id -> View a b -> View a b
-   (:>>>:) :: View a b -> View b c -> View a c 
+   (:>>>:) :: View a b -> View b c -> View a c
    (:***:) :: View a c -> View b d -> View (a, b) (c, d)
    (:+++:) :: View a c -> View b d -> View (Either a b) (Either c d)
    Traverse :: T.Traversable f => View a b -> View (f a) (f b)
@@ -129,7 +129,7 @@ instance C.Category View where
 
 instance Arrow View where
    arr     = (!->)
-   first   = (*** identity) 
+   first   = (*** identity)
    second  = (identity ***)
    (***)   = (:***:)
    f &&& g = copy >>> (f *** g)
@@ -143,7 +143,7 @@ instance ArrowChoice View where
    (+++)   = (:+++:)
    f ||| g = (f +++ g) >>> merge
 
-instance IsMatch View where 
+instance IsMatch View where
    matcher view =
       case view of
          Prim m _   -> m
@@ -154,7 +154,7 @@ instance IsMatch View where
          Traverse v -> makeMatch $ T.mapM (match v)
 
 instance IsView View where
-   build view = 
+   build view =
       case view of
          Prim _ f   -> f
          _ :@ v     -> build v
@@ -183,7 +183,7 @@ makeView = matcherView . makeMatch
 matcherView :: Match a b -> (b -> a) -> View a b
 matcherView = Prim
 
-identity :: C.Category f => f a a 
+identity :: C.Category f => f a a
 identity = C.id
 
 ----------------------------------------------------------------------------------
@@ -198,7 +198,7 @@ instance C.Category Isomorphism where
 
 instance Arrow Isomorphism where
    arr     = (!->)
-   first   = (*** identity) 
+   first   = (*** identity)
    second  = (identity ***)
    p *** q = from p *** from q <-> to p *** to q
    f &&& g = copy >>> (f *** g)
@@ -218,7 +218,7 @@ instance IsMatch Isomorphism where
 instance IsView Isomorphism where
    toView p = getId p @> makeView (match p) (to p)
 
-instance HasId (Isomorphism a b) where 
+instance HasId (Isomorphism a b) where
    getId = pid
    changeId f p = p { pid = f (pid p) }
 
@@ -258,7 +258,7 @@ merge = either id id <-> Left
 -- Packaging a view for documentation purposes
 
 data ViewPackage where
-   ViewPackage :: 
+   ViewPackage ::
       (Show a, Show b, Eq a) => (String -> Maybe a) -> View a b -> ViewPackage
 
 instance HasId ViewPackage where
@@ -269,14 +269,14 @@ instance HasId ViewPackage where
 -- Properties on views
 
 propIdempotence :: (Show a, Eq a) => Gen a -> View a b -> Property
-propIdempotence g v = forAll g $ \a -> 
+propIdempotence g v = forAll g $ \a ->
    let b = simplify v a
    in b == simplify v b
 
 propSoundness :: Show a => (a -> a -> Bool) -> Gen a -> View a c -> Property
-propSoundness semEq g v = forAll g $ \a -> 
+propSoundness semEq g v = forAll g $ \a ->
    let b = simplify v a
    in semEq a b
-   
+
 propNormalForm :: (Show a, Eq a) => Gen a -> View a b -> Property
 propNormalForm g v = forAll g $ \a -> a == simplify v a

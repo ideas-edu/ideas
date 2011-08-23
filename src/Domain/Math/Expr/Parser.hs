@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -27,12 +27,12 @@ import Data.Monoid
 import Domain.Logic.Formula (Logic, catLogic)
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
+import Domain.Math.Data.WithBool
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbols
-import Domain.Math.Data.WithBool
 import Prelude hiding ((^))
-import Text.Parsing
 import Test.QuickCheck (arbitrary)
+import Text.Parsing
 import qualified Text.ParserCombinators.Parsec.Token as P
 
 parseExpr :: String -> Either String Expr
@@ -49,7 +49,7 @@ parseBoolEqExpr = parseSimple (boolAtom (equation expr))
 
 parseRelExpr :: String -> Either String (Relation Expr)
 parseRelExpr = parseSimple (relation expr)
-   
+
 parseOrsEqExpr :: String -> Either String (OrList (Equation Expr))
 parseOrsEqExpr = parseSimple (ors (equation expr))
 
@@ -68,14 +68,14 @@ ors p = mconcat <$> sepBy1 (boolAtom p) (reserved "or")
 logic :: Parser a -> Parser (Logic a)
 logic p = buildExpressionParser table (boolAtom p)
  where
-   table = 
-      [ [Infix ((<&&>) <$ reservedOp "and") AssocRight] 
-      , [Infix ((<||>) <$ reservedOp "or" ) AssocRight] 
+   table =
+      [ [Infix ((<&&>) <$ reservedOp "and") AssocRight]
+      , [Infix ((<||>) <$ reservedOp "or" ) AssocRight]
       ]
 
 boolAtom :: (Container f, BoolValue (f a)) => Parser a -> Parser (f a)
-boolAtom p = choice 
-   [ true      <$  reserved "true" 
+boolAtom p = choice
+   [ true      <$  reserved "true"
    , false     <$  reserved "false"
    , singleton <$> p
    ]
@@ -96,19 +96,19 @@ relType :: Parser (a -> a -> Relation a)
 relType = choice (map make table)
  where
    make (s, f) = reserved s >> return f
-   table = 
+   table =
       [ ("==", (.==.)), ("<=", (.<=.)), (">=", (.>=.))
       , ("<", (.<.)), (">", (.>.)), ("~=", (.~=.))
       ]
-      
+
 tuple :: Parser a -> Parser [a]
 tuple p = parens (sepBy p comma)
 
 expr :: Parser Expr
-expr = buildExpressionParser exprTable term 
+expr = buildExpressionParser exprTable term
 
 term :: Parser Expr
-term = choice 
+term = choice
    [ sqrt <$ reserved "sqrt" <*> atom
    , binary rootSymbol <$ reserved "root" <*> atom <*> atom
    , binary logSymbol  <$ reserved "log"  <*> atom <*> atom
@@ -120,7 +120,7 @@ term = choice
         as <- many atom
         return (function (newSymbol a) as)
    , atom
-   ] 
+   ]
 
 pmixed :: Parser Expr
 pmixed = do
@@ -130,18 +130,18 @@ pmixed = do
       reservedOp "/"
       c <- natural
       return $ mixed a b c
-      
+
 atom :: Parser Expr
-atom = choice 
+atom = choice
    [ try pmixed
-   , do notFollowedBy (char '-') 
+   , do notFollowedBy (char '-')
         either fromInteger fromDouble <$> naturalOrFloat
-   , variable <$> identifier 
+   , variable <$> identifier
    , parens expr
    ]
 
 exprTable :: [[Operator Char () Expr]]
-exprTable = 
+exprTable =
    [ -- precedence level 7
      [ Infix ((^) <$ reservedOp "^") AssocRight
      ]
@@ -150,8 +150,8 @@ exprTable =
      , Infix ((/) <$ reservedOp "/") AssocLeft
      ]
      -- precedence level 6+
-   , [ Prefix (negate <$ reservedOp "-") 
-     ] 
+   , [ Prefix (negate <$ reservedOp "-")
+     ]
      -- precedence level 6
    , [ Infix ((+) <$ reservedOp "+") AssocLeft
      , Infix ((-) <$ reservedOp "-") AssocLeft
@@ -162,7 +162,7 @@ exprTable =
 -- Lexing
 
 lexer :: P.TokenParser a
-lexer = P.makeTokenParser $ emptyDef 
+lexer = P.makeTokenParser $ emptyDef
    { reservedNames   = ["sqrt", "root", "log", "and", "or", "true", "false", "D"]
    , reservedOpNames = ["==", "<=", ">=", "<", ">", "~=", "+", "-", "*", "^", "/"]
    }
@@ -174,7 +174,7 @@ qualId :: CharParser st Id
 qualId = try (P.lexeme lexer (do
    xs <- idPart `sepBy1` char '.'
    guard (length xs > 1)
-   return (mconcat (map newId xs))) 
+   return (mconcat (map newId xs)))
  <?> "qualified identifier")
  where
    idPart   = (:) <$> letter <*> many idLetter
@@ -199,5 +199,5 @@ parens = P.parens lexer
 -- Argument descriptor (for parameterized rules)
 
 instance Argument Expr where
-   makeArgDescr descr = 
+   makeArgDescr descr =
       ArgDescr descr Nothing parseExprM show termView arbitrary

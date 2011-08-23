@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -48,7 +48,7 @@ relative d (x:xs@(y:_))
 
 -- http://en.wikipedia.org/wiki/Bisection_method
 bisection :: Function -> [Double] -> Approximation
-bisection f ds = 
+bisection f ds =
    case partition ((<= 0) . f) ds of
       (lo:_, hi:_) -> run hi lo
       _            -> []
@@ -72,7 +72,7 @@ newton f df x0 = iterate next x0
 
 ------------------------------------------------------------
 -- Finding the derivative of a function
-    
+
 derivative :: Double -> Function -> Function
 derivative delta f x = (f (x+delta) - f (x-delta)) / (2*delta)
 

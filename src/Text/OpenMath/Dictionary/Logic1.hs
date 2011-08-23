@@ -48,4 +48,3 @@ trueSymbol = makeSymbol "logic1" "true"
 {-| This symbol represents the boolean value false. -}
 falseSymbol :: Symbol
 falseSymbol = makeSymbol "logic1" "false"
-

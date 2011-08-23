@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -17,12 +17,12 @@ import Common.Algebra.Boolean
 import Common.Algebra.CoBoolean
 import Common.Library
 import Common.Rewriting.AC
-import Common.Utils.Uniplate
 import Common.Utils
+import Common.Utils.Uniplate
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Domain.Logic.Examples 
+import Domain.Logic.Examples
 import Domain.Logic.Formula
 import Domain.Logic.GeneralizedRules
 import Domain.Logic.Generator (equalLogicA)
@@ -49,8 +49,8 @@ proofExercise = makeExercise
    , ready          = predicate $ all (uncurry equalLogicA)
    , strategy       = proofStrategy
    , navigation     = termNavigator
-   , examples       = map (\a -> (Easy, return a)) $ 
-                      let p = Var (ShowString "p") 
+   , examples       = map (\a -> (Easy, return a)) $
+                      let p = Var (ShowString "p")
                           q = Var (ShowString "q")
                       in exampleProofs ++ [(q :&&: p, p :&&: (q :||: q))]
    }
@@ -60,7 +60,7 @@ instance (IsTerm a, IsTerm b) => IsTerm (a, b) where
    fromTerm term = do
       (a, b) <- isBinary tupleSymbol term
       liftM2 (,) (fromTerm a) (fromTerm b)
-   
+
 tupleSymbol :: Symbol
 tupleSymbol = newSymbol "basic.tuple"
 
@@ -83,7 +83,7 @@ proofStrategy = label "proof equivalent" $
       use tautologyOr <|> use idempotencyAnd <|> use contradictionAnd
       <|> use absorptionSubset <|> use fakeAbsorption <|> use fakeAbsorptionNot
       <|> alternatives (map use list)
-            
+
    list = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleIdempOr
           , ruleAbsorpOr, ruleComplOr
           ]
@@ -104,7 +104,7 @@ dnfStrategyDWA =
       |> label "Move ors to top"                     orToTop
       )
  where
-    toplevel = useRules 
+    toplevel = useRules
        [ ruleFalseZeroOr, ruleTrueZeroOr, ruleIdempOr
        , ruleAbsorpOr, ruleComplOr
        ]
@@ -121,7 +121,7 @@ dnfStrategyDWA =
        [ generalRuleDeMorganAnd, generalRuleDeMorganOr
        , ruleDeMorganAnd, ruleDeMorganOr
        ]
-    orToTop = somewhere $ useRules 
+    orToTop = somewhere $ useRules
        [ generalRuleAndOverOr, ruleAndOverOr ]
 
 useRules :: [Rule SLogic] -> Strategy (Context SLogic)
@@ -130,25 +130,25 @@ useRules = alternatives . map liftToContext
 onceLeft :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onceLeft s = ruleMoveDown <*> s <*> ruleMoveUp
  where
-   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" (down 1)   
+   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" (down 1)
    ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
-   
+
    safeUp a = Just (fromMaybe a (up a))
-   
+
 onceRight :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onceRight s = ruleMoveDown <*> s <*> ruleMoveUp
  where
-   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" (down 2)   
+   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" (down 2)
    ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
-   
+
    safeUp a = Just (fromMaybe a (up a))
 
 testje :: Rule (Context SLogic)
 testje = makeSimpleRule "testje" $ \a -> error $ show a
 
 go n = printDerivation proofExercise [exampleProofs !! n] --(p :||: Not p, Not F)
- --where p = Var (ShowString "p") 
- 
+ --where p = Var (ShowString "p")
+
 normLogicRule :: Rule (SLogic, SLogic)
 normLogicRule = makeSimpleRule "Normalize" $ \tuple@(p, q) -> do
    guard (p /= q)
@@ -159,8 +159,8 @@ normLogicRule = makeSimpleRule "Normalize" $ \tuple@(p, q) -> do
 
 -- Find a common subexpression that can be treated as a box
 commonExprAtom :: Rule (Context (SLogic, SLogic))
-commonExprAtom = makeSimpleRule "commonExprAtom" $ withCM $ \(p, q) -> do 
-   let f  = filter same . filter ok . nub . sort . universe 
+commonExprAtom = makeSimpleRule "commonExprAtom" $ withCM $ \(p, q) -> do
+   let f  = filter same . filter ok . nub . sort . universe
        xs = f p `intersect` f q -- todo: only largest common sub expr
        ok (Var _) = False
        ok T       = False
@@ -172,20 +172,20 @@ commonExprAtom = makeSimpleRule "commonExprAtom" $ withCM $ \(p, q) -> do
        sub a this
           | a == this = Var new
           | otherwise = descend (sub a) this
-   case xs of 
+   case xs of
       hd:_ -> do modifyVar substVar ((show new, show hd):)
                  return (sub hd p, sub hd q)
       _ -> fail "not applicable"
-   
+
 substVar :: Var [(String, String)]
 substVar = newVar "subst" []
-   
+
 logicVars :: [ShowString]
 logicVars = [ ShowString [c] | c <- ['a'..] ]
 
 normLogic :: Ord a => Logic a -> Logic a
-normLogic p = normLogicWith (sort (varsLogic p)) p 
-   
+normLogic p = normLogicWith (sort (varsLogic p)) p
+
 normLogicWith :: Eq a => [a] -> Logic a -> Logic a
 normLogicWith xs p = make (filter keep (subsets xs))
  where
@@ -195,7 +195,7 @@ normLogicWith xs p = make (filter keep (subsets xs))
    f b = if b then id else Not
 
 -- p \/ q \/ ~p     ~> T           (propageren)
-tautologyOr :: Rule SLogic 
+tautologyOr :: Rule SLogic
 tautologyOr = makeSimpleRule "tautologyOr" $ \p -> do
    let xs = disjunctions p
    guard (any (\x -> Not x `elem` xs) xs)
@@ -225,7 +225,7 @@ absorptionSubset = makeSimpleRule "absorptionSubset" $ \p -> do
        ok xs ys = not (ys `isSubsetOf` xs) || xs == ys
    guard (length yss < length xss)
    return $ ors (map ands yss)
-   
+
 -- p \/ ... \/ (~p /\ q /\ r)  ~> p \/ ... \/ (q /\ r)
 --    (p is hier een losse variabele)
 fakeAbsorption :: Rule SLogic
@@ -287,11 +287,11 @@ topIsImpl = makeSimpleRule "top-is-impl" f
       guard (eqLogic p r && eqLogic q s)
       return [(p, r), (q, s)]
    f _ = Nothing
-   
+
 {- Strategie voor sterke(?) normalisatie
 
 (prioritering)
- 
+
 1. p \/ q \/ ~p     ~> T           (propageren)
    p /\ q /\ p      ~> p /\ q
    p /\ q /\ ~p     ~> F           (propageren)
@@ -306,7 +306,7 @@ topIsImpl = makeSimpleRule "top-is-impl" f
 3. a) elimineren wat aan een kant helemaal niet voorkomt (zie regel hieronder)
    b) rijtjes sorteren
    c) rijtjes aanvullen
-   
+
 Twijfelachtige regel bij stap 3: samennemen in plaats van aanvullen:
    (p /\ q /\ r) \/ ... \/ (~p /\ q /\ r)   ~> q /\ r
           (p is hier een losse variable)

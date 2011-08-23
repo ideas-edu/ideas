@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -37,9 +37,9 @@ propEchelon =
    fromMaybe False . fromContextWith inRowEchelonForm . applyD forwardPass . gaussContext
 
 propReducedEchelon :: Matrix Rational -> Bool
-propReducedEchelon = 
+propReducedEchelon =
    fromMaybe False . fromContextWith inRowReducedEchelonForm . applyD gaussianElimStrategy . gaussContext
-   
+
 propSound :: Matrix Rational -> Bool
 propSound m =
    (fromContext . applyD gaussianElimStrategy . gaussContext) m
@@ -47,7 +47,7 @@ propSound m =
 
 propSolution :: Matrix Rational -> Property
 propSolution m1 =
-   forAll (arbSolution m1) $ \(solution, m2) -> 
+   forAll (arbSolution m1) $ \(solution, m2) ->
       let m3  = (fromContext . applyD gaussianElimStrategy . gaussContext) m2
           p r = simplify (sum (zipWith g (solution ++ [-1]) r)) == 0
           g   = (*) . fromRational

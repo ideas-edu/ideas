@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -18,9 +18,9 @@ import Control.Monad.Error
 import Data.Char
 import Data.Monoid
 import Service.FeedbackScript.Syntax
+import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Char
 import Text.ParserCombinators.Parsec.Prim
-import Text.ParserCombinators.Parsec
 import Text.Parsing
 
 -- chases all included script files
@@ -49,7 +49,7 @@ script :: Parser Script
 script = makeScript <$> complete decls
 
 decls :: Parser [Decl]
-decls = many $ do 
+decls = many $ do
    pos <- getPosition
    guard (sourceColumn pos == 1)
    decl
@@ -64,14 +64,14 @@ decl = do
    NameSpace <$ lexString "namespace" <*>  identifiers
  <|>
    Supports <$ lexString "supports" <*> identifiers
- <|> 
+ <|>
    Include <$ lexString "include" <*> filenames
  <?> "declaration"
 
 simpleDecl, guardedDecl :: Parser (DeclType -> [Id] -> Decl)
-simpleDecl  =  (\t dt a -> Simple dt a t) 
+simpleDecl  =  (\t dt a -> Simple dt a t)
            <$> text
-guardedDecl =  (\xs dt a -> Guarded dt a xs) 
+guardedDecl =  (\xs dt a -> Guarded dt a xs)
            <$> many1 ((,) <$> (lexChar '|' *> condition) <*> text)
 
 declType :: Parser DeclType
@@ -83,7 +83,7 @@ condition :: Parser Condition
 condition = choice
    [ CondRef         <$> lexeme attribute
    , RecognizedIs    <$  lexString "recognize" <*> identifier
-   , CondConst True  <$  lexString "true" 
+   , CondConst True  <$  lexString "true"
    , CondConst False <$  lexString "false"
    , CondNot         <$  lexString "not" <*> condition
    ]
@@ -92,12 +92,12 @@ text :: Parser Text
 text = lexChar '=' *> (singleLineText <|> multiLineText)
 
 singleLineText :: Parser Text
-singleLineText = 
+singleLineText =
    mconcat <$> manyTill textItem (lexeme (skip newline <|> comment))
 
 multiLineText :: Parser Text
-multiLineText = 
-   mconcat <$  char '{' 
+multiLineText =
+   mconcat <$  char '{'
            <*> manyTill (textItem <|> (mempty <$ newline)) (lexChar '}')
 
 textItem :: Parser Text
@@ -120,10 +120,10 @@ identifier = lexeme (mconcat . map newId <$> idPart `sepBy1` char '.')
 attribute :: Parser Id
 attribute = newId <$ skip (char '@') <*>  many1 (alphaNum <|> oneOf "-_")
    <?> "attribute"
- 
+
 filenames :: Parser [FilePath]
 filenames = sepBy1 filename (lexChar ',')
-  
+
 filename :: Parser FilePath
 filename = lexeme $ many1 (alphaNum <|> oneOf "+-_./\\:;|")
 
@@ -136,6 +136,6 @@ lexString s = skip (lexeme (try (string s))) <?> "string " ++ show s
 comment :: Parser ()
 comment = skip (char '#' <* manyTill (noneOf "\n") (skip newline <|> eof))
 
--- parse white space and comments afterwards   
+-- parse white space and comments afterwards
 lexeme :: Parser a -> Parser a
 lexeme p = p <* skipMany (skip space <|> comment)

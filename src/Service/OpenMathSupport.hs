@@ -1,7 +1,7 @@
 {-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -20,22 +20,22 @@ import Common.Library
 import Control.Monad
 import Data.Char
 import Data.List
-import Text.OpenMath.Object
-import qualified Text.OpenMath.Symbol as OM
 import Text.OpenMath.Dictionary.Arith1
 import Text.OpenMath.Dictionary.Fns1
+import Text.OpenMath.Object
+import qualified Text.OpenMath.Symbol as OM
 
 -----------------------------------------------------------------------------
 -- Utility functions for conversion to/from OpenMath
 
-toOpenMath :: Monad m => Exercise a -> a -> m OMOBJ 
+toOpenMath :: Monad m => Exercise a -> a -> m OMOBJ
 toOpenMath ex a = do
-   v <- hasTermViewM ex 
+   v <- hasTermViewM ex
    return (toOMOBJ (build v a))
 
 fromOpenMath :: MonadPlus m => Exercise a -> OMOBJ -> m a
-fromOpenMath ex omobj = do 
-   v <- hasTermViewM ex 
+fromOpenMath ex omobj = do
+   v <- hasTermViewM ex
    a <- fromOMOBJ omobj
    matchM v a
 
@@ -52,17 +52,17 @@ toOMOBJ = rec . toTerm
          TApp _ _  -> let (f, xs) = getSpine term
                       in make (map rec (f:xs))
 
-   make [OMS s, OMV x, body] | s == lambdaSymbol = 
+   make [OMS s, OMV x, body] | s == lambdaSymbol =
       OMBIND (OMS s) [x] body
    make [OMS s, a, b, c] | s == mfSymbol = -- special for mixed fraction symbol
       OMA [OMS plusSymbol, a, OMA [OMS divideSymbol, b, c]]
    make xs = OMA xs
 
 fromOMOBJ :: (MonadPlus m, IsTerm a) => OMOBJ -> m a
-fromOMOBJ = (>>= fromTerm) . rec 
+fromOMOBJ = (>>= fromTerm) . rec
  where
    rec omobj =
-      case omobj of 
+      case omobj of
          OMV x -> case isMeta x of
                      Just n  -> return (TMeta n)
                      Nothing -> return (TVar x)
@@ -79,11 +79,11 @@ fromOMOBJ = (>>= fromTerm) . rec
 
 idToSymbol :: Id -> OM.Symbol
 idToSymbol a
-   | null (qualifiers a) = 
+   | null (qualifiers a) =
         OM.extraSymbol (unqualified a)
-   | otherwise = 
+   | otherwise =
         OM.makeSymbol (qualification a) (unqualified a)
-        
+
 hasTermViewM  :: Monad m => Exercise a -> m (View Term a)
 hasTermViewM = maybe (fail "No support for terms") return . hasTermView
 

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -16,9 +16,8 @@ module Domain.Math.Data.PrimeFactors
    , primes, greatestPower, allPowers
    ) where
 
-import qualified Data.IntMap as IM
 import Data.Maybe
-
+import qualified Data.IntMap as IM
 
 -------------------------------------------------------------
 -- Representation
@@ -27,9 +26,9 @@ import Data.Maybe
 -- * Keys in map are prime numbers only (exception: representation of 0)
 -- * Elements in map are positive (non-zero)
 -- * Zero is represented by [(0,1)] (since 0^1 equals 0)
--- * The number can be negative, in which case we use the factors of 
+-- * The number can be negative, in which case we use the factors of
 --   its absolute value
-data PrimeFactors = PF Integer Factors 
+data PrimeFactors = PF Integer Factors
 
 type Factors = IM.IntMap Int
 
@@ -55,14 +54,13 @@ toFactors a
        where
          (q, r) = quotRem m p2
 
-
 fromFactors :: Factors -> Integer
 fromFactors = product . map f . IM.toList
  where f (a, i) = toInteger a ^ toInteger i
 
--- For practical reasons, the list of prime numbers is cut-off after 
+-- For practical reasons, the list of prime numbers is cut-off after
 -- 1000 elements (last primes gives 7919).
-primes :: [Int] 
+primes :: [Int]
 primes = take 1000 $ rec [2..]
  where
    rec (x:xs) = x : rec (filter (\y -> y `mod` x /= 0) xs)
@@ -79,7 +77,7 @@ instance Eq PrimeFactors where
 
 instance Ord PrimeFactors where
    PF a _ `compare` PF b _ = a `compare` b
-   
+
 instance Num PrimeFactors where
    PF a m1 + PF b m2
       | a==0         = PF b m2 -- prevent recomputing prime factors
@@ -96,14 +94,14 @@ instance Num PrimeFactors where
 instance Enum PrimeFactors where
    toEnum   = fromIntegral
    fromEnum = fromIntegral . toInteger
-   
+
 instance Real PrimeFactors where
    toRational = toRational . toInteger
-   
+
 instance Integral PrimeFactors where
    toInteger (PF a _) = a
    quotRem = quotRemPF
-   
+
 -------------------------------------------------------------
 -- Utility functions
 
@@ -126,40 +124,40 @@ power (PF a m) i = PF (a^i) (IM.map (*i) m)
 -- brute force, ugly
 greatestPower :: Integer -> Maybe (Integer, Integer)
 greatestPower n = f 2 1
-  where 
+  where
     f b e | n == b ^ e = Just (b, e)
           | b > n      = Nothing
           | b ^ e > n  = f (b + 1) 1
           | otherwise  = f b (e + 1)
 
 -- -- n == a^x with (a,x) == greatestPower n
--- prop_greatestPower n = traceShow n $ 
---    maybe True (\(a,x) -> fromIntegral a ^ fromIntegral x == n) $ greatestPower n 
+-- prop_greatestPower n = traceShow n $
+--    maybe True (\(a,x) -> fromIntegral a ^ fromIntegral x == n) $ greatestPower n
 
 allPowers :: Integer -> [(Integer, Integer)]
 allPowers n = do
-  (b, e) <- maybeToList $ greatestPower n 
+  (b, e) <- maybeToList $ greatestPower n
   let f i = let (a, r) = e `divMod` i
             in if a > 1 && r == 0 then Just (b^i, a) else Nothing
   mapMaybe f [1..e]
 
--- prop_allPowers n = traceShow n $ 
+-- prop_allPowers n = traceShow n $
 --   and (map (\(a,x) -> fromIntegral a ^ fromIntegral x == n) (allPowers n))
 
--- splitPower i a = (b,c)  
+-- splitPower i a = (b,c)
 --  => b^i * c = a
 splitPower :: Int -> PrimeFactors -> (PrimeFactors, PrimeFactors)
 splitPower i (PF a m) = (PF b p1, PF c p2)
- where 
+ where
    pairs = IM.map (`quotRem` i) m
    p1    = IM.filter (>0) (fmap fst pairs)
    p2    = IM.filter (>0) (fmap snd pairs)
    b     = fromFactors p1
    c     = a `div` (b^i)
-   
-quotRemPF :: PrimeFactors -> PrimeFactors -> (PrimeFactors, PrimeFactors) 
+
+quotRemPF :: PrimeFactors -> PrimeFactors -> (PrimeFactors, PrimeFactors)
 quotRemPF (PF a m1) (PF b m2)
-   | b==0 = error "PrimeFactors: division by zero" 
+   | b==0 = error "PrimeFactors: division by zero"
    | a==0 = (0,0)
    | otherwise = sign $
         case (IM.null up, IM.null dn) of

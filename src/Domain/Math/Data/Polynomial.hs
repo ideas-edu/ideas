@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Data.Polynomial 
+module Domain.Math.Data.Polynomial
    ( Polynomial, var, con, raise
    , degree, lowestDegree, coefficient, terms
    , isMonic, toMonic, isRoot, positiveRoots, negativeRoots
@@ -22,7 +22,7 @@ import Control.Applicative (Applicative, (<$>), liftA)
 import Control.Monad
 import Data.Char
 import Data.Foldable (Foldable, foldMap)
-import Data.List  (nub)
+import Data.List (nub)
 import Data.Ratio (approxRational)
 import Data.Traversable (Traversable, sequenceA)
 import Domain.Math.Approximation (newton, within)
@@ -34,8 +34,8 @@ import qualified Data.IntSet as IS
 ------------------------------------------------------------------
 -- Data type:
 --   Invariant: all keys are non-negative, all values are non-zero
---   (note that the second part of the invariant (zero values) 
---    can be violated using the functor instance) 
+--   (note that the second part of the invariant (zero values)
+--    can be violated using the functor instance)
 
 newtype Polynomial a = P { unsafeP :: IM.IntMap a }
 
@@ -77,8 +77,8 @@ instance Fractional a => SafeDiv (Polynomial a) where
       | p2==0     = Nothing
       | degree p1 < degree p2 = Nothing
       | b==0      = return a
-      | otherwise = Nothing 
-    where 
+      | otherwise = Nothing
+    where
       (a, b) = longDivision p1 p2
 
 -- the Functor instance does not maintain the invariant
@@ -87,7 +87,7 @@ instance Functor Polynomial where
 
 instance Foldable Polynomial where
    foldMap f = foldMap f . unsafeP
-   
+
 instance Traversable Polynomial where
    sequenceA = liftA P . sequenceIntMap . unsafeP
 
@@ -112,7 +112,7 @@ instance (Arbitrary a, Num a) => Arbitrary (Polynomial a) where
 -------------------------------------------------------------------
 -- Functions on polynomials
 
--- a single variable (such as "x") 
+-- a single variable (such as "x")
 var :: Num a => Polynomial a
 var = makeP (IM.singleton 1 1)
 
@@ -162,7 +162,7 @@ positiveRoots = signChanges . IM.elems . unP
 -- Multiple roots are counted separately
 negativeRoots :: Num a => Polynomial a -> Int
 negativeRoots = signChanges . flipOdd . IM.elems . unP
- where 
+ where
    flipOdd (x:y:zs) = x:negate y:flipOdd zs
    flipOdd xs = xs
 
@@ -171,20 +171,20 @@ signChanges = f . map signum
  where
    f (x:xs@(hd:_)) = if x==hd then f xs else 1 + f xs
    f _ = 0
-   
+
 ------------------------------------------------
 
-derivative :: Num a => Polynomial a -> Polynomial a 
-derivative p = makeP $ IM.fromAscList 
+derivative :: Num a => Polynomial a -> Polynomial a
+derivative p = makeP $ IM.fromAscList
    [ (n-1, fromIntegral n*a) | (n, a) <- IM.toList (unP p) ]
 
 eval :: Num a => Polynomial a -> a -> a
-eval p x = sum [ a * x^n | (n, a) <- IM.toList (unP p) ] 
+eval p x = sum [ a * x^n | (n, a) <- IM.toList (unP p) ]
 
 -- polynomial long division
 longDivision :: Fractional a => Polynomial a -> Polynomial a -> (Polynomial a, Polynomial a)
 longDivision p1 p2 = monicLongDivision (f p1) (f p2)
- where 
+ where
    f p = con (recip a) * p
    a   = coefficient (degree p2) p2
 
@@ -198,25 +198,25 @@ monicLongDivision p1 p2
    d2 = degree p2
    xs = map (`coefficient` p1) [d1, d1-1 .. 0]
    ys = drop 1 $ map (negate . (`coefficient` p2)) [d2, d2-1 .. 0]
-   
+
    (quotient, remainder) = rec [] xs
    toP = makeP . IM.fromAscList . zip [0..]
-   
-   rec acc (a:as) | length as >= length ys = 
+
+   rec acc (a:as) | length as >= length ys =
       rec (a:acc) (zipWith (+) (map (*a) ys ++ repeat 0) as)
    rec acc as = (acc, reverse as)
-   
--- use polynomial long division to compute the greatest common factor 
+
+-- use polynomial long division to compute the greatest common factor
 -- of the polynomials
 polynomialGCD :: Fractional a => Polynomial a -> Polynomial a -> Polynomial a
 polynomialGCD x y
-   | degree y > degree x = rec y x 
+   | degree y > degree x = rec y x
    | otherwise           = rec x y
  where
    rec a b
-      | b == 0    = a 
+      | b == 0    = a
       | otherwise = rec b (snd (longDivision a b))
-   
+
 ------------------------
 
 factorize :: Polynomial Rational -> [Polynomial Rational]
@@ -229,13 +229,13 @@ factorize p
            []        -> [p]
  where
    l     = snd (head (terms p))
-   pairs = [ (p1, p2) 
+   pairs = [ (p1, p2)
            | a <- candidateRoots p
-           , isRoot p a 
+           , isRoot p a
            , let p1 = var - con a
            , Just p2 <- [safeDiv p p1]
-           ] 
-           
+           ]
+
 candidateRoots :: Polynomial Rational -> [Rational]
 candidateRoots p = nub (map (`approxRational` 0.0001) xs)
  where
@@ -243,10 +243,10 @@ candidateRoots p = nub (map (`approxRational` 0.0001) xs)
     df = eval (fmap fromRational (derivative p))
     xs = nub (map (within 0.0001 . take 10 . newton f df) startList)
     startList = [0, 3, -3, 10, -10, 100, -100]
-    
+
 -- TODO: replace me by sequenceA
--- This definition is for backwards compatibility. In older versions of IntMap, 
--- the instance for Traversable is lacking. 
+-- This definition is for backwards compatibility. In older versions of IntMap,
+-- the instance for Traversable is lacking.
 sequenceIntMap :: Applicative m => IM.IntMap (m a) -> m (IM.IntMap a)
 sequenceIntMap m = IM.fromDistinctAscList <$> zip ks <$> sequenceA as
  where

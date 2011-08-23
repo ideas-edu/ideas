@@ -1,7 +1,7 @@
-{-# LANGUAGE GADTs, ExistentialQuantification #-} 
+{-# LANGUAGE GADTs, ExistentialQuantification #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,13 +9,13 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- This module defines transformations. Given a term, a transformation returns a list of 
+-- This module defines transformations. Given a term, a transformation returns a list of
 -- results (often a singleton list or the empty list). A transformation can be parameterized
--- with one or more arguments. A rule is in essence just a transformation with a name (which 
--- should be unique). Both transformations and rules can be lifted to work on more complex domains. 
+-- with one or more arguments. A rule is in essence just a transformation with a name (which
+-- should be unique). Both transformations and rules can be lifted to work on more complex domains.
 --
 -----------------------------------------------------------------------------
-module Common.Transformation 
+module Common.Transformation
    ( -- * Transformations
      Transformation, makeTrans, makeTransList, makeRewriteTrans
      -- * Arguments
@@ -55,19 +55,19 @@ data Transformation a
    | forall b . Abstraction (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
    | forall b c . LiftView (View a (b, c)) (Transformation b)
    | Recognizer (a -> a -> Maybe ArgValues) (Transformation a)
-   
+
 instance Apply Transformation where
    applyAll (Function f)        = f
    applyAll (RewriteRule _ f)   = f
    applyAll (Abstraction _ f g) = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
    applyAll (LiftView v t)      = \a -> [ build v (b, c) | (b0, c) <- matchM v a, b <- applyAll t b0  ]
    applyAll (Recognizer _ t)    = applyAll t
-   
--- | Turn a function (which returns its result in the Maybe monad) into a transformation 
+
+-- | Turn a function (which returns its result in the Maybe monad) into a transformation
 makeTrans :: (a -> Maybe a) -> Transformation a
 makeTrans f = makeTransList (maybe [] return . f)
 
--- | Turn a function (which returns a list of results) into a transformation 
+-- | Turn a function (which returns a list of results) into a transformation
 makeTransList :: (a -> [a]) -> Transformation a
 makeTransList = Function
 
@@ -82,7 +82,7 @@ makeRewriteTrans r = RewriteRule r (rewriteM r)
 data ArgDescr a = ArgDescr
    { labelArgument    :: String               -- ^ Label that is shown to the user when asked to supply the argument
    , defaultArgument  :: Maybe a              -- ^ Default value that can be used
-   , parseArgument    :: String -> Maybe a    -- ^ A parser 
+   , parseArgument    :: String -> Maybe a    -- ^ A parser
    , showArgument     :: a -> String          -- ^ A pretty-printer
    , termViewArgument :: View Term a          -- ^ Conversion to/from term
    , genArgument      :: Gen a                -- ^ An arbitrary argument generator
@@ -98,7 +98,7 @@ instance Show ArgValue where
    show (ArgValue descr a) = showArgument descr a
 
 instance Eq ArgValue where
-   ArgValue d1 a1 == ArgValue d2 a2 = 
+   ArgValue d1 a1 == ArgValue d2 a2 =
       build (termViewArgument d1) a1 == build (termViewArgument d2) a2
 
 -- | Constructor function for an argument descriptor that uses the Show and Read type classes
@@ -113,24 +113,24 @@ instance Argument Int where
    makeArgDescr = defaultArgDescr
 
 -- | Parameterization with one argument using the provided label
-supply1 :: Argument x 
+supply1 :: Argument x
                   => String -> (a -> Maybe x)
                   -> (x -> Transformation a) -> Transformation a
-supply1 s f t = 
+supply1 s f t =
    let args = Single (makeArgDescr s)
    in Abstraction args f t
-   
+
 -- | Parameterization with two arguments using the provided labels
-supply2 :: (Argument x, Argument y) 
-                   => (String, String) -> (a -> Maybe (x, y)) 
+supply2 :: (Argument x, Argument y)
+                   => (String, String) -> (a -> Maybe (x, y))
                    -> (x -> y -> Transformation a) -> Transformation a
-supply2 (s1, s2) f t = 
+supply2 (s1, s2) f t =
    let args = Pair (Single (makeArgDescr s1)) (Single (makeArgDescr s2))
    in Abstraction args f (uncurry t)
 
 -- | Parameterization with three arguments using the provided labels
-supply3 :: (Argument x, Argument y, Argument z) 
-                  => (String, String, String) -> (a -> Maybe (x, y, z)) 
+supply3 :: (Argument x, Argument y, Argument z)
+                  => (String, String, String) -> (a -> Maybe (x, y, z))
                   -> (x -> y -> z -> Transformation a) -> Transformation a
 supply3 (s1, s2, s3) f t =
    let args = Pair (Single (makeArgDescr s1))
@@ -148,16 +148,16 @@ getDescriptors r =
    case transformations r of
       [t] -> rec t
       _   -> []
- where 
+ where
    rec :: Transformation a -> [Some ArgDescr]
-   rec trans = 
+   rec trans =
       case trans of
          Abstraction args _ _ -> someArguments args
          LiftView _ t   -> rec t
          Recognizer _ t -> rec t
          _ -> []
 
--- | Returns a list of pretty-printed expected arguments. 
+-- | Returns a list of pretty-printed expected arguments.
 -- Nothing indicates that there are no such arguments (or the arguments
 -- are not applicable for the current value)
 expectedArguments :: Rule a -> a -> Maybe ArgValues
@@ -167,18 +167,18 @@ expectedArguments r =
       _   -> const Nothing
  where
     rec :: Transformation a -> a -> Maybe ArgValues
-    rec trans a =  
+    rec trans a =
        case trans of
-          Abstraction args f _ -> 
+          Abstraction args f _ ->
              fmap (argumentValues args) (f a)
-          LiftView v t -> do 
+          LiftView v t -> do
              (b, _) <- match v a
              rec t b
           Recognizer _ t ->
              rec t a
           _ -> Nothing
 
--- | Transform a rule and use a list of pretty-printed arguments. Nothing indicates that the arguments are 
+-- | Transform a rule and use a list of pretty-printed arguments. Nothing indicates that the arguments are
 -- invalid (not parsable), or that the wrong number of arguments was supplied
 useArguments :: [String] -> Rule a -> Maybe (Rule a)
 useArguments list r =
@@ -186,18 +186,18 @@ useArguments list r =
       [t] -> do new <- make t
                 return r {transformations = [new]}
       _   -> Nothing
- where   
+ where
    make :: Transformation a -> Maybe (Transformation a)
-   make trans = 
+   make trans =
       case trans of
          Abstraction args _ g -> fmap g (parseArguments args list)
          LiftView v t         -> fmap (LiftView v) (make t)
          Recognizer f t       -> fmap (Recognizer f) (make t)
          _                    -> Nothing
-   
+
 -----------------------------------------------------------
 --- Internal machinery for arguments
-               
+
 data ArgumentList a where
    Single :: ArgDescr a -> ArgumentList a
    Pair   :: ArgumentList a -> ArgumentList b -> ArgumentList (a, b)
@@ -205,10 +205,10 @@ data ArgumentList a where
 parseArguments :: ArgumentList a -> [String] -> Maybe a
 parseArguments (Single a) [x] = parseArgument a x
 parseArguments (Pair a b) xs =
-   let (ys, zs) = splitAt (numberOfArguments a) xs 
+   let (ys, zs) = splitAt (numberOfArguments a) xs
    in liftM2 (,) (parseArguments a ys) (parseArguments b zs)
 parseArguments _ _ = Nothing
-   
+
 someArguments :: ArgumentList a -> [Some ArgDescr]
 someArguments (Single a) = [Some a]
 someArguments (Pair a b) = someArguments a ++ someArguments b
@@ -219,12 +219,12 @@ argumentValues (Pair a b) (x, y) = argumentValues a x ++ argumentValues b y
 
 numberOfArguments :: ArgumentList a -> Int
 numberOfArguments = length . someArguments
-      
+
 -----------------------------------------------------------
 --- Rules
 
 -- | Abstract data type for representing rules
-data Rule a = Rule 
+data Rule a = Rule
    { ruleId          :: Id  -- ^ Unique identifier of the rule
    , transformations :: [Transformation a]
    , afterwards      :: a -> a
@@ -243,14 +243,14 @@ instance Ord (Rule a) where
    compare = compareId
 
 instance Apply Rule where
-   applyAll r a = do 
+   applyAll r a = do
       t <- transformations r
       b <- applyAll t a
       return (afterwards r b)
 
 instance HasId (Rule a) where
    getId        = ruleId
-   changeId f r = r { ruleId = f (ruleId r) } 
+   changeId f r = r { ruleId = f (ruleId r) }
 
 instance (Arbitrary a, CoArbitrary a) => Arbitrary (Rule a) where
    arbitrary = liftM3 make arbitrary arbitrary arbitrary
@@ -266,13 +266,13 @@ isMajorRule = not . isMinorRule
 isRewriteRule :: Rule a -> Bool
 isRewriteRule = not . null . getRewriteRules
 
-siblingOf :: HasId b => b -> Rule a -> Rule a 
+siblingOf :: HasId b => b -> Rule a -> Rule a
 siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
 
 ruleList :: (IsId n, RuleBuilder f a) => n -> [f] -> Rule a
 ruleList n = makeRuleList a . map (makeRewriteTrans . rewriteRule a)
  where a = newId n
- 
+
 rule :: (IsId n, RuleBuilder f a) => n -> f -> Rule a
 rule n = makeRule a . makeRewriteTrans . rewriteRule a
  where a = newId n
@@ -299,7 +299,7 @@ idRule = minorRule $ makeSimpleRule "Identity" return
 
 -- | A special (minor) rule that checks a predicate (and returns the identity
 -- if the predicate holds)
-checkRule :: (a -> Bool) -> Rule a 
+checkRule :: (a -> Bool) -> Rule a
 checkRule p = minorRule $ makeSimpleRule "Check" $ \a ->
    if p a then Just a else Nothing
 
@@ -308,11 +308,11 @@ emptyRule :: Rule a
 emptyRule = minorRule $ makeSimpleRule "Empty" (const Nothing)
 
 -- | Mark the rule as minor (by default, rules are not minor)
-minorRule :: Rule a -> Rule a 
+minorRule :: Rule a -> Rule a
 minorRule r = r {isMinorRule = True}
 
 -- | Mark the rule as buggy (by default, rules are supposed to be sound)
-buggyRule :: Rule a -> Rule a 
+buggyRule :: Rule a -> Rule a
 buggyRule r = r {isBuggyRule = True}
 
 -- | Perform the function after the rule has been fired
@@ -325,7 +325,7 @@ getRewriteRules r = concatMap f (transformations r)
    f :: Transformation a -> [(Some RewriteRule, Bool)]
    f trans =
       case trans of
-         RewriteRule rr _ -> [(Some rr, not $ isBuggyRule r)]      
+         RewriteRule rr _ -> [(Some rr, not $ isBuggyRule r)]
          LiftView _ t     -> f t
          _                -> []
 
@@ -339,15 +339,15 @@ transRecognizer eq trans a b =
       Recognizer f t -> f a b `mplus` transRecognizer eq t a b
       LiftView v t   -> msum
          [ transRecognizer (eq `on` f) t av bv
-         | (av, c) <- matchM v a 
+         | (av, c) <- matchM v a
          , (bv, _) <- matchM v b
          , let f z = build v (z, c)
-         ] 
-       `mplus` 
+         ]
+       `mplus`
          noArg (any (`eq` b) (applyAll trans a)) -- is this really needed?
       _ -> noArg $ any (`eq` b) (applyAll trans a)
  where
-   noArg c = if c then Just [] else Nothing 
+   noArg c = if c then Just [] else Nothing
 
 useRecognizer :: (a -> a -> Maybe ArgValues) -> Transformation a -> Transformation a
 useRecognizer = Recognizer
@@ -359,17 +359,17 @@ useSimpleRecognizer p = useRecognizer $ \x y -> guard (p x y) >> return []
 --- Lifting
 
 liftTrans :: View a b -> Transformation b -> Transformation a
-liftTrans v = liftTransIn (v &&& identity) 
+liftTrans v = liftTransIn (v &&& identity)
 
 liftTransIn :: View a (b, c) -> Transformation b -> Transformation a
 liftTransIn = LiftView
 
 liftRule :: View a b -> Rule b -> Rule a
-liftRule v = liftRuleIn (v &&& identity) 
+liftRule v = liftRuleIn (v &&& identity)
 
 liftRuleIn :: View a (b, c) -> Rule b -> Rule a
 liftRuleIn v r = r
-   { transformations = map (liftTransIn v) (transformations r) 
+   { transformations = map (liftTransIn v) (transformations r)
    , afterwards      = simplifyWith (mapFirst (afterwards r)) v
    }
 
@@ -378,25 +378,25 @@ liftRuleIn v r = r
 
 -- | Check the soundness of a rule: the equality function is passed explicitly
 testRule :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
-testRule eq r = 
+testRule eq r =
    quickCheck (propRule eq r arbitrary)
 
--- | Check the soundness of a rule and use a "smart generator" for this. The smart generator 
+-- | Check the soundness of a rule and use a "smart generator" for this. The smart generator
 -- behaves differently on transformations constructed with a (|-), and for these transformations,
 -- the left-hand side patterns are used (meta variables are instantiated with random terms)
 propRuleSmart :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
 propRuleSmart eq r = propRule eq r . smartGen r
-  
+
 propRule :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
-propRule eq r gen = 
-   forAll gen $ \a -> 
-   forAll (smartApplyRule r a) $ \ma -> 
+propRule eq r gen =
+   forAll gen $ \a ->
+   forAll (smartApplyRule r a) $ \ma ->
       isJust ma ==> (a `eq` fromJust ma)
 
 smartGen :: Rule a -> Gen a -> Gen a
 smartGen r gen = frequency [(2, gen), (1, smart)]
  where
-   smart = gen >>= \a -> 
+   smart = gen >>= \a ->
       oneof (gen : mapMaybe (smartGenTrans a) (transformations r))
 
 smartGenTrans :: a -> Transformation a -> Maybe (Gen a)
@@ -421,7 +421,7 @@ smartApplyTrans trans a =
    case trans of
       Abstraction args _ g -> smartArgs args >>= \b -> smartApplyTrans (g b) a
       _ -> return (applyAll trans a)
-      
+
 smartArgs :: ArgumentList a -> Gen a
 smartArgs (Single a) = genArgument a
 smartArgs (Pair a b) = liftM2 (,) (smartArgs a) (smartArgs b)

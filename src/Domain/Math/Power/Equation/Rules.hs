@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -10,28 +10,27 @@
 --
 -----------------------------------------------------------------------------
 
-module Domain.Math.Power.Equation.Rules 
+module Domain.Math.Power.Equation.Rules
   -- ( -- * Power equation rules
   --   commonPower, nthRoot, sameBase, equalsOne, greatestPower
   -- , approxPower, reciprocalFor, coverUpRootWith, coverUpRoot
-  -- ) 
+  -- )
   where
 
 import Common.Library hiding (simplify)
 import Control.Monad
 --import Data.List (partition)
 import Domain.Math.Approximation (precision)
-import qualified Domain.Math.Data.PrimeFactors as PF
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
+import qualified Domain.Math.Data.PrimeFactors as PF
 --import Domain.Math.CleanUp (collectLikeTerms)
+import Domain.Math.Polynomial.Rules (distributeTimes, distributeDivision)
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
-import Domain.Math.Polynomial.Rules (distributeTimes, distributeDivision)
 import Domain.Math.Simplification (simplify)
-
 
 -- | Identifier prefix --------------------------------------------------------
 
@@ -75,9 +74,9 @@ approxPowerT :: Int -> Transformation (Relation Expr)
 approxPowerT n = makeTrans $ \ expr ->
   match equationView expr >>= f
   where
-    f (Var x :==: d) = 
+    f (Var x :==: d) =
       match doubleView d >>= Just . (Var x .~=.) . fromDouble . precision n
-    f (d :==: Var x) = 
+    f (d :==: Var x) =
       match doubleView d >>= Just . (.~=. Var x) . fromDouble . precision n
     f _              = Nothing
 
@@ -90,7 +89,7 @@ sameBase = makeSimpleRule (powereq, "same-base") $ \ expr -> do
 
 -- | c*a^x = d*(1/a)^y  => c*a^x = d*a^-y
 reciprocalFor :: Rule (Equation Expr)
-reciprocalFor = makeSimpleRule (powereq, "reciprocal-for-base") $ 
+reciprocalFor = makeSimpleRule (powereq, "reciprocal-for-base") $
   \ (lhs :==: rhs) -> do
     (_, (a,  _)) <- match unitPowerView lhs
     (one, _)     <- match divView rhs
@@ -104,8 +103,6 @@ equalsOne = makeSimpleRule (powereq, "equals-one") $ \ (lhs :==: rhs) -> do
   guard $ rhs == 1
   (_, x) <- match powerView lhs
   return $ x :==: 0
-
-
 
 ----------------------- Move these funcs to right place ----------------------
 
@@ -125,7 +122,6 @@ condXisRight :: Rule (Equation Expr)
 condXisRight = describe "flip condition" $ checkRule $ \(lhs :==: rhs) ->
    hasVar "x" rhs && withoutVar "x" lhs
 
-
 --xToLeft = makeRule (powereq, "x -to-left") $  toLeftRightT $ elem "x" . vars
 
 -- toLeftRightT :: (Expr -> Bool) -> Transformation (Equation Expr)
@@ -134,6 +130,5 @@ condXisRight = describe "flip condition" $ checkRule $ \(lhs :==: rhs) ->
 --     (xs, cs) <- fmap (partition p) (match sumView lhs)
 --     (ys, ds) <- fmap (partition p) (match sumView rhs)
 --     guard $ length cs > 0 || length ys > 0
---     return $ fmap collectLikeTerms $ 
+--     return $ fmap collectLikeTerms $
 --       build sumView (xs ++ map neg ys) :==: build sumView (ds ++ map neg cs)
-

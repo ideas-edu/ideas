@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,16 +11,16 @@
 -----------------------------------------------------------------------------
 module Domain.RegularExpr.Definitions where
 
-import Domain.RegularExpr.Expr
-import Common.Utils.Uniplate
 import Common.Utils (distinct)
+import Common.Utils.Uniplate
+import Domain.RegularExpr.Expr
 
 deterministic :: (Show a, Eq a) => RE a -> Bool
 deterministic = deterministicSimple {-
    case (deterministicSimple r, det r) of
       (b1, b2) | b1==b2 -> b1
       _ -> error $ show r -}
-       
+
 deterministicSimple :: Eq a => RE a -> Bool
 deterministicSimple regexp =
    distinct (lookahead regexp) && all deterministicSimple (children regexp)
@@ -43,7 +43,6 @@ det regexp =
       Plus s    :*: r -> det ((s :*: Star s) :*: r)
       (q :|: s) :*: r -> det ((q :*: r) :|: (s :*: r))
       (q :*: s) :*: r -> det (q :*: (s :*: r))
-
 
 disj xs = all (`notElem` xs)
 

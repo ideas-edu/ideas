@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,25 +11,24 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Derivative.Rules where
 
-import Prelude hiding ((^))
+import Common.Id
+import Common.Rewriting
 import Common.Transformation
 import Common.View
 import Control.Monad
-import Domain.Math.Expr
-import Common.Id
-import Common.Rewriting
 import Data.Maybe
-import Domain.Math.Polynomial.Views
-import Domain.Math.Numeric.Views
 import Domain.Math.Data.Polynomial
-import Domain.Math.Power.Views
+import Domain.Math.Expr
+import Domain.Math.Numeric.Views
+import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Utils ( (<&>) )
-
+import Domain.Math.Power.Views
+import Prelude hiding ((^))
 
 derivativeRules :: [Rule Expr]
 derivativeRules =
    [ ruleDerivCon, ruleDerivPlus, ruleDerivMin, ruleDerivNegate
-   , ruleDerivMultiple, ruleDerivPower, ruleDerivVar 
+   , ruleDerivMultiple, ruleDerivPower, ruleDerivVar
    , ruleDerivProduct, ruleDerivQuotient, ruleDerivPowerChain
    , ruleSine, ruleLog, ruleDerivSqrt, ruleDerivSqrtChain
    ]
@@ -54,13 +53,13 @@ isLambdaSymbol = (== lambdaSymbol)
 -- Rules for Diffs
 
 ruleSine :: Rule Expr
-ruleSine = rule (diffId, "sine") $ 
+ruleSine = rule (diffId, "sine") $
    \x -> diff (lambda x (sin x))  :~>  cos x
 
 ruleLog :: Rule Expr
 ruleLog = rule (diffId, "logarithmic") $
    \x -> diff (lambda x (ln x))  :~>  1/x
-       
+
 ruleDerivPlus :: Rule Expr
 ruleDerivPlus = rule (diffId, "plus") $
    \x f g -> diff (lambda x (f + g))  :~>  diff (lambda x f) + diff (lambda x g)
@@ -85,7 +84,7 @@ ruleDerivProduct = rule (diffId, "product") $
 -- up an expression will typically put the negate in front of the division: this
 -- makes sure the rule is triggered anyway.
 ruleDerivQuotient :: Rule Expr
-ruleDerivQuotient = ruleList (diffId, "quotient") 
+ruleDerivQuotient = ruleList (diffId, "quotient")
    [ \x f g -> diff (lambda x (f/g))  :~>  (g*diff (lambda x f) - f*diff (lambda x g)) / (g^2)
    , \x f g -> diff (lambda x (-f/g))  :~>  (g*diff (lambda x (-f)) - (-f)*diff (lambda x g)) / (g^2)
    ]
@@ -93,7 +92,7 @@ ruleDerivQuotient = ruleList (diffId, "quotient")
 ruleDerivPolynomial :: Rule Expr
 ruleDerivPolynomial = describe "This rule returns the derivative for all \
    \expressions that can be turned into a polynomial (of rational numbers). \
-   \The polynomial does not have to be in standard form." $ 
+   \The polynomial does not have to be in standard form." $
    makeSimpleRule (diffId, "deriv-of-poly") f
  where
    f (Sym d [Sym l [Var v, expr]]) | isDiffSymbol d && isLambdaSymbol l = do
@@ -102,60 +101,60 @@ ruleDerivPolynomial = describe "This rule returns the derivative for all \
       guard (s==v)
       return (build myView (s, derivative p))
    f _ = Nothing
-   
+
 -----------------------------------
 -- Special rules (not defined with unification)
 
 ruleDerivCon :: Rule Expr
 ruleDerivCon = makeSimpleRule (diffId, "constant") f
- where 
-   f (Sym d [Sym l [Var v, e]]) 
+ where
+   f (Sym d [Sym l [Var v, e]])
       | isDiffSymbol d && isLambdaSymbol l && withoutVar v e = return 0
    f _ = Nothing
- 
+
 ruleDerivMultiple :: Rule Expr
 ruleDerivMultiple = makeSimpleRule (diffId, "constant-multiple") f
- where 
-    f (Sym d [Sym l [x@(Var v), n :*: e]]) 
-       | isDiffSymbol d && isLambdaSymbol l && withoutVar v n = 
+ where
+    f (Sym d [Sym l [x@(Var v), n :*: e]])
+       | isDiffSymbol d && isLambdaSymbol l && withoutVar v n =
        return $ n * diff (lambda x e)
-    f (Sym d [Sym l [x@(Var v), e :*: n]]) 
-       | isDiffSymbol d && isLambdaSymbol l && withoutVar v n = 
+    f (Sym d [Sym l [x@(Var v), e :*: n]])
+       | isDiffSymbol d && isLambdaSymbol l && withoutVar v n =
        return $ n * diff (lambda x e)
-    f _ = Nothing 
+    f _ = Nothing
 
 ruleDerivPower :: Rule Expr
 ruleDerivPower = makeSimpleRule (diffId, "power") f
- where 
-   f (Sym d [Sym l [x@(Var v), Sym p [x1, n]]]) 
+ where
+   f (Sym d [Sym l [x@(Var v), Sym p [x1, n]]])
       | isDiffSymbol d && isLambdaSymbol l && isPowerSymbol p && x==x1 && withoutVar v n =
-      return $ n * (x ^ (n-1)) 
+      return $ n * (x ^ (n-1))
    f _ = Nothing
 
 ruleDerivPowerChain :: Rule Expr
-ruleDerivPowerChain = makeSimpleRule (diffId, "chain-power") f 
- where 
-   f (Sym d [Sym l [x@(Var v), Sym p [a, n]]]) 
+ruleDerivPowerChain = makeSimpleRule (diffId, "chain-power") f
+ where
+   f (Sym d [Sym l [x@(Var v), Sym p [a, n]]])
       | isDiffSymbol d && isLambdaSymbol l && isPowerSymbol p && withoutVar v n =
       return $ n * (a ^ (n-1)) * diff (lambda x a)
    f _ = Nothing
-   
+
 ruleDerivSqrt :: Rule Expr
 ruleDerivSqrt = makeSimpleRule (diffId, "sqrt") f
  where
-   f (Sym d [Sym l [x@(Var _), Sqrt x1]]) 
+   f (Sym d [Sym l [x@(Var _), Sqrt x1]])
       | isDiffSymbol d && isLambdaSymbol l && x==x1 =
-      return $ 1 / (2 * sqrt x) 
-   f _ = Nothing 
-   
+      return $ 1 / (2 * sqrt x)
+   f _ = Nothing
+
 ruleDerivSqrtChain :: Rule Expr
 ruleDerivSqrtChain = makeSimpleRule (diffId, "chain-sqrt") f
  where
-   f (Sym d [Sym l [x@(Var _), Sqrt a]]) 
+   f (Sym d [Sym l [x@(Var _), Sqrt a]])
       | isDiffSymbol d && isLambdaSymbol l =
       return $ (1 / (2 * sqrt a)) * diff (lambda x a)
-   f _ = Nothing 
-   
+   f _ = Nothing
+
 ruleDefRoot :: Rule Expr
 ruleDefRoot = rule (diffId, "def-root") $
    \a b -> root a b :~> a ^ (1/b)
@@ -163,20 +162,20 @@ ruleDefRoot = rule (diffId, "def-root") $
 ruleDerivRoot :: Rule Expr
 ruleDerivRoot = rule (diffId, "def-root") $
    \a b x -> diff (lambda x (root a b)) :~> diff (lambda x (a ^ (1/b)))
-   
+
 ruleDerivPowerFactor :: Rule Expr
 ruleDerivPowerFactor = makeSimpleRule (diffId, "power-factor") $ \de -> do
    expr <- getDiffExpr de
    (a, x, r) <- match myPowerView expr
    return $ build myPowerView (a*fromRational r, x, r-1)
-   
+
 -- (a+b)/c  ~>  a/c + b/c
 ruleSplitRational :: Rule Expr
 ruleSplitRational = makeSimpleRule (diffId, "split-rational") $ \expr -> do
    (up, c) <- match divView expr
    (a, b)  <- match plusView up
    return (a/c + b/c)
-   
+
 myPowerView :: View Expr (Expr, String, Rational)
 myPowerView = makeView f g
  where
@@ -192,19 +191,19 @@ myPowerView = makeView f g
                Nothing -> do
                   (x, r) <- match powView expr
                   return (1, x, r)
-   g (a, x, r) = a .*. (Var x .^. fromRational r) 
-  
+   g (a, x, r) = a .*. (Var x .^. fromRational r)
+
    powView = (powerView <&> noPowerView) >>> myVarView *** rationalView
    myVarView   = makeView isVar Var
    noPowerView = makeView (\expr -> Just (expr, 1)) (build powerView)
-   
+
    isVar (Var x) = Just x
    isVar _       = Nothing
-   
+
 isDiff :: Expr -> Bool
 isDiff = isJust . getDiffExpr
 
 getDiffExpr :: Expr -> Maybe Expr
-getDiffExpr (Sym d [Sym l [Var _, expr]]) | 
+getDiffExpr (Sym d [Sym l [Var _, expr]]) |
    isDiffSymbol d && isLambdaSymbol l = Just expr
 getDiffExpr _ = Nothing

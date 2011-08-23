@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,7 +12,6 @@
 module Text.OpenMath.Tests (propEncoding) where
 
 import Control.Monad
-import Text.OpenMath.Object
 import Test.QuickCheck
 import Text.OpenMath.Dictionary.Arith1
 import Text.OpenMath.Dictionary.Calculus1
@@ -24,15 +23,16 @@ import Text.OpenMath.Dictionary.Nums1
 import Text.OpenMath.Dictionary.Quant1
 import Text.OpenMath.Dictionary.Relation1
 import Text.OpenMath.Dictionary.Transc1
+import Text.OpenMath.Object
 
 arbOMOBJ :: Gen OMOBJ
-arbOMOBJ = sized rec 
+arbOMOBJ = sized rec
  where
    symbols = arith1List ++ calculus1List ++ fns1List ++ linalg2List ++
-      list1List ++ logic1List ++ nums1List ++ quant1List ++ 
+      list1List ++ logic1List ++ nums1List ++ quant1List ++
       relation1List ++ transc1List
- 
-   rec 0 = frequency 
+
+   rec 0 = frequency
       [ (1, liftM OMI arbitrary)
       , (1, liftM (\n -> OMF (fromInteger n / 1000)) arbitrary)
       , (1, liftM OMV arbitrary)

@@ -1,7 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -10,7 +10,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Algebra.Boolean 
+module Common.Algebra.Boolean
    ( -- * Boolean algebra
      BoolValue(..), Boolean(..)
    , ands, ors, implies, equivalent
@@ -30,10 +30,10 @@ module Common.Algebra.Boolean
    , propsBoolean
    ) where
 
-import Common.Algebra.Law
 import Common.Algebra.Group
-import Test.QuickCheck hiding ((><))
+import Common.Algebra.Law
 import Control.Applicative
+import Test.QuickCheck hiding ((><))
 
 --------------------------------------------------------
 -- Boolean algebra
@@ -96,7 +96,7 @@ deMorganAnd = fromAndLaw deMorgan
 deMorganOr  = fromOrLaw  deMorgan
 
 doubleComplement :: Boolean a => Law a
-doubleComplement = law "double-complement" $ \a -> 
+doubleComplement = law "double-complement" $ \a ->
    complement (complement a) :==: a
 
 complementTrue, complementFalse :: Boolean a => Law a
@@ -107,8 +107,8 @@ booleanLaws :: Boolean a => [Law a]
 booleanLaws =
    map fromAndLaw (idempotent : zeroLaws ++ commutativeMonoidLaws) ++
    map fromOrLaw  (idempotent : zeroLaws ++ commutativeMonoidLaws) ++
-   andOverOrLaws ++ orOverAndLaws ++ complementAndLaws ++ complementOrLaws ++ 
-   absorptionAndLaws ++ absorptionOrLaws ++ 
+   andOverOrLaws ++ orOverAndLaws ++ complementAndLaws ++ complementOrLaws ++
+   absorptionAndLaws ++ absorptionOrLaws ++
    [deMorganAnd, deMorganOr, doubleComplement, complementTrue, complementFalse]
 
 --------------------------------------------------------
@@ -119,18 +119,18 @@ class MonoidZero a => DualMonoid a where
    dualCompl :: a -> a
 
 dualDistributive :: DualMonoid a => [Law a]
-dualDistributive = 
+dualDistributive =
    [leftDistributiveFor (<>) (><), rightDistributiveFor (<>) (><)]
 
 dualAbsorption :: DualMonoid a => [Law a]
-dualAbsorption = 
+dualAbsorption =
    [ law "absorption" $ \a b -> a `f` (a `g` b) :==: a
    | f <- [(<>), flip (<>)]
    , g <- [(><), flip (><)]
-   ] 
+   ]
 
 dualComplement :: DualMonoid a => [Law a]
-dualComplement = 
+dualComplement =
    [ law "complement" $ \a -> dualCompl a <> a :==: mzero
    , law "complement" $ \a -> a <> dualCompl a :==: mzero
    ]
@@ -139,9 +139,9 @@ dualTrueFalse :: DualMonoid a => Law a
 dualTrueFalse = law "true-false" $ dualCompl mempty :==: mzero
 
 deMorgan :: DualMonoid a => Law a
-deMorgan = law "demorgan" $ \a b -> 
+deMorgan = law "demorgan" $ \a b ->
    dualCompl (a <> b) :==: dualCompl a >< dualCompl b
-   
+
 --------------------------------------------------------
 -- And monoid
 
@@ -172,7 +172,7 @@ fromAndLaw = mapLaw And fromAnd
 --------------------------------------------------------
 -- Or monoid
 
-newtype Or a  = Or {fromOr :: a} 
+newtype Or a  = Or {fromOr :: a}
    deriving (Show, Eq, Ord, Arbitrary, CoArbitrary)
 
 instance Functor Or where -- could be derived
@@ -185,7 +185,7 @@ instance Applicative Or where
 instance Boolean a => Monoid (Or a) where
    mempty  = pure false
    mappend = liftA2 (<||>)
-   
+
 instance Boolean a => MonoidZero (Or a) where
    mzero = pure true
 

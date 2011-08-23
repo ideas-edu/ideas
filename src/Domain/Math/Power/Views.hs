@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,7 +12,7 @@
 
 module Domain.Math.Power.Views
    ( -- * Power views
-   
+
      -- ** Simple power views
      powerView, powerViewWith, powerViewForWith, powerViewFor, powerFactorView
 
@@ -32,8 +32,8 @@ module Domain.Math.Power.Views
    , plainNatView, plainRationalView, varView
    ) where
 
-import Control.Monad
 import Common.Library hiding (root)
+import Control.Monad
 import Domain.Math.Expr
 import Domain.Math.Power.Utils
 
@@ -43,7 +43,7 @@ consPowerView :: View Expr (Expr, (Expr, Expr))
 consPowerView = addNegativeView $ addUnitTimesView powerView
 
 consPowerViewForWith :: Num a => View Expr a -> View Expr b -> a -> View Expr (Expr, b)
-consPowerViewForWith va vb a = 
+consPowerViewForWith va vb a =
   addNegativeView $ addUnitTimesView (powerViewForWith va vb a)
 
 consPowerViewFor :: Expr -> View Expr (Expr, Expr)
@@ -62,7 +62,7 @@ unitPowerViewForVar s = makeView f g
     g (c, x) = build unitPowerViewVar (c , (s, x))
 
 unitPowerViewWith :: View Expr a -> View Expr (Expr, (a, Expr))
-unitPowerViewWith v = addNegativeView $ addUnitTimesView $ 
+unitPowerViewWith v = addNegativeView $ addUnitTimesView $
   powerViewWith v identity <&> (unitTimes v >>> toView swapView)
 
 unitPowerViewVar :: View Expr (Expr, (String, Expr))
@@ -74,8 +74,8 @@ unitPowerView = unitPowerViewWith identity
 
 -- | A root view
 rootView :: View Expr (Expr, Expr)
-rootView = makeView f (uncurry root) 
-  where 
+rootView = makeView f (uncurry root)
+  where
     f expr = do
       (a, (x, y)) <- match (powerView >>> second divView) expr
       guard (x `elem` [1, -1])
@@ -85,31 +85,30 @@ rootView = makeView f (uncurry root)
 strictRootView :: View Expr (Expr, Expr)
 strictRootView = makeView f g
   where
-    f expr = 
+    f expr =
       case expr of
         Sym s [a, b] | isRootSymbol s -> return (a, b)
         Sqrt e                       -> return (e, 2)
         _ -> Nothing
-    
-    g (a, b) = if b == 2 then Sqrt a else root a b
 
+    g (a, b) = if b == 2 then Sqrt a else root a b
 
 -- Power views --------------------------------------------------------------
 
 strictPowerView :: View Expr (Expr, Expr)
 strictPowerView = makeView f (uncurry (.^.))
   where
-    f expr = 
+    f expr =
       case expr of
         Sym s [a, b] | isPowerSymbol s -> return (a, b)
         _ -> Nothing
 
 powerView :: View Expr (Expr, Expr)
-powerView = makeView f g 
+powerView = makeView f g
   where
     f = match ((strictRootView >>> second ((1 ./.) <-> id)) <&> strictPowerView)
-    g (a, b) = 
-       case b of 
+    g (a, b) =
+       case b of
          (Nat 1 :/: b') -> build strictRootView (a, b')
          _              -> build strictPowerView (a, b)
 
@@ -118,7 +117,7 @@ powerViewWith va vb = powerView >>> first va >>> second vb
 
 powerViewForWith :: Eq a => View Expr a -> View Expr b -> a -> View Expr b
 powerViewForWith va vb a = makeView f ((build va a .^.) .  build vb)
-  where 
+  where
     f expr = do
       (a', b) <- match (powerViewWith va vb) expr
       guard $ a == a'
@@ -136,11 +135,10 @@ powerFactorView p = productView >>> second (f <-> id)
 
 logView :: View Expr (Expr, Expr)
 logView = makeView f (uncurry logBase)
-  where 
+  where
     f expr = case expr of
         Sym s [a, b] | isLogSymbol s -> return (a, b)
         _ -> Nothing
-
 
 -- Help (non-power) views ---------------------------------------------------
 

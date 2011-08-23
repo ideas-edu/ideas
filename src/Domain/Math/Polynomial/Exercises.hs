@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Polynomial.Exercises 
+module Domain.Math.Polynomial.Exercises
    ( linearExercise, linearMixedExercise
    , quadraticExercise, quadraticNoABCExercise
    , quadraticWithApproximation
@@ -22,28 +22,28 @@ import Control.Monad
 import Data.Function
 import Data.Maybe
 import Domain.Math.Approximation
+import Domain.Math.CleanUp
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Equation.Views
-import Domain.Math.Polynomial.Examples
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.BuggyRules
-import Domain.Math.CleanUp
 import Domain.Math.Polynomial.Equivalence
+import Domain.Math.Polynomial.Examples
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
-import qualified Data.Traversable as T
 import qualified Data.Foldable as F
+import qualified Data.Traversable as T
 
 ------------------------------------------------------------
 -- Exercises
 
 linearExercise :: Exercise (Equation Expr)
-linearExercise = makeExercise 
-   { exerciseId   = describe "solve a linear equation" $ 
+linearExercise = makeExercise
+   { exerciseId   = describe "solve a linear equation" $
                        newId "algebra.equations.linear"
    , status       = Provisional
    , parser       = parseEqExpr
@@ -54,7 +54,7 @@ linearExercise = makeExercise
                     <||> predicateView (equationSolvedWith rationalNF)
                     <||> predicateView (equationSolvedWith doubleNF)
    , extraRules   = map use buggyRulesEquation ++
-                    map use buggyRulesExpr 
+                    map use buggyRulesExpr
    , ruleOrdering = ruleOrderingWithId
                        [ getId coverUpTimes, getId flipEquation
                        , getId removeDivision
@@ -63,29 +63,29 @@ linearExercise = makeExercise
    , navigation   = termNavigator
    , examples     = linearExamples
    }
-      
+
 linearMixedExercise :: Exercise (Equation Expr)
-linearMixedExercise = linearExercise 
-   { exerciseId   = describe "solve a linear equation with mixed fractions" $ 
+linearMixedExercise = linearExercise
+   { exerciseId   = describe "solve a linear equation with mixed fractions" $
                        newId "algebra.equations.linear.mixed"
    , ready        = predicateView (equationSolvedWith mixedFractionNF)
    , strategy     = linearMixedStrategy
-   } 
+   }
 
 quadraticExercise :: Exercise (OrList (Relation Expr))
-quadraticExercise = makeExercise 
-   { exerciseId   = describe "solve a quadratic equation" $ 
+quadraticExercise = makeExercise
+   { exerciseId   = describe "solve a quadratic equation" $
                        newId "algebra.equations.quadratic"
    , status       = Provisional
    , parser       = parseOrsEqExpr
-                       >>> right (build (traverseView equationView)) 
+                       >>> right (build (traverseView equationView))
    , similarity   = withoutContext (viewEquivalent (traverseView (traverseView cleanUpView)))
    , equivalence  = withoutContext (equivalentRelation (viewEquivalent quadraticEquationsView))
    , suitable     = predicateView (traverseView equationView >>> quadraticEquationsView)
    , ready        = predicateView relationsSolvedForm
    , extraRules   = map use abcBuggyRules ++ buggyQuadratic ++
-                    map use buggyRulesEquation ++ map use buggyRulesExpr 
-   , ruleOrdering = ruleOrderingWithId $ 
+                    map use buggyRulesEquation ++ map use buggyRulesExpr
+   , ruleOrdering = ruleOrderingWithId $
                        quadraticRuleOrder ++ [getId buggySquareMultiplication]
    , strategy     = quadraticStrategy
    , navigation   = termNavigator
@@ -93,27 +93,27 @@ quadraticExercise = makeExercise
    }
 
 higherDegreeExercise :: Exercise (OrList (Relation Expr))
-higherDegreeExercise = makeExercise 
+higherDegreeExercise = makeExercise
    { exerciseId    = describe "solve an equation (higher degree)" $
                         newId "algebra.equations.polynomial"
    , status        = Provisional
    , parser        = parser quadraticExercise
    , similarity    = withoutContext (viewEquivalent (traverseView (traverseView cleanUpView)))
-   , equivalence   = eqAfterSubstitution $ 
+   , equivalence   = eqAfterSubstitution $
                         equivalentRelation (viewEquivalent higherDegreeEquationsView)
    , suitable      = predicateView (traverseView equationView >>> higherDegreeEquationsView)
    , ready         = predicateView relationsSolvedForm
    , extraRules    = map use abcBuggyRules ++ buggyQuadratic ++
-                     map use buggyRulesEquation ++ map use buggyRulesExpr 
+                     map use buggyRulesEquation ++ map use buggyRulesExpr
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , strategy      = higherDegreeStrategy
    , navigation    = termNavigator
    , examples      = mapExamples (singleton . build equationView) higherDegreeExamples
    }
-   
+
 quadraticNoABCExercise :: Exercise (OrList (Relation Expr))
 quadraticNoABCExercise = quadraticExercise
-   { exerciseId   = describe "solve a quadratic equation without abc-formula" $ 
+   { exerciseId   = describe "solve a quadratic equation without abc-formula" $
                        newId "algebra.equations.quadratic.no-abc"
    , status       = Alpha
    , strategy     = configure cfg quadraticStrategy
@@ -124,10 +124,10 @@ quadraticNoABCExercise = quadraticExercise
          , (byName (newId "abc form"), Remove)
          , (byName simplerPolynomial, Remove)
          ]
-         
+
 quadraticWithApproximation :: Exercise (OrList (Relation Expr))
 quadraticWithApproximation = quadraticExercise
-   { exerciseId   = describe "solve a quadratic equation with approximation" $ 
+   { exerciseId   = describe "solve a quadratic equation with approximation" $
                        newId "algebra.equations.quadratic.approximate"
    , status       = Alpha
    , parser       = parseOrsRelExpr
@@ -141,7 +141,7 @@ quadraticWithApproximation = quadraticExercise
 
 findFactorsExercise :: Exercise Expr
 findFactorsExercise = makeExercise
-   { exerciseId   = describe "factorize the expression" $ 
+   { exerciseId   = describe "factorize the expression" $
                        newId "algebra.manipulation.polynomial.factor"
    , status       = Provisional
    , parser       = parseExpr
@@ -157,7 +157,7 @@ findFactorsExercise = makeExercise
 
 expandExercise :: Exercise Expr
 expandExercise = makeExercise
-   { exerciseId   = describe "expand an expression to polynomial normal form" $ 
+   { exerciseId   = describe "expand an expression to polynomial normal form" $
                        newId "algebra.manipulation.polynomial.expand"
    , status       = Provisional
    , parser       = parseExpr
@@ -176,9 +176,9 @@ linearFactorsView = toView productView >>> second (listView myLinearView)
  where
    myLinearView :: View Expr (String, Expr, Expr)
    myLinearView = makeView f (build linearView)
-   
-   f expr = do 
-      triple@(_, e1, e2) <- match linearView expr 
+
+   f expr = do
+      triple@(_, e1, e2) <- match linearView expr
       a <- match integerView e1
       b <- match integerView e2
       guard (a > 0 && gcd a b == 1) -- gcd 0 0 is undefined
@@ -192,18 +192,18 @@ linearFactorsView = toView productView >>> second (listView myLinearView)
 
 equivalentApprox :: OrList (Relation Expr) -> OrList (Relation Expr) -> Bool
 equivalentApprox a b
-   | hasApprox a || hasApprox b = 
-        let norm = liftM ( simplify orSetView 
-                         . fmap (fmap (acExpr . cleanUpExpr) . toApprox)  
+   | hasApprox a || hasApprox b =
+        let norm = liftM ( simplify orSetView
+                         . fmap (fmap (acExpr . cleanUpExpr) . toApprox)
                          . simplify quadraticEquationsView
                          ) . T.mapM toEq
         in fromMaybe False $ liftM2 (==) (norm a) (norm b)
    | otherwise =
-        equivalentRelation (viewEquivalent quadraticEquationsView) a b 
+        equivalentRelation (viewEquivalent quadraticEquationsView) a b
  where
    hasApprox = F.any isApproximately
    isApproximately = (==Approximately) . relationType
-   toEq rel | relationType rel `elem` [EqualTo, Approximately] = 
+   toEq rel | relationType rel `elem` [EqualTo, Approximately] =
       Just (leftHandSide rel :==: rightHandSide rel)
             | otherwise = Nothing
 
@@ -211,7 +211,7 @@ toApprox :: Equation Expr -> Relation Expr
 toApprox (a :==: b) = f a .~=. f b
  where
    f x = maybe x (fromDouble . precision 4) (match doubleView x)
-      
+
 equivalentRelation :: (OrList (Equation a) -> OrList (Equation a) -> Bool) -> OrList (Relation a) -> OrList (Relation a) -> Bool
 equivalentRelation f ra rb = fromMaybe False $ do
    a <- T.mapM (match equationView) ra

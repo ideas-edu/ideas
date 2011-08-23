@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- some of these help functions may have a broader scope and could be 
+-- some of these help functions may have a broader scope and could be
 -- moved to other parts of the framework (eg. Common)
 --
 -----------------------------------------------------------------------------
@@ -30,7 +30,6 @@ import Data.Function (on)
 import Data.List hiding (repeat, replicate)
 import Data.Ratio
 import Data.Traversable (Traversable, mapM)
-import qualified Domain.Math.Data.PrimeFactors as PF
 import Domain.Math.CleanUp
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -38,7 +37,7 @@ import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Expr
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
-
+import qualified Domain.Math.Data.PrimeFactors as PF
 
 -- | Strategy functions -------------------------------------------------------
 
@@ -62,15 +61,15 @@ smartRule = doAfter f
     f (a :+: b) = a .+. b
     f (a :-: b) = a .-. b
     f e = e
-         
+
 mergeConstantsWith :: (Expr -> Bool) -> Expr -> Expr
 mergeConstantsWith p = simplifyWith f productView
   where
-    f (sign, xs) = 
+    f (sign, xs) =
       let (cs, ys) = partition p xs
           c = simplify rationalView $ build productView (False, cs)
-      in if maybe False (> 1) (match rationalView c) 
-           then (sign, c:ys) 
+      in if maybe False (> 1) (match rationalView c)
+           then (sign, c:ys)
            else (sign, xs)
 
 mergeConstants :: Expr -> Expr
@@ -97,7 +96,7 @@ myIntegerView = makeView f fromInteger
     f _                = Nothing
 
 plainRationalView :: View Rational (Integer, Integer)
-plainRationalView = 
+plainRationalView =
   makeView (\x -> return (numerator x, denominator x)) (uncurry (%))
 
 eqView :: View a b -> View (Equation a) (b, b)
@@ -125,7 +124,7 @@ naturalRules =
    ]
 
 rationalRules :: [Rule Expr]
-rationalRules = 
+rationalRules =
    [ calcPlusWith "rational" rationalRelaxedForm
    , calcMinusWith "rational" rationalRelaxedForm
    , calcTimesWith "rational" rationalRelaxedForm
@@ -139,10 +138,10 @@ coverUpRulesX = map (\r -> r cfg)
    [ coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith, coverUpNegateWith
    , coverUpTimesWith, coverUpNumeratorWith, coverUpDenominatorWith, coverUpSqrtWith
    ]
-   where 
+   where
      cfg = configCoverUp { predicateCovered = elem "x" . vars
-                         , predicateCombined = notElem "x" . vars 
-                         , coverLHS = False} 
+                         , predicateCombined = notElem "x" . vars
+                         , coverLHS = False}
 
 -- | Common functions ---------------------------------------------------------
 
@@ -176,7 +175,7 @@ instance SemEq a => SemEq (OrList a) where
             in length (intersectBy (===) as bs) == length as
 
 tryRewriteAll :: (a -> [a]) -> a -> [a]
-tryRewriteAll f x = 
+tryRewriteAll f x =
   case f x of
     [] -> [x]
     xs -> xs
@@ -190,7 +189,7 @@ takeRoot n x | n == 0    = [0]
              | n == 1    = if x > 0 && odd x then [1] else [1, -1]
              | n == (-1) = [-1 | x > 0 && odd x]
              | x == 1    = [n]
-             | x > 0     = maybe [] roots $ lookup x $ map swap $ PF.allPowers (abs n) 
+             | x > 0     = maybe [] roots $ lookup x $ map swap $ PF.allPowers (abs n)
              | otherwise = []
   where
     roots r | n > 0 && even x = [r, negate r]
@@ -206,10 +205,10 @@ takeRoot n x | n == 0    = [0]
 swap :: (a, b) -> (b, a)
 swap (a, b) = (b, a)
 
-split :: (Eq a) => (a -> a -> t) -> [a] -> [(t, [a])]    
+split :: (Eq a) => (a -> a -> t) -> [a] -> [(t, [a])]
 split op xs = f xs
       where
-        f (y:ys) | not (null ys) = [(y `op` z, xs \\ [y, z]) | z <- ys] ++ f ys 
+        f (y:ys) | not (null ys) = [(y `op` z, xs \\ [y, z]) | z <- ys] ++ f ys
                  | otherwise     = []
         f [] = []
 
@@ -220,26 +219,26 @@ joinBy :: Eq a => (a -> a -> Bool) -> [a] -> [[a]]
 joinBy _  [] = []
 joinBy eq xs = ys : joinBy eq (xs \\ ys)
   where
-    ys = dropUntil eq xs 
+    ys = dropUntil eq xs
 
 dropUntil :: (a -> a -> Bool) -> [a] -> [a]
 dropUntil _ []       = []
 dropUntil _ [x]      = [x]
-dropUntil p (x:y:ys) | p x y     = x : dropUntil p (y:ys) 
+dropUntil p (x:y:ys) | p x y     = x : dropUntil p (y:ys)
                      | otherwise = [x]
 
 holes :: [a] -> [(a, [a], a -> [a])]
-holes xs = map f [0 .. length xs - 1] 
-  where 
-    f i = let (ys, z:zs) = splitAt i xs 
+holes xs = map f [0 .. length xs - 1]
+  where
+    f i = let (ys, z:zs) = splitAt i xs
           in (z, ys ++ zs, \x -> ys ++ x:zs)
 
 twoNonAdjacentHoles :: [a] -> [((a, a), a -> [a])]
 twoNonAdjacentHoles xs = concatMap g pairs
   where
     pairs = [(x, y) | x <- [0 .. length xs - 1], y <- [x + 1 .. length xs - 1]]
-    g (x, y) = let (ys, z:zs) = splitAt x xs 
-                   (ps, q:qs) = splitAt (y - x - 1) zs 
+    g (x, y) = let (ys, z:zs) = splitAt x xs
+                   (ps, q:qs) = splitAt (y - x - 1) zs
                in if null ps
                  then [ ((z, q), \a -> ys ++ a:ps ++ qs) ]
                  else [ ((z, q), \a -> ys ++ a:ps ++ qs)

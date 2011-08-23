@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -14,9 +14,9 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Examples where
 
-import Prelude hiding ((^))
 import Common.Rewriting
 import Domain.Math.Expr
+import Prelude hiding ((^))
 
 ----------------------------------------------------------
 -- HAVO B, hfd 7 applets
@@ -26,28 +26,28 @@ simplerPowers = [level1, level2, level3, level4]
  where
    a = variable "a"
    b = variable "b"
-   level1 = 
+   level1 =
       [ 4*a^3 * 5*a^2
       , 14*a^6 / (-2*a^3)
       , -21*a^7 / (3*a)
       , 5*a * (-3)*a^2 * 2*a^3
       ]
-      
-   level2 = 
+
+   level2 =
       [ a^2 * (-2*a)^3
       , (2*a)^5 / (-4*a)^2
       , (2*a)^4 * (-3)*a^2
       , (-3*a)^4 / (9*a^2)
       ]
-      
-   level3 = 
+
+   level3 =
       [ (a^2 * b^3)^7
       , -a^3 * (2*b)^5 * a^2
       , 3*a * (-2*b)^3 * (-a*b)^2
       , (2*a*b^3)^2 * (-3*a^2*b)^3
       ]
 
-   level4 = 
+   level4 =
       [ ((1/2)*a)^3 - (4*a)^2 * (1/4)*a
       , (2*a)^5 + ((1/3)*a)^2 * (-3*a)^3
       , (2*a^3)^4 - 6*a^3 * (-a^3)^3
@@ -62,31 +62,31 @@ powersOfA = [level1, level2, level3, level4]
       [ a^3 * a^(-4)
       , a^4 * (1/a^2)
       , a^(-1) * a^5
-      , (1/a^3) * a 
+      , (1/a^3) * a
       ]
-      
+
     level2 =
       [ (a^(-2))^3
       , (a^(-3))^4
       , (1/a^6) * a^(-2)
       , (1/a^2) * (1/a^4)
       ]
-      
-    level3 = 
+
+    level3 =
       [ (a^(-2))^3 * (1/a^4)
       , (1/a^3)^2
       , (a^3)^2 * (1/a)
       , (a^(-2))^(-3) * a^(-4)
       ]
-      
+
     level4 =
       [ (a^(-1))^2 / a^3
       , (a^2)^(-3) / a^(-1)
       , ((a^(-2))^4 / (a^2)^3) * a
       , (1/a^(-3))^4 * (1/a)^3
       ]
-      
-nonNegExp :: [[Expr]]      
+
+nonNegExp :: [[Expr]]
 nonNegExp = [level1, level2]
   where
     a = variable "a"
@@ -97,7 +97,7 @@ nonNegExp = [level1, level2]
       , a^(-2) * b^(-3)
       , (1/a^(-3)) * (b^(-2))^2
       ]
-      
+
     level2 =
       [ (1/(a*b)^(-2)) * a * b^(-1)
       , (2*a)^(-1) / (4*b)^(-2)
@@ -107,16 +107,16 @@ nonNegExp = [level1, level2]
 
 -- schrijf als een macht van x
 powersOfX :: [[Expr]]
-powersOfX = 
+powersOfX =
    [ [root x 3, 1/root x 4, sqrt (1/x), (x^2) / root (x^2) 5]
    , [sqrt x/(x^2), root (x/(x^3)) 3, x*root x 3, root x 3 * root (1/(x^2)) 4]
    ]
  where
    x = Var "x"
-   
+
 -- Schrijf zonder negatieve of gebroken exponenten
 nonNegExp2 :: [[Expr]]
-nonNegExp2 = 
+nonNegExp2 =
    [ [ 4^(1/3), 5^(-(1/4)), 5*a^(1/2), 3*a^(-(1/4))]
    , [ 4/(a^(-1)*b^(1/3)), a^(-1)/(8*b^(-(2/3)))
      , 1/(3*a^(2/5)*b^(-1)), 3*a^(1/4)*b^(-(1/2))
@@ -125,7 +125,7 @@ nonNegExp2 =
  where
    a = Var "a"
    b = Var "b"
-   
+
 ----------------------------------------------------------
 -- VWO A/C applets, hfd 5
 
@@ -143,16 +143,16 @@ powers1 =
      ]
    , [ 6*a^5+7*a^5-4*a^9, 8*a^2-4*a^2+2*a^4, 3*a^6+6*a^6+7*a^2
      , 5*a-2*a-9*a^6, 5*a+8*a^2+4*a, 6*a^7-5*a^2+a^7
-     , 8*a^6+2*a^3-2*a^6, 2*a^3-8*a^5-a^3 
-     ] 
+     , 8*a^6+2*a^3-2*a^6, 2*a^3-8*a^5-a^3
+     ]
    , [ (4*a^3)^2*2*a^4, (-a^5)^3*5*a^6, 4*a^3*(5*a^6)^2
      , 6*a^7*(2*a^4)^3, a^17/((a^3)^5), a^9/((a^3)^2)
      , a^14/((a^2)^4), a^16/((a^5)^3)
-     ] 
+     ]
    ]
  where
    a = Var "a"
-   
+
 -- herleid
 powers2 :: [[Expr]]
 powers2 =
@@ -164,21 +164,21 @@ powers2 =
      ]
    , [ (a^2*b^3)^7, (-a)^3*(2*b)^5*a^2
      , 3*a*(-2*b)^3*(-a*b)^2, (2*a*b^3)^2*(-3*a^2*b)^3
-     ] 
+     ]
    , [ (2*a^3)^4-6*a^3*(-a^3)^3, (-2*a^3)^2-6*(3*a)^2*(-4*a^4)
      ]
    ]
  where
    a = Var "a"
    b = Var "b"
-   
+
 negExp1 :: [[Expr]]
-negExp1 = 
+negExp1 =
    [ [ a^3/a^7, a^6/a^8, a^3/a^4, a^3/a^9, a/a^5
      , (1/a^3)/a, a/a^7, (1/a^2)/a
      ]
    , [ (1/(a^4))/a^6, (1/(a^3))/a^5, (1/a^5)/a^2, 1/(a^4)/a^3
-     , 1/a^3, 1/a^5, 1/a^(-4), 1/a^(-6) 
+     , 1/a^3, 1/a^5, 1/a^(-4), 1/a^(-6)
      ]
    , [ a^8/(1/a^2), a^4/(1/a^4), (a^6)/(1/a^5), a^3/(1/a^6)
      , 1/(a^3)/a^(-2), (1/a^7)/a^(-5), (1/a^2)/a^(-9), (1/a^3)/a^(-8)
@@ -186,9 +186,9 @@ negExp1 =
    ]
  where
    a = Var "a"
-   
+
 negExp2 :: [[Expr]]
-negExp2 = 
+negExp2 =
    [ [ a^3*a^(-4), a^4*(1/a^2), a^(-1)*a^5, (1/a^3)*a]
    , [ (a^(-2))^3,(a^(-3))^4, (1/a^6)*a^(-2), (1/a^2)*(1/a^4)]
    , [ (a^(-2))^3*(1/a^4), (1/a^3)^2, (a^3)^2*(1/a), (a^(-2))^(-3)*a^(-4)]
@@ -198,9 +198,9 @@ negExp2 =
    ]
  where
    a = Var "a"
-   
+
 negExp3 :: [[Expr]]
-negExp3 = 
+negExp3 =
    [ [ 4^(-2), 9^(-2), 3^(-3), 2^(-5)
      , (1/4)^(-3), (1/7)^(-2), (1/2)^(-4), (1/3)^(-4)
      ]
@@ -211,9 +211,9 @@ negExp3 =
      , 5*10^(-2), 4*10^(-3), 8*10^(-4), 6*10^(-3)
      ]
    ]
-   
+
 negExp4 :: [[Expr]]
-negExp4 = 
+negExp4 =
    [ [ a*b^(-2), a^(-1)*b^2, a^(-2)*b^(-3), (1/a^(-3))*(b^(-2))^2]
    , [ (1/((a*b)^(-2)))*a*b^(-1), (2*a)^(-1)/(4*b)^(-2)
      , (4*a*b)^(-1)*(b^2)^(-3), (5*a)^(-2) * 10*b^(-1)
@@ -222,9 +222,9 @@ negExp4 =
  where
    a = Var "a"
    b = Var "b"
-   
+
 negExp5 :: [[Expr]]
-negExp5 = 
+negExp5 =
    [ [ 2*a^(-2)*b^2, 4*a^(-5)*b^3, 3*a^2*b^(-1), 5*a*b^(-3)
      , (1/7)*a^(-2), (1/3)*a^(-4), (1/5)*a^(-6), (1/2)*a^(-3)
      ]
@@ -234,14 +234,14 @@ negExp5 =
    , [ (2*a)^(-3)*b^(-4), 4*a^(-2)*(3*b)^(-2), (4*a)^(-3)*7*b^(-5)
      , 9*a^(-7)*(2*b)^(-4), (a^5) / ((2*b)^(-2)), ((2*a)^(-3))/b^2
      , a^(-3)/b^(-3), (4*a)^(-2)/b^(-4)
-     ] 
+     ]
    ]
  where
    a = Var "a"
    b = Var "b"
-   
+
 brokenExp1, brokenExp1' :: [[Expr]]
-brokenExp1 = 
+brokenExp1 =
   [ [ 5*a^(1/2), 7*a^(1/3), (2*a)^(1/4), (3*a)^(1/5)
     , 4*a^(2/3), 2*a^(3/4), 3*a^(2/5), 4*a^(3/5)
     ]
@@ -257,17 +257,17 @@ brokenExp1 =
    a = Var "a"
    b = Var "b"
 
-brokenExp1' = 
+brokenExp1' =
   [ [ a*sqrt a, a^2*root a 3, a^5*root a 4, a^3*root a 7
     , a*root (a^2) 3, a^3*root (a^2) 5, a^2*root (a^3) 5, a^4*root (a^5) 6
-    ] 
+    ]
   , [ 1/sqrt a, a/root a 3, a^2/sqrt a, 1/root a 5, 1/(a*root a 3)
     , a^2/(a*sqrt a), 1/(a^3*sqrt a), a^3/(a^2*root a 3)
     ]
   ]
  where
    a = Var "a"
-   
+
 brokenExp2 :: [[Expr]]
 brokenExp2 =
    [ [ sqrt (1/a^2), root (1/a^5) 3, sqrt (1/a^5), root (1/a^3) 5
@@ -281,7 +281,7 @@ brokenExp2 =
    ]
  where
    a = Var "a"
-   
+
 brokenExp3 :: [[Expr]]
 brokenExp3 =
    [ [root x 3, 1/root x 4, sqrt (1/x), x^2/root (x^2) 5]
@@ -289,13 +289,13 @@ brokenExp3 =
    ]
  where
    x = Var "x"
-   
+
 ----------------------------------------------------------
 -- VWO B applets (hoofdstuk 4)
 
 -- herleiden van wortelvormen
 normSqrt1 :: [[Expr]]
-normSqrt1 = 
+normSqrt1 =
    [ [ 9*sqrt 5 * 7*sqrt 3, 3*sqrt 2 * 2 * sqrt 5, 5*sqrt 2*6*sqrt 7
      , 4*sqrt 6 * 2*sqrt 7, 6*a*sqrt 3*9*sqrt 2, 5*sqrt 5 * 2 * a * sqrt 7
      , a*sqrt 6 * 7 * sqrt 5, 8*sqrt 7*a*sqrt 3
@@ -316,9 +316,9 @@ normSqrt1 =
    ]
  where
    a = Var "a"
-   
+
 normSqrt2 :: [[Expr]]
-normSqrt2 = 
+normSqrt2 =
    [ [ ((1/7)*a*sqrt 2)^2, ((3/5)*a*sqrt 3)^2, ((1/3)*a*sqrt 5)^2
      , ((4/7)*a*sqrt 6)^2, sqrt 8 + sqrt 2, sqrt 2 + sqrt 18
      , sqrt 12 - sqrt 3, sqrt 7 - sqrt 28
@@ -326,7 +326,7 @@ normSqrt2 =
    , [ sqrt 12 + sqrt 48, sqrt 18 - sqrt 8, sqrt 45 - sqrt 20, sqrt 80 + sqrt 45
      , sqrt (50*a^2) - sqrt (32*a^2), sqrt (75*a^2) - sqrt (12*a^2)
      , sqrt (27*a^2) + sqrt (3*a^2), sqrt (24*a^2) + sqrt (96*a^2)
-     ] 
+     ]
    , [ sqrt 27 + 1/sqrt 3, sqrt 24 + 5/sqrt 6, sqrt 72 - 7/sqrt 2
      , sqrt 98 - 5/sqrt 2, sqrt 24 + sqrt (1+1/2), sqrt 40 - sqrt (2+1/2)
      , sqrt 75 - sqrt (1+1/3), sqrt (1+2/3) + sqrt 60
@@ -334,9 +334,9 @@ normSqrt2 =
    ]
  where
    a = Var "a"
-   
+
 normSqrt3 :: [[Expr]]
-normSqrt3 = 
+normSqrt3 =
    [ [ (2*sqrt 7 + 7*sqrt 3)^2, (sqrt 2+6*sqrt 3)^2, (4*sqrt 3 + 3*sqrt 2)^2
      , (2*sqrt 5 + sqrt 7)^2, (3*sqrt 6-4*sqrt 5)^2, (5*sqrt 3 - sqrt 2)^2
      , (4*sqrt 6 - 2*sqrt 7)^2, (sqrt 5 - 2*sqrt 3)^2
@@ -359,7 +359,7 @@ normSqrt3 =
    ]
  where
    a = Var "a"
-   
+
 -- Machten herleiden
 normPower1 :: [[Expr]]
 normPower1 =
@@ -371,7 +371,7 @@ normPower1 =
     ]
   , [ (3*a)^3, (4*a^5)^2, (6*a^3)^2, (2*a^7)^3, (-(a^6))^5
     , (-2*a^2)^5, (-4*a^3)^2, (-3*a^5)^4
-    ] 
+    ]
   , [ 6*a^5 + 7*a^5 - 4*a^9, 8*a^2 - 4*a^2+2*a^4, 3*a^6+6*a^6+7*a^2
     , 5*a-2*a-9*a^6, 5*a+8*a^2+4*a, 6*a^7-5*a^2+a^7
     , 8*a^6+2*a^3-2*a^6, 2*a^3-8*a^5-a^3
@@ -382,22 +382,22 @@ normPower1 =
   ]
  where
    a = Var "a"
-   
+
 normPower2 :: [[Expr]]
 normPower2 =
   [ -- one level only
     [ (3*a)^3+4*a^3, (2*a^2)^3 +(4*a^3)^2, (-2*a^6)^2+(a^2)^6
     , (-3*a^2)^3+(4*a^3)^2, (4*a*b^2)^2, (2*a^2*b^3)^3
-    , (3*a^2*b)^2, (-3*a^2*b^2)^4 
+    , (3*a^2*b)^2, (-3*a^2*b^2)^4
     ]
   ]
  where
    a = Var "a"
    b = Var "b"
-   
+
 normPower3, normPower3' :: [[Expr]]
 normPower3 =
-  [ [ a^3/a^7, a^6/a^8, a^3/a^4, a^3/a^9, a/a^5, (1/a^3)/a, a/a^7, (1/a^2)/a 
+  [ [ a^3/a^7, a^6/a^8, a^3/a^4, a^3/a^9, a/a^5, (1/a^3)/a, a/a^7, (1/a^2)/a
     ]
   , [ (1/a^4)/a^6, (1/a^3)/a^5, (1/a^5)/a^2, (1/a^4)/a^3, 1/a^3, 1/a^5
     , 1/a^(-4), 1/a^(-6)
@@ -416,7 +416,7 @@ normPower3' = -- bereken zonder rekenmachine
     , 6*5^(-2), 4*7^(-2)
     ]
   ]
-   
+
 normPower4, normPower4' :: [[Expr]]
 normPower4 =
   [  -- bereken zonder rekenmachine
@@ -439,7 +439,7 @@ normPower4' =    -- schrijf zonder negatieve exponenten
  where
    a = Var "a"
    b = Var "b"
-   
+
 normPower5, normPower5' :: [[Expr]]
 normPower5 =
   [ -- schrijf zonder negatieve en gebroken exponent
@@ -455,7 +455,7 @@ normPower5 =
   ]
  where
    a = Var "a"
-   b = Var "b"  
+   b = Var "b"
 normPower5' =    -- schrijf als macht van a
   [ [ a*sqrt a, a^2*root a 3, a^5*root a 4, a^3*root a 7, a*root (a^2) 3
     , a^3*root (a^2) 5, a^2*root (a^3) 5, a^4*root (a^5) 6
@@ -466,7 +466,7 @@ normPower5' =    -- schrijf als macht van a
   ]
  where
    a = Var "a"
-   
+
 normPower6 :: [[Expr]]
 normPower6 =
   [ -- schrijf als macht van a

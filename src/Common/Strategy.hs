@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -8,13 +8,13 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A strategy is a context-free grammar with rules as symbols. Strategies can be 
+-- A strategy is a context-free grammar with rules as symbols. Strategies can be
 -- labeled with strings. A type class is introduced to lift all the combinators
 -- that work on strategies, only to prevent that you have to insert these lifting
 -- functions yourself.
 --
 -----------------------------------------------------------------------------
-module Common.Strategy 
+module Common.Strategy
    ( -- * Data types and type classes
      Strategy, LabeledStrategy
    , IsStrategy(..)
@@ -47,8 +47,8 @@ module Common.Strategy
 
 import Common.Strategy.Abstract
 import Common.Strategy.Combinators
-import Common.Strategy.Prefix
-import Common.Strategy.Location
 import Common.Strategy.Configuration
+import Common.Strategy.Location
 import Common.Strategy.Parsing
+import Common.Strategy.Prefix
 import Prelude ()

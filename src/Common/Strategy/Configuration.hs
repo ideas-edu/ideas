@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Strategy.Configuration 
+module Common.Strategy.Configuration
    ( -- Types and constructors
      StrategyConfiguration, ConfigItem
    , ConfigLocation, byName, byGroup
@@ -36,7 +36,7 @@ data ConfigLocation
    = ByName  Id
    | ByGroup Id
  deriving Show
- 
+
 data ConfigAction = Remove | Reinsert | Collapse | Expand | Hide | Reveal
    deriving (Show, Enum)
 
@@ -53,24 +53,24 @@ byGroup = ByGroup . getId
 -- Configure
 
 configureNow :: LabeledStrategy a -> LabeledStrategy a
-configureNow = 
+configureNow =
    let lsToCore = toCore . toStrategy
        coreToLS = fromMaybe err . toLabeledStrategy . fromCore
        err      = error "configureNow: label disappeared"
    in coreToLS . processLabelInfo id . lsToCore
 
 configure :: StrategyConfiguration -> LabeledStrategy a -> LabeledStrategy a
-configure cfg ls = 
+configure cfg ls =
    label (getId ls) (fromCore (configureCore cfg (toCore (unlabel ls))))
 
 configureCore :: StrategyConfiguration -> Core LabelInfo a -> Core LabelInfo a
 configureCore cfg = mapFirst (change [])
  where
-   change groups info = 
+   change groups info =
       let actions = getActions info groups cfg
       in foldr doAction info actions
-   
-getActions :: LabelInfo -> [String] 
+
+getActions :: LabelInfo -> [String]
            -> StrategyConfiguration -> [ConfigAction]
 getActions info groups = map snd . filter (select . fst)
  where

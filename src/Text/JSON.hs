@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -8,11 +8,11 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Support for JavaScript Object Notation (JSON) and remote procedure calls using 
--- JSON. JSON is a lightweight alternative for XML. 
+-- Support for JavaScript Object Notation (JSON) and remote procedure calls using
+-- JSON. JSON is a lightweight alternative for XML.
 --
 -----------------------------------------------------------------------------
-module Text.JSON 
+module Text.JSON
    ( JSON(..), Key, Number(..)            -- types
    , InJSON(..)                           -- type class"
    , lookupM
@@ -20,15 +20,15 @@ module Text.JSON
    , jsonRPC, JSON_RPC_Handler, propEncoding
    ) where
 
-import qualified Text.ParserCombinators.Parsec.Token as P
-import qualified Text.UTF8 as UTF8
+import Control.Monad.Error
 import Data.List (intercalate)
 import Data.Maybe
-import Control.Monad.Error
 import Test.QuickCheck
 import Text.Parsing
+import qualified Text.ParserCombinators.Parsec.Token as P
+import qualified Text.UTF8 as UTF8
 
-data JSON 
+data JSON
    = Number  Number        -- integer, real, or floating point
    | String  String        -- double-quoted Unicode with backslash escapement
    | Boolean Bool          -- true and false
@@ -38,12 +38,12 @@ data JSON
  deriving Eq
 
 type Key = String
-          
+
 data Number = I Integer | D Double deriving Eq
 
 instance Show JSON where
    show = showPretty
-       
+
 showCompact :: JSON -> String
 showCompact json =
    case json of
@@ -54,16 +54,16 @@ showCompact json =
       Object xs -> let f (k, v) = show k ++ ": " ++ showCompact v
                    in curlyBrackets  $ intercalate ", " $ map f xs
       Null      -> "null"
-  
+
 -- Escape double quote and backslash, and convert to UTF8 encoding
 escape :: String -> String
-escape = concatMap f . fromMaybe "invalid UTF8 string" . UTF8.encodeM 
+escape = concatMap f . fromMaybe "invalid UTF8 string" . UTF8.encodeM
  where
    f '\n' = "\\\\n"
    f '"'  = "\\\""
    f '\\' = "\\\\"
    f c    = [c]
-  
+
 showPretty :: JSON -> String
 showPretty json =
    case json of
@@ -71,15 +71,15 @@ showPretty json =
       Object xs -> let f (k, v) = show k ++ ": " ++ showPretty v
                    in curlyBrackets $ '\n' : indent 3 (commas (map f xs))
       _         -> showCompact json
- where      
+ where
    commas []     = []
    commas [x]    = x
    commas (x:xs) = x ++ ",\n" ++ commas xs
-         
+
 squareBrackets, curlyBrackets :: String -> String
 squareBrackets s = "[" ++ s ++ "]"
 curlyBrackets  s = "{" ++ s ++ "}"
-         
+
 instance Show Number where
    show (I n) = show n
    show (D d) = show d
@@ -94,20 +94,20 @@ class InJSON a where
    listFromJSON (Array xs) = mapM fromJSON xs
    listFromJSON _          = fail "expecting an array"
 
-instance InJSON Int where 
+instance InJSON Int where
    toJSON   = toJSON . toInteger
    fromJSON = liftM fromInteger . fromJSON
-   
-instance InJSON Integer where 
+
+instance InJSON Integer where
    toJSON                  = Number . I
    fromJSON (Number (I n)) = return n
    fromJSON _              = fail "expecting a number"
 
-instance InJSON Double where 
+instance InJSON Double where
    toJSON = Number . D
    fromJSON (Number (D n)) = return n
    fromJSON _              = fail "expecting a number"
-   
+
 instance InJSON Char where
    toJSON c   = String [c]
    listToJSON = String
@@ -116,12 +116,12 @@ instance InJSON Char where
    listFromJSON (String s) = return s
    listFromJSON _ = fail "expecting a string"
 
-instance InJSON Bool where 
+instance InJSON Bool where
    toJSON = Boolean
    fromJSON (Boolean b) = return b
    fromJSON _           = fail "expecting a boolean"
 
-instance InJSON a => InJSON [a] where 
+instance InJSON a => InJSON [a] where
    toJSON   = listToJSON
    fromJSON = listFromJSON
 
@@ -147,21 +147,21 @@ parseJSON :: String -> Either String JSON
 parseJSON = parseSimple json
  where
    json :: Parser JSON
-   json = choice 
-      [ Null          <$ P.reserved lexer "null"  
-      , Boolean True  <$ P.reserved lexer "true" 
-      , Boolean False <$ P.reserved lexer "false" 
+   json = choice
+      [ Null          <$ P.reserved lexer "null"
+      , Boolean True  <$ P.reserved lexer "true"
+      , Boolean False <$ P.reserved lexer "false"
       , Number . either I D <$> naturalOrFloat -- redefined in Text.Parsing
       , String . fromMaybe [] . UTF8.decodeM <$> P.stringLiteral lexer
       , Array  <$> P.brackets lexer (sepBy json (P.comma lexer))
       , Object <$> P.braces lexer (sepBy keyValue (P.comma lexer))
       ]
- 
+
    keyValue :: Parser (String, JSON)
    keyValue = (,) <$> P.stringLiteral lexer <* P.colon lexer <*> json
 
    lexer :: P.TokenParser a
-   lexer = P.makeTokenParser $ emptyDef 
+   lexer = P.makeTokenParser $ emptyDef
       { reservedNames = ["true", "false", "null"] }
 
 --------------------------------------------------------
@@ -172,7 +172,7 @@ data JSON_RPC_Request = Request
    , requestParams :: JSON
    , requestId     :: JSON
    }
-   
+
 data JSON_RPC_Response = Response
    { responseResult :: JSON
    , responseError  :: JSON
@@ -198,7 +198,7 @@ instance InJSON JSON_RPC_Request where
       case mj of
          String s -> return (Request s pj ij)
          _        -> fail "expecting a string"
-         
+
 instance InJSON JSON_RPC_Response where
    toJSON resp = Object
       [ ("result", responseResult resp)
@@ -210,14 +210,14 @@ instance InJSON JSON_RPC_Response where
       ej <- lookupM "error"  obj
       ij <- lookupM "id"     obj
       return (Response rj ej ij)
-   
+
 okResponse :: JSON -> JSON -> JSON_RPC_Response
 okResponse x y = Response
    { responseResult = x
    , responseError  = Null
    , responseId     = y
    }
-   
+
 errorResponse :: JSON -> JSON -> JSON_RPC_Response
 errorResponse x y = Response
    { responseResult = Null
@@ -237,10 +237,10 @@ indent n = unlines . map (replicate n ' ' ++) . lines
 
 type JSON_RPC_Handler m = String -> JSON -> m JSON
 
-jsonRPC :: (MonadError a m, InJSON a) 
+jsonRPC :: (MonadError a m, InJSON a)
         => JSON -> JSON_RPC_Handler m -> m JSON_RPC_Response
-jsonRPC input handler = 
-   case fromJSON input of 
+jsonRPC input handler =
+   case fromJSON input of
       Nothing  -> return (errorResponse (String "Invalid request") Null)
       Just req -> do
          json <- handler (requestMethod req) (requestParams req)
@@ -258,8 +258,8 @@ instance Arbitrary Number where
    arbitrary = oneof [liftM I arbitrary, liftM (D . fromInteger) arbitrary]
 
 arbJSON :: Int -> Gen JSON
-arbJSON n 
-   | n == 0 = oneof 
+arbJSON n
+   | n == 0 = oneof
         [ liftM Number arbitrary, liftM String myStringGen
         , liftM Boolean arbitrary, return Null
         ]
@@ -275,13 +275,13 @@ arbJSON n
         ]
  where
    rec = arbJSON (n `div` 2)
-   
+
 myStringGen :: Gen String
-myStringGen = do 
+myStringGen = do
    n <- choose (1, 10)
    replicateM n $ elements $
       ['A' .. 'Z'] ++ ['a' .. 'z'] ++ ['0' .. '9']
-   
+
 propEncoding :: Property
-propEncoding = property $ \a ->  
+propEncoding = property $ \a ->
    parseJSON (show a) == Right a

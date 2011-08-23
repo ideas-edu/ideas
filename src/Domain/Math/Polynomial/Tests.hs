@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,13 +11,13 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Tests (tests) where
 
-import Common.Utils.TestSuite
 import Common.Algebra.Field
 import Common.Algebra.Law
-import Domain.Math.Data.Polynomial
+import Common.Utils.TestSuite
 import Control.Monad
+import Domain.Math.Data.Polynomial
 
 tests :: TestSuite
-tests = suite "Polynomial is a commutative ring" $ 
+tests = suite "Polynomial is a commutative ring" $
    forM_ (commutativeRingLaws :: [Law (SafeNum (Polynomial Int))]) $ \p ->
       addProperty (show p) p

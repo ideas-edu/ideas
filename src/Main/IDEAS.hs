@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,17 +11,17 @@
 -----------------------------------------------------------------------------
 module Main.IDEAS (useIDEAS) where
 
-import Common.Id
 import Common.Exercise
+import Common.Id
 import Common.Utils (Some(..))
 import Control.Arrow
 import Main.Options
 import Service.DomainReasoner
 import Service.ServiceList
-import qualified Domain.Math.ExerciseList as Math
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.LinearAlgebra.Checks as LA
 import qualified Domain.Logic as Logic
+import qualified Domain.Math.ExerciseList as Math
 import qualified Domain.RelationAlgebra as RA
 
 useIDEAS :: DomainReasoner a -> IO a
@@ -63,14 +63,14 @@ exercises =
      -- regular expressions
    -- , some RE.regexpExercise
    ] ++ Math.exerciseList
-   
+
 aliases :: [(Id, Id)]
 aliases = map (newId *** newId)
    [ ("math.coverup",             "algebra.equations.coverup")
    , ("math.lineq",               "algebra.equations.linear")
    , ("math.lineq-mixed",         "algebra.equations.linear.mixed")
-   , ("math.quadreq",             "algebra.equations.quadratic")         
-   , ("math.quadreq-no-abc",      "algebra.equations.quadratic.no-abc")    
+   , ("math.quadreq",             "algebra.equations.quadratic")
+   , ("math.quadreq-no-abc",      "algebra.equations.quadratic.no-abc")
    , ("math.quadreq-with-approx", "algebra.equations.quadratic.approximate")
    , ("math.higherdegree",        "algebra.equations.polynomial")
    , ("math.rationaleq",          "algebra.equations.rational")
@@ -98,9 +98,9 @@ aliases = map (newId *** newId)
    , ("solvelinearsystem"          , "linearalgebra.linsystem")
    , ("solvelinearsystemwithmatrix", "linearalgebra.systemwithmatrix")
    ]
-   
+
 scripts :: [(Id, FilePath)]
 scripts =
    [ (getId Logic.dnfExercise,         "logic.txt")
    , (getId Logic.dnfUnicodeExercise,  "logic.txt")
-   ] ++ Math.scriptList  
+   ] ++ Math.scriptList

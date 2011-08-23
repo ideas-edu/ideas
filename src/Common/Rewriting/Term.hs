@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,7 +12,7 @@
 -- A simple data type for term rewriting
 --
 -----------------------------------------------------------------------------
-module Common.Rewriting.Term 
+module Common.Rewriting.Term
    ( -- * Symbols
      Symbol, newSymbol
    , isAssociative, makeAssociative
@@ -33,6 +33,7 @@ module Common.Rewriting.Term
 
 import Common.Id
 import Common.Utils (ShowString(..))
+import Common.Utils.QuickCheck
 import Common.Utils.Uniplate
 import Common.View
 import Control.Monad
@@ -41,7 +42,6 @@ import Data.Maybe
 import Data.Typeable
 import qualified Data.IntSet as IS
 import qualified Data.Set as S
-import Common.Utils.QuickCheck
 
 -----------------------------------------------------------
 -- Symbols
@@ -70,14 +70,14 @@ makeAssociative (S _ a) = S True a
 -----------------------------------------------------------
 -- * Data type for terms
 
-data Term = TVar   String 
-          | TCon   Symbol 
+data Term = TVar   String
+          | TCon   Symbol
           | TApp   Term Term
-          | TNum   Integer 
+          | TNum   Integer
           | TFloat Double
           | TMeta  Int
  deriving (Show, Eq, Ord, Typeable)
- 
+
 instance Uniplate Term where
    uniplate (TApp f a) = plate TApp |* f |* a
    uniplate term       = plate term
@@ -98,7 +98,7 @@ instance IsTerm Term where
    toTerm   = id
    fromTerm = return
 
-instance IsTerm ShowString where 
+instance IsTerm ShowString where
    toTerm = TVar . fromShowString
    fromTerm (TVar s) = return (ShowString s)
    fromTerm _        = fail "fromTerm"
@@ -107,7 +107,7 @@ instance (IsTerm a, IsTerm b) => IsTerm (Either a b) where
    toTerm = either toTerm toTerm
    fromTerm expr =
       liftM Left  (fromTerm expr) `mplus`
-      liftM Right (fromTerm expr) 
+      liftM Right (fromTerm expr)
 
 instance IsTerm Int where
    toTerm = TNum . fromIntegral
@@ -144,18 +144,18 @@ class WithFunctions a where
    getFunction :: Monad m => a -> m (Symbol, [a])
    -- default definition
    symbol s = function s []
-   getSymbol a = 
+   getSymbol a =
       case getFunction a of
          Just (t, []) -> return t
          _            -> fail "Common.Term.getSymbol"
-         
+
 instance WithFunctions Term where
    function = makeTerm . TCon
-   getFunction a = 
+   getFunction a =
       case getSpine a of
          (TCon s, xs) -> return (s, xs)
-         _            -> fail "Common.Rewriting.getFunction" 
-   
+         _            -> fail "Common.Rewriting.getFunction"
+
 isSymbol :: WithFunctions a => Symbol -> a -> Bool
 isSymbol s = maybe False (==s) . getSymbol
 
@@ -172,13 +172,13 @@ binary :: WithFunctions a => Symbol -> a -> a -> a
 binary s a b = function s [a, b]
 
 isUnary :: (WithFunctions a, Monad m) => Symbol -> a -> m a
-isUnary s a = 
+isUnary s a =
    case isFunction s a of
       Just [x] -> return x
       _        -> fail "Common.Term.isUnary"
 
 isBinary :: (WithFunctions a, Monad m) => Symbol -> a -> m (a, a)
-isBinary s a = 
+isBinary s a =
    case isFunction s a of
       Just [x, y] -> return (x, y)
       _           -> fail "Common.Term.isBinary"
@@ -188,9 +188,9 @@ isBinary s a =
 
 class WithVars a where
    variable    :: String -> a
-   getVariable :: Monad m => a -> m String 
+   getVariable :: Monad m => a -> m String
 
-instance WithVars Term where 
+instance WithVars Term where
    variable = TVar
    getVariable (TVar s) = return s
    getVariable _        = fail "Common.Rewriting.getVariable"
@@ -221,7 +221,7 @@ hasNoVar = null . vars
 
 class WithMetaVars a where
    metaVar    :: Int -> a
-   getMetaVar :: Monad m => a -> m Int 
+   getMetaVar :: Monad m => a -> m Int
 
 instance WithMetaVars Term where
    metaVar = TMeta
@@ -244,7 +244,7 @@ hasMetaVar i = (i `elem`) . metaVars
 -- * Utility functions
 
 getSpine :: Term -> (Term, [Term])
-getSpine = rec [] 
+getSpine = rec []
  where
    rec xs (TApp f a) = rec (a:xs) f
    rec xs a          = (a, xs)
@@ -256,7 +256,7 @@ makeTerm = foldl TApp
 -- * Arbitrary term generator
 
 instance Arbitrary Term where
-   arbitrary = generators 
+   arbitrary = generators
       [ constGens $ map TVar ["x", "y", "z"]
       , arbGen TNum, arbGen TFloat, arbGen TMeta
       , constGens $ map (TCon . newSymbol) ["a", "b"]

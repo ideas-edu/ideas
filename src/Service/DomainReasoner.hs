@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -10,10 +10,10 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Service.DomainReasoner 
+module Service.DomainReasoner
    ( -- * Domain Reasoner data type
      DomainReasoner, runDomainReasoner, runWithCurrent
-   , liftEither, MonadIO(..), catchError 
+   , liftEither, MonadIO(..), catchError
      -- * Update functions
    , addExercises, addExercise, addExerciseService
    , addServices, addService, addViews, addView
@@ -28,13 +28,13 @@ module Service.DomainReasoner
    ) where
 
 import Common.Library
-import Common.Utils.TestSuite
 import Common.Utils (Some(..))
+import Common.Utils.TestSuite
 import Control.Monad.Error
 import Control.Monad.State
 import Data.Maybe
-import Service.Types
 import Service.FeedbackScript.Parser
+import Service.Types
 
 -----------------------------------------------------------------------
 -- Domain Reasoner data type
@@ -52,7 +52,7 @@ data Content = Content
    , version     :: String
    , fullVersion :: Maybe String
    }
-   
+
 noContent :: Content
 noContent = Content [] (const []) [] [] Nothing [] (return ()) [] Nothing
 
@@ -104,7 +104,7 @@ addExercise :: Some Exercise -> DomainReasoner ()
 addExercise ex = addExercises [ex]
 
 addExerciseService :: ([Some Exercise] -> Service) -> DomainReasoner ()
-addExerciseService f = modify $ \c -> 
+addExerciseService f = modify $ \c ->
    c { services = \xs -> f xs : services c xs }
 
 addServices :: [Service] -> DomainReasoner ()
@@ -166,7 +166,7 @@ findExercise i = do
    case [ a | a@(Some ex) <- xs, getId ex == res ] of
       [this] -> return this
       _      -> throwError $ "Exercise " ++ show i ++ " not found"
-      
+
 findService :: String -> DomainReasoner Service
 findService txt = do
    srvs <- getServices
@@ -174,7 +174,7 @@ findService txt = do
       [hd] -> return hd
       []   -> throwError $ "No service " ++ txt
       _    -> throwError $ "Ambiguous service " ++ txt
-      
+
 defaultScript :: Id -> DomainReasoner Script
 defaultScript a = do
    list <- gets scripts

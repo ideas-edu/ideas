@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,15 +12,15 @@
 module Documentation.RulePresenter (ruleToHTML) where
 
 import Common.Library
-import Control.Monad
 import Common.Utils (Some(..), safeHead)
+import Control.Monad
 import Data.List
 import Data.Maybe
 import Text.HTML
 
 ruleToHTML :: Some Exercise -> Rule a -> HTMLBuilder
-ruleToHTML ex r = 
-   forM_ (getRewriteRules r) $ \(Some rr, b) -> 
+ruleToHTML ex r =
+   forM_ (getRewriteRules r) $ \(Some rr, b) ->
       rewriteRuleToHTML b ex rr
 
 rewriteRuleToHTML :: Bool -> Some Exercise -> RewriteRule a -> HTMLBuilder
@@ -45,24 +45,24 @@ showTerm (Some ex) = text . rec
          TNum i   -> show i
          TFloat a -> show a
          TMeta n  -> showMeta ex n
-         _ -> concatMap (either id recp) $  
+         _ -> concatMap (either id recp) $
             case getSpine term of
-               (TCon s, xs) -> 
+               (TCon s, xs) ->
                   let txt = spaced (Left (show s) : map Right xs)
                   in fromMaybe txt (specialSymbol s xs)
                (x, xs) -> spaced (map Right (x:xs))
-   
+
    recp term = parIf (isApp term) (rec term)
    spaced    = intersperse (Left " ")
-      
+
    isApp (TApp _ _) = True
    isApp _          = False
-      
-   parIf b s = if b then "(" ++ s ++ ")" else s           
-         
+
+   parIf b s = if b then "(" ++ s ++ ")" else s
+
 specialSymbol :: Symbol -> [Term] -> Maybe [Either String Term]
 -- constants
-specialSymbol s [] 
+specialSymbol s []
    | sameSymbol s "logic1.true"     = con "T"
    | sameSymbol s "logic1.false"    = con "F"
    | sameSymbol s "relalg.universe" = con "V" -- universe
@@ -96,13 +96,13 @@ specialSymbol s [a, b]
    | sameSymbol s "relalg.add"        = bin " \x2020 " -- relative addition/dagger
  where
    bin x = return [Right a, Left x, Right b]
-specialSymbol s1 [TApp (TApp (TCon s2) x) a] 
-   | sameSymbol s1 "calculus1.diff" && sameSymbol s2 "fns1.lambda" = 
-        return [Left "D(", Right x, Left ") ", Right a] 
+specialSymbol s1 [TApp (TApp (TCon s2) x) a]
+   | sameSymbol s1 "calculus1.diff" && sameSymbol s2 "fns1.lambda" =
+        return [Left "D(", Right x, Left ") ", Right a]
 specialSymbol _ _ = Nothing
 
 sameSymbol :: Symbol -> String -> Bool
-sameSymbol = (==) . show 
+sameSymbol = (==) . show
 
 showMeta :: Exercise a -> Int -> String
 showMeta ex n

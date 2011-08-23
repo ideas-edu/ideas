@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -14,7 +14,7 @@
 -- interface.
 --
 -----------------------------------------------------------------------------
-module Common.Utils.TestSuite 
+module Common.Utils.TestSuite
    ( -- * Test Suite Monad
      TestSuite, MonadIO(..)
      -- * Test suite constructors
@@ -45,7 +45,7 @@ import qualified Data.Sequence as S
 
 newtype TestSuiteM a = TSM { unTSM :: StateT Content IO a }
 
-data Content = C 
+data Content = C
    { column :: !Int -- Number of characters on the current line, for formatting
    , result :: !TestSuiteResult
    }
@@ -77,7 +77,7 @@ suite s m = TSM $ do
    t <- updateDiffTime (withEmptyTree (unTSM m))
    addResult (suiteResult s t)
 
--- | Add a QuickCheck property to the test suite. The first argument is 
+-- | Add a QuickCheck property to the test suite. The first argument is
 -- a label for the property
 addProperty :: Testable prop => String -> prop -> TestSuite
 addProperty = flip addPropertyWith stdArgs
@@ -98,7 +98,7 @@ assertTrue msg = assertIO msg . return
 assertNull :: Show a => String -> [a] -> TestSuite
 assertNull s xs = addAssertion (f xs) (return (null xs))
  where f = setLabel s . newMessage . intercalate "\n" . map show
- 
+
 assertEquals :: (Eq a, Show a) => String -> a -> a -> TestSuite
 assertEquals s x y = addAssertion (setLabel s msg) (return (x==y))
  where msg = newMessage ("Not equal: " ++ show x ++ " and " ++ show y)
@@ -113,7 +113,7 @@ warn = (`addAssertion` return False) . warning . newMessage
 addAssertion :: Message -> IO Bool -> TestSuite
 addAssertion msg io = TSM $ do
    b <- liftIO (io `catch` \_ -> return False)
-   if b then do 
+   if b then do
       dot
       addResult okResult
     else do
@@ -171,7 +171,7 @@ runTestSuiteResult s =
 ----------------------------------------------------------------
 -- Test Suite Result
 
-data TestSuiteResult = TSR 
+data TestSuiteResult = TSR
    { messageSeq     :: S.Seq Message
    , suiteSeq       :: S.Seq (String, TestSuiteResult)
    , numberOfTests  :: !Int
@@ -180,7 +180,7 @@ data TestSuiteResult = TSR
 
 instance Monoid TestSuiteResult where
    mempty = TSR mempty mempty 0 0
-   mappend x y = TSR 
+   mappend x y = TSR
       { messageSeq    = messageSeq x `mappend` messageSeq y
       , suiteSeq      = suiteSeq x `mappend` suiteSeq y
       , numberOfTests = numberOfTests x + numberOfTests y
@@ -194,18 +194,18 @@ messageResult :: Message -> TestSuiteResult
 messageResult m = okResult {messageSeq = S.singleton m}
 
 suiteResult :: String -> TestSuiteResult -> TestSuiteResult
-suiteResult s a = mempty 
+suiteResult s a = mempty
    { suiteSeq = S.singleton (s, a)
    , numberOfTests = numberOfTests a
    }
 
 -- one-line summary
 instance Show TestSuiteResult where
-   show res = 
+   show res =
       let (xs, ys) = partition isError (messages res)
-      in "(tests: " ++ show (numberOfTests res) ++ 
+      in "(tests: " ++ show (numberOfTests res) ++
          ", errors: " ++ show (length xs) ++
-         ", warnings: " ++ show (length ys) ++ 
+         ", warnings: " ++ show (length ys) ++
          ", " ++ show (diffTime res) ++ ")"
 
 subResults :: TestSuiteResult -> [(String, TestSuiteResult)]
@@ -215,10 +215,10 @@ topMessages :: TestSuiteResult -> [Message]
 topMessages = F.toList . messageSeq
 
 messages :: TestSuiteResult -> [Message]
-messages res = 
+messages res =
    topMessages res ++ concatMap (messages . snd) (subResults res)
 
-data Message = Message 
+data Message = Message
    { message      :: String
    , isError      :: Bool
    , messageLabel :: Maybe String
@@ -228,7 +228,7 @@ instance Show Message where
    show a = (if null pre then "" else pre ++ ": ") ++ message a
     where
        parens s = "(" ++ s ++ ")"
-       pre = unwords $ 
+       pre = unwords $
                 [ "Warning" | not (isError a) ] ++
                 maybe [] (return . parens) (messageLabel a)
 
@@ -245,7 +245,7 @@ findSubResult :: String -> TestSuiteResult -> Maybe TestSuiteResult
 findSubResult name = listToMaybe . recs
  where
    recs = concatMap rec . subResults
-   rec (n, t) 
+   rec (n, t)
       | n == name = [t]
       | otherwise = recs t
 
@@ -260,7 +260,7 @@ makeSummary res = unlines $
    , "Warnings : " ++ show (length ys)
    , "\nTime     : " ++ show (diffTime res)
    , "\nSuites: "
-   ] ++ map f (subResults res) 
+   ] ++ map f (subResults res)
      ++ [line]
  where
    line        = replicate 75 '-'
@@ -269,15 +269,15 @@ makeSummary res = unlines $
 
 -----------------------------------------------------
 -- Utility functions
-  
+
 toTestResult :: Result -> Maybe Message
-toTestResult res = 
+toTestResult res =
    let make = Just . newMessage
    in case res of
          Success _ _ _           -> Nothing
          Failure _ _ _ _ msg _ _ -> make msg
          NoExpectedFailure _ _ _ -> make "no expected failure"
-         GaveUp i _  _           -> fmap warning $ make $ 
+         GaveUp i _  _           -> fmap warning $ make $
                                     "passed only " ++ show i ++ " tests"
 
 updateDiffTime :: MonadIO m => m TestSuiteResult -> m TestSuiteResult

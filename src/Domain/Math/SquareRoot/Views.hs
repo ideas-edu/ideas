@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -13,12 +13,12 @@ module Domain.Math.SquareRoot.Views
    ( squareRootView, squareRootViewWith
    ) where
 
-import Control.Monad
 import Common.View
+import Control.Monad
+import Domain.Math.Data.SquareRoot
+import Domain.Math.Expr hiding ((^))
 import Domain.Math.Numeric.Views
 import Domain.Math.Safe
-import Domain.Math.Expr hiding ((^))
-import Domain.Math.Data.SquareRoot
 
 squareRootView :: View Expr (SquareRoot Expr)
 squareRootView = squareRootViewWith identity
@@ -38,13 +38,13 @@ squareRootViewWith v = makeView f g
          Sym s [a, b] | isPowerSymbol s ->
             liftM2 power (f a) (match integerView b)
          _ -> fmap con (match v expr)
-   
-   power a n 
+
+   power a n
       | n >= 0    = a ^ n
       | otherwise = 1 / (a ^ abs n)
-   
+
    g = to sumView . map h . toList
-   h (a, n)  
+   h (a, n)
       | n == 0    = 0
       | n == 1    = build v a
       | otherwise = build v a .*. Sqrt (fromIntegral n)

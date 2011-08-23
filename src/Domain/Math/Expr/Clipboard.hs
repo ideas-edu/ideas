@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,7 +12,7 @@
 -- is part of the environment (terms that are placed in a context)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Expr.Clipboard 
+module Domain.Math.Expr.Clipboard
    ( addToClipboard, addListToClipboard
    , lookupClipboard, lookupListClipboard, removeClipboard
      -- generalized interface
@@ -22,8 +22,8 @@ module Domain.Math.Expr.Clipboard
    ) where
 
 import Common.Context
-import Control.Monad
 import Common.Rewriting
+import Control.Monad
 import Data.Maybe
 import Domain.Math.Data.Relation
 import Domain.Math.Expr.Data
@@ -42,7 +42,7 @@ exprVar s a = ExprVar (makeVar showF readF s (toTerm a))
    readF = liftM toTerm . parseExprM
 
 readExprVar :: IsTerm a => ExprVar a -> ContextMonad a
-readExprVar (ExprVar var) = do  
+readExprVar (ExprVar var) = do
    term <- readVar var
    maybeCM (fromTerm term)
 
@@ -71,10 +71,10 @@ instance IsTerm Key where
 
 clipboard :: ExprVar (M.Map Key Expr)
 clipboard = exprVar "clipboard" M.empty
-   
+
 ---------------------------------------------------------------------
 -- Interface to work with clipboard
-   
+
 addToClipboard :: String -> Expr -> ContextMonad ()
 addToClipboard = addToClipboardG
 
@@ -83,12 +83,12 @@ addListToClipboard = addListToClipboardG
 
 lookupClipboard :: String -> ContextMonad Expr
 lookupClipboard = lookupClipboardG
-   
+
 lookupListClipboard :: [String] -> ContextMonad [Expr]
 lookupListClipboard = lookupListClipboardG
 
 removeClipboard :: String -> ContextMonad ()
-removeClipboard s = 
+removeClipboard s =
    modifyExprVar clipboard (M.delete (Key s))
 
 ---------------------------------------------------------------------
@@ -101,13 +101,13 @@ addListToClipboardG :: IsTerm a => [String] -> [a] -> ContextMonad ()
 addListToClipboardG = zipWithM_ addToClipboardG
 
 lookupClipboardG :: IsTerm a => String -> ContextMonad a
-lookupClipboardG s = do 
+lookupClipboardG s = do
    m    <- readExprVar clipboard
    expr <- maybeCM (M.lookup (Key s) m)
    fromExpr expr
 
 maybeOnClipboardG :: IsTerm a => String -> ContextMonad (Maybe a)
-maybeOnClipboardG s = do 
+maybeOnClipboardG s = do
    m <- readExprVar clipboard
    return (M.lookup (Key s) m >>= fromExpr)
 

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -15,7 +15,7 @@ module Domain.Math.Safe
    , -- * Safe power and root
      SafePower(..)
    ) where
-   
+
 import Data.Ratio
 
 -------------------------------------------------------------------
@@ -28,19 +28,19 @@ class Num a => SafeDiv a where
    safeRecip = safeDiv 1
 
 instance SafeDiv Integer where
-   safeDiv x y 
+   safeDiv x y
       | y /= 0 && m == 0 = Just d
       | otherwise        = Nothing
     where (d, m) = x `divMod` y
 
 instance SafeDiv Double where
    safeDiv = safeDivFractional
-      
+
 instance Integral a => SafeDiv (Ratio a) where
    safeDiv = safeDivFractional
 
 safeDivFractional :: Fractional a => a -> a -> Maybe a
-safeDivFractional x y 
+safeDivFractional x y
    | y /= 0    = Just (x / y)
    | otherwise = Nothing
 
@@ -56,9 +56,9 @@ class Num a => SafePower a where
 
 instance SafePower Integer where
    safeRoot _ _ = Nothing
-   safePower x y 
-      | y >= 0    = Just (x ^ y) 
-      | otherwise = Nothing 
+   safePower x y
+      | y >= 0    = Just (x ^ y)
+      | otherwise = Nothing
 
 instance Integral a => SafePower (Ratio a) where
    safeRoot _ _ = Nothing

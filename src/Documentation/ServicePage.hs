@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,17 +12,17 @@
 -----------------------------------------------------------------------------
 module Documentation.ServicePage (makeServicePage) where
 
-import Documentation.DefaultPage
-import Service.TypedExample
-import Service.Types
-import Service.DomainReasoner
-import Service.State
-import Text.HTML
-import Text.XML (XML)
-import Control.Monad
 import Common.Exercise
 import Common.Id
 import Common.Utils (Some(..))
+import Control.Monad
+import Documentation.DefaultPage
+import Service.DomainReasoner
+import Service.State
+import Service.TypedExample
+import Service.Types
+import Text.HTML
+import Text.XML (XML)
 
 makeServicePage :: String -> Service -> DomainReasoner ()
 makeServicePage dir s = do
@@ -43,19 +43,19 @@ servicePage xs s = do
       br
       text $ description s
 
-   when (serviceDeprecated s) $ 
+   when (serviceDeprecated s) $
       para $ bold $ text "Warning: this service is deprecated!"
-   
+
    unless (null xs) $ do
       h2 $ "XML examples (" ++ show (length xs) ++ ")"
-      forM_ (zip [1::Int ..] xs) $ 
+      forM_ (zip [1::Int ..] xs) $
          \(i, (msg, (xmlRequest, xmlReply, xmlTest))) -> do
             h2 $ show i ++ ". " ++ msg
             bold $ text "Request:"
             highlightXML True xmlRequest
             bold $ text "Reply:"
             highlightXML True xmlReply
-            unless xmlTest $ 
+            unless xmlTest $
                spanClass "error" $
                   bold $ text "Error: invalid request/reply pair"
 
@@ -67,7 +67,7 @@ type Example = (String, (XML, XML, Bool))
 examplesFor :: String -> DomainReasoner [Example]
 examplesFor s = tryAll [ f t | (t, f) <- list, s == t ]
  where
-   list = 
+   list =
       [ ("derivation",   makeExample "logic.dnf"  (noCfg +++ logic1))
       , ("derivation",   makeExample "math.lineq" (noCfg +++ lineq1))
       , ("allfirsts",    makeExample "logic.dnf"  logic2)
@@ -79,32 +79,32 @@ examplesFor s = tryAll [ f t | (t, f) <- list, s == t ]
       , ("strategyinfo", makeExample "math.lineq" exArgs)
       , ("examples",     makeExample "math.lineq" exArgs)
       ]
-   
+
    logic1, logic2 :: Args
    logic1 ex = newState ex "~(p /\\ ~q)"
    logic2 ex = newState ex "~~p /\\ T"
-   
+
    lineq1, lineq2 :: Args
    lineq1 ex = newState ex "5*(x+1) == 11"
    lineq2 ex = newState ex "5*(x+1) == (x-1)/2"
-   
+
    (f +++ g) ex = f ex ++ g ex
-   
+
    noCfg _   = [Nothing ::: maybeType StrategyCfg]
    noArgs _  = []
    exArgs ex = [ex ::: Exercise]
 
 tryAll :: [DomainReasoner a] -> DomainReasoner [a]
-tryAll xs = 
+tryAll xs =
    let f m = liftM return m `catchError` const (return [])
    in liftM concat (mapM f xs)
-      
+
 newState :: Monad m => Exercise a -> String -> m (TypedValue a)
 newState ex s =
    case parser ex s of
       Left msg -> fail ("newState: " ++ msg)
       Right a  -> return (emptyState ex a ::: stateType)
-      
+
 type Args = forall a . Exercise a -> [TypedValue a]
 
 makeExample :: String -> Args -> String -> DomainReasoner Example

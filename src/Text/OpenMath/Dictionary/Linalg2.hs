@@ -22,4 +22,3 @@ matrixrowSymbol = makeSymbol "linalg2" "matrixrow"
 arguments. It is used to represent matrices. -}
 matrixSymbol :: Symbol
 matrixSymbol = makeSymbol "linalg2" "matrix"
-

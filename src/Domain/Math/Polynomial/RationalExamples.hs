@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,14 +12,14 @@
 -- see: http://www.fi.uu.nl/dwo/gr/frameset.html.
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Polynomial.RationalExamples 
+module Domain.Math.Polynomial.RationalExamples
    ( brokenEquations, normBroken, normBroken2, normBrokenCon, deelUit
    ) where
 
-import Prelude hiding ((^))
 import Common.Rewriting
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
+import Prelude hiding ((^))
 
 ----------------------------------------------------------
 -- VWO B applets
@@ -39,7 +39,7 @@ brokenEquations =
      , (x^2+6)/(x^2-2) :==: (7*x)/(x^2-2)
      ]
    , [ (x^2+6*x)/(x^2-1) :==: (3*x+4)/(x^2-1)
-     , (x^2+6)/(x-3) :==: (5*x)/(x-3) 
+     , (x^2+6)/(x-3) :==: (5*x)/(x-3)
      , (x^2+4*x)/(x^2-4) :==: (3*x + 6)/(x^2-4)
      , (x^2+2*x-4)/(x-5) :==: (4*x+11)/(x-5)
      , (5*x+2)/(2*x-1) :==: (5*x+2)/(3*x+5)
@@ -75,7 +75,7 @@ brokenEquations =
      , (3*x-7)/(x-2) :==: (7-x)/(3*x-3)
      ]
    ]
-   
+
 -- Hoofdstuk 4, gebroken vorm herleiden (1 en 1a)
 normBroken :: [[Expr]]
 normBroken =
@@ -128,7 +128,7 @@ normBroken2 =
      , (a^2-9)/(a^3-4*a^2+3*a), (a^2-2*a-15)/(a^3-3*a^2-10*a)
      ]
    ]
-   
+
 deelUit :: [[Expr]]
 deelUit =
    let x = Var "x" in
@@ -144,7 +144,7 @@ deelUit =
      , (-3*t^3+6*t-4)/(3*t), (4*x^3-3*x^2+4)/(7*x)
      ]
    ]
-   
+
 -- Vervolg hoofdstuk 4, gebroken vorm herleiden (2 en 2a), vanaf niveau 4
 normBrokenCon :: [[Equation Expr]]
 normBrokenCon =

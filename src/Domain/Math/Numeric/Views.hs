@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -26,14 +26,14 @@ module Domain.Math.Numeric.Views
    ) where
 
 import Common.Id
-import Common.View
 import Common.Rewriting (function)
+import Common.View
 import Control.Monad
 import Data.Ratio
 import Domain.Math.Expr hiding ((^))
 import Domain.Math.Safe
-import qualified Domain.Math.Data.DecimalFraction as DF 
-import qualified Domain.Math.Data.MixedFraction   as MF
+import qualified Domain.Math.Data.DecimalFraction as DF
+import qualified Domain.Math.Data.MixedFraction as MF
 
 -------------------------------------------------------------------
 -- Natural numbers
@@ -68,7 +68,7 @@ integerNF = "num.integer.nf" @> makeView (optionNegate f) fromInteger
    f _       = Nothing
 
 matchInteger :: (Expr -> Maybe Integer) -> Expr -> Maybe Integer
-matchInteger f expr = 
+matchInteger f expr =
    case expr of
       a :/: b -> join (liftM2 safeDiv (f a) (f b))
       Sym s [a, b]
@@ -100,7 +100,7 @@ matchDecimal f expr =
       a :/: b  -> join (liftM2 safeDiv (f a) (f b))
       Sym s [a, b]
          | isPowerSymbol s -> join (liftM2 safePower (f a) (f b))
-      Sym s [a, b, c] 
+      Sym s [a, b, c]
          | isMixedFractionSymbol s -> f (a+b/c)
       _ -> matchNum f expr
 
@@ -114,29 +114,29 @@ rationalView = describe "Interpret an expression as a (normalized) rational \
    \number, performing computations such as addition and multiplication if \
    \necessary." $
    "number.rational" @> makeView f fromRational
- where 
+ where
    f a = matchExact a >>= either (const Nothing) Just
 
 matchRational :: (Expr -> Maybe Rational) -> Expr -> Maybe Rational
-matchRational f expr = 
-   case expr of 
+matchRational f expr =
+   case expr of
       Number d -> return $ fromRational $ toRational $ DF.fromDouble d
       a :/: b  -> join (liftM2 safeDiv (f a) (f b))
       Sym s [a, b]
          | isPowerSymbol s -> join (liftM2 safePower (f a) (f b))
-      Sym s [a, b, c] 
+      Sym s [a, b, c]
          | isMixedFractionSymbol s -> f (a+b/c)
-      _ -> matchNum f expr 
+      _ -> matchNum f expr
 
 matchExact :: Expr -> Maybe (Either Double Rational)
-matchExact expr = 
-   fmap Left (match doubleNF expr) `mplus` 
+matchExact expr =
+   fmap Left (match doubleNF expr) `mplus`
    fmap Right (fix matchRational expr)
 
 -- 5, -(2/5), (-2)/5, but not 2/(-5), 6/8, or -((-2)/5)
 rationalNF :: View Expr Rational
 rationalNF = "num.rational.nf" @> makeView f fromRational
- where   
+ where
    f (Nat a :/: Nat b) = simpleRational a b
    f (Negate (Nat a :/: Nat b)) = fmap negate (simpleRational a b)
    f (Negate (Nat a) :/: Nat b) = fmap negate (simpleRational a b)
@@ -170,11 +170,11 @@ mixedFractionView :: View Expr MF.MixedFraction
 mixedFractionView = "num.mixed-fraction" @> makeView f (sign g)
  where
    f = fmap fromRational . fix matchRational
-   
+
    sign k a | a < 0     = negate (k (abs a))
             | otherwise = k a
-   
-   g a 
+
+   g a
       | frac  == 0 = fromInteger  whole
       | whole == 0 = fromRational frac
       | otherwise  = function mixedFractionSymbol $ map fromInteger parts
@@ -189,14 +189,14 @@ mixedFractionNF = describe "A normal form for mixed fractions. \
    \allowed." $
    "number.mixed-fraction.nf" @> makeView f (build mixedFractionView)
  where
-   f (Sym s [Nat a, Nat b, Nat c]) 
-      | isMixedFractionSymbol s = simple a b c   
+   f (Sym s [Nat a, Nat b, Nat c])
+      | isMixedFractionSymbol s = simple a b c
    f (Negate (Sym s [Nat a, Nat b, Nat c]))
       | isMixedFractionSymbol s = liftM negate (simple a b c)
    f expr = do r <- match rationalNF expr
                guard ((-1 < r && r < 1) || denominator r == 1)
                return (fromRational r)
-   
+
    simple a b c = do
       guard (a > 0 && b > 0 && b < c)
       r <- simpleRational b c
@@ -207,13 +207,13 @@ mixedFractionNF = describe "A normal form for mixed fractions. \
 
 doubleView :: View Expr Double
 doubleView = "num.double" @> makeView (fix matchDouble) fromDouble
- 
+
 doubleNF :: View Expr Double
 doubleNF = "num.double.nf" @> makeView (optionNegate f) fromDouble
  where
    f (Number d) = Just d
    f _          = Nothing
- 
+
 matchDouble :: (Expr -> Maybe Double) -> Expr -> Maybe Double
 matchDouble f expr =
    case expr of
@@ -223,7 +223,7 @@ matchDouble f expr =
       Sym s [a, b]
          | isPowerSymbol s -> join (liftM2 safePower (f a) (f b))
          | isRootSymbol s  -> join (liftM2 safeRoot (f a) (f b))
-      Sym s [a, b, c] 
+      Sym s [a, b, c]
          | isMixedFractionSymbol s -> f (a+b/c)
       _ -> matchNum f expr
 

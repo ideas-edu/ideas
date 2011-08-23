@@ -71,4 +71,3 @@ a list of variables, and the second of which is an expression, and it forms
 the function which is the lambda extraction of the expression -}
 lambdaSymbol :: Symbol
 lambdaSymbol = makeSymbol "fns1" "lambda"
-

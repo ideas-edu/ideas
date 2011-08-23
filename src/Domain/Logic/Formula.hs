@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Formula 
+module Domain.Logic.Formula
    ( module Domain.Logic.Formula
    , conjunctions, disjunctions, ors, ands
    ) where
@@ -18,18 +18,18 @@ import Common.Algebra.Boolean
 import Common.Algebra.CoBoolean
 import Common.Classes
 import Common.Rewriting
-import Common.Utils.Uniplate
 import Common.Utils (ShowString, subsets)
+import Common.Utils.Uniplate
+import Control.Applicative
 import Control.Monad
 import Data.Foldable (Foldable, foldMap, toList)
-import qualified Data.Traversable as T
-import Control.Applicative
 import Data.List
+import qualified Data.Traversable as T
 import qualified Text.OpenMath.Dictionary.Logic1 as OM
 
 infixr 2 :<->:
-infixr 3 :->: 
-infixr 4 :||: 
+infixr 3 :->:
+infixr 4 :||:
 infixr 5 :&&:
 
 -- | The data type Logic is the abstract syntax for the domain
@@ -57,7 +57,7 @@ instance Foldable Logic where
    foldMap = T.foldMapDefault
 
 instance T.Traversable Logic where
-   traverse f = foldLogic 
+   traverse f = foldLogic
       ( fmap Var . f, liftA2 (:->:), liftA2 (:<->:), liftA2 (:&&:)
       , liftA2 (:||:), liftA Not, pure T, pure F
       )
@@ -95,7 +95,7 @@ type LogicAlg b a = (b -> a, a -> a -> a, a -> a -> a, a -> a -> a, a -> a -> a,
 foldLogic :: LogicAlg b a -> Logic b -> a
 foldLogic (var, impl, equiv, conj, disj, neg, tr, fl) = rec
  where
-   rec logic = 
+   rec logic =
       case logic of
          Var x     -> var x
          p :->: q  -> rec p `impl`  rec q
@@ -103,13 +103,13 @@ foldLogic (var, impl, equiv, conj, disj, neg, tr, fl) = rec
          p :&&: q  -> rec p `conj`  rec q
          p :||: q  -> rec p `disj`  rec q
          Not p     -> neg (rec p)
-         T         -> tr 
+         T         -> tr
          F         -> fl
 
 -- | Pretty-printer for propositions
 ppLogic :: Show a => Logic a -> String
 ppLogic = ppLogicPrio 0
-        
+
 ppLogicPrio :: Show a => Int -> Logic a -> String
 ppLogicPrio = (\f s -> f s "") . flip (foldLogic alg)
  where
@@ -119,11 +119,11 @@ ppLogicPrio = (\f s -> f s "") . flip (foldLogic alg)
    pp s      = const (s++)
    nott p _  = ("~"++) . p 4
    parIf b f = if b then ("("++) . f . (")"++) else f
-   
+
 -- | The monadic join for logic
 catLogic :: Logic (Logic a) -> Logic a
 catLogic = foldLogic (id, (:->:), (:<->:), (:&&:), (:||:), Not, T, F)
-       
+
 -- | evalLogic takes a function that gives a logic value to a variable,
 -- | and a Logic expression, and evaluates the boolean expression.
 evalLogic :: (a -> Bool) -> Logic a -> Bool
@@ -131,27 +131,27 @@ evalLogic env = foldLogic (env, impl, (==), (&&), (||), not, True, False)
  where
    impl p q = not p || q
 
--- | eqLogic determines whether or not two Logic expression are logically 
+-- | eqLogic determines whether or not two Logic expression are logically
 -- | equal, by evaluating the logic expressions on all valuations.
 eqLogic :: Eq a => Logic a -> Logic a -> Bool
 eqLogic p q = all (\f -> evalLogic f p == evalLogic f q) fs
- where 
+ where
    xs = varsLogic p `union` varsLogic q
-   fs = map (flip elem) (subsets xs) 
+   fs = map (flip elem) (subsets xs)
 
 -- | A Logic expression is atomic if it is a variable or a constant True or False.
 isAtomic :: Logic a -> Bool
-isAtomic logic = 
+isAtomic logic =
    case logic of
       Not (Var _) -> True
       _           -> null (children logic)
 
 -- | Functions isDNF, and isCNF determine whether or not a Logix expression
--- | is in disjunctive normal form, or conjunctive normal form, respectively. 
+-- | is in disjunctive normal form, or conjunctive normal form, respectively.
 isDNF, isCNF :: Logic a -> Bool
 isDNF = all isAtomic . concatMap conjunctions . disjunctions
 isCNF = all isAtomic . concatMap disjunctions . conjunctions
- 
+
 -- | Count the number of equivalences
 countEquivalences :: Logic a -> Int
 countEquivalences p = length [ () | _ :<->: _ <- universe p ]
@@ -162,7 +162,7 @@ varsLogic = nub . toList
 
 instance Uniplate (Logic a) where
    uniplate this =
-      case this of 
+      case this of
          p :->: q  -> plate (:->:)  |* p |* q
          p :<->: q -> plate (:<->:) |* p |* q
          p :&&: q  -> plate (:&&:)  |* p |* q
@@ -180,10 +180,10 @@ instance IsTerm a => IsTerm (Logic a) where
       , symbol trueSymbol, symbol falseSymbol
       )
 
-   fromTerm a = 
+   fromTerm a =
       fromTermWith f a `mplus` liftM Var (fromTerm a)
     where
-      f s [] 
+      f s []
          | s == trueSymbol       = return T
          | s == falseSymbol      = return F
       f s [x]

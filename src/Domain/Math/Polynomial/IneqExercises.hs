@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Polynomial.IneqExercises 
+module Domain.Math.Polynomial.IneqExercises
    ( ineqLinearExercise, ineqQuadraticExercise, ineqHigherDegreeExercise
    ) where
 
@@ -30,15 +30,15 @@ import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Equivalence
 import Domain.Math.Polynomial.Examples
-import Domain.Math.Polynomial.Rules 
+import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.SquareRoot.Views
 import qualified Domain.Logic.Formula as Logic
 import qualified Domain.Logic.Views as Logic
 
 ineqLinearExercise :: Exercise (Relation Expr)
-ineqLinearExercise = makeExercise 
-   { exerciseId   = describe "solve a linear inequation" $ 
+ineqLinearExercise = makeExercise
+   { exerciseId   = describe "solve a linear inequation" $
                        newId "algebra.inequalities.linear"
    , status       = Provisional
    , parser       = parseRelExpr
@@ -49,13 +49,13 @@ ineqLinearExercise = makeExercise
    , navigation   = termNavigator
    , examples     = let x = Var "x"
                         extra = (x-12) / (-2) :>: (x+3)/3
-                    in level Medium $ 
+                    in level Medium $
                        map (build inequalityView) (concat ineqLin1 ++ [extra])
-   } 
-   
+   }
+
 ineqQuadraticExercise :: Exercise (Logic (Relation Expr))
-ineqQuadraticExercise = makeExercise 
-   { exerciseId    = describe "solve a quadratic inequation" $ 
+ineqQuadraticExercise = makeExercise
+   { exerciseId    = describe "solve a quadratic inequation" $
                         newId "algebra.inequalities.quadratic"
    , status        = Provisional
    , parser        = parseLogicRelExpr
@@ -66,14 +66,14 @@ ineqQuadraticExercise = makeExercise
    , strategy      = ineqQuadratic
    , navigation    = termNavigator
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
-   , examples      = level Medium $ 
-                     map (Logic.Var . build inequalityView) 
+   , examples      = level Medium $
+                     map (Logic.Var . build inequalityView)
                          (concat $ ineqQuad1 ++ [ineqQuad2, extraIneqQuad])
    }
 
 ineqHigherDegreeExercise :: Exercise (Logic (Relation Expr))
-ineqHigherDegreeExercise = makeExercise 
-   { exerciseId    = describe "solve an inequation of higher degree" $ 
+ineqHigherDegreeExercise = makeExercise
+   { exerciseId    = describe "solve an inequation of higher degree" $
                         newId "algebra.inequalities.polynomial"
    , status        = Provisional
    , parser        = parseLogicRelExpr
@@ -91,14 +91,14 @@ ineq :: String
 ineq = "algebra.inequalities"
 
 showLogicRelation :: (Eq a, Show a) => Logic (Relation a) -> String
-showLogicRelation logic = 
+showLogicRelation logic =
    case logic of
       Logic.T     -> "true"
       Logic.F     -> "false"
       Logic.Var a -> show a
       p :||: q    -> showLogicRelation p ++ " or " ++ showLogicRelation q
       p :&&: q    -> case match betweenView logic of
-                        Just (x, o1, y, o2, z) -> 
+                        Just (x, o1, y, o2, z) ->
                            let f b = if b then "<=" else "<"
                            in unwords [show x, f o1, show y, f o2, show z]
                         _ -> showLogicRelation p ++ " and " ++ showLogicRelation q
@@ -115,7 +115,7 @@ betweenView = makeView f h
           g e          = e
       make (g ineq1) (g ineq2)
    f _ = Nothing
-   
+
    make a b
       | la == rb && ra /= lb = make b a
       | ra == lb =
@@ -126,8 +126,8 @@ betweenView = makeView f h
       (lb, rb) = (leftHandSide b, rightHandSide b)
       op (_ :<=: _) = True
       op _          = False
-   
-   h (x, o1, y, o2, z) = 
+
+   h (x, o1, y, o2, z) =
       let g b = if b then (.<=.) else (.<.)
       in Logic.Var (g o1 x y) :&&: Logic.Var (g o2 y z)
 
@@ -138,30 +138,30 @@ ineqLinearG :: IsTerm a => LabeledStrategy (Context a)
 ineqLinearG = label "Linear inequation" $
    label "Phase 1" (repeatS
        (  use removeDivision
-      <|> multi (showId distributeTimes) 
+      <|> multi (showId distributeTimes)
              (somewhere (useC parentNotNegCheck <*> use distributeTimes))
       <|> multi (showId merge) (once (use merge))
        ))
-   <*>  
-   label "Phase 2" 
+   <*>
+   label "Phase 2"
        (  try (use varToLeft)
       <*> try coverUpPlus
       <*> try (use flipSign)
       <*> try (use coverUpTimesPositive)
        )
 
--- helper strategy (todo: fix needed, because the original rules do not 
+-- helper strategy (todo: fix needed, because the original rules do not
 -- work on relations)
-coverUpPlus :: IsTerm a => Strategy (Context a) 
+coverUpPlus :: IsTerm a => Strategy (Context a)
 coverUpPlus = alternatives (map (use . ($ oneVar)) coverUps)
  where
    coverUps :: [ConfigCoverUp -> Rule (Relation Expr)]
-   coverUps = 
+   coverUps =
       [ coverUpBinaryRule "plus" (commOp . isPlus) (-)
       , coverUpBinaryRule "minus-left" isMinus (+)
       , coverUpBinaryRule "minus-right" (flipOp . isMinus) (flip (-))
       ]
-   
+
 coverUpTimesPositive :: Rule (Relation Expr)
 coverUpTimesPositive = coverUpBinaryRule "times-positive" (commOp . m) (/) configCoverUp
  where
@@ -170,45 +170,45 @@ coverUpTimesPositive = coverUpBinaryRule "times-positive" (commOp . m) (/) confi
       r <- matchM rationalView a
       guard (r>0)
       return (a, b)
-      
+
 flipSign :: Rule (Relation Expr)
 flipSign = describe "Flip sign of inequality" $
    makeSimpleRule (ineq, "flip-sign") $ \r -> do
    let lhs = leftHandSide r
        rhs = rightHandSide r
-   guard (isNegative lhs) 
+   guard (isNegative lhs)
    return $ constructor (flipSides r) (neg lhs) (neg rhs)
  where
    isNegative (Negate _) = True
-   isNegative expr = 
+   isNegative expr =
       maybe False fst (match productView expr)
- 
+
 ineqQuadratic :: LabeledStrategy (Context (Logic (Relation Expr)))
-ineqQuadratic = cleanUpStrategyAfter (applyTop cleanUpLogicRelation) $ 
-   label "Quadratic inequality" $ 
+ineqQuadratic = cleanUpStrategyAfter (applyTop cleanUpLogicRelation) $
+   label "Quadratic inequality" $
       use trivialRelation
-       |> try (useC turnIntoEquation) 
+       |> try (useC turnIntoEquation)
       <*> quadraticStrategyG
       <*> useC solutionInequation
 
 ineqHigherDegree :: LabeledStrategy (Context (Logic (Relation Expr)))
 ineqHigherDegree = cleanUpStrategyAfter (applyTop cleanUpLogicRelation) $
-   label "Inequality of a higher degree" $ 
+   label "Inequality of a higher degree" $
       use trivialRelation
-       |> try (useC turnIntoEquation) 
+       |> try (useC turnIntoEquation)
       <*> higherDegreeStrategyG
       <*> useC solutionInequation
 
--- First, cleanup expression. Then, cleanup equations only (there is an 
+-- First, cleanup expression. Then, cleanup equations only (there is an
 -- explicit rule for the other relations). Finally, simplify the logical
 -- proposition (including impotency or).
 cleanUpLogicRelation :: Logic (Relation Expr) -> Logic (Relation Expr)
-cleanUpLogicRelation = 
+cleanUpLogicRelation =
    let f a | relationType a == EqualTo = build orListView (cleanUpRelation a)
            | otherwise                 = Logic.Var a
-   in simplifyWith noDuplicates orListView . Logic.simplify 
+   in simplifyWith noDuplicates orListView . Logic.simplify
     . catLogic . fmap (f . fmap cleanUpExpr)
-   
+
 trivialRelation :: Rule (OrList (Relation Expr))
 trivialRelation =
    makeSimpleRule (ineq, "trivial") $ oneDisjunct $ \a -> do
@@ -217,26 +217,26 @@ trivialRelation =
       return new
 
 turnIntoEquation :: Rule (Context (Relation Expr))
-turnIntoEquation = describe "Turn into equation" $ 
+turnIntoEquation = describe "Turn into equation" $
    makeSimpleRule (ineq, "to-equation") $ withCM $ \r -> do
    guard (relationType r `elem` ineqTypes)
    addToClipboard "ineq" (toExpr r)
    return (leftHandSide r .==. rightHandSide r)
  where
-   ineqTypes = 
+   ineqTypes =
       [LessThan, GreaterThan, LessThanOrEqualTo, GreaterThanOrEqualTo]
 
 -- Todo: cleanup this function
 solutionInequation :: Rule (Context (Logic (Relation Expr)))
-solutionInequation = describe "Determine solution for inequality" $ 
+solutionInequation = describe "Determine solution for inequality" $
    makeSimpleRule (ineq, "give-solution") $ withCM $ \r -> do
    inEquation <- lookupClipboard "ineq" >>= fromExpr
    let rt = relationType inEquation
    removeClipboard "ineq"
    orv  <- maybeCM (matchM orListView r)
-   case toList orv of 
+   case toList orv of
       _ | isTrue orv ->
-         return $ fromBool $ 
+         return $ fromBool $
             rt `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
       _ | isFalse orv -> do -- no solutions found for equations
          let vs = vars (toExpr inEquation)
@@ -250,7 +250,7 @@ solutionInequation = describe "Determine solution for inequality" $
          guard (all (==v) vs)
          let rs = makeRanges including (sort (zipWith A ds zs))
              including = rt `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
-         return $ fmap (fmap fromDExpr) $ intervalRelations (A 0 (Var v)) $ 
+         return $ fmap (fmap fromDExpr) $ intervalRelations (A 0 (Var v)) $
             ors [ this | (d, isP, this) <- rs, isP || evalIneq inEquation v d ]
  where
    makeRanges :: Bool -> [DExpr] -> [(Double, Bool, Interval DExpr)]
@@ -274,19 +274,19 @@ solutionInequation = describe "Determine solution for inequality" $
            , open a1 a2
            )
          ]
-      
+
    evalIneq :: Relation Expr -> String -> Double -> Bool
    evalIneq r v d = fromMaybe False $
       liftM2 (eval (relationType r)) (useSide leftHandSide) (useSide rightHandSide)
     where
       useSide f = match doubleView (sub (f r))
-      
+
       sub (Var x) | x==v = fromDouble d
       sub expr = descend sub expr
 
 data DExpr = A Double Expr
 
-instance Eq DExpr where 
+instance Eq DExpr where
    A d1 _ == A d2 _ = d1==d2
 
 instance Ord DExpr where

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -24,18 +24,18 @@ module Domain.Math.Polynomial.BalanceUtils
    ) where
 
 import Common.Library
-import Common.Utils.Uniplate
 import Common.Utils (fixpoint)
+import Common.Utils.Uniplate
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Domain.Math.Safe
 import Domain.Math.Data.Polynomial
-import Domain.Math.Data.WithBool
 import Domain.Math.Data.Relation
+import Domain.Math.Data.WithBool
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Views
+import Domain.Math.Safe
 import Domain.Math.Simplification (mergeAlikeSum)
 
 eqView :: View (WithBool (Equation Expr)) (WithBool (String, Rational))
@@ -60,12 +60,12 @@ matchLin expr = do
    (s, p) <- match (polyNormalForm rationalView) expr
    guard (degree p == 1)
    return (Var s, coefficient 1 p, coefficient 0 p)
-   
+
 matchPlusCon :: Expr -> Maybe (Expr, Rational)
-matchPlusCon expr = 
-   match (plusView >>> second rationalView) expr 
+matchPlusCon expr =
+   match (plusView >>> second rationalView) expr
  `mplus`
-   match (plusView >>> toView swapView >>> second rationalView) expr 
+   match (plusView >>> toView swapView >>> second rationalView) expr
 
 ------------------------------------------------------------
 -- Strategy
@@ -83,19 +83,19 @@ cleanerExpr = transform f -- no fixpoint is needed
    f (Negate a :/: b) = f $ Negate (a/b)
    f (Negate (Negate a)) = f a
    f e = cleanSum (cleanProduct (simplify rationalView e))
-    
-   cleanSum = 
+
+   cleanSum =
       let g x y = canonical rationalView (x :+: y)
       in simplifyWith (adjacent g) simpleSumView
 
-   cleanProduct = 
+   cleanProduct =
       let g x y = canonical rationalView (x :*: y)
       in simplifyWith (mapSecond (adjacent g)) simpleProductView
 
 adjacent :: (a -> a -> Maybe a) -> [a] -> [a]
 adjacent f = rec
  where
-   rec (x:y:rest) = 
+   rec (x:y:rest) =
       case f x y of
          Just xy -> rec (xy:rest)
          Nothing -> x:rec (y:rest)
@@ -127,7 +127,7 @@ factorArg :: Expr -> ArgValues
 factorArg expr = [ArgValue (makeArgDescr "factor") expr]
 
 factorArgs :: [Expr] -> ArgValues
-factorArgs = 
+factorArgs =
    let f = ArgValue . makeArgDescr . ("factor" ++) . show
    in zipWith f [1::Int ..]
 
@@ -152,16 +152,16 @@ buggyBalanceRuleArgs n f = bugbalRule n (fmap fst . f) $ \old (a1 :==: a2) -> do
 
 buggyBalanceExprRule :: IsId n => n -> (Expr -> Maybe Expr) -> Rule (Equation Expr)
 buggyBalanceExprRule n f = buggyBalanceRule n $ \(lhs :==: rhs) ->
-   let -- to do: deal with associativity 
+   let -- to do: deal with associativity
        rec = msum .  map (\(a,h) -> liftM h (f a)) . contexts
    in liftM (:==: rhs) (rec lhs) `mplus` liftM (lhs :==:) (rec rhs)
 
 buggyBalanceRecognizer :: IsId n => n -> (a -> a -> Maybe ArgValues) -> Rule a
 buggyBalanceRecognizer n = bugbalRule n(const Nothing)
- 
+
 -- generalized helper
 bugbalRule :: IsId n => n -> (a -> Maybe a) -> (a -> a -> Maybe ArgValues) -> Rule a
-bugbalRule n f p = 
+bugbalRule n f p =
    buggyRule $ makeRule (linbal, "buggy", n) $ useRecognizer p $ makeTrans f
 
 ------------------------------------------------------------
@@ -216,7 +216,7 @@ diffPlusEq (a1 :==: a2) (b1 :==: b2) = do
    return d1
 
 diffPlus :: Expr -> Expr -> Maybe Expr
-diffPlus a b = do 
+diffPlus a b = do
    let myView = polyViewWith rationalView
    (x, pa) <- matchM myView a
    (y, pb) <- matchM myView b
@@ -235,7 +235,7 @@ diffTimesEq (a1 :==: a2) (b1 :==: b2) = do
    return d1
 
 diffTimes :: Expr -> Expr -> Maybe Expr
-diffTimes a b = do 
+diffTimes a b = do
    let myView = polyViewWith rationalView
    (x, pa) <- matchM myView a
    (y, pb) <- matchM myView b

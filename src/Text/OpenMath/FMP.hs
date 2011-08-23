@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -14,10 +14,10 @@
 module Text.OpenMath.FMP where
 
 import Data.List (union)
-import Text.OpenMath.Object
-import Text.OpenMath.Symbol
 import Text.OpenMath.Dictionary.Quant1 (forallSymbol, existsSymbol)
 import Text.OpenMath.Dictionary.Relation1 (eqSymbol, neqSymbol)
+import Text.OpenMath.Object
+import Text.OpenMath.Symbol
 
 data FMP = FMP
    { quantor       :: Symbol
@@ -26,7 +26,7 @@ data FMP = FMP
    , relation      :: Symbol
    , rightHandSide :: OMOBJ
    }
-   
+
 toObject :: FMP -> OMOBJ
 toObject fmp
    | null (metaVariables fmp) = body
@@ -34,7 +34,7 @@ toObject fmp
         OMBIND (OMS (quantor fmp)) (metaVariables fmp) body
  where
    body = OMA [OMS (relation fmp), leftHandSide fmp, rightHandSide fmp]
-   
+
 eqFMP :: OMOBJ -> OMOBJ -> FMP
 eqFMP lhs rhs = FMP
    { quantor       = forallSymbol

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -13,11 +13,11 @@ module Domain.RegularExpr.Exercises (regexpExercise) where
 
 import Common.Library
 import Common.Utils.Uniplate
+import Control.Monad
+import Domain.RegularExpr.Definitions
 import Domain.RegularExpr.Expr
 import Domain.RegularExpr.Parser
 import Domain.RegularExpr.Strategy
-import Domain.RegularExpr.Definitions
-import Control.Monad
 import System.Random
 import Test.QuickCheck
 import Test.QuickCheck.Gen
@@ -38,7 +38,7 @@ regexpExercise = makeExercise
 --   , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
    , testGenerator  = Just startFormGen -- arbitrary
    , randomExercise = simpleGenerator startFormGen -- myGen
-   , examples       = map ((,) Easy) $ unGen (replicateM 15 startFormGen) (mkStdGen 2805) 5  
+   , examples       = map ((,) Easy) $ unGen (replicateM 15 startFormGen) (mkStdGen 2805) 5
    }
 
 -- | Equality modulo associativity of operators
@@ -60,7 +60,7 @@ startFormGen = do
       j  <- elements [1..5]
       ys <- replicateM j $ elements $ map (Atom . return) "abcd"
       return $ foldr1 (:*:) ys
-   return $ foldr1 (:|:) xs   
+   return $ foldr1 (:|:) xs
 
 -- equivalence of regular expressions
 eqRE :: Eq a => RE a -> RE a -> Bool
@@ -71,12 +71,12 @@ checkUntil :: Ord a => Int -> RE a -> RE a -> Bool
 checkUntil n r s = empty r == empty s && (n==0 || next)
  where
    make = groupBy eqFst . sortBy cmpFst . firsts
-   eqFst  (a, _) (b, _) = a==b 
+   eqFst  (a, _) (b, _) = a==b
    cmpFst (a, _) (b, _) = compare a b
-   
+
    as = make r
    bs = make s
    next = and ((length as == length bs) : zipWith f as bs)
-   
+
    -- f ((a, _):
    f _ _ = False -}

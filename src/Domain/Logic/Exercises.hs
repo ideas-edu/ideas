@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -8,11 +8,11 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Exercise for the logic domain, used for the OUNL course 
+-- Exercise for the logic domain, used for the OUNL course
 -- "Discrete Wiskunde A (DWA)"
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Exercises 
+module Domain.Logic.Exercises
    ( dnfExercise, dnfUnicodeExercise
    ) where
 
@@ -55,7 +55,7 @@ dnfUnicodeExercise = dnfExercise
    }
 
 logicExercise :: Difficulty -> Gen SLogic
-logicExercise dif = 
+logicExercise dif =
    let (gen, (minStep, maxStep)) = generateLevel dif
        ok p = let i = fromMaybe maxBound (stepsRemaining maxStep p)
               in countEquivalences p <= 2 && i >= minStep && i <= maxStep
@@ -65,19 +65,19 @@ mySuitable :: SLogic -> Bool
 mySuitable = (<=2) . countEquivalences
 
 stepsRemaining :: Int -> SLogic -> Maybe Int
-stepsRemaining i = 
+stepsRemaining i =
    lengthMax i . derivationTree dnfStrategyDWA . inContext dnfExercise
 
--- QuickCheck property to monitor the number of steps needed 
+-- QuickCheck property to monitor the number of steps needed
 -- to normalize a random proposition (30-40% is ok)
 {-
 testGen :: Property
-testGen = forAll generateLogic $ \p -> 
+testGen = forAll generateLogic $ \p ->
    let n = steps p
    in countEquivalences p <= 2 ==> label (show (n >= 4 && n <= 12)) True
-   
+
 testme :: IO ()
-testme = quickCheck testGen 
+testme = quickCheck testGen
 
 start = ((r :<->: p) :||: (q :->: s)) :&&: (Not s :<->: (p :||: r))
  where

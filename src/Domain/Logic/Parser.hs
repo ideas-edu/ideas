@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -30,12 +30,12 @@ parseLogicUnicode :: String -> Either String SLogic
 parseLogicUnicode = parseSimple (parserSLogic True False)
 
 parseLogicPars :: String -> Either String SLogic
-parseLogicPars input = 
+parseLogicPars input =
      either (Left . ambiguousOperators parseLogic input) suspiciousVariable
    $ parseSimple (parserSLogic False True) input
 
 parseLogicUnicodePars :: String -> Either String SLogic
-parseLogicUnicodePars input = 
+parseLogicUnicodePars input =
    either (Left . ambiguousOperators parseLogicUnicode input) suspiciousVariable
    $ parseSimple (parserSLogic True True) input
 
@@ -43,43 +43,43 @@ parseLogicUnicodePars input =
 parserSLogic :: Bool -> Bool -> Parser SLogic
 parserSLogic unicode extraPars = pLogic
  where
-   pLogic 
+   pLogic
       | extraPars = atom <**> option id composed
       | otherwise = buildExpressionParser table atom
-   
+
    composed = choice
-      [ flip (:->:)  <$ reservedOp implSym  <*> atom 
-      , flip (:<->:) <$ reservedOp equivSym <*> atom 
+      [ flip (:->:)  <$ reservedOp implSym  <*> atom
+      , flip (:<->:) <$ reservedOp equivSym <*> atom
       , (\xs x -> ors (x:xs))  <$> many1 (reservedOp disjSym >> atom)
       , (\xs x -> ands (x:xs)) <$> many1 (reservedOp conjSym >> atom)
       ]
-   
-   atom = choice 
+
+   atom = choice
       [ T <$ P.reserved lexer trSym
       , F <$ P.reserved lexer flSym
       , Var . ShowString <$> P.identifier lexer
       , P.parens lexer pLogic
       , Not <$ reservedOp negSym <*> atom
       ]
-      
-   table = 
+
+   table =
       [ [Infix ((:->:)  <$ reservedOp implSym)  AssocRight ]
       , [Infix ((:&&:)  <$ reservedOp conjSym)  AssocRight ]
       , [Infix ((:||:)  <$ reservedOp disjSym)  AssocRight ]
       , [Infix ((:<->:) <$ reservedOp equivSym) AssocRight ]
       ]
-      
+
    (implSym, equivSym, conjSym, disjSym, negSym, trSym, flSym)
       | unicode   = unicodeTuple
       | otherwise = asciiTuple
 
 lexer :: P.TokenParser a
-lexer = P.makeTokenParser $ emptyDef 
+lexer = P.makeTokenParser $ emptyDef
    { reservedNames   = ["T", "F"]
    , reservedOpNames = ["~", "<->", "->", "||", "/\\"]
    , identStart      = lower
    , identLetter     = lower
-   , opStart         = fail "" 
+   , opStart         = fail ""
    , opLetter        = fail ""
    }
 
@@ -94,12 +94,12 @@ ambiguousOperators p s err =
    let msg = "Syntax error: ambiguous use of operators (write parentheses)"
    in either (const err) (const msg) (p s)
 
--- Report variables 
+-- Report variables
 suspiciousVariable :: SLogic -> Either String SLogic
 suspiciousVariable r =
    case filter p (map fromShowString (varsLogic r)) of
       v:_ -> Left $ "Unexpected variable " ++ v
-                 ++ ". Did you forget an operator?" 
+                 ++ ". Did you forget an operator?"
       _   -> Right r
  where
    p xs = length xs > 1 && all (`elem` "pqrst") xs
@@ -116,15 +116,15 @@ ppLogicUnicodePars :: SLogic -> String
 ppLogicUnicodePars = ppLogicParsGen unicodeTuple
 
 ppLogicParsGen :: SymbolTuple -> SLogic -> String
-ppLogicParsGen (impl, equiv, conj, disj, neg, tr, fl) = 
+ppLogicParsGen (impl, equiv, conj, disj, neg, tr, fl) =
    (\f -> f 0 "") . foldLogic alg
  where
    alg = ( pp . fromShowString, binop 3 impl, binop 3 equiv, binop 1 conj
          , binop 2 disj, nott, pp tr, pp fl
          )
    binop :: Int -> String -> (Int -> String -> String) -> (Int -> String -> String) -> Int -> String -> String
-   binop prio op p q n = 
-      parIf (n/=0 && (n==3 || prio/=n)) 
+   binop prio op p q n =
+      parIf (n/=0 && (n==3 || prio/=n))
             (p prio . ((" "++op++" ")++) . q prio)
    pp s = const (s++)
    nott  p _ = (neg++) . p 3
@@ -144,7 +144,7 @@ equivASym = "<->"
 andASym   = "/\\"
 orASym    = "||"
 notASym   = "~"
-   
+
 -----------------------------------------------------------
 --- Unicode symbols
 

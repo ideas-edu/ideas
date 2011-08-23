@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -21,8 +21,8 @@ data Request = Request
    , dataformat :: DataFormat
    , encoding   :: Maybe Encoding
    }
-   
-data DataFormat = XML | JSON 
+
+data DataFormat = XML | JSON
    deriving Show
 
 data Encoding = OpenMath | OpenMathFocus | StringEncoding

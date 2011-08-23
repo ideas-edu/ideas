@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.Exercises 
+module Domain.LinearAlgebra.Exercises
    ( gramSchmidtExercise, linearSystemExercise
    , gaussianElimExercise, systemWithMatrixExercise
    ) where
@@ -59,21 +59,21 @@ linearSystemExercise = makeExercise
                                Left msg -> Left msg
    , prettyPrinter  = unlines . map show
    , equivalence    = withoutContext $
-                      \x y -> let f = fromContext . applyD linearSystemStrategy 
+                      \x y -> let f = fromContext . applyD linearSystemStrategy
                                     . inContext linearSystemExercise . map toStandardForm
-                              in case (f x, f y) of  
+                              in case (f x, f y) of
                                     (Just a, Just b) -> getSolution a == getSolution b
-                                    _ -> False 
+                                    _ -> False
    , extraRules     = equationsRules
    , ruleOrdering   = ruleOrderingWithId [getId ruleScaleEquation]
    , ready          = predicate inSolvedForm
    , strategy       = linearSystemStrategy
    , randomExercise = simpleGenerator (fmap matrixToSystem arbMatrix)
    }
-   
+
 gaussianElimExercise :: Exercise (Matrix Expr)
 gaussianElimExercise = makeExercise
-   { exerciseId     = describe "Gaussian Elimination" $ 
+   { exerciseId     = describe "Gaussian Elimination" $
                          newId "linearalgebra.gaussianelim"
    , status         = Stable
    , parser         = \s -> case parseMatrix s of
@@ -87,10 +87,10 @@ gaussianElimExercise = makeExercise
    , randomExercise = simpleGenerator arbMatrix
    , testGenerator  = Just arbMatrix
    }
- 
+
 systemWithMatrixExercise :: Exercise Expr
 systemWithMatrixExercise = makeExercise
-   { exerciseId     = describe "Solve Linear System with Matrix" $ 
+   { exerciseId     = describe "Solve Linear System with Matrix" $
                          newId "linearalgebra.systemwithmatrix"
    , status         = Provisional
    , parser         = \s -> case (parser linearSystemExercise s, parser gaussianElimExercise s) of
@@ -101,7 +101,7 @@ systemWithMatrixExercise = makeExercise
                                   (Just ls, _) -> (unlines . map show) (ls :: Equations Expr)
                                   (_, Just m)  -> ppMatrix (m :: Matrix Expr)
                                   _            -> show expr
-   , equivalence    = withoutContext $ 
+   , equivalence    = withoutContext $
                       \x y -> let f expr = case (fromExpr expr, fromExpr expr) of
                                               (Just ls, _) -> Just (ls :: Equations Expr)
                                               (_, Just m)  -> Just $ matrixToSystem (m :: Matrix Expr)
@@ -115,19 +115,19 @@ systemWithMatrixExercise = makeExercise
    , randomExercise = simpleGenerator (fmap (toExpr . matrixToSystem) (arbMatrix :: Gen (Matrix Expr)))
    , testGenerator  = fmap (liftM toExpr) (testGenerator linearSystemExercise)
    }
- 
+
 --------------------------------------------------------------
 -- Other stuff (to be cleaned up)
 
 arbMatrix :: Num a => Gen (Matrix a)
 arbMatrix = fmap (fmap fromInteger) arbNiceMatrix
-   
+
 arbUpperMatrix :: (Enum a, Num a) => Gen (Matrix a)
-arbUpperMatrix = threeNums $ \a b c ->  
+arbUpperMatrix = threeNums $ \a b c ->
    makeMatrix [[1, a, b], [0, 1, c], [0, 0, 1]]
 
 arbAugmentedMatrix :: (Enum a, Num a) => Gen (Matrix a)
-arbAugmentedMatrix = threeNums $ \a b c -> 
+arbAugmentedMatrix = threeNums $ \a b c ->
    makeMatrix [[1, 0, 0, 1], [a, 1, 0, 1], [b, c, 1, 1]]
 
 threeNums :: (Enum a, Num a) => (a -> a -> a -> b) -> Gen b

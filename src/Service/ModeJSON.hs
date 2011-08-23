@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -17,16 +17,16 @@ module Service.ModeJSON (processJSON, jsonTuple) where
 import Common.Library hiding (exerciseId)
 import Common.Utils (Some(..), distinct, readM)
 import Control.Monad.Error
-import Text.JSON
+import Data.Char
+import Data.Maybe
+import Service.DomainReasoner
+import Service.Evaluator
 import Service.Request
 import Service.State
-import qualified Service.Types as Tp
-import Service.Types hiding (String)
 import Service.Submit
-import Service.Evaluator 
-import Service.DomainReasoner
-import Data.Maybe
-import Data.Char
+import Service.Types hiding (String)
+import Text.JSON
+import qualified Service.Types as Tp
 
 -- TODO: Clean-up code
 extractExerciseId :: Monad m => JSON -> m Id
@@ -37,7 +37,7 @@ extractExerciseId json =
       Array (String s:tl) | any p s -> extractExerciseId (Array tl)
       Array (hd:_) -> extractExerciseId hd
       _ -> fail "no code"
- where 
+ where
    p c = not (isAlphaNum c || isSpace c || c `elem` ".-")
 
 processJSON :: String -> DomainReasoner (Request, String, String)
@@ -50,7 +50,7 @@ processJSON input = do
    return (req, out, "application/json")
 
 addVersion :: String -> JSON -> JSON
-addVersion version json = 
+addVersion version json =
    case json of
       Object xs -> Object (xs ++ [info])
       _         -> json
@@ -71,7 +71,7 @@ jsonRequest json = do
               Nothing         -> return Nothing
               Just (String s) -> return (Just s)
               _               -> fail "Invalid source"
-   return Request 
+   return Request
       { service    = srv
       , exerciseId = a
       , source     = src
@@ -81,7 +81,7 @@ jsonRequest json = do
 
 myHandler :: JSON_RPC_Handler DomainReasoner
 myHandler fun arg = do
-   ex   <- if fun == "exerciselist" 
+   ex   <- if fun == "exerciselist"
            then return (Some emptyExercise)
            else extractExerciseId arg >>= findExercise
    srv  <- findService fun
@@ -105,10 +105,10 @@ jsonEncoder ex = Encoder
    encode enc serviceType a
       | length xs > 1 =
            liftM jsonTuple (mapM (\(b ::: t) -> encode enc t b) xs)
-      | otherwise = 
+      | otherwise =
            case serviceType of
-              Tp.Tag s t 
-                 | s `elem` ["elem", "list"] -> 
+              Tp.Tag s t
+                 | s `elem` ["elem", "list"] ->
                       encode enc t a
                  | s == "Result" -> do
                       conv <- equalM serviceType submitType
@@ -116,10 +116,10 @@ jsonEncoder ex = Encoder
                  | s == "state" -> do
                       conv <- equalM serviceType stateType
                       encodeState (encodeTerm enc) (conv a)
-                 
+
               Tp.List t     -> liftM Array (mapM (encode enc t) a)
               Tp.ArgValueTp -> case a of
-                                  ArgValue descr x -> return $ 
+                                  ArgValue descr x -> return $
                                      Object [(labelArgument descr, String (showArgument descr x))]
               Tp.Text       -> return (toJSON (show a))
               Tp.Tag s t    -> liftM (\b -> Object [(s, b)]) (encode enc t a)
@@ -129,12 +129,12 @@ jsonEncoder ex = Encoder
               _             -> encodeDefault enc serviceType a
     where
       xs = tupleList (a ::: serviceType)
-    
+
    tupleList :: TypedValue a -> [TypedValue a]
    tupleList (a ::: Tp.Iso p t)   = tupleList (to p a ::: t)
-   tupleList (p ::: Tp.Pair t1 t2) = 
+   tupleList (p ::: Tp.Pair t1 t2) =
       tupleList (fst p ::: t1) ++ tupleList (snd p ::: t2)
-   tupleList (a ::: Tag s t) 
+   tupleList (a ::: Tag s t)
       | s `elem` ["ruletext", "message", "accept"] = tupleList (a ::: t)
    tupleList tv = [tv]
 
@@ -148,8 +148,8 @@ jsonDecoder ex = Decoder
    reader :: Monad m => (String -> Either String a) -> JSON -> m a
    reader f (String s) = either (fail . show) return (f s)
    reader _  _         = fail "Expecting a string when reading a term"
- 
-   decode :: Decoder JSON a -> Type a t -> JSON -> DomainReasoner (t, JSON) 
+
+   decode :: Decoder JSON a -> Type a t -> JSON -> DomainReasoner (t, JSON)
    decode dec serviceType =
       case serviceType of
          Tp.Location -> useFirst decodeLocation
@@ -158,17 +158,17 @@ jsonDecoder ex = Decoder
          Tp.Exercise -> \json -> case json of
                                        Array (String _:rest) -> return (decoderExercise dec, Array rest)
                                        _ -> return (decoderExercise dec, json)
-         Tp.Int      -> useFirst $ \json -> case json of 
+         Tp.Int      -> useFirst $ \json -> case json of
                                                Number (I n) -> return (fromIntegral n)
                                                _        -> fail "not an integer"
-         Tp.String   -> useFirst $ \json -> case json of 
+         Tp.String   -> useFirst $ \json -> case json of
                                                String s -> return s
                                                _        -> fail "not a string"
-         Tp.Tag s _ | s == "state" -> do 
+         Tp.Tag s _ | s == "state" -> do
             f <- equalM stateType serviceType
             useFirst (liftM f . decodeState (decoderExercise dec) (decodeTerm dec))
          _ -> decodeDefault dec serviceType
-   
+
    useFirst :: Monad m => (JSON -> m a) -> JSON -> m (a, JSON)
    useFirst f (Array (x:xs)) = do
       a <- f x
@@ -185,7 +185,7 @@ decodeLocation _          = fail "expecting a string for a location"
 --------------------------
 
 encodeState :: Monad m => (a -> m JSON) -> State a -> m JSON
-encodeState f st = do 
+encodeState f st = do
    theTerm <- f (stateTerm st)
    return $ Array
       [ String (showId (exercise st))
@@ -203,7 +203,7 @@ decodeState :: Monad m => Exercise a -> (JSON -> m a) -> JSON -> m (State a)
 decodeState ex f (Array [a]) = decodeState ex f a
 decodeState ex f (Array [String _code, String p, ce, jsonContext]) = do
    let mpr = readM p >>= (`makePrefix` strategy ex)
-   a    <- f ce 
+   a    <- f ce
    env  <- decodeContext jsonContext
    return $ makeState ex mpr (makeContext ex env a)
 decodeState _ _ s = fail $ "invalid state" ++ show s
@@ -211,17 +211,17 @@ decodeState _ _ s = fail $ "invalid state" ++ show s
 decodeContext :: Monad m => JSON -> m Environment
 decodeContext (String "") = decodeContext (Object []) -- Being backwards compatible (for now)
 decodeContext (Object xs) = foldM add emptyEnv xs
- where 
-   add env (k, String s) = return (storeEnv k s env)       
+ where
+   add env (k, String s) = return (storeEnv k s env)
    add _ _ = fail "invalid item in context"
 decodeContext json = fail $ "invalid context: " ++ show json
-   
+
 encodeResult :: Encoder JSON a -> Result a -> DomainReasoner JSON
 encodeResult enc result =
    case result of
       -- SyntaxError _ -> [("result", String "SyntaxError")]
       Buggy rs      -> return $ Object [("result", String "Buggy"), ("rules", Array $ map (String . showId) rs)]
-      NotEquivalent -> return $ Object [("result", String "NotEquivalent")]   
+      NotEquivalent -> return $ Object [("result", String "NotEquivalent")]
       Ok rs st      -> do
          json <- encodeType enc stateType st
          return $ Object [("result", String "Ok"), ("rules", Array $ map (String . showId) rs), ("state", json)]
@@ -233,8 +233,8 @@ encodeResult enc result =
          return $ Object [("result", String "Unknown"), ("state", json)]
 
 jsonTuple :: [JSON] -> JSON
-jsonTuple xs = 
-   case mapM f xs of 
+jsonTuple xs =
+   case mapM f xs of
       Just ys | distinct (map fst ys) -> Object ys
       _ -> Array xs
  where

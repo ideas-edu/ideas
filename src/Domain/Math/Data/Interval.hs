@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -30,8 +30,8 @@ module Domain.Math.Data.Interval
 
 import Common.Algebra.Boolean
 import Common.Algebra.Law
-import Common.Utils.TestSuite
 import Common.Utils (commaList)
+import Common.Utils.TestSuite
 import Control.Monad
 import Data.Maybe
 import Test.QuickCheck
@@ -120,7 +120,7 @@ makeInterval pl pr = maybe empty (I . return) (makeSegment pl pr)
 makeSegment :: Ord a => Endpoint a -> Endpoint a -> Maybe (Segment a)
 makeSegment pl pr =
    case liftM2 compare (getPoint pl) (getPoint pr) of
-      Just EQ 
+      Just EQ
          | isExcluding pl -> Nothing
          | isExcluding pr -> Nothing
       Just GT             -> Nothing
@@ -163,7 +163,7 @@ union xs (I ys) = foldr insert xs ys
 intersect :: Ord a => Interval a -> Interval a -> Interval a
 intersect (I xs) (I ys) = I (f xs ys)
  where
-   f (a@(S _ ar):as) (b@(S _ br):bs) = 
+   f (a@(S _ ar):as) (b@(S _ br):bs) =
       let cond = maxPointRight ar br == ar
           rest | cond      = f (a:as) bs
                | otherwise = f as (b:bs)
@@ -171,17 +171,17 @@ intersect (I xs) (I ys) = I (f xs ys)
    f _ _ = []
 
 complementIntervals :: Ord a => Interval a -> Interval a
-complementIntervals (I xs) 
+complementIntervals (I xs)
    | null xs   = unbounded
-   | otherwise = I $ catMaybes $ 
+   | otherwise = I $ catMaybes $
         left (head xs) : zipWith f xs (drop 1 xs) ++ [right (last xs)]
  where
    f (S _ a) (S b _) = liftM2 S (g a) (g b)
-   
+
    g (Including a) = Just (Excluding a)
    g (Excluding a) = Just (Including a)
    g Unbounded     = Nothing
-   
+
    left  (S al _) = fmap (S Unbounded) (g al)
    right (S _ ar) = fmap (flip S Unbounded) (g ar)
 
@@ -189,8 +189,8 @@ isIn :: Ord a => a -> Interval a -> Bool
 isIn a (I xs) = any p xs
  where
    p (S x y) = f GT x && f LT y
-   f value b = 
-      let g c = (c==EQ && isIncluding b) || c==value 
+   f value b =
+      let g c = (c==EQ && isIncluding b) || c==value
       in maybe True (g . compare a) (getPoint b)
 
 ---------------------------------------------------------------------
@@ -204,28 +204,28 @@ getPoint Unbounded     = Nothing
 merge :: Ord a => Segment a -> Segment a -> Maybe (Segment a)
 merge ia@(S al ar) ib@(S bl br)
    | minPointLeft al bl /= al = merge ib ia
-   | otherwise = 
+   | otherwise =
         case liftM2 compare (getPoint ar) (getPoint bl) of
            Just LT -> Nothing
            Just EQ | isExcluding ar && isExcluding bl -> Nothing
            _ -> Just (S al (maxPointRight ar br))
 
 inBoth :: Ord a => Segment a -> Segment a -> Maybe (Segment a)
-inBoth (S al ar) (S bl br) = 
+inBoth (S al ar) (S bl br) =
    makeSegment (maxPointLeft al bl) (minPointRight ar br)
 
-minPointLeft, minPointRight, maxPointLeft, maxPointRight 
+minPointLeft, minPointRight, maxPointLeft, maxPointRight
    :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
 minPointLeft  = compareEndpoint True  True
-minPointRight = compareEndpoint True  False 
+minPointRight = compareEndpoint True  False
 maxPointLeft  = compareEndpoint False False
-maxPointRight = compareEndpoint False True 
+maxPointRight = compareEndpoint False True
 
 compareEndpoint :: Ord a => Bool -> Bool -> Endpoint a -> Endpoint a -> Endpoint a
-compareEndpoint b1 b2 a b = 
+compareEndpoint b1 b2 a b =
    case liftM2 compare (getPoint a) (getPoint b) of
       Just LT                -> x
-      Just EQ | p a          -> x 
+      Just EQ | p a          -> x
               | otherwise    -> y
       Just GT                -> y
       Nothing | b2           -> Unbounded
@@ -234,12 +234,12 @@ compareEndpoint b1 b2 a b =
  where
    p = if b1==b2 then isIncluding else isExcluding
    (x, y) = if b1 then (a, b) else (b, a)
-  
+
 ---------------------------------------------------------------------
 -- QuickCheck
 
 instance (Arbitrary a, Ord a) => Arbitrary (Endpoint a) where
-   arbitrary = frequency 
+   arbitrary = frequency
       [ (2, liftM Excluding arbitrary)
       , (2, liftM Including arbitrary)
       , (1, return Unbounded)
@@ -267,24 +267,24 @@ testMe = suite "Intervals" $ do
    suite "Constructor functions" $ do
      addProperty "empty"     $ op0 empty     (const False)
      addProperty "unbounded" $ op0 unbounded (const True)
-   
+
      addProperty "greater than"             $ op1 greaterThan (>)
      addProperty "greater than or equal to" $ op1 greaterThanOrEqualTo (>=)
      addProperty "less than"                $ op1 lessThan (<)
      addProperty "less than or equal to"    $ op1 lessThanOrEqualTo (<=)
      addProperty "point    "                $ op1 point (==)
-   
+
      addProperty "open"       $ op2 open      (<)  (<)
      addProperty "closed"     $ op2 closed    (<=) (<=)
      addProperty "left open"  $ op2 leftOpen  (<)  (<=)
      addProperty "right open" $ op2 rightOpen (<=) (<)
-   
+
    suite "Combinators" $ do
       addProperty "except"     defExcept
       addProperty "union"      defUnion
       addProperty "intersect"  defIntersect
       addProperty "complement" defComplement
-   
+
    suite "Boolean algebra" $
       forM_ (booleanLaws :: [Law (Interval Int)]) $ \p ->
          addProperty (show p) p

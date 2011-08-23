@@ -1,7 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -13,7 +13,7 @@
 -- Division in the Fractional type class is not safe.
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Data.DecimalFraction 
+module Domain.Math.Data.DecimalFraction
    ( DecimalFraction, fromDouble, validDivisor, digits
    ) where
 
@@ -25,7 +25,7 @@ import Domain.Math.Safe
 -- |Data type for decimal fractions
 newtype DecimalFraction = DF Rational -- Invariant: denominator is valid
    deriving (Eq, Ord, Num, Real)
-   
+
 instance Show DecimalFraction where
    show d@(DF r) = show x ++ "." ++ replicate extra '0' ++ show y
     where
@@ -33,7 +33,7 @@ instance Show DecimalFraction where
       base   = 10^digs
       n      = numerator (r * fromInteger base)
       (x, y) = n `divMod` base
-      extra  = digs - length (show y)   
+      extra  = digs - length (show y)
 
 instance Fractional DecimalFraction where
    a/b = fromMaybe (error "invalid divisor") (safeDiv a b)
@@ -43,7 +43,7 @@ instance SafeDiv DecimalFraction where
    safeDiv (DF a) (DF b) = do
       guard (validDivisor (DF b))
       liftM DF (a `safeDiv` b)
-   
+
 instance SafePower DecimalFraction where
    safePower x (DF r)
       | denominator r /= 1 = Nothing
@@ -61,7 +61,7 @@ fromDouble d = DF (fromInteger base / 10^digs)
    digs = 8 :: Int -- maximum number of digits
    base = round (d * 10^digs) :: Integer
 
--- |Tests whether it is safe to divide by this fraction: it is safe to divide 
+-- |Tests whether it is safe to divide by this fraction: it is safe to divide
 -- if its numerator(!) is a product of two's and five's.
 validDivisor :: DecimalFraction -> Bool
 validDivisor (DF a) = validDenominator (abs (numerator a))

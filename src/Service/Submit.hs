@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,24 +11,24 @@
 -- Diagnose a term submitted by a student. Deprecated (see diagnose service).
 --
 -----------------------------------------------------------------------------
-module Service.Submit 
+module Service.Submit
    ( submit, Result(..)
    , submitType
    ) where
 
 import Common.Library
-import qualified Service.Diagnose as Diagnose
 import Service.Diagnose (Diagnosis, diagnose)
 import Service.State
 import Service.Types
+import qualified Service.Diagnose as Diagnose
 
 -- Note that in the typed setting there is no syntax error
-data Result a = Buggy  [Rule (Context a)]   
-              | NotEquivalent      
+data Result a = Buggy  [Rule (Context a)]
+              | NotEquivalent
               | Ok     [Rule (Context a)] (State a)  -- equivalent
               | Detour [Rule (Context a)] (State a)  -- equivalent
               | Unknown                   (State a)  -- equivalent
- 
+
 fromDiagnose :: Diagnosis a -> Result a
 fromDiagnose diagnosis =
    case diagnosis of
@@ -40,8 +40,8 @@ fromDiagnose diagnosis =
       Diagnose.Correct _ s     -> Unknown s
 --      Diagnose.Missing         -> NotEquivalent
 --      Diagnose.IncorrectPart _ -> NotEquivalent
-          
-submit :: State a -> a -> Result a 
+
+submit :: State a -> a -> Result a
 submit state = fromDiagnose . diagnose state
 
 submitType :: Type a (Result a)
@@ -57,9 +57,9 @@ submitType = Tag "Result" (Iso (f <-> g) tp)
    g (NotEquivalent) = Right (Left ())
    g (Ok rs s)       = Right (Right (Left (rs, s)))
    g (Detour rs s)   = Right (Right (Right (Left (rs, s))))
-   g (Unknown s)     = Right (Right (Right (Right s))) 
+   g (Unknown s)     = Right (Right (Right (Right s)))
 
-   tp  =  List Rule 
+   tp  =  List Rule
       :|: Unit
       :|: Pair (List Rule) stateType
       :|: Pair (List Rule) stateType

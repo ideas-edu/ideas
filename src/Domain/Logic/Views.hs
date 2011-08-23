@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,13 +9,13 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Views 
+module Domain.Logic.Views
    ( (.<->.), (.->.), (.&&.), (.||.)
    , simplify, pushNot, pushNotWith
    , orView, andView
    ) where
 
-import Common.Algebra.CoBoolean 
+import Common.Algebra.CoBoolean
 import Common.Id
 import Common.View hiding (simplify)
 import Domain.Logic.Formula
@@ -24,7 +24,7 @@ import Domain.Logic.Formula
 -- Smart constructors
 
 infixr 2 .<->.
-infixr 3 .->. 
+infixr 3 .->.
 
 (.<->.) :: Logic a -> Logic a -> Logic a
 T .<->. q = q
@@ -40,7 +40,7 @@ _ .->. T = T
 p .->. F = nott p
 p .->. q = p :->: q
 
-{- (.||.) :: Logic a -> Logic a -> Logic a 
+{- (.||.) :: Logic a -> Logic a -> Logic a
 T .||. _ = T
 F .||. q = q
 _ .||. T = T
@@ -67,7 +67,7 @@ simplify = foldLogic (Var, (.->.), (.<->.), (.&&.), (.||.), nott, T, F)
 pushNotWith :: (a -> Logic a) -> Logic a -> Logic a
 pushNotWith f = foldLogic (Var, (.->.), (.<->.), (.&&.), (.||.), rec, T, F)
  where
-   rec logic = 
+   rec logic =
       case logic of
          Not p :<->: q -> p     .<->. q
          p :<->: Not q -> p     .<->. q
@@ -82,7 +82,7 @@ pushNotWith f = foldLogic (Var, (.->.), (.<->.), (.&&.), (.||.), rec, T, F)
 
 pushNot :: Logic a -> Logic a
 pushNot = pushNotWith (nott . Var)
-         
+
 orView :: View (Logic a) [a]
 orView = "logic.orView" @> makeView (($ []) . f) (foldr ((.||.) . Var) F)
  where

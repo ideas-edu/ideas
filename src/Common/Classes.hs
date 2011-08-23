@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,7 +11,7 @@
 -- Type classes and instances.
 --
 -----------------------------------------------------------------------------
-module Common.Classes 
+module Common.Classes
    ( -- * Type class Apply
      Apply, apply, applyAll, applicable, applyD, applyM
      -- * Type class Container
@@ -31,8 +31,8 @@ import qualified Data.Set as S
 -----------------------------------------------------------
 -- Type class Apply
 
--- | A type class for functors that can be applied to a value. Transformation, 
--- Rule, and Strategy are all instances of this type class. 
+-- | A type class for functors that can be applied to a value. Transformation,
+-- Rule, and Strategy are all instances of this type class.
 class Apply t where
    applyAll :: t a -> a -> [a]  -- ^ Returns zero or more results
 
@@ -64,7 +64,7 @@ instance Container [] where
    singleton        = return
    getSingleton [a] = Just a
    getSingleton _   = Nothing
-   
+
 instance Container S.Set where
    singleton    = S.singleton
    getSingleton = getSingleton . S.toList
@@ -82,11 +82,11 @@ class Arrow arr => BiArrow arr where
    (<-!) :: (b -> a) -> arr a b
    -- default definitions
    (!->) f = f <-> errBiArrow
-   (<-!) f = errBiArrow <-> f 
+   (<-!) f = errBiArrow <-> f
 
 errBiArrow :: a
 errBiArrow = error "BiArrow: not bi-directional"
-   
+
 -----------------------------------------------------------
 -- Type class BiFunctor
 
@@ -103,6 +103,6 @@ instance BiFunctor Either where
 
 instance BiFunctor (,) where
   biMap f g (a, b) = (f a, g b)
-  
+
 mapBoth :: BiFunctor f => (a -> b) -> f a a -> f b b
 mapBoth f = biMap f f

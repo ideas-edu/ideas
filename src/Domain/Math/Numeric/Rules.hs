@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,10 +12,10 @@
 module Domain.Math.Numeric.Rules where
 
 import Common.Transformation
+import Common.View
 import Control.Monad
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Common.View
 
 ------------------------------------------------------------
 -- Rules
@@ -26,27 +26,27 @@ alg = "algebra.manipulation"
 calcRuleName :: String -> String -> String
 calcRuleName opName viewName =
    "arithmetic.operation." ++ viewName ++ "." ++ opName
-      
+
 calcBinRule :: String -> (a -> a -> a) -> (e -> Maybe (e, e)) -> String -> View e a -> Rule e
-calcBinRule opName op m viewName v = 
-   makeSimpleRule (calcRuleName opName viewName) $ \e -> 
+calcBinRule opName op m viewName v =
+   makeSimpleRule (calcRuleName opName viewName) $ \e ->
    do (e1, e2) <- m e
       a <- match v e1
       b <- match v e2
       return (build v (op a b))
 
 calcPlusWith :: Num a => String -> View Expr a -> Rule Expr
-calcPlusWith = calcBinRule "plus" (+) isPlus 
+calcPlusWith = calcBinRule "plus" (+) isPlus
 
 calcMinusWith :: Num a => String -> View Expr a -> Rule Expr
-calcMinusWith = calcBinRule "minus" (-) isMinus 
+calcMinusWith = calcBinRule "minus" (-) isMinus
 
 calcTimesWith :: Num a => String -> View Expr a -> Rule Expr
 calcTimesWith = calcBinRule "times" (*) isTimes
 
 calcDivisionWith :: Integral a => String -> View Expr a -> Rule Expr
-calcDivisionWith viewName v = 
-   makeSimpleRule (calcRuleName "division" viewName) $ \e -> 
+calcDivisionWith viewName v =
+   makeSimpleRule (calcRuleName "division" viewName) $ \e ->
    do (e1, e2) <- isDivide e
       a <- match v e1
       b <- match v e2
@@ -54,13 +54,13 @@ calcDivisionWith viewName v =
       guard (b /= 0 && m == 0)
       return (build v d)
 
-negateZero :: Rule Expr 
+negateZero :: Rule Expr
 negateZero = makeSimpleRule (alg, "negate-zero") f
  where
    f (Negate (Nat n)) | n == 0 = Just 0
    f _                         = Nothing
 
-doubleNegate :: Rule Expr 
+doubleNegate :: Rule Expr
 doubleNegate = makeSimpleRule (alg, "double-negate") f
  where
    f (Negate (Negate a)) = Just a
@@ -155,10 +155,10 @@ fractionPlusScale = makeSimpleRuleList (alg, "fraction-plus-scale") $ \expr -> d
      build plusView (e1, e2n) | d /= bd ]
 
 fractionTimes :: Rule Expr
-fractionTimes = makeSimpleRule (alg, "fraction-times") f 
+fractionTimes = makeSimpleRule (alg, "fraction-times") f
  where
    f (e1 :*: e2) = do
       (a, b)   <- matchM fractionForm e1 `mplus` liftM (\n -> (n, 1)) (matchM integerNF e1)
       (c, d)   <- matchM fractionForm e2 `mplus` liftM (\n -> (n, 1)) (matchM integerNF e2)
-      return (build fractionForm (a*c, b*d)) 
+      return (build fractionForm (a*c, b*d))
    f _ = Nothing

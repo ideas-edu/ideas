@@ -1,7 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,8 +12,8 @@
 -----------------------------------------------------------------------------
 module Common.Algebra.SmartGroup where
 
-import Common.Algebra.Group
 import Common.Algebra.CoGroup
+import Common.Algebra.Group
 import Control.Applicative
 import Control.Monad (mplus)
 import Data.Maybe
@@ -30,7 +30,7 @@ instance Applicative Smart where
 
 instance (CoMonoid a, Monoid a) => Monoid (Smart a) where
    mempty = Smart mempty
-   mappend a b 
+   mappend a b
       | isEmpty a = b
       | isEmpty b = a
       | otherwise = liftA2 (<>) a b
@@ -49,7 +49,7 @@ instance Applicative SmartZero where
 
 instance (CoMonoidZero a, MonoidZero a) => Monoid (SmartZero a) where
    mempty = SmartZero mempty
-   mappend a b 
+   mappend a b
       | isMonoidZero a || isMonoidZero b = mzero
       | otherwise = liftA2 (<>) a b
 
@@ -72,12 +72,12 @@ instance (CoGroup a, Group a) => Monoid (SmartGroup a) where
       | otherwise = fromMaybe (liftA2 (<>) a b) (matchGroup alg b)
     where
       alg = (a, \x y -> (a <> x) <> y, \x -> a <>- x, \x y -> (a <> x) <>- y)
-   
+
 instance (CoGroup a, Group a) => Group (SmartGroup a) where
    inverse a = fromMaybe (liftA inverse a) (matchGroup alg a)
     where
       alg = (mempty, \x y -> inverse x <>- y, id, \x y -> inverse x <> y)
-   appendInv a b 
+   appendInv a b
       | isEmpty a = inverse b
       | otherwise = fromMaybe (liftA2 (<>-) a b) (matchGroup alg b)
     where
@@ -88,7 +88,7 @@ instance (CoGroup a, Group a) => Group (SmartGroup a) where
 type GroupMatch a b = (b, a -> a -> b, a -> b, a -> a -> b)
 
 matchGroup :: CoGroup a => GroupMatch a b -> a -> Maybe b
-matchGroup (emp, app, inv, appinv) a = 
+matchGroup (emp, app, inv, appinv) a =
    (if isEmpty a then Just emp else Nothing) `mplus`
    fmap (uncurry app) (isAppend a)  `mplus`
    fmap inv (isInverse a) `mplus`

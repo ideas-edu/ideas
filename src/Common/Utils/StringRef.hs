@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,25 +9,25 @@
 -- Portability :  portable (depends on ghc)
 --
 -- References to Strings, proving a fast comparison implementation (Eq and
--- Ord) that uses a hash function. Code is based on Daan Leijen's Lazy 
+-- Ord) that uses a hash function. Code is based on Daan Leijen's Lazy
 -- Virutal Machine (LVM) identifiers.
 --
 -----------------------------------------------------------------------------
-module Common.Utils.StringRef 
+module Common.Utils.StringRef
    ( StringRef, stringRef, toString, tableStatus
    ) where
 
 import Common.Utils (commaList)
 import Data.Bits
 import Data.IORef
-import Data.List 
+import Data.List
 import System.IO.Unsafe
 import qualified Data.IntMap as IM
 
 ----------------------------------------------------------------
 -- StringRef datatype and instance declarations
 
-data StringRef = S !Int 
+data StringRef = S !Int
    deriving (Eq, Ord)
 
 instance Show StringRef where
@@ -52,9 +52,9 @@ stringRef s = unsafePerformIO $ do
       (Nothing, new) -> do
          writeIORef tableRef new
          return (S (encodeIndexZero hash))
-      (Just old, new) -> 
+      (Just old, new) ->
          case findIndex (==s) old of
-            Just index -> 
+            Just index ->
                return (S (encode hash index))
             Nothing -> do
                let index = length old
@@ -64,12 +64,12 @@ stringRef s = unsafePerformIO $ do
 toString :: StringRef -> String
 toString (S i) = unsafePerformIO $ do
    m <- readIORef tableRef
-   case IM.lookup (extractHash i) m of 
+   case IM.lookup (extractHash i) m of
       Just xs -> return (atIndex (extractIndex i) xs)
       Nothing -> intErr "id not found"
 
 ----------------------------------------------------------------
--- Bit encoding   
+-- Bit encoding
 
 encode :: Int -> Int -> Int
 encode hash index = hash + index `shiftL` 12
@@ -109,7 +109,7 @@ combine :: Eq a => [a] -> [a] -> [a]
 combine [a] = rec
  where
    rec [] = [a]
-   rec this@(x:xs) 
+   rec this@(x:xs)
       | a == x    = this
       | otherwise = x:rec xs
 combine _ = intErr "combine"
@@ -118,10 +118,10 @@ intErr :: String -> a
 intErr s = error ("Internal error in Common.StringRef: " ++ s)
 
 ----------------------------------------------------------------
--- Testing and debugging 
+-- Testing and debugging
 
 tableStatus :: IO String
-tableStatus = readIORef tableRef >>= \m -> 
+tableStatus = readIORef tableRef >>= \m ->
    let xs = map f (IM.assocs m)
        f (i, ys) = '#' : show i ++ ": " ++ commaList (map g (frequency ys)) ++
                    "  [total = " ++ show (length ys) ++ "]"
@@ -131,6 +131,6 @@ tableStatus = readIORef tableRef >>= \m ->
 
 frequency :: Eq a => [a] -> [(a, Int)]
 frequency [] = []
-frequency (x:xs) = 
+frequency (x:xs) =
    let (ys, zs) = partition (==x) xs
    in (x, 1+length ys) : frequency zs

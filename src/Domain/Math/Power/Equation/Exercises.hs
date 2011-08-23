@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Power.Equation.Exercises    
+module Domain.Math.Power.Equation.Exercises
    ( powerEqExercise
    , expEqExercise
    , logEqExercise
@@ -24,14 +24,14 @@ import Data.Function (on)
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.Views
-import Domain.Math.Power.Equation.Examples
 import Domain.Math.Expr hiding (isPower)
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Views
+import Domain.Math.Power.Equation.Examples
+import Domain.Math.Power.Equation.NormViews
+import Domain.Math.Power.Equation.Strategies
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Utils (sortOrList)
-import Domain.Math.Power.Equation.Strategies
-import Domain.Math.Power.Equation.NormViews
 
 ------------------------------------------------------------
 -- Exercises
@@ -42,29 +42,29 @@ powerEqExercise = let precision = 2 in makeExercise
   , parser         = parseRelExpr
   , strategy       = powerEqApproxStrategy
   , navigation     = termNavigator
-  , exerciseId     = describe "solve power equation algebraically with x > 0" $ 
+  , exerciseId     = describe "solve power equation algebraically with x > 0" $
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = level Medium $ concatMap (map $ build equationView) $ 
+  , examples       = level Medium $ concatMap (map $ build equationView) $
                        powerEquations ++ [last higherPowerEquations]
   , ready          = predicateView relationSolvedForm
   , suitable       = predicateView (normPowerEqApproxView precision)
   , equivalence    = withoutContext (viewEquivalent (normPowerEqApproxView precision))
   }
-  
+
 expEqExercise :: Exercise (Equation Expr)
 expEqExercise = makeExercise
   { status         = Provisional
   , parser         = parseEqExpr
   , strategy       = expEqStrategy
   , navigation     = termNavigator
-  , exerciseId     = describe "solve exponential equation algebraically" $ 
+  , exerciseId     = describe "solve exponential equation algebraically" $
                        newId "algebra.manipulation.exponential.equation"
   , examples       = level Medium $ concat expEquations
-  , ready          = predicate $ \ rel -> isVariable (leftHandSide rel) 
+  , ready          = predicate $ \ rel -> isVariable (leftHandSide rel)
                            && rightHandSide rel `belongsTo` rationalView
   , suitable       = predicateView normExpEqView
   , equivalence    = withoutContext (viewEquivalent normExpEqView)
-  , ruleOrdering   = ruleOrderingWithId [ getId root2power ]  
+  , ruleOrdering   = ruleOrderingWithId [ getId root2power ]
   }
 
 logEqExercise :: Exercise (OrList (Relation Expr))
@@ -73,7 +73,7 @@ logEqExercise = makeExercise
   , parser         = parseOrsRelExpr
   , strategy       = logEqStrategy
   , navigation     = termNavigator
-  , exerciseId     = describe "solve logarithmic equation algebraically" $ 
+  , exerciseId     = describe "solve logarithmic equation algebraically" $
                        newId "algebra.manipulation.logarithmic.equation"
   , examples       = level Medium $ map (singleton . build equationView) (concat logEquations)
   , ready          = predicateView relationsSolvedForm
@@ -89,9 +89,9 @@ higherPowerEqExercise = makeExercise
   , parser         = parseOrsEqExpr
   , strategy       = higherPowerEqStrategy
   , navigation     = termNavigator
-  , exerciseId     = describe "solve higher power equation algebraically" $ 
+  , exerciseId     = describe "solve higher power equation algebraically" $
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = level Medium $ map singleton $ concat $ 
+  , examples       = level Medium $ map singleton $ concat $
                        higherPowerEquations ++ take 3 rootEquations
   , ready          = predicateView relationsSolvedForm
   , suitable       = predicateView (traverseView normPowerEqView)
@@ -106,7 +106,7 @@ rootEqExercise = makeExercise
   , parser         = parseOrsEqExpr
   , strategy       = rootEqStrategy
   , navigation     = termNavigator
-  , exerciseId     = describe "solve higher power equation algebraically" $ 
+  , exerciseId     = describe "solve higher power equation algebraically" $
                        newId "algebra.manipulation.exponents.equation"
   , examples       = level Medium $ map singleton $ concat $ drop 3 rootEquations
   , ready          = predicateView relationsSolvedForm

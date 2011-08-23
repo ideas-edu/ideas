@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,33 +12,33 @@
 -----------------------------------------------------------------------------
 module Service.TypedExample (typedExample) where
 
+import Common.Library
 import Data.Char
 import Data.Maybe
 import Service.DomainReasoner
-import Service.ModeXML
 import Service.Evaluator
+import Service.ModeXML
 import Service.Types
-import Common.Library
 import Text.XML
-   
+
 typedExample :: Exercise a -> Service -> [TypedValue a] -> DomainReasoner (XML, XML, Bool)
 typedExample ex service args = do
    -- Construct a request in xml
-   request <- 
+   request <-
       case makeArgType args of
-         Nothing -> return $  
+         Nothing -> return $
             stdReply (showId service) enc ex (return ())
          Just (reqTuple ::: reqTp) -> do
             xml <- encodeType (encoder evaluator) reqTp reqTuple
-            return $ 
+            return $
                stdReply (showId service) enc ex xml
    -- Construct a reply in xml
    reply <-
       case foldl dynamicApply (serviceFunction service) args of
          reply ::: replyTp -> do
             xml <- encodeType (encoder evaluator) replyTp reply
-            return (resultOk xml) 
-    `catchError` 
+            return (resultOk xml)
+    `catchError`
       (return . resultError)
    -- Check request/reply pair
    vers <- getVersion
@@ -47,7 +47,7 @@ typedExample ex service args = do
       let p   = filter (not . isSpace)
           out = showXML (if null vers then reply else addVersion vers reply)
       return (p txt == p out)
-     `catchError` 
+     `catchError`
       const (return False)
    return (request, reply, xmlTest)
  where
@@ -56,7 +56,7 @@ typedExample ex service args = do
       | otherwise               = (stringFormatConverterTp ex, "string")
 
 stdReply :: String -> String -> Exercise a -> XMLBuilder -> XML
-stdReply s enc ex body = makeXML "request" $ do 
+stdReply s enc ex body = makeXML "request" $ do
    "service"    .=. s
    "exerciseid" .=. showId ex
    "source"     .=. "test"
@@ -74,8 +74,8 @@ makeArgType ((a1 ::: t1) : rest) = do
 dynamicApply :: TypedValue a -> TypedValue a -> TypedValue a
 dynamicApply fun arg =
    case (fun, arg) of
-      (f ::: t1 :-> t2, a ::: t3) -> 
-         case equal t3 t1 of 
+      (f ::: t1 :-> t2, a ::: t3) ->
+         case equal t3 t1 of
             Just eq -> f (eq a) ::: t2
             Nothing -> error $ "mismatch (argument type): " ++ show t3 ++ " does not match " ++ show t1
       _ -> error "mismatch (not a function)"

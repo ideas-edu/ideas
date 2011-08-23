@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,7 +11,7 @@
 -- Abstract syntax for feedback scripts, and pretty-printer (Show instance)
 --
 -----------------------------------------------------------------------------
-module Service.FeedbackScript.Syntax 
+module Service.FeedbackScript.Syntax
    ( Script, makeScript, scriptDecls, makeText, textItems
    , Decl(..), DeclType(..), Text(..), Condition(..)
    , feedbackDecl, textForIdDecl
@@ -20,8 +20,8 @@ module Service.FeedbackScript.Syntax
 
 import Common.Algebra.Group ((<>))
 import Common.Library
-import Common.Utils.Uniplate
 import Common.Utils (commaList, safeHead)
+import Common.Utils.Uniplate
 import Data.Char
 import Data.Monoid
 
@@ -30,7 +30,7 @@ newtype Script = S { scriptDecls :: [Decl] }
 makeScript :: [Decl] -> Script
 makeScript = S
 
-data Decl 
+data Decl
    = NameSpace [Id]
    | Supports  [Id]
    | Include [FilePath]
@@ -38,15 +38,15 @@ data Decl
    | Guarded DeclType [Id] [(Condition, Text)]
 
 data DeclType = TextForId | StringDecl | Feedback
-        
+
 data Text
-   = TextString String  
+   = TextString String
    | TextTerm   Term
    | TextRef Id
    | TextEmpty
    | Text :<>: Text
-          
-data Condition 
+
+data Condition
    = RecognizedIs Id
    | CondNot   Condition
    | CondConst Bool
@@ -64,8 +64,8 @@ textForIdDecl a = Simple TextForId [getId a]
 instance Show Script where
    show = unlines . map show . scriptDecls
 
-instance Show Decl where 
-   show decl = 
+instance Show Decl where
+   show decl =
       let idList   = commaList . map show
           f dt as  = unwords [show dt, idList as]
           g (c, t) = "   | " ++ show c ++ " = " ++ nonEmpty (show t)
@@ -86,7 +86,7 @@ instance Show Condition where
    show (RecognizedIs a) = "recognize " ++ show a
    show (CondNot c)      = "not " ++ show c
    show (CondConst b)    = map toLower (show b)
-   show (CondRef a)      = '@' : show a 
+   show (CondRef a)      = '@' : show a
 
 instance Show Text where
    show (TextString s) = s
@@ -94,18 +94,18 @@ instance Show Text where
    show TextEmpty      = ""
    show t@(_ :<>: _)   = show [t]
    show (TextRef a)    = '@' : show a
-   
-   showList xs ys = 
+
+   showList xs ys =
       foldr (combine . show) ys (concatMap textItems xs)
-   
+
 instance Monoid Script where
    mempty = makeScript []
    mappend s t = makeScript (scriptDecls s ++ scriptDecls t)
-   
+
 instance Monoid Text where
    mempty  = TextEmpty
    mappend = (:<>:)
-   
+
 instance Uniplate Condition where
    uniplate (CondNot a) = plate CondNot |* a
    uniplate c           = plate c
@@ -125,7 +125,7 @@ combineList :: [String] -> String
 combineList = foldr combine []
 
 combine :: String -> String -> String
-combine a b 
+combine a b
    | null a    = b
    | null b    = a
    | maybe False special (safeHead b) = a ++ b

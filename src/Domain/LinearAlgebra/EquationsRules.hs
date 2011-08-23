@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,31 +11,31 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.EquationsRules where
 
-import Prelude
 import Common.Library hiding (simplify)
 import Common.Utils
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Domain.Math.Expr
-import Domain.Math.Data.Relation
-import Domain.Math.Simplification (simplify)
-import Domain.LinearAlgebra.LinearView
 import Domain.LinearAlgebra.LinearSystem
+import Domain.LinearAlgebra.LinearView
 import Domain.LinearAlgebra.MatrixRules (covered) -- for context
+import Domain.Math.Data.Relation
+import Domain.Math.Expr
+import Domain.Math.Simplification (simplify)
+import Prelude
 import Test.QuickCheck
 
 equationsRules :: [Rule (Context (LinearSystem Expr))]
-equationsRules = 
+equationsRules =
    [ ruleExchangeEquations, ruleEliminateVar, ruleDropEquation
    , ruleInconsistentSystem
    , ruleScaleEquation, ruleBackSubstitution, ruleIdentifyFreeVariables
-   , ruleCoverUpEquation, ruleUncoverEquation, ruleCoverAllEquations 
+   , ruleCoverUpEquation, ruleUncoverEquation, ruleCoverAllEquations
    ]
 
 ruleExchangeEquations :: Rule (Context (LinearSystem Expr))
-ruleExchangeEquations = describe "Exchange two equations" $ 
-   simplifySystem $ makeRule "linearalgebra.linsystem.exchange" $ 
+ruleExchangeEquations = describe "Exchange two equations" $
+   simplifySystem $ makeRule "linearalgebra.linsystem.exchange" $
    supply2 descr args (\x y -> liftTransContext $ exchange x y)
  where
    descr = ("equation 1", "equation 2")
@@ -48,11 +48,11 @@ ruleExchangeEquations = describe "Exchange two equations" $
 
 ruleEliminateVar :: Rule (Context (LinearSystem Expr))
 ruleEliminateVar = describe "Eliminate a variable (using addition)" $
-   simplifySystem $ makeRule "linearalgebra.linsystem.eliminate" $ 
+   simplifySystem $ makeRule "linearalgebra.linsystem.eliminate" $
    supply3 descr args (\x y z -> liftTransContext $ addEquations x y z)
  where
    descr = ("equation 1", "equation 2", "scale factor")
-   args  = evalCM $ \ls -> do 
+   args  = evalCM $ \ls -> do
       mv <- minvar ls
       hd:rest <- remaining ls
       let getCoef = coefficientOf mv . leftHandSide
@@ -78,27 +78,27 @@ ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
       return stop
 
 ruleScaleEquation :: Rule (Context (LinearSystem Expr))
-ruleScaleEquation = describe "Scale equation to one" $ 
-   simplifySystem $ makeRule "linearalgebra.linsystem.scale" $ 
+ruleScaleEquation = describe "Scale equation to one" $
+   simplifySystem $ makeRule "linearalgebra.linsystem.scale" $
    supply2 descr args (\x y -> liftTransContext $ scaleEquation x y)
  where
    descr = ("equation", "scale factor")
-   args  = evalCM $ \ls -> do 
-      cov <- readVar covered 
+   args  = evalCM $ \ls -> do
+      cov <- readVar covered
       eq  <- maybeCM $ safeHead $ drop cov ls
       let expr = leftHandSide eq
       mv <- minvar ls
       guard (coefficientOf mv expr /= 0)
       let coef = 1 / coefficientOf mv expr
       return (cov, coef)
-   
+
 ruleBackSubstitution :: Rule (Context (LinearSystem Expr))
 ruleBackSubstitution = describe "Back substitution" $
-   simplifySystem $ makeRule "linearalgebra.linsystem.subst" $ 
+   simplifySystem $ makeRule "linearalgebra.linsystem.subst" $
    supply3 descr args (\x y z -> liftTransContext $ addEquations x y z)
  where
    descr = ("equation 1", "equation 2", "scale factor")
-   args  = evalCM $ \ls -> do 
+   args  = evalCM $ \ls -> do
       cov <- readVar covered
       eq  <- maybeCM $ safeHead $ drop cov ls
       let expr = leftHandSide eq
@@ -108,7 +108,7 @@ ruleBackSubstitution = describe "Back substitution" $
       return (i, cov, coef)
 
 ruleIdentifyFreeVariables :: IsLinear a => Rule (Context (LinearSystem a))
-ruleIdentifyFreeVariables = describe "Identify free variables" $ 
+ruleIdentifyFreeVariables = describe "Identify free variables" $
    minorRule $ makeSimpleRule "linearalgebra.linsystem.freevars" $ withCM $ \ls ->
    let vs = [ head ys | ys <- map (vars . leftHandSide) ls, not (null ys) ]
        f eq =
@@ -117,15 +117,15 @@ ruleIdentifyFreeVariables = describe "Identify free variables" $
    in return (map f ls)
 
 ruleCoverUpEquation :: Rule (Context (LinearSystem a))
-ruleCoverUpEquation = describe "Cover up first equation" $ 
+ruleCoverUpEquation = describe "Cover up first equation" $
    minorRule $ makeRule "linearalgebra.linsystem.coverup" $ changeCover succ
 
 ruleUncoverEquation :: Rule (Context (LinearSystem a))
-ruleUncoverEquation = describe "Uncover one equation" $ 
+ruleUncoverEquation = describe "Uncover one equation" $
    minorRule $ makeRule "linearalgebra.linsystem.uncover" $ changeCover pred
 
 ruleCoverAllEquations :: Rule (Context (LinearSystem a))
-ruleCoverAllEquations = describe "Cove all equations" $ 
+ruleCoverAllEquations = describe "Cove all equations" $
    minorRule $ makeSimpleRule "linearalgebra.linsystem.coverall" $ withCM $ \ls -> do
       writeVar covered (length ls)
       return ls
@@ -149,7 +149,7 @@ simplifySystem = doAfter $ change (map (fmap f))
 -- Parameterized transformations
 
 exchange :: Int -> Int -> Transformation [a]
-exchange i j 
+exchange i j
    | i >  j    = exchange j i
    | otherwise = makeTrans $ \xs -> do
         guard (i/=j && validEquation i xs && validEquation j xs)
@@ -162,7 +162,7 @@ scaleEquation i a = makeTrans $ \xs -> do
    guard (a `notElem` [0,1] && validEquation i xs)
    let (begin, this:end) = splitAt i xs
    return (begin ++ [fmap (a*) this] ++ end)
-      
+
 addEquations :: IsLinear a => Int -> Int -> a -> Transformation (LinearSystem a)
 addEquations i j a = makeTrans $ \xs -> do
    guard (i/=j && validEquation i xs && validEquation j xs)
@@ -183,19 +183,19 @@ combineWith f (x1 :==: x2) (y1 :==: y2) = f x1 y1 :==: f x2 y2
 
 validEquation :: Int -> [a] -> Bool
 validEquation n xs = n >= 0 && n < length xs
-  
+
 --------------------
 -- TEMP
 
 -- | The equations that remain to be solved
 remaining :: LinearSystem a -> ContextMonad (Equations a)
-remaining ls = do 
+remaining ls = do
    cov <- readVar covered
    return (drop cov ls)
 
 -- | The minimal variable in the remaining equations
 minvar :: IsLinear a => LinearSystem a -> ContextMonad String
-minvar ls = do 
+minvar ls = do
    list <- liftM getVarsSystem (remaining ls)
    guard (not $ null list)
    return (minimum list)

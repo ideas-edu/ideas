@@ -3,13 +3,13 @@ module Domain.Lambda where
 import Common.Library
 import Common.Utils.Uniplate
 
-data Expr = Abs String Expr 
-          | App Expr Expr 
-          | Var String 
+data Expr = Abs String Expr
+          | App Expr Expr
+          | Var String
           | LApp Expr
           | Application
           | Composition deriving Eq
-          
+
 instance Uniplate Expr where
    uniplate (Abs x a)        = plate Abs |- x |* a -- ([a], \[b] -> Abs x b)
    uniplate (App f a)        = plate App |* f |* a -- ([f,a], \[f,a] -> App f a)
@@ -22,14 +22,14 @@ instance Show Expr where
    show (Abs x a) = "\\" ++ x ++ "." ++ show a
    show Application = "(:@:)"
    show Composition = "."
-   show (LApp y) = "(" ++ show y ++ " :@:) " 
+   show (LApp y) = "(" ++ show y ++ " :@:) "
    show expr      = f expr
     where
       f (App a b) = f a ++ " " ++ g b
       f a         = g a
       g (Var x)   = x
       g a         = "(" ++ show a ++ ")"
- 
+
 freeVars :: Expr -> [String]
 freeVars (Abs x a) = filter (/=x) (freeVars a)
 freeVars (App a b) = freeVars a ++ freeVars b
@@ -39,7 +39,7 @@ freeVars Application = []
 freeVars Composition = []
 
 scomb, comp, flp :: Expr
-scomb = Abs "f" $ Abs "g" $ Abs "x" $ App (App (Var "f") (Var "x")) 
+scomb = Abs "f" $ Abs "g" $ Abs "x" $ App (App (Var "f") (Var "x"))
                                           (App (Var "g") (Var "x"))
 comp = Abs "f" $ Abs "g" $ Abs "x" $ App (Var "f") $ App (Var "g") (Var "x")
 flp  = Abs "f" $ Abs "x" $ Abs "y" $ App (App (Var "f") (Var "y")) (Var "x")
@@ -48,16 +48,16 @@ flp  = Abs "f" $ Abs "x" $ Abs "y" $ App (App (Var "f") (Var "y")) (Var "x")
 myex = Abs "x" $ Abs "y" $ App (Var "x") (Var "y")
 
 ski :: Exercise Expr
-ski = emptyExercise 
+ski = emptyExercise
    { prettyPrinter = show
    , strategy      = skiStrategy
    , navigation    = navigator
    }
 
 skiStrategy :: LabeledStrategy (Context Expr)
-skiStrategy = label "ski" $ 
+skiStrategy = label "ski" $
    repeatS $ somewhere $ alternatives $
-      map liftToContext [introS, introK, introI] 
+      map liftToContext [introS, introK, introI]
 
 introS :: Rule Expr
 introS = makeSimpleRule "intro-S" f
@@ -75,22 +75,22 @@ introI :: Rule Expr
 introI = makeSimpleRule "intro-I" f
  where
    f (Abs x (Var y)) | x==y = Just $ Var "I"
-   f _ = Nothing   
+   f _ = Nothing
 
 {-
 s f g x = (f x) (g x)
 k x y = x
 i x = x
 -}
-  
+
 pf :: Exercise Expr
-pf = emptyExercise 
+pf = emptyExercise
    { prettyPrinter = show
    , strategy      = pfStrategy
    , navigation    = navigator
    }
 
-etaReduce :: Rule Expr 
+etaReduce :: Rule Expr
 etaReduce = makeSimpleRule "Eta_reduce" f
   where f (Abs x (App y z)) | z == Var x && x `notElem` freeVars y = Just $ LApp y
         f _ = Nothing
@@ -101,7 +101,7 @@ section2prefix = makeSimpleRule "Section_to_prefix" f
         f _ = Nothing
 
 pfStrategy :: LabeledStrategy (Context Expr)
-pfStrategy = label "point-free" $ 
+pfStrategy = label "point-free" $
    repeatS $ somewhere $ alternatives $
       map liftToContext [etaReduce,section2prefix,introK]
 
@@ -111,5 +111,5 @@ ex1 = Abs "x" (Abs "y" (App (Var "x") (Var "y")))
 ex2 :: Expr
 ex2 = Abs "x" (Abs "y" (Var "x"))
 
-main :: IO () 
+main :: IO ()
 main = printDerivation pf ex2

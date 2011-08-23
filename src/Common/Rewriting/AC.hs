@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Rewriting.AC 
+module Common.Rewriting.AC
    ( -- * Types
      Pairings, PairingsList, PairingsPair
 --   , pairings, pairingsMatch
@@ -24,7 +24,7 @@ type PairingsPair a b = (a, a) -> (b, b) -> [[(a, b)]]
 
 -----------------------------------------------------------
 -- Pairing terms with an AC theory
--- matchMode: the left-hand sides cannot have the operator at top-level 
+-- matchMode: the left-hand sides cannot have the operator at top-level
 
 {-
 pairings, pairingsMatch :: IsMagma m => m a -> Pairings a
@@ -42,7 +42,7 @@ pairingsMode matchMode op =
 
 -- non-associative, non-commutative pairings
 pairingsNone :: PairingsPair a b
-pairingsNone (a1, a2) (b1, b2) = 
+pairingsNone (a1, a2) (b1, b2) =
    [[(a1, b1), (a2, b2)]]
 
 -- commutative pairings
@@ -55,7 +55,7 @@ pairingsA :: Bool -> PairingsList a b
 pairingsA matchMode = rec
  where
    rec [] [] = [[]]
-   rec as bs = 
+   rec as bs =
       [ (a1, b1):ps
       | i <- if matchMode && not (null as) then [1] else [1 .. length as]
       , j <- [1 .. length bs]
@@ -73,7 +73,7 @@ pairingsAC matchMode = rec
  where
    rec [] [] = [[]]
    rec [] _  = []
-   rec (a:as) bs = 
+   rec (a:as) bs =
       [ (as1, bs1):ps
       | (asr, as2) <- if matchMode then [([], as)] else splits as
       , let as1 = a:asr
@@ -90,8 +90,8 @@ opPairings :: IsMagma m => m a -> PairingsPair a a -> Pairings a
 opPairings op f a b = fromMaybe [] $
    liftM2 f (match (magmaView op) a) (match (magmaView op) b)
 
-operatorPairings :: IsMagma m => m a -> PairingsList a a -> Pairings a 
-operatorPairings op g = curry $ 
+operatorPairings :: IsMagma m => m a -> PairingsList a a -> Pairings a
+operatorPairings op g = curry $
    let f a = fromMaybe [a] $ match (magmaListView op) a
        h = build (magmaListView op)
    in map (map (onBoth h)) . uncurry g . onBoth f
@@ -99,7 +99,7 @@ operatorPairings op g = curry $
 splits :: [a] -> [([a], [a])]
 splits = foldr insert [([], [])]
  where
-   insert a ps = 
+   insert a ps =
       let toLeft  (xs, ys) = (a:xs,   ys)
           toRight (xs, ys) = (  xs, a:ys)
       in map toLeft ps ++ map toRight ps

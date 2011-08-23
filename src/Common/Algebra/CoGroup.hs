@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Algebra.CoGroup 
+module Common.Algebra.CoGroup
    ( CoMonoid(..), CoGroup(..), CoMonoidZero(..)
    , associativeList
    ) where
@@ -26,13 +26,13 @@ import qualified Data.Set as S
 class CoMonoid a where
    isEmpty  :: a -> Bool
    isAppend :: a -> Maybe (a, a)
-   
+
 class CoMonoid a => CoGroup a where
    isInverse   :: a -> Maybe a
    isAppendInv :: a -> Maybe (a, a)
    -- default definition
    isAppendInv = const Nothing
-   
+
 class CoMonoid a => CoMonoidZero a where
    isMonoidZero :: a -> Bool
 
@@ -43,13 +43,13 @@ fromSemiGroup f = rec
    make (x, y) = rec x <> rec y
 {-
 fromMonoid :: (CoMonoid a, Monoid b) => (a -> b) -> a -> b
-fromMonoid f = fromSemiGroup $ \a -> 
+fromMonoid f = fromSemiGroup $ \a ->
    if isEmpty a then mempty else f a
 
 fromGroup :: (CoGroup a, Group b) => (a -> b) -> a -> b
-fromGroup f = rec 
+fromGroup f = rec
  where
-   rec = fromMonoid $ \a -> 
+   rec = fromMonoid $ \a ->
       case isInverse a of
          Just x  -> inverse (rec x)
          Nothing ->
@@ -58,9 +58,9 @@ fromGroup f = rec
                Nothing     -> f a
 
 fromMonoidZero :: (CoMonoidZero a, MonoidZero b) => (a -> b) -> a -> b
-fromMonoidZero f = fromMonoid $ \a -> 
+fromMonoidZero f = fromMonoid $ \a ->
    if isZero a then zero else f a
-   
+
 ----------------------
 -}
 associativeList :: CoMonoid a => a -> [a]
@@ -111,7 +111,7 @@ instance Eq a => Monoid (GroupSequence a) where
    mempty = GS mempty
    mappend (GS xs) (GS ys) =
       case (Q.viewr xs, Q.viewl ys) of
-         (as Q.:> (a, ai), (b, bi) Q.:< bs) | a == b && ai /= bi -> 
+         (as Q.:> (a, ai), (b, bi) Q.:< bs) | a == b && ai /= bi ->
             mappend (GS as) (GS bs)
          _ -> GS (xs <> ys)
 
@@ -143,6 +143,6 @@ instance CoMonoid (Q.Seq a) where
 instance CoMonoid a => CoMonoid (WithZero a) where
    isEmpty    = maybe False isEmpty . fromWithZero
    isAppend a = fromWithZero a >>= fmap (pure *** pure) . isAppend
-   
+
 instance CoMonoid a => CoMonoidZero (WithZero a) where
    isMonoidZero = isNothing . fromWithZero

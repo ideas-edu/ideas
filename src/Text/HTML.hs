@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,7 +12,7 @@
 -- See http://www.w3.org/TR/html4/
 --
 -----------------------------------------------------------------------------
-module Text.HTML 
+module Text.HTML
    ( HTML, HTMLBuilder, showHTML
    , htmlPage, link
    , h1, h2, h3, h4, h5, h6
@@ -26,12 +26,12 @@ module Text.HTML
    , tt, italic, bold, big, small
    ) where
 
-import Prelude hiding (div)
-import Text.XML hiding (text)
-import qualified Text.XML as XML
 import Control.Monad
 import Data.Char
 import Data.List
+import Prelude hiding (div)
+import Text.XML hiding (text)
+import qualified Text.XML as XML
 
 type HTML = XML
 
@@ -49,13 +49,13 @@ htmlPage title css body = makeXML "html" $ do
       case css of
          Nothing -> return ()
          Just n  -> element "link" $ do
-            "rel"  .=. "STYLESHEET" 
+            "rel"  .=. "STYLESHEET"
             "href" .=. n
             "type" .=. "text/css"
    element "body" body
-   
+
 link :: String -> HTMLBuilder -> HTMLBuilder
-link url body = element "a" $ 
+link url body = element "a" $
    ("href" .=. url) >> body
 
 h1, h2, h3, h4, h5, h6 :: String -> HTMLBuilder
@@ -99,7 +99,7 @@ table b rows = element "table" $ do
    getClass i
       | i == 0 && b = "topRow"
       | even i      = "evenRow"
-      | otherwise   = "oddRow" 
+      | otherwise   = "oddRow"
 
 spaces :: Int -> HTMLBuilder
 spaces n = replicateM_ n space
@@ -108,8 +108,8 @@ space, bullet :: HTMLBuilder
 space  = XML.unescaped "&nbsp;"
 bullet = XML.unescaped "&#8226;"
 
-image :: String -> HTMLBuilder 
-image n = element "img" ("src" .=. n) 
+image :: String -> HTMLBuilder
+image n = element "img" ("src" .=. n)
 
 text :: String -> HTMLBuilder
 text = XML.text
@@ -128,28 +128,27 @@ highlightXML nice
  where
    highlight :: HTML -> HTML
    highlight html = html {content = map (either (Left . f) Right) (content html)}
-   
+
    -- find <
    f :: String -> String
    f [] = []
    f list@(x:xs)
       | "&lt;/" `isPrefixOf` list = -- close tag
-           let (as, bs) = span isAlphaNum (drop 5 list) 
+           let (as, bs) = span isAlphaNum (drop 5 list)
            in "<font color='blue'>&lt;/" ++ as ++ "<font color='green'>" ++ g bs
       | "&lt;" `isPrefixOf` list = -- open tag
-           let (as, bs) = span isAlphaNum (drop 4 list) 
+           let (as, bs) = span isAlphaNum (drop 4 list)
            in "<font color='blue'>&lt;" ++ as ++ "<font color='green'>" ++ g bs
       | otherwise = x : f xs
    -- find >
    g [] = []
-   g list@(x:xs) 
+   g list@(x:xs)
       | "/&gt;" `isPrefixOf` list =
            "</font>/&gt;</font>" ++ f (drop 5 list)
       | "&gt;" `isPrefixOf` list =
            "</font>&gt;</font>" ++ f (drop 4 list)
       | x=='=' = "<font color='orange'>=</font>" ++ g xs
       | otherwise = x : g xs
-
 
 -----------------------------------------------------------
 -- * HTML generic attributes
@@ -161,7 +160,7 @@ styleA = setA "style"  -- associated style info
 titleA = setA "title"  -- advisory title
 
 setA :: String -> String -> HTMLBuilder -> HTMLBuilder
-setA attr value = updateLast $ \e ->  
+setA attr value = updateLast $ \e ->
    e { attributes = (attr := value) : attributes e }
 
 -----------------------------------------------------------
@@ -177,7 +176,7 @@ italic = element "i"
 
 -- | Renders as bold text style.
 bold :: HTMLBuilder -> HTMLBuilder
-bold = element "b" 
+bold = element "b"
 
 -- BIG: Renders text in a "large" font.
 big :: HTMLBuilder -> HTMLBuilder

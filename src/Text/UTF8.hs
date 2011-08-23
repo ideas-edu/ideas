@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,14 +11,14 @@
 -- Support for the UTF8 encoding
 --
 -----------------------------------------------------------------------------
-module Text.UTF8 
+module Text.UTF8
    ( encode, encodeM, decode, decodeM
    , isUTF8, allBytes, propEncoding
    ) where
 
+import Control.Monad.Error
 import Data.Char
 import Data.Maybe
-import Control.Monad.Error
 import Test.QuickCheck
 
 ------------------------------------------------------------------
@@ -52,11 +52,11 @@ allBytes = all ((`between` (0, 255)) . ord)
 -- Helper functions
 
 toUTF8 :: Monad m => Int -> m [Int]
-toUTF8 n 
+toUTF8 n
    | n < 128 = -- one byte
         return [n]
    | n < 2048 = -- two bytes
-        let (a, d) = n `divMod` 64   
+        let (a, d) = n `divMod` 64
         in return [a+192, d+128]
    | n < 65536 = -- three bytes
         let (a, d1) = n  `divMod` 4096
@@ -79,18 +79,18 @@ fromUTF8 xs
         return (i:is)
  where
    f (a:rest) | a < 128 = -- one byte
-      return (a, rest) 
+      return (a, rest)
    f (a:b:rest) | a `between` (192, 223) = do -- two bytes
-      unless (isHigh b) $ 
+      unless (isHigh b) $
          fail "invalid UTF8 character (two bytes)"
       return ((a-192)*64 + b-128, rest)
    f (a:b:c:rest) | a `between` (224, 239) = do -- three bytes
-      unless (isHigh b && isHigh c) $ 
+      unless (isHigh b && isHigh c) $
          fail "invalid UTF8 character (three bytes)"
       return ((a-224)*4096 + (b-128)*64 + c-128, rest)
    f (a:b:c:d:rest) | a >= 240 && a < 248 = do -- four bytes
       let value = (a-240)*262144 + (b-128)*4096 + (c-128)*64 + d-128
-      unless (isHigh b && isHigh c && isHigh d && value <= 1114111) $ 
+      unless (isHigh b && isHigh c && isHigh d && value <= 1114111) $
          fail "invalid UTF8 character (four bytes)"
       return (value, rest)
    f _ = fail "invalid character in UTF8"
@@ -117,7 +117,7 @@ propEncoding = forAll (sized gen) valid
       ]
 
 valid :: String -> Bool
-valid xs = fromMaybe False $ 
+valid xs = fromMaybe False $
    do us <- encodeM xs
       bs <- decodeM us
       return (xs == bs)

@@ -1,7 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,19 +12,19 @@
 -- Values extended with boolean constants
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Data.WithBool 
+module Domain.Math.Data.WithBool
    ( WithBool, fromWithBool, join
    ) where
 
-import Common.Classes
 import Common.Algebra.Boolean
+import Common.Classes
 import Common.Rewriting
 import Control.Applicative
 import Control.Monad
 import Data.Char (toLower)
 import Data.Foldable
 import Data.Traversable
-import Domain.Logic.Formula 
+import Domain.Logic.Formula
 
 -------------------------------------------------------------------
 -- Abstract data type and instances
@@ -34,7 +34,7 @@ newtype WithBool a = WB { fromWithBool :: Either Bool a }
 
 instance Show a => Show (WithBool a) where
    show = either (map toLower . show) show . fromWithBool
-   
+
 instance BoolValue (WithBool a) where
    fromBool = WB . Left
    isTrue   = either id  (const False) . fromWithBool
@@ -56,11 +56,11 @@ instance Traversable WithBool where
    traverse f (WB (Right a)) = (WB . Right) <$> f a
 
 instance IsTerm a => IsTerm (WithBool a) where
-   toTerm = either f toTerm . fromWithBool 
-    where 
-      f True  = symbol trueSymbol 
+   toTerm = either f toTerm . fromWithBool
+    where
+      f True  = symbol trueSymbol
       f False = symbol falseSymbol
-   fromTerm term 
+   fromTerm term
       | isSymbol trueSymbol  term = return true
       | isSymbol falseSymbol term = return false
       | otherwise                 = liftM singleton (fromTerm term)

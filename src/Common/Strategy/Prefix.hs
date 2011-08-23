@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -8,29 +8,29 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A prefix encodes a sequence of steps already performed (a so-called trace), 
+-- A prefix encodes a sequence of steps already performed (a so-called trace),
 -- and allows to continue the derivation at that particular point.
 --
 -----------------------------------------------------------------------------
-module Common.Strategy.Prefix 
+module Common.Strategy.Prefix
    ( Prefix, emptyPrefix, makePrefix
    , prefixToSteps, prefixTree, stepsToRules, lastStepInPrefix
    ) where
 
-import Common.Utils
+import Common.DerivationTree
 import Common.Strategy.Abstract
 import Common.Strategy.Parsing
 import Common.Transformation
-import Common.DerivationTree
-import Data.Maybe
+import Common.Utils
 import Control.Monad
+import Data.Maybe
 
 -----------------------------------------------------------
 --- Prefixes
 
--- | Abstract data type for a (labeled) strategy with a prefix (a sequence of 
--- executed rules). A prefix is still "aware" of the labels that appear in the 
--- strategy. A prefix is encoded as a list of integers (and can be reconstructed 
+-- | Abstract data type for a (labeled) strategy with a prefix (a sequence of
+-- executed rules). A prefix is still "aware" of the labels that appear in the
+-- strategy. A prefix is encoded as a list of integers (and can be reconstructed
 -- from such a list: see @makePrefix@). The list is stored in reversed order.
 data Prefix a = P (State LabelInfo a)
 
@@ -56,19 +56,19 @@ emptyPrefix = fromMaybe (error "emptyPrefix") . makePrefix []
 -- | Construct a prefix for a given list of integers and a labeled strategy.
 makePrefix :: Monad m => [Int] -> LabeledStrategy a -> m (Prefix a)
 makePrefix []     ls = makePrefix [0] ls
-makePrefix (i:is) ls = liftM P $ 
+makePrefix (i:is) ls = liftM P $
    replay i (map (==0) is) (mkCore ls)
  where
    mkCore = processLabelInfo id . toCore . toStrategy
 
 -- | Create a derivation tree with a "prefix" as annotation.
 prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
-prefixTree (P s) a = fmap value $ updateAnnotations (\_ _ -> P) $ 
+prefixTree (P s) a = fmap value $ updateAnnotations (\_ _ -> P) $
    parseDerivationTree s {value = a}
 
 prefixToSteps :: Prefix a -> [Step LabelInfo a]
 prefixToSteps (P t) = reverse (trace t)
- 
+
 -- | Retrieves the rules from a list of steps
 stepsToRules :: [Step l a] -> [Rule a]
 stepsToRules xs = [ r | RuleStep r <- xs ]

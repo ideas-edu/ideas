@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,18 +11,18 @@
 -- Diagnose a term submitted by a student
 --
 -----------------------------------------------------------------------------
-module Service.Diagnose 
+module Service.Diagnose
    ( Diagnosis(..), diagnose, restartIfNeeded
    , newState
    , diagnosisType
-   ) where 
+   ) where
 
 import Common.Library hiding (ready)
 import Common.Utils (safeHead)
 import Data.List (sortBy)
 import Data.Maybe
-import Service.State
 import Service.BasicServices hiding (apply)
+import Service.State
 import Service.Types
 
 ----------------------------------------------------------------
@@ -32,26 +32,26 @@ data Diagnosis a
    = Buggy          ArgValues (Rule (Context a))
 --   | Missing
 --   | IncorrectPart  [a]
-   | NotEquivalent  
+   | NotEquivalent
    | Similar        Bool (State a)
    | Expected       Bool (State a) (Rule (Context a))
    | Detour         Bool (State a) ArgValues (Rule (Context a))
    | Correct        Bool (State a)
 
 instance Show (Diagnosis a) where
-   show diagnosis = 
+   show diagnosis =
       case diagnosis of
          Buggy _ r        -> "Buggy rule " ++ show (show r)
 --         Missing          -> "Missing solutions"
 --         IncorrectPart xs -> "Incorrect parts (" ++ show (length xs) ++ " items)"
-         NotEquivalent    -> "Unknown mistake" 
+         NotEquivalent    -> "Unknown mistake"
          Similar _ _      -> "Very similar"
          Expected _ _ r   -> "Rule " ++ show (show r) ++ ", expected by strategy"
          Detour _ _ _ r   -> "Rule " ++ show (show r) ++ ", not following strategy"
          Correct _ _      -> "Unknown step"
 
 newState :: Diagnosis a -> Maybe (State a)
-newState diagnosis = 
+newState diagnosis =
    case diagnosis of
       Buggy _ _        -> Nothing
       NotEquivalent    -> Nothing
@@ -71,16 +71,16 @@ diagnose state new
         case discovered True of
            Just (r, as) -> Buggy as r -- report the buggy rule
            Nothing      -> NotEquivalent -- compareParts state new
-              
-   -- Is the submitted term (very) similar to the previous one? 
+
+   -- Is the submitted term (very) similar to the previous one?
    | similarity ex (stateContext state) newc =
         -- If yes, report this
         Similar (ready state) state
-        
+
    -- Was the submitted term expected by the strategy?
    | isJust expected =
         -- If yes, return new state and rule
-        let (r, _, _, ns) = fromJust expected  
+        let (r, _, _, ns) = fromJust expected
         in Expected (ready ns) ns r
 
    -- Is the rule used discoverable by trying all known rules?
@@ -94,7 +94,7 @@ diagnose state new
  where
    ex   = exercise state
    newc = inContext ex new
-   
+
    expected = do
       let xs = either (const []) id $ allfirsts (restartIfNeeded state)
           p (_, _, _, ns) = similarity ex newc (stateContext ns)
@@ -106,13 +106,13 @@ diagnose state new
       , isBuggyRule r == searchForBuggy
       , (_, as) <- recognizeRule ex r sub1 sub2
       ]
-    where 
+    where
       diff = if searchForBuggy then difference else differenceEqual
       (sub1, sub2) =
-         case diff ex (stateTerm state) new of 
-            Just (a, b) -> (inContext ex a, inContext ex b) 
+         case diff ex (stateTerm state) new of
+            Just (a, b) -> (inContext ex a, inContext ex b)
             Nothing     -> (stateContext state, newc)
- 
+
 ----------------------------------------------------------------
 -- Helpers
 
@@ -120,13 +120,13 @@ diagnose state new
 -- Make sure that the new state has a prefix
 -- When resetting the prefix, also make sure that the context is refreshed
 restartIfNeeded :: State a -> State a
-restartIfNeeded state 
-   | isNothing (statePrefix state) && canBeRestarted ex = 
+restartIfNeeded state
+   | isNothing (statePrefix state) && canBeRestarted ex =
         emptyState ex (stateTerm state)
    | otherwise = state
  where
    ex = exercise state
-   
+
 diagnosisType :: Type a (Diagnosis a)
 diagnosisType = Iso (f <-> g) tp
  where
@@ -147,20 +147,20 @@ diagnosisType = Iso (f <-> g) tp
    g (Expected b s r)   = Right (Right (Left (b, s, r)))
    g (Detour b s as r)  = Right (Right (Right (Left (b, s, as, r))))
    g (Correct b s)      = Right (Right (Right (Right (b, s))))
-   
-   tp  =  
+
+   tp  =
        (  Tag "buggy"         (Pair (List ArgValueTp) Rule)
 --      :|: Tag "missing"       Unit
 --      :|: Tag "incorrectpart" (List Term)
       :|: Tag "notequiv"      Unit
        )
-      :|: 
+      :|:
        (  Tag "similar"  (Pair   readyBool stateType)
       :|: Tag "expected" (tuple3 readyBool stateType Rule)
       :|: Tag "detour"   (tuple4 readyBool stateType (List ArgValueTp) Rule)
       :|: Tag "correct"  (Pair   readyBool stateType)
        )
-      
+
    readyBool = Tag "ready" Bool
 
 ----------------------------------------------------------------
@@ -172,9 +172,9 @@ compareParts state = answerList eq split solve (stateTerm state)
    ex    = exercise (exercise state)
    eq    = equivalence ex
    split = splitParts ex
-   solve = \a -> fromMaybe a $ 
+   solve = \a -> fromMaybe a $
                     apply (strategy ex) (inContext ex a) >>= fromContext
-   
+
 answerList :: (a -> a -> Bool) -> (a -> [a]) -> (a -> a) -> a -> a -> Diagnosis a
 answerList eq split solve a b
    | noSplit               = NotEquivalent

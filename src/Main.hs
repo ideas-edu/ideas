@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -22,35 +22,35 @@ import Main.IDEAS
 import Main.LoggingDatabase
 import Main.Options
 import Network.CGI
-import Service.ModeJSON (processJSON)
-import Service.ModeXML  (processXML)
-import Service.Request
 import Service.FeedbackScript.Analysis
+import Service.ModeJSON (processJSON)
+import Service.ModeXML (processXML)
+import Service.Request
 
 main :: IO ()
 main = do
    startTime <- getCurrentTime
    flags     <- serviceOptions
    logRef    <- newIORef (return ())
-   
-   case withInputFile flags of      
+
+   case withInputFile flags of
       -- from file
-      Just file -> do  
-         when (FixRNG `elem` flags) 
+      Just file -> do
+         when (FixRNG `elem` flags)
             useFixedStdGen -- use a predictable "random" number generator
          input    <- readFile file
          (req, txt, _) <- process input
-         when (Logging True `elem` flags) $ 
+         when (Logging True `elem` flags) $
             writeIORef logRef $ -- save logging action for later
                logMessage req input txt "local" startTime
          putStrLn txt
 
       -- documentation mode
-      _ | documentationMode flags -> 
-             useIDEAS $ 
+      _ | documentationMode flags ->
+             useIDEAS $
                 let f = makeDocumentation (docDir flags) (testDir flags)
                 in mapM_ f (docItems flags)
-      
+
       -- feedback script options
         | scriptMode flags -> useIDEAS $
              withScripts (Just (scriptDir flags))
@@ -59,7 +59,7 @@ main = do
 
       -- cgi binary
       Nothing -> runCGI $ do
-         addr  <- remoteAddr           -- the IP address of the remote host making the request          
+         addr  <- remoteAddr           -- the IP address of the remote host making the request
          raw   <- getInput "input"     -- read input
          input <- case raw of
                      Nothing -> fail "Invalid request: environment variable \"input\" is empty"
@@ -69,13 +69,13 @@ main = do
             logMessage req input txt addr startTime
          setHeader "Content-type" ctp
          output txt
-   
+
    -- log request to database
    when (withLogging flags) $
       join (readIORef logRef)
-   
+
 process :: String -> IO (Request, String, String)
-process input = useIDEAS $ 
+process input = useIDEAS $
    case discoverDataFormat input of
       Just XML  -> processXML input
       Just JSON -> processJSON input

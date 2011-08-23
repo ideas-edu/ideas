@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,22 +9,22 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.CleanUp 
+module Domain.Math.CleanUp
    ( cleanUpRelations, cleanUpRelation, cleanUpExpr
    , cleanUpSimple, cleanUpView, cleanUpACView
    , assocExpr, acExpr, smart, assocPlus, assocTimes
    ) where
 
 import Common.Classes
-import Common.Utils.Uniplate
 import Common.Utils (fixpoint)
+import Common.Utils.Uniplate
 import Common.View
 import Control.Monad
+import Data.Foldable (foldMap)
 import Data.List
 import Data.Maybe
 import Data.Ord
 import Data.Ratio
-import Data.Foldable (foldMap)
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Data.SquareRoot (fromSquareRoot)
@@ -39,7 +39,7 @@ import qualified Prelude
 -- Root simplification
 
 simplerRoot :: Rational -> Integer -> Expr
-simplerRoot a b 
+simplerRoot a b
    | b < 0          = 1 ./. simplerRoot a (abs b)
    | a < 0 && odd b = neg (simplerRoot (abs a) b)
    | otherwise      = f (numerator a) b ./. f (denominator a) b
@@ -69,24 +69,24 @@ cleanUpRelation = f . fmap cleanUpBU
    f rel
       | any falsity (universe a ++ universe b) = false
       | a == b    = fromBool (relationType rel `elem` equals)
-      | otherwise = 
+      | otherwise =
            case (match rationalView a, match rationalView b) of
               (Just r, Just s) -> fromBool (eval (relationType rel) r s)
               _                -> singleton rel
     where
       (a, b) = (leftHandSide rel, rightHandSide rel)
 
-   equals = 
+   equals =
       [EqualTo, LessThanOrEqualTo, GreaterThanOrEqualTo, Approximately]
 
    falsity :: Expr -> Bool
    falsity (Sqrt e)  = maybe False (<0)  (match rationalView e)
    falsity (_ :/: e) = maybe False (==0) (match rationalView e)
    falsity _         = False
-   
+
 -- also simplify square roots
 cleanUpExpr :: Expr -> Expr
-cleanUpExpr = fixpoint $ 
+cleanUpExpr = fixpoint $
    cleanUpBU . transform (simplify (squareRootViewWith rationalView))
 
 cleanUpView, cleanUpACView :: View Expr Expr
@@ -97,19 +97,19 @@ cleanUpACView = makeView (return . acExpr . cleanUpExpr) id
 assocExpr, acExpr :: Expr -> Expr
 assocExpr = normExpr id
 acExpr    = normExpr sort
-   
+
 normExpr :: ([Expr] -> [Expr]) -> Expr -> Expr
-normExpr f = rec 
+normExpr f = rec
  where
-   rec expr = 
+   rec expr =
       case (from sumView expr, from productView expr) of
-         (xs, _) | length xs > 1 -> 
+         (xs, _) | length xs > 1 ->
             to sumView $ f $ map rec xs
-         (_, (b, xs)) | length xs > 1 -> 
+         (_, (b, xs)) | length xs > 1 ->
             to productView (b, f $ map rec xs)
-         _ -> 
-            descend rec expr 
-  
+         _ ->
+            descend rec expr
+
 ------------------------------------------------------------
 -- Associativity
 
@@ -130,8 +130,8 @@ assocOp op v = rec . map (simplify v)
 -- Fixpoint of a bottom-up traversal
 
 cleanUpBU :: Expr -> Expr
-cleanUpBU = {- fixpoint $ -} transform $ \e -> 
-   simplify myView $ 
+cleanUpBU = {- fixpoint $ -} transform $ \e ->
+   simplify myView $
    fromMaybe (smart e) $
       canonical rationalView e
     `mplus`
@@ -139,7 +139,7 @@ cleanUpBU = {- fixpoint $ -} transform $ \e ->
       -- Just simplify order of terms with square roots for now
     `mplus` do
       let f xs | length xs > 1 = return (assocPlus myView xs)
-          f _ = Nothing 
+          f _ = Nothing
       canonicalWithM f sumView e
     `mplus`
       canonical myView e
@@ -162,9 +162,9 @@ specialSqrtOrder = toView sumView >>> makeView f id
 smart :: Expr -> Expr
 smart (a :*: b) = a .*. b
 smart (a :/: b) = a ./. b
-smart expr@(Sym s [x, y]) 
+smart expr@(Sym s [x, y])
    | isPowerSymbol s = x .^. y
-   | isRootSymbol  s = fromMaybe expr $ 
+   | isRootSymbol  s = fromMaybe expr $
         liftM2 simplerRoot (match rationalView x) (match integerView y)
 smart (Negate a) = neg a
 smart (a :+: b) = a .+. b

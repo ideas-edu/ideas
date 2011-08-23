@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,7 +11,7 @@
 -- Mathematical relations
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Data.Relation 
+module Domain.Math.Data.Relation
    ( -- * Type class
      Relational(..), mapLeft, mapRight, updateLeft, updateRight
      -- * Relation data type
@@ -25,16 +25,16 @@ module Domain.Math.Data.Relation
    , Inequality(..), inequalityView
    ) where
 
-import Common.View
 import Common.Rewriting
+import Common.View
+import Control.Applicative
+import Control.Monad
 import Data.Foldable (Foldable, foldMap, toList)
-import Data.Traversable (Traversable, sequenceA)
-import Text.OpenMath.Dictionary.Relation1
 import Data.Maybe
 import Data.Monoid
-import Control.Applicative
+import Data.Traversable (Traversable, sequenceA)
 import Test.QuickCheck
-import Control.Monad
+import Text.OpenMath.Dictionary.Relation1
 
 -----------------------------------------------------------------------------
 -- Type class for relations
@@ -42,7 +42,7 @@ import Control.Monad
 class Functor f => Relational f where
    leftHandSide  :: f a -> a
    rightHandSide :: f a -> a
-   flipSides     :: f a -> f a -- possibly also flips operator 
+   flipSides     :: f a -> f a -- possibly also flips operator
    constructor   :: f a -> b -> b -> f b
    isSymmetric   :: f a -> Bool
    -- default definitions
@@ -63,7 +63,7 @@ data Relation a = R { lhs :: a, relationType :: RelationType, rhs :: a }
    deriving (Eq, Ord)
 
 -- Corresponds exactly to the symbols in the relation1 OpenMath dictionary
-data RelationType = EqualTo | NotEqualTo | LessThan | GreaterThan 
+data RelationType = EqualTo | NotEqualTo | LessThan | GreaterThan
                   | LessThanOrEqualTo | GreaterThanOrEqualTo | Approximately
    deriving (Show, Eq, Ord, Enum)
 
@@ -78,7 +78,7 @@ instance Foldable Relation where
 
 instance Traversable Relation where
    sequenceA = sequenceRelation
-   
+
 instance Relational Relation where
    leftHandSide  = lhs
    rightHandSide = rhs
@@ -87,11 +87,11 @@ instance Relational Relation where
    isSymmetric = (`elem` [EqualTo, NotEqualTo, Approximately]) . relationType
 
 instance IsTerm a => IsTerm (Relation a) where
-   toTerm p = 
+   toTerm p =
       let op  = relationType p
           sym = maybe (newSymbol (show op)) snd (lookup op relationSymbols)
       in binary sym (toTerm (leftHandSide p)) (toTerm (rightHandSide p))
-   fromTerm term = 
+   fromTerm term =
       case getFunction term of
          Just (s, [a, b]) ->
             case [ rt | (rt, (_, t)) <- relationSymbols, s==t ] of
@@ -117,7 +117,7 @@ notRelation r = r { relationType = relationType r ? table }
    swap (x, y) = (y, x)
    xs = [ (EqualTo, NotEqualTo)
         , (LessThan, GreaterThanOrEqualTo)
-        , (LessThanOrEqualTo, GreaterThan) 
+        , (LessThanOrEqualTo, GreaterThan)
         ]
 
 eval :: (Ord a, Num a) => RelationType -> a -> a -> Bool
@@ -131,7 +131,7 @@ eval relType =
       GreaterThanOrEqualTo -> (>=)
       Approximately        -> \a b -> 1000 * abs (a-b) < 1
 
--- helpers   
+-- helpers
 showRelType :: RelationType -> String
 showRelType = fst . (? relationSymbols)
 
@@ -155,13 +155,13 @@ sequenceRelation p = constructor p <$> leftHandSide p <*> rightHandSide p
 
 instance Arbitrary a => Arbitrary (Relation a) where
    arbitrary = liftM3 R arbitrary arbitrary arbitrary
-   
+
 instance CoArbitrary a => CoArbitrary (Relation a) where
    coarbitrary p = coarbitrary (relationType p) . coarbitrary (toList p)
-   
+
 instance Arbitrary RelationType where
    arbitrary = elements [EqualTo .. Approximately]
-   
+
 instance CoArbitrary RelationType where
    coarbitrary op = variant (fromEnum op)
 
@@ -173,8 +173,8 @@ infix 1 .==., ./=., .<., .>., .<=., .>=., .~=.
 (.==.), (./=.), (.<.), (.>.), (.<=.), (.>=.), (.~=.) :: a -> a -> Relation a
 (.==.) = makeType EqualTo
 (./=.) = makeType NotEqualTo
-(.<.)  = makeType LessThan 
-(.>.)  = makeType GreaterThan 
+(.<.)  = makeType LessThan
+(.>.)  = makeType GreaterThan
 (.<=.) = makeType LessThanOrEqualTo
 (.>=.) = makeType GreaterThanOrEqualTo
 (.~=.) = makeType Approximately
@@ -213,7 +213,7 @@ instance Relational Equation where
 
 instance Arbitrary a => Arbitrary (Equation a) where
    arbitrary   = liftM2 (:==:) arbitrary arbitrary
-   
+
 instance CoArbitrary a => CoArbitrary (Equation a) where
    coarbitrary = coarbitrary . build equationView
 
@@ -233,14 +233,14 @@ equationView = makeView f g
 -- Inequality (view on Relation)
 
 infix 1 :<:, :>:, :<=:, :>=:
-   
+
 data Inequality a = a :<: a | a :>: a | a :<=: a | a :>=: a
 
 instance Show a => Show (Inequality a) where
    show = show . build inequalityView
 
 instance Functor Inequality where
-   fmap f ineq = 
+   fmap f ineq =
       let a = leftHandSide ineq
           b = rightHandSide ineq
       in constructor ineq (f a) (f b)
@@ -254,14 +254,14 @@ instance Traversable Inequality where
 instance Relational Inequality where
    leftHandSide  = leftHandSide  . build inequalityView
    rightHandSide = rightHandSide . build inequalityView
-   flipSides = fromMaybe (error "inequality: flipSides") . matchM inequalityView 
+   flipSides = fromMaybe (error "inequality: flipSides") . matchM inequalityView
              . flipSides . build inequalityView
-   constructor ineq = 
+   constructor ineq =
       let relType = relationType (build inequalityView ineq)
       in fst (relType ? inequalityTable)
 
 instance Arbitrary a => Arbitrary (Inequality a) where
-   arbitrary = do 
+   arbitrary = do
       op <- elements $ map (fst . snd) inequalityTable
       liftM2 op arbitrary arbitrary
 
@@ -277,14 +277,14 @@ inequalityView = makeView f g
  where
    f (R x op y) = fmap (\pair -> fst pair x y) (lookup op inequalityTable)
    g ineq =
-      case ineq of 
-         x :<:  y -> x .<.  y 
+      case ineq of
+         x :<:  y -> x .<.  y
          x :>:  y -> x .>.  y
          x :<=: y -> x .<=. y
          x :>=: y -> x .>=. y
 
 inequalityTable :: [(RelationType, (a -> a -> Inequality a, a -> a -> Relation a))]
-inequalityTable = 
+inequalityTable =
    [ (LessThan, ((:<:), (.<.))), (LessThanOrEqualTo, ((:<=:), (.<=.)))
    , (GreaterThan, ((:>:), (.>.))), (GreaterThanOrEqualTo, ((:>=:), (.>=.)))
    ]

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,18 +9,18 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Expr.Views 
+module Domain.Math.Expr.Views
    ( module Domain.Math.Expr.Views
    , (.+.), (.-.), neg, (.*.), (./.)
    ) where
 
 import Common.Algebra.CoField
 import Common.Algebra.Group
-import Common.Utils.Uniplate
-import Prelude hiding ((^))
 import Common.Library
+import Common.Utils.Uniplate
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbols
+import Prelude hiding ((^))
 import qualified Data.Set as S
 
 ------------------------------------------------------------
@@ -92,7 +92,7 @@ simpleSumView = sumEP
    f (Negate (Nat 0))    = mempty
    f (Negate (Negate a)) = f a
    f a                   = return a
-   
+
    Nat 0 .+ b = b
    a .+ Nat 0 = a
    a .+ Negate b  = a :-: b
@@ -110,11 +110,11 @@ productView = "math.product" @> productEP
                        _              -> f r a .&&. f (not r) b
    f r (Negate a) = first not (f r a)
    f r e          = (False, if r then (recip e:) else (e:))
-   
+
    (n1, g1) .&&. (n2, g2) = (n1 /= n2, g1 . g2)
-   
+
    g (b, xs) = (if b then neg else id) (foldl (.*.) 1 xs)
-   
+
 simpleProductView :: Isomorphism Expr (Bool, [Expr])
 simpleProductView = "math.product.simple" @> simpleProductEP
  where
@@ -124,11 +124,11 @@ simpleProductView = "math.product.simple" @> simpleProductEP
    f (Nat 1)    = (False, id)
    f (Negate a) = first not (f a)
    f e          = (False, (e:))
-   
+
    (n1, g1) .&&. (n2, g2) = (n1 /= n2, g1 . g2)
-   
+
    g (b, xs) = (if b then myNeg else id) (foldl (.*) 1 xs)
-   
+
    Nat 1 .* a = a
    a .* Nat 1 = a
    Nat 0 .* a | ok a = 0
@@ -136,14 +136,13 @@ simpleProductView = "math.product.simple" @> simpleProductEP
    Negate a .* b = myNeg (a .* b)
    a .* Negate b = myNeg (a .* b)
    a .* b = a :*: b
-   
+
    myNeg (Negate a) = a
    myNeg a = Negate a
-   
+
    ok (a :/: b) = b /= 0 && ok a && ok b -- to do: evaluate b before b/=0
    ok a = all ok (children a)
-   
-   
+
 -- helper to determine the name of the variable (move to a different module?)
 selectVar :: Expr -> Maybe String
 selectVar = f  . S.toList . varSet

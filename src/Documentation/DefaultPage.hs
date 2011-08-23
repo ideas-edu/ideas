@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -35,7 +35,7 @@ generatePageAt n dir txt body = do
       writeFile filename (showHTML doc)
 
 defaultPage :: String -> String -> Int -> HTMLBuilder -> HTML
-defaultPage version title level builder = 
+defaultPage version title level builder =
    htmlPage title (Just (up level ++ "ideas.css")) $ do
       header level
       divClass "content" builder
@@ -52,7 +52,7 @@ header level = divClass "header" $ do
    make "api/index.html"          "API"
  where
    make target = spanClass "menuitem" . link (up level ++ target) . text
-   
+
 footer :: String -> HTMLBuilder
 footer version = divClass "footer" $
    text $ "Automatically generated from sources: " ++ version
@@ -69,7 +69,7 @@ filePathId a = foldr (\x y -> x ++ "/" ++ y) (unqualified a) (qualifiers a)
 ------------------------------------------------------------
 -- Paths and files
 
-exerciseOverviewPageFile, exerciseOverviewAllPageFile, 
+exerciseOverviewPageFile, exerciseOverviewAllPageFile,
    serviceOverviewPageFile, testsPageFile, viewsOverviewPageFile :: String
 
 exerciseOverviewPageFile    = "exercises.html"
@@ -98,5 +98,5 @@ diagnosisExampleFile a = "examples/" ++ showId a ++ ".xml"
 ------------------------------------------------------------
 -- Utility functions
 
-showBool :: Bool -> String 
+showBool :: Bool -> String
 showBool b = if b then "yes" else "no"

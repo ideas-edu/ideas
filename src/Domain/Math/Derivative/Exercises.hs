@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Derivative.Exercises 
+module Domain.Math.Derivative.Exercises
    ( derivativeExercise, derivativePolyExercise
    , derivativeProductExercise, derivativeQuotientExercise
    , derivativePowerExercise
@@ -21,12 +21,12 @@ import Control.Monad
 import Data.List
 import Data.Maybe
 import Data.Ord
+import Domain.Math.CleanUp
+import Domain.Math.Derivative.Examples
 import Domain.Math.Derivative.Rules
 import Domain.Math.Derivative.Strategies
-import Domain.Math.Derivative.Examples
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.CleanUp
 import Domain.Math.Polynomial.Generators
 import Domain.Math.Polynomial.RationalExercises
 import Domain.Math.Polynomial.Views
@@ -48,14 +48,14 @@ derivativePolyExercise = describe
    , strategy      = derivativePolyStrategy
    , navigation    = navigator
    , examples      = level Medium $ concat (diffSet1 ++ diffSet2 ++ diffSet3)
-   , testGenerator = Just $ liftM (diff . lambda (Var "x")) $ 
+   , testGenerator = Just $ liftM (diff . lambda (Var "x")) $
                         sized quadraticGen
    }
 
 derivativeProductExercise :: Exercise Expr
 derivativeProductExercise = describe
    "Use the product-rule to find the derivative of a polynomial. Keep \
-   \the parentheses in your answer." $ 
+   \the parentheses in your answer." $
    derivativePolyExercise
    { exerciseId    = diffId # "product"
    , ready         = predicate noDiff
@@ -66,7 +66,7 @@ derivativeProductExercise = describe
 derivativeQuotientExercise :: Exercise Expr
 derivativeQuotientExercise = describe
    "Use the quotient-rule to find the derivative of a polynomial. Only \
-   \remove parentheses in the numerator." $ 
+   \remove parentheses in the numerator." $
    derivativePolyExercise
    { exerciseId    = diffId # "quotient"
    , ready         = predicate readyQuotientDiff
@@ -81,7 +81,7 @@ derivativeQuotientExercise = describe
 derivativePowerExercise :: Exercise Expr
 derivativePowerExercise = describe
    "First write as a power, then find the derivative. Rewrite negative or \
-   \rational exponents." $ 
+   \rational exponents." $
    derivativePolyExercise
    { exerciseId    = diffId # "power"
    , status        = Experimental
@@ -126,7 +126,7 @@ isQuotientDiff de = fromMaybe False $ do
    return (all isp ys)
 
 eqPolyDiff :: Expr -> Expr -> Bool
-eqPolyDiff x y = 
+eqPolyDiff x y =
    let f a = fromMaybe (descend f a) (apply ruleDerivPolynomial a)
    in viewEquivalent (polyViewWith rationalView) (f x) (f y)
 
@@ -151,7 +151,7 @@ readyQuotientDiff expr = fromMaybe False $ do
    return (all nfp ys && all isp zs)
 
 noDiff :: Expr -> Bool
-noDiff e = all (not . isDiffSymbol) [ s | Sym s _ <- universe e]   
+noDiff e = all (not . isDiffSymbol) [ s | Sym s _ <- universe e]
 
 onlyNatPower :: Expr -> Bool
 onlyNatPower e = all isNat [ a | Sym s [_, a] <- universe e, isPowerSymbol s ]
@@ -162,9 +162,9 @@ onlyNatPower e = all isNat [ a | Sym s [_, a] <- universe e, isPowerSymbol s ]
 {-
 evalDiff :: Expr -> Expr
 evalDiff expr
-   | isDiff expr = 
+   | isDiff expr =
         case concatMap (`applyAll` expr) list of
-           hd:_ -> evalDiff hd 
+           hd:_ -> evalDiff hd
            _    -> expr
    | otherwise = descend evalDiff expr
  where
@@ -177,20 +177,20 @@ evalDiff expr
 go = checkExercise derivativePowerExercise
 
 raar i = printDerivation derivativePowerExercise expr
- where 
+ where
    expr = examples derivativePowerExercise !! i
 
 eqApprox :: Expr -> Expr -> Bool
 eqApprox a b = rec 5 doubleList
  where
    vs = nub (collectVars a ++ collectVars b)
- 
+
    rec 0 = const True
    rec n = rec2 n 10
-    
+
    rec2 _ 0 ds = undefined -- a==b
-   rec2 n m ds = case eqApproxWith f a b of  
-                    Just b  -> b && rec (n-1) ys 
+   rec2 n m ds = case eqApproxWith f a b of
+                    Just b  -> b && rec (n-1) ys
                     Nothing -> rec2 n (m-1) ys
     where
       (xs, ys) = splitAt (length vs) ds
@@ -201,14 +201,14 @@ eqApproxWith f a b = do
    d1 <- match doubleView (subst a)
    d2 <- match doubleView (subst b)
    return $ abs (d1 - d2) < 1e-9 -- 11 is still ok for example set
- where 
+ where
     subst (Var s) = fromDouble (f s)
     subst expr    = descend subst expr
-    
+
 doubleList :: [Double] -- between -20 and 20
 doubleList = iterate next (pi*exp 1)
-  where   
+  where
     next :: Double -> Double
-    next a = if b > 20 then b-20 else b 
+    next a = if b > 20 then b-20 else b
      where
        b = a + exp 3 * log 2 -}

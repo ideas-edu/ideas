@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Text.OpenMath.ContentDictionary 
+module Text.OpenMath.ContentDictionary
    ( -- data types
      ContentDictionary(..), VersionNumber, Date
    , ContentDictionaryStatus(..), Definition(..)
@@ -17,14 +17,14 @@ module Text.OpenMath.ContentDictionary
    , readContentDictionary, main, findOCDs
    ) where
 
-import Text.OpenMath.Object (OMOBJ, xml2omobj)
-import Text.Scanning (scanInt, Pos(..))
-import Text.XML
+import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
-import Control.Monad
 import System.Directory
+import Text.OpenMath.Object (OMOBJ, xml2omobj)
+import Text.Scanning (scanInt, Pos(..))
+import Text.XML
 
 main :: IO ()
 main = do
@@ -32,7 +32,7 @@ main = do
        f x  = base ++ "/" ++ x
    xs  <- findOCDs base
    cds <- mapM (readContentDictionary . f) xs
-   let defs = concatMap definitions cds 
+   let defs = concatMap definitions cds
    putStrLn $ show (length cds) ++ " valid dictionaries, with " ++ show (length defs) ++ " definitions"
 
    -- print [ p | d <- defs, p <- formalProperties d ]
@@ -48,9 +48,9 @@ readContentDictionary filename = do
    input <- readFile filename
    case parseXML input of
       Left s  -> err s
-      Right xml -> do 
-         guard (name xml == "CD") 
-         case buildContentDictionary xml of 
+      Right xml -> do
+         guard (name xml == "CD")
+         case buildContentDictionary xml of
             Left s -> err s
             Right cd -> do
                putStrLn $ "  found " ++ show (length $ definitions cd) ++ " definition(s)"
@@ -103,13 +103,13 @@ buildDefinition xml = do
 extractDate :: String -> XML -> Either String Date
 extractDate s xml = do
    txt <- extractText s xml
-   case txt of 
-      [y1,y2,y3,y4,'-',m1,m2,'-',d1,d2] | all isDigit [y1,y2,y3,y4,m1,m2,d1,d2] -> 
+   case txt of
+      [y1,y2,y3,y4,'-',m1,m2,'-',d1,d2] | all isDigit [y1,y2,y3,y4,m1,m2,d1,d2] ->
          return (read [y1,y2,y3,y4], read [m1,m2], read [d1,d2])
       _ -> fail ("invalid date (YYYY-MM-DD): " ++ txt)
 
 extractInt :: String -> XML -> Either String Int
-extractInt s xml = do 
+extractInt s xml = do
    txt <- extractText s xml
    case scanInt (Pos 0 0) txt of
       Just (i, _, rest) | all isSpace rest
@@ -132,7 +132,7 @@ extractText s xml = do
    guard (null $ children a)
    return (getData a)
 
-data ContentDictionary = CD 
+data ContentDictionary = CD
    { dictionaryName :: String
    , description    :: String
    , revisionDate   :: Date
@@ -141,21 +141,21 @@ data ContentDictionary = CD
    , status         :: ContentDictionaryStatus
    , base           :: Maybe String
    , url            :: String
-   , definitions    :: [Definition]   
+   , definitions    :: [Definition]
    } deriving Show
 
 type VersionNumber = (Int, Int) -- major and minor part
 type Date = (Int, Int, Int) -- YYYY-MM-DD
 
-data ContentDictionaryStatus = Official | Experimental | Private | Obsolete 
+data ContentDictionaryStatus = Official | Experimental | Private | Obsolete
    deriving Show
 
-data Definition = Definition 
+data Definition = Definition
    { symbolName          :: String
    , symbolDescription   :: String
    , role                :: Maybe String
    , commentedProperties :: [String]
    , formalProperties    :: [OMOBJ]
    , examples            :: [[XML]]
-   } 
+   }
  deriving Show

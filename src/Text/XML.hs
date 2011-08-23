@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -53,21 +53,21 @@ parseXML input = do
    return (ignoreLayout xml)
 
 ignoreLayout :: XML -> XML
-ignoreLayout (Element n as xs) = 
+ignoreLayout (Element n as xs) =
    let f = either (Left . trim) (Right . ignoreLayout)
    in Element n as (map f xs)
 
 indentXML :: XML -> XML
 indentXML = rec 0
- where 
+ where
    rec i (Element n as xs) =
-      let ipl  = i+2 
+      let ipl  = i+2
           cd j = Left ('\n' : replicate j ' ')
           f    = either (\x -> [cd ipl, Left x]) (\x -> [cd ipl, Right (rec ipl x)])
           body | null xs   = xs
                | otherwise = concatMap f xs ++ [cd i]
       in Element n as body
- 
+
 showXML :: XML -> String
 showXML = (++"\n") . show . indentXML . ignoreLayout
 
@@ -103,7 +103,7 @@ instance Monad XMLBuilderM where
    m >>= f = XMLBuilder (unBuild m >>= (unBuild . f))
 
 makeXML :: String -> XMLBuilder -> XML
-makeXML s m = 
+makeXML s m =
    let bs = execState (unBuild m) emptyBS
    in Element s (bsAttributes bs []) (bsElements bs [])
 
@@ -169,14 +169,14 @@ extractText n xml = do
       _    -> fail ("invalid content for tag " ++ show n)
 
 isTag :: XML -> Maybe (String, AttrList, [XML])
-isTag = 
-isTag (Tagged (Element n as xs)) = 
-   let f (x := y) = (x, concatMap (either return g) y) 
+isTag =
+isTag (Tagged (Element n as xs)) =
+   let f (x := y) = (x, concatMap (either return g) y)
        g (CharRef n) = [chr n]
        g (EntityRef n)
           | otherwise = []
    in Just (n, map f as, xs)
-isTag _ = Nothing 
+isTag _ = Nothing
 
 mkTag :: String -> AttrList -> Content -> XML
 mkTag n as = Element n (map f as)
@@ -190,8 +190,8 @@ isText :: XML -> Maybe String
 isText =
 isText (CharData s) = Just s
 isText (CDATA s)    = Just s
-isText _            = Nothing 
+isText _            = Nothing
 
 findChild :: Monad m => String -> XML -> m XML
-findChild s e = maybe (fail "child not found") return . safeHead $ 
+findChild s e = maybe (fail "child not found") return . safeHead $
    [ c | c <- children e, Just (n, _, _) <- [isTag c], s==n ]-}

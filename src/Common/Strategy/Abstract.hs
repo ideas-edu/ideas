@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts, UndecidableInstances #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -10,7 +10,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Strategy.Abstract 
+module Common.Strategy.Abstract
    ( Strategy, IsStrategy(..)
    , LabeledStrategy, label, unlabel
    , fullDerivationTree, derivationTree, rulesInStrategy
@@ -22,15 +22,15 @@ module Common.Strategy.Abstract
    , removed, collapsed, hidden, IsLabeled(..), noInterleaving
    ) where
 
-import Common.Id
-import Common.Utils (commaList)
-import Common.Strategy.Core
 import Common.Classes
-import Common.Rewriting (RewriteRule)
-import Common.Transformation
 import Common.DerivationTree
-import Common.Utils.Uniplate hiding (rewriteM)
+import Common.Id
+import Common.Rewriting (RewriteRule)
+import Common.Strategy.Core
 import Common.Strategy.Parsing
+import Common.Transformation
+import Common.Utils (commaList)
+import Common.Utils.Uniplate hiding (rewriteM)
 import Control.Monad
 import Test.QuickCheck hiding (label)
 import qualified Data.Traversable as T
@@ -53,8 +53,8 @@ instance (Arbitrary a, CoArbitrary a) => Arbitrary (Strategy a) where
 -----------------------------------------------------------
 --- The information used as label in a strategy
 
-data LabelInfo = Info 
-   { labelId   :: Id 
+data LabelInfo = Info
+   { labelId   :: Id
    , removed   :: Bool
    , collapsed :: Bool
    , hidden    :: Bool
@@ -62,8 +62,8 @@ data LabelInfo = Info
  deriving (Eq, Ord)
 
 instance Show LabelInfo where
-   show info = 
-      let ps = ["removed"   | removed   info] ++ 
+   show info =
+      let ps = ["removed"   | removed   info] ++
                ["collapsed" | collapsed info] ++
                ["hidden"    | hidden    info]
           extra = " (" ++ commaList ps ++ ")"
@@ -98,14 +98,14 @@ instance IsStrategy Rule where
       | otherwise     = S (Rule r)
 
 instance IsStrategy RewriteRule where
-   toStrategy r = 
+   toStrategy r =
       toStrategy (makeRule (getId r) (makeRewriteTrans r))
 
 -----------------------------------------------------------
 --- Labeled Strategy data-type
 
 -- | A strategy which is labeled with a string
-data LabeledStrategy a = LS 
+data LabeledStrategy a = LS
    { labelInfo :: LabelInfo  -- ^ Returns information associated with this label
    , unlabel   :: Strategy a -- ^ Removes the label from a strategy
    }
@@ -114,7 +114,7 @@ makeLabeledStrategy :: IsStrategy f => LabelInfo -> f a -> LabeledStrategy a
 makeLabeledStrategy info = LS info . toStrategy
 
 toLabeledStrategy :: Monad m => Strategy a -> m (LabeledStrategy a)
-toLabeledStrategy s = 
+toLabeledStrategy s =
    case toCore s of
       Label l c -> return (makeLabeledStrategy l (fromCore c))
       _         -> fail "Strategy without label"
@@ -131,7 +131,7 @@ instance HasId (LabeledStrategy a) where
 
 class IsLabeled f where
    toLabeled :: f a -> LabeledStrategy a
-   
+
 instance IsLabeled LabeledStrategy where
    toLabeled = id
 
@@ -155,17 +155,17 @@ changeInfo f a = LS (f info) s
 processLabelInfo :: (l -> LabelInfo) -> Core l a -> Core l a
 processLabelInfo getInfo = rec []
  where
-   rec env core = 
-      case core of 
+   rec env core =
+      case core of
          Rec n a   -> Rec n (rec ((n, core):env) a)
          Label l a -> forLabel env l (rec env a)
          _ -> descend (rec env) core
- 
-   forLabel env l c 
+
+   forLabel env l c
       | removed info   = Fail
       | collapsed info = Label l (Rule asRule) -- !!
       | otherwise      = new
-    where 
+    where
       new | hidden info = fmap minorRule (Label l c)
           | otherwise   = Label l c
       info   = getInfo l
@@ -178,21 +178,21 @@ processLabelInfo getInfo = rec []
 -- | Returns the derivation tree for a strategy and a term, including all
 -- minor rules
 fullDerivationTree :: IsStrategy f => f a -> a -> DerivationTree (Step LabelInfo a) a
-fullDerivationTree = make . processLabelInfo id . toCore . toStrategy 
- where 
+fullDerivationTree = make . processLabelInfo id . toCore . toStrategy
+ where
    make core = fmap value . parseDerivationTree . makeState core
- 
+
 -- | Returns the derivation tree for a strategy and a term with only major rules
 derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
 derivationTree s = mergeMaybeSteps . mapFirst f . fullDerivationTree s
  where
    f (RuleStep r) | isMajorRule r = Just r
    f _ = Nothing
-   
+
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]
 rulesInStrategy f = [ r | Rule r <- universe (toCore (toStrategy f)), isMajorRule r ]
-                    
+
 -- | Apply a function to all the rules that make up a labeled strategy
 mapRules :: (Rule a -> Rule b) -> LabeledStrategy a -> LabeledStrategy b
 mapRules f (LS n s) = LS n (mapRulesS f s)
@@ -212,7 +212,7 @@ cleanUpStrategy f (LS n s) = cleanUpStrategyAfter f (LS n (make s))
 
 -- | Use a function as do-after hook for all rules in a labeled strategy
 cleanUpStrategyAfter :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
-cleanUpStrategyAfter f = mapRules $ \r -> 
+cleanUpStrategyAfter f = mapRules $ \r ->
    if isMajorRule r then doAfter f r else r
 
 noInterleaving :: IsStrategy f => f a -> Strategy a
@@ -221,7 +221,7 @@ noInterleaving = liftCore $ transform f
       f (a :%:  b) = a :*: b
       f (a :!%: b) = a :*: b
       f (Atomic a) = a
-      f s          = s    
+      f s          = s
 
 -----------------------------------------------------------
 --- Functions to lift the core combinators

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -10,46 +10,45 @@
 --
 -----------------------------------------------------------------------------
 
-module Domain.Math.Power.NormViews 
+module Domain.Math.Power.NormViews
    ( -- * Normalising views
      normPowerView, normPowerMapView, normPowerNonNegRatio
    , normPowerNonNegDouble
    ) where
 
-import Prelude hiding ((^), recip)
-import qualified Prelude
-import Control.Monad
 import Common.View
+import Control.Monad
 import Data.Function
 import Data.List
-import qualified Data.Map as M
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Utils
+import Prelude hiding ((^), recip)
+import qualified Data.Map as M
+import qualified Prelude
 
 type PowerMap = (M.Map String Rational, Rational)
-
 
 normPowerNonNegRatio :: View Expr (M.Map String Rational, Rational) -- (Rational, M.Map String Rational)
 normPowerNonNegRatio = makeView (liftM swap . f) (g . swap)
   where
-    f expr = 
+    f expr =
         case expr of
-           Sym s [a,b] 
+           Sym s [a,b]
               | isPowerSymbol s -> do
                    (r, m) <- f a
-                   if r==1 
+                   if r==1
                      then do
                        r2 <- match rationalView b
                        return (1, M.map (*r2) m)
                      else do
                        n <- match integerView b
-                       if n >=0 
+                       if n >=0
                          then return (r Prelude.^ n, M.map (*fromIntegral n) m)
                          else return (1/(r Prelude.^ abs n), M.map (*fromIntegral n) m)
               | isRootSymbol s ->
                   f (Sym powerSymbol [a, 1/b])
-           Sqrt a -> 
+           Sqrt a ->
               f (Sym rootSymbol [a,2])
            a :*: b -> do
              (r1, m1) <- f a
@@ -62,13 +61,13 @@ normPowerNonNegRatio = makeView (liftM swap . f) (g . swap)
              return (r1/r2, M.unionWith (+) m1 (M.map negate m2))
            Var s -> return (1, M.singleton s 1)
            Nat n -> return (toRational n, M.empty)
-           Negate x -> do 
+           Negate x -> do
              (r, m) <- f x
              return (negate r, m)
            _ -> do
              r <- match rationalView expr
              return (fromRational r, M.empty)
-    g (r, m) = 
+    g (r, m) =
        let xs = [ Var s .^. fromRational a | (s, a) <- M.toList m ]
        in build productView (False, fromRational r : xs)
 
@@ -77,9 +76,9 @@ normPowerNonNegDouble :: View Expr (Double, M.Map String Rational)
 normPowerNonNegDouble = makeView (liftM (roundof 6) . f) g
   where
     roundof n (x, m) = (fromInteger (round (x * 10.0 ** n)) / 10.0 ** n, m)
-    f expr = 
+    f expr =
       case expr of
-        Sym s [a,b] 
+        Sym s [a,b]
           | isPowerSymbol s -> do
             (x, m) <- f a
             y      <- match rationalView b
@@ -96,13 +95,13 @@ normPowerNonNegDouble = makeView (liftM (roundof 6) . f) g
           guard (r2 /= 0)
           return (r1/r2, M.unionWith (+) m1 (M.map negate m2))
         Var s -> return (1, M.singleton s 1)
-        Negate x -> do 
+        Negate x -> do
           (r, m) <- f x
           return (negate r, m)
         _ -> do
           d <- match doubleView expr
           return (d, M.empty)
-    g (r, m) = 
+    g (r, m) =
       let xs = [ Var s .^. fromRational a | (s, a) <- M.toList m ]
       in build productView (False, fromDouble r : xs)
 
@@ -117,18 +116,18 @@ normPowerMapView = makeView (liftM h . f) g
 normPowerView :: View Expr (String, Rational)
 normPowerView = makeView f g
  where
-   f expr = 
+   f expr =
         case expr of
-           Sym s [x,y] 
+           Sym s [x,y]
               | isPowerSymbol s -> do
                    (s2, r) <- f x
                    r2 <- match rationalView y
                    return (s2, r*r2)
-              | isRootSymbol s -> 
+              | isRootSymbol s ->
                    f (x^(1/y))
            Sqrt x ->
               f (Sym rootSymbol [x, 2])
-           Var s -> return (s, 1) 
+           Var s -> return (s, 1)
            x :*: y -> do
              (s1, r1) <- f x
              (s2, r2) <- f y
@@ -141,8 +140,7 @@ normPowerView = makeView f g
              (s1, r1) <- f x
              (s2, r2) <- f y
              guard (s1==s2)
-             return (s1, r1-r2) 
+             return (s1, r1-r2)
            _ -> Nothing
-             
-   g (s, r) = Var s .^. fromRational r
 
+   g (s, r) = Var s .^. fromRational r

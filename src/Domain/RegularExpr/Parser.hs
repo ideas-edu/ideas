@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -16,15 +16,15 @@ import Text.Parsing
 import qualified Text.ParserCombinators.Parsec.Token as P
 
 parseRegExp :: String -> Either String RegExp
-parseRegExp = parseSimple pRE 
+parseRegExp = parseSimple pRE
  where
    pRE  = chainl1 pSeq ((:|:) <$ reservedOp "|")
    pSeq = foldl1 (:*:) <$> many1 post
    post = foldl (flip ($)) <$> atom <*> many pUn
-   pUn  = choice 
-      [ Star   <$ reservedOp "*" 
-      , Plus   <$ reservedOp "+" 
-      , Option <$ reservedOp "?" 
+   pUn  = choice
+      [ Star   <$ reservedOp "*"
+      , Plus   <$ reservedOp "+"
+      , Option <$ reservedOp "?"
       ]
    atom = choice
       [ Epsilon  <$ P.reserved lexer "T"
@@ -34,12 +34,12 @@ parseRegExp = parseSimple pRE
       ]
 
 lexer :: P.TokenParser a
-lexer = P.makeTokenParser $ emptyDef 
+lexer = P.makeTokenParser $ emptyDef
    { reservedNames   = ["T", "F"]
    , reservedOpNames = ["+", "*", "?", "|"]
    , identStart      = letter
-   , identLetter     = fail "" 
-   , opStart         = fail "" 
+   , identLetter     = fail ""
+   , opStart         = fail ""
    , opLetter        = fail ""
    }
 

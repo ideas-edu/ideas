@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -14,7 +14,7 @@ module Domain.RelationAlgebra.Parser (parseRelAlg, ppRelAlg) where
 import Domain.RelationAlgebra.Formula
 import Text.Parsing
 import qualified Text.ParserCombinators.Parsec.Token as P
-   
+
 -----------------------------------------------------------
 --- Parser
 
@@ -22,14 +22,14 @@ parseRelAlg  :: String -> Either String RelAlg
 parseRelAlg = parseSimple relalg
  where
    relalg = buildExpressionParser table term
-   
+
    term = foldl (flip ($)) <$> atom <*> many pUn
-   
-   pUn = choice 
+
+   pUn = choice
       [ Inv <$ reservedOp "~"
       , Not <$ reservedOp "-"
       ]
-   
+
    atom = choice
       [ V     <$  P.reserved lexer "V"
       , empty <$  P.reserved lexer "E"
@@ -37,8 +37,8 @@ parseRelAlg = parseSimple relalg
       , Var   <$> P.identifier lexer
       , P.parens lexer relalg
       ]
-   
-   table = 
+
+   table =
       [ [ Infix ((:.:) <$ reservedOp ";") AssocRight -- or none-associative?
         , Infix ((:+:) <$ reservedOp "!") AssocRight -- or none-associative?
         ]
@@ -50,12 +50,12 @@ parseRelAlg = parseSimple relalg
 --- Lexer
 
 lexer :: P.TokenParser a
-lexer = P.makeTokenParser $ emptyDef 
+lexer = P.makeTokenParser $ emptyDef
    { reservedNames   = ["V", "E", "I"]
    , reservedOpNames = ["~", "-", ";", "!", "\\/", "/\\"]
    , identStart      = letter
    , identLetter     = letter
-   , opStart         = fail "" 
+   , opStart         = fail ""
    , opLetter        = fail ""
    }
 
@@ -68,15 +68,15 @@ reservedOp = P.reservedOp lexer
 ppRelAlg :: RelAlg -> String
 ppRelAlg = ppRelAlgPrio (0, "")
 
-ppRelAlgPrio :: (Int, String) -> RelAlg -> String 
+ppRelAlgPrio :: (Int, String) -> RelAlg -> String
 ppRelAlgPrio = (\f n -> f n "") . flip (foldRelAlg alg)
  where
    alg = (var, binop 4 ";", binop 4 "!", binop 3 "/\\", binop 2 "\\/"
          , nott, inv, var "V", var "I"
-         ) 
-   binop prio op p q (n, parent) = 
+         )
+   binop prio op p q (n, parent) =
       parIf (n > prio || (prio==4 && n==4 && op/=parent)) (p (prio+1, op) . ((" "++op++" ")++) . q (prio, op))
    var       = const . (++)
-   nott p _  = p (6, "") . ("-"++) 
+   nott p _  = p (6, "") . ("-"++)
    inv  p _  = p (6, "") . ("~"++)
    parIf b f = if b then ("("++) . f . (")"++) else f

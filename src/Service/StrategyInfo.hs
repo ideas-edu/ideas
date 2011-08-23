@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -13,14 +13,14 @@
 -----------------------------------------------------------------------------
 module Service.StrategyInfo (strategyToXML, xmlToStrategy) where
 
+import Common.Library
+import Common.Strategy.Abstract
+import Common.Strategy.Core
+import Common.Utils (readInt)
+import Control.Monad
 import Data.Char
 import Data.Maybe
-import Control.Monad
-import Common.Library
-import Common.Strategy.Core
-import Common.Strategy.Abstract
 import Text.XML
-import Common.Utils (readInt)
 
 -----------------------------------------------------------------------
 -- Strategy to XML
@@ -36,7 +36,7 @@ infoToXML info = do
    when (hidden    info) ("hidden"    .=. "true")
 
 coreToXML :: Core LabelInfo a -> XML
-coreToXML core = makeXML "label" $ 
+coreToXML core = makeXML "label" $
    case core of
       Label l a -> infoToXML l >> coreBuilder infoToXML a
       _         -> coreBuilder infoToXML core
@@ -44,7 +44,7 @@ coreToXML core = makeXML "label" $
 coreBuilder :: HasId l => (l -> XMLBuilder) -> Core l a -> XMLBuilder
 coreBuilder f = rec
  where
-   rec core = 
+   rec core =
       case core of
          _ :*:  _  -> asList  "sequence"   isSequence
          _ :|:  _  -> asList  "choice"     isChoice
@@ -69,7 +69,7 @@ coreBuilder f = rec
 collect :: (a -> Maybe (a, a)) -> a -> [a]
 collect f = ($ []) . rec
  where rec a = maybe (a:) (\(x, y) -> rec x . rec y) (f a)
-      
+
 isSequence :: Core l a -> Maybe (Core l a, Core l a)
 isSequence (a :*: b) = Just (a, b)
 isSequence _ = Nothing
@@ -109,7 +109,7 @@ xmlToInfo xml = do
 findBool :: Monad m => String -> XML -> m Bool
 findBool attr xml = do
    s <- findAttribute attr xml
-   case map toLower s of 
+   case map toLower s of
       "true"  -> return True
       "false" -> return False
       _       -> fail "not a boolean"
@@ -120,10 +120,10 @@ readStrategy toLabel findRule xml = do
    let s = name xml
    case lookup s table of
       Just f  -> f s xs
-      Nothing -> 
+      Nothing ->
          fail $ "Unknown strategy combinator " ++ show s
  where
-   buildSequence _ xs 
+   buildSequence _ xs
       | null xs   = return Succeed
       | otherwise = return (foldr1 (:*:) xs)
    buildChoice _ xs
@@ -153,12 +153,12 @@ readStrategy toLabel findRule xml = do
 
    comb0 a _ [] = return a
    comb0 _ s _  = fail $ "Strategy combinator " ++ s ++ "expects 0 args"
- 
+
    comb1 f _ [x] = return (f x)
    comb1 _ s _   = fail $ "Strategy combinator " ++ s ++ "expects 1 arg"
- 
+
    join2 f g a b = join (f g a b)
- 
+
    table =
       [ ("sequence",   buildSequence)
       , ("choice",     buildChoice)
@@ -173,5 +173,5 @@ readStrategy toLabel findRule xml = do
       , ("rule",       join2 comb0 buildRule)
       , ("var",        join2 comb0 buildVar)
       , ("succeed",    comb0 Succeed)
-      , ("fail",       comb0 Fail) 
+      , ("fail",       comb0 Fail)
       ]

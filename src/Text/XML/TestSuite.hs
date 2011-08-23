@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -14,10 +14,10 @@
 -----------------------------------------------------------------------------
 module Main (main) where
 
-import Text.XML.Interface
-import Text.XML.Document (trim)
 import Control.Monad.Error
 import Data.Maybe
+import Text.XML.Document (trim)
+import Text.XML.Interface
 
 {-testje = do
    xs <- readFile "tmp.xml" >>= decoding
@@ -51,9 +51,9 @@ runTestCases base e
    | otherwise = do
         printProfile e
         let newbase = fromMaybe base (findAttribute "xml:base" e)
-        is <- forM (children e) $ \x -> 
-           if name x == "TESTCASES" 
-           then runTestCases newbase x 
+        is <- forM (children e) $ \x ->
+           if name x == "TESTCASES"
+           then runTestCases newbase x
            else do b <- runTest newbase x
                    return (if b then 0 else 1)
         return (sum is)
@@ -66,7 +66,7 @@ runTest base e
             uri      = fromMaybe "." (findAttribute "URI" e)
             testtype = fromMaybe ""  (findAttribute "TYPE" e)
             reccom   = findAttribute "RECOMMENDATION" e
-        {-case reccom of 
+        {-case reccom of
            Nothing -> return ()
            Just "XML1.1" -> return ()
            Just "XML1.0-errata2e" -> return ()
@@ -77,13 +77,13 @@ runTest base e
            Just "NS1.0-errata1e" -> return () -}
         if isJust reccom then return True else do
         putChar '.'
-        mdoc <- (do a <- parseIO filename; return (Just a)) 
+        mdoc <- (do a <- parseIO filename; return (Just a))
                    `catch` (\_ -> return Nothing)
         case mdoc of
            Just _
               --  not (accept document (show doc)) -> error ("pretty-print error: " ++ show doc)
               | testtype == "valid" -> return True
-           Nothing 
+           Nothing
               | testtype == "not-wf"  -> return True
               | testtype == "error"   -> return True
               | testtype == "invalid" -> return True
@@ -92,4 +92,4 @@ runTest base e
               putStrLn $ "\nFilename: " ++ show filename
               putStrLn $ "Test type: " ++ show testtype
               putStrLn $ "Description: " ++ trim (getData e)
-              return False   
+              return False

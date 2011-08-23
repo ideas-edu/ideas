@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,11 +9,11 @@
 -- Portability :  portable (depends on ghc)
 --
 -- The core strategy combinators. This module defines the interal data
--- structure of a strategy, and some utility functions that operate 
+-- structure of a strategy, and some utility functions that operate
 -- directly on it.
 --
 -----------------------------------------------------------------------------
-module Common.Strategy.Core 
+module Common.Strategy.Core
    ( GCore(..), Core
    , (.|.), (.*.), (.%.)
    , coreMany, coreRepeat, coreOrElse, coreFix
@@ -22,8 +22,8 @@ module Common.Strategy.Core
 
 import Common.Classes
 import Common.Transformation
-import Common.Utils.Uniplate
 import Common.Utils.QuickCheck
+import Common.Utils.Uniplate
 import Control.Applicative
 import qualified Data.Foldable as F
 import qualified Data.Traversable as T
@@ -36,7 +36,7 @@ infixr 2 :%:, :!%:, .%.
 infixr 3 :|:, :|>:, .|.
 infixr 5 :*:, .*.
 
--- | Core expression, with rules 
+-- | Core expression, with rules
 type Core l a = GCore l (Rule a)
 
 -- | A generalized Core expression, not restricted to rules. This makes GCore
@@ -45,7 +45,7 @@ data GCore l a
    = GCore l a :*:  GCore l a
    | GCore l a :|:  GCore l a
    | GCore l a :|>: GCore l a
-   | GCore l a :%:  GCore l a -- interleave 
+   | GCore l a :%:  GCore l a -- interleave
    | GCore l a :!%: GCore l a -- interleave-first-from-left
    | Many    (GCore l a)
    | Repeat  (GCore l a)
@@ -82,7 +82,7 @@ instance Uniplate (GCore l a) where
          _         -> plate core
 
 instance BiFunctor GCore where
-   biMap f g = rec 
+   biMap f g = rec
     where
       rec core =
          case core of
@@ -175,7 +175,7 @@ coreFix f = -- disadvantage: function f is applied twice
 -- Utility functions
 
 substCoreVar :: Int -> GCore l a -> GCore l a -> GCore l a
-substCoreVar i a core = 
+substCoreVar i a core =
    case core of
       Var j   | i==j -> a
       Rec j _ | i==j -> core
@@ -188,7 +188,7 @@ nextVar p
  where xs = coreVars p
 
 coreVars :: GCore l a -> [Int]
-coreVars core = 
+coreVars core =
    case core of
       Var n   -> [n]
       Rec n a -> n : coreVars a

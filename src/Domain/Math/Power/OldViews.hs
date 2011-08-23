@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Domain.Math.Power.OldViews 
+module Domain.Math.Power.OldViews
    ( powerFactorView, powerFactorViewForWith, powerFactorViewWith
    ) where
 
@@ -34,24 +34,24 @@ powerFactorViewWith v = makeView f g
 powerFactorViewForWith :: Num a => String -> View Expr a -> View Expr (a, Int)
 powerFactorViewForWith pv v = makeView f g
  where
-   f expr = 
+   f expr =
       case expr of
          Var s | pv == s -> Just (1, 1)
          Negate e -> do
             (a, b) <- f e
             return (negate a, b)
-         e1 :*: e2 -> do 
+         e1 :*: e2 -> do
             (a1, b1) <- f e1
             (a2, b2) <- f e2
             return (a1*a2, b1+b2)
          Sym s [e1, Nat n]
-            | isPowerSymbol s -> do 
+            | isPowerSymbol s -> do
                  (a1, b1) <- f e1
                  a <- match v (build v a1 ^ toInteger n)
                  return (a, b1 * fromInteger n)
          _ -> do
             guard (withoutVar pv expr)
-            a <- match v expr 
+            a <- match v expr
             return (a, 0)
-   
+
    g (a, b) = build v a .*. (Var pv .^. fromIntegral b)

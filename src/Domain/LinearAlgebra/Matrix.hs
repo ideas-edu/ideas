@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.Matrix 
+module Domain.LinearAlgebra.Matrix
    ( Matrix, Row, Column, isRectangular, makeMatrix, identity, mapWithPos
    , changeEntries, changeEntry, setEntries, setEntry
    , rows, row, columns, column, dimensions, entry, isEmpty
@@ -22,18 +22,18 @@ module Domain.LinearAlgebra.Matrix
    ) where
 
 import Common.Rewriting
+import Control.Applicative
 import Control.Monad
+import Data.Foldable (Foldable, foldMap)
 import Data.List hiding (transpose)
 import Data.Maybe
 import Data.Monoid
-import Data.Foldable (Foldable, foldMap)
 import Data.Traversable (Traversable, sequenceA)
-import Control.Applicative
 import Domain.Math.Simplification
 import Test.QuickCheck
-import qualified Text.OpenMath.Dictionary.Linalg2 as OM
 import qualified Data.List as L
 import qualified Data.Map as M
+import qualified Text.OpenMath.Dictionary.Linalg2 as OM
 
 -- Invariant: a matrix is always rectangular
 newtype Matrix a = M [[a]]
@@ -42,7 +42,7 @@ newtype Matrix a = M [[a]]
 type Row    a = [a]
 type Column a = [a]
 
-instance Functor Matrix where 
+instance Functor Matrix where
    fmap f (M rs) = M (map (map f) rs)
 
 instance Foldable Matrix where
@@ -52,7 +52,7 @@ instance Traversable Matrix where
    sequenceA (M xss) = M <$> sequenceA (map sequenceA xss)
 
 instance IsTerm a => IsTerm (Matrix a) where
-   toTerm = 
+   toTerm =
       let f = function matrixrowSymbol . map toTerm
       in function matrixSymbol . map f . rows
    fromTerm a = do
@@ -71,7 +71,7 @@ instance CoArbitrary a => CoArbitrary (Matrix a) where
    coarbitrary = coarbitrary . rows
 
 arbSizedMatrix :: Arbitrary a => (Int, Int) -> Gen (Matrix a)
-arbSizedMatrix (i, j) = 
+arbSizedMatrix (i, j) =
    do rs <- replicateM i (vector j)
       return (makeMatrix rs)
 
@@ -150,7 +150,7 @@ scale :: Num a => a -> Matrix a -> Matrix a
 scale a = fmap (*a)
 
 multiply :: Num a => Matrix a -> Matrix a -> Matrix a
-multiply a b 
+multiply a b
    | snd (dimensions a) == fst (dimensions b) =
         M $ map (\r -> map (sum . zipWith (*) r) (columns b)) (rows a)
    | otherwise =
@@ -163,7 +163,7 @@ reduce :: Fractional a => Matrix a -> Matrix a
 reduce = backward . forward
 
 forward :: Fractional a => Matrix a -> Matrix a
-forward m 
+forward m
    | h==0 || w==0 = m
    | all (==0) col = M $ zipWith (:) (repeat 0) $ rows $ forward $ M $ map tail $ rows m
    | x == 0 = forward (switchRows 0 (fromJust $ findIndex (/= 0) col) m)
@@ -189,14 +189,14 @@ rank :: Fractional a => Matrix a -> Int
 rank = length . filter (isJust . pivot) . rows . reduce
 
 nullity :: Fractional a => Matrix a -> Int
-nullity m = snd (dimensions m) - rank m 
- 
+nullity m = snd (dimensions m) - rank m
+
 inverse :: Fractional a => Matrix a -> Maybe (Matrix a)
 inverse m
    | h /= w     = Nothing
    | rank m < w = Nothing
    | otherwise  = Just $ M $ map (drop h) $ rows $ reduce $ M $ zipWith (++) (rows m) $ rows $ identity h
- where 
+ where
    (h, w) = dimensions m
 
 invertible :: Fractional a => Matrix a -> Bool
@@ -221,7 +221,7 @@ isSquare m = i==j
  where (i, j) = dimensions m
 
 identityMatrix :: Num a => Int -> Matrix a
-identityMatrix n = M $ map (\y -> map (\x -> if x==y then 1 else 0) list) list 
+identityMatrix n = M $ map (\y -> map (\x -> if x==y then 1 else 0) list) list
  where list = [0..n-1]
 
 -------------------------------------------------------
@@ -234,28 +234,28 @@ switchRows :: Int -> Int -> Matrix a -> Matrix a
 switchRows i j m@(M rs)
    | i == j = m
    | i >  j = switchRows j i m
-   | checkRow i m && checkRow j m = 
+   | checkRow i m && checkRow j m =
         let (before, r1:rest)  = splitAt i       rs
             (middle, r2:after) = splitAt (j-i-1) rest
         in M $ before ++ [r2] ++ middle ++ [r1] ++ after
-   | otherwise = 
+   | otherwise =
         error "switchRows: invalid rows"
 
 scaleRow :: Num a => Int -> a -> Matrix a -> Matrix a
 scaleRow i a m@(M rs)
-   | checkRow i m = 
+   | checkRow i m =
         let f y = if y==i then map (*a) else id
         in M $ zipWith f [0..] rs
-   | otherwise = 
+   | otherwise =
         error "scaleRow: invalid row"
 
 addRow :: Num a => Int -> Int -> a -> Matrix a -> Matrix a
-addRow i j a m@(M rs) 
-   | checkRow i m && checkRow j m = 
+addRow i j a m@(M rs)
+   | checkRow i m && checkRow j m =
         let rj  = map (*a) (row j m)
             f y = if y==i then zipWith (+) rj else id
         in M $ zipWith f [0..] rs
-   | otherwise = 
+   | otherwise =
         error "addRow: invalid row"
 
 -------------------------------------------------------
@@ -282,7 +282,7 @@ nonZero = any (/=0)
 -- or row canonical form
 inRowReducedEchelonForm :: Num a => Matrix a -> Bool
 inRowReducedEchelonForm m@(M rs) =
-   inRowEchelonForm m && 
+   inRowEchelonForm m &&
    all (==1) (mapMaybe pivot rs) &&
    all (isPivotColumn . flip column m . length . takeWhile (==0)) (filter nonZero rs)
 
@@ -292,7 +292,7 @@ pivot r = case dropWhile (==0) r of
              _    -> Nothing
 
 isPivotColumn :: Num a => Column a -> Bool
-isPivotColumn c = 
+isPivotColumn c =
    case filter (/=0) c of
       [1] -> True
       _   -> False

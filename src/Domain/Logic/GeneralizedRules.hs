@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,21 +11,21 @@
 -- Generalized rules, and inverse rules, for De Morgan and distributivity
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.GeneralizedRules 
+module Domain.Logic.GeneralizedRules
    ( generalRules, inverseRules
    , generalRuleDeMorganOr, generalRuleDeMorganAnd
    , generalRuleAndOverOr, generalRuleOrOverAnd
    , inverseDeMorganOr, inverseDeMorganAnd
-   , inverseAndOverOr, inverseOrOverAnd 
+   , inverseAndOverOr, inverseOrOverAnd
    ) where
 
 -- Note: the generalized rules do not take AC-unification into account,
 -- and perhaps they should.
 import Common.Algebra.Boolean
-import Domain.Logic.Formula
 import Common.Transformation (Rule)
-import qualified Common.Transformation as Rule
 import Control.Monad
+import Domain.Logic.Formula
+import qualified Common.Transformation as Rule
 
 generalRules :: [Rule SLogic]
 generalRules =
@@ -34,7 +34,7 @@ generalRules =
    ]
 
 inverseRules :: [Rule SLogic]
-inverseRules = 
+inverseRules =
    [ inverseDeMorganOr, inverseDeMorganAnd
    , inverseAndOverOr, inverseOrOverAnd
    ]
@@ -46,7 +46,7 @@ makeSimpleRule s = Rule.makeSimpleRule ("logic.propositional." ++ s)
 -- Inverse rules
 
 -- generalized (works for multiple terms)
-inverseDeMorganOr :: Rule SLogic 
+inverseDeMorganOr :: Rule SLogic
 inverseDeMorganOr = makeSimpleRule "InvDeMorganOr" $ \p -> do
    let xs = conjunctions p
    guard (length xs > 1)
@@ -54,7 +54,7 @@ inverseDeMorganOr = makeSimpleRule "InvDeMorganOr" $ \p -> do
    return (Not $ ors ys)
 
 -- generalized (works for multiple terms)
-inverseDeMorganAnd :: Rule SLogic 
+inverseDeMorganAnd :: Rule SLogic
 inverseDeMorganAnd = makeSimpleRule "InvDeMorganAnd" $ \p -> do
    let xs = disjunctions p
    guard (length xs > 1)
@@ -87,7 +87,7 @@ inverseOrOverAnd = makeSimpleRule "InvOrOverAnd" $ \p -> do
       pairs <- mapM isOrLast xs
       let (ys, as) = unzip pairs
       guard (allSame as)
-      return (ands ys :||: head as)      
+      return (ands ys :||: head as)
 
 isNot :: SLogic -> Maybe SLogic
 isNot (Not p) = Just p
@@ -106,7 +106,6 @@ useHead _ _ = Nothing
 
 useLast op = fmap (\(x, y) -> (y, x)) . useHead (flip op) . reverse
 
-
 allSame :: Eq a => [a] -> Bool
 allSame []     = True
 allSame (x:xs) = all (==x) xs
@@ -114,7 +113,7 @@ allSame (x:xs) = all (==x) xs
 -----------------------------------------------------------------------------
 -- Generalized rules
 
-generalRuleDeMorganOr :: Rule SLogic 
+generalRuleDeMorganOr :: Rule SLogic
 generalRuleDeMorganOr = makeSimpleRule "GenDeMorganOr" f
  where
    f (Not e) = do
@@ -123,7 +122,7 @@ generalRuleDeMorganOr = makeSimpleRule "GenDeMorganOr" f
       return (ands (map Not xs))
    f _ = Nothing
 
-generalRuleDeMorganAnd :: Rule SLogic 
+generalRuleDeMorganAnd :: Rule SLogic
 generalRuleDeMorganAnd = makeSimpleRule "GenDeMorganAnd" f
  where
    f (Not e) = do
@@ -131,7 +130,7 @@ generalRuleDeMorganAnd = makeSimpleRule "GenDeMorganAnd" f
       guard (length xs > 2)
       return (ors (map Not xs))
    f _ = Nothing
-  
+
 generalRuleAndOverOr :: Rule SLogic
 generalRuleAndOverOr = makeSimpleRule "GenAndOverOr" f
  where
@@ -144,7 +143,7 @@ generalRuleAndOverOr = makeSimpleRule "GenAndOverOr" f
          _ -> Nothing
    f _ = Nothing
 
-generalRuleOrOverAnd :: Rule SLogic 
+generalRuleOrOverAnd :: Rule SLogic
 generalRuleOrOverAnd = makeSimpleRule "GenOrOverAnd" f
  where
    f (x :||: y) =

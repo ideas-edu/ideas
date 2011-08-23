@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -17,15 +17,15 @@ module Text.Parsing
    , parseSimple, complete, accepts, skip, (<..>), ranges, stopOn
    , naturalOrFloat, float
    ) where
-   
-import Control.Arrow
+
 import Control.Applicative hiding ((<|>))
+import Control.Arrow
 import Data.Char
 import Data.List
 import Text.ParserCombinators.Parsec as Export
 import Text.ParserCombinators.Parsec.Expr as Export
 import Text.ParserCombinators.Parsec.Language as Export
- 
+
 parseSimple :: Parser a -> String -> Either String a
 parseSimple p = left show . runParser (complete p) () ""
 
@@ -38,17 +38,17 @@ accepts p = either (const False) (const True) . parseSimple p
 skip :: Parser a -> Parser ()
 skip p = p >> return ()
 
--- Like the combinator from parser, except that for doubles 
+-- Like the combinator from parser, except that for doubles
 -- the read instance is used. This is a more precies representation
 -- of the double (e.g., 1.413 is not 1.413000000001).
-naturalOrFloat :: Parser (Either Integer Double) 
+naturalOrFloat :: Parser (Either Integer Double)
 naturalOrFloat = do
    a <- num
-   b <- option "" ((:) <$> char '.' <*> nat) 
+   b <- option "" ((:) <$> char '.' <*> nat)
    c <- option "" ((:) <$> oneOf "eE" <*> num)
-   spaces 
+   spaces
    case reads (a++b++c) of
-      _ | null b && null c -> 
+      _ | null b && null c ->
          case a of
             '-':xs -> return (Left (negate (readInt xs)))
             xs     -> return (Left (readInt xs))
@@ -63,7 +63,7 @@ naturalOrFloat = do
 float :: Parser Double
 float = do
    a <- nat
-   b <- option "" ((:) <$> char '.' <*> nat) 
+   b <- option "" ((:) <$> char '.' <*> nat)
    c <- option "" ((:) <$> oneOf "eE" <*> num)
    case reads (a++b++c) of
       [(d, [])] -> return d

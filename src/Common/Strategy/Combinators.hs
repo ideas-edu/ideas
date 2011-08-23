@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -14,16 +14,16 @@
 -----------------------------------------------------------------------------
 module Common.Strategy.Combinators where
 
-import qualified Prelude
-import Prelude hiding (not, repeat, fail, sequence)
-import Common.Id
 import Common.Context
+import Common.Id
 import Common.Navigator
-import Common.Transformation
-import Common.Strategy.Core
 import Common.Strategy.Abstract
 import Common.Strategy.Configuration
+import Common.Strategy.Core
+import Common.Transformation
 import Data.Maybe
+import Prelude hiding (not, repeat, fail, sequence)
+import qualified Prelude
 
 -----------------------------------------------------------
 --- Strategy combinators
@@ -43,7 +43,7 @@ infixr 5 <*>
 (<|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
 (<|>) = liftCore2 (.|.)
 
--- | Interleave two strategies 
+-- | Interleave two strategies
 (<%>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
 (<%>) = liftCore2 (.%.)
 
@@ -69,11 +69,11 @@ alternatives = foldr ((<|>) . toStrategy) fail
 
 -- | Merges a list of strategies (in parallel)
 interleave :: IsStrategy f => [f a] -> Strategy a
-interleave = foldr ((<%>) . toStrategy) succeed 
+interleave = foldr ((<%>) . toStrategy) succeed
 
 -- | Allows all permutations of the list
 permute :: IsStrategy f => [f a] -> Strategy a
-permute = foldr ((<%>) . atomic) succeed 
+permute = foldr ((<%>) . atomic) succeed
 
 -- EBNF combinators --------------------------------------
 
@@ -91,7 +91,7 @@ replicate n = sequence . Prelude.replicate n
 
 -- | Apply a certain strategy or do nothing (non-greedy)
 option :: IsStrategy f => f a -> Strategy a
-option s = s <|> succeed   
+option s = s <|> succeed
 
 -- Negation and greedy combinators ----------------------
 
@@ -150,12 +150,12 @@ fix f = fromCore (coreFix (toCore . f . fromCore))
 onceWith :: IsStrategy f => String -> (Context a -> [Int]) -> f (Context a) -> Strategy (Context a)
 onceWith n f s = ruleMoveDown <*> s <*> ruleMoveUp
  where
-   ruleMoveDown = minorRule $ makeSimpleRuleList ("navigation.down." ++ n) $ \a -> 
+   ruleMoveDown = minorRule $ makeSimpleRuleList ("navigation.down." ++ n) $ \a ->
       concatMap (`down` a) (f a)
    ruleMoveUp = minorRule $ makeSimpleRule "navigation.up" $ \a ->
       Just (fromMaybe a (up a))
 
--- | Apply a strategy somewhere in the term. The function selects which 
+-- | Apply a strategy somewhere in the term. The function selects which
 -- children are visited
 somewhereWith :: IsStrategy f => String -> (Context a -> [Int]) -> f (Context a) -> Strategy (Context a)
 somewhereWith n f s = fix $ \this -> s <|> onceWith n f this

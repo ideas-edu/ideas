@@ -42,4 +42,3 @@ geqSymbol = makeSymbol "relation1" "geq"
 arguments. -}
 approxSymbol :: Symbol
 approxSymbol = makeSymbol "relation1" "approx"
-

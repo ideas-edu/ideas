@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,18 +9,18 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Documentation.OverviewPages 
+module Documentation.OverviewPages
    ( makeOverviewExercises, makeOverviewServices
    ) where
 
-import Documentation.DefaultPage
+import Common.Exercise
+import Common.Id
+import Common.Utils (Some(..), safeHead)
+import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
-import Control.Monad
-import Common.Utils (Some(..), safeHead)
-import Common.Id
-import Common.Exercise
+import Documentation.DefaultPage
 import Service.DomainReasoner
 import Service.Types
 import Text.HTML
@@ -28,9 +28,9 @@ import Text.HTML
 makeOverviewExercises :: String -> DomainReasoner ()
 makeOverviewExercises dir = do
    list <- getExercises
-   generatePage dir exerciseOverviewPageFile $ 
+   generatePage dir exerciseOverviewPageFile $
       exerciseOverviewPage False list
-   generatePage dir exerciseOverviewAllPageFile $ 
+   generatePage dir exerciseOverviewAllPageFile $
       exerciseOverviewPage True list
 
 makeOverviewServices :: String -> DomainReasoner ()
@@ -41,22 +41,22 @@ makeOverviewServices dir = do
 exerciseOverviewPage :: Bool -> [Some Exercise] -> HTMLBuilder
 exerciseOverviewPage showAll list = do
    h1 title
-   
+
    unless showAll $ para $ do
       text "Show"
       space
-      link exerciseOverviewAllPageFile $ 
+      link exerciseOverviewAllPageFile $
          text "all exercises"
       text ", including the ones under development"
-      
+
    forM_ (zip [1::Int ..] (grouping list)) $ \(i, (dom, xs)) -> do
       h2 (show i ++ ". " ++ dom)
-      table False (map makeRow xs) 
+      table False (map makeRow xs)
  where
    title | showAll   = "All exercises"
          | otherwise = "Exercises"
- 
-   makeRow (Some ex) = 
+
+   makeRow (Some ex) =
       [ link (exercisePageFile code) $ ttText (show code)
       , do spaces 10
            f (status ex)
@@ -84,5 +84,3 @@ serviceOverviewPage list = do
    unless (null xs) $ do
       h2 "Deprecated"
       ul $ map make xs
-
-   

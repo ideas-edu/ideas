@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -13,10 +13,10 @@
 -----------------------------------------------------------------------------
 module Text.OpenMath.MakeSymbols where
 
-import Text.OpenMath.ContentDictionary hiding (main)
 import Control.Monad
 import Data.Char
 import Data.List
+import Text.OpenMath.ContentDictionary hiding (main)
 
 main :: IO ()
 main = do
@@ -24,18 +24,18 @@ main = do
        target = "src/Text/Openmath/Dictionary"
    ocds <- findOCDs base
    forM_ ocds $ \s -> do
-      let modn = target ++ "/" ++ moduleName s ++ ".hs" 
+      let modn = target ++ "/" ++ moduleName s ++ ".hs"
       txt <- makeSymbols (base ++ "/" ++ s)
       putStrLn $ "  writing " ++ modn
       writeFile modn txt
 
 moduleName :: String -> String
 moduleName s = dropSuffix (map toUpper (take 1 s) ++ drop 1 s)
-   
+
 dropDir :: String -> String
-dropDir s 
-   | '/' `elem` s = dropDir $ drop 1  $dropWhile (/='/') s 
-   | otherwise    = s 
+dropDir s
+   | '/' `elem` s = dropDir $ drop 1  $dropWhile (/='/') s
+   | otherwise    = s
 
 dropSuffix :: String -> String
 dropSuffix = takeWhile (/='.')
@@ -44,7 +44,7 @@ makeSymbols :: String -> IO String
 makeSymbols file = do
    cd <- readContentDictionary file
    let cdname = dropDir file
-   return $ unlines $ 
+   return $ unlines $
       [ "-- Automatically generated from content dictionary " ++ cdname ++ ". \
         \ Do not change."
       , "module Text.OpenMath.Dictionary." ++ moduleName cdname ++ " where\n"
@@ -54,17 +54,17 @@ makeSymbols file = do
       map (makeSymbol (dropSuffix cdname)) (definitions cd)
 
 symbolIdentifier :: Definition -> String
-symbolIdentifier d = f (symbolName d) ++ "Symbol" 
+symbolIdentifier d = f (symbolName d) ++ "Symbol"
  where f xs = map toLower (take 1 xs) ++ camelCase (drop 1 xs)
 
 camelCase :: String -> String
 camelCase []         = []
 camelCase ('_':x:xs) = toUpper x : camelCase xs
-camelCase (x:xs)     = x : camelCase xs 
+camelCase (x:xs)     = x : camelCase xs
 
 makeSymbolList :: ContentDictionary -> String
-makeSymbolList cd = unlines 
-   [ "-- | List of symbols defined in " ++ dictionaryName cd ++ " dictionary" 
+makeSymbolList cd = unlines
+   [ "-- | List of symbols defined in " ++ dictionaryName cd ++ " dictionary"
    , name ++ " :: [Symbol]"
    , name ++ " = [" ++ intercalate ", " list ++ "]"
    ]
@@ -79,8 +79,8 @@ makeSymbol dict def = unlines $
    , name ++ " = makeSymbol " ++ show dict ++ " " ++ show (symbolName def)
    ]
  where
-    name = symbolIdentifier def 
-    
+    name = symbolIdentifier def
+
 makeComment :: Int -> String -> [String]
 makeComment n = breaks . comment . words
  where

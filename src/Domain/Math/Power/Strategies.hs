@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -31,12 +31,11 @@ import Domain.Math.Power.Rules
 import Domain.Math.Power.Utils
 import Domain.Math.Simplification
 
-
 -- Strategies ---------------------------------------------------------------
 
 -- | Simplify an expression containing powers as far as possible
 simplifyPowerStrategy :: LabeledStrategy (Context Expr)
-simplifyPowerStrategy = cleanUpStrategyRules "Simplify" powerRules 
+simplifyPowerStrategy = cleanUpStrategyRules "Simplify" powerRules
 
 nonNegBrokenExpStrategy :: LabeledStrategy (Context Expr)
 nonNegBrokenExpStrategy = cleanUpStrategy (change cleanup . applyTop cleanup) strategy
@@ -48,7 +47,7 @@ nonNegBrokenExpStrategy = cleanUpStrategy (change cleanup . applyTop cleanup) st
     strategy = label "Write with non-negative exponent" $ exhaustiveStrategy rs
     cleanup = applyD divisionNumerator
             . applyD myFractionTimes
-            . mergeConstants 
+            . mergeConstants
             . simplifyWith simplifyConfig {withMergeAlike = False}
 
 calcPowerStrategy :: LabeledStrategy (Context Expr)
@@ -59,7 +58,6 @@ calcPowerStrategy = cleanUpStrategy cleanup strategy
     cleanup = applyTop (applyD myFractionTimes)
             . applyD (exhaustiveStrategy $ myFractionTimes : naturalRules)
 
-
 -- Rule collections ---------------------------------------------------------
 
 powerRules :: [Rule Expr]
@@ -69,14 +67,12 @@ powerRules =
   , pushNegOut
   ]
 
-
 -- | Help functions -----------------------------------------------------------
 
 cleanUpStrategyRules :: IsId n => n -> [Rule Expr] -> LabeledStrategy (Context Expr)
-cleanUpStrategyRules l = 
+cleanUpStrategyRules l =
   cleanUpStrategy (change cleanUp. applyTop cleanUp) . label l . exhaustiveStrategy
 
 cleanUp :: Expr -> Expr
-cleanUp = mergeConstants 
+cleanUp = mergeConstants
         . simplifyWith simplifyConfig {withMergeAlike = False}
-                 

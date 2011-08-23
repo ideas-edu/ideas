@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -24,11 +24,11 @@ data Attribute  = Name := AttValue deriving Eq
 
 data Reference = CharRef Int | EntityRef String
    deriving Eq
-   
+
 data Parameter = Parameter String
    deriving Eq
-   
-data XMLDoc = XMLDoc 
+
+data XMLDoc = XMLDoc
    { versionInfo :: Maybe String
    , encoding    :: Maybe String
    , standalone  :: Maybe Bool
@@ -43,14 +43,14 @@ data XML = Tagged Element
          | CDATA String
          | Reference Reference
    deriving Eq
-            
-data Element = Element 
-   { name       :: Name 
-   , attributes :: Attributes 
+
+data Element = Element
+   { name       :: Name
+   , attributes :: Attributes
    , content    :: Content
    }
  deriving Eq
-   
+
 type Content = [XML]
 
 data DTD = DTD Name (Maybe ExternalID) [DocTypeDecl]
@@ -62,22 +62,22 @@ data DocTypeDecl = ElementDecl Name ContentSpec
                  | NotationDecl Name (Either ExternalID PublicID)
                  | DTDParameter Parameter
                  | DTDConditional Conditional
-   deriving Eq                
-                 
+   deriving Eq
+
 data ContentSpec = Empty | Any | Mixed Bool [Name] | Children CP
    deriving Eq
-   
+
 -- content particles
 data CP = Choice [CP] | Sequence [CP] | QuestionMark CP | Star CP | Plus CP | CPName Name
    deriving Eq
-   
+
 data AttType = IdType | IdRefType | IdRefsType | EntityType | EntitiesType | NmTokenType | NmTokensType
              | StringType | EnumerationType [String] | NotationType [String]
    deriving Eq
-   
+
 data DefaultDecl = Required | Implied | Value AttValue | Fixed AttValue
    deriving Eq
-   
+
 type AttDef = (Name, AttType, DefaultDecl)
 type EntityDef = Either EntityValue (ExternalID, Maybe String)
 type AttValue    = [Either Char Reference]
@@ -85,12 +85,12 @@ type EntityValue = [Either Char (Either Parameter Reference)]
 
 data ExternalID = System String | Public String String
    deriving Eq
-   
+
 type PublicID = String
 
 data Conditional = Include [DocTypeDecl] | Ignore [String]
    deriving Eq
-  
+
 type TextDecl = (Maybe String, String)
 
 type External = (Maybe TextDecl, Content)
@@ -108,20 +108,20 @@ instance Show Element where
       | null c    = showOpenTag True n as
       | otherwise = showOpenTag False n as ++ concatMap show c ++ showCloseTag n
 
-instance Show XML where 
-   show xml = 
+instance Show XML where
+   show xml =
       case xml of
          Tagged e    -> show e
          CharData s  -> s
          CDATA s     -> "<![CDATA[" ++ s ++ "]]>"
          Reference r -> show r
-   
+
 instance Show Reference where
    show ref =
       case ref of
          CharRef n   -> "&#" ++ show n ++ ";"
          EntityRef s -> "&" ++ s ++ ";"
-         
+
 instance Show Parameter where
    show (Parameter s) = "%" ++ s ++ ";"
 
@@ -134,17 +134,17 @@ instance Show DTD where
          | otherwise = Just $ "[" ++ concatMap show xs ++ "]"
 
 instance Show ExternalID where
-   show extID = 
-      case extID of 
+   show extID =
+      case extID of
          System s   -> "SYSTEM " ++ doubleQuote s
          Public p s -> unwords ["PUBLIC", doubleQuote p, doubleQuote s]
 
 instance Show DocTypeDecl where
-   show decl = 
+   show decl =
       case decl of
          ElementDecl n c  -> "<!ELEMENT " ++ n ++ " " ++ show c ++ ">"
          AttListDecl n as -> "<!ATTLIST " ++ unwords (n:map showAttDef as) ++ ">"
-         EntityDecl b n e -> 
+         EntityDecl b n e ->
             let xs = ["%" | not b] ++ [n, showEntityDef e]
             in "<!ENTITY " ++ unwords xs ++ ">"
          NotationDecl n e ->
@@ -158,7 +158,7 @@ instance Show ContentSpec where
       case cspec of
          Empty -> "EMPTY"
          Any   -> "ANY"
-         Mixed b ns -> 
+         Mixed b ns ->
             let txt = intercalate "|" ("#PCDATA":ns)
             in parenthesize txt ++ (if b then "*" else "")
          Children cp -> show cp
@@ -174,8 +174,8 @@ instance Show CP where
          CPName n       -> n
 
 instance Show AttType where
-   show attType = 
-      case attType of 
+   show attType =
+      case attType of
          IdType       -> "ID"
          IdRefType    -> "IDREF"
          IdRefsType   -> "IDREFS"
@@ -190,8 +190,8 @@ instance Show AttType where
 instance Show DefaultDecl where
    show defaultDecl =
       case defaultDecl of
-         Required -> "#REQUIRED" 
-         Implied  -> "#IMPLIED" 
+         Required -> "#REQUIRED"
+         Implied  -> "#IMPLIED"
          Value v  -> showAttValue v
          Fixed v  -> "#FIXED " ++ showAttValue v
 
@@ -200,7 +200,7 @@ instance Show Conditional where
       case conditional of
          Include xs -> "<![INCLUDE[" ++ concatMap show xs ++ "]]>"
          Ignore _ -> "" -- ToDO undefined -- [String]
-             
+
 showXMLDecl :: XMLDoc -> String
 showXMLDecl doc
    | isJust (versionInfo doc) = "<?xml " ++ unwords (catMaybes [s1,s2,s3]) ++ "?>"
@@ -209,9 +209,9 @@ showXMLDecl doc
    s1 = fmap (\s -> "version=" ++ doubleQuote s) (versionInfo doc)
    s2 = fmap (\s -> "encoding=" ++ doubleQuote s) (encoding doc)
    s3 = fmap (\b -> "standalone=" ++ doubleQuote (if b then "yes" else "no")) (standalone doc)
- 
+
 showOpenTag :: Bool -> Name -> Attributes -> String
-showOpenTag close n as = "<" ++ unwords (n:map show as) ++ 
+showOpenTag close n as = "<" ++ unwords (n:map show as) ++
    (if close then "/>" else ">")
 
 showCloseTag :: Name -> String
@@ -222,19 +222,19 @@ showAttValue = doubleQuote . concatMap (either f show)
  where
    f '"' = []
    f c   = [c]
-   
+
 showEntityValue :: EntityValue -> String
 showEntityValue = doubleQuote . concatMap (either f (either show show))
  where
    f '"' = []
    f c   = [c]
-   
+
 showAttDef :: AttDef -> String
 showAttDef (s, tp, dd) = unwords [s, show tp, show dd]
 
 showEntityDef :: EntityDef -> String
-showEntityDef entityDef = 
-   case entityDef of 
+showEntityDef entityDef =
+   case entityDef of
       Left ev -> showEntityValue ev
       Right (eid, ms) -> show eid ++ maybe "" (" NDATA "++) ms
 

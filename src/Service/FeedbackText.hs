@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,16 +9,16 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Service.FeedbackText 
+module Service.FeedbackText
    ( onefirsttext, submittext, derivationtext, feedbacktext
    ) where
 
 import Common.Library hiding (derivation)
-import Service.State
-import Service.Diagnose
 import Service.BasicServices
+import Service.Diagnose
 import Service.FeedbackScript.Run
 import Service.FeedbackScript.Syntax
+import Service.State
 
 ------------------------------------------------------------
 -- Services
@@ -29,7 +29,7 @@ derivationtext script state =
    in right (mapFirst f) (derivation Nothing state)
 
 onefirsttext :: Script -> State a -> Maybe String -> (Text, Maybe (State a))
-onefirsttext script old event = 
+onefirsttext script old event =
    ( feedbackHint (event == Just "hint button") env script
    , fmap fth4 next
    )
@@ -42,13 +42,13 @@ onefirsttext script old event =
           new      <- fmap fth4 next
           oldC     <- fromContext (stateContext old)
           a        <- fromContext (stateContext new)
-          (d1, d2) <- difference ex oldC a 
+          (d1, d2) <- difference ex oldC a
           return (prettyPrinter ex d1, prettyPrinter ex d2)
       }
 
 -- Feedback messages for submit service (free student input). The boolean
--- indicates whether the student is allowed to continue (True), or forced 
--- to go back to the previous state (False)      
+-- indicates whether the student is allowed to continue (True), or forced
+-- to go back to the previous state (False)
 submittext :: Script -> State a -> String -> (Bool, Text, State a)
 submittext script old input =
    case parser (exercise old) input of
@@ -71,6 +71,6 @@ feedbacktext script old a =
    env = (newEnvironment old)
             { diffPair = do
                  oldC     <- fromContext (stateContext old)
-                 (d1, d2) <- difference ex oldC a 
+                 (d1, d2) <- difference ex oldC a
                  return (prettyPrinter ex d1, prettyPrinter ex d2)
             }

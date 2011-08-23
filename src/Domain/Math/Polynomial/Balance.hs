@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,14 +12,14 @@
 module Domain.Math.Polynomial.Balance (balanceExercise) where
 
 import Common.Library
-import Common.Utils.Uniplate
 import Common.Utils (fixpoint)
+import Common.Utils.Uniplate
 import Control.Monad
 import Data.Function
 import Data.Maybe
 import Data.Ratio
-import Domain.Math.Data.WithBool
 import Domain.Math.Data.Relation
+import Domain.Math.Data.WithBool
 import Domain.Math.Equation.BalanceRules
 import Domain.Math.Equation.Views
 import Domain.Math.Expr
@@ -36,8 +36,8 @@ import Test.QuickCheck (sized)
 -- Exercise
 
 balanceExercise :: Exercise (WithBool (Equation Expr))
-balanceExercise = makeExercise 
-   { exerciseId    = describe "Solve a linear equation using only balance rules." $ 
+balanceExercise = makeExercise
+   { exerciseId    = describe "Solve a linear equation using only balance rules." $
                      newId "algebra.equations.linear.balance"
    , status        = Provisional
    , parser        = parseBoolEqExpr
@@ -56,7 +56,7 @@ balanceExercise = makeExercise
    }
 
 balanceOrder :: [Id]
-balanceOrder = 
+balanceOrder =
    [ getId removeDivision, getId collect
    , getId varRightMinus, getId varRightPlus
    , getId conLeftMinus, getId conLeftPlus
@@ -75,14 +75,14 @@ balanceStrategy = cleanUpStrategyAfter (applyTop cleaner) $
    label "Balance equation" $
        label "Phase 1" (repeatS
            (  use collect
-          <|> use distribute 
+          <|> use distribute
           <|> use removeDivision
           <|> somewhere (use divisionToFraction)
            ))
    <*> label "Phase 2" (repeatS
-           (  use varLeftMinus <|> use varLeftPlus 
-          <|> use conRightMinus <|> use conRightPlus 
-          <|> (check p2 <*> (use varRightMinus <|> use varRightPlus)) 
+           (  use varLeftMinus <|> use varLeftPlus
+          <|> use conRightMinus <|> use conRightPlus
+          <|> (check p2 <*> (use varRightMinus <|> use varRightPlus))
           <|> (check p1 <*> (use conLeftMinus <|> use conLeftPlus)
            ))
        <*> try (use scaleToOne)
@@ -107,13 +107,13 @@ balanceStrategy = cleanUpStrategyAfter (applyTop cleaner) $
 calculate :: Rule (WithBool (Equation Expr))
 calculate = makeSimpleRule (linbal, "calculate") $ checkForChange $
    Just . cleaner
-  
+
 -- factor is always positive due to lcm function
 removeDivision :: Rule (Equation Expr)
 removeDivision = doAfter (fmap distributeTimes) $
-   describe "remove division" $ 
+   describe "remove division" $
    makeRule (linbal, "remove-div") $ useSimpleRecognizer isTimesT $
-   supply1 "factor" removeDivisionArg timesT 
+   supply1 "factor" removeDivisionArg timesT
  where
    removeDivisionArg (lhs :==: rhs) = do
       xs <- match simpleSumView lhs
@@ -125,7 +125,7 @@ removeDivision = doAfter (fmap distributeTimes) $
           op (b1, a1) (b2, a2) = (b1 || b2, a1 `lcm` a2)
       guard (b && result > 1)
       return (fromInteger result)
-      
+
    getFactor (Negate a) = getFactor a
    getFactor expr = do
       (b, c) <- match (divView >>> second integerView) expr
@@ -133,10 +133,10 @@ removeDivision = doAfter (fmap distributeTimes) $
     `mplus` do
       r <- match rationalView expr
       return (False, denominator r)
-    `mplus` do 
+    `mplus` do
       (r, c) <- match (timesView >>> first rationalView) expr
       return (hasSomeVar c, denominator r)
-    `mplus` do 
+    `mplus` do
       (b, r) <- match (timesView >>> second rationalView) expr
       return (hasSomeVar b, denominator r)
     `mplus` do
@@ -148,7 +148,7 @@ removeDivision = doAfter (fmap distributeTimes) $
       return (False, 1)
 
 divisionToFraction :: Rule Expr
-divisionToFraction = 
+divisionToFraction =
    describe "turn a division into a multiplication with a fraction" $
    makeSimpleRule (linbal, "div-to-fraction") $ \expr -> do
       (a, r) <- match (divView >>> second rationalView) expr
@@ -157,18 +157,18 @@ divisionToFraction =
 
 divideCommonFactor :: Rule (Equation Expr)
 divideCommonFactor = doAfter (fmap distributeDiv) $
-   describe "divide by common factor" $ 
+   describe "divide by common factor" $
    makeRule (linbal, "smart-div") $ useSimpleRecognizer isTimesT $
    supply1 "factor" getArg divisionT
  where
-   getArg (lhs :==: rhs) 
-      | all (/=0) ns && n > 1 = Just (fromInteger n) 
+   getArg (lhs :==: rhs)
+      | all (/=0) ns && n > 1 = Just (fromInteger n)
       | otherwise             = Nothing
     where
        xs = from sumView lhs ++ from sumView rhs
        ns = map getFactor xs
        n  = foldr1 gcd ns
-      
+
    getFactor expr
       | hasNoVar expr = fromMaybe 1 $ match integerView expr
       | otherwise = fromMaybe 1 $ do
@@ -223,24 +223,24 @@ flipped rid = liftRule flipView . changeId (const (newId rid))
  where flipView = makeView (Just . flipSides) flipSides
 
 scaleToOne :: Rule (Equation Expr)
-scaleToOne = doAfter (fmap distributeDiv) $ 
-   makeRule (linbal, "scale-to-one") $ useSimpleRecognizer isTimesT $ 
+scaleToOne = doAfter (fmap distributeDiv) $
+   makeRule (linbal, "scale-to-one") $ useSimpleRecognizer isTimesT $
    supply1 "factor" scaleToOneArg divisionT
  where
    scaleToOneArg :: Equation Expr -> Maybe Expr
    scaleToOneArg (lhs :==: rhs) = f lhs rhs `mplus` f rhs lhs
-      
+
    f :: Expr -> Expr -> Maybe Expr
    f expr c = do
       (_, a1, b1) <- matchLin expr
       guard (a1 /= 0 && a1 /= 1 && b1 == 0 && hasNoVar c)
       return (fromRational a1)
-      
+
 collect :: Rule (Equation Expr)
-collect = makeSimpleRule (linbal, "collect") $ 
+collect = makeSimpleRule (linbal, "collect") $
    -- don't use this rule just for cleaning up
-   checkForChange (Just . fmap collectGlobal) . fmap cleanerExpr 
-   
+   checkForChange (Just . fmap collectGlobal) . fmap cleanerExpr
+
 distribute :: Rule (Equation Expr)
 distribute = makeSimpleRule (linbal, "distribute") $ checkForChange $
    Just . fmap (fixpoint f)
@@ -249,15 +249,15 @@ distribute = makeSimpleRule (linbal, "distribute") $ checkForChange $
    f (a :*: (b :-: c))  = f (a*b-a*c)
    f ((a :+: b) :*: c)  = f (a*c+b*c)
    f ((a :-: b) :*: c)  = f (a*c-b*c)
-   f (Negate (a :+: b)) = f (-a-b) 
+   f (Negate (a :+: b)) = f (-a-b)
    f (Negate (a :-: b)) = f (-a+b)
-   f (Negate (Negate a)) = f a  
+   f (Negate (Negate a)) = f a
    f (a :-: (b :+: c)) = f (a-b-c)
    f (a :-: (b :-: c)) = f (a-b+c)
    f (a :-: Negate b)  = f (a+b)
    f a = descend f a
-   
--- for debugging                 
+
+-- for debugging
 {-
 go = printDerivation balanceExercise $ singleton $ let x=Var "x" in
    (x+2+7/2*x)/(3/2) :==: -3/2*x/4*0 -}

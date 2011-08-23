@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -16,22 +16,22 @@ module Domain.Math.Power.Equation.Strategies
    -- , expEqStrategy
    -- , logEqStrategy
    -- , higherPowerEqStrategy
-   -- ) 
+   -- )
    where
 
 import Common.Library
 import Data.Maybe
-import Domain.Math.Data.Relation
-import Domain.Math.Data.OrList
-import Domain.Math.Expr
-import Domain.Math.Equation.CoverUpRules
 import Domain.Math.CleanUp
-import Domain.Math.Polynomial.Strategies (quadraticStrategy, linearStrategy)
+import Domain.Math.Data.OrList
+import Domain.Math.Data.Relation
+import Domain.Math.Equation.CoverUpRules
+import Domain.Math.Expr
+import Domain.Math.Numeric.Rules
 import Domain.Math.Polynomial.Rules (flipEquation, conditionVarsRHS)
+import Domain.Math.Polynomial.Strategies (quadraticStrategy, linearStrategy)
+import Domain.Math.Power.Equation.Rules
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Utils
-import Domain.Math.Power.Equation.Rules
-import Domain.Math.Numeric.Rules
 
 -- | Strategies ---------------------------------------------------------------
 
@@ -55,21 +55,21 @@ powerEqApproxStrategy = label "Power equation with approximation" $
 
 expEqStrategy :: LabeledStrategy (Context (Equation Expr))
 expEqStrategy = cleanUpStrategy cleanup strat
-  where 
-    strat =  label "Exponential equation" 
+  where
+    strat =  label "Exponential equation"
           $  myCoverUpStrategy
          <*> repeatS (somewhereNotInExp (use factorAsPower))
          <*> repeatS (somewhereNotInExp (use reciprocal))
-         <*> powerS 
+         <*> powerS
          <*> (use sameBase <|> use equalsOne)
          <*> linearStrategy
-           
+
     cleanup = applyD (exhaustiveUse $ naturalRules ++ rationalRules)
             . applyTop (fmap (mergeConstantsWith isIntRatio))
-    
+
     isIntRatio x = x `belongsTo` myIntegerView || x `belongsTo` v
       where v = divView >>> first myIntegerView >>> second myIntegerView
-    
+
     powerS = exhaustiveUse [ root2power, addExponents, subExponents
                            , mulExponents,  simpleAddExponents ]
 
@@ -77,9 +77,9 @@ logEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 logEqStrategy = label "Logarithmic equation"
               $  try (use logarithm)
              <*> try (use conditionVarsRHS <*> use flipEquation)
-             <*> repeatS (somewhere $  use nthRoot 
-                                   <|> use calcPower 
-                                    <|> use calcPowerPlus 
+             <*> repeatS (somewhere $  use nthRoot
+                                   <|> use calcPower
+                                    <|> use calcPowerPlus
                                    <|> use calcPowerMinus
                                    <|> use calcPlainRoot
                                    <|> use calcPowerRatio)
@@ -87,13 +87,13 @@ logEqStrategy = label "Logarithmic equation"
 
 higherPowerEqStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 higherPowerEqStrategy =  cleanUpStrategy cleanup coverUpStrategy'
-  where 
+  where
     cleanup = applyTop $ fmap $ fmap cleanUpExpr
 
 rootEqStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 rootEqStrategy =  cleanUpStrategy cleanup strat
-  where 
-    strat =  label "Cover up" 
+  where
+    strat =  label "Cover up"
           $ try ( use condXisRight <*> use flipEquation )
          <*> exhaustiveSomewhere myCoverUpRulesOr
     cleanup = applyTop $ fmap $ fmap cleanUpExpr
@@ -124,11 +124,11 @@ myConfigCoverUp = configCoverUp
    }
 
 myCoverUpRulesOr :: IsTerm a => [Rule (Context a)]
-myCoverUpRulesOr = use (coverUpPowerWith myConfigCoverUp) 
+myCoverUpRulesOr = use (coverUpPowerWith myConfigCoverUp)
                  : map (\f -> use $ f myConfigCoverUp) coverUpRulesWith
 
 coverUpRulesWith :: [ConfigCoverUp -> Rule (Equation Expr)]
-coverUpRulesWith = 
+coverUpRulesWith =
    [ coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith
    , coverUpNegateWith, {-myCoverUpTimesWith-} coverUpTimesWith, coverUpNumeratorWith
    , coverUpDenominatorWith, coverUpSqrtWith, coverUpRootWith

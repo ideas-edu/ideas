@@ -2,30 +2,30 @@
 
 -- spul integreren met ideas
 -- document buggy rules for AM
--- include problemstatement translations 
+-- include problemstatement translations
 -- second ``for'' ref?
 -- if HU translations are provided, switch them on
 -- ref and xrefelt are now the same, I think
 -- feedbacktexts
 
 import Common.Library
-import Service.OpenMathSupport
 import Service.MathBridgeExerciseInfo
-import qualified Main.Revision as MR
+import Service.OpenMathSupport
 import Text.OpenMath.Object
 import Text.XML.Interface
+import qualified Main.Revision as MR
 
 import Data.Map((!))
 import Data.Maybe
 import Domain.LinearAlgebra
-import Domain.Math.Polynomial.Exercises
 import Domain.Math.Derivative.Exercises
-import Domain.Math.Numeric.Exercises
-import Domain.Math.Polynomial.RationalExercises
-import Domain.Math.Polynomial.IneqExercises
 import Domain.Math.Equation.CoverUpExercise
-import Domain.Math.Power.Exercises
+import Domain.Math.Numeric.Exercises
+import Domain.Math.Polynomial.Exercises
+import Domain.Math.Polynomial.IneqExercises
+import Domain.Math.Polynomial.RationalExercises
 import Domain.Math.Power.Equation.Exercises
+import Domain.Math.Power.Exercises
 
 import Text.XML
 
@@ -42,9 +42,8 @@ today  =  "Today's date"
 -}
 --------------------------------------------------------------------------------
 
-
 generateallfiles :: IO ()
-generateallfiles = 
+generateallfiles =
       do let version = MR.version
          let revision = MR.revision
          omdocexercisefile version revision linearExercise
@@ -137,7 +136,7 @@ generateallfiles =
            ,omdocexerciserefs gaussianElimExercise
            ,omdocexerciserefs systemWithMatrixExercise
            ]
-       
+
 --------------------------------------------------------------------------------
 {- Generating the recbook for the exercise collections
 -}
@@ -145,11 +144,11 @@ generateallfiles =
 
 recbookfile :: String -> Int -> [Element] -> [Element] -> IO ()
 recbookfile version revision sourcefiles exercisesrefs = do
-  let filestring = 
-             xmldecl 
-          ++ activemathdtd 
+  let filestring =
+             xmldecl
+          ++ activemathdtd
           ++ showXML
-               (omdocelt 
+               (omdocelt
                   ""
                   "http://www.activemath.org/namespaces/am_internal"
                   [omgroupelt "" "http://www.mathweb.org/omdoc"
@@ -159,7 +158,7 @@ recbookfile version revision sourcefiles exercisesrefs = do
                         -- versionelt version (show revision) -- apparently not allowed
                       ,omgroupelt "recbook_for_IdeasExercises" ""
                         (metadataelt ""
-                          (titleelts [EN,NL] ["Complete Ideas Exercises Recbook","Recbook voor alle Ideas opgaven"] 
+                          (titleelts [EN,NL] ["Complete Ideas Exercises Recbook","Recbook voor alle Ideas opgaven"]
                            ++
                            [dateelt "created" "2011-01-22"
                            ,dateelt "changed" today
@@ -177,11 +176,11 @@ recbookfile version revision sourcefiles exercisesrefs = do
                )
   writeFile (omdocpath ++ "RecBook_Exercises.omdoc") filestring
   writeFile (oqmathpath ++ "RecBook_Exercises.oqmath") filestring
-  
+
 sourcefile :: Exercise a -> Element
-sourcefile ex = 
-  sourcefileelt 
-    "http://www.activemath.org/namespaces/am_internal" 
+sourcefile ex =
+  sourcefileelt
+    "http://www.activemath.org/namespaces/am_internal"
     ("omdoc/" ++ show (exerciseId ex))
     "1293473065000" -- last modified; don't know why or if this has to be provided
 
@@ -189,14 +188,14 @@ omdocrefpath  :: String
 omdocrefpath  =  ""
 
 omdocexerciserefs :: Exercise a -> Element
-omdocexerciserefs ex = 
+omdocexerciserefs ex =
   let info             = mBExerciseInfo ! (exerciseId ex)
       langs            = langSupported info
       titleCmps        =  map (\l -> title info l) langs
       len              = length (examples ex)
       refs             = map (\i -> omdocrefpath  -- relative dir (the same right now)
                                 ++  context info  -- filename
-                                ++  "/" 
+                                ++  "/"
                                 ++  context info  -- exercise id
                                 ++  show i)       -- and nr
                              [0..len-1]
@@ -229,14 +228,14 @@ omdocexercisefile version revision ex = do
   let info = mBExerciseInfo ! (exerciseId ex)
   let langs = langSupported info
   let titleCmps =  map (\l -> title info l) langs
-  let filestring = 
-             xmldecl 
-          ++ activemathdtd 
+  let filestring =
+             xmldecl
+          ++ activemathdtd
           ++ showXML
-               (omdocelt 
+               (omdocelt
                   (context info ++ ".omdoc")
                   []
-                  [metadataelt 
+                  [metadataelt
                     ""
                     [dateelt "created" "2011-01-22"
                     ,dateelt "changed" today
@@ -244,7 +243,7 @@ omdocexercisefile version revision ex = do
                     ,creatorelt "aut" "Johan Jeuring"
                     ,versionelt version (show revision)
                     ]
-                  ,theoryelt (context info) 
+                  ,theoryelt (context info)
                              (omdocexercises ex)
                   ]
                )
@@ -256,11 +255,11 @@ omdocexercises ex = catMaybes $ zipWith make [(0::Int)..] (examples ex)
  where
    info = mBExerciseInfo ! (exerciseId ex)
    langs = langSupported info
-   make nr (dif, example) = 
+   make nr (dif, example) =
       fmap (makeElement . omobj2xml) (toOpenMath ex example)
     where
       makeElement omobj =
-         omdocexercise  
+         omdocexercise
             (context info ++ show nr)
             (if null (for info) then Nothing else Just (for info))
             (show dif)
@@ -283,24 +282,24 @@ omdocexercise :: String
               -> String
               -> Element
               -> Element
-omdocexercise 
-    exerciseid 
+omdocexercise
+    exerciseid
     maybefor
-    difficulty 
-    langs 
+    difficulty
+    langs
     cmps
-    interaction_generatorname 
-    interaction_generatortype 
+    interaction_generatorname
+    interaction_generatortype
     problemstatement
     ctxt
     task
-  = exerciseelt 
+  = exerciseelt
       exerciseid
       Nothing
       ([metadataelt
          ""
          [formatelt "AMEL1.0"
-         ,extradataelt 
+         ,extradataelt
            (difficultyelt difficulty
            :case maybefor of
               Just for -> [relationelt for]
@@ -311,8 +310,8 @@ omdocexercise
        ++
        cmpelts langs cmps
        ++
-       [interaction_generatorelt 
-         interaction_generatorname 
+       [interaction_generatorelt
+         interaction_generatorname
          interaction_generatortype
          [parameterelt "problemstatement" [Left problemstatement]
          ,parameterelt "context"          [Left ctxt]
@@ -322,11 +321,10 @@ omdocexercise
        ]
       )
 
-
 --------------------------------------------------------------------------------
 {- XML elements for Omdoc.
 
-Use inefficient string concatenation. 
+Use inefficient string concatenation.
 Probably use Text.XML.
 -}
 --------------------------------------------------------------------------------
@@ -335,10 +333,10 @@ activemathdtd  :: String
 activemathdtd  =  "<!DOCTYPE omdoc SYSTEM \"../dtd/activemath.dtd\" []>\n"
 
 cmpelts :: [Lang] -> [String] -> [Element]
-cmpelts = zipWith (\l s -> cmpelt (show l) s)         
+cmpelts = zipWith (\l s -> cmpelt (show l) s)
 
 cmpelt :: String  -> String -> Element
-cmpelt lang cmp =          
+cmpelt lang cmp =
   Element { name        =  "CMP"
           , attributes  =  ["xml:lang" := lang]
           , content     =  [Left cmp]
@@ -348,33 +346,33 @@ creatorelt :: String -> String -> Element
 creatorelt role nm =
   Element { name         =  "Creator"
           , attributes   =  ["role" := role ]
-          , content      =  [Left nm] 
-          }           
+          , content      =  [Left nm]
+          }
 
 dateelt :: String -> String -> Element
 dateelt action date =
   Element { name         =  "Date"
           , attributes   =  ["action" := action ]
-          , content      =  [Left date] 
-          }           
+          , content      =  [Left date]
+          }
 
 difficultyelt :: String  -> Element
-difficultyelt difficulty = 
+difficultyelt difficulty =
   Element { name        =  "difficulty"
           , attributes  =  ["value" := difficulty]
           , content     =  []
           }
 
 extradataelt :: [Element] -> Element
-extradataelt ls = 
+extradataelt ls =
   Element { name        =  "extradata"
           , attributes  =  []
           , content     =  map Right ls
           }
 
 exerciseelt :: String -> Maybe String -> [Element] -> Element
-exerciseelt idattr maybefor ls = 
-  case maybefor of 
+exerciseelt idattr maybefor ls =
+  case maybefor of
     Nothing  -> Element { name        =  "exercise"
                         , attributes  =  ["id" := idattr]
                         , content     =  map Right ls
@@ -382,17 +380,17 @@ exerciseelt idattr maybefor ls =
     Just for -> Element { name        =  "exercise"
                         , attributes  =  ["id" := idattr, "for" := for]
                         , content     =  map Right ls
-                        }                        
+                        }
 
 formatelt :: String -> Element
-formatelt format = 
+formatelt format =
   Element { name        =  "Format"
           , attributes  =  []
           , content     =  [Left format]
           }
 
 interaction_generatorelt :: String -> String -> [Element] -> Element
-interaction_generatorelt interaction_generatorname interaction_generatortype ls =          
+interaction_generatorelt interaction_generatorname interaction_generatortype ls =
   Element { name        =  "interaction_generator"
           , attributes  =  ["name" := interaction_generatorname
                            ,"type" := interaction_generatortype]
@@ -400,7 +398,7 @@ interaction_generatorelt interaction_generatorname interaction_generatortype ls 
           }
 
 metadataelt :: String -> [Element] -> Element
-metadataelt identifier ls = 
+metadataelt identifier ls =
   Element { name        =  "metadata"
           , attributes  =  if null identifier
                            then []
@@ -411,14 +409,14 @@ metadataelt identifier ls =
 omdocelt :: String -> String -> [Element] -> Element
 omdocelt identifier namespace ls =
   Element { name         =  "omdoc"
-          , attributes   =  if null namespace 
+          , attributes   =  if null namespace
                             then ["id" := identifier]
-                            else if null identifier 
+                            else if null identifier
                                  then ["xmlns:ami" := namespace]
                                  else ["id" := identifier
                                       ,"xmlns:ami" := namespace]
           , content      =  map Right ls
-          }           
+          }
 
 omgroupelt :: String -> String -> [Element] -> Element
 omgroupelt identifier namespace ls =
@@ -427,22 +425,22 @@ omgroupelt identifier namespace ls =
                            then []
                            else if null namespace
                                 then ["id" := identifier]
-                                else if null identifier 
+                                else if null identifier
                                      then ["xmlns" := namespace]
                                      else ["id" := identifier
                                           ,"xmlns" := namespace]
           , content      =  map Right ls
-          }           
+          }
 
 omtextelt  :: String -> [Element] -> Element
 omtextelt identifier ls =
   Element { name         =  "omtext"
           , attributes   =  ["id" := identifier]
           , content      =  map Right ls
-          }           
+          }
 
 parameterelt :: String -> Content -> Element
-parameterelt parametername ls =          
+parameterelt parametername ls =
   Element { name        =  "parameter"
           , attributes  =  ["name" := parametername]
           , content     =  ls
@@ -453,15 +451,15 @@ refelt ref =
   Element { name         =  "ref"
           , attributes   =  ["xref" := ref]
           , content      =  []
-          }           
+          }
 
 relationelt :: String -> Element
 relationelt for =
   Element { name         =  "relation"
           , attributes   =  ["type" := "for"]
           , content      =  [Right (refelt for)]
-          }           
-          
+          }
+
 sourceelt :: String -> Element
 sourceelt source =
   Element { name         =  "Source"
@@ -469,7 +467,7 @@ sourceelt source =
           , content      =  if null source
                             then []
                             else [Left source]
-          }           
+          }
 
 sourcefileelt :: String -> String -> String -> Element
 sourcefileelt namespace filename lastmodified =
@@ -478,48 +476,48 @@ sourcefileelt namespace filename lastmodified =
                             ,"path" := filename
                             ,"lastModified" := lastmodified]
           , content      =  []
-          }           
+          }
 
 theoryelt  :: String -> [Element] -> Element
 theoryelt identifier ls =
   Element { name         =  "theory"
           , attributes   =  ["id" := identifier]
           , content      =  map Right ls
-          }           
+          }
 
 titleelt :: String -> Element
-titleelt titletext = 
+titleelt titletext =
   Element { name        =  "Title"
           , attributes  =  []
           , content     =  [Left titletext]
           }
 
 titleeltlang :: Lang -> String -> Element
-titleeltlang lang titletext = 
+titleeltlang lang titletext =
   Element { name        =  "Title"
           , attributes  =  ["xml:lang" := show lang]
           , content     =  [Left titletext]
           }
 
 titleelts :: [Lang] -> [String] -> [Element]
-titleelts langs texts = zipWith titleeltlang langs texts 
+titleelts langs texts = zipWith titleeltlang langs texts
 
 titleeltMultLang :: [Lang] -> [String] -> Element
-titleeltMultLang langs texts = 
+titleeltMultLang langs texts =
   Element { name        =  "Title"
           , attributes  =  []
           , content     =  map Right (cmpelts langs texts)
           }
 
 versionelt :: String -> String -> Element
-versionelt version revision = 
+versionelt version revision =
   Element { name        =  "Version"
           , attributes  =  ["number" := revision]
           , content     =  [Left version]
           }
 
 xmldecl  :: String
-xmldecl  =  "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" 
+xmldecl  =  "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
 
 xrefelt :: String -> String -> Element
 xrefelt xref ami =
@@ -528,5 +526,4 @@ xrefelt xref ami =
                             --,"ami:item-element-name" := ami -- apparently not allowed
                             ]
           , content      =  []
-          }           
-
+          }

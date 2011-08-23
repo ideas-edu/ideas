@@ -52,4 +52,3 @@ gammaSymbol = makeSymbol "nums1" "gamma"
 floating computation. See IEEE standard for floating point representations. -}
 naNSymbol :: Symbol
 naNSymbol = makeSymbol "nums1" "NaN"
-

@@ -8,21 +8,21 @@ import Data.Map(Map,empty,insert)
 import Common.Library
 
 import Domain.LinearAlgebra
-import Domain.Math.Polynomial.Exercises
 import Domain.Math.Derivative.Exercises
-import Domain.Math.Numeric.Exercises
-import Domain.Math.Polynomial.RationalExercises
-import Domain.Math.Polynomial.IneqExercises
 import Domain.Math.Equation.CoverUpExercise
-import Domain.Math.Power.Exercises
+import Domain.Math.Numeric.Exercises
+import Domain.Math.Polynomial.Exercises
+import Domain.Math.Polynomial.IneqExercises
+import Domain.Math.Polynomial.RationalExercises
 import Domain.Math.Power.Equation.Exercises
+import Domain.Math.Power.Exercises
 
 --------------------------------------------------------------------------------
 {- Different languages can be supported.
 -}
 --------------------------------------------------------------------------------
 
-data Lang = EN | ES | DE | FR | NL | FI | HU | ALL 
+data Lang = EN | ES | DE | FR | NL | FI | HU | ALL
 
 instance Show Lang where
   show EN = "en"
@@ -49,7 +49,7 @@ data MBExerciseInfo = MBExerciseInfo
   }
 
 mBExerciseInfo :: Map Id MBExerciseInfo
-mBExerciseInfo =  
+mBExerciseInfo =
     insert (exerciseId coverUpExercise)            coverUpExerciseInfo
   $ insert (exerciseId derivativeExercise)         derivativeExerciseInfo
   $ insert (exerciseId gramSchmidtExercise)        gramSchmidtExerciseInfo
@@ -71,7 +71,7 @@ mBExerciseInfo =
   $ insert (exerciseId ineqHigherDegreeExercise)   ineqHigherDegreeExerciseInfo
   $ insert (exerciseId ineqLinearExercise)         ineqLinearExerciseInfo
   $ insert (exerciseId ineqQuadraticExercise)      ineqQuadraticExerciseInfo
-  $ insert (exerciseId linearExercise)             linearExerciseInfo 
+  $ insert (exerciseId linearExercise)             linearExerciseInfo
   $ insert (exerciseId linearMixedExercise)        linearMixedExerciseInfo
   $ insert (exerciseId quadraticExercise)          quadraticExerciseInfo
   $ insert (exerciseId quadraticNoABCExercise)     quadraticNoABCExerciseInfo
@@ -93,7 +93,7 @@ calcPowerExerciseInfo = MBExerciseInfo
                           HU -> ""
   , for               = "mbase://mb_concepts/mb_numbers_and_computation/_01_02_05_03_Powers"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Calculate the power "
                           ES -> "Calcular la potencia "
                           DE -> "Berechnen Sie die Potenz "
@@ -118,7 +118,7 @@ coverUpExerciseInfo = MBExerciseInfo
                           HU -> "Bevezető feladat algebrai egyenletekhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve the equation "
                           ES -> "Resolver la ecuación "
                           DE -> "Lösen Sie die Gleichung "
@@ -143,7 +143,7 @@ derivativeExerciseInfo = MBExerciseInfo
                           HU -> "Feladat deriválásához"
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_04_Differentiation"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Calculate the following derivative of a function "
                           ES -> "Calcular la derivada de la función "
                           DE -> "Bestimmen Sie die folgende Ableitung einer Funktion "
@@ -168,7 +168,7 @@ derivativePolyExerciseInfo = MBExerciseInfo
                           HU -> "Feladat polinomok deriválásához"
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_04_Differentiation"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Calculate the following derivative of a polynomial "
                           ES -> "Calcular la derivada del polinomio "
                           DE -> "Bestimmen Sie die folgende Ableitung eines Produkts von Funktionen "
@@ -193,7 +193,7 @@ derivativeProductExerciseInfo = MBExerciseInfo
                           HU -> "Feladat szorzat deriválásához"
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_04_Differentiation"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Calculate the following derivative of a product "
                           ES -> "Calcular la derivada del producto "
                           DE -> "Bestimmen Sie die folgende Ableitung eines Produkts von Funktionen "
@@ -218,7 +218,7 @@ derivativeQuotientExerciseInfo = MBExerciseInfo
                           HU -> "Feladat tört deriválásához"
   , for               = "mbase://mb_concepts/mb_calculus/_06_01_04_Differentiation"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Calculate the following derivative of a quotient "
                           ES -> "Calcular la derivada del cociente "
                           DE -> "BBestimmen Sie die folgende Ableitung eines Quotienten von Funktionen "
@@ -243,7 +243,7 @@ expEqExerciseInfo = MBExerciseInfo
                           HU -> "Feladat exponenciális egyenletekhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_05_Exponential_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve the exponential equation "
                           ES -> "Resolver la ecuación exponencial "
                           DE -> "Lösen Sie die Exponentialgleichung "
@@ -268,7 +268,7 @@ findFactorsExerciseInfo = MBExerciseInfo
                           HU -> "Feladat polinomok szorzattá alakításához"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Find the factors "
                           ES -> "Encontrar los factores "
                           DE -> "Finden Sie die Faktoren "
@@ -289,17 +289,17 @@ fractionExerciseInfo = MBExerciseInfo
                           DE -> ""
                           FR -> ""
                           NL -> "Breuken vereenvoudigen"
-                          FI -> "" 
+                          FI -> ""
                           HU -> ""
   , for               = "mbase://mb_concepts/mb_numbers_and_computation/_01_02_02_Fractions"
   , langSupported     = [EN,NL]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Simplify the fraction "
                           ES -> ""
                           DE -> ""
                           FR -> ""
                           NL -> "Vereenvoudig de breuk "
-                          FI -> "" 
+                          FI -> ""
                           HU -> ""
   , problemStatement  = "Simplify the following fraction: "
   , context           = showId $ exerciseId fractionExercise
@@ -314,17 +314,17 @@ gaussianElimExerciseInfo = MBExerciseInfo
                           DE -> ""
                           FR -> ""
                           NL -> "Matrix vegen"
-                          FI -> "" 
+                          FI -> ""
                           HU -> "Feladat mátrixegyenletek Gauss módszerrel történő megoldásához"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_02_02_Matrix_Algebra"
   , langSupported     = [EN,NL]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Perform Gaussian elimination on "
                           ES -> ""
                           DE -> ""
                           FR -> ""
                           NL -> "Veeg de matrix "
-                          FI -> "" 
+                          FI -> ""
                           HU -> ""
   , problemStatement  = "Perform Gaussian elimination: "
   , context           = showId $ exerciseId gaussianElimExercise
@@ -339,17 +339,17 @@ gramSchmidtExerciseInfo = MBExerciseInfo
                           DE -> ""
                           FR -> ""
                           NL -> "Gram Schmidt"
-                          FI -> "" 
+                          FI -> ""
                           HU -> ""
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_02_04_Vector_Spaces"
   , langSupported     = [EN,NL]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve using Gram Schmidt "
                           ES -> ""
                           DE -> ""
                           FR -> ""
                           NL -> "Los op mbv. Gram Schmidt"
-                          FI -> "" 
+                          FI -> ""
                           HU -> ""
   , problemStatement  = "Solve using Gram Schmidt: "
   , context           = showId $ exerciseId gramSchmidtExercise
@@ -368,7 +368,7 @@ higherDegreeExerciseInfo = MBExerciseInfo
                           HU -> "Feladat ásodfokú egyenletekhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_03_Polynomial_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve the higher degree polynomial equation "
                           ES -> "Resolver la ecuación de orden superior "
                           DE -> "Lösen Sie die Gleichung "
@@ -393,7 +393,7 @@ ineqHigherDegreeExerciseInfo = MBExerciseInfo
                           HU -> "Feladat másodfokú egyenlőtlenségekhez "
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_05_Inequalities"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve the inequation "
                           ES -> "Resolver la inecuación "
                           DE -> "Lösen Sie die Ungleichung "
@@ -418,7 +418,7 @@ ineqLinearExerciseInfo = MBExerciseInfo
                           HU -> "Feladat magasabb fokú egyenlőtlenségekhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_05_Inequalities"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve the linear inequation "
                           ES -> "Resolver la inecuación linea "
                           DE -> "Lösen Sie die lineare Ungleichung "
@@ -443,7 +443,7 @@ ineqQuadraticExerciseInfo = MBExerciseInfo
                           HU -> "Feladat másodfokú egyenlőtlenségekhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_05_Inequalities"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve the inequation "
                           ES -> "Resolver la inecuación "
                           DE -> "Lösen Sie die Ungleichung "
@@ -468,7 +468,7 @@ linearExerciseInfo = MBExerciseInfo
                           HU -> "Könnyű feladat elsőfokú egyenletekhez "
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_01_Linear_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve the linear equation "
                           ES -> "Resolver la ecuación lineal "
                           DE -> "Lösen Sie die lineare Gleichung "
@@ -493,7 +493,7 @@ linearMixedExerciseInfo = MBExerciseInfo
                           HU -> "Feladatk magasabb fokú egyenletekhez "
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_01_Linear_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve the linear mixed equation "
                           ES -> "Resolver la ecuación lineal compuesta "
                           DE -> "Lösen Sie die lineare Gleichung "
@@ -514,17 +514,17 @@ linearSystemExerciseInfo = MBExerciseInfo
                           DE -> ""
                           FR -> ""
                           NL -> "Systemen van lineaire vergelijkingen oplossen"
-                          FI -> "" 
+                          FI -> ""
                           HU -> ""
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_07_Systems_of_Equations"
   , langSupported     = [EN,NL]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve the system of linear equations "
                           ES -> ""
                           DE -> ""
                           FR -> ""
                           NL -> "Los het volgende systeem van lineaire vergelijkingen op"
-                          FI -> "" 
+                          FI -> ""
                           HU -> ""
   , problemStatement  = "Solve the following system of linear equations: "
   , context           = showId $ exerciseId linearSystemExercise
@@ -543,7 +543,7 @@ logEqExerciseInfo = MBExerciseInfo
                           HU -> "Feladat logaritmikus egyenletekhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_06_Logarithmic_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve the logarithmic equation "
                           ES -> "Resolver la ecuación logarítmica "
                           DE -> "Lösen Sie die Gleichung mit Logarithmen "
@@ -568,7 +568,7 @@ nonNegBrokenExpExerciseInfo = MBExerciseInfo
                           HU -> "Feladat nemnegatív kitevőt tartalmazó kifejezésekhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Write with a non-negative exponent "
                           ES -> "Expresar con exponente no negativo "
                           DE -> "Schreiben Sie mit nicht-negativen Exponenten "
@@ -593,7 +593,7 @@ powerEqExerciseInfo = MBExerciseInfo
                           HU -> "Feladat exponenciális egyenletekhez (x > 0)"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_03_Polynomial_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve the power equation "
                           ES -> "Resolver la ecuación con potencias "
                           DE -> "Lösen Sie die Gleichung mit x im Exponenten "
@@ -618,7 +618,7 @@ powerOfExerciseInfo = MBExerciseInfo
                           HU -> "Feladat kifejezés felírására ... hatványaként"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Write as a power "
                           ES -> "Expresar como potencia "
                           DE -> "Schreiben Sie als Potenz "
@@ -643,7 +643,7 @@ quadraticExerciseInfo = MBExerciseInfo
                           HU -> "Feladat tört egyenletekhez "
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_02_Quadratic_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve the quadratic equation "
                           ES -> "Resolver la ecuación cuadrática "
                           DE -> "Lösen Sie die quadratische Gleichung "
@@ -655,7 +655,7 @@ quadraticExerciseInfo = MBExerciseInfo
   , context           = showId $ exerciseId quadraticExercise
   , difficulty        = "easy"
   }
-  
+
 quadraticNoABCExerciseInfo :: MBExerciseInfo
 quadraticNoABCExerciseInfo = MBExerciseInfo
   { title             = \l -> case l of
@@ -668,7 +668,7 @@ quadraticNoABCExerciseInfo = MBExerciseInfo
                           HU -> "Feladat tört egyenletekhez "
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_02_Quadratic_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve, without using the quadratic formula, the quadratic equation "
                           ES -> "Resolver la ecuación cuadrática sin utilizar la fórmula cuadrática "
                           DE -> "Lösen Sie die quadratische Gleichung ohne Benutzung der p-q-Formel "
@@ -680,7 +680,7 @@ quadraticNoABCExerciseInfo = MBExerciseInfo
   , context           = showId $ exerciseId quadraticNoABCExercise
   , difficulty        = "easy"
   }
-  
+
 quadraticWithApproximationExerciseInfo :: MBExerciseInfo
 quadraticWithApproximationExerciseInfo = MBExerciseInfo
   { title             = \l -> case l of
@@ -693,7 +693,7 @@ quadraticWithApproximationExerciseInfo = MBExerciseInfo
                           HU -> "Feladat tört egyenletekhez "
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_02_Quadratic_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve, with approximation allowed, the quadratic equation "
                           ES -> "Resolver la ecuación cuadrática, con aproximación permitida "
                           DE -> "Lösen Sie die quadratische Gleichung"
@@ -718,7 +718,7 @@ rationalEquationExerciseInfo = MBExerciseInfo
                           HU -> "Feladat elsőfokú egyenlőtlenségekhez "
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_04_Rational_Equations"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve the rational equation "
                           ES -> "Resolver la ecuación racional "
                           DE -> "Lösen Sie die Bruchgleichung "
@@ -743,7 +743,7 @@ simplifyPowerExerciseInfo = MBExerciseInfo
                           HU -> "Feladat hatványokat tartalmazó kifejezések egyszerűsítéséhez"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Simplify the power "
                           ES -> "Simplificar las potencias "
                           DE -> "Vereinfachen Sie die Potenz "
@@ -768,7 +768,7 @@ simplifyRationalExerciseInfo = MBExerciseInfo
                           HU -> ""
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Simplify the rational "
                           ES -> "Simplificar el racional "
                           DE -> "Vereinfachen Sie den Bruch "
@@ -789,17 +789,17 @@ systemWithMatrixExerciseInfo = MBExerciseInfo
                           DE -> ""
                           FR -> ""
                           NL -> "Systemen van lineaire vergelijkingen oplossen mbv. matrices"
-                          FI -> "" 
+                          FI -> ""
                           HU -> ""
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_02_02_Matrix_Algebra"
   , langSupported     = [EN,NL]
-  , cmp               = \l -> case l of 
+  , cmp               = \l -> case l of
                           EN -> "Solve the following system of linear equations using a matrix "
                           ES -> ""
                           DE -> ""
                           FR -> ""
                           NL -> "Los het volgende systeem van lineaire vergelijkingen op mbv. matrices "
-                          FI -> "" 
+                          FI -> ""
                           HU -> ""
   , problemStatement  = "Solve the following system of linear equations using a matrix:  "
   , context           = showId $ exerciseId systemWithMatrixExercise

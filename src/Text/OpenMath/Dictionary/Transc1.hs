@@ -147,4 +147,3 @@ arccschSymbol = makeSymbol "transc1" "arccsch"
 Stegun, section 4.6. -}
 arccothSymbol :: Symbol
 arccothSymbol = makeSymbol "transc1" "arccoth"
-

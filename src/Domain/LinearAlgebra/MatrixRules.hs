@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,20 +11,20 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.MatrixRules where
 
-import Domain.Math.Simplification
-import Domain.LinearAlgebra.Matrix
 import Common.Context
 import Common.Navigator
 import Common.Transformation
 import Control.Monad
 import Data.List
+import Domain.LinearAlgebra.Matrix
+import Domain.Math.Simplification
 
 matrixRules :: (Argument a, Fractional a) => [Rule (Context (Matrix a))]
-matrixRules = 
+matrixRules =
    let noArgs f = f (const Nothing)
    in [ noArgs ruleScaleRow
       , noArgs ruleExchangeRows
-      , noArgs ruleAddMultiple 
+      , noArgs ruleAddMultiple
       ]
 
 ruleFindColumnJ :: Num a => Rule (Context (Matrix a))
@@ -33,7 +33,7 @@ ruleFindColumnJ = minorRule $ makeSimpleRule "linearalgebra.gaussianelim.FindCol
    i    <- findIndexM nonZero cols
    writeVar columnJ i
    return m
-   
+
 ruleExchangeNonZero :: (Simplify a, Num a) => Rule (Context (Matrix a))
 ruleExchangeNonZero = simplify $ ruleExchangeRows $ evalCM $ \m -> do
    nonEmpty m
@@ -61,7 +61,7 @@ ruleZerosFP = simplify $ ruleAddMultiple $ evalCM $ \m -> do
    cov <- readVar covered
    let v = negate (col!!i)
    return (i + cov + 1, cov, v)
-   
+
 ruleZerosBP :: (Argument a, Simplify a, Fractional a) => Rule (Context (Matrix a))
 ruleZerosBP = simplify $ ruleAddMultiple $ evalCM $ \m -> do
    nonEmpty m
@@ -86,7 +86,7 @@ ruleUncoverRow = minorRule $ makeRule "linearalgebra.gaussianelim.UncoverRow" $ 
 ruleScaleRow :: (Argument a, Fractional a) => (Context (Matrix a) -> Maybe (Int, a)) -> Rule (Context (Matrix a))
 ruleScaleRow f = makeRule "linearalgebra.gaussianelim.scale" (supply2 descr f rowScale)
  where descr  = ("row", "scale factor")
-      
+
 ruleExchangeRows :: Num a => (Context (Matrix a) -> Maybe (Int, Int)) -> Rule (Context (Matrix a))
 ruleExchangeRows f = makeRule "linearalgebra.gaussianelim.exchange" (supply2 descr f rowExchange)
  where descr = ("row 1", "row 2")
@@ -94,7 +94,7 @@ ruleExchangeRows f = makeRule "linearalgebra.gaussianelim.exchange" (supply2 des
 ruleAddMultiple :: (Argument a, Fractional a) => (Context (Matrix a) -> Maybe (Int, Int, a)) -> Rule (Context (Matrix a))
 ruleAddMultiple f = makeRule "linearalgebra.gaussianelim.add" (supply3 descr f  rowAdd)
  where descr  = ("row 1", "row2", "scale factor")
-      
+
 ---------------------------------------------------------------------------------
 -- Parameterized transformations
 
@@ -102,7 +102,7 @@ rowExchange :: Int -> Int -> Transformation (Context (Matrix a))
 rowExchange i j = matrixTrans $ \m -> do
    guard (i /= j && validRow i m && validRow j m)
    return (switchRows i j m)
-                                                                            
+
 rowScale :: Num a => Int -> a -> Transformation (Context (Matrix a))
 rowScale i k = matrixTrans $ \m -> do
    guard (k `notElem` [0, 1] && validRow i m)
@@ -119,7 +119,7 @@ changeCover f = makeTrans $ withCM $ \m -> do
    guard (new >= 0 && new <= fst (dimensions m))
    writeVar covered new
    return m
-   
+
 matrixTrans ::  (Matrix a -> Maybe (Matrix a)) -> Transformation (Context (Matrix a))
 matrixTrans f = makeTrans $ \c -> do
    a   <- fromContext c
@@ -129,7 +129,7 @@ matrixTrans f = makeTrans $ \c -> do
 -- local helper function
 validRow :: Int -> Matrix a -> Bool
 validRow i m = i >= 0 && i < fst (dimensions m)
-   
+
 nonEmpty :: Matrix a -> ContextMonad ()
 nonEmpty m = subMatrix m >>= guard . not . isEmpty
 
@@ -138,9 +138,9 @@ covered = newVar "covered" 0
 columnJ = newVar "columnJ" 0
 
 subMatrix :: Matrix a -> ContextMonad (Matrix a)
-subMatrix m = do 
+subMatrix m = do
    cov <- readVar covered
    return $ makeMatrix $ drop cov $ rows m
-   
+
 findIndexM :: MonadPlus m => (a -> Bool) -> [a] -> m Int
 findIndexM p = maybe mzero return . findIndex p

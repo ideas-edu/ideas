@@ -1,7 +1,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,7 +12,7 @@
 -- A collection of general utility functions
 --
 -----------------------------------------------------------------------------
-module Common.Utils 
+module Common.Utils
    ( Some(..), ShowString(..), readInt, readM
    , subsets, isSubsetOf
    , cartesian, distinct, allsame
@@ -34,7 +34,7 @@ instance Show ShowString where
    show = fromShowString
 
 readInt :: String -> Maybe Int
-readInt xs 
+readInt xs
    | null xs                = Nothing
    | any (not . isDigit) xs = Nothing
    | otherwise              = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
@@ -47,7 +47,7 @@ readM s = case reads s of
 subsets :: [a] -> [[a]]
 subsets = foldr op [[]]
  where op a list = list ++ map (a:) list
- 
+
 isSubsetOf :: Eq a => [a] -> [a] -> Bool
 isSubsetOf xs ys = all (`elem` ys) xs
 
@@ -56,7 +56,7 @@ cartesian as bs = [ (a, b) | a <- as, b <- bs ]
 
 distinct :: Eq a => [a] -> Bool
 distinct []     = True
-distinct (x:xs) = all (/=x) xs && distinct xs 
+distinct (x:xs) = all (/=x) xs && distinct xs
 
 allsame :: Eq a => [a] -> Bool
 allsame []     = True
@@ -67,21 +67,21 @@ safeHead (x:_) = return x
 safeHead _     = Nothing
 
 fixpoint :: Eq a => (a -> a) -> a -> a
-fixpoint f = stop . iterate f 
+fixpoint f = stop . iterate f
  where
    stop []           = error "Common.Utils: empty list"
    stop (x:xs)
       | x == head xs = x
       | otherwise    = stop xs
-   
+
 splitAtElem :: Eq a => a -> [a] -> Maybe ([a], [a])
 splitAtElem c s =
    case break (==c) s of
-      (xs, _:ys) -> Just (xs, ys) 
+      (xs, _:ys) -> Just (xs, ys)
       _          -> Nothing
 
 splitsWithElem :: Eq a => a -> [a] -> [[a]]
-splitsWithElem c s = 
+splitsWithElem c s =
    case splitAtElem c s of
       Just (xs, ys) -> xs : splitsWithElem c ys
       Nothing       -> [s]

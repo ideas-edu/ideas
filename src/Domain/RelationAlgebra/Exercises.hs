@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,14 +11,14 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Exercises (cnfExercise) where
 
-import Prelude hiding (repeat)
-import Domain.RelationAlgebra.Formula
-import Domain.RelationAlgebra.Generator
-import Domain.RelationAlgebra.Strategies
-import Domain.RelationAlgebra.Rules
-import Domain.RelationAlgebra.Parser
 import Common.Library
 import Data.Maybe
+import Domain.RelationAlgebra.Formula
+import Domain.RelationAlgebra.Generator
+import Domain.RelationAlgebra.Parser
+import Domain.RelationAlgebra.Rules
+import Domain.RelationAlgebra.Strategies
+import Prelude hiding (repeat)
 import Test.QuickCheck
 
 cnfExercise :: Exercise RelAlg
@@ -40,7 +40,7 @@ cnfExercise = makeExercise
    }
 
 stepsRemaining :: Int -> RelAlg -> Maybe Int
-stepsRemaining i = 
+stepsRemaining i =
    lengthMax i . derivationTree toCNF . inContext cnfExercise
 
 {- cnfExerciseSimple :: Exercise RelAlg
@@ -49,7 +49,7 @@ cnfExerciseSimple = cnfExercise
    , description = description cnfExercise ++ " (simple)"
    , strategy    = label "Apply rules exhaustively" $ repeat $ somewhere $ alternatives $ ruleset cnfExercise
    } -}
-   
+
 myReady :: Exercise a -> a -> Bool
-myReady ex = null . applyAll (alternatives $ filter (not . isBuggyRule) (ruleset ex)) 
+myReady ex = null . applyAll (alternatives $ filter (not . isBuggyRule) (ruleset ex))
          . inContext ex

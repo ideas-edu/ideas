@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,16 +11,16 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.LinearSystem where
 
-import Domain.Math.Data.Relation
-import Domain.LinearAlgebra.Matrix (Matrix, makeMatrix, rows)
-import Domain.LinearAlgebra.LinearView
+import Common.Rewriting
+import Common.Utils
+import Common.Utils.Uniplate
+import Control.Monad
 import Data.Foldable (toList)
 import Data.List
 import Data.Maybe
-import Control.Monad
-import Common.Utils
-import Common.Utils.Uniplate
-import Common.Rewriting
+import Domain.LinearAlgebra.LinearView
+import Domain.LinearAlgebra.Matrix (Matrix, makeMatrix, rows)
+import Domain.Math.Data.Relation
 import qualified Data.Set as S
 
 type LinearSystem a = Equations a
@@ -29,7 +29,7 @@ getVarsSystem :: IsLinear a => LinearSystem a -> [String]
 getVarsSystem = S.toList . S.unions . map varSet . concatMap toList
 
 evalSystem :: (Uniplate a, IsLinear a) => (String -> a) -> LinearSystem a -> Bool
-evalSystem f = 
+evalSystem f =
    let evalEq (x :==: y) = x==y
    in all (evalEq . fmap (evalLinearExpr f))
 
@@ -50,7 +50,7 @@ getSolution xs = do
    make (lhs :==: rhs) = do
       v <- getVariable lhs
       return (v, rhs)
-      
+
 -- No constant on the left, no variables on the right
 inStandardForm :: IsLinear a => Equation a -> Bool
 inStandardForm (lhs :==: rhs) = getConstant lhs == 0 && hasNoVar rhs
@@ -59,7 +59,6 @@ toStandardForm :: IsLinear a => Equation a -> Equation a
 toStandardForm (lhs :==: rhs) =
       let c = getConstant rhs - getConstant lhs
       in (lhs - rhs + c) :==: c
-
 
 inSolvedForm :: IsLinear a => LinearSystem a -> Bool
 inSolvedForm xs = invalidSystem xs || isJust (getSolution xs)
@@ -83,10 +82,10 @@ matrixToSystemWith vs = map makeEquation . rows
  where
    varList = vs ++ (variables \\ vs)
    makeEquation [] = 0 :==: 0
-   makeEquation xs = 
-      let lhs = sum (zipWith (\v a -> a * variable v) varList (init xs))  
+   makeEquation xs =
+      let lhs = sum (zipWith (\v a -> a * variable v) varList (init xs))
           rhs = last xs
       in lhs :==: rhs
-            
+
 variables :: [String]
 variables = map (\n -> 'x' : [n]) $ ['1' .. '9'] ++ ['a' .. 'z'] -- should be sorted!!

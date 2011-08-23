@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs, Rank2Types #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -10,9 +10,9 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Service.Types 
+module Service.Types
    ( -- * Services
-     Service, makeService, deprecate 
+     Service, makeService, deprecate
    , serviceDeprecated, serviceFunction
      -- * Types
    , Type(..), TypedValue(..), tuple2, tuple3, tuple4
@@ -26,22 +26,22 @@ import Common.Library
 import Common.Utils (commaList)
 import Control.Monad
 import Data.Maybe
-import System.Random
 import Service.FeedbackScript.Syntax
+import System.Random
 
 -----------------------------------------------------------------------------
 -- Services
 
-data Service = Service 
+data Service = Service
    { serviceId         :: Id
    , serviceDeprecated :: Bool
    , serviceFunction   :: forall a . TypedValue a
    }
-   
+
 instance HasId Service where
    getId = serviceId
    changeId f a = a { serviceId = f (serviceId a) }
-   
+
 makeService :: String -> String -> (forall a . TypedValue a) -> Service
 makeService s descr f = describe descr (Service (newId s) False f)
 
@@ -94,13 +94,13 @@ tuple2 :: Type a t1 -> Type a t2 -> Type a (t1, t2)
 tuple2 = Pair
 
 tuple3 :: Type a t1 -> Type a t2 -> Type a t3 -> Type a (t1, t2, t3)
-tuple3 t1 t2 t3 = Iso (f <-> g) (Pair t1 (Pair t2 t3)) 
+tuple3 t1 t2 t3 = Iso (f <-> g) (Pair t1 (Pair t2 t3))
  where
    f (a, (b, c)) = (a, b, c)
    g (a, b, c)   = (a, (b, c))
-   
+
 tuple4 :: Type a t1 -> Type a t2 -> Type a t3 -> Type a t4 -> Type a (t1, t2, t3, t4)
-tuple4 t1 t2 t3 t4 = Iso (f <-> g) (Pair t1 (Pair t2 (Pair t3 t4))) 
+tuple4 t1 t2 t3 t4 = Iso (f <-> g) (Pair t1 (Pair t2 (Pair t3 t4)))
  where
    f (a, (b, (c, d))) = (a, b, c, d)
    g (a, b, c, d)     = (a, (b, (c, d)))
@@ -171,14 +171,14 @@ data Type a t where
 
 instance Show (Type a t) where
    show (Iso _ t)      = show t
-   show (t1 :-> t2)    = show t1 ++ " -> " ++ show t2 
+   show (t1 :-> t2)    = show t1 ++ " -> " ++ show t2
    show t@(Pair _ _)   = showTuple t
    show (t1 :|: t2)    = show t1 ++ " | " ++ show t2
    show (Tag s _)      = s -- ++ "@(" ++ show t ++ ")"
    show (List t)       = "[" ++ show t ++ "]"
    show (IO t)         = show t
    show t              = fromMaybe "unknown" (showGroundType t)
-   
+
 showTuple :: Type a t -> String
 showTuple tp = "(" ++ commaList (collect tp) ++ ")"
  where
@@ -186,10 +186,10 @@ showTuple tp = "(" ++ commaList (collect tp) ++ ")"
    collect (Pair t1 t2) = collect t1 ++ collect t2
    collect (Iso _ t)    = collect t
    collect t            = [show t]
-   
+
 showGroundType :: Type a t -> Maybe String
 showGroundType tp =
-   case tp of 
+   case tp of
       Exercise     -> Just "Exercise"
       Script       -> Just "Script"
       Strategy     -> Just "Strategy"

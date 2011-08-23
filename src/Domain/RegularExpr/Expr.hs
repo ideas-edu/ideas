@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -33,9 +33,9 @@ data RE a = EmptySet | Epsilon | Atom a | Option (RE a) | Star (RE a)
 -- Fold
 
 foldRE :: (b, b, a -> b, b -> b, b -> b, b -> b, b -> b -> b, b -> b -> b) -> RE a -> b
-foldRE (es, eps, at, opt, st, pl, sq, ch) = rec 
+foldRE (es, eps, at, opt, st, pl, sq, ch) = rec
  where
-   rec regexp = 
+   rec regexp =
       case regexp of
          EmptySet -> es
          Epsilon  -> eps
@@ -56,7 +56,7 @@ instance Arbitrary RegExp where
    arbitrary = sized $ arbRE $ elements ["a", "b", "c", "d"]
 
 instance CoArbitrary RegExp where
-   coarbitrary = foldRE 
+   coarbitrary = foldRE
       (         variant (0 :: Int)
       ,         variant (1 :: Int)
       , \a ->   variant (2 :: Int). coarbitrary a
@@ -68,13 +68,13 @@ instance CoArbitrary RegExp where
       )
 
 arbRE :: Gen a -> Int -> Gen (RE a)
-arbRE g n 
-   | n == 0 = frequency 
+arbRE g n
+   | n == 0 = frequency
         [ (6, liftM Atom g)
         , (3, return Epsilon)
         , (1, return EmptySet)
         ]
-   | otherwise = frequency 
+   | otherwise = frequency
         [ (3, arbRE g 0)
         , (2, unop Star) -- (1, unop Option), (1, unop Plus)
         , (3, binop (:*:)), (3, binop (:|:))
@@ -91,20 +91,20 @@ ppRegExp :: RegExp -> String
 ppRegExp = ppWith (const id)
 
 ppWith :: (Int -> a -> String) -> RE a -> String
-ppWith f = ($ 0) . foldRE 
+ppWith f = ($ 0) . foldRE
    (const "F", const "T", flip f, unop "?", unop "*", unop "+", binop 5 "", binop 4 "|")
- where 
+ where
    unop s a _ = parIf False (a 6 ++ s)
    binop i s a b n = parIf (n > i) (a i ++ s ++ b i)
    parIf b s = if b then "(" ++ s ++ ")" else s
 
 --testje = ppWith (const id) (Star (Plus (Atom "P")) :*: (Option (Atom "Q" :*: Option (Atom "S")) :|: Atom "R"))
-   
+
 --------------------------------------------------------------------
 -- Instances for rewriting
 
 instance Uniplate (RE a) where
-   uniplate regexp = 
+   uniplate regexp =
       case regexp of
          Option r -> plate Option |* r
          Star r   -> plate Star   |* r
@@ -116,23 +116,23 @@ instance Uniplate (RE a) where
 instance Different (RE a) where
    different = (EmptySet, Epsilon)
 
-instance IsTerm RegExp where 
-   toTerm = foldRE 
+instance IsTerm RegExp where
+   toTerm = foldRE
       ( symbol emptySetSymbol, symbol epsilonSymbol, variable
       , unary optionSymbol, unary starSymbol, unary plusSymbol
       , binary sequenceSymbol, binary choiceSymbol
-      ) 
+      )
 
    fromTerm a = fromTermWith f a `mplus` liftM Atom (getVariable a)
     where
-      f s []     
+      f s []
          | s == emptySetSymbol = return EmptySet
          | s == epsilonSymbol  = return Epsilon
-      f s [x]    
+      f s [x]
          | s == optionSymbol   = return (Option x)
          | s == starSymbol     = return (Star x)
          | s == plusSymbol     = return (Plus x)
-      f s [x, y] 
+      f s [x, y]
          | s == sequenceSymbol = return (x :*: y)
          | s == choiceSymbol   = return (x :|: y)
       f _ _ = fail "fromExpr"

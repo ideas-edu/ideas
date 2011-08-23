@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,16 +9,16 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Polynomial.Generators 
+module Domain.Math.Polynomial.Generators
    ( polynomialGen, polynomialDegreeGen
-   , cubicGen, quadraticGen, linearGen 
+   , cubicGen, quadraticGen, linearGen
    ) where
 
-import Prelude hiding ((^))
+import Control.Monad
 import Domain.Math.Expr
 import Domain.Math.Numeric.Generators
+import Prelude hiding ((^))
 import Test.QuickCheck
-import Control.Monad
 
 polynomialGen :: Int -> Gen Expr
 polynomialGen n = do
@@ -30,8 +30,8 @@ polynomialGen n = do
 polynomialDegreeGen :: Int -> Int -> Gen Expr
 polynomialDegreeGen d n
    | d==0         = ratGen
-   | n==0 && d==1 = return (Var "x") 
-   | n==0         = return (Var "x" ^ fromIntegral d) 
+   | n==0 && d==1 = return (Var "x")
+   | n==0         = return (Var "x" ^ fromIntegral d)
    | otherwise    = oneof $
         [ timesGen, plusGen
         , liftM2 (:/:) (rec d) ratGenNZ
@@ -52,7 +52,7 @@ polynomialDegreeGen d n
       i <- elements [ i | i <- [2..d], d `mod` i == 0 ]
       a <- rec (d `div` i)
       return (a ^ fromIntegral i)
-      
+
 cubicGen, quadraticGen, linearGen :: Int -> Gen Expr
 cubicGen     = polynomialDegreeGen 3
 quadraticGen = polynomialDegreeGen 2

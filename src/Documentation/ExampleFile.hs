@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,21 +12,21 @@
 -- encoded in XML. The examples can be for the diagnose and ready services.
 --
 -----------------------------------------------------------------------------
-module Documentation.ExampleFile 
+module Documentation.ExampleFile
    ( ExampleFile, items, Item(..)
    , readExampleFile, writeExampleFile
    ) where
 
 import Common.Id
 import Common.Utils (readM)
+import Control.Monad
 import Data.Maybe
 import Text.XML
-import Control.Monad
 
 data ExampleFile = EF { fileId :: Id, items :: [Item] }
 
 instance Show ExampleFile where
-   show a = "Example file for " ++ showId a ++ 
+   show a = "Example file for " ++ showId a ++
             " (" ++ show (length (items a)) ++ " items)"
 
 instance HasId ExampleFile where
@@ -53,7 +53,7 @@ getItem xml = do
    let descr = fromMaybe "" $ findAttribute "description" xml
    return $ Diagnose before after descr
  `mplus` do
-   guard (name xml == "ready") 
+   guard (name xml == "ready")
    term <- findAttribute "term" xml
    let expected = findAttribute "expected" xml >>= readM
        descr = fromMaybe "" $ findAttribute "description" xml
@@ -66,14 +66,14 @@ writeExampleFile file ex = writeFile file $ showXML $
       mapM_ buildItem (items ex)
 
 buildItem :: Item -> XMLBuilder
-buildItem item = 
-   case item of 
+buildItem item =
+   case item of
       Diagnose before after descr ->
          element "diagnose" $ do
             "before"      .=. before
             "after"       .=. after
             "description" .=. descr
-      Ready term expected descr -> 
+      Ready term expected descr ->
          element "ready" $ do
             "term"        .=. term
             maybe (return ()) (("expected" .=.) . show) expected

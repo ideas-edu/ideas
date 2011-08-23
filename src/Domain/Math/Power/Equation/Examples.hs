@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -17,16 +17,16 @@ module Domain.Math.Power.Equation.Examples
    , rootEquations, rootEquations2, rootSubstEquations, expEquations2
    ) where
 
-import Prelude hiding ((^))
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
+import Prelude hiding ((^))
 
 ----------------------------------------------------------
 -- HAVO B applets
 
 -- Hoofdstuk 7, vergelijkingen met machten algebraisch (6)
 powerEquations :: [[Equation Expr]]
-powerEquations = 
+powerEquations =
   -- los vergelijkingen algebraisch op
   let x = Var "x" in
   [ [ x^14 :==: 25
@@ -39,7 +39,7 @@ powerEquations =
     , root (x^3) 4 :==: 720
     , root (x^2) 5 :==: 5.5
     ]
-  , [ 4*x^(-12) :==: 28 
+  , [ 4*x^(-12) :==: 28
     , 7*x^5.1 + 16 :==: 100
     , 8*x^(-1.9) - 5 :==: 2
     , 0.8 * x^0.7 + 7 :==: 12.5
@@ -99,7 +99,6 @@ logEquations =
     ]
   ]
 
-
 ----------------------------------------------------------
 -- VWO A/C applets
 
@@ -149,7 +148,7 @@ higherPowerEquations =
 
 -- Hoofdstuk 5, hogeremachtswortels (2)
 rootEquations :: [[Equation Expr]]
-rootEquations = 
+rootEquations =
   -- Bereken exacte oplossing
   let x = Var "x" in
   let y = Var "y" in
@@ -180,8 +179,6 @@ rootEquations =
     , y :==: 8+(1/2)*root x 3
     ]
   ]
-
-
 
 ----------------------------------------------------------
 -- VWO B applets

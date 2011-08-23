@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Simplification 
+module Domain.Math.Simplification
    ( Simplify(..), SimplifyConfig(..)
    , simplifyConfig
    , Simplified, simplified, liftS, liftS2
@@ -30,8 +30,7 @@ import Domain.Math.Numeric.Views
 import Domain.Math.SquareRoot.Views
 import qualified Common.View as View
 
-
-data SimplifyConfig = SimplifyConfig 
+data SimplifyConfig = SimplifyConfig
   { withSmartConstructors  :: Bool
   , withMergeAlike         :: Bool
   , withDistribution       :: Bool
@@ -64,7 +63,7 @@ instance Simplify Expr where
        optional (withSmartConstructors cfg)  (transform smart)
      . optional (withMergeAlike cfg)         mergeAlike
      . optional (withDistribution cfg)       distribution
-     . optional (withSimplifySquareRoot cfg) (View.simplify 
+     . optional (withSimplifySquareRoot cfg) (View.simplify
                                                (squareRootViewWith rationalView))
      . optional (withConstantFolding cfg)    constantFolding
 
@@ -148,17 +147,17 @@ distribution = descend distribution . f
          guard (length xs > 1)
          return $ build sumView $ map (./. b) xs
       _ -> Nothing
-      
+
 -------------------------------------------------------------
 -- Constant folding
 
 -- Not an efficient implementation: could be improved if necessary
 constantFolding :: Expr -> Expr
-constantFolding expr = 
+constantFolding expr =
    case match rationalView expr of
       Just r  -> fromRational r
       Nothing -> descend constantFolding expr
-                 
+
 ----------------------------------------------------------------------
 -- merge alike for sums and products
 
@@ -171,18 +170,18 @@ collectLikeTerms = View.simplifyWith f sumView
 mergeAlike :: Expr -> Expr
 mergeAlike a =
    case (match sumView a, match productView a) of
-      (Just xs, _) | length xs > 1 -> 
+      (Just xs, _) | length xs > 1 ->
          build sumView (sort $ mergeAlikeSum $ map mergeAlike xs)
-      (_, Just (b, ys)) | length (filter (/= 1) ys) > 1 -> 
+      (_, Just (b, ys)) | length (filter (/= 1) ys) > 1 ->
          build productView (b, sort $ mergeAlikeProduct $ map mergeAlike ys)
       _ -> a
 
 mergeAlikeProduct :: [Expr] -> [Expr]
 mergeAlikeProduct ys = f [ (match rationalView y, y) | y <- ys ]
- where  
+ where
    f []                    = []
    f ((Nothing  , e):xs)   = e:f xs
-   f ((Just r   , _):xs)   = 
+   f ((Just r   , _):xs)   =
       let cs   = r : [ c | (Just c, _) <- xs ]
           rest = [ x | (Nothing, x) <- xs ]
       in build rationalView (product cs):rest
@@ -199,7 +198,7 @@ mergeAlikeSum xs = rec [ (Just $ pm 1 x, x) | x <- xs ]
    pm r e = case match rationalView e of
                Just r1 -> (r*r1, Nat 1)
                Nothing -> (r, e)
-   
+
    rec [] = []
    rec ((Nothing, e):ys) = e:rec ys
    rec ((Just (r, a), e):ys) = new:rec rest

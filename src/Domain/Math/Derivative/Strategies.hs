@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Derivative.Strategies 
+module Domain.Math.Derivative.Strategies
    ( derivativeStrategy, derivativePolyStrategy
    , derivativeProductStrategy, derivativeQuotientStrategy
    , derivativePowerStrategy, getDiffExpr
@@ -17,20 +17,20 @@ module Domain.Math.Derivative.Strategies
 
 import Common.Library
 import Data.Maybe
-import Domain.Math.Derivative.Rules 
-import Domain.Math.Expr
 import Domain.Math.CleanUp
-import Domain.Math.Polynomial.Views
-import Domain.Math.Polynomial.Rules
+import Domain.Math.Derivative.Rules
+import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.Power.Strategies
+import Domain.Math.Polynomial.Rules
+import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Rules
+import Domain.Math.Power.Strategies
 
 import Prelude hiding ((^))
 
 derivativeStrategy :: LabeledStrategy (Context Expr)
 derivativeStrategy = cleanUpStrategyAfter (applyTop cleanUpExpr) $
-   label "Derivative" $ repeatS $ somewhere $ 
+   label "Derivative" $ repeatS $ somewhere $
       alternatives (map liftToContext derivativeRules)
       <|> derivativePolyStepStrategy
       <|> check isDiffC <*> once (once (liftToContext ruleDefRoot))
@@ -68,14 +68,14 @@ derivativeQuotientStrategy = cleanUpStrategyAfter (applyTop cleanUpExpr) $
  where
    list = map liftToContext
       [ ruleDerivQuotient, ruleDerivPlus, ruleDerivMin, ruleDerivNegate ]
-      
+
 derivativePowerStrategy :: LabeledStrategy (Context Expr)
-derivativePowerStrategy = label "derivative-power" $ 
-   cleanUpStrategyAfter (applyTop cleanUpExpr) (label "split-rational" 
+derivativePowerStrategy = label "derivative-power" $
+   cleanUpStrategyAfter (applyTop cleanUpExpr) (label "split-rational"
       (repeatS (somewhere (liftToContext ruleSplitRational)))) <*>
-   configure mycfg simplifyPowerStrategy <*> 
+   configure mycfg simplifyPowerStrategy <*>
    repeatS (distr <*> configure mycfg simplifyPowerStrategy) <*>
-   cleanUpStrategyAfter (applyTop cleanUpExpr) (label "use-derivative-rules" 
+   cleanUpStrategyAfter (applyTop cleanUpExpr) (label "use-derivative-rules"
       (repeatS (somewhere (alternatives list)))) <*>
    configure mycfg nonNegBrokenExpStrategy
  where
@@ -83,9 +83,9 @@ derivativePowerStrategy = label "derivative-power" $
       [ ruleDerivPlus, ruleDerivMin, ruleDerivNegate, ruleDerivPowerFactor
       , ruleDerivCon ]
    mycfg = [(byName myFractionTimes, Remove)]
-   distr = cleanUpStrategyAfter (applyTop cleanUpExpr) $ 
+   distr = cleanUpStrategyAfter (applyTop cleanUpExpr) $
       label "distr" (somewhere (alternatives (map liftToContext rulesPolyNF)))
-      
+
 derivativePolyStepStrategy :: LabeledStrategy (Context Expr)
 derivativePolyStepStrategy = label "derivative-poly-step" $
    check polyDiff <*> liftToContext ruleDerivPolynomial
@@ -94,9 +94,9 @@ derivativePolyStepStrategy = label "derivative-poly-step" $
    nfPoly   = (`belongsTo` polyNormalForm rationalView)
 
 exceptLowerDiv :: IsStrategy f => f (Context Expr) -> Strategy (Context Expr)
-exceptLowerDiv = somewhereWith "except-lower-div" $ \a -> 
+exceptLowerDiv = somewhereWith "except-lower-div" $ \a ->
    if isDivC a then [0] else [0 .. arity a-1]
- where 
+ where
    isDivC = maybe False isDiv . current
    isDiv (_ :/: _) = True
    isDiv _         = False

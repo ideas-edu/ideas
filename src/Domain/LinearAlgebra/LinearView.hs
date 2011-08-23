@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -14,11 +14,11 @@ module Domain.LinearAlgebra.LinearView
    , splitLinearExpr, evalLinearExpr, linearView
    ) where
 
-import Control.Monad
-import Data.List
 import Common.Rewriting
 import Common.Utils.Uniplate
 import Common.View
+import Control.Monad
+import Data.List
 import Domain.Math.Expr
 import qualified Data.Map as M
 
@@ -29,9 +29,9 @@ instance Functor LinearMap where
 
 linearView :: View Expr (LinearMap Expr)
 linearView = makeView f g
- where 
+ where
    -- compositional (sumView would be a more restrictive alternative)
-   f expr = 
+   f expr =
       case expr of
          Nat _    -> return $ LM M.empty expr
          Var s    -> return $ LM (M.singleton s 1) 0
@@ -43,7 +43,7 @@ linearView = makeView f g
          Sqrt a   -> join $ liftM sqrtLM (f a)
          Number _ -> return $ LM M.empty expr
          Sym s as -> mapM f as >>= symLM s
-       
+
    g (LM m c) = build sumView (concatMap make (M.toList m) ++ [c | c /= 0])
    make (s, e)
       | e == 0    = []
@@ -58,7 +58,7 @@ negateLM :: Num a => LinearMap a -> LinearMap a
 negateLM (LM m c) = LM (M.map negate m) (negate c)
 
 timesLM :: Num a => LinearMap a -> LinearMap a -> Maybe (LinearMap a)
-timesLM lm1@(LM m1 c1) lm2@(LM m2 c2) 
+timesLM lm1@(LM m1 c1) lm2@(LM m2 c2)
    | M.null m1 = return $ fmap (c1*) lm2
    | M.null m2 = return $ fmap (*c2) lm1
    | otherwise = Nothing
@@ -101,7 +101,7 @@ evalLinearExpr f a =
       Nothing -> descend (evalLinearExpr f) a
 
 renameVariables :: IsLinear a => (String -> String) -> a -> a
-renameVariables f a = 
+renameVariables f a =
    case getVariable a of
       Just s  -> variable (f s)
       Nothing -> descend (renameVariables f) a

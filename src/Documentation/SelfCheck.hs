@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,8 +12,8 @@
 module Documentation.SelfCheck (selfCheck, blackBoxTests) where
 
 import Common.Exercise
-import Common.Utils.TestSuite
 import Common.Utils (useFixedStdGen, Some(..), snd3)
+import Common.Utils.TestSuite
 import Control.Monad
 import Data.List
 import Service.DomainReasoner
@@ -24,7 +24,7 @@ import System.Directory
 import qualified Common.Algebra.Boolean as Algebra
 import qualified Common.Algebra.Field as Algebra
 import qualified Common.Rewriting.Substitution as Substitution
-import qualified Common.Rewriting.Unification  as Unification
+import qualified Common.Rewriting.Unification as Unification
 import qualified Common.Strategy.Tests as Strategy
 import qualified Text.JSON as JSON
 import qualified Text.OpenMath.Tests as OpenMath
@@ -35,7 +35,7 @@ selfCheck dir = do
    list        <- getExercises
    domainSuite <- getTestSuite
    run         <- runWithCurrent
-   
+
    return $ do
       suite "Framework checks" $ do
          suite "Text encodings" $ do
@@ -45,17 +45,17 @@ selfCheck dir = do
          Substitution.tests
          Unification.unificationTests
          Strategy.tests
-         suite "Field properties" $ 
+         suite "Field properties" $
             mapM_ (addProperty "field") Algebra.propsField
-         suite "Boolean properties" $ 
+         suite "Boolean properties" $
             mapM_ (addProperty "boolean") Algebra.propsBoolean
-         
+
       suite "Domain checks" domainSuite
-      
+
       suite "Exercise checks" $
          forM_ list $ \(Some ex) ->
             exerciseTestSuite ex
-      
+
       suite "Black box tests" $
          join (liftIO (blackBoxTests run dir))
 
@@ -76,39 +76,39 @@ blackBoxTests run path = do
    ts3 <- forM (filter ((/= ".") . take 1) xs2) $ \x -> do
              let p = path ++ "/" ++ x
              valid <- doesDirectoryExist p
-             if not valid 
+             if not valid
                 then return (return ())
-                else liftM (suite $ "Directory " ++ simplerDirectory p) 
+                else liftM (suite $ "Directory " ++ simplerDirectory p)
                            (blackBoxTests run p)
-   return $ 
+   return $
       sequence_ (ts1 ++ ts2 ++ ts3)
 
 doBlackBoxTest :: (DomainReasoner Bool -> IO Bool) -> DataFormat -> FilePath -> IO TestSuite
 doBlackBoxTest run format path = do
    b <- doesFileExist expPath
-   return $ if not b 
+   return $ if not b
       then warn $ expPath ++ " does not exist"
-      else assertIO (stripDirectoryPart path) $ run $ do 
+      else assertIO (stripDirectoryPart path) $ run $ do
          -- Comparing output with expected output
          (txt, expt) <- liftIO $ do
             useFixedStdGen -- fix the random number generator
             txt  <- readFile path
             expt <- liftIO $ readFile expPath
             return (txt, expt)
-         out  <- case format of 
+         out  <- case format of
                     JSON -> liftM snd3 (processJSON txt)
                     XML  -> liftM snd3 (processXML txt)
          -- Conditional forces evaluation of the result, to make sure that
          -- all file handles are closed afterwards.
          if out ~= expt then return True else return False
-       `catchError` 
+       `catchError`
          \_ -> return False
  where
    expPath = baseOf path ++ ".exp"
    baseOf  = reverse . drop 1 . dropWhile (/= '.') . reverse
    x ~= y  = filterVersion x == filterVersion y -- compare line-based
-   
-   filterVersion = 
+
+   filterVersion =
       let p s = not (null s || "version" `isInfixOf` s)
       in filter p . lines . filter (/= '\r')
 

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.Vector 
+module Domain.LinearAlgebra.Vector
    ( Vector, VectorSpace
    , makeVectorSpace, vectors, sameDimension, gramSchmidt
    , fromList, toList, liftV, liftV2, showVectorWith
@@ -17,12 +17,12 @@ module Domain.LinearAlgebra.Vector
    , scale, norm, distance, vectorSum, innerProduct, dimension
    ) where
 
-import Control.Monad
 import Common.Rewriting
-import Data.List
-import Data.Foldable (Foldable, foldMap)
-import Data.Traversable (Traversable, sequenceA)
 import Control.Applicative
+import Control.Monad
+import Data.Foldable (Foldable, foldMap)
+import Data.List
+import Data.Traversable (Traversable, sequenceA)
 import Domain.Math.Simplification
 import Test.QuickCheck
 import qualified Text.OpenMath.Dictionary.Linalg2 as OM
@@ -32,7 +32,7 @@ import qualified Text.OpenMath.Dictionary.Linalg2 as OM
 
 newtype Vector a = V [a]
    deriving (Eq, Ord)
-   
+
 newtype VectorSpace a = VS [Vector a]
    deriving (Eq, Ord)
 
@@ -91,7 +91,7 @@ instance IsTerm a => IsTerm (VectorSpace a) where
       xs <- fromTerm a
       guard (sameDimension xs)
       return (makeVectorSpace xs)
-      
+
 instance Simplify a => Simplify (VectorSpace a) where
    simplifyWith opt = fmap (simplifyWith opt)
 
@@ -117,9 +117,9 @@ sameDimension xs =
 
 -- | Checks that all vectors in vector space have same dimension
 makeVectorSpace :: [Vector a] -> VectorSpace a
-makeVectorSpace xs 
+makeVectorSpace xs
    | sameDimension xs = VS xs
-   | otherwise        = error "makeVectorSpace: different dimensions" 
+   | otherwise        = error "makeVectorSpace: different dimensions"
 
 vectors :: VectorSpace a -> [Vector a]
 vectors (VS xs) = xs
@@ -170,18 +170,18 @@ scale a = liftV (*a)
 orthonormalList :: Floating a => [Vector a] -> Bool
 orthonormalList xs = all isUnit xs && all (uncurry orthogonal) pairs
  where
-   pairs = [ (a, b) | (i, a) <- zip [0::Int ..] xs, (j, b) <- zip [0..] xs, i < j ] 
+   pairs = [ (a, b) | (i, a) <- zip [0::Int ..] xs, (j, b) <- zip [0..] xs, i < j ]
 
 -- length of the vector (also called norm)
 norm :: Floating a => Vector a -> a
 norm v = sqrt $ innerProduct v v
- 
+
 distance :: Floating a => Vector a -> Vector a -> a
 distance v1 v2 = norm (v1 - v2)
- 
+
 vectorSum :: Num a => Vector a -> a
 vectorSum = sum . toList
- 
+
 innerProduct :: Num a => Vector a -> Vector a -> a
 innerProduct v1 v2 = vectorSum (v1 * v2)
 

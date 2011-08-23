@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -15,15 +15,15 @@
 -----------------------------------------------------------------------------
 module Text.XML.Parser (document, extParsedEnt, extSubset) where
 
-import Prelude hiding (seq)
 import Control.Monad
 import Data.Char (toUpper, ord, isSpace)
 import Data.List (foldl') -- '
 import Data.Maybe (catMaybes)
-import Text.XML.Unicode
-import Text.XML.Document hiding (versionInfo, name, content)
-import qualified Text.XML.Document as D
+import Prelude hiding (seq)
 import Text.Parsing hiding (digit, letter, space)
+import Text.XML.Document hiding (versionInfo, name, content)
+import Text.XML.Unicode
+import qualified Text.XML.Document as D
 
 letter, digit, combiningChar, extender :: Parser Char
 letter        = ranges letterMap
@@ -46,11 +46,11 @@ doubleQuoted = between (char '"')  (char '"')
 
 -- [1]   	document	   ::=   	 prolog element Misc*
 document :: Parser XMLDoc
-document = do 
+document = do
    (mxml, mdtd) <- prolog
    rt <- element
    miscs
-   let (ver, enc, sa) = 
+   let (ver, enc, sa) =
           case mxml of
              Just (a, b, c) -> (Just a, b, c)
              Nothing        -> (Nothing, Nothing, Nothing)
@@ -62,7 +62,7 @@ document = do
       , D.externals   = []
       , root        = rt
       }
-   
+
 --------------------------------------------------
 -- ** 2.2 Characters
 
@@ -89,7 +89,7 @@ nameChar = letter <|> digit <|> combiningChar <|> extender <|> oneOf ".-_:"
 
 -- [5]   	Name	   ::=   	(Letter | '_' | ':') (NameChar)*
 name :: Parser String
-name = do 
+name = do
    c  <- letter <|> oneOf "_:"
    cs <- many nameChar
    return (c:cs)
@@ -110,15 +110,15 @@ nmtokens :: Parser [String]
 nmtokens = sepBy1 nmtoken (char '\x20')
 -}
 
--- [9]   	EntityValue	   ::=   	'"' ([^%&"] | PEReference | Reference)* '"' 
+-- [9]   	EntityValue	   ::=   	'"' ([^%&"] | PEReference | Reference)* '"'
 --                           |  "'" ([^%&'] | PEReference | Reference)* "'"
 entityValue :: Parser EntityValue
 entityValue = doubleQuoted (p "%&\"") <|> singleQuoted (p "%&'")
- where 
-   p s =  many (fmap Left (noneOf s) 
+ where
+   p s =  many (fmap Left (noneOf s)
       <|> fmap Right (fmap Left peReference <|> fmap Right reference))
 
--- [10]   	AttValue	   ::=   	'"' ([^<&"] | Reference)* '"' 
+-- [10]   	AttValue	   ::=   	'"' ([^<&"] | Reference)* '"'
 --                           |  "'" ([^<&'] | Reference)* "'"
 attValue :: Parser AttValue
 attValue = doubleQuoted (p "<&\"") <|> singleQuoted (p "<&'")
@@ -135,7 +135,7 @@ pubidLiteral = doubleQuoted (many (pubidChar True)) <|> singleQuoted (many (pubi
 
 -- [13]   	PubidChar	   ::=   	#x20 | #xD | #xA | [a-zA-Z0-9] | [-'()+,./:=?;!*#@$_%]
 pubidChar :: Bool -> Parser Char
-pubidChar withSingleQuote = 
+pubidChar withSingleQuote =
    ranges xs <|> oneOf "\x20\xD\xA-()+,./:=?;!*#@$_%" <|> singleQuote
  where
    xs = [('a', 'z'), ('A', 'Z'), ('0', '9')]
@@ -148,8 +148,7 @@ pubidChar withSingleQuote =
 
 -- [14]   	CharData	   ::=   	[^<&]* - ([^<&]* ']]>' [^<&]*)
 charData :: Parser String -- This implementation is too liberal since it allows "]]>"
-charData = stopOn ["<", "&", "]]>"] 
-   
+charData = stopOn ["<", "&", "]]>"]
 
 --------------------------------------------------
 -- ** 2.5 Comments
@@ -164,7 +163,7 @@ comment = between (string "<!--") (string "-->") (stopOn ["--"])
 -- [16]   	PI	   ::=   	'<?' PITarget (S (Char* - (Char* '?>' Char*)))? '?>'
 pInstr :: Parser String
 pInstr = between (string "<?") (string "?>") p
- where 
+ where
    p = piTarget >> option "" (space >> stopOn ["?>"])
 
 -- [17]   	PITarget	   ::=   	 Name - (('X' | 'x') ('M' | 'm') ('L' | 'l'))
@@ -195,10 +194,10 @@ type XMLDecl = (String, Maybe String, Maybe Bool)
 
 -- [22]   	prolog	   ::=   	 XMLDecl? Misc* (doctypedecl Misc*)?
 prolog :: Parser (Maybe XMLDecl, Maybe DTD)
-prolog = do 
+prolog = do
    ma <- optionMaybe (try xmlDecl)
    miscs
-   mb <- optionMaybe $ try $ do 
+   mb <- optionMaybe $ try $ do
       mb <- doctypedecl
       miscs
       return mb
@@ -206,7 +205,7 @@ prolog = do
 
 -- [23]   	XMLDecl	   ::=   	'<?xml' VersionInfo EncodingDecl? SDDecl? S? '?>'
 xmlDecl :: Parser XMLDecl
-xmlDecl = do 
+xmlDecl = do
    skip (string "<?xml")
    x <- versionInfo
    y <- optionMaybe (try encodingDecl)
@@ -239,13 +238,13 @@ miscs = skip (many misc)
 
 -- [28]   	doctypedecl	   ::=   	'<!DOCTYPE' S Name (S ExternalID)? S? ('[' intSubset ']' S?)? '>'
 doctypedecl :: Parser DTD
-doctypedecl = do 
+doctypedecl = do
    skip (string "<!DOCTYPE")
    space
    x <- name
    y <- optionMaybe (try (space >> externalID))
    mspace
-   z <- option [] $ do 
+   z <- option [] $ do
       z <- brackets intSubset
       mspace
       return z
@@ -254,7 +253,7 @@ doctypedecl = do
 
 -- [28a]   	DeclSep	   ::=   	 PEReference | S
 declSep :: Parser (Maybe DocTypeDecl)
-declSep =  fmap (Just . DTDParameter) peReference 
+declSep =  fmap (Just . DTDParameter) peReference
        <|> (space >> return Nothing)
 
 -- [28b]   	intSubset	   ::=   	(markupdecl | DeclSep)*
@@ -265,12 +264,12 @@ intSubset = fmap catMaybes (many (markupdecl <|> declSep))
 markupdecl :: Parser (Maybe DocTypeDecl)
 markupdecl =  fmap Just (choice (map try list))
           <|> ((try pInstr <|> comment) >> return Nothing)
- where 
+ where
    list = [elementdecl, attlistDecl, entityDecl, notationDecl]
 
 -- [30]   	extSubset	   ::=   	 TextDecl? extSubsetDecl
 extSubset :: Parser (Maybe TextDecl, [DocTypeDecl])
-extSubset = do 
+extSubset = do
    m <- optionMaybe textDecl
    e <- extSubsetDecl
    return (m, e)
@@ -286,7 +285,7 @@ sdDecl :: Parser Bool
 sdDecl = space >> string "standalone" >> eq >> (singleQuoted bool <|> doubleQuoted bool)
  where bool =  (string "yes" >> return True)
            <|> (string "no"  >> return False)
-   
+
 --------------------------------------------------
 -- ** 2.10 White Space Handling
 
@@ -295,14 +294,14 @@ sdDecl = space >> string "standalone" >> eq >> (singleQuoted bool <|> doubleQuot
 
 -- [39]   	element	   ::=   	 EmptyElemTag | STag content ETag
 element :: Parser Element
-element = do 
+element = do
    (s1, as, closed) <- sTag
-   if closed 
+   if closed
      then return (Element s1 as [])
      else do
        c  <- content
        s2 <- eTag
-       when (s1/=s2) $ fail "WFC: element" 
+       when (s1/=s2) $ fail "WFC: element"
        return (Element s1 as c)
 
 --------------------------------------------------
@@ -324,18 +323,18 @@ sTag = do
 -- [41]   	Attribute	   ::=   	NSAttName Eq AttValue
 --        | Name Eq AttValue
 attribute :: Parser Attribute
-attribute = do 
-   n <- name 
+attribute = do
+   n <- name
    eq
    a <- attValue
    return (n := a)
 
 -- [42]   	ETag	   ::=   	'</' Name S? '>'
 eTag :: Parser Name
-eTag = do 
+eTag = do
    skip (string "</")
-   n <- name 
-   mspace 
+   n <- name
+   mspace
    skip (char '>')
    return n
 
@@ -343,7 +342,7 @@ eTag = do
 -- Note: since CharData accepts epsilon, there is no need to make it optional
 content :: Parser Content
 content = chainr1 (fmap g charData) (fmap f ps)
- where 
+ where
    f ma l r = l ++ maybe [] return ma ++ r
    g s = [ CharData s | any (not . isSpace) s ]  -- quick fix, ignores layout
    ps  = try (fmap Just (choice (map try [fmap Tagged element, fmap Reference reference, cdSect]))
@@ -354,11 +353,11 @@ content = chainr1 (fmap g charData) (fmap f ps)
 
 -- [45]   	elementdecl	   ::=   	'<!ELEMENT' S Name S contentspec S? '>'
 elementdecl :: Parser DocTypeDecl
-elementdecl = do 
+elementdecl = do
    skip (string "<!ELEMENT")
-   space 
-   n <- name 
-   space 
+   space
+   n <- name
+   space
    cs <- contentspec
    mspace
    skip (char '>')
@@ -366,28 +365,28 @@ elementdecl = do
 
 -- [46]   	contentspec	   ::=   	'EMPTY' | 'ANY' | Mixed | children
 contentspec :: Parser ContentSpec
-contentspec = choice 
+contentspec = choice
    [ string "EMPTY" >> return Empty
    , string "ANY"   >> return Any
-   , try mixed 
+   , try mixed
    , children
    ]
 
 -- [47]   	children	   ::=   	(choice | seq) ('?' | '*' | '+')?
 children :: Parser ContentSpec
-children = do 
+children = do
    a <- try cpChoice <|> cpSeq
    f <- option id multi
    return (Children (f a))
-   
+
 multi :: Parser (CP -> CP)
 multi =  (char '?' >> return QuestionMark)
      <|> (char '*' >> return Star)
      <|> (char '+' >> return Plus)
-   
+
 -- [48]   	cp	   ::=   	(Name | choice | seq) ('?' | '*' | '+')?
 cp :: Parser CP
-cp = do 
+cp = do
    a <- fmap CPName name <|> try cpChoice <|> cpSeq
    f <- option id multi
    return (f a)
@@ -403,7 +402,7 @@ cpChoice = parens $ do
 
 -- [50]   	seq	   ::=   	'(' S? cp ( S? ',' S? cp )* S? ')'
 cpSeq :: Parser CP
-cpSeq = parens $ do 
+cpSeq = parens $ do
    mspace
    x  <- cp
    xs <- many (try (mspace >> char ',' >> mspace >> cp))
@@ -416,7 +415,7 @@ mixed :: Parser ContentSpec
 mixed = char '(' >> mspace >> string "#PCDATA" >> (rest1 <|> rest2)
  where
    p = mspace >> char '|' >> mspace >> name
-   rest1 = try $ do 
+   rest1 = try $ do
        xs <- many (try p)
        mspace
        skip (string ")*")
@@ -430,21 +429,21 @@ mixed = char '(' >> mspace >> string "#PCDATA" >> (rest1 <|> rest2)
 attlistDecl :: Parser DocTypeDecl
 attlistDecl = do
    skip (string "<!ATTLIST")
-   space 
+   space
    n  <- name
    ds <- many (try attDef)
-   mspace 
+   mspace
    skip (char '>')
    return (AttListDecl n ds)
 
 -- [53]   	AttDef	   ::=   	 S Name S AttType S DefaultDecl
 attDef :: Parser AttDef
-attDef = do 
-   space 
+attDef = do
+   space
    n  <- name
-   space 
+   space
    tp <- attType
-   space  
+   space
    dd <- defaultDecl
    return (n, tp, dd)
 
@@ -459,12 +458,12 @@ stringType = string "CDATA" >> return StringType
 -- [56]   	TokenizedType	   ::=   	'ID' | 'IDREF' | 'IDREFS' | 'ENTITY' | 'ENTITIES' | 'NMTOKEN' | 'NMTOKENS'
 tokenizedType :: Parser AttType
 tokenizedType = choice (map f xs)
- where 
+ where
    f (tp, s) = try (string s) >> return tp
    xs = [ (IdRefsType, "IDREFS"), (IdRefType, "IDREF"), (IdType, "ID"), (EntityType, "ENTITY")
         , (EntitiesType, "ENTITIES"), (NmTokensType, "NMTOKENS"), (NmTokenType, "NMTOKEN")
         ]
- 
+
 -- [57]   	EnumeratedType	   ::=   	 NotationType | Enumeration
 enumeratedType :: Parser AttType
 enumeratedType = notationType <|> enumeration
@@ -472,10 +471,10 @@ enumeratedType = notationType <|> enumeration
 -- [58]   	NotationType	   ::=   	'NOTATION' S '(' S? Name (S? '|' S? Name)* S? ')'
 notationType :: Parser AttType
 notationType = string "NOTATION" >> space >> parens p
- where 
+ where
    p = do
-      mspace 
-      n  <- name 
+      mspace
+      n  <- name
       ns <- many (try (mspace >> char '|' >> mspace >> name))
       mspace
       return (NotationType (n:ns))
@@ -484,7 +483,7 @@ notationType = string "NOTATION" >> space >> parens p
 enumeration :: Parser AttType
 enumeration = parens $ do
    mspace
-   x  <- nmtoken 
+   x  <- nmtoken
    xs <- many (try (mspace >> char '|' >> mspace >> nmtoken))
    mspace
    return (EnumerationType (x:xs))
@@ -506,9 +505,9 @@ conditionalSect = try includeSect <|> ignoreSect
 
 -- [62]   	includeSect	   ::=   	'<![' S? 'INCLUDE' S? '[' extSubsetDecl ']]>'
 includeSect :: Parser Conditional
-includeSect = do 
+includeSect = do
    skip (string "<![")
-   mspace 
+   mspace
    skip (string "INCLUDE")
    mspace
    skip (char '[')
@@ -518,20 +517,20 @@ includeSect = do
 
 -- [63]   	ignoreSect	   ::=   	'<![' S? 'IGNORE' S? '[' ignoreSectContents* ']]>'
 ignoreSect :: Parser Conditional
-ignoreSect = do 
+ignoreSect = do
    skip (string "<![")
-   mspace 
+   mspace
    skip (string "IGNORE")
    mspace
    skip (char '[')
-   xss <- many ignoreSectContents 
+   xss <- many ignoreSectContents
    skip (string "]]>")
    return (Ignore (concat xss))
 
 -- [64]   	ignoreSectContents	   ::=   	 Ignore ('<![' ignoreSectContents ']]>' Ignore)*
 ignoreSectContents :: Parser [String]
-ignoreSectContents = 
-   do x   <- ignore  
+ignoreSectContents =
+   do x   <- ignore
       xss <- many $ do
          skip (string "<![")
          ys <- ignoreSectContents
@@ -552,7 +551,7 @@ ignore = stopOn ["<![", "]]>"]
 
 -- [66]   	CharRef	   ::=   	'&#' [0-9]+ ';' | '&#x' [0-9a-fA-F]+ ';'
 charRef :: Parser Reference
-charRef = do 
+charRef = do
    skip (string "&#")
    n <- p <|> (char 'x' >> q)
    skip (char ';')
@@ -560,18 +559,18 @@ charRef = do
  where
    p = fmap (foldl' (\a b -> a*10+ord b-48) 0) (many1 ('0' <..> '9'))
    q = fmap hexa (many1 (ranges [('0', '9'), ('a', 'f'), ('A', 'F')]))
-   
+
 hexa :: String -> Int
-hexa = rec 0 
- where 
+hexa = rec 0
+ where
    rec n []     = n
    rec n (x:xs) = rec (16*n + ord x - correct) xs
     where
-      correct 
+      correct
          | x <= '9'  = ord '0'
          | x <= 'F'  = ord 'A' - 10
          | otherwise = ord 'a' - 10
-   
+
 -- [67]   	Reference	   ::=   	 EntityRef | CharRef
 reference :: Parser Reference
 reference = try entityRef <|> charRef
@@ -593,11 +592,11 @@ entityDecl = try geDecl <|> peDecl
 
 -- [71]   	GEDecl	   ::=   	'<!ENTITY' S Name S EntityDef S? '>'
 geDecl :: Parser DocTypeDecl
-geDecl = do 
+geDecl = do
    skip (string "<!ENTITY")
-   space 
-   n <- name 
-   space 
+   space
+   n <- name
+   space
    ed <- entityDef
    mspace
    skip (char '>')
@@ -607,23 +606,23 @@ geDecl = do
 peDecl :: Parser DocTypeDecl
 peDecl = do
    skip (string "<!ENTITY")
-   space 
+   space
    skip (char '%')
-   space 
-   n <- name 
+   space
+   n <- name
    space
    e <- peDef
    mspace
    skip (char '>')
    return (EntityDecl False n (either Left (\a -> Right (a, Nothing)) e))
- 
+
 -- [73]   	EntityDef	   ::=   	 EntityValue | (ExternalID NDataDecl?)
 entityDef :: Parser EntityDef
-entityDef = fmap Left entityValue <|> do 
-   e  <- externalID 
+entityDef = fmap Left entityValue <|> do
+   e  <- externalID
    ms <- optionMaybe (try nDataDecl)
    return (Right (e, ms))
- 
+
 -- [74]   	PEDef	   ::=   	 EntityValue | ExternalID
 peDef :: Parser (Either EntityValue ExternalID)
 peDef = fmap Left entityValue <|> fmap Right externalID
@@ -634,7 +633,7 @@ externalID =  (string "SYSTEM" >> space >> fmap System systemLiteral) <|> do
    skip (string "PUBLIC")
    space
    x <- pubidLiteral
-   space 
+   space
    y <- systemLiteral
    return (Public x y)
 
@@ -648,24 +647,24 @@ nDataDecl = space >> string "NDATA" >> space >> name
 -- [77]   	TextDecl	   ::=   	'<?xml' VersionInfo? EncodingDecl S? '?>'
 
 textDecl :: Parser TextDecl
-textDecl = do 
+textDecl = do
    skip (string "<?xml")
    v <- optionMaybe versionInfo
-   e <- encodingDecl 
-   mspace 
+   e <- encodingDecl
+   mspace
    skip (string "?>")
    return (v, e)
 
 -- [78]   	extParsedEnt	   ::=   	 TextDecl? content
 extParsedEnt :: Parser (Maybe TextDecl, Content)
-extParsedEnt = do 
+extParsedEnt = do
    td <- optionMaybe (try textDecl)
    c  <- content
    return (td, c)
 
 -- [80]   	EncodingDecl	   ::=   	 S 'encoding' Eq ('"' EncName '"' | "'" EncName "'" )
 encodingDecl :: Parser String
-encodingDecl = space >> string "encoding" >> eq >> 
+encodingDecl = space >> string "encoding" >> eq >>
    (singleQuoted encName <|> doubleQuoted encName)
 
 -- [81]   	EncName	   ::=   	[A-Za-z] ([A-Za-z0-9._] | '-')*
@@ -682,13 +681,13 @@ encName = do
 notationDecl :: Parser DocTypeDecl
 notationDecl = do
    skip (string "<!NOTATION")
-   space 
-   n <- name 
+   space
+   n <- name
    space
    e <- fmap Left (try externalID) <|> fmap Right publicID
-   mspace 
+   mspace
    skip (char '>')
-   return (NotationDecl n e) 
+   return (NotationDecl n e)
 
 -- [83]   	PublicID	   ::=   	'PUBLIC' S PubidLiteral
 publicID :: Parser PublicID

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,12 +9,12 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Equation.CoverUpRules 
+module Domain.Math.Equation.CoverUpRules
    ( coverUpRules, coverUpRulesOr
    , coverUp, coverUpOrs
-   , coverUpPower, coverUpPlus, coverUpMinusLeft, coverUpMinusRight 
+   , coverUpPower, coverUpPlus, coverUpMinusLeft, coverUpMinusRight
    , coverUpTimes, coverUpNegate
-   , coverUpNumerator, coverUpDenominator, coverUpSqrt 
+   , coverUpNumerator, coverUpDenominator, coverUpSqrt
      -- parameterized rules
    , ConfigCoverUp, configName, predicateCovered, predicateCombined
    , coverLHS, coverRHS, configCoverUp
@@ -32,8 +32,8 @@ import Common.Rewriting
 import Common.Transformation
 import Common.View
 import Control.Monad
-import Data.Maybe
 import Data.Foldable
+import Data.Maybe
 import Data.Traversable (Traversable, mapM)
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -42,12 +42,12 @@ import Domain.Math.Expr
 ---------------------------------------------------------------------
 -- Constructors for cover-up rules
 
-coverUpFunction :: (Traversable f, Relational r) 
-                   => (Expr -> [(Expr, Expr)]) 
+coverUpFunction :: (Traversable f, Relational r)
+                   => (Expr -> [(Expr, Expr)])
                    -> (Expr -> Expr -> [f Expr])
                    -> ConfigCoverUp -> r Expr -> [f (r Expr)]
-coverUpFunction fm fb cfg eq0 = 
-   (guard (coverLHS cfg) >> coverLeft eq0) ++ 
+coverUpFunction fm fb cfg eq0 =
+   (guard (coverLHS cfg) >> coverLeft eq0) ++
    (guard (coverRHS cfg) >> coverRight eq0)
  where
    coverRight   = map (fmap flipSides) . coverLeft . flipSides
@@ -59,25 +59,25 @@ coverUpFunction fm fb cfg eq0 =
       return (fmap (constructor eq e1) new)
 
 coverUpBinaryOrRule :: Relational r
-                   => String -> (Expr -> [(Expr, Expr)]) 
+                   => String -> (Expr -> [(Expr, Expr)])
                    -> (Expr -> Expr -> [OrList Expr])
                    -> ConfigCoverUp -> Rule (OrList (r Expr))
 coverUpBinaryOrRule opName fm fb cfg =
    let name = coverUpRuleName opName (configName cfg)
    in makeSimpleRuleList name $ oneDisjunct $ coverUpFunction fm fb cfg
-   
-coverUpBinaryRule :: Relational r => String 
-                  -> (Expr -> [(Expr, Expr)]) -> (Expr -> Expr -> Expr) 
+
+coverUpBinaryRule :: Relational r => String
+                  -> (Expr -> [(Expr, Expr)]) -> (Expr -> Expr -> Expr)
                   -> ConfigCoverUp -> Rule (r Expr)
-coverUpBinaryRule opName fm fb cfg = 
+coverUpBinaryRule opName fm fb cfg =
    let name = coverUpRuleName opName (configName cfg)
        fb2 a b = [[fb a b]]
-   in makeSimpleRuleList name $ map head . coverUpFunction fm fb2 cfg 
-      
-coverUpUnaryRule :: Relational r => String -> (Expr -> [Expr]) -> (Expr -> Expr) 
+   in makeSimpleRuleList name $ map head . coverUpFunction fm fb2 cfg
+
+coverUpUnaryRule :: Relational r => String -> (Expr -> [Expr]) -> (Expr -> Expr)
                -> ConfigCoverUp -> Rule (r Expr)
-coverUpUnaryRule opName fm fb = 
-   coverUpBinaryRule opName (map (\e -> (e, e)) . fm) (const . fb) 
+coverUpUnaryRule opName fm fb =
+   coverUpBinaryRule opName (map (\e -> (e, e)) . fm) (const . fb)
 
 coverUpRuleName :: String -> String -> Id
 coverUpRuleName opName cfg =
@@ -116,9 +116,9 @@ coverUpPowerWith = coverUpBinaryOrRule "power" (isBinary powerSymbol) fb
       guard (n > 0)
       let new1 = root rhs (fromIntegral n)
           new2 = neg new1
-      return $ singleton new1 <> 
+      return $ singleton new1 <>
          if even n && new1 /= new2 then singleton new2 else false
-      
+
 coverUpPlusWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpPlusWith = coverUpBinaryRule "plus" (commOp . isPlus) (-)
 
@@ -162,9 +162,9 @@ coverUpOrs = foldMap  (f . coverUp)
    f eq = case apply coverUpPower (singleton eq) of
              Just xs -> coverUpOrs xs
              Nothing -> singleton eq
-                 
+
 coverUp :: Equation Expr -> Equation Expr
-coverUp eq = 
+coverUp eq =
    case mapMaybe (`apply` eq) coverUpRules of
       hd:_ -> coverUp hd
       _    -> eq
@@ -173,13 +173,13 @@ coverUpRulesOr :: IsTerm a => [Rule (Context a)]
 coverUpRulesOr = use coverUpPower : map use coverUpRules
 
 coverUpRules :: [Rule (Equation Expr)]
-coverUpRules = 
+coverUpRules =
    [ coverUpPlus, coverUpMinusLeft, coverUpMinusRight, coverUpNegate
    , coverUpTimes, coverUpNumerator, coverUpDenominator, coverUpSqrt
    ]
 
 coverUpPower :: Rule (OrList (Equation Expr))
-coverUpPlus, coverUpMinusLeft, coverUpMinusRight, coverUpTimes, coverUpNegate, 
+coverUpPlus, coverUpMinusLeft, coverUpMinusRight, coverUpTimes, coverUpNegate,
    coverUpNumerator, coverUpDenominator, coverUpSqrt :: Rule (Equation Expr)
 
 coverUpPower       = coverUpPowerWith       configCoverUp
@@ -196,8 +196,8 @@ coverUpSqrt        = coverUpSqrtWith        configCoverUp
 -- Some helper-functions
 
 commOp :: MonadPlus m => m (a, a) -> m (a, a)
-commOp m = do 
-   (a, b) <- m 
+commOp m = do
+   (a, b) <- m
    return (a, b) `mplus` return (b, a)
 
 flipOp :: Monad m => m (a, a) -> m (a, a)

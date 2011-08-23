@@ -77,4 +77,3 @@ multiplication e.g. an integral interval, the second being the function to be
 multiplied. Note that the product may be over an infinite interval. -}
 productSymbol :: Symbol
 productSymbol = makeSymbol "arith1" "product"
-

@@ -34,4 +34,3 @@ It takes two arguments; the first being the range (e.g. a set) of integration,
 and the second the function. -}
 defintSymbol :: Symbol
 defintSymbol = makeSymbol "calculus1" "defint"
-

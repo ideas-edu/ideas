@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -13,7 +13,7 @@
 -- key-value pairs. A context is both showable and parsable.
 --
 -----------------------------------------------------------------------------
-module Common.Context 
+module Common.Context
    ( -- * Abstract data type
      Context, fromContext, fromContextWith, fromContextWith2
    , newContext, getEnvironment, modifyEnvironment
@@ -28,7 +28,7 @@ module Common.Context
      -- * Context Monad
    , ContextMonad, readVar, writeVar, modifyVar
    , maybeCM, withCM, evalCM
-   ) where 
+   ) where
 
 import Common.Id
 import Common.Navigator
@@ -37,19 +37,19 @@ import Common.Transformation
 import Common.Utils (commaList, readM)
 import Common.View
 import Control.Monad
-import Data.Maybe
 import Data.Dynamic
+import Data.Maybe
 import qualified Data.Map as M
 
 ----------------------------------------------------------
 -- Abstract data type
 
--- | Abstract data type for a context: a context stores an envrionent 
+-- | Abstract data type for a context: a context stores an envrionent
 -- (key-value pairs) and a value
-data Context a = C 
+data Context a = C
    { getEnvironment :: Environment -- ^ Returns the environment
    , getNavigator   :: Navigator a -- ^ Retrieve a value from its context
-   } 
+   }
 
 fromContext :: Monad m => Context a -> m a
 fromContext = leave . getNavigator
@@ -64,10 +64,10 @@ instance Eq a => Eq (Context a) where
    x == y = fromMaybe False $ liftM2 (==) (fromContext x) (fromContext y)
 
 instance Show a => Show (Context a) where
-   show (C env a) = 
-      let rest | null (keysEnv env) = "" 
+   show (C env a) =
+      let rest | null (keysEnv env) = ""
                | otherwise = "  {" ++ show env ++ "}"
-      in show a ++ rest 
+      in show a ++ rest
 
 instance IsNavigator Context where
    up        (C env a) = liftM (C env) (up a)
@@ -95,7 +95,7 @@ modifyEnvironment f c = c {getEnvironment = f (getEnvironment c)}
 newtype Environment = Env { envMap :: M.Map String (Maybe Dynamic, String) }
 
 instance Show Environment where
-   show = 
+   show =
       let f (k, (_, v)) = k ++ "=" ++ v
       in commaList . map f . M.toList . envMap
 
@@ -125,10 +125,10 @@ storeEnv = storeEnvWith show
 
 -- Generalized helper-function
 storeEnvWith :: Typeable a => (a -> String) -> String -> a -> Environment -> Environment
-storeEnvWith f s a (Env m) = Env (M.insert s pair m) 
+storeEnvWith f s a (Env m) = Env (M.insert s pair m)
  where -- Special case for type String
-   pair = 
-      case cast a of 
+   pair =
+      case cast a of
          Just txt -> (Nothing, txt)
          Nothing  -> (Just (toDyn a), f a)
 
@@ -144,14 +144,14 @@ deleteEnv s (Env m) = Env (M.delete s m)
 
 -- | A variable has a name and a default value (for initializing). Each
 -- stored value must be readable and showable.
-data Var a = V 
+data Var a = V
    { varName    :: String
    , varInitial :: a
    , varShow    :: a -> String
    , varRead    :: String -> Maybe a
    }
 
--- | Simple constructor function for creating a variable. Uses the 
+-- | Simple constructor function for creating a variable. Uses the
 -- Show and Read type classes
 newVar :: (Show a, Read a) => String -> a -> Var a
 newVar = makeVar show readM
@@ -171,11 +171,11 @@ liftToContext = liftRuleIn contextView
 liftTransContext :: Transformation a -> Transformation (Context a)
 liftTransContext = liftTransIn contextView
 
--- | Apply a function at top-level. Afterwards, try to return the focus 
+-- | Apply a function at top-level. Afterwards, try to return the focus
 -- to the old position
 applyTop :: (a -> a) -> Context a -> Context a
-applyTop f c = 
-   case top c of 
+applyTop f c =
+   case top c of
       Just ok -> navigateTowards (location c) (change f ok)
       Nothing -> c
 
@@ -191,7 +191,7 @@ termNavigator a = fromMaybe (noNavigator a) (make a)
     where
       (x, xs)    = getSpine term
       f i y      = (y, makeTerm x . changeAt i)
-      changeAt i b = 
+      changeAt i b =
          case splitAt i xs of
             (ys, _:zs) -> ys ++ b:zs
             _          -> xs
@@ -214,7 +214,7 @@ contextView = "views.contextView" @> makeView f g
 newtype ContextMonad a = CM { unCM :: Environment -> Maybe (a, Environment) }
 
 withCM :: (a -> ContextMonad a) -> Context a -> Maybe (Context a)
-withCM f c = do 
+withCM f c = do
    a0       <- current c
    (a, env) <- unCM (f a0) (getEnvironment c)
    let nav = replace a (getNavigator c)
@@ -232,7 +232,7 @@ instance Functor ContextMonad where
 instance Monad ContextMonad where
    fail       = const mzero
    return a   = CM (\env -> return (a, env))
-   CM m >>= f = CM (\env -> do (a, e) <- m env 
+   CM m >>= f = CM (\env -> do (a, e) <- m env
                                let CM g = f a
                                g e)
 
@@ -250,7 +250,7 @@ readVar var = CM $ \env -> return $
          _           -> (varInitial var, env)
 
 writeVar  :: Typeable a => Var a -> a -> ContextMonad ()
-writeVar var a = 
+writeVar var a =
    let f = storeEnvWith (varShow var) (varName var) a
    in CM $ \env -> return ((), f env)
 

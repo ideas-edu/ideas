@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,24 +9,24 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Equation.Views 
+module Domain.Math.Equation.Views
    ( relationSolvedForm, relationsSolvedForm
    , equationSolvedForm, equationsSolvedForm, equationSolvedWith
    ) where
 
-import Domain.Math.Expr
-import Domain.Math.Data.OrList
-import Domain.Math.Data.Relation
 import Common.Library
 import Data.Traversable
+import Domain.Math.Data.OrList
+import Domain.Math.Data.Relation
+import Domain.Math.Expr
 
-relationsSolvedForm :: (Traversable f, Relational g) => 
+relationsSolvedForm :: (Traversable f, Relational g) =>
    View (f (g Expr)) (f (Expr -> Expr -> g Expr, String, Expr))
 relationsSolvedForm = "relations.solved" @> traverseView relationSolvedForm
 
 -- The variable may appear on one of the sides of the relation (right-hand side
 -- is thus allowed), but must be isolated
-relationSolvedForm :: Relational f => 
+relationSolvedForm :: Relational f =>
    View (f Expr) (Expr -> Expr -> f Expr, String, Expr)
 relationSolvedForm = "relation.solved" @> makeView f g
  where
@@ -51,7 +51,7 @@ equationSolvedForm = "equation.solved" @> makeView f g
       return (x, e)
    f _ = Nothing
    g (s, e) = Var s :==: e
-   
+
 equationSolvedWith :: View Expr a -> View (Equation Expr) (String, a)
 equationSolvedWith v = "equation.solved-with" @> makeView f g
  where

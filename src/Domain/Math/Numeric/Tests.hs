@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -50,8 +50,8 @@ main = suite "Numeric tests" $ do
       f "ratio expr nonzero" ratioExprGenNonZero rationalNF
 
    suite "View relations" $ do
-      let va .>. vb = forM_ numGenerators $ \g -> 
-             addProperty "" $ forAll g $ \a -> 
+      let va .>. vb = forM_ numGenerators $ \g ->
+             addProperty "" $ forAll g $ \a ->
                 not (a `belongsTo` va) || a `belongsTo` vb
       integerNF .>. integerView
       rationalNF .>. rationalRelaxedForm
@@ -60,9 +60,9 @@ main = suite "Numeric tests" $ do
       integerView .>. rationalView
 
    suite "Pre/post conditions strategies" $ do
-      let f l s pre post = forM_ numGenerators $ \g -> 
+      let f l s pre post = forM_ numGenerators $ \g ->
              addProperty l $ forAll g $ \a ->
-                let run = fromMaybe a . fromContext . applyD s 
+                let run = fromMaybe a . fromContext . applyD s
                         . newContext emptyEnv . termNavigator
                 in not (a `belongsTo` pre) || run a `belongsTo` post
       f "natural"  naturalStrategy  integerView  integerNF
@@ -71,19 +71,19 @@ main = suite "Numeric tests" $ do
       f "fraction" fractionStrategy rationalView rationalNF
 
 numGenerators :: [Gen Expr]
-numGenerators = map sized 
+numGenerators = map sized
    [ integerGenerator, rationalGenerator
    , ratioExprGen, ratioExprGenNonZero, numGenerator
    ]
-   
+
 semEqDouble :: Expr -> Expr -> Bool
-semEqDouble a b = 
+semEqDouble a b =
    case (match doubleView a, match doubleView b) of
       (Just x, Just y)   -> x ~= y
       (Nothing, Nothing) -> True
       _                  -> False
  where
    delta = 0.0001
- 
+
    (~=) :: Double -> Double -> Bool
    x ~= y = abs x < delta || abs y < delta || abs (1 - (x/y)) < delta

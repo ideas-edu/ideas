@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,19 +11,19 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Formula where
 
-import Common.Utils.Uniplate
 import Common.Rewriting
 import Common.Utils
+import Common.Utils.Uniplate
 import Control.Monad
 import Data.List
-import qualified Data.Set as S
 import System.Random (StdGen, mkStdGen, split, randomR)
 import Test.QuickCheck
 import Test.QuickCheck.Gen
+import qualified Data.Set as S
 
 infixr 2 :.:
-infixr 3 :+: 
-infixr 4 :||: 
+infixr 3 :+:
+infixr 4 :||:
 infixr 5 :&&:
 
 -- | The data type RelAlg is the abstract syntax for the domain
@@ -47,7 +47,7 @@ empty = Not V
 -------------------------------------
 
 isAtom :: RelAlg -> Bool
-isAtom  r = 
+isAtom  r =
     case r of
       Var _             -> True
       Not I             -> True
@@ -58,20 +58,20 @@ isAtom  r =
       V                 -> True
       I                 -> True
       _                 -> False
- 
+
 isMolecule :: RelAlg -> Bool
 isMolecule (r :.: s) = isMolecule r && isMolecule s
 isMolecule (r :+: s) = isMolecule r && isMolecule s
 isMolecule r = isAtom r
- 
+
 isDisj :: RelAlg -> Bool
 isDisj (r :||: s) = isDisj r && isDisj s
 isDisj r = isMolecule r
-      
+
 isCNF :: RelAlg -> Bool
 isCNF (r :&&: s) = isCNF r && isCNF s
 isCNF r = isDisj r
- 
+
 -- | The type RelAlgAlgebra is the algebra for the data type RelAlg
 -- | Used in the fold for RelAlg.
 type RelAlgAlgebra a = (String -> a, a -> a -> a, a -> a -> a, a -> a -> a, a -> a -> a, a -> a, a -> a, a, a)
@@ -89,20 +89,20 @@ foldRelAlg (var, comp, add, conj, disj, neg, inv, univ, ident) = rec
          p :||: q  -> rec p `disj` rec q
          Not p     -> neg (rec p)
          Inv p     -> inv (rec p)
-         V         -> univ 
+         V         -> univ
          I         -> ident
 
 type Relation a = S.Set (a, a)
 
 evalRelAlg :: Ord a => (String -> Relation a) -> [a] -> RelAlg -> Relation a
-evalRelAlg var as = foldRelAlg (var, comp, add, conj, disj, neg, inv, univ, ident) 
+evalRelAlg var as = foldRelAlg (var, comp, add, conj, disj, neg, inv, univ, ident)
  where
    pairs = cartesian as as
-   
+
    comp p q = let f (a1, a2) c = (a1, c) `S.member` p && (c, a2) `S.member` q
-              in S.fromAscList [ x | x <- pairs, any (f x) as ] 
+              in S.fromAscList [ x | x <- pairs, any (f x) as ]
    add p q  = let f (a1, a2) c = (a1, c) `S.member` p || (c, a2) `S.member` q
-              in S.fromAscList [ x | x <- pairs, all (f x) as ] 
+              in S.fromAscList [ x | x <- pairs, all (f x) as ]
    conj     = S.intersection
    disj     = S.union
    neg p    = S.fromAscList [ x | x <- pairs, x `S.notMember` p ]
@@ -125,7 +125,7 @@ probablyEqualWith rng p q = all (\i -> eval i p == eval i q) (makeRngs 50 rng)
    makeRngs n g
       | n == 0    = []
       | otherwise = let (g1, g2) = split g in g1 : makeRngs (n-1) g2
-   eval g = 
+   eval g =
       let MkGen f   = arbRelations as
           (size, a) = randomR (0, 100) g
       in evalRelAlg (f a size) as
@@ -143,13 +143,13 @@ arbRelation as = do
 -- Alternative relation generator, which works best for slightly
 -- larger domains (for instance, with 4 elements or more)
 arbRelationAlt:: Eq a => [a] -> Gen (Relation a)
-arbRelationAlt as = do 
+arbRelationAlt as = do
    n  <- choose (0, 100)
    let f x = do
           m <- choose (1::Int, 100)
           return [ x | n < m ]
    xs <- mapM f $ cartesian as as
-   return $ S.fromAscList $ concat xs 
+   return $ S.fromAscList $ concat xs
 
 -- Test on a limited domain whether two relation algebra terms are equivalent
 (===) :: RelAlg -> RelAlg -> Property
@@ -157,11 +157,11 @@ p === q = forAll arbitrary $ \n -> probablyEqualWith (mkStdGen n) p q
 
 -- | Function varsRelAlg returns the variables that appear in a RelAlg expression.
 varsRelAlg :: RelAlg -> [String]
-varsRelAlg = foldRelAlg (return, union, union, union, union, id, id, [], [])      
+varsRelAlg = foldRelAlg (return, union, union, union, union, id, id, [], [])
 
 instance Uniplate RelAlg where
    uniplate term =
-      case term of 
+      case term of
          s :.:  t  -> plate (:.:)  |* s |* t
          s :+:  t  -> plate (:+:)  |* s |* t
          s :&&: t  -> plate (:&&:) |* s |* t
@@ -169,19 +169,19 @@ instance Uniplate RelAlg where
          Not s     -> plate Not    |* s
          Inv s     -> plate Inv    |* s
          _         -> plate term
-         
+
 instance Different RelAlg where
    different = (V, I)
 
 instance IsTerm RelAlg where
-   toTerm = foldRelAlg 
+   toTerm = foldRelAlg
       ( variable, binary compSymbol, binary addSymbol
       , binary conjSymbol
       , binary disjSymbol, unary notSymbol, unary invSymbol
       , symbol universeSymbol, symbol identSymbol
       )
 
-   fromTerm a = 
+   fromTerm a =
       fromTermWith f a `mplus` liftM Var (getVariable a)
     where
       f s []
@@ -196,7 +196,7 @@ instance IsTerm RelAlg where
          | s == conjSymbol      = return (x :&&: y)
          | s == disjSymbol      = return (x :||: y)
       f _ _ = fail "fromTerm"
-      
+
 compSymbol, addSymbol, conjSymbol, disjSymbol,
    notSymbol, invSymbol, universeSymbol, identSymbol :: Symbol
 compSymbol     = relalgSymbol "comp"

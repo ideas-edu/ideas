@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,7 +11,7 @@
 -- Run a feedbackscript
 --
 -----------------------------------------------------------------------------
-module Service.FeedbackScript.Run 
+module Service.FeedbackScript.Run
    ( Script
    , Environment(..), newEnvironment
    , feedbackDiagnosis, feedbackHint
@@ -24,8 +24,8 @@ import Control.Monad
 import Data.List
 import Data.Maybe
 import Service.BasicServices
-import Service.FeedbackScript.Syntax
 import Service.Diagnose
+import Service.FeedbackScript.Syntax
 import Service.State
 
 data Environment a = Env
@@ -37,9 +37,9 @@ data Environment a = Env
    , after      :: Maybe Term
    , afterText  :: Maybe String
    }
-   
+
 newEnvironment :: State a -> Environment a
-newEnvironment st = Env 
+newEnvironment st = Env
    { oldReady   = ready st
    , expected   = fmap fst4 next
    , recognized = Nothing
@@ -59,17 +59,17 @@ toText :: Environment a -> Script -> Text -> Maybe Text
 toText env script = eval env script . Right
 
 ruleToString :: Environment a -> Script -> Rule b -> String
-ruleToString env script r = 
+ruleToString env script r =
    let f = eval env script . Left . getId
-   in maybe (showId r) show (f r) 
+   in maybe (showId r) show (f r)
 
 eval :: Environment a -> Script -> Either Id Text -> Maybe Text
 eval env script = either (return . findIdRef) evalText
- where   
+ where
    evalText :: Text -> Maybe Text
    evalText = liftM mconcat . mapM unref . textItems
     where
-      unref (TextRef a) 
+      unref (TextRef a)
          | a == expectedId   = fmap (findIdRef . getId) (expected env)
          | a == recognizedId = fmap (findIdRef . getId) (recognized env)
          | a == diffbeforeId = fmap (TextString . fst) (diffPair env)
@@ -77,7 +77,7 @@ eval env script = either (return . findIdRef) evalText
          | a == beforeId     = fmap TextTerm (before env)
          | a == afterId      = fmap TextTerm (after env)
          | a == afterTextId  = fmap TextString (afterText env)
-         | otherwise         = findRef (==a) 
+         | otherwise         = findRef (==a)
       unref t = Just t
 
    evalBool :: Condition -> Bool
@@ -97,22 +97,22 @@ eval env script = either (return . findIdRef) evalText
 
    findIdRef :: Id -> Text
    findIdRef x = fromMaybe (TextString (showId x)) (findRef (`eqId` x))
-        
+
    findRef :: (Id -> Bool) -> Maybe Text
    findRef p = safeHead $ catMaybes
       [ evalText t
       | (as, c, t) <- allDecls
       , any p as && evalBool c
       ]
-      
-   allDecls = 
+
+   allDecls =
       let f (Simple _ as t)   = [ (as, CondConst True, t) ]
-          f (Guarded _ as xs) = [ (as, c, t) | (c, t) <- xs ] 
+          f (Guarded _ as xs) = [ (as, c, t) | (c, t) <- xs ]
           f _ = []
       in concatMap f (scriptDecls script)
 
 feedbackDiagnosis :: Diagnosis a -> Environment a -> Script -> Text
-feedbackDiagnosis diagnosis env = 
+feedbackDiagnosis diagnosis env =
    fromMaybe (TextString "ERROR") .
    case diagnosis of
       Buggy _ r      -> make "buggy"   env {recognized = Just r}
@@ -121,14 +121,14 @@ feedbackDiagnosis diagnosis env =
       Similar _ _    -> make "same"    env
       Detour _ _ _ r -> make "detour"  env {recognized = Just r}
       Correct _ _    -> make "unknown" env
-  
+
 feedbackHint :: Bool -> Environment a -> Script -> Text
-feedbackHint b env script = 
+feedbackHint b env script =
    fromMaybe (defaultHint env script) $
    make (if b then "hint" else "step") env script
 
 defaultHint :: Environment a -> Script -> Text
-defaultHint env script = makeText $ 
+defaultHint env script = makeText $
    case expected env of
       Just r  -> ruleToString env script r
       Nothing -> "Sorry, not hint available."
@@ -137,25 +137,25 @@ make :: String -> Environment a -> Script -> Maybe Text
 make s env script = toText env script (TextRef (newId s))
 
 feedbackIds :: [Id]
-feedbackIds = map newId 
+feedbackIds = map newId
    ["same", "noteq", "unknown", "ok", "buggy", "detour", "hint", "step"]
-   
+
 attributeIds :: [Id]
 attributeIds =
    [expectedId, recognizedId, diffbeforeId, diffafterId, beforeId, afterId, afterTextId]
-   
+
 conditionIds :: [Id]
 conditionIds = [oldreadyId, hasexpectedId]
-    
+
 expectedId, recognizedId, diffbeforeId, diffafterId, beforeId, afterId, afterTextId :: Id
-expectedId   = newId "expected"  
+expectedId   = newId "expected"
 recognizedId = newId "recognized"
 diffbeforeId = newId "diffbefore"
-diffafterId  = newId "diffafter" 
-beforeId     = newId "before"    
-afterId      = newId "after"     
+diffafterId  = newId "diffafter"
+beforeId     = newId "before"
+afterId      = newId "after"
 afterTextId  = newId "aftertext"
 
 oldreadyId, hasexpectedId :: Id
-oldreadyId    = newId "oldready" 
+oldreadyId    = newId "oldready"
 hasexpectedId = newId "hasexpected"

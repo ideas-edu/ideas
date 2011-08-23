@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -10,12 +10,12 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Text.OpenMath.Object 
+module Text.OpenMath.Object
    ( OMOBJ(..), getOMVs, xml2omobj, omobj2xml
    ) where
 
-import Data.Generics.Uniplate.Direct hiding (children)
 import Data.Char
+import Data.Generics.Uniplate.Direct hiding (children)
 import Data.List (nub)
 import Data.Maybe
 import Data.Typeable
@@ -23,11 +23,11 @@ import Text.OpenMath.Symbol
 import Text.XML
 
 -- internal representation for OpenMath objects
-data OMOBJ = OMI Integer 
-           | OMF Double 
-           | OMV String 
-           | OMS Symbol 
-           | OMA [OMOBJ] 
+data OMOBJ = OMI Integer
+           | OMF Double
+           | OMV String
+           | OMS Symbol
+           | OMA [OMOBJ]
            | OMBIND OMOBJ [String] OMOBJ
    deriving (Show, Eq, Typeable)
 
@@ -47,20 +47,20 @@ getOMVs omobj = nub [ x | OMV x <- universe omobj ]
 
 ----------------------------------------------------------
 -- conversion functions: XML <-> OMOBJ
-   
+
 xml2omobj :: XML -> Either String OMOBJ
 xml2omobj xmlTop =
-   case xmlTop of  
+   case xmlTop of
       Element "OMOBJ" _ [Right e] -> rec e
       _ -> fail $ "expected an OMOBJ tag" ++ show xmlTop
  where
    rec xml =
       case content xml of
-      
+
          _ | name xml == "OMA" -> do
-            ys <- mapM rec (children xml) 
+            ys <- mapM rec (children xml)
             return (OMA ys)
-            
+
          [] | name xml == "OMS" -> do
             let mcd = findAttribute "cd" xml
             n <- findAttribute "name" xml
@@ -70,17 +70,17 @@ xml2omobj xmlTop =
             case readInt s of
                Just i -> return (OMI (toInteger i))
                _      -> fail "invalid integer in OMI"
-         
+
          [] | name xml == "OMF" -> do
-            s <- findAttribute "dec" xml 
+            s <- findAttribute "dec" xml
             case readDouble s of
                Just nr -> return (OMF nr)
                _       -> fail "invalid floating-point in OMF"
-                    
+
          [] | name xml == "OMV" -> do
             s <- findAttribute "name" xml
             return (OMV s)
-        
+
          [Right x1, Right x2, Right x3] | name xml == "OMBIND" -> do
             y1 <- rec x1
             y2 <- recOMBVAR x2
@@ -88,15 +88,15 @@ xml2omobj xmlTop =
             return (OMBIND y1 y2 y3)
 
          _ -> fail ("invalid tag " ++ show (name xml))
-   
+
    recOMBVAR xml
       | name xml == "OMBVAR" =
            let f (Right (OMV s)) = return s
                f this = fail $ "expected tag OMV in OMBVAR, but found " ++ show this
            in mapM (f . rec) (children xml)
-      | otherwise = 
+      | otherwise =
            fail ("expected tag OMVAR, but found " ++ show (name xml))
-   
+
 omobj2xml :: OMOBJ -> XML
 omobj2xml object = makeXML "OMOBJ" $ do
    "xmlns"   .=. "http://www.openmath.org/OpenMath"
@@ -113,17 +113,17 @@ omobj2xml object = makeXML "OMOBJ" $ do
          OMS s  -> element "OMS" $ do
             "cd"   .=. fromMaybe "unknown" (dictionary s)
             "name" .=. symbolName s
-         OMBIND x ys z -> element "OMBIND" $ do 
-            rec x 
-            element "OMBVAR" (mapM_ (rec . OMV) ys) 
+         OMBIND x ys z -> element "OMBIND" $ do
+            rec x
+            element "OMBVAR" (mapM_ (rec . OMV) ys)
             rec z
 
-readInt :: String -> Maybe Integer     
+readInt :: String -> Maybe Integer
 readInt s = case reads s of
                [(n, xs)] | all isSpace xs -> Just n
                _ -> Nothing
 
-readDouble :: String -> Maybe Double   
+readDouble :: String -> Maybe Double
 readDouble s = case reads s of
                   [(n, xs)] | all isSpace xs -> Just n
                   _ -> Nothing

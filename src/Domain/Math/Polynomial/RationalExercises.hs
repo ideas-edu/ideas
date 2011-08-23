@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -9,28 +9,28 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Polynomial.RationalExercises 
+module Domain.Math.Polynomial.RationalExercises
    ( rationalEquationExercise
    , simplifyRationalExercise, divisionRationalExercise
    , eqSimplifyRational
    ) where
 
 import Common.Library
-import Common.Utils.Uniplate
 import Common.Utils (fst3)
+import Common.Utils.Uniplate
 import Control.Monad
 import Data.Maybe
 import Domain.Logic.Formula hiding (Var)
 import Domain.Logic.Views ((.&&.))
+import Domain.Math.CleanUp
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Equation.Views
-import Domain.Math.Polynomial.RationalExamples
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.CleanUp
 import Domain.Math.Polynomial.LeastCommonMultiple
+import Domain.Math.Polynomial.RationalExamples
 import Domain.Math.Polynomial.RationalRules
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
@@ -38,14 +38,14 @@ import Domain.Math.Polynomial.Views
 import Domain.Math.Power.OldViews (powerFactorViewWith)
 import Domain.Math.SquareRoot.Views
 import qualified Data.Foldable as F
-import qualified Data.Traversable as T
 import qualified Data.Set as S
+import qualified Data.Traversable as T
 import qualified Domain.Logic as Logic
 import qualified Domain.Logic.Views as Logic
 
 rationalEquationExercise :: Exercise (OrList (Equation Expr))
-rationalEquationExercise = makeExercise 
-   { exerciseId    = describe "solve a rational equation (with a variable in a divisor)" $ 
+rationalEquationExercise = makeExercise
+   { exerciseId    = describe "solve a rational equation (with a variable in a divisor)" $
                         newId "algebra.equations.rational"
    , status        = Provisional
    , parser        = parseOrsEqExpr
@@ -58,10 +58,10 @@ rationalEquationExercise = makeExercise
    , navigation    = termNavigator
    , examples      = level Medium $ map singleton (concat brokenEquations)
    }
-   
+
 simplifyRationalExercise :: Exercise Expr
 simplifyRationalExercise = makeExercise
-   { exerciseId    = describe "simplify a rational expression (with a variable in a divisor)" $ 
+   { exerciseId    = describe "simplify a rational expression (with a variable in a divisor)" $
                         newId "algebra.manipulation.rational.simplify"
    , status        = Alpha -- Provisional
    , parser        = parseExpr
@@ -74,10 +74,10 @@ simplifyRationalExercise = makeExercise
    , navigation    = termNavigator
    , examples      = level Medium $ concat (normBroken ++ normBroken2)
    }
-   
+
 divisionRationalExercise :: Exercise Expr
 divisionRationalExercise = simplifyRationalExercise
-   { exerciseId   = describe "divide a rational expression ('uitdelen')" $ 
+   { exerciseId   = describe "divide a rational expression ('uitdelen')" $
                        newId "math.divrational"
    , strategy     = label "divide broken fraction" succeed
    , examples     = level Medium $ concat deelUit
@@ -85,26 +85,26 @@ divisionRationalExercise = simplifyRationalExercise
 
 rationalEquationStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 rationalEquationStrategy = cleanUpStrategy (applyTop (fmap (fmap cleaner))) $
-   label "Rational equation" $ 
+   label "Rational equation" $
        brokenFormToPoly <*> higherDegreeStrategyG <*> checkSolutionStrategy
  where
-   -- a custom-made clean-up function. (Standard) cleanUpExpr function 
+   -- a custom-made clean-up function. (Standard) cleanUpExpr function
    -- has some strange interaction with the rules
-   cleaner = transform (simplify (powerFactorViewWith rationalView)) 
+   cleaner = transform (simplify (powerFactorViewWith rationalView))
            . cleanUpSimple . transform smart
-   
+
    brokenFormToPoly = label "rational form to polynomial" $ untilS allArePoly $
-      (  useC divisionIsZero <|> useC divisionIsOne 
+      (  useC divisionIsZero <|> useC divisionIsOne
      <|> useC sameDivisor <|> useC sameDividend
      <|> use coverUpPlus <|> use coverUpMinusLeft <|> use coverUpMinusRight
      <|> use coverUpNegate
-      ) |>    
+      ) |>
       (  useC crossMultiply <|> useC multiplyOneDiv  )
-   checkSolutionStrategy = label "check solutions" $ 
+   checkSolutionStrategy = label "check solutions" $
       try (multi (showId checkSolution) (somewhere checkSolution))
 
 allArePoly :: Context (OrList (Equation Expr)) -> Bool
-allArePoly = 
+allArePoly =
    let f a = a `belongsTo` polyView
    in maybe False (all f . concatMap F.toList . F.toList) .  fromContext
 
@@ -113,43 +113,43 @@ simplifyRationalStrategy = cleanUpStrategy (applyTop cleaner) $
    label "Simplify rational expression" $
       phaseOneDiv <*> phaseSimplerDiv
  where
-   -- a custom-made clean-up function. (Standard) cleanUpExpr function 
+   -- a custom-made clean-up function. (Standard) cleanUpExpr function
    -- has some strange interaction with the rules
    cleaner = transform (simplify (powerFactorViewWith rationalView)) . cleanUpSimple
- 
+
    phaseOneDiv = label "Write as division" $
-      untilS isDivC $ 
+      untilS isDivC $
          use fractionPlus <|> use fractionScale <|> use turnIntoFraction
    phaseSimplerDiv = label "Simplify division" $
       repeatS $
          (onlyLowerDiv findFactorsStrategyG <|> somewhere (useC cancelTermsDiv)
             <|> commitS (onlyUpperDiv (repeatS findFactorsStrategyG) <*> useC cancelTermsDiv))
-         |> ( somewhere (use merge) 
+         |> ( somewhere (use merge)
          <|> multi (showId distributeTimes) (exceptLowerDiv (use distributeTimes))
           )
 
 isDivC :: Context a -> Bool
 isDivC = maybe False (isJust . isDivide :: Term -> Bool) . currentT
 
--- First check that the whole strategy can be executed. Cleaning up is not 
+-- First check that the whole strategy can be executed. Cleaning up is not
 -- propagated correctly to predicate in check combinator, hence the use of
 -- cleanUpStrategy (which is not desirable here).
 commitS :: IsStrategy f => f (Context Expr) -> Strategy (Context Expr)
-commitS s = 
+commitS s =
    let cs  = cleanUpStrategy (applyTop cleanUpExpr) (label "" s)
        f a = fromMaybe a (do b <- top a; c <- current a; return (change (const c) b))
    in check (applicable cs . f) <*> s
 
 exceptLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
-exceptLowerDiv = somewhereWith "except-lower-div" $ \a -> 
+exceptLowerDiv = somewhereWith "except-lower-div" $ \a ->
    if isDivC a then [1] else [0 .. arity a-1]
 
 onlyUpperDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onlyUpperDiv = onceWith "only-upper-div" $ \a -> [ 1 | isDivC a ]
-   
+
 onlyLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onlyLowerDiv = onceWith "only-lower-div" $ \a -> [ 2 | isDivC a ]
-   
+
 simplifiedRational :: Expr -> Bool
 simplifiedRational expr =
    case expr of
@@ -163,7 +163,7 @@ simplifiedRational expr =
    inPolyForm a =
       a `belongsTo` polyNormalForm identity ||
       S.size (varSet expr) > 1
-          
+
    inFactorForm :: Expr -> Bool
    inFactorForm = flip belongsTo $
       let v = first (polyNormalForm identity >>> second linearPolyView)
@@ -171,7 +171,7 @@ simplifiedRational expr =
 
 rationalEquations :: OrList (Equation Expr) -> Maybe (OrList Expr)
 rationalEquations = fmap (F.foldMap id) . T.mapM rationalEquation
- 
+
 rationalEquation :: Equation Expr -> Maybe (OrList Expr)
 rationalEquation eq = do
    let (lhs :==: rhs) = coverUp eq
@@ -187,17 +187,17 @@ restrictOrList p0 = catOrList . fmap f
  where
    f a | p a       = singleton a
        | otherwise = false
-   p zeroExpr = 
-      case coverUp (zeroExpr :==: 0) of 
+   p zeroExpr =
+      case coverUp (zeroExpr :==: 0) of
          Var x :==: a -> -- returns true if a contradiction was not found
-            substVar x (cleanUpExpr a) p0 /= F 
+            substVar x (cleanUpExpr a) p0 /= F
          _ -> True
 
    substVar x a = Logic.simplify . catLogic . fmap (simpler . fmap (cleanUpExpr . subst))
-    where 
+    where
       subst (Var s) | x == s = a
       subst expr = descend subst expr
-       
+
    simpler r = fromMaybe (Logic.Var r) $ do
       a <- match (squareRootViewWith rationalView) (leftHandSide r)
       b <- match (squareRootViewWith rationalView) (rightHandSide r)
@@ -212,12 +212,12 @@ eqRationalEquation :: Context (OrList (Equation Expr)) -> Context (OrList (Equat
 eqRationalEquation ca cb = fromMaybe False $
    liftM2 (==) (solve ca) (solve cb)
  where
-   solve ctx = do 
+   solve ctx = do
       let f = fromMaybe T . conditionOnClipboard
-      a  <- fromContext ctx 
+      a  <- fromContext ctx
       xs <- rationalEquations a
       return $ simplify orSetView $ restrictOrList (f ctx) xs
-   
+
 eqSimplifyRational :: Context Expr -> Context Expr -> Bool
 eqSimplifyRational ca cb = fromMaybe False $ do
    a <- fromContext ca
@@ -229,7 +229,7 @@ eqSimplifyRational ca cb = fromMaybe False $ do
    p1 <- match (polyViewWith rationalView) a1c
    p2 <- match (polyViewWith rationalView) b1c
    return (p1==p2)
-   
+
 conditionOnClipboard :: Context a -> Maybe (Logic (Relation Expr))
 conditionOnClipboard = evalCM $ const $
    lookupClipboardG "condition"
@@ -243,7 +243,7 @@ rationalExpr expr =
       Negate a -> fNeg (rationalExpr a)
       a :*: b  -> rationalExpr a `fTimes` rationalExpr b
       a :/: b  -> rationalExpr a `fTimes` fRecip (rationalExpr b)
-      Sym s [a, b] | isPowerSymbol s -> 
+      Sym s [a, b] | isPowerSymbol s ->
          fPower (rationalExpr a) b
       _ -> (expr, 1, T)
  where
@@ -252,8 +252,8 @@ rationalExpr expr =
    fPower (a, b, p) n = (a .^. n, b .^. n, p)
    fTimes (a1, a2, p) (b1, b2, q) = (a1 .*. b1, a2 .*. b2, p .&&. q)
    fPlus  (a1, a2, p) (b1, b2, q) =
-      case (divisionExpr c2 a2, divisionExpr c2 b2) of 
-         (Just a3, Just b3) 
+      case (divisionExpr c2 a2, divisionExpr c2 b2) of
+         (Just a3, Just b3)
             | a1 == b1     -> (a1 .*. (a3 .+. b3), c2, pq)
             | a1 == neg b1 -> (a1 .*. (a3 .-. b3), c2, pq)
             | otherwise    -> (a1 .*. a3 .+. b1 .*. b3, c2, pq)
@@ -281,23 +281,23 @@ go0 = checkExercise rationalEquationExercise
 go = checkExercise simplifyRationalExercise
 
 see n = printDerivation ex (examples ex !! (n-1))
- where ex = --rationalEquationExercise  
+ where ex = --rationalEquationExercise
             simplifyRationalExercise
-      
+
 go4 = printDerivation findFactorsExercise $ -a + 4
  where x = Var "x"
        a = Var "a"
-       
+
 test = e4
- where 
+ where
    a  = Var "a"
    b  = Var "b"
-   
+
    e1 = 6*a*b*a
    e2 = -4*b^2*a*2
    e3 = lcmExpr e1 e2
    e4 = divisionExpr e3 e1
    e5 = divisionExpr e3 e2
-   
+
 go = putStrLn $ unlines $ map show $ zip [1..] $ map (brokenEq []) (concat brokenEquations)
 -}

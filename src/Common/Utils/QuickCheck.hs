@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,7 +11,7 @@
 -- Extensions to the QuickCheck library
 --
 -----------------------------------------------------------------------------
-module Common.Utils.QuickCheck 
+module Common.Utils.QuickCheck
    ( module Test.QuickCheck
      -- * Data type
    , ArbGen, generator, generators
@@ -43,10 +43,10 @@ generator (AG pairs) = sized rec
    factor = foldr (lcm . denominator . fst) 1 pairs
    rec n  = frequency (map make (select pairs))
     where
-      select 
+      select
          | n == 0    = filter ((==0) . fst . snd)
          | otherwise = id
-      make (r, (a, gf)) = 
+      make (r, (a, gf)) =
          let m  = round (fromInteger factor*r)
              xs = replicateM a $ rec $ n `div` 2
          in (m, liftM2 ($) gf xs)

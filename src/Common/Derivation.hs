@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -25,8 +25,8 @@ module Common.Derivation
 
 import Common.Classes
 import Common.Utils (safeHead)
-import qualified Data.Sequence as S
 import qualified Data.Foldable as F
+import qualified Data.Sequence as S
 
 -----------------------------------------------------------------------------
 -- Data type definition and instances
@@ -74,7 +74,7 @@ terms (D a xs) = a:map snd (F.toList xs)
 steps :: Derivation s a -> [s]
 steps (D _ xs) = map fst (F.toList xs)
 
--- | The triples of a derivation, consisting of the before term, the 
+-- | The triples of a derivation, consisting of the before term, the
 -- step, and the after term.
 triples :: Derivation s a -> [(a, s, a)]
 triples d = zip3 (terms d) (steps d) (tail (terms d))
@@ -95,7 +95,7 @@ withoutLast d@(D a xs) =
       ys S.:> _ -> D a ys
 
 updateSteps :: (a -> s -> a -> t) -> Derivation s a -> Derivation t a
-updateSteps f d = 
+updateSteps f d =
    let ts   = [ f a b c | (a, b, c) <- triples d ]
        x:xs = terms d
    in D x (S.fromList (zip ts xs))

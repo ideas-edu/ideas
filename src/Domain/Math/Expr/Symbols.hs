@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -29,19 +29,19 @@ module Domain.Math.Expr.Symbols
 import Common.Rewriting
 import Control.Monad
 import Prelude hiding ((^))
-import qualified Text.OpenMath.Dictionary.Arith1    as OM
+import qualified Text.OpenMath.Dictionary.Arith1 as OM
 import qualified Text.OpenMath.Dictionary.Calculus1 as OM
-import qualified Text.OpenMath.Dictionary.Fns1      as OM
-import qualified Text.OpenMath.Dictionary.List1     as OM
-import qualified Text.OpenMath.Dictionary.Nums1     as OM
-import qualified Text.OpenMath.Dictionary.Transc1   as OM
+import qualified Text.OpenMath.Dictionary.Fns1 as OM
+import qualified Text.OpenMath.Dictionary.List1 as OM
+import qualified Text.OpenMath.Dictionary.Nums1 as OM
+import qualified Text.OpenMath.Dictionary.Transc1 as OM
 
 -------------------------------------------------------------
 -- Arith1 dictionary
 
 plusSymbol, timesSymbol, minusSymbol, divideSymbol, rootSymbol,
    powerSymbol, negateSymbol, absSymbol :: Symbol
-   
+
 plusSymbol   = newSymbol OM.plusSymbol
 timesSymbol  = newSymbol OM.timesSymbol
 minusSymbol  = newSymbol OM.minusSymbol
@@ -61,7 +61,7 @@ logSymbol  = newSymbol OM.logSymbol
 sinSymbol  = newSymbol OM.sinSymbol
 cosSymbol  = newSymbol OM.cosSymbol
 lnSymbol   = newSymbol OM.lnSymbol
-expSymbol  = newSymbol OM.expSymbol 
+expSymbol  = newSymbol OM.expSymbol
 tanSymbol  = newSymbol OM.tanSymbol
 sinhSymbol = newSymbol OM.sinhSymbol
 tanhSymbol = newSymbol OM.tanhSymbol
@@ -83,13 +83,13 @@ piSymbol     = newSymbol OM.piSymbol
 signumSymbol, asinSymbol, atanSymbol, acosSymbol, asinhSymbol, atanhSymbol,
    acoshSymbol, bottomSymbol, fcompSymbol, mixedFractionSymbol :: Symbol
 
-signumSymbol = newSymbol "signum"    
-asinSymbol   = newSymbol "asin"   
-atanSymbol   = newSymbol "atan"   
-acosSymbol   = newSymbol "acos"     
-asinhSymbol  = newSymbol "asinh"  
-atanhSymbol  = newSymbol "atanh" 
-acoshSymbol  = newSymbol "acosh"  
+signumSymbol = newSymbol "signum"
+asinSymbol   = newSymbol "asin"
+atanSymbol   = newSymbol "atan"
+acosSymbol   = newSymbol "acos"
+asinhSymbol  = newSymbol "asinh"
+atanhSymbol  = newSymbol "atanh"
+acoshSymbol  = newSymbol "acosh"
 bottomSymbol = newSymbol "error"
 fcompSymbol  = newSymbol "compose"
 
@@ -99,19 +99,19 @@ mixedFractionSymbol = newSymbol ("extra", "mixedfraction")
 -------------------------------------------------------------
 -- Some match functions
 
-isPlus, isTimes, isMinus, isDivide, isPower, isRoot :: 
+isPlus, isTimes, isMinus, isDivide, isPower, isRoot ::
    (WithFunctions a, MonadPlus m) => a -> m (a, a)
 isNegate :: (WithFunctions a, MonadPlus m) => a -> m a
-   
+
 isPlus   = isAssoBinary plusSymbol
-isTimes  = isAssoBinary timesSymbol  
-isMinus  = isBinary     minusSymbol  
-isDivide = isBinary     divideSymbol 
-isNegate = isUnary      negateSymbol 
+isTimes  = isAssoBinary timesSymbol
+isMinus  = isBinary     minusSymbol
+isDivide = isBinary     divideSymbol
+isNegate = isUnary      negateSymbol
 isPower  = isBinary     powerSymbol
 isRoot   = isBinary     rootSymbol
 
-isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol, 
+isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol,
    isMixedFractionSymbol :: Symbol -> Bool
 
 isPowerSymbol  = (== powerSymbol)

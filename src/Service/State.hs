@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -12,9 +12,9 @@
 -- derivation.
 --
 -----------------------------------------------------------------------------
-module Service.State 
+module Service.State
    ( -- * Exercise state
-     State, makeState, empyStateContext, emptyState 
+     State, makeState, empyStateContext, emptyState
    , exercise, statePrefix, stateContext, stateTerm
      -- * Types
    , stateType
@@ -25,12 +25,12 @@ import Common.Utils (readM)
 import Data.Maybe
 import Service.Types
 
-data State a = State 
+data State a = State
    { exercise     :: Exercise a
    , statePrefix  :: Maybe (Prefix (Context a))
    , stateContext :: Context a
    }
-   
+
 instance Show (State a) where
    show s = unlines $ "State {" : map ("   "++) xs ++ ["}"]
     where
@@ -40,7 +40,7 @@ instance Show (State a) where
            , "term     = " ++ prettyPrinterContext (exercise s) (stateContext s)
            ]
 
-instance HasId (State a) where 
+instance HasId (State a) where
    getId = getId . exercise
    changeId f s = s { exercise = changeId f (exercise s) }
 
@@ -69,7 +69,7 @@ stateType = Tag "state" (Iso (f <-> g) tp)
       let str = strategy ex
           h   = fromMaybe [] . readM
       in makeState ex (mp >>= flip makePrefix str . h) ctx
-   g st = 
+   g st =
       ( exercise st
       , fmap show (statePrefix st)
       , stateContext st

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
--- Copyright 2010, Open Universiteit Nederland. This file is distributed 
--- under the terms of the GNU General Public License. For more information, 
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
@@ -11,8 +11,8 @@
 -----------------------------------------------------------------------------
 module Documentation.TestsPage (makeTestsPage) where
 
-import Control.Monad
 import Common.Utils.TestSuite
+import Control.Monad
 import Documentation.DefaultPage
 import Documentation.SelfCheck
 import Service.DomainReasoner
@@ -25,7 +25,7 @@ makeTestsPage docDir testDir = do
    generatePage docDir testsPageFile (testsPage result)
 
 testsPage :: TestSuiteResult -> HTMLBuilder
-testsPage result = do 
+testsPage result = do
    h1 "Summary"
    preText (makeSummary result)
    h1 "Tests"
@@ -35,10 +35,10 @@ formatResult :: [Int] -> TestSuiteResult -> HTMLBuilder
 formatResult loc result = do
    ttText (show result)
    br
-   forM_ (topMessages result) $ \m -> 
-      spanClass (if isError m then "error" else "warning") 
+   forM_ (topMessages result) $ \m ->
+      spanClass (if isError m then "error" else "warning")
       (ttText (show m) >> br)
-   let subs = zip [1::Int ..] (subResults result) 
+   let subs = zip [1::Int ..] (subResults result)
    forM_ subs $ \(i, (s, a)) -> do
       let newloc = loc ++ [i]
       showHeader newloc s

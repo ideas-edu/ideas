@@ -14,7 +14,7 @@ module Domain.Math.Power.Rules
   ( -- * Power rules
     calcPower, calcPowerPlus, calcPowerMinus, addExponents, mulExponents
   , subExponents, distributePower, distributePowerDiv, reciprocal
-  , reciprocalInv, reciprocalFrac, calcPowerRatio, calcRoot, simplifyPower
+  , reciprocalInv, reciprocalFrac, calcPowerRatio, simplifyPower
   , onePower, powerOne, zeroPower, powerZero, divBase, reciprocalVar
   , reciprocalPower, factorAsPower, calcPlainRoot, simpleAddExponents
     -- * Root rules
@@ -25,24 +25,18 @@ module Domain.Math.Power.Rules
   , myFractionTimes, pushNegOut
   ) where
 
-import Prelude hiding ( (^) )
-import qualified Prelude
-
-import Common.Classes
-import Common.Id
-import Common.Transformation
-import Common.View
-import Control.Arrow ( (>>^) )
+import Common.Library hiding (root)
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
+import Prelude hiding ( (^) )
 import qualified Domain.Math.Data.PrimeFactors as PF
+import qualified Prelude
 
 -- Identifier prefixes ------------------------------------------------------
 
@@ -78,13 +72,14 @@ calcPowerRatio = makeSimpleRule (power, "power-ratio") $ \ expr -> do
   return $ (a .^. fromInteger x) .^. (1 ./. fromInteger y)
 
 -- | root n x
-calcPlainRoot :: Rule (OrList Expr)
-calcPlainRoot = makeSimpleRuleList (power, "root") $
-   oneDisjunct $ \expr -> do
-     (n, x) <- matchM (rootView >>> (integerView *** integerView)) expr
-     return $ toOrList $ map fromInteger $ takeRoot n x
+calcPlainRoot :: Rule Expr
+calcPlainRoot = makeSimpleRule (power, "root") $ \expr -> do
+   (n, x) <- matchM (rootView >>> (integerView *** integerView)) expr
+   fmap fromInteger (takeRoot n x)
 
 -- | [root n x, ... ]
+-- BHR: not used. Better to turn this into OrList (Relation Expr) 
+{-
 calcRoot :: Rule (OrList Expr)
 calcRoot = makeSimpleRule (power, "root") $
    oneDisjunct $ \expr -> do
@@ -96,6 +91,7 @@ calcRoot = makeSimpleRule (power, "root") $
              | otherwise       = []
       roots  <- toMaybe (not. null) ys
       return $ toOrList roots
+-}
 
 calcPowerPlus :: Rule Expr
 calcPowerPlus =
@@ -114,7 +110,7 @@ addExponents = makeSimpleRuleList (power, "add-exponents") $ \ expr -> do
 
 isPow :: Expr -> Expr -> Bool
 isPow x y = x `belongsTo` myIntegerView &&
-             (y `belongsTo` varView || y `belongsTo` powerView)
+             (y `belongsTo` variableView || y `belongsTo` powerView)
 
 -- | a*x^y * b*x^q = a*b * x^(y+q)
 addExponentsT :: Transformation Expr
@@ -281,8 +277,9 @@ myFractionTimes :: Rule Expr
 myFractionTimes = smartRule $ makeSimpleRule (power, "fraction-times") $ \ expr -> do
   (e1, e2) <- match timesView expr
   guard $ e1 `belongsTo` divView || e2 `belongsTo` divView
-  (a, b)   <- match (divView <&> (identity >>^ \e -> (e,1))) e1
-  (c, d)   <- match (divView <&> (identity >>^ \e -> (e,1))) e2
+  let f e    = fromMaybe (e, 1) (match divView e)
+      (a, b) = f e1
+      (c, d) = f e2
   return $ build divView (a .*. c, b .*. d)
 
 -- | Help functions -----------------------------------------------------------

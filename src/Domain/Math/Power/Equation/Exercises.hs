@@ -64,7 +64,7 @@ expEqExercise = makeExercise
                            && rightHandSide rel `belongsTo` rationalView
   , suitable       = predicateView normExpEqView
   , equivalence    = withoutContext (viewEquivalent normExpEqView)
-  , ruleOrdering   = ruleOrderingWithId [ getId root2power ]
+  , ruleOrdering   = ruleOrderingWithId [getId root2power]
   }
 
 logEqExercise :: Exercise (OrList (Relation Expr))
@@ -79,8 +79,7 @@ logEqExercise = makeExercise
   , ready          = predicateView relationsSolvedForm
   , suitable       = predicateView (traverseView equationView >>> normLogEqView)
   , equivalence    = withoutContext (viewEquivalent (traverseView equationView >>> normLogEqView))
-  , ruleOrdering   = ruleOrderingWithId [ getId calcPower
-                                        , getId calcRoot ]
+  , ruleOrdering   = ruleOrderingWithId [getId calcPower]
   }
 
 higherPowerEqExercise :: Exercise (OrList (Equation Expr))
@@ -96,8 +95,7 @@ higherPowerEqExercise = makeExercise
   , ready          = predicateView relationsSolvedForm
   , suitable       = predicateView (traverseView normPowerEqView)
   , equivalence    = withoutContext (viewEquivalent (normPowerEqView' hasSomeVar >>> higherDegreeEquationsView))
-  , ruleOrdering   = ruleOrderingWithId [ getId calcPower
-                                        , getId calcRoot ]
+  , ruleOrdering   = ruleOrderingWithId [getId calcPower]
   }
 
 rootEqExercise :: Exercise (OrList (Equation Expr))
@@ -112,6 +110,5 @@ rootEqExercise = makeExercise
   , ready          = predicateView relationsSolvedForm
   , suitable       = predicateView (traverseView normPowerEqView)
   , equivalence    = withoutContext (on (==) (sortOrList . simplify (normPowerEqView' $ elem "x" . vars)))
-  , ruleOrdering   = ruleOrderingWithId [ getId calcPower
-                                        , getId calcRoot ]
+  , ruleOrdering   = ruleOrderingWithId [getId calcPower]
   }

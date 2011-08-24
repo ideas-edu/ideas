@@ -25,7 +25,8 @@ module Common.Rewriting.Term
    , unary, binary, isUnary, isBinary
      -- * Variables
    , WithVars(..), isVariable
-   , vars, varSet, hasVar, withoutVar, hasSomeVar, hasNoVar
+   , vars, varSet, hasVar, withoutVar
+   , hasSomeVar, hasNoVar, variableView
      -- * Meta variables
    , WithMetaVars(..), isMetaVar
    , metaVars, metaVarSet, hasMetaVar
@@ -187,8 +188,8 @@ isBinary s a =
 -- * Variables
 
 class WithVars a where
-   variable    :: String -> a
-   getVariable :: Monad m => a -> m String
+   variable     :: String -> a
+   getVariable  :: Monad m => a -> m String
 
 instance WithVars Term where
    variable = TVar
@@ -215,6 +216,9 @@ hasSomeVar = not . hasNoVar
 
 hasNoVar :: (Uniplate a, WithVars a) => a -> Bool
 hasNoVar = null . vars
+
+variableView :: WithVars a => View a String
+variableView = makeView getVariable variable
 
 -----------------------------------------------------------
 -- * Meta variables

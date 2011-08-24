@@ -13,23 +13,14 @@
 -- moved to other parts of the framework (eg. Common)
 --
 -----------------------------------------------------------------------------
-
 module Domain.Math.Power.Utils where
 
-import Prelude hiding (repeat, replicate)
-
-import Common.Context
-import Common.Rewriting
-import Common.Strategy hiding (not)
-import Common.Transformation
+import Common.Library
 import Common.Utils.Uniplate
-import Common.View
-import Control.Monad
-import Data.Foldable (Foldable, foldMap, toList)
+import Data.Foldable (toList)
 import Data.Function (on)
-import Data.List hiding (repeat, replicate)
+import Data.List
 import Data.Ratio
-import Data.Traversable (Traversable, mapM)
 import Domain.Math.CleanUp
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -37,7 +28,6 @@ import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Expr
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
-import qualified Domain.Math.Data.PrimeFactors as PF
 
 -- | Strategy functions -------------------------------------------------------
 
@@ -48,7 +38,7 @@ exhaustiveUse :: (IsTerm a, IsTerm b) => [Rule a] -> Strategy (Context b)
 exhaustiveUse = exhaustiveSomewhere . map use
 
 exhaustiveSomewhere :: IsStrategy f => [f (Context a)] -> Strategy (Context a)
-exhaustiveSomewhere = repeat . somewhere . alternatives
+exhaustiveSomewhere = repeatS . somewhere . alternatives
 
 -- | Rule functions -----------------------------------------------------------
 
@@ -76,11 +66,6 @@ mergeConstants :: Expr -> Expr
 mergeConstants = mergeConstantsWith (`belongsTo` rationalView)
 
 -- | View functions -----------------------------------------------------------
-
-(<&>) :: View a b -> View a b -> View a b
-v <&> w = makeView (\x -> match v x `mplus` match w x) (build v)
-
-infixl 1 <&>
 
 plainNatView :: View Expr Integer
 plainNatView = makeView f Nat
@@ -174,18 +159,15 @@ instance SemEq a => SemEq (OrList a) where
   a === b = let as = toList a ; bs = toList b
             in length (intersectBy (===) as bs) == length as
 
-tryRewriteAll :: (a -> [a]) -> a -> [a]
-tryRewriteAll f x =
-  case f x of
-    [] -> [x]
-    xs -> xs
-
-transformOrList :: (Traversable f, Uniplate a) => (a -> [a]) -> OrList (f a) -> OrList (f a)
-transformOrList f = foldMap (toOrList . Data.Traversable.mapM (transformM f))
-
 -- y = root n x
-takeRoot :: Integer -> Integer -> [Integer]
-takeRoot n x | n == 0    = [0]
+takeRoot :: Integer -> Integer -> Maybe Integer
+takeRoot n x
+   | n >= 0 && x >0 && a Prelude.^ x == n = Just a
+   | otherwise = Nothing
+ where
+   a = round (fromInteger n ** (1/fromInteger x) :: Double)
+{-
+| n == 0    = [0]
              | n == 1    = if x > 0 && odd x then [1] else [1, -1]
              | n == (-1) = [-1 | x > 0 && odd x]
              | x == 1    = [n]
@@ -195,7 +177,7 @@ takeRoot n x | n == 0    = [0]
     roots r | n > 0 && even x = [r, negate r]
             | n > 0 && odd  x = [r]
             | n < 0 && odd  x = [negate r]
-            | otherwise       = []
+            | otherwise       = [] -}
 
 -- prop_takeRoot n = traceShow n f
 --   where

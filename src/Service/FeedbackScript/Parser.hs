@@ -19,8 +19,6 @@ import Data.Char
 import Data.Monoid
 import Service.FeedbackScript.Syntax
 import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Char
-import Text.ParserCombinators.Parsec.Prim
 import Text.Parsing
 
 -- chases all included script files

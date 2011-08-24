@@ -11,17 +11,13 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Derivative.Rules where
 
-import Common.Id
-import Common.Rewriting
-import Common.Transformation
-import Common.View
+import Common.Library hiding (root)
 import Control.Monad
 import Data.Maybe
 import Domain.Math.Data.Polynomial
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Views
-import Domain.Math.Power.Utils ( (<&>) )
 import Domain.Math.Power.Views
 import Prelude hiding ((^))
 
@@ -172,8 +168,8 @@ ruleDerivPowerFactor = makeSimpleRule (diffId, "power-factor") $ \de -> do
 -- (a+b)/c  ~>  a/c + b/c
 ruleSplitRational :: Rule Expr
 ruleSplitRational = makeSimpleRule (diffId, "split-rational") $ \expr -> do
-   (up, c) <- match divView expr
-   (a, b)  <- match plusView up
+   (upper, c) <- match divView expr
+   (a, b)     <- match plusView upper
    return (a/c + b/c)
 
 myPowerView :: View Expr (Expr, String, Rational)
@@ -193,12 +189,9 @@ myPowerView = makeView f g
                   return (1, x, r)
    g (a, x, r) = a .*. (Var x .^. fromRational r)
 
-   powView = (powerView <&> noPowerView) >>> myVarView *** rationalView
-   myVarView   = makeView isVar Var
+   powView = (matcher powerView <+> matcher noPowerView) 
+             >>> matcher (variableView *** rationalView)
    noPowerView = makeView (\expr -> Just (expr, 1)) (build powerView)
-
-   isVar (Var x) = Just x
-   isVar _       = Nothing
 
 isDiff :: Expr -> Bool
 isDiff = isJust . getDiffExpr

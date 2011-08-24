@@ -12,24 +12,18 @@
 
 module Domain.Math.Power.Views
    ( -- * Power views
-
      -- ** Simple power views
      powerView, powerViewWith, powerViewForWith, powerViewFor, powerFactorView
-
      -- ** Views for power expressions with a constant factor
    , consPowerView, consPowerViewForWith, consPowerViewFor,consPowerViewForVar
-
      -- ** Power views that allow constants
    , unitPowerViewForVar, unitPowerViewVar, unitPowerView, strictPowerView
-
      -- Root views
    , rootView, strictRootView
-
      -- * Log view
    , logView
-
      -- * Other views
-   , plainNatView, plainRationalView, varView
+   , plainNatView, plainRationalView
    ) where
 
 import Common.Library hiding (root)
@@ -66,7 +60,7 @@ unitPowerViewWith v = addNegativeView $ addUnitTimesView $
   powerViewWith v identity <&> (unitTimes v >>> toView swapView)
 
 unitPowerViewVar :: View Expr (Expr, (String, Expr))
-unitPowerViewVar = unitPowerViewWith varView
+unitPowerViewVar = unitPowerViewWith variableView
 
 -- | Careful! This view will match anything, so use it wise and with care.
 unitPowerView :: View Expr (Expr, (Expr, Expr))
@@ -104,9 +98,10 @@ strictPowerView = makeView f (uncurry (.^.))
         _ -> Nothing
 
 powerView :: View Expr (Expr, Expr)
-powerView = makeView f g
+powerView = matcherView f g
   where
-    f = match ((strictRootView >>> second ((1 ./.) <-> id)) <&> strictPowerView)
+    f = matcher (strictRootView >>> second (arr (1 ./.)))
+        <+> matcher strictPowerView
     g (a, b) =
        case b of
          (Nat 1 :/: b') -> build strictRootView (a, b')
@@ -157,8 +152,7 @@ negateView = makeView isNegate negate
 addNegativeView :: View Expr a -> View Expr a
 addNegativeView v = v <&> (negateView >>> v)
 
-varView :: View Expr String
-varView = makeView f Var
-  where
-    f (Var s) = Just s
-    f _       = Nothing
+(<&>) :: View a b -> View a b -> View a b
+v <&> w = makeView (\x -> match v x `mplus` match w x) (build v)
+
+infixl 1 <&>

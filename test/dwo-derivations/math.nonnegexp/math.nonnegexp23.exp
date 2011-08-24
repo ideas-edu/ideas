@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.7 (3637)">
+<reply result="ok" version="0.7.9 (0)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
@@ -26,7 +26,7 @@
     </elem>
     <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
-        1/(b^7*4*a)
+        1/(4*b^7*a)
       </expr>
       <context>
         <item name="location" value="[1]"/>

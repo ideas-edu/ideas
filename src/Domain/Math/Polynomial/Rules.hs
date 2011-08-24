@@ -78,10 +78,9 @@ commonFactorVarNew :: Rule Expr
 commonFactorVarNew = describe "Common factor variable" $
    makeSimpleRule (quadreq, "common-factor") $ \expr -> do
       (x, (a, b, c)) <- match quadraticNF expr
-      guard (b /= 0 && c == 0)
+      guard (a /= 0 && b /= 0 && c == 0)
       -- also search for constant factor
-      let d | a<0 && b<0 = -gcdFrac a b
-            | otherwise  = gcdFrac a b
+      let d = signum a * gcdFrac a b
       return (fromRational d .*. Var x .*. (fromRational (a/d) .*. Var x .+. fromRational (b/d)))
 
 gcdFrac :: Rational -> Rational -> Rational

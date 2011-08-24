@@ -13,11 +13,11 @@
 module Domain.Math.Power.Views
    ( -- * Power views
      -- ** Simple power views
-     powerView, powerViewWith, powerViewForWith, powerViewFor, powerFactorView
+     powerView, powerViewWith, powerViewFor, powerFactorView
      -- ** Views for power expressions with a constant factor
-   , consPowerView, consPowerViewForWith, consPowerViewFor,consPowerViewForVar
+   , consPowerView
      -- ** Power views that allow constants
-   , unitPowerViewForVar, unitPowerViewVar, unitPowerView, strictPowerView
+   , unitPowerView, unitPowerViewVar, strictPowerView
      -- Root views
    , rootView, strictRootView
      -- * Log view
@@ -34,31 +34,27 @@ import Domain.Math.Power.Utils
 -- Power views with constant factor -----------------------------------------
 
 consPowerView :: View Expr (Expr, (Expr, Expr))
-consPowerView = addNegativeView $ addUnitTimesView powerView
-
-consPowerViewForWith :: Num a => View Expr a -> View Expr b -> a -> View Expr (Expr, b)
-consPowerViewForWith va vb a =
-  addNegativeView $ addUnitTimesView (powerViewForWith va vb a)
-
-consPowerViewFor :: Expr -> View Expr (Expr, Expr)
-consPowerViewFor = consPowerViewForWith identity identity
-
-consPowerViewForVar :: String -> View Expr (Expr, Expr)
-consPowerViewForVar = consPowerViewFor . Var
-
-unitPowerViewForVar :: String -> View Expr (Expr, Expr)
-unitPowerViewForVar s = makeView f g
-  where
-    f expr = do
-      (c, (s', x)) <- match unitPowerViewVar expr
-      guard $ s == s'
-      return (c, x)
-    g (c, x) = build unitPowerViewVar (c , (s, x))
+consPowerView = makeView f g 
+ where
+   f (Negate a) = fmap (first Negate) (f a)
+   f (a :*: b)  = fmap ((,) a) (match powerView b)
+   f expr       = f (1 :*: expr)
+   g = build (timesView >>> second powerView)
 
 unitPowerViewWith :: View Expr a -> View Expr (Expr, (a, Expr))
-unitPowerViewWith v = addNegativeView $ addUnitTimesView $
-  powerViewWith v identity <&> (unitTimes v >>> toView swapView)
-
+unitPowerViewWith v = makeView f g 
+ where
+   mv = powerViewWith v identity
+   f (Negate a) = fmap (first Negate) (f a)
+   f (a :*: b)  = do
+         x <- match mv b
+         return (a, x)
+       `mplus` do 
+         x <- match v b
+         return (a, (x, 1))
+   f expr = f (1 :*: expr)
+   g = build (timesView >>> second mv)
+           
 unitPowerViewVar :: View Expr (Expr, (String, Expr))
 unitPowerViewVar = unitPowerViewWith variableView
 
@@ -108,7 +104,7 @@ powerView = matcherView f g
          _              -> build strictPowerView (a, b)
 
 powerViewWith :: View Expr a -> View Expr b -> View Expr (a, b)
-powerViewWith va vb = powerView >>> first va >>> second vb
+powerViewWith va vb = powerView >>> (va *** vb)
 
 powerViewForWith :: Eq a => View Expr a -> View Expr b -> a -> View Expr b
 powerViewForWith va vb a = makeView f ((build va a .^.) .  build vb)
@@ -134,25 +130,3 @@ logView = makeView f (uncurry logBase)
     f expr = case expr of
         Sym s [a, b] | isLogSymbol s -> return (a, b)
         _ -> Nothing
-
--- Help (non-power) views ---------------------------------------------------
-
-unitTimes :: Num t => View a b -> View a (t, b)
-unitTimes v = v >>> ((,) 1 <-> snd)
-
-addTimesView :: View Expr a -> View Expr (Expr, a)
-addTimesView v = timesView >>> second v
-
-addUnitTimesView :: View Expr a -> View Expr (Expr, a)
-addUnitTimesView v = addTimesView v <&> unitTimes v
-
-negateView :: (Num a, WithFunctions a) => View a a
-negateView = makeView isNegate negate
-
-addNegativeView :: View Expr a -> View Expr a
-addNegativeView v = v <&> (negateView >>> v)
-
-(<&>) :: View a b -> View a b -> View a b
-v <&> w = makeView (\x -> match v x `mplus` match w x) (build v)
-
-infixl 1 <&>

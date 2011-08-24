@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.10">
+<reply result="ok" version="0.7.9 (0)">
   <list>
     <elem ruleid="algebra.inequalities.to-equation">
       <expr>
@@ -10,7 +10,7 @@
     </elem>
     <elem ruleid="algebra.equations.quadratic.common-factor">
       <expr>
-        2*x*(-x+5) == 0
+        -2*x*(x-5) == 0
       </expr>
       <context>
         <item name="clipboard" value="[ineq==(-2*x^2+10*x>0)]"/>

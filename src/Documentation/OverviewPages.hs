@@ -42,16 +42,16 @@ exerciseOverviewPage :: Bool -> [Some Exercise] -> HTMLBuilder
 exerciseOverviewPage showAll list = do
    h1 title
 
+   forM_ (zip [1::Int ..] (grouping list)) $ \(i, (dom, xs)) -> do
+      h2 (show i ++ ". " ++ dom)
+      table False (map makeRow xs)
+      
    unless showAll $ para $ do
       text "Show"
       space
       link exerciseOverviewAllPageFile $
          text "all exercises"
       text ", including the ones under development"
-
-   forM_ (zip [1::Int ..] (grouping list)) $ \(i, (dom, xs)) -> do
-      h2 (show i ++ ". " ++ dom)
-      table False (map makeRow xs)
  where
    title | showAll   = "All exercises"
          | otherwise = "Exercises"

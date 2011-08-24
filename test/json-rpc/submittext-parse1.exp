@@ -1,7 +1,7 @@
 {
    "result": [
       false,
-      "Syntax error at (1,7): Closing parenthesis symbol ) has no matching symbol",
+      "(line 1, column 7): Closing symbol ) has no matching symbol",
       [
          "logic.propositional.dnf",
          "[]",
@@ -12,5 +12,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.6.3 (0)"
+   "version": "0.7.9 (0)"
 }

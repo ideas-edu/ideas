@@ -16,6 +16,7 @@ module Text.Parsing
    , (<*>), (*>), (<*), (<$>), (<$), (<**>)
    , parseSimple, complete, accepts, skip, (<..>), ranges, stopOn
    , naturalOrFloat, float
+   , UnbalancedError(..), balanced
    ) where
 
 import Control.Applicative hiding ((<|>))
@@ -25,6 +26,7 @@ import Data.List
 import Text.ParserCombinators.Parsec as Export
 import Text.ParserCombinators.Parsec.Expr as Export
 import Text.ParserCombinators.Parsec.Language as Export
+import Text.ParserCombinators.Parsec.Pos
 
 parseSimple :: Parser a -> String -> Either String a
 parseSimple p = left show . runParser (complete p) () ""
@@ -88,3 +90,32 @@ stopOn ys = rec
    f x  = try (string x >> return ' ')
    rec  =  (:) <$ notFollowedBy stop <*> anyChar <*> rec
        <|> return []
+       
+-- simple function for finding unbalanced pairs (e.g. parentheses) 
+balanced :: [(Char, Char)] -> String -> Maybe UnbalancedError
+balanced table = run (initialPos "") []
+ where
+   run _ [] [] = Nothing
+   run _ ((pos, c):_) [] = return (NotClosed pos c)
+   run pos stack (x:xs)
+      | x `elem` opens  = 
+           run next ((pos, x):stack) xs
+      | x `elem` closes = 
+           case stack of 
+              (_, y):rest | Just x == lookup y table -> run next rest xs
+              _ -> return (NotOpened pos x)
+      | otherwise = 
+           run next stack xs
+    where
+      next = updatePosChar pos x
+      
+   (opens, closes) = unzip table
+   
+data UnbalancedError = NotClosed SourcePos Char
+                     | NotOpened SourcePos Char
+
+instance Show UnbalancedError where
+   show (NotClosed pos c) =
+      show pos ++ ": Opening symbol " ++ [c] ++ " is not closed" 
+   show (NotOpened pos c) = 
+      show pos ++ ": Closing symbol " ++ [c] ++ " has no matching symbol" 

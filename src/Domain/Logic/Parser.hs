@@ -24,20 +24,24 @@ import qualified Text.ParserCombinators.Parsec.Token as P
 --- Parser
 
 parseLogic :: String -> Either String SLogic
-parseLogic = parseSimple (parserSLogic False False)
+parseLogic = parseBalanced (parserSLogic False False)
 
 parseLogicUnicode :: String -> Either String SLogic
-parseLogicUnicode = parseSimple (parserSLogic True False)
+parseLogicUnicode = parseBalanced (parserSLogic True False)
 
 parseLogicPars :: String -> Either String SLogic
 parseLogicPars input =
      either (Left . ambiguousOperators parseLogic input) suspiciousVariable
-   $ parseSimple (parserSLogic False True) input
+   $ parseBalanced (parserSLogic False True) input
 
 parseLogicUnicodePars :: String -> Either String SLogic
 parseLogicUnicodePars input =
    either (Left . ambiguousOperators parseLogicUnicode input) suspiciousVariable
-   $ parseSimple (parserSLogic True True) input
+   $ parseBalanced (parserSLogic True True) input
+
+parseBalanced :: Parser a -> String -> Either String a
+parseBalanced p input = 
+   maybe (parseSimple p input) (Left . show) (balanced [('(', ')')] input)
 
 -- generalized parser
 parserSLogic :: Bool -> Bool -> Parser SLogic

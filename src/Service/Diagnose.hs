@@ -85,15 +85,15 @@ diagnose state new
 
    -- Is the rule used discoverable by trying all known rules?
    | otherwise =
-        let ns = restartIfNeeded (makeState ex Nothing newc)
-        in case discovered False of
-              Just (r, as) ->  -- If yes, report the found rule as a detour
-                 Detour (ready ns) ns as r
-              Nothing -> -- If not, we give up
-                 Correct (ready ns) ns
+        case discovered False of
+           Just (r, as) ->  -- If yes, report the found rule as a detour
+              Detour (ready restarted) restarted as r
+           Nothing -> -- If not, we give up
+              Correct (ready restarted) restarted
  where
-   ex   = exercise state
-   newc = inContext ex new
+   ex        = exercise state
+   newc      = inContext ex new
+   restarted = restartIfNeeded (makeState ex Nothing newc)
 
    expected = do
       let xs = either (const []) id $ allfirsts (restartIfNeeded state)

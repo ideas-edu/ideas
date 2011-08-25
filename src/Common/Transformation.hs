@@ -24,7 +24,7 @@ module Common.Transformation
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
    , Rule, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
-   , ruleSiblings, rule, ruleList
+   , finalRule, isFinalRule, ruleSiblings, rule, ruleList
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doAfter
    , siblingOf, transformations, getRewriteRules
@@ -230,6 +230,7 @@ data Rule a = Rule
    , afterwards      :: a -> a
    , isBuggyRule     :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
    , isMinorRule     :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
+   , isFinalRule     :: Bool -- ^ Final (clean-up) step in derivation
    , ruleSiblings    :: [Id]
    }
 
@@ -283,7 +284,7 @@ makeRule n = makeRuleList n . return
 
 -- | Turn a list of transformations into a single rule: the first argument is the rule's name
 makeRuleList :: IsId n => n -> [Transformation a] -> Rule a
-makeRuleList n ts = Rule (newId n) ts id False False []
+makeRuleList n ts = Rule (newId n) ts id False False False []
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: the first argument is the rule's name
 makeSimpleRule :: IsId n => n -> (a -> Maybe a) -> Rule a
@@ -314,6 +315,11 @@ minorRule r = r {isMinorRule = True}
 -- | Mark the rule as buggy (by default, rules are supposed to be sound)
 buggyRule :: Rule a -> Rule a
 buggyRule r = r {isBuggyRule = True}
+
+-- | Mark the rule as final (by default, false). Final rules are used as a 
+-- final step in the derivation, to get the term in the expected form
+finalRule :: Rule a -> Rule a
+finalRule r = r {isFinalRule = True}
 
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a

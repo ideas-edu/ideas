@@ -107,8 +107,7 @@ quadraticStrategyG =
 
    -- simplifies square roots, or do an approximation
    simplifyForm =
-      label "square root simplification" (
-         multi (showId simplerSquareRoot) (somewhere (use simplerSquareRoot)))
+      label "square root simplification" simplerSquareRootMulti
       <|>
       remove (label "approximate result" (
          multi (showId ruleApproximate) (somewhere (use ruleApproximate))))
@@ -120,8 +119,7 @@ quadraticStrategyG =
         <|> somewhere (use distributionSquare)
         <|> multi (showId distributeTimes) (somewhere
                (useC parentNotNegCheck <*> use distributeTimes))
-        <|> multi (showId distributeDivision) (somewhere
-               (once (use distributeDivision)))
+        <|> finalRule distributeDivisionMulti
         <|> somewhere flipEquationS
          )
       |> somewhere (use moveToLeft <|> remove (use prepareSplitSquare))

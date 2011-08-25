@@ -40,13 +40,15 @@ derivativeStrategy = cleanUpStrategyAfter (applyTop cleanUpExpr) $
 derivativePolyStrategy :: LabeledStrategy (Context Expr)
 derivativePolyStrategy = cleanUpStrategyAfter (applyTop cleanUpExpr) $
    label "derivative-polynomial" $
-      repeatS (somewhere (alternatives (map liftToContext rulesPolyNF)))
+      repeatS (somewhere (alternatives rulesPolyNF))
       <*> derivativePolyStepStrategy
 
-rulesPolyNF :: [Rule Expr]
-rulesPolyNF =
+rulesPolyNF :: [Rule (Context Expr)]
+rulesPolyNF = 
+   distributeDivisionMulti :
+   map liftToContext
    [ distributionSquare, distributeTimes, merge
-   , distributeDivision, noDivisionConstant
+   , noDivisionConstant
    ]
 
 derivativeProductStrategy :: LabeledStrategy (Context Expr)
@@ -54,8 +56,8 @@ derivativeProductStrategy = cleanUpStrategyAfter (applyTop cleanUpExpr) $
    label "derivative-product" $
       repeatS (somewhere (derivativePolyStepStrategy |> alternatives list))
  where
-   list = map liftToContext
-      [ distributeDivision, noDivisionConstant
+   list = distributeDivisionMulti : map liftToContext
+      [ noDivisionConstant
       , ruleDerivProduct, defPowerNat
       , ruleDerivNegate, ruleDerivPlus, ruleDerivMin
       ]
@@ -64,7 +66,7 @@ derivativeQuotientStrategy :: LabeledStrategy (Context Expr)
 derivativeQuotientStrategy = cleanUpStrategyAfter (applyTop cleanUpExpr) $
    label "derivative-quotient" $
    repeatS (somewhere (derivativePolyStepStrategy |> alternatives list))
-   <*> repeatS (exceptLowerDiv (alternatives (map liftToContext rulesPolyNF)))
+   <*> repeatS (exceptLowerDiv (alternatives rulesPolyNF))
  where
    list = map liftToContext
       [ ruleDerivQuotient, ruleDerivPlus, ruleDerivMin, ruleDerivNegate ]
@@ -84,7 +86,7 @@ derivativePowerStrategy = label "derivative-power" $
       , ruleDerivCon ]
    mycfg = [(byName myFractionTimes, Remove)]
    distr = cleanUpStrategyAfter (applyTop cleanUpExpr) $
-      label "distr" (somewhere (alternatives (map liftToContext rulesPolyNF)))
+      label "distr" (somewhere (alternatives rulesPolyNF))
 
 derivativePolyStepStrategy :: LabeledStrategy (Context Expr)
 derivativePolyStepStrategy = label "derivative-poly-step" $

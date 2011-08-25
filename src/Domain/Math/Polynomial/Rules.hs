@@ -11,14 +11,15 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Rules
    ( sameConFactor, abcFormula, allPowerFactors, bringAToOne, cancelTerms
-   , commonFactorVar, commonFactorVarNew, defPowerNat, distributeDivision
+   , commonFactorVar, commonFactorVarNew, defPowerNat
+   , distributeDivisionT, distributeDivisionMulti
    , distributeTimes, distributionSquare, exposeSameFactor, factorLeftAsSquare
    , factorVariablePower, flipEquation, higherSubst, merge, moveToLeft, mulZero
    , niceFactors, niceFactorsNew, noDivisionConstant, noLinFormula, oneVar
    , parentNotNegCheck, prepareSplitSquare, quadraticRuleOrder, removeDivision
    , ruleApproximate, ruleNormalizeMixedFraction, ruleNormalizeRational
    , ruleNormalizePolynomial
-   , sameFactor, simplerLinearFactor, simplerPolynomial, simplerSquareRoot
+   , sameFactor, simplerLinearFactor, simplerPolynomial, simplerSquareRootMulti
    , squareBothSides, substBackVar, varToLeft, conditionVarsRHS, fractionProduct
    ) where
 
@@ -193,17 +194,21 @@ oneVar = configCoverUp
 ------------------------------------------------------------
 -- Top form rules: expr1 = expr2
 
--- Do not simplify (5+sqrt 53)/2
-simplerSquareRoot :: Rule Expr
-simplerSquareRoot = describe "simpler square root" $
-   makeSimpleRule (quadreq, "simpler-sqrt") $ \e -> do
+simplerSquareRootMulti :: IsTerm a => Rule (Context a)
+simplerSquareRootMulti = describe "simpler square root" $
+   finalRule $ makeSimpleRuleList (quadreq, "simpler-sqrt") $ applyAll $ 
+   repeat1 (somewhere (use (makeSimpleRule () simplerSqrt)))
+ where
+   -- Do not simplify (5+sqrt 53)/2
+   simplerSqrt :: Expr -> Maybe Expr
+   simplerSqrt e = do
       xs <- f e
       guard (not (null xs))
       new <- canonical (squareRootViewWith rationalView) e
       ys <- f new
       guard (xs /= ys)
       return new
- where
+
    -- return numbers under sqrt symbol
    f :: Expr -> Maybe [Rational]
    f e = liftM sort $ sequence [ match rationalView a | Sqrt a <- universe e ]
@@ -514,14 +519,18 @@ distributeTimes :: Rule Expr
 distributeTimes = describe "distribution multiplication" $
    makeSimpleRuleList (lineq, "distr-times") $
       liftM collectLikeTerms . applyAll distributionT
+               
+distributeDivisionMulti :: IsTerm a => Rule (Context a)
+distributeDivisionMulti = describe "distribution division" $
+   makeSimpleRule (quadreq, "distr-div") $ apply $ repeat1 $ 
+      somewhere (use (makeRule () distributeDivisionT))
 
-distributeDivision :: Rule Expr
-distributeDivision = describe "distribution division" $
-   makeSimpleRule (quadreq, "distr-div") $ \expr -> do
-      (xs, r) <- match (divView >>> (toView sumView *** rationalView)) expr
-      guard (length xs > 1)
-      let ys = map (/fromRational r) xs
-      return $ build sumView ys
+distributeDivisionT :: Transformation Expr
+distributeDivisionT = makeTrans $ \expr -> do
+   (xs, r) <- match (divView >>> (toView sumView *** rationalView)) expr
+   guard (length xs > 1)
+   let ys = map (/fromRational r) xs
+   return $ build sumView ys
 
 merge :: Rule Expr
 merge = describe "merge similar terms" $

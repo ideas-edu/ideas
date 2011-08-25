@@ -27,7 +27,7 @@ import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import qualified Domain.Math.Data.PrimeFactors as PF
 --import Domain.Math.CleanUp (collectLikeTerms)
-import Domain.Math.Polynomial.Rules (distributeTimes, distributeDivision)
+import Domain.Math.Polynomial.Rules (distributeTimes, distributeDivisionT)
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
 import Domain.Math.Simplification (simplify)
@@ -116,7 +116,7 @@ coverUpRoot = coverUpRootWith configCoverUp
 -- | Negations are pushed inside
 myCoverUpTimesWith :: ConfigCoverUp -> Rule (Equation Expr)
 myCoverUpTimesWith = doAfter f . coverUpTimesWith
-  where f = mapRight (applyD distributeDivision . applyD distributeTimes)
+  where f = mapRight (applyD distributeDivisionT . applyD distributeTimes)
 
 condXisRight :: Rule (Equation Expr)
 condXisRight = describe "flip condition" $ checkRule $ \(lhs :==: rhs) ->

@@ -484,7 +484,7 @@ checksForDerivation ex d = do
       ++ "  with  " ++ prettyPrinterContext ex y
 
    -- Similarity of terms
-   let p3 (x, _, y) = similarity ex x y
+   let p3 (x, r, y) = not (isFinalRule r) && similarity ex x y
    assertNull  "similars" $ take 1 $ flip map (filter p3 (triples d)) $ \(x, r, y) ->
       "similar subsequent terms: " ++ prettyPrinterContext ex x
       ++ "  with  " ++ prettyPrinterContext ex y

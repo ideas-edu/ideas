@@ -73,7 +73,7 @@ diagnose state new
            Nothing      -> NotEquivalent -- compareParts state new
 
    -- Is the submitted term (very) similar to the previous one?
-   | similarity ex (stateContext state) newc =
+   | similar && not (isReady ex new) =
         -- If yes, report this
         Similar (ready state) state
 
@@ -82,6 +82,8 @@ diagnose state new
         -- If yes, return new state and rule
         let (r, _, _, ns) = fromJust expected
         in Expected (ready ns) ns r
+
+   | similar = Similar (ready state) state
 
    -- Is the rule used discoverable by trying all known rules?
    | otherwise =
@@ -94,6 +96,7 @@ diagnose state new
    ex        = exercise state
    newc      = inContext ex new
    restarted = restartIfNeeded (makeState ex Nothing newc)
+   similar   = similarity ex (stateContext state) newc
 
    expected = do
       let xs = either (const []) id $ allfirsts (restartIfNeeded state)
@@ -103,7 +106,7 @@ diagnose state new
    discovered searchForBuggy = safeHead
       [ (r, as)
       | r <- sortBy (ruleOrdering ex) (ruleset ex)
-      , isBuggyRule r == searchForBuggy
+      , isBuggyRule r == searchForBuggy, not (isFinalRule r)
       , (_, as) <- recognizeRule ex r sub1 sub2
       ]
     where

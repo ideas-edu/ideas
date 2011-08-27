@@ -215,19 +215,19 @@ oqmathpath :: String
 oqmathpath = "/Users/johanj/Documents/Research/ExerciseAssistants/Feedback/math-bridge/activemath/all/activemath-ideas/content/IdeasExercises/oqmath/"
 -}
 
--- {- -- For committing purposes
+-- -- For committing purposes
 omdocpath :: String
 omdocpath = "/Users/johanj/Documents/Research/ExerciseAssistants/Feedback/math-bridge/private/Content/Intermediate/IdeasExercises/omdoc/"
 
 oqmathpath :: String
 oqmathpath = "/Users/johanj/Documents/Research/ExerciseAssistants/Feedback/math-bridge/private/Content/Intermediate/IdeasExercises/oqmath/"
--- -}
+--
 
 omdocexercisefile :: (IsTerm a) => String -> Int -> Exercise a -> IO ()
 omdocexercisefile version revision ex = do
   let info = mBExerciseInfo ! (exerciseId ex)
   let langs = langSupported info
-  let titleCmps =  map (\l -> title info l) langs
+  let titleTexts =  map (\l -> title info l) langs
   let filestring =
              xmldecl
           ++ activemathdtd
@@ -237,12 +237,14 @@ omdocexercisefile version revision ex = do
                   []
                   [metadataelt
                     ""
-                    [dateelt "created" "2011-01-22"
-                    ,dateelt "changed" today
-                    ,titleeltMultLang langs titleCmps
-                    ,creatorelt "aut" "Johan Jeuring"
-                    ,versionelt version (show revision)
-                    ]
+                    ([dateelt "created" "2011-01-22"
+                     ,dateelt "changed" today
+                     ] ++
+                     titleelts langs titleTexts ++
+                     [creatorelt "aut" "Johan Jeuring"
+                     ,versionelt version (show revision)
+                     ]
+                    )
                   ,theoryelt (context info)
                              (omdocexercises ex)
                   ]
@@ -255,12 +257,14 @@ omdocexercises ex = catMaybes $ zipWith make [(0::Int)..] (examples ex)
  where
    info = mBExerciseInfo ! (exerciseId ex)
    langs = langSupported info
+   titleTexts =  map (\l -> title info l) langs
    make nr (dif, example) =
       fmap (makeElement . omobj2xml) (toOpenMath ex example)
     where
       makeElement omobj =
          omdocexercise
             (context info ++ show nr)
+            (titleelts langs titleTexts)
             (if null (for info) then Nothing else Just (for info))
             (show dif)
             langs
@@ -272,6 +276,7 @@ omdocexercises ex = catMaybes $ zipWith make [(0::Int)..] (examples ex)
             omobj
 
 omdocexercise :: String
+              -> [Element]
               -> Maybe String
               -> String
               -> [Lang]
@@ -284,6 +289,7 @@ omdocexercise :: String
               -> Element
 omdocexercise
     exerciseid
+    titles
     maybefor
     difficulty
     langs
@@ -298,14 +304,16 @@ omdocexercise
       Nothing
       ([metadataelt
          ""
-         [formatelt "AMEL1.0"
-         ,extradataelt
-           (difficultyelt difficulty
-           :case maybefor of
-              Just for -> [relationelt for]
-              Nothing  -> []
-           )
-         ]
+         (titles ++
+          [formatelt "AMEL1.0"
+          ,extradataelt
+            (difficultyelt difficulty
+            :case maybefor of
+               Just for -> [relationelt for]
+               Nothing  -> []
+            )
+          ]
+         )
        ]
        ++
        cmpelts langs cmps

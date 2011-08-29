@@ -15,6 +15,7 @@ module Domain.Math.Power.Equation.NormViews
    ) where
 
 import Common.Rewriting hiding (rewrite)
+import Common.Utils.Uniplate
 import Common.View
 import Control.Monad
 import Data.List
@@ -134,8 +135,17 @@ normLogEqView = makeView (liftM g . T.mapM f) id
       case match logView lhs of
         Just (b, x) -> x :==: b .^. rhs
         Nothing     -> expr
-    g = simplify orSetView . fmap (fmap cleanUpExpr) . simplify (normPowerEqView' hasSomeVar)
+    g = simplify orSetView . fmap (fmap cleaner) . simplify (normPowerEqView' hasSomeVar)
       . simplify higherDegreeEquationsView
+    
+    -- Quick fix: 4^(3/2) should be simplified to sqrt (4^3), which is 8
+    cleaner = cleanUpExpr . transform h . cleanUpExpr
+    h expr@(Sym s [a, b]) | isPowerSymbol s = 
+       case (match rationalView a, match rationalView b) of 
+          (Just x, Just y) | denominator y /= 1 -> 
+             root (fromRational (x Prelude.^ numerator y)) (fromInteger $ denominator y)
+          _ -> expr
+    h expr = expr
 
 normLogView :: View Expr Expr
 normLogView = makeView g id

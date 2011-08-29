@@ -81,7 +81,7 @@ logEqExercise = makeExercise
   , equivalence    = withoutContext (viewEquivalent (traverseView equationView >>> normLogEqView))
   , ruleOrdering   = ruleOrderingWithId [getId calcPower]
   }
-
+   
 higherPowerEqExercise :: Exercise (OrList (Equation Expr))
 higherPowerEqExercise = makeExercise
   { status         = Provisional

@@ -188,6 +188,7 @@ showExpr table = rec 0
 
    showSymbol s
       | isRootSymbol s = "root"
+      | isLogSymbol s  = "log"
       | otherwise = show s
 
    symbolTable = [ (s, (a, n, op)) | (n, (a, xs)) <- zip [1..] table, (s, op) <- xs ]

@@ -65,6 +65,12 @@ instance HasId (RewriteRule a) where
 class Different a where
    different :: (a, a)
 
+instance Different a => Different [a] where
+   different = ([], [fst different])
+
+instance Different Char where
+   different = ('a', 'b')
+
 class (IsTerm a, Show a) => RuleBuilder t a | t -> a where
    buildRuleSpec  :: Int -> t -> RuleSpec Term
    buildGenerator :: t -> Gen a

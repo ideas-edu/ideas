@@ -35,8 +35,8 @@ diff = unary diffSymbol
 ln :: Expr -> Expr
 ln = unary lnSymbol
 
-lambda :: Expr -> Expr -> Expr
-lambda = binary lambdaSymbol
+lambda :: String -> Expr -> Expr
+lambda = binary lambdaSymbol . Var
 
 diffId :: Id
 diffId = newId "calculus.differentiation"
@@ -50,11 +50,11 @@ isLambdaSymbol = (== lambdaSymbol)
 
 ruleSine :: Rule Expr
 ruleSine = rule (diffId, "sine") $
-   \x -> diff (lambda x (sin x))  :~>  cos x
+   \x -> diff (lambda x (sin (Var x)))  :~>  cos (Var x)
 
 ruleLog :: Rule Expr
 ruleLog = rule (diffId, "logarithmic") $
-   \x -> diff (lambda x (ln x))  :~>  1/x
+   \x -> diff (lambda x (ln (Var x)))  :~>  1/(Var x)
 
 ruleDerivPlus :: Rule Expr
 ruleDerivPlus = rule (diffId, "plus") $
@@ -70,7 +70,7 @@ ruleDerivNegate = rule (diffId, "negate") $
 
 ruleDerivVar :: Rule Expr
 ruleDerivVar = rule (diffId, "var") $
-   \x -> diff (lambda x x)  :~>  1
+   \x -> diff (lambda x (Var x))  :~>  1
 
 ruleDerivProduct :: Rule Expr
 ruleDerivProduct = rule (diffId, "product") $
@@ -104,49 +104,49 @@ ruleDerivPolynomial = describe "This rule returns the derivative for all \
 ruleDerivCon :: Rule Expr
 ruleDerivCon = makeSimpleRule (diffId, "constant") f
  where
-   f (Sym d [Sym l [Var v, e]])
-      | isDiffSymbol d && isLambdaSymbol l && withoutVar v e = return 0
+   f (Sym d [Sym l [Var x, e]])
+      | isDiffSymbol d && isLambdaSymbol l && withoutVar x e = return 0
    f _ = Nothing
 
 ruleDerivMultiple :: Rule Expr
 ruleDerivMultiple = makeSimpleRule (diffId, "constant-multiple") f
  where
-    f (Sym d [Sym l [x@(Var v), n :*: e]])
-       | isDiffSymbol d && isLambdaSymbol l && withoutVar v n =
+    f (Sym d [Sym l [Var x, n :*: e]])
+       | isDiffSymbol d && isLambdaSymbol l && withoutVar x n =
        return $ n * diff (lambda x e)
-    f (Sym d [Sym l [x@(Var v), e :*: n]])
-       | isDiffSymbol d && isLambdaSymbol l && withoutVar v n =
+    f (Sym d [Sym l [Var x, e :*: n]])
+       | isDiffSymbol d && isLambdaSymbol l && withoutVar x n =
        return $ n * diff (lambda x e)
     f _ = Nothing
 
 ruleDerivPower :: Rule Expr
 ruleDerivPower = makeSimpleRule (diffId, "power") f
  where
-   f (Sym d [Sym l [x@(Var v), Sym p [x1, n]]])
-      | isDiffSymbol d && isLambdaSymbol l && isPowerSymbol p && x==x1 && withoutVar v n =
-      return $ n * (x ^ (n-1))
+   f (Sym d [Sym l [Var x, Sym p [x1, n]]])
+      | isDiffSymbol d && isLambdaSymbol l && isPowerSymbol p && Var x==x1 && withoutVar x n =
+      return $ n * (Var x ^ (n-1))
    f _ = Nothing
 
 ruleDerivPowerChain :: Rule Expr
 ruleDerivPowerChain = makeSimpleRule (diffId, "chain-power") f
  where
-   f (Sym d [Sym l [x@(Var v), Sym p [a, n]]])
-      | isDiffSymbol d && isLambdaSymbol l && isPowerSymbol p && withoutVar v n =
+   f (Sym d [Sym l [Var x, Sym p [a, n]]])
+      | isDiffSymbol d && isLambdaSymbol l && isPowerSymbol p && withoutVar x n =
       return $ n * (a ^ (n-1)) * diff (lambda x a)
    f _ = Nothing
 
 ruleDerivSqrt :: Rule Expr
 ruleDerivSqrt = makeSimpleRule (diffId, "sqrt") f
  where
-   f (Sym d [Sym l [x@(Var _), Sqrt x1]])
-      | isDiffSymbol d && isLambdaSymbol l && x==x1 =
-      return $ 1 / (2 * sqrt x)
+   f (Sym d [Sym l [Var x, Sqrt x1]])
+      | isDiffSymbol d && isLambdaSymbol l && Var x==x1 =
+      return $ 1 / (2 * sqrt (Var x))
    f _ = Nothing
 
 ruleDerivSqrtChain :: Rule Expr
 ruleDerivSqrtChain = makeSimpleRule (diffId, "chain-sqrt") f
  where
-   f (Sym d [Sym l [x@(Var _), Sqrt a]])
+   f (Sym d [Sym l [Var x, Sqrt a]])
       | isDiffSymbol d && isLambdaSymbol l =
       return $ (1 / (2 * sqrt a)) * diff (lambda x a)
    f _ = Nothing

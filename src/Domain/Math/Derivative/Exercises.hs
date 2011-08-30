@@ -48,10 +48,10 @@ derivativePolyExercise = describe
    , strategy      = derivativePolyStrategy
    , navigation    = navigator
    , examples      = level Medium $ concat (diffSet1 ++ diffSet2 ++ diffSet3)
-   , testGenerator = Just $ liftM (diff . lambda (Var "x")) $
+   , testGenerator = Just $ liftM (diff . lambda "x") $
                         sized quadraticGen
    }
-
+ 
 derivativeProductExercise :: Exercise Expr
 derivativeProductExercise = describe
    "Use the product-rule to find the derivative of a polynomial. Keep \
@@ -127,7 +127,10 @@ isQuotientDiff de = fromMaybe False $ do
 
 eqPolyDiff :: Expr -> Expr -> Bool
 eqPolyDiff x y =
-   let f a = fromMaybe (descend f a) (apply ruleDerivPolynomial a)
+   let f a = fromMaybe (descend f a) $ 
+                apply ruleDerivPolynomial a
+              `mplus`
+                apply ruleDerivCon a -- rule needed because of check on var
    in viewEquivalent (polyViewWith rationalView) (f x) (f y)
 
 eqQuotientDiff :: Expr -> Expr -> Bool

@@ -65,9 +65,8 @@ simplifyRationalExercise = makeExercise
                         newId "algebra.manipulation.rational.simplify"
    , status        = Alpha -- Provisional
    , parser        = parseExpr
--- isSuitable
    , ready         = predicate simplifiedRational
-   -- , eqWithContext = Just eqSimplifyRational
+   -- , equivalence   = eqSimplifyRational
    , similarity    = withoutContext (viewEquivalent cleanUpView)
    , strategy      = simplifyRationalStrategy
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder

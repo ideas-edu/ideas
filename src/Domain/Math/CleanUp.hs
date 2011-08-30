@@ -138,15 +138,15 @@ cleanUpBU = {- fixpoint $ -} transform $ \e ->
       liftM (transform smart) (canonical specialSqrtOrder e)
       -- Just simplify order of terms with square roots for now
     `mplus` do
-      let f xs | length xs > 1 = return (assocPlus myView xs)
+      let f xs | length xs > 1 = return (assocPlus rationalView xs)
           f _ = Nothing
       canonicalWithM f sumView e
     `mplus`
       canonical myView e
     `mplus` do
-      let f (b, xs) | length xs > 1 = return (b, assocTimes myView xs)
+      let f (b, xs) | length xs > 1 = return (b, assocTimes rationalView xs)
           f _ = Nothing
-      canonicalWithM f productView e
+      canonicalWithM f simpleProductView e
  where
    myView = powerFactorViewWith rationalView
 

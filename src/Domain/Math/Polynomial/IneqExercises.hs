@@ -16,6 +16,7 @@ module Domain.Math.Polynomial.IneqExercises
 import Common.Library hiding (isEmpty)
 import Common.Utils.Uniplate (descend)
 import Control.Monad
+import Data.Function
 import Data.Foldable (toList)
 import Data.List
 import Data.Maybe (fromMaybe)
@@ -62,7 +63,7 @@ ineqQuadraticExercise = makeExercise
    , prettyPrinter = showLogicRelation
    , ready         = predicateView relationsSolvedForm
    , equivalence   = quadrEqContext
-   , similarity    = withoutContext (simLogic (fmap cleanUpExpr . flipGT))
+   , similarity    = simIneqContext
    , strategy      = ineqQuadratic
    , navigation    = termNavigator
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
@@ -80,7 +81,7 @@ ineqHigherDegreeExercise = makeExercise
    , prettyPrinter = showLogicRelation
    , ready         = predicateView relationsSolvedForm
    , equivalence   = highEqContext
-   , similarity    = withoutContext (simLogic (fmap cleanUpExpr . flipGT))
+   , similarity    = simIneqContext
    , strategy      = ineqHigherDegree
    , navigation    = termNavigator
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
@@ -89,6 +90,15 @@ ineqHigherDegreeExercise = makeExercise
 
 ineq :: String
 ineq = "algebra.inequalities"
+
+simIneqContext :: Context (Logic (Relation Expr)) -> Context (Logic (Relation Expr)) -> Bool
+simIneqContext a b = 
+   sameClipboard a b && 
+   withoutContext (simLogic (fmap cleanUpExpr . flipGT)) a b
+ where
+   sameClipboard = (==) `on` evalCM (const (lookupClipboard "ineq"))
+   
+--inEquation <- lookupClipboard "ineq" >>= fromExpr
 
 showLogicRelation :: (Eq a, Show a) => Logic (Relation a) -> String
 showLogicRelation logic =

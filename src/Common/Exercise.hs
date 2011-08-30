@@ -417,9 +417,10 @@ checkParserPretty eq p pretty a =
    either (const False) (eq a) (p (pretty a))
 
 checkParserPrettyEx :: Exercise a -> Context a -> Bool
-checkParserPrettyEx ex =
-   let f = either Left (Right . inContext ex) . parser ex
-   in checkParserPretty (similarity ex) f (prettyPrinterContext ex)
+checkParserPrettyEx ex ca =
+   let f    = mapSecond make . parser ex
+       make = newContext (getEnvironment ca) . navigation ex
+   in checkParserPretty (similarity ex) f (prettyPrinterContext ex) ca
 
 checkExamples :: Exercise a -> TestSuite
 checkExamples ex = do

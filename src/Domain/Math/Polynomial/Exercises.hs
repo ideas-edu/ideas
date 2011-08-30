@@ -45,7 +45,7 @@ linearExercise :: Exercise (Equation Expr)
 linearExercise = makeExercise
    { exerciseId   = describe "solve a linear equation" $
                        newId "algebra.equations.linear"
-   , status       = Provisional
+   , status       = Stable
    , parser       = parseEqExpr
    , similarity   = withoutContext (viewEquivalent (traverseView cleanUpACView))
    , equivalence  = withoutContext (viewEquivalent linearEquationView)
@@ -68,6 +68,7 @@ linearMixedExercise :: Exercise (Equation Expr)
 linearMixedExercise = linearExercise
    { exerciseId   = describe "solve a linear equation with mixed fractions" $
                        newId "algebra.equations.linear.mixed"
+   , status       = Provisional
    , ready        = predicateView (equationSolvedWith mixedFractionNF)
    , strategy     = linearMixedStrategy
    }
@@ -76,7 +77,7 @@ quadraticExercise :: Exercise (OrList (Relation Expr))
 quadraticExercise = makeExercise
    { exerciseId   = describe "solve a quadratic equation" $
                        newId "algebra.equations.quadratic"
-   , status       = Provisional
+   , status       = Stable
    , parser       = parseOrsEqExpr
                        >>> right (build (traverseView equationView))
    , similarity   = withoutContext (viewEquivalent (traverseView (traverseView cleanUpView)))
@@ -96,7 +97,7 @@ higherDegreeExercise :: Exercise (OrList (Relation Expr))
 higherDegreeExercise = makeExercise
    { exerciseId    = describe "solve an equation (higher degree)" $
                         newId "algebra.equations.polynomial"
-   , status        = Provisional
+   , status        = Stable
    , parser        = parser quadraticExercise
    , similarity    = withoutContext (viewEquivalent (traverseView (traverseView cleanUpView)))
    , equivalence   = eqAfterSubstitution $
@@ -115,7 +116,7 @@ quadraticNoABCExercise :: Exercise (OrList (Relation Expr))
 quadraticNoABCExercise = quadraticExercise
    { exerciseId   = describe "solve a quadratic equation without abc-formula" $
                        newId "algebra.equations.quadratic.no-abc"
-   , status       = Alpha
+   , status       = Provisional
    , strategy     = configure cfg quadraticStrategy
    }
  where
@@ -129,7 +130,7 @@ quadraticWithApproximation :: Exercise (OrList (Relation Expr))
 quadraticWithApproximation = quadraticExercise
    { exerciseId   = describe "solve a quadratic equation with approximation" $
                        newId "algebra.equations.quadratic.approximate"
-   , status       = Alpha
+   , status        = Provisional
    , parser       = parseOrsRelExpr
    , strategy     = configure cfg quadraticStrategy
    , equivalence  = withoutContext equivalentApprox

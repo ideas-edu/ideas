@@ -15,11 +15,7 @@ module Domain.Math.Polynomial.RationalRules
    , fractionScale, turnIntoFraction, checkSolution
    ) where
 
-import Common.Classes
-import Common.Context
-import Common.Id
-import Common.Transformation
-import Common.View
+import Common.Library
 import Control.Monad
 import Data.Maybe
 import Domain.Logic.Formula hiding (Var)

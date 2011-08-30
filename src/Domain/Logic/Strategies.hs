@@ -13,22 +13,18 @@ module Domain.Logic.Strategies
    ( dnfStrategy, dnfStrategyDWA, somewhereOr
    ) where
 
-import Common.Context (Context, liftToContext)
-import Common.Navigator
-import Common.Strategy
-import Common.Transformation
+import Common.Library
 import Domain.Logic.Formula
 import Domain.Logic.GeneralizedRules
 import Domain.Logic.Rules
-import Prelude hiding (repeat)
 
 -----------------------------------------------------------------------------
 -- To DNF, with priorities (the "DWA" approach)
 
 dnfStrategyDWA :: LabeledStrategy (Context SLogic)
 dnfStrategyDWA =  label "Bring to dnf (DWA)" $
-   repeat $ toplevel <|> somewhereOr
-      (  label "Simplify"                            simplify
+   repeatS $ toplevel <|> somewhereOr
+      (  label "Simplify"                            simpl
       |> label "Eliminate implications/equivalences" eliminateImplEquiv
       |> label "Eliminate nots"                      eliminateNots
       |> label "Move ors to top"                     orToTop
@@ -38,7 +34,7 @@ dnfStrategyDWA =  label "Bring to dnf (DWA)" $
        [ ruleFalseZeroOr, ruleTrueZeroOr, ruleIdempOr
        , ruleAbsorpOr, ruleComplOr
        ]
-    simplify = somewhere $ useRules
+    simpl = somewhere $ useRules
        [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
        , ruleFalseZeroAnd, ruleNotTrue, ruleNotFalse
        , ruleNotNot, ruleIdempOr, ruleIdempAnd, ruleAbsorpOr, ruleAbsorpAnd
@@ -78,22 +74,22 @@ dnfStrategy =  label "Bring to dnf"
      <*> label "Eliminate nots"                      eliminateNots
      <*> label "Move ors to top"                     orToTop
  where
-   eliminateConstants = repeat $ topDown $ useRules
+   eliminateConstants = repeatS $ topDown $ useRules
       [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
       , ruleFalseZeroAnd, ruleNotTrue, ruleNotFalse, ruleFalseInEquiv
       , ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
       ]
-   eliminateImplEquiv = repeat $ bottomUp $ useRules
+   eliminateImplEquiv = repeatS $ bottomUp $ useRules
       [ ruleDefImpl, ruleDefEquiv
       ]
-   eliminateNots = repeat $ topDown $
+   eliminateNots = repeatS $ topDown $
       useRules
          [ generalRuleDeMorganAnd, generalRuleDeMorganOr ]
       |> useRules
          [ ruleDeMorganAnd, ruleDeMorganOr
          , ruleNotNot
          ]
-   orToTop = repeat $ somewhere $
+   orToTop = repeatS $ somewhere $
       liftToContext generalRuleAndOverOr |>
       liftToContext ruleAndOverOr
 

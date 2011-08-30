@@ -13,12 +13,8 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.BuggyRules where
 
-import Common.Classes
-import Common.Context
-import Common.Id
-import Common.Rewriting
-import Common.Transformation hiding (makeRule, makeSimpleRule, makeSimpleRuleList, ruleList)
-import Common.View
+import Common.Library hiding (makeRule, makeSimpleRule, makeSimpleRuleList, 
+                              ruleList, root)
 import Control.Monad
 import Domain.Math.CleanUp
 import Domain.Math.Data.OrList

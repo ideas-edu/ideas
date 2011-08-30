@@ -8,7 +8,7 @@
       {
          "exerciseid": "algebra.equations.linear",
          "description": "solve a linear equation",
-         "status": "Provisional"
+         "status": "Stable"
       },
       {
          "exerciseid": "algebra.equations.linear.balance",
@@ -23,22 +23,22 @@
       {
          "exerciseid": "algebra.equations.polynomial",
          "description": "solve an equation (higher degree)",
-         "status": "Provisional"
+         "status": "Stable"
       },
       {
          "exerciseid": "algebra.equations.quadratic",
          "description": "solve a quadratic equation",
-         "status": "Provisional"
+         "status": "Stable"
       },
       {
          "exerciseid": "algebra.equations.quadratic.approximate",
          "description": "solve a quadratic equation with approximation",
-         "status": "Alpha"
+         "status": "Provisional"
       },
       {
          "exerciseid": "algebra.equations.quadratic.no-abc",
          "description": "solve a quadratic equation without abc-formula",
-         "status": "Alpha"
+         "status": "Provisional"
       },
       {
          "exerciseid": "algebra.equations.rational",
@@ -118,7 +118,7 @@
       {
          "exerciseid": "calculus.differentiation",
          "description": "Derivative",
-         "status": "Experimental"
+         "status": "Provisional"
       },
       {
          "exerciseid": "calculus.differentiation.polynomial",
@@ -173,5 +173,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.7.4 (0)"
+   "version": "0.7.9 (0)"
 }

@@ -42,6 +42,7 @@ import qualified Data.Set as S
 import qualified Data.Traversable as T
 import qualified Domain.Logic as Logic
 import qualified Domain.Logic.Views as Logic
+import Prelude hiding ((^))
 
 rationalEquationExercise :: Exercise (OrList (Equation Expr))
 rationalEquationExercise = makeExercise
@@ -63,10 +64,10 @@ simplifyRationalExercise :: Exercise Expr
 simplifyRationalExercise = makeExercise
    { exerciseId    = describe "simplify a rational expression (with a variable in a divisor)" $
                         newId "algebra.manipulation.rational.simplify"
-   , status        = Alpha -- Provisional
+   , status        = Alpha
    , parser        = parseExpr
    , ready         = predicate simplifiedRational
-   -- , equivalence   = eqSimplifyRational
+   , equivalence   = withoutContext eqSimplifyRational
    , similarity    = withoutContext (viewEquivalent cleanUpView)
    , strategy      = simplifyRationalStrategy
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
@@ -217,10 +218,8 @@ eqRationalEquation ca cb = fromMaybe False $
       xs <- rationalEquations a
       return $ simplify orSetView $ restrictOrList (f ctx) xs
 
-eqSimplifyRational :: Context Expr -> Context Expr -> Bool
-eqSimplifyRational ca cb = fromMaybe False $ do
-   a <- fromContext ca
-   b <- fromContext cb
+eqSimplifyRational :: Expr -> Expr -> Bool
+eqSimplifyRational a b = fromMaybe False $ do
    let a1c = cleanUpExpr (fst3 (rationalExpr a))
        b1c = cleanUpExpr (fst3 (rationalExpr b))
        manyVars = S.size (varSet a `S.union` varSet b) > 1
@@ -268,35 +267,7 @@ notZero expr =
              | otherwise -> F
       _ -> Logic.Var (expr ./=. 0)
 
------------------
--- test code
-
 {-
-raar = brokenExpr $ x^2/(5*x+6) + 1
- where x = Var "x"
--
-go0 = checkExercise rationalEquationExercise
-
-go = checkExercise simplifyRationalExercise
-
-see n = printDerivation ex (examples ex !! (n-1))
- where ex = --rationalEquationExercise
-            simplifyRationalExercise
-
-go4 = printDerivation findFactorsExercise $ -a + 4
- where x = Var "x"
-       a = Var "a"
-
-test = e4
- where
-   a  = Var "a"
-   b  = Var "b"
-
-   e1 = 6*a*b*a
-   e2 = -4*b^2*a*2
-   e3 = lcmExpr e1 e2
-   e4 = divisionExpr e3 e1
-   e5 = divisionExpr e3 e2
-
-go = putStrLn $ unlines $ map show $ zip [1..] $ map (brokenEq []) (concat brokenEquations)
--}
+q = checkExercise simplifyRationalExercise
+go = rationalExpr $ (a^2-2*a-15)/(a^3-3*a^2-10*a)
+ where a = Var "a" -}

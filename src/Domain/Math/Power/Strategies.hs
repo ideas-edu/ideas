@@ -17,14 +17,7 @@ module Domain.Math.Power.Strategies
    , nonNegBrokenExpStrategy
    ) where
 
-import Prelude hiding (repeat, not)
-
-import Common.Classes
-import Common.Context
-import Common.Id
-import Common.Navigator
-import Common.Strategy
-import Common.Transformation
+import Common.Library hiding (simplifyWith)
 import Domain.Math.Expr
 import Domain.Math.Numeric.Rules (divisionNumerator, divisionDenominator)
 import Domain.Math.Power.Rules

@@ -25,12 +25,7 @@ module Domain.Math.Equation.CoverUpRules
    , coverUpBinaryRule, commOp, flipOp
    ) where
 
-import Common.Classes
-import Common.Context
-import Common.Id
-import Common.Rewriting
-import Common.Transformation
-import Common.View
+import Common.Library hiding (root)
 import Control.Monad
 import Data.Foldable
 import Data.Maybe

@@ -14,20 +14,17 @@ module Domain.Math.Numeric.Strategies
    , rationalStrategy, fractionStrategy
    ) where
 
-import Common.Context
-import Common.Strategy
-import Common.View
+import Common.Library
 import Domain.Math.Expr
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
-import Prelude hiding (repeat)
 
 ------------------------------------------------------------
 -- Strategies
 
 naturalStrategy :: LabeledStrategy (Context Expr)
 naturalStrategy = label "simplify" $
-   repeat $ somewhere $ alternatives $ map use
+   repeatS $ somewhere $ alternatives $ map use
       [ calcPlusWith     "natural" natView
       , calcMinusWith    "natural" natView
       , calcTimesWith    "natural" natView
@@ -44,7 +41,7 @@ naturalStrategy = label "simplify" $
 
 integerStrategy :: LabeledStrategy (Context Expr)
 integerStrategy = label "simplify" $
-   repeat $ somewhere $ alternatives $ map use
+   repeatS $ somewhere $ alternatives $ map use
       [ calcPlusWith     "integer" integerNF
       , calcMinusWith    "integer" integerNF
       , calcTimesWith    "integer" integerNF
@@ -54,7 +51,7 @@ integerStrategy = label "simplify" $
 
 rationalStrategy :: LabeledStrategy (Context Expr)
 rationalStrategy = label "simplify" $
-   repeat $ somewhere $ alternatives $ map use
+   repeatS $ somewhere $ alternatives $ map use
       [ calcPlusWith     "rational" rationalRelaxedForm
       , calcMinusWith    "rational" rationalRelaxedForm
       , calcTimesWith    "rational" rationalRelaxedForm
@@ -65,7 +62,7 @@ rationalStrategy = label "simplify" $
 
 fractionStrategy :: LabeledStrategy (Context Expr)
 fractionStrategy = label "simplify" $
-   repeat $
+   repeatS $
       somewhere
          (  use (calcPlusWith     "integer" integerNF)
         <|> use (calcMinusWith    "integer" integerNF)

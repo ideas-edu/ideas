@@ -18,6 +18,7 @@ module Domain.Math.Derivative.Exercises
 import Common.Library
 import Common.Utils.Uniplate
 import Control.Monad
+import Data.Function
 import Data.List
 import Data.Maybe
 import Data.Ord
@@ -96,14 +97,15 @@ derivativePowerExercise = describe
 derivativeExercise :: Exercise Expr
 derivativeExercise = makeExercise
    { exerciseId   = describe "Derivative" diffId
-   , status       = Experimental
+   , status       = Provisional
    , parser       = parseExpr
    , ready        = predicate noDiff
    , strategy     = derivativeStrategy
    , ruleOrdering = derivativeOrdering
+   , equivalence   = withoutContext eqQuotientDiff
    , navigation   = navigator
-   , examples     = level Medium $ concat (diffSet3++diffSet4++
-                            diffSet5++diffSet6++diffSet7++diffSet8)
+   , examples     = level Medium $ concat $ diffSet3++diffSet4++diffSet5
+                            {- diffSet6 -- ++diffSet7++diffSet8 -}
    }
 
 derivativeOrdering :: Rule a -> Rule a -> Ordering
@@ -126,23 +128,10 @@ isQuotientDiff de = fromMaybe False $ do
    return (all isp ys)
 
 eqPolyDiff :: Expr -> Expr -> Bool
-eqPolyDiff x y =
-   let f a = fromMaybe (descend f a) $ 
-                apply ruleDerivPolynomial a
-              `mplus`
-                apply ruleDerivCon a -- rule needed because of check on var
-   in viewEquivalent (polyViewWith rationalView) (f x) (f y)
+eqPolyDiff = viewEquivalent (polyViewWith rationalView) `on` evalDiff
 
 eqQuotientDiff :: Expr -> Expr -> Bool
-eqQuotientDiff a b = eqSimplifyRational (make a) (make b)
- where
-   make = inContext derivativeQuotientExercise . f
-   rs   = [ ruleDerivPolynomial, ruleDerivQuotient, ruleDerivProduct
-          , ruleDerivNegate, ruleDerivPlus, ruleDerivMin
-          ]
-   f x  = case mapMaybe (`apply` x) rs of
-             hd:_ -> f hd
-             []   -> descend f x
+eqQuotientDiff = eqSimplifyRational `on` (cleanUpExpr . evalDiff)
 
 readyQuotientDiff :: Expr -> Bool
 readyQuotientDiff expr = fromMaybe False $ do
@@ -162,56 +151,30 @@ onlyNatPower e = all isNat [ a | Sym s [_, a] <- universe e, isPowerSymbol s ]
    isNat (Nat _) = True
    isNat _       = False
 
-{-
 evalDiff :: Expr -> Expr
-evalDiff expr
-   | isDiff expr =
-        case concatMap (`applyAll` expr) list of
-           hd:_ -> evalDiff hd
-           _    -> expr
-   | otherwise = descend evalDiff expr
+evalDiff da = 
+   case da of 
+      Sym d [Sym l [Var x, expr]] | isDiffSymbol d && isLambdaSymbol l ->
+         cleanUpExpr (rec x expr)
+      _ -> descend evalDiff da
  where
-   list = [ ruleDerivPolynomial, ruleDerivPowerFactor
-          , ruleDerivPlus, ruleDerivMin, ruleDerivNegate
-          , ruleDerivProduct, ruleDerivQuotient
-          , ruleDerivPowerChain, ruleDerivSqrtChain, ruleDerivRoot
-          ]
-
-go = checkExercise derivativePowerExercise
-
-raar i = printDerivation derivativePowerExercise expr
- where
-   expr = examples derivativePowerExercise !! i
-
-eqApprox :: Expr -> Expr -> Bool
-eqApprox a b = rec 5 doubleList
- where
-   vs = nub (collectVars a ++ collectVars b)
-
-   rec 0 = const True
-   rec n = rec2 n 10
-
-   rec2 _ 0 ds = undefined -- a==b
-   rec2 n m ds = case eqApproxWith f a b of
-                    Just b  -> b && rec (n-1) ys
-                    Nothing -> rec2 n (m-1) ys
+   rec x expr =
+      case expr of
+         _ | withoutVar x expr -> 0 
+         Var y | x==y -> 1
+         a :+: b  -> rec x a + rec x b
+         a :-: b  -> rec x a - rec x b
+         Negate a -> -rec x a
+         a :*: b  -> rec x a*b + a*rec x b
+         a :/: b  -> (b*rec x a - a*rec x b) / b^2
+         Sqrt a   -> rec x (a^(1/2))
+         Sym s [a, b] 
+            | isPowerSymbol s -> 
+                 case match rationalView b of
+                    Just n  -> fromRational n * a^fromRational (n-1) * rec x a
+                    Nothing -> diffExpr
+            | isRootSymbol s -> 
+                 rec x (a^(1/b))
+         _ -> diffExpr
     where
-      (xs, ys) = splitAt (length vs) ds
-      f = (xs !!) . fromMaybe 0 . (`elemIndex` vs)
-
-eqApproxWith :: (String -> Double) -> Expr -> Expr -> Maybe Bool
-eqApproxWith f a b = do
-   d1 <- match doubleView (subst a)
-   d2 <- match doubleView (subst b)
-   return $ abs (d1 - d2) < 1e-9 -- 11 is still ok for example set
- where
-    subst (Var s) = fromDouble (f s)
-    subst expr    = descend subst expr
-
-doubleList :: [Double] -- between -20 and 20
-doubleList = iterate next (pi*exp 1)
-  where
-    next :: Double -> Double
-    next a = if b > 20 then b-20 else b
-     where
-       b = a + exp 3 * log 2 -}
+      diffExpr = diff (lambda x expr)

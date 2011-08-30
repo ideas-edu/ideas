@@ -1,13 +1,13 @@
-<reply result="ok" version="0.7.4 (0)">
+<reply result="ok" version="0.7.9 (0)">
   <list>
     <elem exerciseid="algebra.equations.coverup" description="solve an equation by covering up" status="Provisional"/>
-    <elem exerciseid="algebra.equations.linear" description="solve a linear equation" status="Provisional"/>
+    <elem exerciseid="algebra.equations.linear" description="solve a linear equation" status="Stable"/>
     <elem exerciseid="algebra.equations.linear.balance" description="Solve a linear equation using only balance rules." status="Provisional"/>
     <elem exerciseid="algebra.equations.linear.mixed" description="solve a linear equation with mixed fractions" status="Provisional"/>
-    <elem exerciseid="algebra.equations.polynomial" description="solve an equation (higher degree)" status="Provisional"/>
-    <elem exerciseid="algebra.equations.quadratic" description="solve a quadratic equation" status="Provisional"/>
-    <elem exerciseid="algebra.equations.quadratic.approximate" description="solve a quadratic equation with approximation" status="Alpha"/>
-    <elem exerciseid="algebra.equations.quadratic.no-abc" description="solve a quadratic equation without abc-formula" status="Alpha"/>
+    <elem exerciseid="algebra.equations.polynomial" description="solve an equation (higher degree)" status="Stable"/>
+    <elem exerciseid="algebra.equations.quadratic" description="solve a quadratic equation" status="Stable"/>
+    <elem exerciseid="algebra.equations.quadratic.approximate" description="solve a quadratic equation with approximation" status="Provisional"/>
+    <elem exerciseid="algebra.equations.quadratic.no-abc" description="solve a quadratic equation without abc-formula" status="Provisional"/>
     <elem exerciseid="algebra.equations.rational" description="solve a rational equation (with a variable in a divisor)" status="Provisional"/>
     <elem exerciseid="algebra.inequalities.linear" description="solve a linear inequation" status="Provisional"/>
     <elem exerciseid="algebra.inequalities.polynomial" description="solve an inequation of higher degree" status="Provisional"/>
@@ -23,7 +23,7 @@
     <elem exerciseid="algebra.manipulation.rational.simplify" description="simplify a rational expression (with a variable in a divisor)" status="Alpha"/>
     <elem exerciseid="arithmetic.exponents" description="simplify expression (powers)" status="Provisional"/>
     <elem exerciseid="arithmetic.fractions" description="simplify expression (fractions)" status="Alpha"/>
-    <elem exerciseid="calculus.differentiation" description="Derivative" status="Experimental"/>
+    <elem exerciseid="calculus.differentiation" description="Derivative" status="Provisional"/>
     <elem exerciseid="calculus.differentiation.polynomial" description="Find the derivative of a polynomial. First normalize the polynomial (e.g., with distribution). Don't make use of the product-rule, or other chain rules." status="Provisional"/>
     <elem exerciseid="calculus.differentiation.product" description="Use the product-rule to find the derivative of a polynomial. Keep the parentheses in your answer." status="Provisional"/>
     <elem exerciseid="calculus.differentiation.quotient" description="Use the quotient-rule to find the derivative of a polynomial. Only remove parentheses in the numerator." status="Provisional"/>

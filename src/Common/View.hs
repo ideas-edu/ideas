@@ -160,7 +160,7 @@ instance IsView View where
          _ :@ v     -> build v
          v :>>>: w  -> build v <<< build w
          v :***: w  -> build v *** build w
-         v :+++: w  -> either (Left . build v) (Right . build w)
+         v :+++: w  -> biMap (build v) (build w)
          Traverse v -> fmap (build v)
 
    toView = id

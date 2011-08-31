@@ -41,7 +41,8 @@ class InXML a where
    -- default definitions
    listToXML = Element "list" [] . map (Right . toXML)
    listFromXML xml
-      | name xml == "list" && noAttributes xml = mapM fromXML (children xml)
+      | name xml == "list" && null (attributes xml) = 
+           mapM fromXML (children xml)
       | otherwise = fail "expecting a list tag"
 
 ----------------------------------------------------------------
@@ -147,51 +148,3 @@ escape = concatMap f
    f '>' = "&gt;"
    f '&' = "&amp;"
    f c   = [c]
-
-----------------------------------------------------------------
--- XML utility functions
-
-{-
-children :: XML -> [XML]
-children (Element _ _ xs) = xs
-
-extract :: Monad m => String -> XML -> m [XML]
-extract n xml =
-   case filter (children xml) of --  [ xs | Tagged (Element m _ xs) <- children xml, n==m ] of
-      [hd] -> return hd
-      _    -> fail ("missing tag " ++ show n)
-
-extractText :: Monad m => String -> XML -> m String
-extractText n xml = do
-   xs <- extract n xml
-   case xs of
-      [hd] -> maybe (fail "extract text") return (isText hd)
-      _    -> fail ("invalid content for tag " ++ show n)
-
-isTag :: XML -> Maybe (String, AttrList, [XML])
-isTag =
-isTag (Tagged (Element n as xs)) =
-   let f (x := y) = (x, concatMap (either return g) y)
-       g (CharRef n) = [chr n]
-       g (EntityRef n)
-          | otherwise = []
-   in Just (n, map f as, xs)
-isTag _ = Nothing
-
-mkTag :: String -> AttrList -> Content -> XML
-mkTag n as = Element n (map f as)
- where
-   f (x, y) = x := y
-
-mkText :: String -> XML
-mkText = -- CharData
-
-isText :: XML -> Maybe String
-isText =
-isText (CharData s) = Just s
-isText (CDATA s)    = Just s
-isText _            = Nothing
-
-findChild :: Monad m => String -> XML -> m XML
-findChild s e = maybe (fail "child not found") return . safeHead $
-   [ c | c <- children e, Just (n, _, _) <- [isTag c], s==n ]-}

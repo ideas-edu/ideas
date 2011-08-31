@@ -14,7 +14,7 @@
 module Text.Parsing
    ( module Export
    , (<*>), (*>), (<*), (<$>), (<$), (<**>)
-   , parseSimple, complete, accepts, skip, (<..>), ranges, stopOn
+   , parseSimple, complete, skip, (<..>), ranges, stopOn
    , naturalOrFloat, float
    , UnbalancedError(..), balanced
    ) where
@@ -33,9 +33,6 @@ parseSimple p = left show . runParser (complete p) () ""
 
 complete :: Parser a -> Parser a
 complete p = spaces *> (p <* eof)
-
-accepts :: Parser a -> String -> Bool
-accepts p = either (const False) (const True) . parseSimple p
 
 skip :: Parser a -> Parser ()
 skip p = p >> return ()

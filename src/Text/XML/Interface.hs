@@ -11,15 +11,18 @@
 -- Collection of common operation on XML documents
 --
 -----------------------------------------------------------------------------
-module Text.XML.Interface where
+module Text.XML.Interface 
+   ( Element(..), Content, Attribute(..), Attributes
+   , normalize, parseXML
+   , children, findAttribute, findChild, getData
+   ) where
 
 import Control.Arrow
 import Data.Char (chr, ord)
 import Data.Maybe
-import System.FilePath (takeDirectory, pathSeparator)
 import Text.Parsing (parseSimple)
 import Text.XML.Document (Name)
-import Text.XML.Parser (document, extParsedEnt)
+import Text.XML.Parser (document)
 import Text.XML.Unicode (decoding)
 import qualified Text.XML.Document as D
 
@@ -78,25 +81,15 @@ normalize doc = toElement (D.root doc)
    merge (x:xs) = x:merge xs
    merge []     = []
 
-extend :: Element -> D.XMLDoc
-extend e = D.XMLDoc
-   { D.versionInfo = Nothing
-   , D.encoding    = Nothing
-   , D.standalone  = Nothing
-   , D.dtd         = Nothing
-   , D.externals   = []
-   , D.root        = toElement e
-   }
+extend :: Element -> D.Element
+extend (Element n as c) =
+   D.Element n (map toAttribute as) (concatMap toXML c)
  where
-   toElement :: Element -> D.Element
-   toElement (Element n as c) =
-      D.Element n (map toAttribute as) (concatMap toXML c)
-
    toAttribute :: Attribute -> D.Attribute
-   toAttribute (n := s) = (D.:=) n (map Left s)
+   toAttribute (m := s) = (D.:=) m (map Left s)
 
    toXML :: Either String Element -> [D.XML]
-   toXML = either fromString (return . D.Tagged . toElement)
+   toXML = either fromString (return . D.Tagged . extend)
 
    fromString :: String -> [D.XML]
    fromString [] = []
@@ -114,41 +107,7 @@ parseXML xs = do
    doc   <- parseSimple document input
    return (normalize doc)
 
-parseIO :: String -> IO Element
-parseIO baseFile = do
-   -- putStrLn $ "Reading " ++ show baseFile
-   xs    <- readFile baseFile
-   input <- decoding xs
-   case parseSimple document input of
-      Left err  -> fail err
-      Right doc -> do
-         let exts = getExternals doc
-         rs <- mapM (parseExternal . snd) exts
-         let new = doc { D.externals = zip (map fst exts) rs }
-         return (normalize new)
-
- where
-   getExternals :: D.XMLDoc -> [(String, String)]
-   getExternals doc =
-      case D.dtd doc of
-         Just (D.DTD _ _ decls) ->
-            [ (n, s) | D.EntityDecl True n (Right (D.System s, Nothing)) <- decls ]
-         Nothing -> []
-
-   parseExternal :: String -> IO D.External
-   parseExternal extFile = do
-      let full = takeDirectory baseFile ++ [pathSeparator] ++ extFile
-      -- putStrLn $ "Reading " ++ show full
-      xs    <- readFile full
-      input <- decoding xs
-      case parseSimple extParsedEnt input of
-         Right doc -> return doc
-         Left err  -> fail err
-
 -----------------------------------------------------
-
-noAttributes :: Element -> Bool
-noAttributes = null . attributes
 
 findAttribute :: Monad m => String -> Element -> m String
 findAttribute s (Element _ as _) =
@@ -167,26 +126,3 @@ children e = [ c | Right c <- content e ]
 
 getData :: Element -> String
 getData e = concat [ s | Left s <- content e ]
-
-{-
-children :: D.Element -> [D.Element]
-children (D.Element _ _ c) = [ e | D.Tagged e <- c ]
-
-getAttributes :: D.Element -> [(String, String)]
-getAttributes (D.Element _ as _) =
-   [ (n, concatMap f av) | n D.:= av <- as ]
- where
-   f :: Either Char D.Reference -> String
-   f (Left c)              = [c]
-   f (Right (D.CharRef n))   = [chr $ fromIntegral n]
-   f (Right (D.EntityRef _)) = []
-
-findAttribute :: Monad m => String -> D.Element -> m String
-findAttribute n e =
-   case lookup n (getAttributes e) of
-      Just a  -> return a
-      Nothing -> fail $ "Attribute not found: " ++ show n
-
-getData :: D.Element -> String
-getData (D.Element _ _ c) = concat [ s | D.CharData s <- c ]
--}

@@ -56,7 +56,7 @@ equal :: Type a t1 -> Type a t2 -> Maybe (t1 -> t2)
 equal type1 type2 =
    case (type1, type2) of
       (Pair a b,    Pair c d   ) -> liftM2 (\f g (x, y) -> (f x, g y)) (equal a c) (equal b d)
-      (a :|: b,     c :|: d    ) -> liftM2 (\f g -> either (Left . f) (Right . g)) (equal a c) (equal b d)
+      (a :|: b,     c :|: d    ) -> liftM2 biMap (equal a c) (equal b d)
       (List a,      List b     ) -> fmap map (equal a b)
       (Rule,        Rule       ) -> Just id
       (Unit,        Unit       ) -> Just id

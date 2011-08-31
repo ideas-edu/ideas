@@ -231,7 +231,6 @@ Executable              ideas
     Text.XML.Document
     Text.XML.Interface
     Text.XML.Parser
-    Text.XML.TestSuite
     Text.XML.Unicode
   build-depends:        base >= 4.2 && < 5,
                         directory,

@@ -14,19 +14,16 @@
 module Text.XML.Document where
 
 import Data.Char
-import Data.List
 import Data.Maybe
 
 type Name = String
 
 type Attributes = [Attribute]
-data Attribute  = Name := AttValue deriving Eq
+data Attribute  = Name := AttValue
 
 data Reference = CharRef Int | EntityRef String
-   deriving Eq
 
 data Parameter = Parameter String
-   deriving Eq
 
 data XMLDoc = XMLDoc
    { versionInfo :: Maybe String
@@ -36,25 +33,21 @@ data XMLDoc = XMLDoc
    , externals   :: [(String, External)]
    , root        :: Element
    }
-  deriving Eq
 
 data XML = Tagged Element
          | CharData String
          | CDATA String
          | Reference Reference
-   deriving Eq
 
 data Element = Element
    { name       :: Name
    , attributes :: Attributes
    , content    :: Content
    }
- deriving Eq
 
 type Content = [XML]
 
 data DTD = DTD Name (Maybe ExternalID) [DocTypeDecl]
-   deriving Eq
 
 data DocTypeDecl = ElementDecl Name ContentSpec
                  | AttListDecl Name [AttDef]
@@ -62,21 +55,16 @@ data DocTypeDecl = ElementDecl Name ContentSpec
                  | NotationDecl Name (Either ExternalID PublicID)
                  | DTDParameter Parameter
                  | DTDConditional Conditional
-   deriving Eq
 
 data ContentSpec = Empty | Any | Mixed Bool [Name] | Children CP
-   deriving Eq
 
 -- content particles
 data CP = Choice [CP] | Sequence [CP] | QuestionMark CP | Star CP | Plus CP | CPName Name
-   deriving Eq
 
 data AttType = IdType | IdRefType | IdRefsType | EntityType | EntitiesType | NmTokenType | NmTokensType
              | StringType | EnumerationType [String] | NotationType [String]
-   deriving Eq
 
 data DefaultDecl = Required | Implied | Value AttValue | Fixed AttValue
-   deriving Eq
 
 type AttDef = (Name, AttType, DefaultDecl)
 type EntityDef = Either EntityValue (ExternalID, Maybe String)
@@ -84,22 +72,20 @@ type AttValue    = [Either Char Reference]
 type EntityValue = [Either Char (Either Parameter Reference)]
 
 data ExternalID = System String | Public String String
-   deriving Eq
 
 type PublicID = String
 
 data Conditional = Include [DocTypeDecl] | Ignore [String]
-   deriving Eq
 
 type TextDecl = (Maybe String, String)
 
 type External = (Maybe TextDecl, Content)
 
 ---
-
+{-
 instance Show XMLDoc where
    show doc = showXMLDecl doc ++ maybe "" show (dtd doc) ++ show (root doc)
-
+-}
 instance Show Attribute where
    show (n := v) = n ++ "=" ++ showAttValue v
 
@@ -124,7 +110,7 @@ instance Show Reference where
 
 instance Show Parameter where
    show (Parameter s) = "%" ++ s ++ ";"
-
+{-
 instance Show DTD where
    show (DTD n mid ds) = "<!DOCTYPE " ++ unwords list ++ ">"
     where
@@ -200,6 +186,7 @@ instance Show Conditional where
       case conditional of
          Include xs -> "<![INCLUDE[" ++ concatMap show xs ++ "]]>"
          Ignore _ -> "" -- ToDO undefined -- [String]
+-}
 
 showXMLDecl :: XMLDoc -> String
 showXMLDecl doc
@@ -228,7 +215,7 @@ showEntityValue = doubleQuote . concatMap (either f (either show show))
  where
    f '"' = []
    f c   = [c]
-
+{-
 showAttDef :: AttDef -> String
 showAttDef (s, tp, dd) = unwords [s, show tp, show dd]
 
@@ -237,7 +224,7 @@ showEntityDef entityDef =
    case entityDef of
       Left ev -> showEntityValue ev
       Right (eid, ms) -> show eid ++ maybe "" (" NDATA "++) ms
-
+-}
 doubleQuote :: String -> String
 doubleQuote s = "\"" ++ s ++ "\""
 

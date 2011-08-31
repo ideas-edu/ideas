@@ -18,6 +18,7 @@ module Common.Id
    , mempty, isEmptyId
    ) where
 
+import Common.Classes
 import Common.Utils (splitsWithElem)
 import Common.Utils.StringRef
 import Control.Monad
@@ -105,7 +106,7 @@ instance HasId Id where
 
 instance (HasId a, HasId b) => HasId (Either a b) where
    getId      = either getId getId
-   changeId f = either (Left . changeId f) (Right . changeId f)
+   changeId f = biMap (changeId f) (changeId f)
 
 class HasId a => Identify a where
    (@>) :: IsId n => n -> a -> a

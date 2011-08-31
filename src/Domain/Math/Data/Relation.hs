@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Data.Relation
    ( -- * Type class
-     Relational(..), mapLeft, mapRight, updateLeft, updateRight
+     Relational(..)
      -- * Relation data type
    , Relation, relationType, RelationType(..), relationSymbols
    , notRelation, eval
@@ -47,14 +47,6 @@ class Functor f => Relational f where
    isSymmetric   :: f a -> Bool
    -- default definitions
    isSymmetric _ = False
-
-mapLeft, mapRight :: Relational f => (a -> a) -> f a -> f a
-mapLeft  f p = updateLeft  (f (leftHandSide p))  p
-mapRight f p = updateRight (f (rightHandSide p)) p
-
-updateLeft, updateRight :: Relational f => a -> f a -> f a
-updateLeft  a p = constructor p a (rightHandSide p)
-updateRight a p = constructor p (leftHandSide p) a
 
 -----------------------------------------------------------------------------
 -- Relation data type

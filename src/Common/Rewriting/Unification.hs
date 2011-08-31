@@ -14,7 +14,7 @@ module Common.Rewriting.Unification
    , unificationTests
    ) where
 
-import Common.Rewriting.AC
+import Common.Rewriting.AC (pairingsA)
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
 import Common.Utils.TestSuite

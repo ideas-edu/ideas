@@ -84,8 +84,7 @@ xmlReply request xml = do
    Some conv <-
       case encoding request of
          Just StringEncoding -> return (stringFormatConverter ex)
-         Just OpenMathFocus  -> return (openMathConverter True ex)
-         _                   -> return (openMathConverter False ex)
+         _                   -> return (openMathConverter ex)
    res <- evalService conv srv xml
    return (resultOk res)
 
@@ -119,11 +118,11 @@ stringFormatConverterTp ex =
       let input = getData xml
       either (fail . show) return (parser ex input)
 
-openMathConverter :: Bool -> Some Exercise -> Some (Evaluator XML XMLBuilder)
-openMathConverter useFocus (Some ex) = Some (openMathConverterTp useFocus ex)
+openMathConverter :: Some Exercise -> Some (Evaluator XML XMLBuilder)
+openMathConverter (Some ex) = Some (openMathConverterTp ex)
 
-openMathConverterTp :: Bool -> Exercise a -> Evaluator XML XMLBuilder a
-openMathConverterTp useFocus ex =
+openMathConverterTp :: Exercise a -> Evaluator XML XMLBuilder a
+openMathConverterTp ex =
    Evaluator (xmlEncoder True f ex) (xmlDecoder True g ex)
  where
    f ctx = liftM (builder . toXML) $
@@ -147,6 +146,7 @@ openMathConverterTp useFocus ex =
    noFocus a = a
 
    focusSymbol = makeSymbol "ideas" "focus"
+   useFocus = False
 
 xmlEncoder :: Bool -> (Context a -> DomainReasoner XMLBuilder) -> Exercise a -> Encoder XMLBuilder a
 xmlEncoder isOM f ex = Encoder

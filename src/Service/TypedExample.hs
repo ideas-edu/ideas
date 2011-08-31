@@ -52,7 +52,7 @@ typedExample ex service args = do
    return (request, reply, xmlTest)
  where
    (evaluator, enc)
-      | isJust (hasTermView ex) = (openMathConverterTp False ex, "openmath")
+      | isJust (hasTermView ex) = (openMathConverterTp ex, "openmath")
       | otherwise               = (stringFormatConverterTp ex, "string")
 
 stdReply :: String -> String -> Exercise a -> XMLBuilder -> XML

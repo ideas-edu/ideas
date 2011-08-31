@@ -17,7 +17,7 @@ module Common.Rewriting.Term
      Symbol, newSymbol
    , isAssociative, makeAssociative
      -- * Terms
-   , Term(..), IsTerm(..)
+   , Term(..), IsTerm(..), termView
    , fromTermM, fromTermWith
    , getSpine, makeTerm
      -- * Functions and symbols
@@ -89,11 +89,9 @@ instance Uniplate Term where
 class IsTerm a where
    toTerm   :: a -> Term
    fromTerm :: MonadPlus m => Term -> m a
-   termView :: View Term a
-   -- default definitions
-   toTerm   = build termView
-   fromTerm = matchM termView
-   termView = makeView fromTerm toTerm
+
+termView :: IsTerm a => View Term a
+termView = makeView fromTerm toTerm
 
 instance IsTerm Term where
    toTerm   = id

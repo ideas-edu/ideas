@@ -23,8 +23,10 @@ data Request = Request
    }
 
 data DataFormat = XML | JSON
+   deriving Show -- needed for LoggingDatabase
 
 data Encoding = OpenMath | StringEncoding
+   deriving Show -- needed for LoggingDatabase
 
 discoverDataFormat :: Monad m => String -> m DataFormat
 discoverDataFormat xs =

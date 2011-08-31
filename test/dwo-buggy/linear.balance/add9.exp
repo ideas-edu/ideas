@@ -1,0 +1,8 @@
+<reply result="ok" version="0.7.9 (0)">
+  <buggy ruleid="algebra.equations.linear.balance.buggy.addbal9">
+    <argument description="term">
+      3
+    </argument>
+  </buggy>
+</reply>
+

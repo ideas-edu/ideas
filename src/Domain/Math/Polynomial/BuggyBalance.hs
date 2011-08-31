@@ -29,7 +29,8 @@ buggyBalanceRules =
    , rule1311, rule1312, rule1314, rule1321, rule1322
    , rule133, rule134, rule135, rule136, rule137
    , rule201
-   , rule2111, rule2112, rule2121, rule2122, rule2131, rule2132
+   , rule2111, rule2112, rule2113, rule2114
+   , rule2121, rule2122, rule2131, rule2132
    , rule2141, rule2142
    , rule221, rule222, rule2231, rule2232, rule2233, rule227
    , rule311, rule321, rule322, rule323
@@ -219,6 +220,15 @@ rule201 = describe "2.0.1: Links en rechts alleen maar verwisseld?" $
 -------------------------------------------------------------------
 -- 2.1 Links en rechts hetzelfde optellen/aftrekken
 
+{- schema addbal regels: (telkens paren met positief/negatief argument)
+   1+2   constante naar rechts
+   3+4   variabele naar links
+   7+8   variabele naar rechts
+   9+10  constante naar links
+   ---
+   5/6   constante links weggehaald, maar rechts onveranderd gelaten
+-}
+
 -- ax+b=[cx]+d  -> ax=[cx]+d+b
 rule2111 :: Rule (Equation Expr)
 rule2111 = describe "2.1.1.1: Links en rechts hetzelfde optellen; links +b en rechts -b" $
@@ -238,6 +248,26 @@ rule2112 = describe "2.1.1.2: Links en rechts hetzelfde optellen; links -b en re
       (ax, b) <- matchPlusCon lhs
       guard (b<0)
       return (ax :==: rhs+fromRational b, termArg (fromRational (abs b)))
+
+-- a=cx+d  -> a+d=cx
+rule2113 :: Rule (Equation Expr)
+rule2113 = describe "2.1.1.3: Je trekt er rechts {?} vanaf, maar links tel je {?} erbij op." $
+   buggyBalanceRuleArgs "addbal9" f
+ where
+   f (lhs :==: rhs) = do
+      (cx, d) <- matchPlusCon rhs
+      guard (d>0)
+      return (lhs+fromRational d :==: cx, termArg (fromRational d))
+
+-- a=cx-d  -> a-d=cx
+rule2114 :: Rule (Equation Expr)
+rule2114 = describe "2.1.1.4: Je telt er rechts {?} bij op, maar links trek je {?} er vanaf." $
+   buggyBalanceRuleArgs "addbal10" f
+ where
+   f (lhs :==: rhs) = do
+      (cx, d) <- matchPlusCon rhs
+      guard (d<0)
+      return (lhs+fromRational d :==: cx, termArg (fromRational (abs d)))
 
 -- ax[+b]=cx+d  ->  (a+c)x[+b]=d
 rule2121 :: Rule (Equation Expr)

@@ -16,8 +16,8 @@ module Domain.Math.Polynomial.IneqExercises
 import Common.Library hiding (isEmpty)
 import Common.Utils.Uniplate (descend)
 import Control.Monad
-import Data.Function
 import Data.Foldable (toList)
+import Data.Function
 import Data.List
 import Data.Maybe (fromMaybe)
 import Domain.Logic.Formula (Logic((:||:), (:&&:)), catLogic)
@@ -92,12 +92,12 @@ ineq :: String
 ineq = "algebra.inequalities"
 
 simIneqContext :: Context (Logic (Relation Expr)) -> Context (Logic (Relation Expr)) -> Bool
-simIneqContext a b = 
-   sameClipboard a b && 
+simIneqContext a b =
+   sameClipboard a b &&
    withoutContext (simLogic (fmap cleanUpExpr . flipGT)) a b
  where
    sameClipboard = (==) `on` evalCM (const (lookupClipboard "ineq"))
-   
+
 --inEquation <- lookupClipboard "ineq" >>= fromExpr
 
 showLogicRelation :: (Eq a, Show a) => Logic (Relation a) -> String

@@ -78,7 +78,7 @@ calcPlainRoot = makeSimpleRule (power, "root") $ \expr -> do
    fmap fromInteger (takeRoot n x)
 
 -- | [root n x, ... ]
--- BHR: not used. Better to turn this into OrList (Relation Expr) 
+-- BHR: not used. Better to turn this into OrList (Relation Expr)
 {-
 calcRoot :: Rule (OrList Expr)
 calcRoot = makeSimpleRule (power, "root") $

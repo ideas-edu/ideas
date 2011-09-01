@@ -196,7 +196,7 @@ oneVar = configCoverUp
 
 simplerSquareRootMulti :: IsTerm a => Rule (Context a)
 simplerSquareRootMulti = describe "simpler square root" $
-   finalRule $ makeSimpleRuleList (quadreq, "simpler-sqrt") $ applyAll $ 
+   finalRule $ makeSimpleRuleList (quadreq, "simpler-sqrt") $ applyAll $
    repeat1 (somewhere (use (makeSimpleRule () simplerSqrt)))
  where
    -- Do not simplify (5+sqrt 53)/2
@@ -519,10 +519,10 @@ distributeTimes :: Rule Expr
 distributeTimes = describe "distribution multiplication" $
    makeSimpleRuleList (lineq, "distr-times") $
       liftM collectLikeTerms . applyAll distributionT
-               
+
 distributeDivisionMulti :: IsTerm a => Rule (Context a)
 distributeDivisionMulti = describe "distribution division" $
-   makeSimpleRule (quadreq, "distr-div") $ apply $ repeat1 $ 
+   makeSimpleRule (quadreq, "distr-div") $ apply $ repeat1 $
       somewhere (use (makeRule () distributeDivisionT))
 
 distributeDivisionT :: Transformation Expr

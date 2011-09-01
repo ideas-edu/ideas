@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.BuggyRules where
 
-import Common.Library hiding (makeRule, makeSimpleRule, makeSimpleRuleList, 
+import Common.Library hiding (makeRule, makeSimpleRule, makeSimpleRuleList,
                               ruleList, root)
 import Control.Monad
 import Domain.Math.CleanUp

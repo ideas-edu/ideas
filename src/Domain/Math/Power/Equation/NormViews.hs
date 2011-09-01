@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Power.Equation.NormViews 
+module Domain.Math.Power.Equation.NormViews
    ( normPowerEqApproxView, normExpEqView, normLogEqView
    , normPowerEqView, normPowerEqView'
    ) where
@@ -55,8 +55,8 @@ normPowerEqView = makeView f (uncurry (:==:))
       -- match power
       let simpl   = simplify normPowerView lhs
           (c, ax) = fromMaybe (1, simpl) (match timesView simpl)
-          (a, x)  = fromMaybe (simpl, 1) $ 
-             match powerView ax 
+          (a, x)  = fromMaybe (simpl, 1) $
+             match powerView ax
            `mplus` do
              (h, k) <- match rootView ax
              return (h, 1 ./. k)
@@ -73,7 +73,7 @@ normPowerEqView' isVar = makeView f id
              )
       . T.mapM takeRoot'   -- power to left and take root
 
-    root2power (Sym s [x, y]) 
+    root2power (Sym s [x, y])
        | isRootSymbol s = x .^. (1 ./. y)
     root2power expr = expr
 
@@ -137,12 +137,12 @@ normLogEqView = makeView (liftM g . T.mapM f) id
         Nothing     -> expr
     g = simplify orSetView . fmap (fmap cleaner) . simplify (normPowerEqView' hasSomeVar)
       . simplify higherDegreeEquationsView
-    
+
     -- Quick fix: 4^(3/2) should be simplified to sqrt (4^3), which is 8
     cleaner = cleanUpExpr . transform h . cleanUpExpr
-    h expr@(Sym s [a, b]) | isPowerSymbol s = 
-       case (match rationalView a, match rationalView b) of 
-          (Just x, Just y) | denominator y /= 1 -> 
+    h expr@(Sym s [a, b]) | isPowerSymbol s =
+       case (match rationalView a, match rationalView b) of
+          (Just x, Just y) | denominator y /= 1 ->
              root (fromRational (x Prelude.^ numerator y)) (fromInteger $ denominator y)
           _ -> expr
     h expr = expr
@@ -183,8 +183,8 @@ simplerPower expr =
        | isRootSymbol s  -> x ^ (1/y)
        | isPowerSymbol s -> f x y
      _ -> expr
- where 
-   f x y 
+ where
+   f x y
       | y == 0 = 1
       | y == 1 = x
       | x == 0 = 0

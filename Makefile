@@ -3,14 +3,13 @@ all: binaries documentation
 
 SRCDIR = src
 
-VERSION = 0.7.9
+VERSION = 1.0
 
 include Makefile.incl
 
 binaries: ideas ideasWX
 
 ideas: $(BINDIR)/ideas.cgi
-omconverter: $(BINDIR)/omconverter$(EXE)
 ideasWX: $(BINDIR)/ideasWX$(EXE)
 prof-ideas: $(BINDIR)/prof-ideas$(EXE)
 prof: prof-ideas.prof
@@ -28,16 +27,6 @@ ifeq ($(WX), yes)
 	$(STRIP) $@
 ifeq ($(WINDOWS), no)
 	$(CD) $(BINDIR); $(MAC) ideasWX
-endif
-endif
-
-$(BINDIR)/omconverter$(EXE): $(HS-SOURCES) tools/OMConverter.hs revision
-ifeq ($(WX), yes)
-	$(MKDIR) -p $(BINDIR) $(OUTDIR)
-	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) -itools/ExerciseAssistant -o $@ tools/OMConverter.hs
-	$(STRIP) $@
-ifeq ($(WINDOWS), no)
-	$(CD) $(BINDIR); $(MAC) omconverter
 endif
 endif
 
@@ -77,7 +66,6 @@ documentation: docs $(BINDIR)/ideas.cgi
 pages: docs $(BINDIR)/ideas.cgi
 	make -C $(DOCDIR) pages || exit 1
 
-unit-tests: $(TESTDIR)/test.log
 test: $(TESTDIR)/test.log
 
 $(TESTDIR)/test.log: $(HS-SOURCES) $(BINDIR)/ideas.cgi

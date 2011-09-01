@@ -11,10 +11,13 @@
 -- Datatype for representing XML documents
 --
 -----------------------------------------------------------------------------
-module Text.XML.Document where
-
-import Data.Char
-import Data.Maybe
+module Text.XML.Document
+   ( Name, Attributes, Attribute(..), Reference(..), Parameter(..)
+   , XMLDoc(..), XML(..), Element(..), Content, DTD(..), DocTypeDecl(..)
+   , ContentSpec(..), CP(..), AttType(..), DefaultDecl(..), AttDef
+   , EntityDef, AttValue, EntityValue, ExternalID(..), PublicID
+   , Conditional(..), TextDecl, External
+   ) where
 
 type Name = String
 
@@ -186,7 +189,6 @@ instance Show Conditional where
       case conditional of
          Include xs -> "<![INCLUDE[" ++ concatMap show xs ++ "]]>"
          Ignore _ -> "" -- ToDO undefined -- [String]
--}
 
 showXMLDecl :: XMLDoc -> String
 showXMLDecl doc
@@ -196,7 +198,7 @@ showXMLDecl doc
    s1 = fmap (\s -> "version=" ++ doubleQuote s) (versionInfo doc)
    s2 = fmap (\s -> "encoding=" ++ doubleQuote s) (encoding doc)
    s3 = fmap (\b -> "standalone=" ++ doubleQuote (if b then "yes" else "no")) (standalone doc)
-
+-}
 showOpenTag :: Bool -> Name -> Attributes -> String
 showOpenTag close n as = "<" ++ unwords (n:map show as) ++
    (if close then "/>" else ">")
@@ -209,13 +211,13 @@ showAttValue = doubleQuote . concatMap (either f show)
  where
    f '"' = []
    f c   = [c]
-
+{-
 showEntityValue :: EntityValue -> String
 showEntityValue = doubleQuote . concatMap (either f (either show show))
  where
    f '"' = []
    f c   = [c]
-{-
+
 showAttDef :: AttDef -> String
 showAttDef (s, tp, dd) = unwords [s, show tp, show dd]
 
@@ -227,20 +229,6 @@ showEntityDef entityDef =
 -}
 doubleQuote :: String -> String
 doubleQuote s = "\"" ++ s ++ "\""
-
+{-
 parenthesize :: String -> String
-parenthesize s = "(" ++ s ++ ")"
-
-trim :: String -> String
-trim = dropWhile isSpace . reverse . dropWhile isSpace . reverse
-
----------------------------------------------------
-
-type M = [Either String Element]
-
-refToString :: Reference -> String
-refToString (CharRef c)   = [chr c]
-refToString (EntityRef _) = undefined
-
-attribute_ :: AttValue -> String
-attribute_ = concatMap (either return refToString)
+parenthesize s = "(" ++ s ++ ")" -}

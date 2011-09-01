@@ -45,7 +45,7 @@ exerciseOverviewPage showAll list = do
    forM_ (zip [1::Int ..] (grouping list)) $ \(i, (dom, xs)) -> do
       h2 (show i ++ ". " ++ dom)
       table False (map makeRow xs)
-      
+
    unless showAll $ para $ do
       text "Show"
       space

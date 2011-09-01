@@ -52,7 +52,7 @@ derivativePolyExercise = describe
    , testGenerator = Just $ liftM (diff . lambda "x") $
                         sized quadraticGen
    }
- 
+
 derivativeProductExercise :: Exercise Expr
 derivativeProductExercise = describe
    "Use the product-rule to find the derivative of a polynomial. Keep \
@@ -152,15 +152,15 @@ onlyNatPower e = all isNat [ a | Sym s [_, a] <- universe e, isPowerSymbol s ]
    isNat _       = False
 
 evalDiff :: Expr -> Expr
-evalDiff da = 
-   case da of 
+evalDiff da =
+   case da of
       Sym d [Sym l [Var x, expr]] | isDiffSymbol d && isLambdaSymbol l ->
          cleanUpExpr (rec x expr)
       _ -> descend evalDiff da
  where
    rec x expr =
       case expr of
-         _ | withoutVar x expr -> 0 
+         _ | withoutVar x expr -> 0
          Var y | x==y -> 1
          a :+: b  -> rec x a + rec x b
          a :-: b  -> rec x a - rec x b
@@ -168,12 +168,12 @@ evalDiff da =
          a :*: b  -> rec x a*b + a*rec x b
          a :/: b  -> (b*rec x a - a*rec x b) / b^2
          Sqrt a   -> rec x (a^(1/2))
-         Sym s [a, b] 
-            | isPowerSymbol s -> 
+         Sym s [a, b]
+            | isPowerSymbol s ->
                  case match rationalView b of
                     Just n  -> fromRational n * a^fromRational (n-1) * rec x a
                     Nothing -> diffExpr
-            | isRootSymbol s -> 
+            | isRootSymbol s ->
                  rec x (a^(1/b))
          _ -> diffExpr
     where

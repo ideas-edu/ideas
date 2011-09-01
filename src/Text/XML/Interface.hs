@@ -11,7 +11,7 @@
 -- Collection of common operation on XML documents
 --
 -----------------------------------------------------------------------------
-module Text.XML.Interface 
+module Text.XML.Interface
    ( Element(..), Content, Attribute(..), Attributes
    , normalize, parseXML
    , children, findAttribute, findChild, getData

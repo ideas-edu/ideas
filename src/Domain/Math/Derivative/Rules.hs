@@ -54,7 +54,7 @@ ruleSine = rule (diffId, "sine") $
 
 ruleLog :: Rule Expr
 ruleLog = rule (diffId, "logarithmic") $
-   \x -> diff (lambda x (ln (Var x)))  :~>  1/(Var x)
+   \x -> diff (lambda x (ln (Var x)))  :~>  1 / Var x
 
 ruleDerivPlus :: Rule Expr
 ruleDerivPlus = rule (diffId, "plus") $
@@ -189,7 +189,7 @@ myPowerView = makeView f g
                   return (1, x, r)
    g (a, x, r) = a .*. (Var x .^. fromRational r)
 
-   powView = (matcher powerView <+> matcher noPowerView) 
+   powView = (matcher powerView <+> matcher noPowerView)
              >>> matcher (variableView *** rationalView)
    noPowerView = makeView (\expr -> Just (expr, 1)) (build powerView)
 

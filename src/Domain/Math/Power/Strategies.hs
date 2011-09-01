@@ -31,22 +31,22 @@ simplifyPowerStrategy :: LabeledStrategy (Context Expr)
 simplifyPowerStrategy = cleanUpStrategyRules "Simplify" powerRules
 
 nonNegBrokenExpStrategy :: LabeledStrategy (Context Expr)
-nonNegBrokenExpStrategy = cleanUpStrategy (change cleanup . applyTop cleanup) strategy
+nonNegBrokenExpStrategy = cleanUpStrategy (change cleanup . applyTop cleanup) $
+   label "Write with non-negative exponent" $ exhaustiveStrategy rs
   where
     rs = [ addExponents, subExponents, mulExponents, reciprocalInv
          , distributePower, distributePowerDiv, power2root, zeroPower
          , calcPowerPlus, calcPowerMinus
          ]
-    strategy = label "Write with non-negative exponent" $ exhaustiveStrategy rs
     cleanup = applyD divisionNumerator
             . applyD myFractionTimes
             . mergeConstants
             . simplifyWith simplifyConfig {withMergeAlike = False}
 
 calcPowerStrategy :: LabeledStrategy (Context Expr)
-calcPowerStrategy = cleanUpStrategy cleanup strategy
+calcPowerStrategy = cleanUpStrategy cleanup $
+   label "Calculate power" $ exhaustiveStrategy rules
   where
-    strategy = label "Calculate power" $ exhaustiveStrategy rules
     rules = calcPower : divisionDenominator : reciprocalInv : divBase : rationalRules
     cleanup = applyTop (applyD myFractionTimes)
             . applyD (exhaustiveStrategy $ myFractionTimes : naturalRules)

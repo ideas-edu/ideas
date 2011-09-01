@@ -12,8 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.GeneralizedRules
-   ( generalRules, inverseRules
-   , generalRuleDeMorganOr, generalRuleDeMorganAnd
+   ( generalRuleDeMorganOr, generalRuleDeMorganAnd
    , generalRuleAndOverOr, generalRuleOrOverAnd
    , inverseDeMorganOr, inverseDeMorganAnd
    , inverseAndOverOr, inverseOrOverAnd
@@ -26,18 +25,6 @@ import Common.Transformation (Rule)
 import Control.Monad
 import Domain.Logic.Formula
 import qualified Common.Transformation as Rule
-
-generalRules :: [Rule SLogic]
-generalRules =
-   [ generalRuleDeMorganOr, generalRuleDeMorganAnd
-   , generalRuleAndOverOr, generalRuleOrOverAnd
-   ]
-
-inverseRules :: [Rule SLogic]
-inverseRules =
-   [ inverseDeMorganOr, inverseDeMorganAnd
-   , inverseAndOverOr, inverseOrOverAnd
-   ]
 
 makeSimpleRule :: String -> (a -> Maybe a) -> Rule a
 makeSimpleRule s = Rule.makeSimpleRule ("logic.propositional." ++ s)

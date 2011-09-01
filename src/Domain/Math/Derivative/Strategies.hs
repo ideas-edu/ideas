@@ -44,7 +44,7 @@ derivativePolyStrategy = cleanUpStrategyAfter (applyTop cleanUpExpr) $
       <*> derivativePolyStepStrategy
 
 rulesPolyNF :: [Rule (Context Expr)]
-rulesPolyNF = 
+rulesPolyNF =
    distributeDivisionMulti :
    map liftToContext
    [ distributionSquare, distributeTimes, merge

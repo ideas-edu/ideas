@@ -1,5 +1,5 @@
 name:                   ideas
-version:                0.7.9
+version:                1.0
 synopsis:               Feedback services for intelligent tutoring systems
 homepage:               http://ideas.cs.uu.nl/www/
 description:
@@ -18,7 +18,7 @@ stability:              provisional
 extra-source-files:     CREDITS.txt
 build-type:             Simple
 cabal-version:          >= 1.8.0.2
-tested-with:            GHC == 6.10.1, GHC == 6.12.1
+tested-with:            GHC == 6.10.1, GHC == 7.0.2
 
 source-repository head
   type:     svn
@@ -104,7 +104,6 @@ Executable              ideas
     Domain.Logic.GeneralizedRules
     Domain.Logic.Generator
     Domain.Logic.Parser
-    Domain.Logic.Proofs
     Domain.Logic.Rules
     Domain.Logic.Strategies
     Domain.Logic.Views

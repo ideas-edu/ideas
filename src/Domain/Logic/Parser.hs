@@ -40,7 +40,7 @@ parseLogicUnicodePars input =
    $ parseBalanced (parserSLogic True True) input
 
 parseBalanced :: Parser a -> String -> Either String a
-parseBalanced p input = 
+parseBalanced p input =
    maybe (parseSimple p input) (Left . show) (balanced [('(', ')')] input)
 
 -- generalized parser

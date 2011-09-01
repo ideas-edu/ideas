@@ -37,12 +37,12 @@ import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.OldViews (powerFactorViewWith)
 import Domain.Math.SquareRoot.Views
+import Prelude hiding ((^))
 import qualified Data.Foldable as F
 import qualified Data.Set as S
 import qualified Data.Traversable as T
 import qualified Domain.Logic as Logic
 import qualified Domain.Logic.Views as Logic
-import Prelude hiding ((^))
 
 rationalEquationExercise :: Exercise (OrList (Equation Expr))
 rationalEquationExercise = makeExercise

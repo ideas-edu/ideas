@@ -30,9 +30,6 @@ import qualified Data.IntMap as IM
 data StringRef = S !Int
    deriving (Eq, Ord)
 
-instance Show StringRef where
-   show s@(S i) = '#' : show i ++ toString s
-
 ----------------------------------------------------------------
 -- Hash table
 

@@ -180,7 +180,7 @@ level = zip . repeat
 ruleset :: Exercise a -> [Rule (Context a)]
 ruleset ex = nub (sortBy compareId list)
  where
-   list = extraRules ex ++ rulesInStrategy (strategy ex) 
+   list = extraRules ex ++ rulesInStrategy (strategy ex)
 
 simpleGenerator :: Gen a -> Maybe (StdGen -> Difficulty -> a)
 simpleGenerator = useGenerator (const True) . const

@@ -316,7 +316,7 @@ minorRule r = r {isMinorRule = True}
 buggyRule :: Rule a -> Rule a
 buggyRule r = r {isBuggyRule = True}
 
--- | Mark the rule as final (by default, false). Final rules are used as a 
+-- | Mark the rule as final (by default, false). Final rules are used as a
 -- final step in the derivation, to get the term in the expected form
 finalRule :: Rule a -> Rule a
 finalRule r = r {isFinalRule = True}

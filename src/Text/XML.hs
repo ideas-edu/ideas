@@ -20,8 +20,8 @@ module Text.XML
    ) where
 
 import Control.Monad.State
+import Data.Char
 import Data.Monoid
-import Text.XML.Document (trim)
 import Text.XML.Interface hiding (parseXML)
 import qualified Text.XML.Interface as I
 
@@ -41,7 +41,7 @@ class InXML a where
    -- default definitions
    listToXML = Element "list" [] . map (Right . toXML)
    listFromXML xml
-      | name xml == "list" && null (attributes xml) = 
+      | name xml == "list" && null (attributes xml) =
            mapM fromXML (children xml)
       | otherwise = fail "expecting a list tag"
 
@@ -148,3 +148,6 @@ escape = concatMap f
    f '>' = "&gt;"
    f '&' = "&amp;"
    f c   = [c]
+
+trim :: String -> String
+trim = dropWhile isSpace . reverse . dropWhile isSpace . reverse

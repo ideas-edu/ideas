@@ -34,7 +34,7 @@ import Domain.Math.Power.Utils
 -- Power views with constant factor -----------------------------------------
 
 consPowerView :: View Expr (Expr, (Expr, Expr))
-consPowerView = makeView f g 
+consPowerView = makeView f g
  where
    f (Negate a) = fmap (first Negate) (f a)
    f (a :*: b)  = fmap ((,) a) (match powerView b)
@@ -42,19 +42,19 @@ consPowerView = makeView f g
    g = build (timesView >>> second powerView)
 
 unitPowerViewWith :: View Expr a -> View Expr (Expr, (a, Expr))
-unitPowerViewWith v = makeView f g 
+unitPowerViewWith v = makeView f g
  where
    mv = powerViewWith v identity
    f (Negate a) = fmap (first Negate) (f a)
    f (a :*: b)  = do
          x <- match mv b
          return (a, x)
-       `mplus` do 
+       `mplus` do
          x <- match v b
          return (a, (x, 1))
    f expr = f (1 :*: expr)
    g = build (timesView >>> second mv)
-           
+
 unitPowerViewVar :: View Expr (Expr, (String, Expr))
 unitPowerViewVar = unitPowerViewWith variableView
 

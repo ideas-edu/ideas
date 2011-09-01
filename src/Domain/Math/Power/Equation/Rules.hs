@@ -116,8 +116,8 @@ coverUpRoot = coverUpRootWith configCoverUp
 -- | Negations are pushed inside
 myCoverUpTimesWith :: ConfigCoverUp -> Rule (Equation Expr)
 myCoverUpTimesWith = doAfter f . coverUpTimesWith
- where 
-   f (lhs :==: rhs) = 
+ where
+   f (lhs :==: rhs) =
       lhs :==: applyD distributeDivisionT (applyD distributeTimes rhs)
 
 condXisRight :: Rule (Equation Expr)

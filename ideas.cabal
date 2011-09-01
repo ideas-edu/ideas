@@ -237,7 +237,7 @@ Executable              ideas
                         mtl,
                         cgi,
                         containers,
-                        QuickCheck >= 2.1.0.3,
+                        QuickCheck >= 2.4.1,
                         random,
                         filepath,
                         parsec,

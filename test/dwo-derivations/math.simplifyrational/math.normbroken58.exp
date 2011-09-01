@@ -1,0 +1,29 @@
+<reply result="ok" version="0.7.9 (0)">
+  <list>
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
+      <expr>
+        (-p^2+5*p)/(p-5)^2
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.quadratic.common-factor">
+      <expr>
+        -p*(p-5)/(p-5)^2
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.rational.cancel-div">
+      <expr>
+        -p/(p-5)
+      </expr>
+      <context>
+        <item name="clipboard" value="[condition==(p/=5)]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

@@ -1,4 +1,4 @@
-﻿module Service.MathBridgeExerciseInfo where
+﻿module ExerciseInfo where
 
 -- Derivative formulation corrected: EN, NL, FI
 -- Title translated: EN, NL, FI

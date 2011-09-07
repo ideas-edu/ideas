@@ -1,4 +1,4 @@
-﻿module Service.Omdoc where
+﻿module Main where
 
 -- spul integreren met ideas
 -- document buggy rules for AM
@@ -9,7 +9,7 @@
 -- feedbacktexts
 
 import Common.Library
-import Service.MathBridgeExerciseInfo
+import ExerciseInfo
 import Service.OpenMathSupport
 import Text.OpenMath.Object
 import Text.XML.Interface

@@ -1,12 +1,13 @@
 ﻿module Main(main) where
 
--- spul integreren met ideas
 -- document buggy rules for AM
--- include problemstatement translations
 -- second ``for'' ref?
 -- if HU translations are provided, switch them on
 -- ref and xrefelt are now the same, I think
 -- feedbacktexts
+-- add two new exercises (notify partners)
+-- resolve translation with defaults
+-- overhaul XML generation
 
 import ExerciseInfo
 import Languages
@@ -34,8 +35,10 @@ import Text.XML
 import qualified Main.Revision as MR
 import Main.IDEAS
 
-import Data.Map((!))
+-- import Data.Map((!))
 import Data.Maybe
+import Data.Map((!),Map,empty,insert)
+
 
 import System.Environment
 import Control.Monad
@@ -262,6 +265,68 @@ omdocexercise
          ]
        ]
       )
+
+mBExerciseInfo :: Map Id MBExerciseInfo
+mBExerciseInfo =
+  let coverUpExerciseId             = exerciseId coverUpExercise
+      derivativeExerciseId          = exerciseId derivativeExercise
+      gramSchmidtExerciseId         = exerciseId gramSchmidtExercise
+      linearSystemExerciseId        = exerciseId linearSystemExercise
+      gaussianElimExerciseId        = exerciseId gaussianElimExercise
+      systemWithMatrixExerciseId    = exerciseId systemWithMatrixExercise
+      powerOfExerciseId             = exerciseId powerOfExercise
+      nonNegBrokenExpExerciseId     = exerciseId nonNegBrokenExpExercise
+      calcPowerExerciseId           = exerciseId calcPowerExercise
+      powerEqExerciseId             = exerciseId powerEqExercise
+      expEqExerciseId               = exerciseId expEqExercise
+      logEqExerciseId               = exerciseId logEqExercise
+      derivativePolyExerciseId      = exerciseId derivativePolyExercise
+      derivativeProductExerciseId   = exerciseId derivativeProductExercise
+      derivativeQuotientExerciseId  = exerciseId derivativeQuotientExercise
+      findFactorsExerciseId         = exerciseId findFactorsExercise
+      fractionExerciseId            = exerciseId fractionExercise
+      higherDegreeExerciseId        = exerciseId higherDegreeExercise
+      ineqHigherDegreeExerciseId    = exerciseId ineqHigherDegreeExercise
+      ineqLinearExerciseId          = exerciseId ineqLinearExercise
+      ineqQuadraticExerciseId       = exerciseId ineqQuadraticExercise
+      linearExerciseId              = exerciseId linearExercise
+      linearMixedExerciseId         = exerciseId linearMixedExercise
+      quadraticExerciseId           = exerciseId quadraticExercise
+      quadraticNoABCExerciseId      = exerciseId quadraticNoABCExercise
+      quadraticWithApproximationId  = exerciseId quadraticWithApproximation
+      rationalEquationExerciseId    = exerciseId rationalEquationExercise
+      simplifyPowerExerciseId       = exerciseId simplifyPowerExercise
+      simplifyRationalExerciseId    = exerciseId simplifyRationalExercise
+  in  insert coverUpExerciseId            (coverUpExerciseInfo                    coverUpExerciseId)
+    $ insert derivativeExerciseId         (derivativeExerciseInfo                 derivativeExerciseId)
+    $ insert gramSchmidtExerciseId        (gramSchmidtExerciseInfo                gramSchmidtExerciseId)
+    $ insert linearSystemExerciseId       (linearSystemExerciseInfo               linearSystemExerciseId)
+    $ insert gaussianElimExerciseId       (gaussianElimExerciseInfo               gaussianElimExerciseId)
+    $ insert systemWithMatrixExerciseId   (systemWithMatrixExerciseInfo           systemWithMatrixExerciseId)
+    $ insert powerOfExerciseId            (powerOfExerciseInfo                    powerOfExerciseId)
+    $ insert nonNegBrokenExpExerciseId    (nonNegBrokenExpExerciseInfo            nonNegBrokenExpExerciseId)
+    $ insert calcPowerExerciseId          (calcPowerExerciseInfo                  calcPowerExerciseId)
+    $ insert powerEqExerciseId            (powerEqExerciseInfo                    powerEqExerciseId)
+    $ insert expEqExerciseId              (expEqExerciseInfo                      expEqExerciseId)
+    $ insert logEqExerciseId              (logEqExerciseInfo                      logEqExerciseId)
+    $ insert derivativePolyExerciseId     (derivativePolyExerciseInfo             derivativePolyExerciseId)
+    $ insert derivativeProductExerciseId  (derivativeProductExerciseInfo          derivativeProductExerciseId)
+    $ insert derivativeQuotientExerciseId (derivativeQuotientExerciseInfo         derivativeQuotientExerciseId)
+    $ insert findFactorsExerciseId        (findFactorsExerciseInfo                findFactorsExerciseId)
+    $ insert fractionExerciseId           (fractionExerciseInfo                   fractionExerciseId)
+    $ insert higherDegreeExerciseId       (higherDegreeExerciseInfo               higherDegreeExerciseId)
+    $ insert ineqHigherDegreeExerciseId   (ineqHigherDegreeExerciseInfo           ineqHigherDegreeExerciseId)
+    $ insert ineqLinearExerciseId         (ineqLinearExerciseInfo                 ineqLinearExerciseId)
+    $ insert ineqQuadraticExerciseId      (ineqQuadraticExerciseInfo              ineqQuadraticExerciseId)
+    $ insert linearExerciseId             (linearExerciseInfo                     linearExerciseId)
+    $ insert linearMixedExerciseId        (linearMixedExerciseInfo                linearMixedExerciseId)
+    $ insert quadraticExerciseId          (quadraticExerciseInfo                  quadraticExerciseId)
+    $ insert quadraticNoABCExerciseId     (quadraticNoABCExerciseInfo             quadraticNoABCExerciseId)
+    $ insert quadraticWithApproximationId (quadraticWithApproximationExerciseInfo quadraticWithApproximationId)
+    $ insert rationalEquationExerciseId   (rationalEquationExerciseInfo           rationalEquationExerciseId)
+    $ insert simplifyPowerExerciseId      (simplifyPowerExerciseInfo              simplifyPowerExerciseId)
+    $ insert simplifyRationalExerciseId   (simplifyRationalExerciseInfo           simplifyRationalExerciseId)
+      empty
 
 --------------------------------------------------------------------------------
 {- XML elements for Omdoc.

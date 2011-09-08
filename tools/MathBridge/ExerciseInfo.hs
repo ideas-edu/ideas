@@ -1,23 +1,8 @@
 ﻿module ExerciseInfo where
 
--- Derivative formulation corrected: EN, NL, FI
--- Title translated: EN, NL, FI
-
 import Languages
 
-import Domain.LinearAlgebra
-import Domain.Math.Derivative.Exercises
-import Domain.Math.Equation.CoverUpExercise
-import Domain.Math.Numeric.Exercises
-import Domain.Math.Polynomial.Exercises
-import Domain.Math.Polynomial.IneqExercises
-import Domain.Math.Polynomial.RationalExercises
-import Domain.Math.Power.Equation.Exercises
-import Domain.Math.Power.Exercises
-
-import Common.Library
-
-import Data.Map(Map,empty,insert)
+import Common.Id
 
 --------------------------------------------------------------------------------
 {- Info about exercises for ActiveMath
@@ -34,41 +19,9 @@ data MBExerciseInfo = MBExerciseInfo
   , difficulty        :: String
   }
 
-mBExerciseInfo :: Map Id MBExerciseInfo
-mBExerciseInfo =
-    insert (exerciseId coverUpExercise)            coverUpExerciseInfo
-  $ insert (exerciseId derivativeExercise)         derivativeExerciseInfo
-  $ insert (exerciseId gramSchmidtExercise)        gramSchmidtExerciseInfo
-  $ insert (exerciseId linearSystemExercise)       linearSystemExerciseInfo
-  $ insert (exerciseId gaussianElimExercise)       gaussianElimExerciseInfo
-  $ insert (exerciseId systemWithMatrixExercise)   systemWithMatrixExerciseInfo
-  $ insert (exerciseId powerOfExercise)            powerOfExerciseInfo
-  $ insert (exerciseId nonNegBrokenExpExercise)    nonNegBrokenExpExerciseInfo
-  $ insert (exerciseId calcPowerExercise)          calcPowerExerciseInfo
-  $ insert (exerciseId powerEqExercise)            powerEqExerciseInfo
-  $ insert (exerciseId expEqExercise)              expEqExerciseInfo
-  $ insert (exerciseId logEqExercise)              logEqExerciseInfo
-  $ insert (exerciseId derivativePolyExercise)     derivativePolyExerciseInfo
-  $ insert (exerciseId derivativeProductExercise)  derivativeProductExerciseInfo
-  $ insert (exerciseId derivativeQuotientExercise) derivativeQuotientExerciseInfo
-  $ insert (exerciseId findFactorsExercise)        findFactorsExerciseInfo
-  $ insert (exerciseId fractionExercise)           fractionExerciseInfo
-  $ insert (exerciseId higherDegreeExercise)       higherDegreeExerciseInfo
-  $ insert (exerciseId ineqHigherDegreeExercise)   ineqHigherDegreeExerciseInfo
-  $ insert (exerciseId ineqLinearExercise)         ineqLinearExerciseInfo
-  $ insert (exerciseId ineqQuadraticExercise)      ineqQuadraticExerciseInfo
-  $ insert (exerciseId linearExercise)             linearExerciseInfo
-  $ insert (exerciseId linearMixedExercise)        linearMixedExerciseInfo
-  $ insert (exerciseId quadraticExercise)          quadraticExerciseInfo
-  $ insert (exerciseId quadraticNoABCExercise)     quadraticNoABCExerciseInfo
-  $ insert (exerciseId quadraticWithApproximation) quadraticWithApproximationExerciseInfo
-  $ insert (exerciseId rationalEquationExercise)   rationalEquationExerciseInfo
-  $ insert (exerciseId simplifyPowerExercise)      simplifyPowerExerciseInfo
-  $ insert (exerciseId simplifyRationalExercise)   simplifyRationalExerciseInfo
-    empty
 
-calcPowerExerciseInfo :: MBExerciseInfo
-calcPowerExerciseInfo = MBExerciseInfo
+calcPowerExerciseInfo :: Id -> MBExerciseInfo
+calcPowerExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Calculating powers"
                           ES -> "Calcular la potencia "
@@ -88,12 +41,12 @@ calcPowerExerciseInfo = MBExerciseInfo
                           FI -> "Laske arvo potenssilausekkeelle "
                           HU -> "Számítsa ki a kitevőt"
   , problemStatement  = "Calculate the following power: "
-  , context           = showId $ exerciseId calcPowerExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-coverUpExerciseInfo :: MBExerciseInfo
-coverUpExerciseInfo = MBExerciseInfo
+coverUpExerciseInfo :: Id -> MBExerciseInfo
+coverUpExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving equations"
                           ES -> "Resolver la ecuación "
@@ -113,12 +66,12 @@ coverUpExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise yhtälö "
                           HU -> "Oldja meg az egyenletet "
   , problemStatement  = "Solve the following equation: "
-  , context           = showId $ exerciseId coverUpExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-derivativeExerciseInfo :: MBExerciseInfo
-derivativeExerciseInfo = MBExerciseInfo
+derivativeExerciseInfo :: Id -> MBExerciseInfo
+derivativeExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Derivatives"
                           ES -> "Calcular la derivada de la función "
@@ -138,12 +91,12 @@ derivativeExerciseInfo = MBExerciseInfo
                           FI -> "Laske seuraava derivaatta "
                           HU -> "Deriválja a függvényt"
   , problemStatement  = "Calculate the derivative of the following function: "
-  , context           = showId $ exerciseId derivativeExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-derivativePolyExerciseInfo :: MBExerciseInfo
-derivativePolyExerciseInfo = MBExerciseInfo
+derivativePolyExerciseInfo :: Id -> MBExerciseInfo
+derivativePolyExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Differentiate polynomials"
                           ES -> "Calcular la derivada del polinomio "
@@ -163,12 +116,12 @@ derivativePolyExerciseInfo = MBExerciseInfo
                           FI -> "Laske seuraava derivaatta "
                           HU -> "Deriválja a polinomot "
   , problemStatement  = "Calculate the derivative of the following polynomial: "
-  , context           = showId $ exerciseId derivativePolyExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-derivativeProductExerciseInfo :: MBExerciseInfo
-derivativeProductExerciseInfo = MBExerciseInfo
+derivativeProductExerciseInfo :: Id -> MBExerciseInfo
+derivativeProductExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Differentiate products"
                           ES -> "Calcular la derivada del producto "
@@ -188,12 +141,12 @@ derivativeProductExerciseInfo = MBExerciseInfo
                           FI -> "Laske seuraava derivaatta "
                           HU -> "Deriválja a szorzatot"
   , problemStatement  = "Calculate the derivative of the following product: "
-  , context           = showId $ exerciseId derivativeProductExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-derivativeQuotientExerciseInfo :: MBExerciseInfo
-derivativeQuotientExerciseInfo = MBExerciseInfo
+derivativeQuotientExerciseInfo :: Id -> MBExerciseInfo
+derivativeQuotientExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Differentiate quotients"
                           ES -> "Calcular la derivada del cociente "
@@ -213,12 +166,12 @@ derivativeQuotientExerciseInfo = MBExerciseInfo
                           FI -> "Laske derivaatta osamäärälle "
                           HU -> "Deriválja a törtet"
   , problemStatement  = "Calculate the derivative of the following quotient: "
-  , context           = showId $ exerciseId derivativeQuotientExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-expEqExerciseInfo :: MBExerciseInfo
-expEqExerciseInfo = MBExerciseInfo
+expEqExerciseInfo :: Id -> MBExerciseInfo
+expEqExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving exponential equations"
                           ES -> "Resolver la ecuación exponencial "
@@ -238,12 +191,12 @@ expEqExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise eksponenttiyhtälö "
                           HU -> "Oldja meg az exponenciális egyenetet "
   , problemStatement  = "Solve the following exponential equation: "
-  , context           = showId $ exerciseId expEqExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-findFactorsExerciseInfo :: MBExerciseInfo
-findFactorsExerciseInfo = MBExerciseInfo
+findFactorsExerciseInfo :: Id -> MBExerciseInfo
+findFactorsExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Finding factors"
                           ES -> "Encontrar los factores "
@@ -263,12 +216,12 @@ findFactorsExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise kertoimet "
                           HU -> "Keresse meg gyöktényezőket"
   , problemStatement  = "Find the factors: "
-  , context           = showId $ exerciseId findFactorsExercise
+  , context           = showId $ identifier 
   , difficulty        = "easy"
   }
 
-fractionExerciseInfo :: MBExerciseInfo
-fractionExerciseInfo = MBExerciseInfo
+fractionExerciseInfo :: Id -> MBExerciseInfo
+fractionExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Simplifying fractions"
                           ES -> ""
@@ -288,12 +241,12 @@ fractionExerciseInfo = MBExerciseInfo
                           FI -> ""
                           HU -> ""
   , problemStatement  = "Simplify the following fraction: "
-  , context           = showId $ exerciseId fractionExercise
+  , context           = showId $ identifier 
   , difficulty        = ""
   }
 
-gaussianElimExerciseInfo :: MBExerciseInfo
-gaussianElimExerciseInfo = MBExerciseInfo
+gaussianElimExerciseInfo :: Id -> MBExerciseInfo
+gaussianElimExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Gaussian elimination"
                           ES -> ""
@@ -313,12 +266,12 @@ gaussianElimExerciseInfo = MBExerciseInfo
                           FI -> ""
                           HU -> ""
   , problemStatement  = "Perform Gaussian elimination: "
-  , context           = showId $ exerciseId gaussianElimExercise
+  , context           = showId $ identifier 
   , difficulty        = ""
   }
 
-gramSchmidtExerciseInfo :: MBExerciseInfo
-gramSchmidtExerciseInfo = MBExerciseInfo
+gramSchmidtExerciseInfo :: Id -> MBExerciseInfo
+gramSchmidtExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Gram Schmidt"
                           ES -> ""
@@ -338,12 +291,12 @@ gramSchmidtExerciseInfo = MBExerciseInfo
                           FI -> ""
                           HU -> ""
   , problemStatement  = "Solve using Gram Schmidt: "
-  , context           = showId $ exerciseId gramSchmidtExercise
+  , context           = showId $ identifier 
   , difficulty        = ""
   }
 
-higherDegreeExerciseInfo :: MBExerciseInfo
-higherDegreeExerciseInfo = MBExerciseInfo
+higherDegreeExerciseInfo :: Id -> MBExerciseInfo
+higherDegreeExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving higher degree polynomial equations"
                           ES -> "Resolver la ecuación de orden superior "
@@ -363,12 +316,12 @@ higherDegreeExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise korkeamman asteen polynomiyhätlö "
                           HU -> "Oldja meg a magasabb fokú egyenletet "
   , problemStatement  = "Solve the following higher degree polynomial equation: "
-  , context           = showId $ exerciseId higherDegreeExercise
+  , context           = showId $ identifier 
   , difficulty        = "easy"
   }
 
-ineqHigherDegreeExerciseInfo :: MBExerciseInfo
-ineqHigherDegreeExerciseInfo = MBExerciseInfo
+ineqHigherDegreeExerciseInfo :: Id -> MBExerciseInfo
+ineqHigherDegreeExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving inequations of higher degree"
                           ES -> "Resolver la inecuación "
@@ -388,12 +341,12 @@ ineqHigherDegreeExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise epäyhtälö "
                           HU -> ""
   , problemStatement  = "Solve the following inequation: "
-  , context           = showId $ exerciseId ineqHigherDegreeExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-ineqLinearExerciseInfo :: MBExerciseInfo
-ineqLinearExerciseInfo = MBExerciseInfo
+ineqLinearExerciseInfo :: Id -> MBExerciseInfo
+ineqLinearExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving linear inequations"
                           ES -> "Resolver la inecuación linea "
@@ -413,12 +366,12 @@ ineqLinearExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise lineaarinen epäyhtälö "
                           HU -> "Oldja meg az elsőfokú egyenlőtlenséget "
   , problemStatement  = "Solve the following linear inequation: "
-  , context           = showId $ exerciseId ineqLinearExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-ineqQuadraticExerciseInfo :: MBExerciseInfo
-ineqQuadraticExerciseInfo = MBExerciseInfo
+ineqQuadraticExerciseInfo :: Id -> MBExerciseInfo
+ineqQuadraticExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving quadratic inequations"
                           ES -> "Resolver la inecuación "
@@ -438,12 +391,12 @@ ineqQuadraticExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise epäyhtälö "
                           HU -> "Oldja meg az egyenlőtlenséget "
   , problemStatement  = "Solve the following inequation: "
-  , context           = showId $ exerciseId ineqQuadraticExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-linearExerciseInfo :: MBExerciseInfo
-linearExerciseInfo = MBExerciseInfo
+linearExerciseInfo :: Id -> MBExerciseInfo
+linearExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving linear equations"
                           ES -> "Resolver la ecuación lineal "
@@ -463,12 +416,12 @@ linearExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise lineaarinen yhtälö "
                           HU -> "Oldja meg az elsőfokú egyenletet "
   , problemStatement  = "Solve the following equation: "
-  , context           = showId $ exerciseId linearExercise
+  , context           = showId $ identifier 
   , difficulty        = "easy"
   }
 
-linearMixedExerciseInfo :: MBExerciseInfo
-linearMixedExerciseInfo = MBExerciseInfo
+linearMixedExerciseInfo :: Id -> MBExerciseInfo
+linearMixedExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving linear mixed equations"
                           ES -> "Resolver la ecuación lineal compuesta "
@@ -488,12 +441,12 @@ linearMixedExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise lineaarinen yhtälö "
                           HU -> "Oldja meg az elsőfokú egyenletet "
   , problemStatement  = "Solve the linear mixed equation: "
-  , context           = showId $ exerciseId linearMixedExercise
+  , context           = showId $ identifier 
   , difficulty        = "easy"
   }
 
-linearSystemExerciseInfo :: MBExerciseInfo
-linearSystemExerciseInfo = MBExerciseInfo
+linearSystemExerciseInfo :: Id -> MBExerciseInfo
+linearSystemExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving systems of linear equations"
                           ES -> ""
@@ -513,12 +466,12 @@ linearSystemExerciseInfo = MBExerciseInfo
                           FI -> ""
                           HU -> ""
   , problemStatement  = "Solve the following system of linear equations: "
-  , context           = showId $ exerciseId linearSystemExercise
+  , context           = showId $ identifier 
   , difficulty        = ""
   }
 
-logEqExerciseInfo :: MBExerciseInfo
-logEqExerciseInfo = MBExerciseInfo
+logEqExerciseInfo :: Id -> MBExerciseInfo
+logEqExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving logarithmic equations"
                           ES -> "Resolver la ecuación logarítmica "
@@ -538,12 +491,12 @@ logEqExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise logaritmiyhtälö "
                           HU -> "Oldja meg a logaritmusos egyenletet"
   , problemStatement  = "Solve the following logarithmic equation: "
-  , context           = showId $ exerciseId logEqExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-nonNegBrokenExpExerciseInfo :: MBExerciseInfo
-nonNegBrokenExpExerciseInfo = MBExerciseInfo
+nonNegBrokenExpExerciseInfo :: Id -> MBExerciseInfo
+nonNegBrokenExpExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Writing with non-negative exponents"
                           ES -> "Expresar con exponente no negativo "
@@ -563,12 +516,12 @@ nonNegBrokenExpExerciseInfo = MBExerciseInfo
                           FI -> "Ilmaise käyttäen ei-negatiivista eksponenttia "
                           HU -> "Írja fel nemnegatív hatvány segítségével"
   , problemStatement  = "Write the following with a non-negative exponent: "
-  , context           = showId $ exerciseId nonNegBrokenExpExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-powerEqExerciseInfo :: MBExerciseInfo
-powerEqExerciseInfo = MBExerciseInfo
+powerEqExerciseInfo :: Id -> MBExerciseInfo
+powerEqExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving power equations"
                           ES -> "Resolver la ecuación con potencias "
@@ -588,12 +541,12 @@ powerEqExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise potenssiyhtälö "
                           HU -> "Oldja meg az egyenletet "
   , problemStatement  = "Solve the following power equation: "
-  , context           = showId $ exerciseId powerEqExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-powerOfExerciseInfo :: MBExerciseInfo
-powerOfExerciseInfo = MBExerciseInfo
+powerOfExerciseInfo :: Id -> MBExerciseInfo
+powerOfExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Writing as a power"
                           ES -> "Expresar como potencia "
@@ -613,12 +566,12 @@ powerOfExerciseInfo = MBExerciseInfo
                           FI -> "Ilmaise potenssimuodossa "
                           HU -> "Írja fel hatvány alakban"
   , problemStatement  = "Write the following as a power: "
-  , context           = showId $ exerciseId powerOfExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-quadraticExerciseInfo :: MBExerciseInfo
-quadraticExerciseInfo = MBExerciseInfo
+quadraticExerciseInfo :: Id -> MBExerciseInfo
+quadraticExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving quadratic equations"
                           ES -> "Resolver la ecuación cuadrática "
@@ -638,12 +591,12 @@ quadraticExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise toisen asteen yhtälö "
                           HU -> "Oldja meg a másodfokú egyenletet "
   , problemStatement  = "Solve the following quadratic equation: "
-  , context           = showId $ exerciseId quadraticExercise
+  , context           = showId $ identifier 
   , difficulty        = "easy"
   }
 
-quadraticNoABCExerciseInfo :: MBExerciseInfo
-quadraticNoABCExerciseInfo = MBExerciseInfo
+quadraticNoABCExerciseInfo :: Id -> MBExerciseInfo
+quadraticNoABCExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving quadratic equations (no quadratic formula)"
                           ES -> "Resolver la ecuación cuadrática sin utilizar la fórmula cuadrática "
@@ -663,12 +616,12 @@ quadraticNoABCExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise toisen asteen yhtälö käyttämättä ratkaisukaavaa "
                           HU -> "Oldja meg a másodfokú egyenlet megoldóképlete nélkül az egyenletet "
   , problemStatement  = "Solve, without using the quadratic formula, the following quadratic equation: "
-  , context           = showId $ exerciseId quadraticNoABCExercise
+  , context           = showId $ identifier 
   , difficulty        = "easy"
   }
 
-quadraticWithApproximationExerciseInfo :: MBExerciseInfo
-quadraticWithApproximationExerciseInfo = MBExerciseInfo
+quadraticWithApproximationExerciseInfo :: Id -> MBExerciseInfo
+quadraticWithApproximationExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving quadratic equations (with approximation)"
                           ES -> "Resolver la ecuación cuadrática, con aproximación permitida "
@@ -688,12 +641,12 @@ quadraticWithApproximationExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise likimääräisesti toisen asteen yhtälö "
                           HU -> "Oldja meg a másodfokú egyenletet, közelítő módszer megengedett "
   , problemStatement  = "Solve, with approximation allowed, the following quadratic equation: "
-  , context           = showId $ exerciseId quadraticWithApproximation
+  , context           = showId $ identifier 
   , difficulty        = "easy"
   }
 
-rationalEquationExerciseInfo :: MBExerciseInfo
-rationalEquationExerciseInfo = MBExerciseInfo
+rationalEquationExerciseInfo :: Id -> MBExerciseInfo
+rationalEquationExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving rational equations"
                           ES -> "Resolver la ecuación racional "
@@ -713,12 +666,12 @@ rationalEquationExerciseInfo = MBExerciseInfo
                           FI -> "Ratkaise rationaaliyhtälö "
                           HU -> "Oldja meg a törtegyütthatós egyenletet "
   , problemStatement  = "Solve the following rational equation: "
-  , context           = showId $ exerciseId rationalEquationExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-simplifyPowerExerciseInfo :: MBExerciseInfo
-simplifyPowerExerciseInfo = MBExerciseInfo
+simplifyPowerExerciseInfo :: Id -> MBExerciseInfo
+simplifyPowerExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Simplifying powers"
                           ES -> "Simplificar las potencias "
@@ -738,12 +691,12 @@ simplifyPowerExerciseInfo = MBExerciseInfo
                           FI -> "Sievennä potenssilauseke "
                           HU -> "Egyszerűsítse a kitevőt "
   , problemStatement  = "Simplify the following power: "
-  , context           = showId $ exerciseId simplifyPowerExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-simplifyRationalExerciseInfo :: MBExerciseInfo
-simplifyRationalExerciseInfo = MBExerciseInfo
+simplifyRationalExerciseInfo :: Id -> MBExerciseInfo
+simplifyRationalExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Simplifying rationals"
                           ES -> "Simplificar el racional "
@@ -763,12 +716,12 @@ simplifyRationalExerciseInfo = MBExerciseInfo
                           FI -> "Sievennä murtolauseke "
                           HU -> "Egyszerűsítse a törtet"
   , problemStatement  = "Simplify the following rational: "
-  , context           = showId $ exerciseId simplifyRationalExercise
+  , context           = showId $ identifier 
   , difficulty        = "medium"
   }
 
-systemWithMatrixExerciseInfo :: MBExerciseInfo
-systemWithMatrixExerciseInfo = MBExerciseInfo
+systemWithMatrixExerciseInfo :: Id -> MBExerciseInfo
+systemWithMatrixExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving systems of linear equations using matrices"
                           ES -> ""
@@ -788,6 +741,6 @@ systemWithMatrixExerciseInfo = MBExerciseInfo
                           FI -> ""
                           HU -> ""
   , problemStatement  = "Solve the following system of linear equations using a matrix:  "
-  , context           = showId $ exerciseId systemWithMatrixExercise
+  , context           = showId $ identifier 
   , difficulty        = ""
   }

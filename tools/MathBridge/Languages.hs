@@ -16,3 +16,4 @@ instance Show Lang where
   show FI = "fi"
   show HU = "hu"
 
+mBlangs = [EN,ES,DE,FR,NL,FI,HU]

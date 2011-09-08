@@ -3,9 +3,7 @@
 -- Derivative formulation corrected: EN, NL, FI
 -- Title translated: EN, NL, FI
 
-import Data.Map(Map,empty,insert)
-
-import Common.Library
+import Languages
 
 import Domain.LinearAlgebra
 import Domain.Math.Derivative.Exercises
@@ -17,21 +15,9 @@ import Domain.Math.Polynomial.RationalExercises
 import Domain.Math.Power.Equation.Exercises
 import Domain.Math.Power.Exercises
 
---------------------------------------------------------------------------------
-{- Different languages can be supported.
--}
---------------------------------------------------------------------------------
+import Common.Library
 
-data Lang = EN | ES | DE | FR | NL | FI | HU | ALL
-
-instance Show Lang where
-  show EN = "en"
-  show ES = "es"
-  show DE = "de"
-  show FR = "fr"
-  show NL = "nl"
-  show FI = "fi"
-  show HU = "hu"
+import Data.Map(Map,empty,insert)
 
 --------------------------------------------------------------------------------
 {- Info about exercises for ActiveMath

@@ -8,15 +8,9 @@
 -- ref and xrefelt are now the same, I think
 -- feedbacktexts
 
-import Common.Library
 import ExerciseInfo
-import Service.OpenMathSupport
-import Text.OpenMath.Object
-import Text.XML.Interface
-import qualified Main.Revision as MR
+import Languages
 
-import Data.Map((!))
-import Data.Maybe
 import Domain.LinearAlgebra
 import Domain.Math.Derivative.Exercises
 import Domain.Math.Equation.CoverUpExercise
@@ -27,13 +21,29 @@ import Domain.Math.Polynomial.RationalExercises
 import Domain.Math.Power.Equation.Exercises
 import Domain.Math.Power.Exercises
 
-import Main.IDEAS
+import Common.Library
+import Common.Utils
+
+import Service.OpenMathSupport
 import Service.DomainReasoner
+
+import Text.OpenMath.Object
+import Text.XML.Interface
+import Text.XML
+
+import qualified Main.Revision as MR
+import Main.IDEAS
+
+import Data.Map((!))
+import Data.Maybe
 
 import System.Environment
 import Control.Monad
-import Common.Utils
-import Text.XML
+
+--------------------------------------------------------------------------------
+{- main
+-}
+--------------------------------------------------------------------------------
 
 main :: IO ()
 main = do

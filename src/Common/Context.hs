@@ -34,10 +34,11 @@ import Common.Id
 import Common.Navigator
 import Common.Rewriting
 import Common.Transformation
-import Common.Utils (commaList, readM)
+import Common.Utils (readM)
 import Common.View
 import Control.Monad
 import Data.Dynamic
+import Data.List
 import Data.Maybe
 import qualified Data.Map as M
 
@@ -97,7 +98,7 @@ newtype Environment = Env { envMap :: M.Map String (Maybe Dynamic, String) }
 instance Show Environment where
    show =
       let f (k, (_, v)) = k ++ "=" ++ v
-      in commaList . map f . M.toList . envMap
+      in intercalate ", " . map f . M.toList . envMap
 
 emptyEnv :: Environment
 emptyEnv = Env M.empty

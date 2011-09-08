@@ -49,7 +49,7 @@ import Common.Predicate
 import Common.Rewriting
 import Common.Strategy hiding (not, fail, repeat, replicate)
 import Common.Transformation
-import Common.Utils (ShowString(..), commaList)
+import Common.Utils (ShowString(..))
 import Common.Utils.TestSuite
 import Common.View
 import Control.Monad.Error
@@ -335,7 +335,7 @@ showDerivation ex a = show (present der) ++ extra
       newl = "\n      "
       g (ArgValue descr x) = labelArgument descr ++ "=" ++ showArgument descr x
       part1 = case expectedArguments b old of
-                 Just xs -> newl ++ commaList (map g xs)
+                 Just xs -> newl ++ intercalate ", " (map g xs)
                  Nothing -> ""
       part2 | nullEnv env = ""
             | otherwise   = newl ++ show env

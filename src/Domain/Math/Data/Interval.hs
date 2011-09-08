@@ -30,9 +30,9 @@ module Domain.Math.Data.Interval
 
 import Common.Algebra.Boolean
 import Common.Algebra.Law
-import Common.Utils (commaList)
 import Common.Utils.TestSuite
 import Control.Monad
+import Data.List (intercalate)
 import Data.Maybe
 import Test.QuickCheck
 
@@ -59,7 +59,7 @@ instance Ord a => Boolean (Interval a) where
    complement = complementIntervals
 
 instance Show a => Show (Interval a) where
-   show (I xs) = "{ " ++ commaList (map show xs) ++ " }"
+   show (I xs) = "{ " ++ intercalate ", " (map show xs) ++ " }"
 
 instance Show a => Show (Segment a) where
    show (S a b) = showLeft a ++ "," ++ showRight b

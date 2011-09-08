@@ -12,8 +12,9 @@
 module Documentation.ExercisePage (makeExercisePage, idboxHTML) where
 
 import Common.Library hiding (up)
-import Common.Utils (Some(..), commaList)
+import Common.Utils (Some(..))
 import Control.Monad
+import Data.List
 import Data.Maybe
 import Documentation.DefaultPage
 import Documentation.ExampleFile
@@ -207,7 +208,7 @@ forStep n ((r, env), old) = do
       unless (null xs) $ do
          br
          spaces 6
-         text (commaList (map g xs))
+         text (intercalate ", " (map g xs))
       unless (nullEnv env) $ do
          br
          spaces 6

@@ -24,7 +24,7 @@ module Common.Derivation
    ) where
 
 import Common.Classes
-import Common.Utils (safeHead)
+import Data.Maybe
 import qualified Data.Foldable as F
 import qualified Data.Sequence as S
 
@@ -86,7 +86,7 @@ lastTerm :: Derivation s a -> a
 lastTerm = last . terms
 
 lastStep:: Derivation s a -> Maybe s
-lastStep = safeHead . reverse . steps
+lastStep = listToMaybe . reverse . steps
 
 withoutLast :: Derivation s a -> Derivation s a
 withoutLast d@(D a xs) =

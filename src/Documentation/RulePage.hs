@@ -12,7 +12,7 @@
 module Documentation.RulePage (makeRulePages) where
 
 import Common.Library hiding (up)
-import Common.Utils (commaList, Some(..))
+import Common.Utils (Some(..))
 import Control.Monad
 import Data.List
 import Documentation.DefaultPage
@@ -57,7 +57,7 @@ makeRulePages dir = do
 rulePage :: Exercise a -> ExampleMap a -> [Id] ->  Rule (Context a) -> HTMLBuilder
 rulePage ex exMap usedIn r = do
    idboxHTML "rule" (getId r)
-   let idList = text . commaList . map showId
+   let idList = text . intercalate ", " . map showId
    para $ table False
       [ [bold $ text "Buggy", text $ showBool (isBuggyRule r)]
       , [bold $ text "Rewrite rule", text $ showBool (isRewriteRule r)]

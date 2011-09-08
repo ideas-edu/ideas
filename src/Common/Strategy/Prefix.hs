@@ -21,7 +21,6 @@ import Common.DerivationTree
 import Common.Strategy.Abstract
 import Common.Strategy.Parsing
 import Common.Transformation
-import Common.Utils
 import Control.Monad
 import Data.Maybe
 
@@ -75,4 +74,4 @@ stepsToRules xs = [ r | RuleStep r <- xs ]
 
 -- | Returns the last rule of a prefix (if such a rule exists)
 lastStepInPrefix :: Prefix a -> Maybe (Step LabelInfo a)
-lastStepInPrefix (P t) = safeHead (trace t)
+lastStepInPrefix (P t) = listToMaybe (trace t)

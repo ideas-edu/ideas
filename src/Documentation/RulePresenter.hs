@@ -12,7 +12,7 @@
 module Documentation.RulePresenter (ruleToHTML) where
 
 import Common.Library
-import Common.Utils (Some(..), safeHead)
+import Common.Utils (Some(..))
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -106,6 +106,6 @@ sameSymbol = (==) . show
 
 showMeta :: Exercise a -> Int -> String
 showMeta ex n
-   | safeHead (qualifiers ex) == Just "logic" = [ [c] | c <- ['p'..] ] !! n
-   | safeHead (qualifiers ex) == Just "relationalgebra" = [ [c] | c <- ['r'..] ] !! n
+   | listToMaybe (qualifiers ex) == Just "logic" = [ [c] | c <- ['p'..] ] !! n
+   | listToMaybe (qualifiers ex) == Just "relationalgebra" = [ [c] | c <- ['r'..] ] !! n
    | otherwise = [ [c] | c <- ['a'..] ] !! n

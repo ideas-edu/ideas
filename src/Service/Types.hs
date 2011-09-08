@@ -23,8 +23,8 @@ module Service.Types
    ) where
 
 import Common.Library
-import Common.Utils (commaList)
 import Control.Monad
+import Data.List
 import Data.Maybe
 import Service.FeedbackScript.Syntax
 import System.Random
@@ -180,7 +180,7 @@ instance Show (Type a t) where
    show t              = fromMaybe "unknown" (showGroundType t)
 
 showTuple :: Type a t -> String
-showTuple tp = "(" ++ commaList (collect tp) ++ ")"
+showTuple tp = "(" ++ intercalate ", " (collect tp) ++ ")"
  where
    collect :: Type a t -> [String]
    collect (Pair t1 t2) = collect t1 ++ collect t2

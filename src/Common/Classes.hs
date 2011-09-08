@@ -22,7 +22,6 @@ module Common.Classes
    , BiFunctor, biMap, mapFirst, mapSecond, mapBoth
    ) where
 
-import Common.Utils (safeHead)
 import Control.Arrow
 import Data.Maybe
 
@@ -38,7 +37,7 @@ class Apply t where
 
 -- | Returns zero or one results
 apply :: Apply t => t a -> a -> Maybe a
-apply ta = safeHead . applyAll ta
+apply ta = listToMaybe . applyAll ta
 
 -- | Checks whether the functor is applicable (at least one result)
 applicable :: Apply t => t a -> a -> Bool

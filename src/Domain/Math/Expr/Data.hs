@@ -16,10 +16,10 @@ module Domain.Math.Expr.Data
 
 import Common.Algebra.Field
 import Common.Rewriting
-import Common.Utils (commaList)
 import Common.Utils.Uniplate
 import Control.Monad
 import Data.Char (isAlphaNum)
+import Data.List
 import Data.Maybe
 import Data.Ratio
 import Data.Typeable
@@ -170,7 +170,7 @@ showExpr table = rec 0
          Just (s, [a, b]) | isRootSymbol s && b == Nat 2 ->
             parIf (i>10000) $ unwords ["sqrt", rec 10001 a]
          Just (s, xs) | s == listSymbol ->
-            "[" ++ commaList (map (rec 0) xs) ++ "]"
+            "[" ++ intercalate ", " (map (rec 0) xs) ++ "]"
          Just (s, as) ->
             case (lookup s symbolTable, as) of
                (Just (InfixLeft, n, op), [x, y]) ->

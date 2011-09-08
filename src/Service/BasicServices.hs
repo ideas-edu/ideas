@@ -16,7 +16,7 @@ module Service.BasicServices
    ) where
 
 import Common.Library hiding (derivation, applicable, apply, ready)
-import Common.Utils (fst3, safeHead)
+import Common.Utils (fst3)
 import Data.List
 import Data.Maybe
 import Service.State
@@ -134,7 +134,7 @@ apply :: Rule (Context a) -> Location -> State a -> Either String (State a)
 apply r loc state = maybe applyOff applyOn (statePrefix state)
  where
    applyOn _ = -- scenario 1: on-strategy
-      maybe applyOff Right $ safeHead
+      maybe applyOff Right $ listToMaybe
       [ s1 | Right xs <- [allfirsts state], (r1, loc1, _, s1) <- xs, r==r1, loc==loc1 ]
 
    applyOff  = -- scenario 2: off-strategy

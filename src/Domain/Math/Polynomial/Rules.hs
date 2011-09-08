@@ -24,7 +24,7 @@ module Domain.Math.Polynomial.Rules
    ) where
 
 import Common.Library hiding (terms, simplify)
-import Common.Utils
+import Common.Utils (thd3)
 import Common.Utils.Uniplate (universe, descend)
 import Control.Monad
 import Data.List
@@ -349,7 +349,7 @@ sameFactor = describe "same factor" $
    makeSimpleRule (quadreq, "same-factor") $ oneDisjunct $ \(lhs :==: rhs) -> do
       (b1, xs) <- match productView lhs
       (b2, ys) <- match productView rhs
-      (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y, hasSomeVar x ] -- equality is too strong?
+      (x, y) <- listToMaybe [ (x, y) | x <- xs, y <- ys, x==y, hasSomeVar x ] -- equality is too strong?
       return $ toOrList [ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
 
 -- N*(A+B) = N*C + N*D   recognize a constant factor on both sides

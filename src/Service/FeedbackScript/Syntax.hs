@@ -20,9 +20,10 @@ module Service.FeedbackScript.Syntax
 
 import Common.Algebra.Group ((<>))
 import Common.Library
-import Common.Utils (commaList, safeHead)
 import Common.Utils.Uniplate
 import Data.Char
+import Data.List
+import Data.Maybe
 import Data.Monoid
 
 newtype Script = S { scriptDecls :: [Decl] }
@@ -66,14 +67,14 @@ instance Show Script where
 
 instance Show Decl where
    show decl =
-      let idList   = commaList . map show
+      let idList   = intercalate ", " . map show
           f dt as  = unwords [show dt, idList as]
           g (c, t) = "   | " ++ show c ++ " = " ++ nonEmpty (show t)
           nonEmpty xs = if null xs then "{}" else xs
       in case decl of
             NameSpace as     -> "namespace " ++ idList as
             Supports as      -> "supports "  ++ idList as
-            Include xs       -> "include "   ++ commaList xs
+            Include xs       -> "include "   ++ intercalate ", " xs
             Simple dt as t   -> f dt as ++ " = " ++ nonEmpty (show t)
             Guarded dt as xs -> unlines (f dt as : map g xs)
 
@@ -128,7 +129,7 @@ combine :: String -> String -> String
 combine a b
    | null a    = b
    | null b    = a
-   | maybe False special (safeHead b) = a ++ b
+   | maybe False special (listToMaybe b) = a ++ b
    | otherwise = a ++ " " ++ b
  where
     special = (`elem` ".,:;?!")

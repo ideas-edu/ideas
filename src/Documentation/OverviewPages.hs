@@ -15,7 +15,7 @@ module Documentation.OverviewPages
 
 import Common.Exercise
 import Common.Id
-import Common.Utils (Some(..), safeHead)
+import Common.Utils (Some(..))
 import Control.Monad
 import Data.Char
 import Data.List
@@ -71,7 +71,7 @@ exerciseOverviewPage showAll list = do
     where
       cmp (Some a) (Some b) = compareId (exerciseId a) (exerciseId b)
       eq a b      = f a == f b
-      f (Some ex) = safeHead (qualifiers (exerciseId ex))
+      f (Some ex) = listToMaybe (qualifiers (exerciseId ex))
       g xs        = (fromMaybe "" (f (head xs)), xs)
       p (Some ex) = showAll || isPublic ex
 

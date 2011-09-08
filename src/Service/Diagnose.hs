@@ -18,7 +18,6 @@ module Service.Diagnose
    ) where
 
 import Common.Library hiding (ready)
-import Common.Utils (safeHead)
 import Data.List (sortBy)
 import Data.Maybe
 import Service.BasicServices hiding (apply)
@@ -101,9 +100,9 @@ diagnose state new
    expected = do
       let xs = either (const []) id $ allfirsts (restartIfNeeded state)
           p (_, _, _, ns) = similarity ex newc (stateContext ns)
-      safeHead (filter p xs)
+      listToMaybe (filter p xs)
 
-   discovered searchForBuggy = safeHead
+   discovered searchForBuggy = listToMaybe
       [ (r, as)
       | r <- sortBy (ruleOrdering ex) (ruleset ex)
       , isBuggyRule r == searchForBuggy, not (isFinalRule r)

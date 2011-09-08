@@ -17,7 +17,6 @@ module Common.Utils.StringRef
    ( StringRef, stringRef, toString, tableStatus
    ) where
 
-import Common.Utils (commaList)
 import Data.Bits
 import Data.IORef
 import Data.List
@@ -120,7 +119,7 @@ intErr s = error ("Internal error in Common.StringRef: " ++ s)
 tableStatus :: IO String
 tableStatus = readIORef tableRef >>= \m ->
    let xs = map f (IM.assocs m)
-       f (i, ys) = '#' : show i ++ ": " ++ commaList (map g (frequency ys)) ++
+       f (i, ys) = '#' : show i ++ ": " ++ intercalate ", " (map g (frequency ys)) ++
                    "  [total = " ++ show (length ys) ++ "]"
        g (a, n)  | n == 1    = show a
                  | otherwise = show a ++ " (" ++ show n ++ ")"

@@ -19,7 +19,6 @@ module Service.FeedbackScript.Run
    ) where
 
 import Common.Library hiding (ready, Environment)
-import Common.Utils (safeHead)
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -99,7 +98,7 @@ eval env script = either (return . findIdRef) evalText
    findIdRef x = fromMaybe (TextString (showId x)) (findRef (`eqId` x))
 
    findRef :: (Id -> Bool) -> Maybe Text
-   findRef p = safeHead $ catMaybes
+   findRef p = listToMaybe $ catMaybes
       [ evalText t
       | (as, c, t) <- allDecls
       , any p as && evalBool c

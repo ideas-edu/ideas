@@ -29,10 +29,10 @@ import Common.Rewriting (RewriteRule)
 import Common.Strategy.Core
 import Common.Strategy.Parsing
 import Common.Transformation
-import Common.Utils (commaList)
 import Common.Utils.Uniplate hiding (rewriteM)
 import Control.Monad
 import Test.QuickCheck hiding (label)
+import Data.List
 import qualified Data.Traversable as T
 
 -----------------------------------------------------------
@@ -66,7 +66,7 @@ instance Show LabelInfo where
       let ps = ["removed"   | removed   info] ++
                ["collapsed" | collapsed info] ++
                ["hidden"    | hidden    info]
-          extra = " (" ++ commaList ps ++ ")"
+          extra = " (" ++ intercalate ", " ps ++ ")"
       in showId info ++ if null ps then "" else extra
 
 instance HasId LabelInfo where

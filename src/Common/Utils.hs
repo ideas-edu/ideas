@@ -23,6 +23,7 @@ module Common.Utils
 
 import Data.Char
 import Data.List
+import Data.Maybe
 import System.Random
 
 data Some f = forall a . Some (f a)
@@ -62,9 +63,9 @@ allsame :: Eq a => [a] -> Bool
 allsame []     = True
 allsame (x:xs) = all (==x) xs
 
+{-# DEPRECATED safeHead "Use Data.Maybe.listToMaybe instead" #-}
 safeHead :: [a] -> Maybe a
-safeHead (x:_) = return x
-safeHead _     = Nothing
+safeHead = listToMaybe
 
 fixpoint :: Eq a => (a -> a) -> a -> a
 fixpoint f = stop . iterate f
@@ -100,5 +101,6 @@ snd3 (_, x, _) = x
 thd3 :: (a, b, c) -> c
 thd3 (_, _, x) = x
 
+{-# DEPRECATED commaList "Use Data.List.intercalate \", \" instead" #-}
 commaList :: [String] -> String
 commaList = intercalate ", "

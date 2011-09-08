@@ -19,7 +19,6 @@ module Common.Strategy.Location
 import Common.Id
 import Common.Strategy.Abstract
 import Common.Strategy.Core
-import Common.Utils (safeHead)
 import Common.Utils.Uniplate
 import Data.Maybe
 
@@ -70,11 +69,11 @@ strategyLocations s = ([], s) : rec [] (toCore (unlabel s))
 -- indicates that the location is invalid
 subStrategy :: Id -> LabeledStrategy a -> Maybe (LabeledStrategy a)
 subStrategy loc =
-   fmap snd . safeHead . filter ((==loc) . getId . snd) . strategyLocations
+   fmap snd . listToMaybe . filter ((==loc) . getId . snd) . strategyLocations
 
 fromLoc :: LabeledStrategy a -> [Int] -> Maybe Id
 fromLoc s loc = fmap getId (lookup loc (strategyLocations s))
 
 toLoc :: LabeledStrategy a -> Id -> Maybe [Int]
 toLoc s i =
-   fmap fst (safeHead (filter ((==i) . getId . snd) (strategyLocations s)))
+   fmap fst (listToMaybe (filter ((==i) . getId . snd) (strategyLocations s)))

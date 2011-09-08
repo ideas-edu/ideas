@@ -14,7 +14,6 @@ module Service.ProblemDecomposition
    ) where
 
 import Common.Library
-import Common.Utils
 import Data.Maybe
 import Service.State
 import Service.Types
@@ -90,7 +89,7 @@ argumentsForSteps a0 = flip rec a0 . stepsToRules
 
 nextMajorForPrefix :: Prefix a -> a -> Maybe Id
 nextMajorForPrefix p0 a = do
-   (_, p1)  <- safeHead $ runPrefixMajor p0 a
+   (_, p1)  <- listToMaybe $ runPrefixMajor p0 a
    rec (reverse (prefixToSteps p1))
  where
    rec [] = Nothing

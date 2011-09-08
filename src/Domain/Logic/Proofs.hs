@@ -42,7 +42,7 @@ proofExercise = makeExercise
    , status         = Experimental
 --   , parser         = parseLogicProof
    , prettyPrinter  = let f (p, q) = ppLogicPars p ++ " == " ++ ppLogicPars q
-                      in commaList . map f
+                      in intercalate ", " . map f
 --   , equivalence    = \(p, _) (r, s) -> eqLogic p r && eqLogic r s
 --   , similarity     = \(p, q) (r, s) -> equalLogicA p r && equalLogicA q s
    , suitable       = predicate $ all (uncurry eqLogic)

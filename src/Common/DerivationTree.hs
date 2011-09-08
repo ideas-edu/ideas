@@ -29,7 +29,6 @@ module Common.DerivationTree
 
 import Common.Classes
 import Common.Derivation
-import Common.Utils (safeHead)
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -164,7 +163,7 @@ derivations t =
 
 -- | The first derivation (if any)
 derivation :: DerivationTree s a -> Maybe (Derivation s a)
-derivation = safeHead . derivations
+derivation = listToMaybe . derivations
 
 -- | Return  a random derivation (if any exists at all)
 randomDerivation :: RandomGen g => g -> DerivationTree s a -> Maybe (Derivation s a)

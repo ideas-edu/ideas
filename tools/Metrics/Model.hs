@@ -1,23 +1,27 @@
 module Model 
    ( System(..), systemModules
    , Module(..), Function(..)
-   , Size, sizeOf, sizeLines, sizeChars, Sized(..), showSize
+   , Size, sizeOf, sizeLines, sizeChars, Sized(..)
    , overallLines, overallChars, linesOfCode, charsOfCode
    , Named(..), QName, makeQName, qualifiers, unqualified
    , organize, folders, localItems, Hierarchy, F.toList
    ) where
 
-import Data.Char
+import Control.Monad
 import Data.List hiding (insert)
 import Data.Monoid
 import qualified Data.Map as M
 import qualified Data.Foldable as F
+import Text.JSON
 
 data System = System 
    { systemName      :: String
    , systemHierarchy :: Hierarchy Module
    }
- deriving (Read, Show)
+
+instance InJSON System where
+   toJSON (System a b) = toJSON (a, b)
+   fromJSON = liftM (\(a, b) -> System a b) . fromJSON
 
 systemModules :: System -> [Module]
 systemModules = F.toList . systemHierarchy
@@ -30,19 +34,33 @@ data Module = Module
    , moduleSize      :: !Size
    , moduleOverall   :: !Size
    }
- deriving (Read, Show)
+
+instance InJSON Module where
+   toJSON (Module a b c d e f) = 
+      Array [toJSON a, toJSON b, toJSON c, toJSON d, toJSON e, toJSON f]
+   fromJSON (Array [a1, a2, a3, a4, a5, a6]) = do
+      (x1, x2, x3) <- liftM3 (,,) (fromJSON a1) (fromJSON a2) (fromJSON a3)
+      (x4, x5, x6) <- liftM3 (,,) (fromJSON a4) (fromJSON a5) (fromJSON a6)
+      return (Module x1 x2 x3 x4 x5 x6)
+   fromJSON _ = fail "InJSON Module"
 
 data Function = Function
    { functionName :: String
    , functionSize :: !Size
    }
- deriving (Read, Show)
+
+instance InJSON Function where
+   toJSON (Function a b) = toJSON (a, b)
+   fromJSON = liftM (\(a, b) -> Function a b) . fromJSON 
 
 data Size = Size {sizeLines :: !Int, sizeChars :: !Int}
- deriving (Read, Show)
- 
-showSize :: Size -> String
-showSize s = show (sizeLines s) ++ " lines (" ++ show (sizeChars s) ++ " chars)"
+
+instance Show Size where
+   show s = show (sizeLines s) ++ " lines (" ++ show (sizeChars s) ++ " chars)"
+
+instance InJSON Size where
+   toJSON (Size a b) = toJSON (a, b)
+   fromJSON = liftM (\(a, b) -> Size a b) . fromJSON 
 
 sizeOf :: String -> Size
 sizeOf s = Size (length $ lines s) (length s)
@@ -83,7 +101,6 @@ instance Monoid Size where
    mappend (Size a1 a2) (Size b1 b2) = Size (a1+b1) (a2+b2)
    
 data Hierarchy a = H (M.Map String (Hierarchy a)) [a]
- deriving (Read, Show)
 
 instance Monoid (Hierarchy a) where
    mempty = H M.empty []
@@ -93,6 +110,15 @@ instance F.Foldable Hierarchy where
    foldMap f = rec 
     where
       rec (H m as) = mconcat (map rec (M.elems m) ++ map f as)
+
+instance InJSON a => InJSON (Hierarchy a) where
+   toJSON (H m as) = Array [Object (M.toList (M.map toJSON m)), toJSON as]
+   fromJSON (Array [Object xs, a]) = do
+      let (ks, es) = unzip xs
+      ys <- mapM fromJSON es
+      as <- fromJSON a
+      return (H (M.fromList (zip ks ys)) as)
+   fromJSON _ = fail "InJSON (Hierarchy a)"
 
 folders :: Hierarchy a -> [(String, Hierarchy a)]
 folders (H m _) = M.toList m
@@ -137,9 +163,9 @@ data QName = Q { qualifiers :: [String], unqualified :: String }
 instance Show QName where
    show qn = intercalate "." (qualifiers qn ++ [unqualified qn])
 
-instance Read QName where
-   readsPrec _ s = [ (makeQName xs, rest) | not (null xs) ]
-    where (xs, rest) = span (\x -> isAlphaNum x || x == '.') s
+instance InJSON QName where
+   toJSON   = toJSON . show
+   fromJSON = liftM makeQName . fromJSON
 
 makeQName :: String -> QName
 makeQName s =

@@ -20,6 +20,22 @@ data MBExerciseInfo = MBExerciseInfo
   }
 
 
+-- For cmp I could reuse the linearExerciseInfo
+balanceExerciseInfo :: Id -> MBExerciseInfo
+balanceExerciseInfo identifier = MBExerciseInfo
+  { title             = \l -> case l of
+                          EN -> "Solving linear equations using balancing"
+                          NL -> "Lineaire vergelijkingen oplossen met de belanceermethode"
+  , for               = "mbase://mb_concepts/mb_numbers_and_computation/_01_02_05_03_Powers"
+  , langSupported     = [EN,NL]
+  , cmp               = \l -> case l of
+                          EN -> "Solve the linear equation "
+                          NL -> "Los de volgende lineaire vergelijking op "
+  , problemStatement  = "Solve the following linear equation: "
+  , context           = showId $ identifier 
+  , difficulty        = "medium"
+  }
+
 calcPowerExerciseInfo :: Id -> MBExerciseInfo
 calcPowerExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of

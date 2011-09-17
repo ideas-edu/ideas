@@ -15,6 +15,7 @@ import Domain.LinearAlgebra
 import Domain.Math.Derivative.Exercises
 import Domain.Math.Equation.CoverUpExercise
 import Domain.Math.Numeric.Exercises
+import Domain.Math.Polynomial.Balance
 import Domain.Math.Polynomial.Exercises
 import Domain.Math.Polynomial.IneqExercises
 import Domain.Math.Polynomial.RationalExercises
@@ -74,7 +75,6 @@ revision     =  MR.revision
 dontIncludeExercises = ["logic.propositional.dnf"
                        ,"logic.propositional.dnf.unicode"
                        ,"relationalgebra.cnf"
-                       ,"algebra.equations.linear.balance"
                        ,"algebra.manipulation.polynomial.expand"
                        ]
 
@@ -257,64 +257,66 @@ omdocexercise
 
 mBExerciseInfo :: Map Id MBExerciseInfo
 mBExerciseInfo =
-  let coverUpExerciseId             = exerciseId coverUpExercise
-      derivativeExerciseId          = exerciseId derivativeExercise
-      gramSchmidtExerciseId         = exerciseId gramSchmidtExercise
-      linearSystemExerciseId        = exerciseId linearSystemExercise
-      gaussianElimExerciseId        = exerciseId gaussianElimExercise
-      systemWithMatrixExerciseId    = exerciseId systemWithMatrixExercise
-      powerOfExerciseId             = exerciseId powerOfExercise
-      nonNegBrokenExpExerciseId     = exerciseId nonNegBrokenExpExercise
+  let balanceExerciseId             = exerciseId balanceExercise
       calcPowerExerciseId           = exerciseId calcPowerExercise
-      powerEqExerciseId             = exerciseId powerEqExercise
-      expEqExerciseId               = exerciseId expEqExercise
-      logEqExerciseId               = exerciseId logEqExercise
+      coverUpExerciseId             = exerciseId coverUpExercise
+      derivativeExerciseId          = exerciseId derivativeExercise
       derivativePolyExerciseId      = exerciseId derivativePolyExercise
       derivativeProductExerciseId   = exerciseId derivativeProductExercise
       derivativeQuotientExerciseId  = exerciseId derivativeQuotientExercise
+      expEqExerciseId               = exerciseId expEqExercise
       findFactorsExerciseId         = exerciseId findFactorsExercise
       fractionExerciseId            = exerciseId fractionExercise
+      gaussianElimExerciseId        = exerciseId gaussianElimExercise
+      gramSchmidtExerciseId         = exerciseId gramSchmidtExercise
       higherDegreeExerciseId        = exerciseId higherDegreeExercise
       ineqHigherDegreeExerciseId    = exerciseId ineqHigherDegreeExercise
       ineqLinearExerciseId          = exerciseId ineqLinearExercise
       ineqQuadraticExerciseId       = exerciseId ineqQuadraticExercise
       linearExerciseId              = exerciseId linearExercise
       linearMixedExerciseId         = exerciseId linearMixedExercise
+      linearSystemExerciseId        = exerciseId linearSystemExercise
+      logEqExerciseId               = exerciseId logEqExercise
+      nonNegBrokenExpExerciseId     = exerciseId nonNegBrokenExpExercise
+      powerOfExerciseId             = exerciseId powerOfExercise
+      powerEqExerciseId             = exerciseId powerEqExercise
       quadraticExerciseId           = exerciseId quadraticExercise
       quadraticNoABCExerciseId      = exerciseId quadraticNoABCExercise
       quadraticWithApproximationId  = exerciseId quadraticWithApproximation
       rationalEquationExerciseId    = exerciseId rationalEquationExercise
       simplifyPowerExerciseId       = exerciseId simplifyPowerExercise
       simplifyRationalExerciseId    = exerciseId simplifyRationalExercise
-  in  insert coverUpExerciseId            (coverUpExerciseInfo                    coverUpExerciseId)
-    $ insert derivativeExerciseId         (derivativeExerciseInfo                 derivativeExerciseId)
-    $ insert gramSchmidtExerciseId        (gramSchmidtExerciseInfo                gramSchmidtExerciseId)
-    $ insert linearSystemExerciseId       (linearSystemExerciseInfo               linearSystemExerciseId)
-    $ insert gaussianElimExerciseId       (gaussianElimExerciseInfo               gaussianElimExerciseId)
-    $ insert systemWithMatrixExerciseId   (systemWithMatrixExerciseInfo           systemWithMatrixExerciseId)
-    $ insert powerOfExerciseId            (powerOfExerciseInfo                    powerOfExerciseId)
-    $ insert nonNegBrokenExpExerciseId    (nonNegBrokenExpExerciseInfo            nonNegBrokenExpExerciseId)
+      systemWithMatrixExerciseId    = exerciseId systemWithMatrixExercise
+  in  insert balanceExerciseId            (balanceExerciseInfo                    balanceExerciseId)
     $ insert calcPowerExerciseId          (calcPowerExerciseInfo                  calcPowerExerciseId)
-    $ insert powerEqExerciseId            (powerEqExerciseInfo                    powerEqExerciseId)
-    $ insert expEqExerciseId              (expEqExerciseInfo                      expEqExerciseId)
-    $ insert logEqExerciseId              (logEqExerciseInfo                      logEqExerciseId)
+    $ insert coverUpExerciseId            (coverUpExerciseInfo                    coverUpExerciseId)
+    $ insert derivativeExerciseId         (derivativeExerciseInfo                 derivativeExerciseId)
     $ insert derivativePolyExerciseId     (derivativePolyExerciseInfo             derivativePolyExerciseId)
     $ insert derivativeProductExerciseId  (derivativeProductExerciseInfo          derivativeProductExerciseId)
     $ insert derivativeQuotientExerciseId (derivativeQuotientExerciseInfo         derivativeQuotientExerciseId)
+    $ insert expEqExerciseId              (expEqExerciseInfo                      expEqExerciseId)
     $ insert findFactorsExerciseId        (findFactorsExerciseInfo                findFactorsExerciseId)
     $ insert fractionExerciseId           (fractionExerciseInfo                   fractionExerciseId)
+    $ insert gaussianElimExerciseId       (gaussianElimExerciseInfo               gaussianElimExerciseId)
+    $ insert gramSchmidtExerciseId        (gramSchmidtExerciseInfo                gramSchmidtExerciseId)
     $ insert higherDegreeExerciseId       (higherDegreeExerciseInfo               higherDegreeExerciseId)
     $ insert ineqHigherDegreeExerciseId   (ineqHigherDegreeExerciseInfo           ineqHigherDegreeExerciseId)
     $ insert ineqLinearExerciseId         (ineqLinearExerciseInfo                 ineqLinearExerciseId)
     $ insert ineqQuadraticExerciseId      (ineqQuadraticExerciseInfo              ineqQuadraticExerciseId)
     $ insert linearExerciseId             (linearExerciseInfo                     linearExerciseId)
     $ insert linearMixedExerciseId        (linearMixedExerciseInfo                linearMixedExerciseId)
+    $ insert linearSystemExerciseId       (linearSystemExerciseInfo               linearSystemExerciseId)
+    $ insert logEqExerciseId              (logEqExerciseInfo                      logEqExerciseId)
+    $ insert nonNegBrokenExpExerciseId    (nonNegBrokenExpExerciseInfo            nonNegBrokenExpExerciseId)
+    $ insert powerOfExerciseId            (powerOfExerciseInfo                    powerOfExerciseId)
+    $ insert powerEqExerciseId            (powerEqExerciseInfo                    powerEqExerciseId)
     $ insert quadraticExerciseId          (quadraticExerciseInfo                  quadraticExerciseId)
     $ insert quadraticNoABCExerciseId     (quadraticNoABCExerciseInfo             quadraticNoABCExerciseId)
     $ insert quadraticWithApproximationId (quadraticWithApproximationExerciseInfo quadraticWithApproximationId)
     $ insert rationalEquationExerciseId   (rationalEquationExerciseInfo           rationalEquationExerciseId)
     $ insert simplifyPowerExerciseId      (simplifyPowerExerciseInfo              simplifyPowerExerciseId)
     $ insert simplifyRationalExerciseId   (simplifyRationalExerciseInfo           simplifyRationalExerciseId)
+    $ insert systemWithMatrixExerciseId   (systemWithMatrixExerciseInfo           systemWithMatrixExerciseId)
       empty
 
 --------------------------------------------------------------------------------

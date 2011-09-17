@@ -5,7 +5,7 @@ module Languages where
 -}
 --------------------------------------------------------------------------------
 
-data Lang = EN | ES | DE | FR | NL | FI | HU 
+data Lang = EN | ES | DE | FR | NL | FI | HU deriving Eq
 
 instance Show Lang where
   show EN = "en"
@@ -16,4 +16,5 @@ instance Show Lang where
   show FI = "fi"
   show HU = "hu"
 
-mBlangs = [EN,ES,DE,FR,NL,FI,HU]
+mblangs        =  [EN,ES,DE,FR,NL,FI,HU]
+mbdefaultlang  =  EN

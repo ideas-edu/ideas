@@ -105,6 +105,9 @@ data Hierarchy a = H (M.Map String (Hierarchy a)) [a]
 instance Monoid (Hierarchy a) where
    mempty = H M.empty []
    mappend (H m1 as) (H m2 bs) = H (M.unionWith mappend m1 m2) (as++bs)
+           
+instance Functor Hierarchy where
+   fmap f (H m as) = H (fmap (fmap f) m) (fmap f as)
              
 instance F.Foldable Hierarchy where
    foldMap f = rec 

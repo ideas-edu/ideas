@@ -2,25 +2,31 @@ module Main (main) where
 
 import Control.Monad
 import Data.List
+import Data.Maybe
 import Model
 import Scanner
 import Options
 import qualified Data.Map as M
 import System.Directory
-import System.Environment
 import Text.JSON
+import Text.HTML
 
 main :: IO ()
 main = do
-   flags <- getFlags
-   forM_ (inputs flags) $ \path -> do
+   (flags, inputs) <- readOptions
+   forM_ inputs $ \path -> do
       isf <- doesFileExist path
       sys <- if isf 
              then readJSON path
              else scanSystem path
       unless (null $ systemModules sys) $ do
-         forM_ (outputs flags) $
-            report flags sys
+         let ds = map (flagsData flags . flip outputData sys) (outputs flags)
+         forM_ (modes flags) $ \mode -> 
+            case mode of 
+               Report -> report ds
+               HTML   -> html   ds
+         forM_ (exports flags) $ 
+            export sys
          when (Save `elem` flags) $
             writeFile "out.json" (compactJSON $ toJSON sys)
     `catch`
@@ -30,90 +36,132 @@ readJSON :: FilePath -> IO System
 readJSON path =
    readFile path >>= either fail fromJSON . parseJSON
 
-report :: [Flag] -> System -> Output -> IO ()
-report flags sys output = 
+data Data = TableString (Table String)
+          | TableInt    (Table Int)
+          | Hierarchy String (Hierarchy Int)
+
+outputData :: Output -> System -> Data
+outputData output =
    case output of
-   
-      SystemSize ->
-         putStrLn $ showTable id (["System size"], 
-            [ ("system",  name sys)
-            , ("modules", show (length ms))
-            , ("code size", show (size sys))
-            , ("full size", show (overallSize sys))
-            ])
-            
-      PackageSize ->
-         putStrLn $ showTable show $ (["Package size (LOC)"], 
-            [ (s, n)
-            | let spaces n = replicate n ' '
-                  collect i a = concat 
-                     [ (spaces (i*2) ++ s, linesOfCode b) : collect (i+1) b 
-                     | (s, b) <- folders a 
-                     ]
-            , (s, n) <- collect 0 (systemHierarchy sys)
-            ])
-      
-      ModuleSize ->
-         putStrLn $ showTable show $ limit $ addStats $ sortTable (["Module size (LOC)"], 
-            [ (name m, linesOfCode m)
-            | m <- ms
-            ])
-            
-      FunctionSize ->      
-         putStrLn $ showTable show $ limit $ addStats $ sortTable (["Function size (LOC)"], 
-            [ (name f ++ "  (" ++ name m ++ ")", linesOfCode f)
-            | m <- ms, f <- moduleFunctions m
-            ])
-      
-      Imports ->
-         putStrLn $ showTable show $ limit $ addStats $ sortTable (["Imports in module"], 
-            [ (name m, length (moduleImports m))
-            | m <- ms
-            ])
-            
-      ImportsOf -> do
-         let table = foldr (\a -> M.insertWith (+) a 1) M.empty 
-                   $ filter (`elem` map qname ms)
-                   $ concatMap moduleImports ms
-         putStrLn $ showTable show $ limit $ addStats $ sortTable (["Imports of module"], 
-            [ (show a, n)
-            | (a, n) <- M.toList table
-            ])
+      SystemSize   -> TableString . systemSizeTable
+      PackageSize  -> packageSizeData
+      ModuleSize   -> TableInt . moduleSizeTable
+      FunctionSize -> TableInt . functionSizeTable
+      Imports      -> TableInt . importsTable
+      ImportsOf    -> TableInt . importsOfTable
+
+flagsData :: [Flag] -> Data -> Data
+flagsData flags = f (limit . addStats)
  where
-   ms = systemModules sys
-   limit = case [ n | Limit n <- flags ] of  
-              [] -> id
-              ns -> limitTable (maximum ns)
+   f g (TableInt a) = TableInt (g a)
+   f _ item         = item
+ 
+   limit = 
+      case [ n | Limit n <- flags ] of  
+         [] -> id
+         ns -> limitTable (maximum ns)
+         
    addStats
       | showStatistics flags = addAvgInt
       | otherwise = id
 
-   {-
-   writeFile "output/locs-data.js" $ 
-      "var moduleLOCS =" ++ show (moduleLOCS sys) ++ ";"
-      
-   writeFile "output/imports-data.js" $ 
-      let (labs, dat) = modImports sys
-      in "var labs =" ++ show labs ++ ";\n" ++
-         "var data = " ++ show dat ++ ";"
+report :: [Data] -> IO ()
+report ds = 
+   forM_ ds $ \item -> putStrLn $
+   case item of
+      TableInt a    -> showTable show a
+      TableString a -> showTable id a
+      Hierarchy s a -> showTable show (hierarchyTable sum s a)
 
-   writeFile "output/model.json" (compactJSON $ toJSON sys)
+html :: [Data] -> IO ()
+html ds = 
+   writeFile "out.html" $ show $ htmlPage "title" (Just "ideas.css") $  
+   divClass "content" $ do
+   forM_ ds $ \item -> 
+      case item of
+         TableInt a    -> tableToHTML show a
+         TableString a -> tableToHTML id a
+         Hierarchy s a -> tableToHTML show (hierarchyTable sum s a)
 
-   --dot -Tsvg -O *.dot
-   let rec pr h = 
-          let f (s, a) = rec (pr++[s]) a
-          in (pr, h) : concatMap f (folders h)
-   forM_ (rec [] (systemHierarchy sys)) $ \(pr, h) -> do
-      print (importsFile pr)
-      writeFile ("imports/" ++ importsFile pr) (impGraph pr h sys)     
+tableToHTML :: (a -> String) -> Table a -> HTMLBuilder
+tableToHTML f (title, xs) = do
+   preText (unlines title)
+   table False $ map (\(a, b) -> [text a, text (f b)]) xs 
+
+systemSizeTable :: System -> Table String
+systemSizeTable sys = 
+   (["System size"], 
+            [ ("system",  name sys)
+            , ("modules", show (length (systemModules sys)))
+            , ("code size", show (size sys))
+            , ("full size", show (overallSize sys))
+            ])
+
+packageSizeData :: System -> Data
+packageSizeData = 
+   Hierarchy "Package size (LOC)" . fmap linesOfCode . systemHierarchy
+
+moduleSizeTable :: System -> Table Int
+moduleSizeTable sys =
+         sortTable (["Module size (LOC)"], 
+            [ (name m, linesOfCode m)
+            | m <- systemModules sys
+            ])
+            
+functionSizeTable :: System -> Table Int
+functionSizeTable sys = 
+         sortTable (["Function size (LOC)"], 
+            [ (name f ++ "  (" ++ name m ++ ")", linesOfCode f)
+            | m <- systemModules sys, f <- moduleFunctions m
+            ])
+
+importsTable :: System -> Table Int
+importsTable sys = sortTable (["Imports in module"], 
+            [ (name m, length (moduleImports m))
+            | m <- systemModules sys
+            ])
+
+importsOfTable :: System -> Table Int
+importsOfTable sys = sortTable (["Imports of module"], 
+            [ (show a, n)
+            | (a, n) <- M.toList table
+            ])
+ where
+   table = foldr (\a -> M.insertWith (+) a 1) M.empty 
+                   $ filter (`elem` map qname (systemModules sys))
+                   $ concatMap moduleImports (systemModules sys)
+
+hierarchyTable :: ([a] -> a) -> String -> Hierarchy a -> Table a
+hierarchyTable f title h = ([title], rec 0 h)
+ where
+   rec i a = concat 
+      [ (spaces (i*2) ++ s, f (toList b)) : rec (i+1) b 
+      | (s, b) <- folders a 
+      ]
+   spaces n = replicate n ' '
+
+export :: System -> Export -> IO ()
+export sys export =
+   case export of
       
-   let is = sort (map (fromIntegral . linesOfCode) ms)
-       (q1, q2, q3) = quartiles is
-       iqr = q3-q1
-       lf  = q1-1.5*iqr
-       uf  = q3+1.5*iqr
-   putStrLn $ "Quartiles: " ++ show (q1, q2, q3) 
-   putStrLn $ "Fences: " ++ show (lf, uf) -}
+      ExportLOC mf -> do
+         writeFile (fromMaybe "loc.js" mf) $ 
+            "var metrics = {};\nmetrics.loc =" ++ show (moduleLOCS sys) ++ ";"
+            
+      ExportImports mf -> do
+         writeFile (fromMaybe "imports.js" mf) $ 
+            let (labs, dat) = modImports sys
+            in "var labs =" ++ show labs ++ ";\n" ++
+               "var data = " ++ show dat ++ ";"
+               
+      ImportGraph mf -> do --dot -Tsvg -O *.dot
+         let rec pr h = 
+                let f (s, a) = rec (pr++[s]) a
+                in (pr, h) : concatMap f (folders h)
+         forM_ (rec [] (systemHierarchy sys)) $ \(pr, h) -> do
+            print (importsFile pr)
+            writeFile (maybe "" (++"/") mf ++ importsFile pr) $
+               impGraph pr h sys
  
 moduleLOCS :: System -> JSON
 moduleLOCS = rec . systemHierarchy
@@ -380,6 +428,3 @@ splitMedian list
  where
    n = length list
    (xs, mid:ys) = splitAt (n `div` 2) list
-   
-ex1 = quartiles $ sort [ 6, 47, 49, 15, 42, 41, 7, 39, 43, 40, 36]
-ex2 = quartiles [ 7, 15, 36, 39, 40, 41] 

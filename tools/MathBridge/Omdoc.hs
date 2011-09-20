@@ -2,10 +2,8 @@
 
 -- document buggy rules for AM
 -- second ``for'' ref?
--- if HU translations are provided, switch them on
--- ref and xrefelt are now the same, I think
 -- feedbacktexts
--- add two new exercises (notify partners) algebra.equations.linear.balance, algebra.manipulation.polynomial.expand
+-- notify partners of two new exercises
 -- overhaul XML generation
 
 import ExerciseInfo
@@ -141,7 +139,7 @@ omdocexerciserefs ex =
                                 ++  context info  -- exercise id
                                 ++  show i)       -- and nr
                              [0..len-1]
-      exercises        = map (`xrefelt` "exercise") refs
+      exercises        = map xrefelt refs
   in omgroupelt "" "" (metadataelt "" [titleeltMultLang langs titleCmps]:exercises)
 
 --------------------------------------------------------------------------------
@@ -194,7 +192,7 @@ omdocexercises ex = catMaybes $ zipWith make [(0::Int)..] (examples ex)
             (if null (for info) then Nothing else Just (for info))
             (show dif)
             mblangs
-            (map (\l -> if l `elem` langs then cmp info l else cmp info mbdefaultlang ++ (show omobj)) mblangs)
+            (map (\l -> (if l `elem` langs then cmp info l else cmp info mbdefaultlang) ++ show omobj) mblangs)
             "IDEASGenerator"
             "strategy"
             (problemStatement info)
@@ -264,6 +262,7 @@ mBExerciseInfo =
       derivativePolyExerciseId      = exerciseId derivativePolyExercise
       derivativeProductExerciseId   = exerciseId derivativeProductExercise
       derivativeQuotientExerciseId  = exerciseId derivativeQuotientExercise
+      expandExerciseId              = exerciseId expandExercise
       expEqExerciseId               = exerciseId expEqExercise
       findFactorsExerciseId         = exerciseId findFactorsExercise
       fractionExerciseId            = exerciseId fractionExercise
@@ -294,6 +293,7 @@ mBExerciseInfo =
     $ insert derivativePolyExerciseId     (derivativePolyExerciseInfo             derivativePolyExerciseId)
     $ insert derivativeProductExerciseId  (derivativeProductExerciseInfo          derivativeProductExerciseId)
     $ insert derivativeQuotientExerciseId (derivativeQuotientExerciseInfo         derivativeQuotientExerciseId)
+    $ insert expandExerciseId             (expandExerciseInfo                     expandExerciseId)
     $ insert expEqExerciseId              (expEqExerciseInfo                      expEqExerciseId)
     $ insert findFactorsExerciseId        (findFactorsExerciseInfo                findFactorsExerciseId)
     $ insert fractionExerciseId           (fractionExerciseInfo                   fractionExerciseId)
@@ -444,18 +444,11 @@ parameterelt parametername ls =
           , content     =  ls
           }
 
-refelt :: String -> Element
-refelt ref =
-  Element { name         =  "ref"
-          , attributes   =  ["xref" := ref]
-          , content      =  []
-          }
-
 relationelt :: String -> Element
 relationelt for =
   Element { name         =  "relation"
           , attributes   =  ["type" := "for"]
-          , content      =  [Right (refelt for)]
+          , content      =  [Right (xrefelt for)]
           }
 
 sourceelt :: String -> Element
@@ -517,11 +510,9 @@ versionelt version revision =
 xmldecl  :: String
 xmldecl  =  "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
 
-xrefelt :: String -> String -> Element
-xrefelt xref ami =
+xrefelt :: String -> Element
+xrefelt xref =
   Element { name         =  "ref"
-          , attributes   =  ["xref" := xref
-                            --,"ami:item-element-name" := ami -- apparently not allowed
-                            ]
+          , attributes   =  ["xref" := xref]
           , content      =  []
           }

@@ -26,7 +26,7 @@ balanceExerciseInfo identifier = MBExerciseInfo
   { title             = \l -> case l of
                           EN -> "Solving linear equations using balancing"
                           NL -> "Lineaire vergelijkingen oplossen met de belanceermethode"
-  , for               = "mbase://mb_concepts/mb_numbers_and_computation/_01_02_05_03_Powers"
+  , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_04_01_Linear_Equations"
   , langSupported     = [EN,NL]
   , cmp               = \l -> case l of
                           EN -> "Solve the linear equation "
@@ -182,6 +182,21 @@ derivativeQuotientExerciseInfo identifier = MBExerciseInfo
                           FI -> "Laske derivaatta osamäärälle "
                           HU -> "Deriválja a törtet"
   , problemStatement  = "Calculate the derivative of the following quotient: "
+  , context           = showId $ identifier 
+  , difficulty        = "medium"
+  }
+
+expandExerciseInfo :: Id -> MBExerciseInfo
+expandExerciseInfo identifier = MBExerciseInfo
+  { title             = \l -> case l of
+                          EN -> "Expanding polynomial expressions"
+                          NL -> "Polynomen uitwerken"
+  , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
+  , langSupported     = [EN,NL]
+  , cmp               = \l -> case l of
+                          EN -> "Expand the following expression "
+                          NL -> "Werk de haken weg in de volgende expressie "
+  , problemStatement  = "Expand the following expression: "
   , context           = showId $ identifier 
   , difficulty        = "medium"
   }

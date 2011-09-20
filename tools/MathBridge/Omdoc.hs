@@ -73,7 +73,6 @@ revision     =  MR.revision
 dontIncludeExercises = ["logic.propositional.dnf"
                        ,"logic.propositional.dnf.unicode"
                        ,"relationalgebra.cnf"
-                       ,"algebra.manipulation.polynomial.expand"
                        ]
 
 generate :: String -> IO ()

@@ -5,6 +5,9 @@
 -- feedbacktexts
 -- notify partners of two new exercises
 -- overhaul XML generation
+-- copyright heading
+-- metadata title texts in multiple languages to ExerciseInfo
+-- too many titlelang builders
 
 import ExerciseInfo
 import Languages
@@ -27,16 +30,13 @@ import Service.OpenMathSupport
 import Service.DomainReasoner
 
 import Text.OpenMath.Object
-import Text.XML.Interface
 import Text.XML
 
 import qualified Main.Revision as MR
 import Main.IDEAS
 
--- import Data.Map((!))
 import Data.Maybe
 import Data.Map((!),Map,empty,insert)
-
 
 import System.Environment
 import Control.Monad
@@ -58,67 +58,65 @@ main = do
 -}
 --------------------------------------------------------------------------------
 
-lastChanged, version :: String
+lastChanged, version, created, author :: String
 lastChanged  =  MR.lastChanged
 version      =  MR.version
+created      =  "2011-01-22"
+author       =  "Johan Jeuring"
 
 revision :: Int
 revision     =  MR.revision
+
 
 --------------------------------------------------------------------------------
 {- Generate all required files
 -}
 --------------------------------------------------------------------------------
 
-dontIncludeExercises = ["logic.propositional.dnf"
-                       ,"logic.propositional.dnf.unicode"
-                       ,"relationalgebra.cnf"
-                       ]
+dontIncludeExercises  :: [String]
+dontIncludeExercises  =  ["logic.propositional.dnf"
+                         ,"logic.propositional.dnf.unicode"
+                         ,"relationalgebra.cnf"
+                         ]
 
 generate :: String -> IO ()
 generate dir =
       do allExercises <- useIDEAS getExercises
-         let exercises = filter (\(Some ex) -> not (show (exerciseId ex) `elem` dontIncludeExercises)) allExercises
-         forM_ exercises $ \(Some ex) -> 
-           omdocexercisefile dir ex
-         recbookfile 
-           dir 
-           [omdocexerciserefs ex | Some ex <- exercises] 
+         let exercises = filter (\(Some ex) -> 
+                                     not (show (exerciseId ex) `elem` dontIncludeExercises)) 
+                                allExercises
+         forM_ exercises $ \(Some ex) -> omdocexercisefileB dir ex
+         recbookfileB dir (mapM_ (\(Some ex) -> omdocexerciserefsB ex) exercises)
 
 --------------------------------------------------------------------------------
 {- Generating the recbook for the exercise collections
 -}
 --------------------------------------------------------------------------------
 
-recbookfile :: String -> [Element] -> IO ()
-recbookfile dir exercisesrefs = do
+recbookfileB :: String -> XMLBuilder -> IO ()
+recbookfileB dir exercisesrefs = do
   let filestring =
              xmldecl
           ++ activemathdtd
           ++ showXML
-               (omdocelt
+               (omdocB
                   ""
                   "http://www.activemath.org/namespaces/am_internal"
-                  [omgroupelt "" "http://www.mathweb.org/omdoc"
-                    [omgroupelt "IdeasExercises" ""
-                      [metadataelt "IdeasExercises-metadata"
-                        (titleelts [EN,NL] ["Ideas Exercises collection","Ideas opgaven"])
-                      ,omgroupelt "recbook_for_IdeasExercises" ""
-                        (metadataelt ""
-                          (titleelts [EN,NL] ["Complete Ideas Exercises Recbook","Recbook voor alle Ideas opgaven"]
-                           ++
-                           [dateelt "created" "2011-01-22"
-                           ,dateelt "changed" lastChanged
-                           ,creatorelt "aut" "Johan Jeuring"
-                           ,sourceelt ""
-                           ,formatelt "application/omdoc+xml"
-                           ]
-                          )
-                        :exercisesrefs
-                        )
-                      ]
-                    ]
-                  ]
+                  $ do 
+                    omgroupB "" "http://www.mathweb.org/omdoc"
+                      (omgroupB "IdeasExercises" ""
+                         $ do  metadataB "IdeasExercises-metadata"
+                                 $ do titlesB [EN,NL] ["Ideas Exercises collection","Ideas opgaven"]
+                               omgroupB "recbook_for_IdeasExercises" ""
+                                 $ do metadataB ""
+                                        $ do titlesB [EN,NL] ["Complete Ideas Exercises Recbook","Recbook voor alle Ideas opgaven"]
+                                             dateB "created" created
+                                             dateB "changed" lastChanged
+                                             creatorB "aut"  author
+                                             sourceB ""
+                                             formatB "application/omdoc+xml"
+                                      exercisesrefs
+                     ) 
                )
   writeFile (dir ++ "omdoc/"  ++ "RecBook_Exercises.omdoc" ) filestring
   writeFile (dir ++ "oqmath/" ++ "RecBook_Exercises.oqmath") filestring
@@ -126,28 +124,29 @@ recbookfile dir exercisesrefs = do
 omdocrefpath  :: String
 omdocrefpath  =  ""
 
-omdocexerciserefs :: Exercise a -> Element
-omdocexerciserefs ex =
+omdocexerciserefsB :: Exercise a -> XMLBuilder
+omdocexerciserefsB ex =
   let info             = mBExerciseInfo ! (exerciseId ex)
       langs            = langSupported info
       titleCmps        =  map (\l -> title info l) langs
       len              = length (examples ex)
-      refs             = map (\i -> omdocrefpath  -- relative dir (the same right now)
+      refs             = map (\i -> omdocrefpath  -- relative dir 
                                 ++  context info  -- filename
                                 ++  "/"
                                 ++  context info  -- exercise id
                                 ++  show i)       -- and nr
                              [0..len-1]
-      exercises        = map xrefelt refs
-  in omgroupelt "" "" (metadataelt "" [titleeltMultLang langs titleCmps]:exercises)
+      exercises        = mapM_ refB refs
+  in omgroupB "" "" $ do metadataB "" $ do titleMultLangB langs titleCmps 
+                         exercises
 
 --------------------------------------------------------------------------------
 {- Generating an omdoc file for an exercise
 -}
 --------------------------------------------------------------------------------
 
-omdocexercisefile :: String -> Exercise a -> IO ()
-omdocexercisefile dir ex = do
+omdocexercisefileB :: String -> Exercise a -> IO ()
+omdocexercisefileB dir ex = do
   let info = mBExerciseInfo ! (exerciseId ex)
   let langs = langSupported info
   let titleTexts =  map (\l -> title info l) langs
@@ -155,66 +154,61 @@ omdocexercisefile dir ex = do
              xmldecl
           ++ activemathdtd
           ++ showXML
-               (omdocelt
-                  (context info ++ ".omdoc")
-                  []
-                  [metadataelt
-                    ""
-                    ([dateelt "created" "2011-01-22"
-                     ,dateelt "changed" lastChanged
-                     ] ++
-                     titleelts langs titleTexts ++
-                     [creatorelt "aut" "Johan Jeuring"
-                     ,versionelt version (show revision)
-                     ]
-                    )
-                  ,theoryelt (context info)
-                             (omdocexercises ex)
-                  ]
+               (omdocB (context info ++ ".omdoc") []
+                  $ do metadataB
+                         ""
+                         (  dateB "created" "2011-01-22" 
+                         >> dateB "changed" lastChanged 
+                         >> titlesB langs titleTexts 
+                         >> creatorB "aut" "Johan Jeuring" 
+                         >> versionB version (show revision)
+                         ) 
+                       theoryB (context info) $ do omdocexercisesB ex
                )
   writeFile (dir ++ "omdoc/"  ++ context info ++ ".omdoc" ) filestring
   writeFile (dir ++ "oqmath/" ++ context info ++ ".oqmath") filestring
 
-omdocexercises :: {- (IsTerm a) => -} Exercise a -> [Element]
-omdocexercises ex = catMaybes $ zipWith make [(0::Int)..] (examples ex)
+omdocexercisesB :: Exercise a -> XMLBuilder
+omdocexercisesB ex = zipWithM_ make [(0::Int)..] (examples ex)
  where
    info = mBExerciseInfo ! (exerciseId ex)
    langs = langSupported info
    titleTexts =  map (\l -> title info l) langs
-   make nr (dif, example) =
-      fmap (makeElement . omobj2xml) (toOpenMath ex example)
+   make nr (dif, example) = do omobj <- toOpenMath ex example
+                               let xmlobj = omobj2xml omobj
+                               makeElement xmlobj
     where
-      makeElement omobj =
-         omdocexercise
+      makeElement omobj = 
+         omdocexerciseB
             (context info ++ show nr)
-            (titleelts langs titleTexts)
+            (titlesB langs titleTexts)
             (if null (for info) then Nothing else Just (for info))
             (show dif)
             mblangs
-            (map (\l -> (if l `elem` langs then cmp info l else cmp info mbdefaultlang) ++ show omobj) mblangs)
+            (map (\l -> (if l `elem` langs then cmp info l else cmp info mbdefaultlang, unescaped $ showXML omobj)) mblangs)
             "IDEASGenerator"
             "strategy"
             (problemStatement info)
             (context info)
-            omobj
+            (unescaped $ showXML omobj)
 
-omdocexercise :: String
-              -> [Element]
-              -> Maybe String
-              -> String
-              -> [Lang]
-              -> [String]
-              -> String
-              -> String
-              -> String
-              -> String
-              -> Element
-              -> Element
-omdocexercise
+omdocexerciseB :: String
+               -> XMLBuilder
+               -> Maybe String
+               -> String
+               -> [Lang]
+               -> [(String, XMLBuilder)]
+               -> String
+               -> String
+               -> String
+               -> String
+               -> XMLBuilder
+               -> XMLBuilder
+omdocexerciseB
     exerciseid
     titles
     maybefor
-    difficulty
+    dif
     langs
     cmps
     interaction_generatorname
@@ -222,35 +216,33 @@ omdocexercise
     problemstatement
     ctxt
     task
-  = exerciseelt
+  = exerciseB
       exerciseid
       Nothing
-      ([metadataelt
+      (metadataB
          ""
-         (titles ++
-          [formatelt "AMEL1.0"
-          ,extradataelt
-            (difficultyelt difficulty
-            :case maybefor of
-               Just for -> [relationelt for]
-               Nothing  -> []
+         (titles >>
+          formatB "AMEL1.0" >>
+          extradataB 
+            (difficultyB dif >>
+             when (isJust maybefor) (relationB (fromJust maybefor))
             )
-          ]
-         )
-       ]
-       ++
-       cmpelts langs cmps
-       ++
-       [interaction_generatorelt
+         ) >>
+       cmpsTaskB langs cmps >>
+       interaction_generatorB
          interaction_generatorname
          interaction_generatortype
-         [parameterelt "problemstatement" [Left problemstatement]
-         ,parameterelt "context"          [Left ctxt]
-         ,parameterelt "difficulty"       [Left difficulty]
-         ,parameterelt "task"             [Right task]
-         ]
-       ]
-      )
+         (   parameterB "problemstatement" (text problemstatement)
+         >>  parameterB "context"          (text ctxt)
+         >>  parameterB "difficulty"       (text dif)
+         >>  parameterB "task"             task
+         )
+       )
+
+--------------------------------------------------------------------------------
+{- Create a Map for the exercise info
+-}
+--------------------------------------------------------------------------------
 
 mBExerciseInfo :: Map Id MBExerciseInfo
 mBExerciseInfo =
@@ -320,198 +312,119 @@ mBExerciseInfo =
 
 --------------------------------------------------------------------------------
 {- XML elements for Omdoc.
-
-Use inefficient string concatenation.
-Probably use Text.XML.
 -}
 --------------------------------------------------------------------------------
 
 activemathdtd  :: String
 activemathdtd  =  "<!DOCTYPE omdoc SYSTEM \"../dtd/activemath.dtd\" []>\n"
 
-cmpelts :: [Lang] -> [String] -> [Element]
-cmpelts = zipWith (\l s -> cmpelt (show l) s)
+cmpsTaskB  :: [Lang] -> [(String,XMLBuilder)] -> XMLBuilder
+cmpsTaskB  =  zipWithM_ (\l s -> cmpTaskB l s)
 
-cmpelt :: String  -> String -> Element
-cmpelt lang cmp =
-  Element { name        =  "CMP"
-          , attributes  =  ["xml:lang" := lang]
-          , content     =  [Left cmp]
-          }
+cmpsTitleB  :: [Lang] -> [String] -> XMLBuilder
+cmpsTitleB  =  zipWithM_ (\l s -> cmpTitleB l s)
 
-creatorelt :: String -> String -> Element
-creatorelt role nm =
-  Element { name         =  "Creator"
-          , attributes   =  ["role" := role ]
-          , content      =  [Left nm]
-          }
+cmpTaskB :: Lang -> (String,XMLBuilder) -> XMLBuilder
+cmpTaskB lang (taskcmp,omo) =
+  element "CMP" (("xml:lang" .=. show lang) >> text taskcmp >> omo)
 
-dateelt :: String -> String -> Element
-dateelt action date =
-  Element { name         =  "Date"
-          , attributes   =  ["action" := action ]
-          , content      =  [Left date]
-          }
+cmpTitleB :: Lang -> String -> XMLBuilder
+cmpTitleB lang titlecmp =
+  element "CMP" (("xml:lang" .=. show lang) >> text titlecmp)
 
-difficultyelt :: String  -> Element
-difficultyelt difficulty =
-  Element { name        =  "difficulty"
-          , attributes  =  ["value" := difficulty]
-          , content     =  []
-          }
+creatorB :: String -> String -> XMLBuilder
+creatorB role nm = 
+  element "Creator" (("role" .=. role) >> text nm)
 
-extradataelt :: [Element] -> Element
-extradataelt ls =
-  Element { name        =  "extradata"
-          , attributes  =  []
-          , content     =  map Right ls
-          }
+dateB :: String -> String -> XMLBuilder
+dateB action date = element "Date" (("action" .=. action) >> text date)
 
-exerciseelt :: String -> Maybe String -> [Element] -> Element
-exerciseelt idattr maybefor ls =
-  case maybefor of
-    Nothing  -> Element { name        =  "exercise"
-                        , attributes  =  ["id" := idattr]
-                        , content     =  map Right ls
-                        }
-    Just for -> Element { name        =  "exercise"
-                        , attributes  =  ["id" := idattr, "for" := for]
-                        , content     =  map Right ls
-                        }
+difficultyB :: String -> XMLBuilder
+difficultyB dif = 
+  element "difficulty" ("value" .=. dif)
 
-formatelt :: String -> Element
-formatelt format =
-  Element { name        =  "Format"
-          , attributes  =  []
-          , content     =  [Left format]
-          }
+exerciseB :: String -> Maybe String -> XMLBuilder -> XMLBuilder
+exerciseB idattr maybefor ls = 
+  element "exercise" $ do
+    ("id" .=. idattr)
+    unless (isNothing maybefor) ("for" .=. fromJust maybefor)
+    ls
+       
+extradataB :: XMLBuilder -> XMLBuilder
+extradataB ls = 
+  element "extradata" $ do ls
 
-interaction_generatorelt :: String -> String -> [Element] -> Element
-interaction_generatorelt interaction_generatorname interaction_generatortype ls =
-  Element { name        =  "interaction_generator"
-          , attributes  =  ["name" := interaction_generatorname
-                           ,"type" := interaction_generatortype]
-          , content     =  map Right ls
-          }
+formatB :: String -> XMLBuilder
+formatB format = 
+  element "Format" (text format)
+ 
+interaction_generatorB :: String -> String -> XMLBuilder -> XMLBuilder
+interaction_generatorB interaction_generatorname interaction_generatortype ls = 
+  element "interaction_generator" $ do
+    ("name" .=. interaction_generatorname)
+    ("type" .=. interaction_generatortype)
+    ls
 
-metadataelt :: String -> [Element] -> Element
-metadataelt identifier ls =
-  Element { name        =  "metadata"
-          , attributes  =  if null identifier
-                           then []
-                           else ["id" := identifier]
-          , content     =  map Right ls
-          }
+metadataB :: String -> XMLBuilder -> XMLBuilder
+metadataB identifier ls =
+  element "metadata" $ do
+    unless (null identifier) ("id" .=. identifier)
+    ls
 
-omdocelt :: String -> String -> [Element] -> Element
-omdocelt identifier namespace ls =
-  Element { name         =  "omdoc"
-          , attributes   =  if null namespace
-                            then ["id" := identifier]
-                            else if null identifier
-                                 then ["xmlns:ami" := namespace]
-                                 else ["id" := identifier
-                                      ,"xmlns:ami" := namespace]
-          , content      =  map Right ls
-          }
+omdocB :: String -> String -> XMLBuilder -> XML
+omdocB identifier namespace ls = makeXML "omdoc" $
+  do when (not (null identifier)) ("id" .=. identifier)
+     when (not (null namespace)) ("xmlns:ami" .=. namespace)
+     ls
 
-omgroupelt :: String -> String -> [Element] -> Element
-omgroupelt identifier namespace ls =
-  Element { name         =  "omgroup"
-          , attributes   = if null namespace && null identifier
-                           then []
-                           else if null namespace
-                                then ["id" := identifier]
-                                else if null identifier
-                                     then ["xmlns" := namespace]
-                                     else ["id" := identifier
-                                          ,"xmlns" := namespace]
-          , content      =  map Right ls
-          }
+omgroupB :: String -> String -> XMLBuilder -> XMLBuilder
+omgroupB identifier namespace ls =
+  element "omgroup" $ do 
+    unless (null namespace) ("xmlns" .=. namespace)
+    unless (null identifier) ("id" .=. identifier)
+    ls
 
-omtextelt  :: String -> [Element] -> Element
-omtextelt identifier ls =
-  Element { name         =  "omtext"
-          , attributes   =  ["id" := identifier]
-          , content      =  map Right ls
-          }
+parameterB :: String -> XMLBuilder -> XMLBuilder
+parameterB parametername ls =
+  element "parameter" $ do
+    ("name" .=. parametername)
+    ls
 
-parameterelt :: String -> Content -> Element
-parameterelt parametername ls =
-  Element { name        =  "parameter"
-          , attributes  =  ["name" := parametername]
-          , content     =  ls
-          }
+relationB :: String -> XMLBuilder
+relationB relfor =
+  element "relation" $ do
+    ("type" .=. "for")
+    refB relfor
 
-relationelt :: String -> Element
-relationelt for =
-  Element { name         =  "relation"
-          , attributes   =  ["type" := "for"]
-          , content      =  [Right (xrefelt for)]
-          }
+sourceB :: String -> XMLBuilder
+sourceB source = 
+  element "Source" $ do unless (null source) (text source)
 
-sourceelt :: String -> Element
-sourceelt source =
-  Element { name         =  "Source"
-          , attributes   =  []
-          , content      =  if null source
-                            then []
-                            else [Left source]
-          }
+theoryB :: String -> XMLBuilder -> XMLBuilder
+theoryB identifier ls = 
+  element "theory" (("id" .=. identifier) >> ls)
 
-sourcefileelt :: String -> String -> String -> Element
-sourcefileelt namespace filename lastmodified =
-  Element { name         =  "sourcefile"
-          , attributes   =  ["xmlns" := namespace
-                            ,"path" := filename
-                            ,"lastModified" := lastmodified]
-          , content      =  []
-          }
+titlelangB :: Lang -> String -> XMLBuilder
+titlelangB lang titletext =
+  element "Title" $ do 
+     "xml:lang" .=. show lang
+     text titletext
 
-theoryelt  :: String -> [Element] -> Element
-theoryelt identifier ls =
-  Element { name         =  "theory"
-          , attributes   =  ["id" := identifier]
-          , content      =  map Right ls
-          }
+titlesB :: [Lang] -> [String] -> XMLBuilder
+titlesB = zipWithM_ titlelangB   
 
-titleelt :: String -> Element
-titleelt titletext =
-  Element { name        =  "Title"
-          , attributes  =  []
-          , content     =  [Left titletext]
-          }
+titleMultLangB :: [Lang] -> [String] -> XMLBuilder
+titleMultLangB langs texts =
+  element "Title" $ do cmpsTitleB langs texts
 
-titleeltlang :: Lang -> String -> Element
-titleeltlang lang titletext =
-  Element { name        =  "Title"
-          , attributes  =  ["xml:lang" := show lang]
-          , content     =  [Left titletext]
-          }
-
-titleelts :: [Lang] -> [String] -> [Element]
-titleelts langs texts = zipWith titleeltlang langs texts
-
-titleeltMultLang :: [Lang] -> [String] -> Element
-titleeltMultLang langs texts =
-  Element { name        =  "Title"
-          , attributes  =  []
-          , content     =  map Right (cmpelts langs texts)
-          }
-
-versionelt :: String -> String -> Element
-versionelt version revision =
-  Element { name        =  "Version"
-          , attributes  =  ["number" := revision]
-          , content     =  [Left version]
-          }
+versionB :: String -> String -> XMLBuilder
+versionB rev ver = 
+  element "Version" (("number" .=. rev) >> text ver)
 
 xmldecl  :: String
 xmldecl  =  "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
 
-xrefelt :: String -> Element
-xrefelt xref =
-  Element { name         =  "ref"
-          , attributes   =  ["xref" := xref]
-          , content      =  []
-          }
+refB :: String -> XMLBuilder
+refB xref = do element "ref" ("xref" .=. xref)
+     
+     

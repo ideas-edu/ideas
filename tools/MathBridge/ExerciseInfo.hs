@@ -5,7 +5,13 @@ import Languages
 import Common.Id
 
 --------------------------------------------------------------------------------
-{- Info about exercises for ActiveMath
+{- General info about Ideas exercises for Math-Bridge
+-}
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+{- Info about particular exercises for Math-Bridge
 -}
 --------------------------------------------------------------------------------
 
@@ -18,7 +24,6 @@ data MBExerciseInfo = MBExerciseInfo
   , context           :: String
   , difficulty        :: String
   }
-
 
 -- For cmp I could reuse the linearExerciseInfo
 balanceExerciseInfo :: Id -> MBExerciseInfo

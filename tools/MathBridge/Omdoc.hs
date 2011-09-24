@@ -13,10 +13,6 @@
 -----------------------------------------------------------------------------
 module Main(main) where
 
--- document buggy rules for AM
--- feedbacktexts
--- notify partners of two new exercises
-
 import ExerciseInfo
 import Languages
 

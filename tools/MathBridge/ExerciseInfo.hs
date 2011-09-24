@@ -1,4 +1,17 @@
-﻿module ExerciseInfo where
+﻿-----------------------------------------------------------------------------
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  johan.jeuring@ou.nl
+-- Stability   :  provisional
+-- Portability :  portable (depends on ghc)
+--
+-- Module specifying the texts for the ideas exercises used in Math-Bridge
+--
+-----------------------------------------------------------------------------
+module ExerciseInfo where
 
 import Languages
 

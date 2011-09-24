@@ -1,10 +1,21 @@
-﻿module Main(main) where
+﻿-----------------------------------------------------------------------------
+-- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- under the terms of the GNU General Public License. For more information,
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  johan.jeuring@ou.nl
+-- Stability   :  provisional
+-- Portability :  portable (depends on ghc)
+--
+-- Main module for generating Math-Bridge exercises from the ideas framework
+--
+-----------------------------------------------------------------------------
+module Main(main) where
 
 -- document buggy rules for AM
--- second ``for'' ref?
 -- feedbacktexts
 -- notify partners of two new exercises
--- overhaul XML generation
 -- copyright heading
 -- metadata title texts in multiple languages to ExerciseInfo
 -- too many titlelang builders

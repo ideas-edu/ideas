@@ -16,9 +16,6 @@ module Main(main) where
 -- document buggy rules for AM
 -- feedbacktexts
 -- notify partners of two new exercises
--- copyright heading
--- metadata title texts in multiple languages to ExerciseInfo
--- too many titlelang builders
 
 import ExerciseInfo
 import Languages
@@ -117,10 +114,12 @@ recbookfileB dir exercisesrefs = do
                     omgroupB "" "http://www.mathweb.org/omdoc"
                       (omgroupB "IdeasExercises" ""
                          $ do  metadataB "IdeasExercises-metadata"
-                                 $ do titlesB [EN,NL] ["Ideas Exercises collection","Ideas opgaven"]
+                                 $ do titlesB titleIdeasExercisesMetadataLangs 
+                                              titleIdeasExercisesMetadata
                                omgroupB "recbook_for_IdeasExercises" ""
                                  $ do metadataB ""
-                                        $ do titlesB [EN,NL] ["Complete Ideas Exercises Recbook","Recbook voor alle Ideas opgaven"]
+                                        $ do titlesB titlesRecbookForIdeasExercisesLangs
+                                                     titlesRecbookForIdeasExercises
                                              dateB "created" created
                                              dateB "changed" lastChanged
                                              creatorB "aut"  author
@@ -139,7 +138,7 @@ omdocexerciserefsB :: Exercise a -> XMLBuilder
 omdocexerciserefsB ex =
   let info             = mBExerciseInfo ! (exerciseId ex)
       langs            = langSupported info
-      titleCmps        =  map (\l -> title info l) langs
+      titleCmps        = map (\l -> title info l) langs
       len              = length (examples ex)
       refs             = map (\i -> omdocrefpath  -- relative dir 
                                 ++  context info  -- filename
@@ -160,7 +159,7 @@ omdocexercisefileB :: String -> Exercise a -> IO ()
 omdocexercisefileB dir ex = do
   let info = mBExerciseInfo ! (exerciseId ex)
   let langs = langSupported info
-  let titleTexts =  map (\l -> title info l) langs
+--  let titleTexts =  map (\l -> title info l) langs
   let filestring =
              xmldecl
           ++ activemathdtd
@@ -170,7 +169,7 @@ omdocexercisefileB dir ex = do
                          ""
                          (  dateB "created" "2011-01-22" 
                          >> dateB "changed" lastChanged 
-                         >> titlesB langs titleTexts 
+                         >> titlesB langs (title info)
                          >> creatorB "aut" "Johan Jeuring" 
                          >> versionB version (show revision)
                          ) 
@@ -184,7 +183,6 @@ omdocexercisesB ex = zipWithM_ make [(0::Int)..] (examples ex)
  where
    info = mBExerciseInfo ! (exerciseId ex)
    langs = langSupported info
-   titleTexts =  map (\l -> title info l) langs
    make nr (dif, example) = do omobj <- toOpenMath ex example
                                let xmlobj = omobj2xml omobj
                                makeElement xmlobj
@@ -192,7 +190,7 @@ omdocexercisesB ex = zipWithM_ make [(0::Int)..] (examples ex)
       makeElement omobj = 
          omdocexerciseB
             (context info ++ show nr)
-            (titlesB langs titleTexts)
+            (titlesB langs (title info))
             (if null (for info) then Nothing else Just (for info))
             (show dif)
             mblangs
@@ -421,8 +419,8 @@ titlelangB lang titletext =
      "xml:lang" .=. show lang
      text titletext
 
-titlesB :: [Lang] -> [String] -> XMLBuilder
-titlesB = zipWithM_ titlelangB   
+titlesB :: [Lang] -> (Lang -> String) -> XMLBuilder
+titlesB langs flang = mapM_ (\l -> titlelangB l (flang l)) langs
 
 titleMultLangB :: [Lang] -> [String] -> XMLBuilder
 titleMultLangB langs texts =

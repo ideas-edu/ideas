@@ -22,6 +22,17 @@ import Common.Id
 -}
 --------------------------------------------------------------------------------
 
+titleIdeasExercisesMetadata = \l -> case l of
+  EN -> "Ideas Exercises collection"
+  NL -> "Ideas opgaven"
+
+titleIdeasExercisesMetadataLangs = [EN,NL]
+
+titlesRecbookForIdeasExercises = \l -> case l of
+  EN -> "Complete Ideas Exercises Recbook"
+  NL -> "Recbook voor alle Ideas opgaven"
+
+titlesRecbookForIdeasExercisesLangs = [EN,NL]
 
 --------------------------------------------------------------------------------
 {- Info about particular exercises for Math-Bridge

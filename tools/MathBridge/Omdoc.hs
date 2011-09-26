@@ -118,7 +118,7 @@ recbookfileB dir exercisesrefs = do
                                                      titlesRecbookForIdeasExercises
                                              dateB "created" created
                                              dateB "changed" lastChanged
-                                             creatorB "aut"  author
+                                             element "Creator" (("role" .=."aut") >> text author)
                                              sourceB ""
                                              formatB "application/omdoc+xml"
                                       exercisesrefs
@@ -155,7 +155,6 @@ omdocexercisefileB :: String -> Exercise a -> IO ()
 omdocexercisefileB dir ex = do
   let info = mBExerciseInfo ! (exerciseId ex)
   let langs = langSupported info
---  let titleTexts =  map (\l -> title info l) langs
   let filestring =
              xmldecl
           ++ activemathdtd
@@ -166,7 +165,7 @@ omdocexercisefileB dir ex = do
                          (  dateB "created" "2011-01-22" 
                          >> dateB "changed" lastChanged 
                          >> titlesB langs (title info)
-                         >> creatorB "aut" "Johan Jeuring" 
+                         >> element "Creator" (("role" .=."aut") >> text author)
                          >> versionB version (show revision)
                          ) 
                        theoryB (context info) $ do omdocexercisesB ex
@@ -190,7 +189,7 @@ omdocexercisesB ex = zipWithM_ make [(0::Int)..] (examples ex)
             (if null (for info) then Nothing else Just (for info))
             (show dif)
             mblangs
-            (map (\l -> (if l `elem` langs then cmp info l else cmp info mbdefaultlang, unescaped $ showXML omobj)) mblangs)
+            (map (\l -> (if l `elem` langs then cmp info l else cmp info mbdefaultlang, omobj)) mblangs)
             "IDEASGenerator"
             "strategy"
             (problemStatement info)
@@ -202,7 +201,7 @@ omdocexerciseB :: String
                -> Maybe String
                -> String
                -> [Lang]
-               -> [(String, XMLBuilder)]
+               -> [(String, XML)]
                -> String
                -> String
                -> String
@@ -251,70 +250,40 @@ omdocexerciseB
 
 mBExerciseInfo :: Map Id MBExerciseInfo
 mBExerciseInfo =
-  let balanceExerciseId             = exerciseId balanceExercise
-      calcPowerExerciseId           = exerciseId calcPowerExercise
-      coverUpExerciseId             = exerciseId coverUpExercise
-      derivativeExerciseId          = exerciseId derivativeExercise
-      derivativePolyExerciseId      = exerciseId derivativePolyExercise
-      derivativeProductExerciseId   = exerciseId derivativeProductExercise
-      derivativeQuotientExerciseId  = exerciseId derivativeQuotientExercise
-      expandExerciseId              = exerciseId expandExercise
-      expEqExerciseId               = exerciseId expEqExercise
-      findFactorsExerciseId         = exerciseId findFactorsExercise
-      fractionExerciseId            = exerciseId fractionExercise
-      gaussianElimExerciseId        = exerciseId gaussianElimExercise
-      gramSchmidtExerciseId         = exerciseId gramSchmidtExercise
-      higherDegreeExerciseId        = exerciseId higherDegreeExercise
-      ineqHigherDegreeExerciseId    = exerciseId ineqHigherDegreeExercise
-      ineqLinearExerciseId          = exerciseId ineqLinearExercise
-      ineqQuadraticExerciseId       = exerciseId ineqQuadraticExercise
-      linearExerciseId              = exerciseId linearExercise
-      linearMixedExerciseId         = exerciseId linearMixedExercise
-      linearSystemExerciseId        = exerciseId linearSystemExercise
-      logEqExerciseId               = exerciseId logEqExercise
-      nonNegBrokenExpExerciseId     = exerciseId nonNegBrokenExpExercise
-      powerOfExerciseId             = exerciseId powerOfExercise
-      powerEqExerciseId             = exerciseId powerEqExercise
-      quadraticExerciseId           = exerciseId quadraticExercise
-      quadraticNoABCExerciseId      = exerciseId quadraticNoABCExercise
-      quadraticWithApproximationId  = exerciseId quadraticWithApproximation
-      rationalEquationExerciseId    = exerciseId rationalEquationExercise
-      simplifyPowerExerciseId       = exerciseId simplifyPowerExercise
-      simplifyRationalExerciseId    = exerciseId simplifyRationalExercise
-      systemWithMatrixExerciseId    = exerciseId systemWithMatrixExercise
-  in  insert balanceExerciseId            (balanceExerciseInfo                    balanceExerciseId)
-    $ insert calcPowerExerciseId          (calcPowerExerciseInfo                  calcPowerExerciseId)
-    $ insert coverUpExerciseId            (coverUpExerciseInfo                    coverUpExerciseId)
-    $ insert derivativeExerciseId         (derivativeExerciseInfo                 derivativeExerciseId)
-    $ insert derivativePolyExerciseId     (derivativePolyExerciseInfo             derivativePolyExerciseId)
-    $ insert derivativeProductExerciseId  (derivativeProductExerciseInfo          derivativeProductExerciseId)
-    $ insert derivativeQuotientExerciseId (derivativeQuotientExerciseInfo         derivativeQuotientExerciseId)
-    $ insert expandExerciseId             (expandExerciseInfo                     expandExerciseId)
-    $ insert expEqExerciseId              (expEqExerciseInfo                      expEqExerciseId)
-    $ insert findFactorsExerciseId        (findFactorsExerciseInfo                findFactorsExerciseId)
-    $ insert fractionExerciseId           (fractionExerciseInfo                   fractionExerciseId)
-    $ insert gaussianElimExerciseId       (gaussianElimExerciseInfo               gaussianElimExerciseId)
-    $ insert gramSchmidtExerciseId        (gramSchmidtExerciseInfo                gramSchmidtExerciseId)
-    $ insert higherDegreeExerciseId       (higherDegreeExerciseInfo               higherDegreeExerciseId)
-    $ insert ineqHigherDegreeExerciseId   (ineqHigherDegreeExerciseInfo           ineqHigherDegreeExerciseId)
-    $ insert ineqLinearExerciseId         (ineqLinearExerciseInfo                 ineqLinearExerciseId)
-    $ insert ineqQuadraticExerciseId      (ineqQuadraticExerciseInfo              ineqQuadraticExerciseId)
-    $ insert linearExerciseId             (linearExerciseInfo                     linearExerciseId)
-    $ insert linearMixedExerciseId        (linearMixedExerciseInfo                linearMixedExerciseId)
-    $ insert linearSystemExerciseId       (linearSystemExerciseInfo               linearSystemExerciseId)
-    $ insert logEqExerciseId              (logEqExerciseInfo                      logEqExerciseId)
-    $ insert nonNegBrokenExpExerciseId    (nonNegBrokenExpExerciseInfo            nonNegBrokenExpExerciseId)
-    $ insert powerOfExerciseId            (powerOfExerciseInfo                    powerOfExerciseId)
-    $ insert powerEqExerciseId            (powerEqExerciseInfo                    powerEqExerciseId)
-    $ insert quadraticExerciseId          (quadraticExerciseInfo                  quadraticExerciseId)
-    $ insert quadraticNoABCExerciseId     (quadraticNoABCExerciseInfo             quadraticNoABCExerciseId)
-    $ insert quadraticWithApproximationId (quadraticWithApproximationExerciseInfo quadraticWithApproximationId)
-    $ insert rationalEquationExerciseId   (rationalEquationExerciseInfo           rationalEquationExerciseId)
-    $ insert simplifyPowerExerciseId      (simplifyPowerExerciseInfo              simplifyPowerExerciseId)
-    $ insert simplifyRationalExerciseId   (simplifyRationalExerciseInfo           simplifyRationalExerciseId)
-    $ insert systemWithMatrixExerciseId   (systemWithMatrixExerciseInfo           systemWithMatrixExerciseId)
-      empty
-
+    insertExercise balanceExercise            balanceExerciseInfo
+  $ insertExercise calcPowerExercise          calcPowerExerciseInfo
+  $ insertExercise coverUpExercise            coverUpExerciseInfo
+  $ insertExercise derivativeExercise         derivativeExerciseInfo
+  $ insertExercise derivativePolyExercise     derivativePolyExerciseInfo
+  $ insertExercise derivativeProductExercise  derivativeProductExerciseInfo
+  $ insertExercise derivativeQuotientExercise derivativeQuotientExerciseInfo
+  $ insertExercise expandExercise             expandExerciseInfo
+  $ insertExercise expEqExercise              expEqExerciseInfo
+  $ insertExercise findFactorsExercise        findFactorsExerciseInfo
+  $ insertExercise fractionExercise           fractionExerciseInfo
+  $ insertExercise gaussianElimExercise       gaussianElimExerciseInfo
+  $ insertExercise gramSchmidtExercise        gramSchmidtExerciseInfo
+  $ insertExercise higherDegreeExercise       higherDegreeExerciseInfo
+  $ insertExercise ineqHigherDegreeExercise   ineqHigherDegreeExerciseInfo
+  $ insertExercise ineqLinearExercise         ineqLinearExerciseInfo
+  $ insertExercise ineqQuadraticExercise      ineqQuadraticExerciseInfo
+  $ insertExercise linearExercise             linearExerciseInfo
+  $ insertExercise linearMixedExercise        linearMixedExerciseInfo
+  $ insertExercise linearSystemExercise       linearSystemExerciseInfo
+  $ insertExercise logEqExercise              logEqExerciseInfo
+  $ insertExercise nonNegBrokenExpExercise    nonNegBrokenExpExerciseInfo
+  $ insertExercise powerOfExercise            powerOfExerciseInfo
+  $ insertExercise powerEqExercise            powerEqExerciseInfo
+  $ insertExercise quadraticExercise          quadraticExerciseInfo
+  $ insertExercise quadraticNoABCExercise     quadraticNoABCExerciseInfo
+  $ insertExercise quadraticWithApproximation quadraticWithApproximationExerciseInfo
+  $ insertExercise rationalEquationExercise   rationalEquationExerciseInfo
+  $ insertExercise simplifyPowerExercise      simplifyPowerExerciseInfo
+  $ insertExercise simplifyRationalExercise   simplifyRationalExerciseInfo
+  $ insertExercise systemWithMatrixExercise   systemWithMatrixExerciseInfo
+  $ empty
+  
+insertExercise ex exinfo = let idex = exerciseId ex in insert idex (exinfo idex)  
 --------------------------------------------------------------------------------
 {- XML elements for Omdoc.
 -}
@@ -323,23 +292,19 @@ mBExerciseInfo =
 activemathdtd  :: String
 activemathdtd  =  "<!DOCTYPE omdoc SYSTEM \"../dtd/activemath.dtd\" []>\n"
 
-cmpsTaskB  :: [Lang] -> [(String,XMLBuilder)] -> XMLBuilder
+cmpsTaskB  :: [Lang] -> [(String,XML)] -> XMLBuilder
 cmpsTaskB  =  zipWithM_ (\l s -> cmpTaskB l s)
 
 cmpsTitleB  :: [Lang] -> [String] -> XMLBuilder
 cmpsTitleB  =  zipWithM_ (\l s -> cmpTitleB l s)
 
-cmpTaskB :: Lang -> (String,XMLBuilder) -> XMLBuilder
+cmpTaskB :: Lang -> (String,XML) -> XMLBuilder
 cmpTaskB lang (taskcmp,omo) =
-  element "CMP" (("xml:lang" .=. show lang) >> text taskcmp >> omo)
+  element "CMP" (("xml:lang" .=. show lang) >> text taskcmp >> builder omo)
 
 cmpTitleB :: Lang -> String -> XMLBuilder
 cmpTitleB lang titlecmp =
   element "CMP" (("xml:lang" .=. show lang) >> text titlecmp)
-
-creatorB :: String -> String -> XMLBuilder
-creatorB role nm = 
-  element "Creator" (("role" .=. role) >> text nm)
 
 dateB :: String -> String -> XMLBuilder
 dateB action date = element "Date" (("action" .=. action) >> text date)
@@ -356,12 +321,10 @@ exerciseB idattr maybefor ls =
     ls
        
 extradataB :: XMLBuilder -> XMLBuilder
-extradataB ls = 
-  element "extradata" $ do ls
+extradataB ls = element "extradata" $ do ls
 
 formatB :: String -> XMLBuilder
-formatB format = 
-  element "Format" (text format)
+formatB format = element "Format" (text format)
  
 interaction_generatorB :: String -> String -> XMLBuilder -> XMLBuilder
 interaction_generatorB interaction_generatorname interaction_generatortype ls = 

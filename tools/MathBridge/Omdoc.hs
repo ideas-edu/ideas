@@ -250,37 +250,37 @@ omdocexerciseB
 
 mBExerciseInfo :: Map Id MBExerciseInfo
 mBExerciseInfo =
-    insertExercise balanceExercise            balanceExerciseInfo
-  $ insertExercise calcPowerExercise          calcPowerExerciseInfo
-  $ insertExercise coverUpExercise            coverUpExerciseInfo
-  $ insertExercise derivativeExercise         derivativeExerciseInfo
-  $ insertExercise derivativePolyExercise     derivativePolyExerciseInfo
-  $ insertExercise derivativeProductExercise  derivativeProductExerciseInfo
-  $ insertExercise derivativeQuotientExercise derivativeQuotientExerciseInfo
-  $ insertExercise expandExercise             expandExerciseInfo
-  $ insertExercise expEqExercise              expEqExerciseInfo
-  $ insertExercise findFactorsExercise        findFactorsExerciseInfo
-  $ insertExercise fractionExercise           fractionExerciseInfo
-  $ insertExercise gaussianElimExercise       gaussianElimExerciseInfo
-  $ insertExercise gramSchmidtExercise        gramSchmidtExerciseInfo
-  $ insertExercise higherDegreeExercise       higherDegreeExerciseInfo
-  $ insertExercise ineqHigherDegreeExercise   ineqHigherDegreeExerciseInfo
-  $ insertExercise ineqLinearExercise         ineqLinearExerciseInfo
-  $ insertExercise ineqQuadraticExercise      ineqQuadraticExerciseInfo
-  $ insertExercise linearExercise             linearExerciseInfo
-  $ insertExercise linearMixedExercise        linearMixedExerciseInfo
-  $ insertExercise linearSystemExercise       linearSystemExerciseInfo
-  $ insertExercise logEqExercise              logEqExerciseInfo
-  $ insertExercise nonNegBrokenExpExercise    nonNegBrokenExpExerciseInfo
-  $ insertExercise powerOfExercise            powerOfExerciseInfo
-  $ insertExercise powerEqExercise            powerEqExerciseInfo
-  $ insertExercise quadraticExercise          quadraticExerciseInfo
-  $ insertExercise quadraticNoABCExercise     quadraticNoABCExerciseInfo
-  $ insertExercise quadraticWithApproximation quadraticWithApproximationExerciseInfo
-  $ insertExercise rationalEquationExercise   rationalEquationExerciseInfo
-  $ insertExercise simplifyPowerExercise      simplifyPowerExerciseInfo
-  $ insertExercise simplifyRationalExercise   simplifyRationalExerciseInfo
-  $ insertExercise systemWithMatrixExercise   systemWithMatrixExerciseInfo
+    insertExercise balanceExercise                   balanceExerciseInfo
+  $ insertExercise calcPowerExercise                 calcPowerExerciseInfo
+  $ insertExercise coverUpExercise                   coverUpExerciseInfo
+  $ insertExercise derivativeExercise                derivativeExerciseInfo
+  $ insertExercise derivativePolyExercise            derivativePolyExerciseInfo
+  $ insertExercise derivativeProductExercise         derivativeProductExerciseInfo
+  $ insertExercise derivativeQuotientExercise        derivativeQuotientExerciseInfo
+  $ insertExercise expandExercise                    expandExerciseInfo
+  $ insertExercise expEqExercise                     expEqExerciseInfo
+  $ insertExercise findFactorsExercise               findFactorsExerciseInfo
+  $ insertExercise fractionExercise                  fractionExerciseInfo
+  $ insertExercise gaussianElimExercise              gaussianElimExerciseInfo
+  $ insertExercise gramSchmidtExercise               gramSchmidtExerciseInfo
+  $ insertExercise higherDegreeExercise              higherDegreeExerciseInfo
+  $ insertExercise ineqHigherDegreeExercise          ineqHigherDegreeExerciseInfo
+  $ insertExercise ineqLinearExercise                ineqLinearExerciseInfo
+  $ insertExercise ineqQuadraticExercise             ineqQuadraticExerciseInfo
+  $ insertExercise linearExercise                    linearExerciseInfo
+  $ insertExercise linearMixedExercise               linearMixedExerciseInfo
+  $ insertExercise linearSystemExercise              linearSystemExerciseInfo
+  $ insertExercise logEqExercise                     logEqExerciseInfo
+  $ insertExercise nonNegBrokenExpExercise            nonNegBrokenExpExerciseInfo
+  $ insertExercise powerOfExercise                    powerOfExerciseInfo
+  $ insertExercise powerEqExercise                    powerEqExerciseInfo
+  $ insertExercise quadraticExercise                  quadraticExerciseInfo
+  $ insertExercise quadraticNoABCExercise             quadraticNoABCExerciseInfo
+  $ insertExercise quadraticWithApproximationExercise quadraticWithApproximationExerciseInfo
+  $ insertExercise rationalEquationExercise           rationalEquationExerciseInfo
+  $ insertExercise simplifyPowerExercise              simplifyPowerExerciseInfo
+  $ insertExercise simplifyRationalExercise           simplifyRationalExerciseInfo
+  $ insertExercise systemWithMatrixExercise           systemWithMatrixExerciseInfo
   $ empty
   
 insertExercise ex exinfo = let idex = exerciseId ex in insert idex (exinfo idex)  

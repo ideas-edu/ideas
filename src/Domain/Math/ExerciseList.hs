@@ -57,7 +57,7 @@ exerciseList =
    , Some simplifyRationalExercise
    -- , Some divisionBrokenExercise
    , Some quadraticNoABCExercise
-   , Some quadraticWithApproximation
+   , Some quadraticWithApproximationExercise
    , Some derivativeExercise
    , Some derivativePolyExercise
    , Some derivativeProductExercise

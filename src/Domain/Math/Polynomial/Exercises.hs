@@ -12,7 +12,7 @@
 module Domain.Math.Polynomial.Exercises
    ( linearExercise, linearMixedExercise
    , quadraticExercise, quadraticNoABCExercise
-   , quadraticWithApproximation
+   , quadraticWithApproximationExercise
    , higherDegreeExercise
    , findFactorsExercise, expandExercise
    ) where
@@ -126,8 +126,8 @@ quadraticNoABCExercise = quadraticExercise
          , (byName simplerPolynomial, Remove)
          ]
 
-quadraticWithApproximation :: Exercise (OrList (Relation Expr))
-quadraticWithApproximation = quadraticExercise
+quadraticWithApproximationExercise :: Exercise (OrList (Relation Expr))
+quadraticWithApproximationExercise = quadraticExercise
    { exerciseId   = describe "solve a quadratic equation with approximation" $
                        newId "algebra.equations.quadratic.approximate"
    , status        = Provisional

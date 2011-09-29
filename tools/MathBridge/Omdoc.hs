@@ -116,11 +116,11 @@ recbookfileB dir exercisesrefs = do
                                  $ do metadataB ""
                                         $ do titlesB titlesRecbookForIdeasExercisesLangs
                                                      titlesRecbookForIdeasExercises
-                                             dateB "created" created
-                                             dateB "changed" lastChanged
+                                             element "Date" (("action" .=. "created") >> text created)  
+                                             element "Date" (("action" .=. "changed") >> text lastChanged)  
                                              element "Creator" (("role" .=."aut") >> text author)
-                                             sourceB ""
-                                             formatB "application/omdoc+xml"
+                                             element "Source" mempty
+                                             element "Format" (text "application/omdoc+xml")
                                       exercisesrefs
                      ) 
                )
@@ -142,7 +142,7 @@ omdocexerciserefsB ex =
                                 ++  context info  -- exercise id
                                 ++  show i)       -- and nr
                              [0..len-1]
-      exercises        = mapM_ refB refs
+      exercises        = mapM_ (\ref -> element "ref" ("xref" .=. ref)) refs
   in omgroupB "" "" $ do metadataB "" $ do titleMultLangB langs titleCmps 
                          exercises
 
@@ -162,13 +162,13 @@ omdocexercisefileB dir ex = do
                (omdocB (context info ++ ".omdoc") []
                   $ do metadataB
                          ""
-                         (  dateB "created" "2011-01-22" 
-                         >> dateB "changed" lastChanged 
+                         (  element "Date" (("action" .=. "created") >> text created) 
+                         >> element "Date" (("action" .=. "changed") >> text lastChanged)    
                          >> titlesB langs (title info)
                          >> element "Creator" (("role" .=."aut") >> text author)
                          >> versionB version (show revision)
                          ) 
-                       theoryB (context info) $ do omdocexercisesB ex
+                       element "theory" (("id" .=. context info) >> omdocexercisesB ex)
                )
   writeFile (dir ++ "omdoc/"  ++ context info ++ ".omdoc" ) filestring
   writeFile (dir ++ "oqmath/" ++ context info ++ ".oqmath") filestring
@@ -226,11 +226,10 @@ omdocexerciseB
       (metadataB
          ""
          (titles >>
-          formatB "AMEL1.0" >>
-          extradataB 
-            (difficultyB dif >>
-             when (isJust maybefor) (relationB (fromJust maybefor))
-            )
+          element "Format" (text "AMEL1.0") >>
+          element "extradata" (element "difficulty" ("value" .=. dif) >>
+                               when (isJust maybefor) (relationB (fromJust maybefor))
+                              )
          ) >>
        cmpsTaskB langs cmps >>
        interaction_generatorB
@@ -283,6 +282,7 @@ mBExerciseInfo =
   $ insertExercise systemWithMatrixExercise           systemWithMatrixExerciseInfo
   $ empty
   
+insertExercise :: Exercise a -> (Id -> b) -> Map Id b -> Map Id b
 insertExercise ex exinfo = let idex = exerciseId ex in insert idex (exinfo idex)  
 --------------------------------------------------------------------------------
 {- XML elements for Omdoc.
@@ -306,13 +306,6 @@ cmpTitleB :: Lang -> String -> XMLBuilder
 cmpTitleB lang titlecmp =
   element "CMP" (("xml:lang" .=. show lang) >> text titlecmp)
 
-dateB :: String -> String -> XMLBuilder
-dateB action date = element "Date" (("action" .=. action) >> text date)
-
-difficultyB :: String -> XMLBuilder
-difficultyB dif = 
-  element "difficulty" ("value" .=. dif)
-
 exerciseB :: String -> Maybe String -> XMLBuilder -> XMLBuilder
 exerciseB idattr maybefor ls = 
   element "exercise" $ do
@@ -320,12 +313,6 @@ exerciseB idattr maybefor ls =
     unless (isNothing maybefor) ("for" .=. fromJust maybefor)
     ls
        
-extradataB :: XMLBuilder -> XMLBuilder
-extradataB ls = element "extradata" $ do ls
-
-formatB :: String -> XMLBuilder
-formatB format = element "Format" (text format)
- 
 interaction_generatorB :: String -> String -> XMLBuilder -> XMLBuilder
 interaction_generatorB interaction_generatorname interaction_generatortype ls = 
   element "interaction_generator" $ do
@@ -361,16 +348,7 @@ parameterB parametername ls =
 relationB :: String -> XMLBuilder
 relationB relfor =
   element "relation" $ do
-    ("type" .=. "for")
-    refB relfor
-
-sourceB :: String -> XMLBuilder
-sourceB source = 
-  element "Source" $ do unless (null source) (text source)
-
-theoryB :: String -> XMLBuilder -> XMLBuilder
-theoryB identifier ls = 
-  element "theory" (("id" .=. identifier) >> ls)
+    ("type" .=. "for") >> element "ref" ("xref" .=. relfor)
 
 titlelangB :: Lang -> String -> XMLBuilder
 titlelangB lang titletext =
@@ -392,7 +370,4 @@ versionB rev ver =
 xmldecl  :: String
 xmldecl  =  "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
 
-refB :: String -> XMLBuilder
-refB xref = do element "ref" ("xref" .=. xref)
-     
      

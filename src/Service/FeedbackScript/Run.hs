@@ -112,14 +112,17 @@ eval env script = either (return . findIdRef) evalText
 
 feedbackDiagnosis :: Diagnosis a -> Environment a -> Script -> Text
 feedbackDiagnosis diagnosis env =
-   fromMaybe (TextString "ERROR") .
    case diagnosis of
-      Buggy _ r      -> make "buggy"   env {recognized = Just r}
-      NotEquivalent  -> make "noteq"   env
-      Expected _ _ r -> make "ok"      env {recognized = Just r}
-      Similar _ _    -> make "same"    env
-      Detour _ _ _ r -> make "detour"  env {recognized = Just r}
-      Correct _ _    -> make "unknown" env
+      Buggy _ r      -> makeWrong "buggy"   env {recognized = Just r}
+      NotEquivalent  -> makeWrong "noteq"   env
+      Expected _ _ r -> makeOk    "ok"      env {recognized = Just r}
+      Similar _ _    -> makeOk    "same"    env
+      Detour _ _ _ r -> makeOk    "detour"  env {recognized = Just r}
+      Correct _ _    -> makeOk    "unknown" env
+ where
+   makeOk    = makeDefault "Well done!"
+   makeWrong = makeDefault "This is incorrect."
+   makeDefault dt s e = fromMaybe (TextString dt) . make s e
 
 feedbackHint :: Bool -> Environment a -> Script -> Text
 feedbackHint b env script =

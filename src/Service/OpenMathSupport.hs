@@ -12,11 +12,12 @@
 -----------------------------------------------------------------------------
 module Service.OpenMathSupport
    ( -- * Conversion functions to/from OpenMath
-     toOpenMath, fromOpenMath
+     toOpenMath, fromOpenMath, noMixedFractions
    , toOMOBJ, fromOMOBJ
    ) where
 
 import Common.Library
+import Common.Utils.Uniplate
 import Control.Monad
 import Data.Char
 import Data.List
@@ -54,8 +55,6 @@ toOMOBJ = rec . toTerm
 
    make [OMS s, OMV x, body] | s == lambdaSymbol =
       OMBIND (OMS s) [x] body
-   make [OMS s, a, b, c] | s == mfSymbol = -- special for mixed fraction symbol
-      OMA [OMS plusSymbol, a, OMA [OMS divideSymbol, b, c]]
    make xs = OMA xs
 
 fromOMOBJ :: (MonadPlus m, IsTerm a) => OMOBJ -> m a
@@ -76,6 +75,13 @@ fromOMOBJ = (>>= fromTerm) . rec
 
    isMeta ('$':xs) = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
    isMeta _        = Nothing
+
+noMixedFractions :: OMOBJ -> OMOBJ
+noMixedFractions = transform f 
+ where
+   f (OMA [OMS s, a, b, c]) | s == mfSymbol =
+      OMA [OMS plusSymbol, a, OMA [OMS divideSymbol, b, c]]
+   f a = a
 
 idToSymbol :: Id -> OM.Symbol
 idToSymbol a

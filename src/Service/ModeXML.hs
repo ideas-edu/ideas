@@ -84,9 +84,13 @@ xmlReply request xml = do
    Some conv <-
       case encoding request of
          Just StringEncoding -> return (stringFormatConverter ex)
-         _                   -> return (openMathConverter ex)
+         _ | fromDWO request -> return (dwoConverter ex)
+           | otherwise       -> return (openMathConverter ex)
    res <- evalService conv srv xml
    return (resultOk res)
+
+fromDWO :: Request -> Bool
+fromDWO = (== Just "dwo") . fmap (map toLower) . source
 
 extractExerciseId :: Monad m => XML -> m Id
 extractExerciseId = liftM newId . findAttribute "exerciseid"
@@ -118,11 +122,12 @@ stringFormatConverterTp ex =
       let input = getData xml
       either (fail . show) return (parser ex input)
 
-openMathConverter :: Some Exercise -> Some (Evaluator XML XMLBuilder)
-openMathConverter (Some ex) = Some (openMathConverterTp ex)
+openMathConverter, dwoConverter :: Some Exercise -> Some (Evaluator XML XMLBuilder)
+openMathConverter (Some ex) = Some (openMathConverterTp False ex)
+dwoConverter      (Some ex) = Some (openMathConverterTp True  ex)
 
-openMathConverterTp :: Exercise a -> Evaluator XML XMLBuilder a
-openMathConverterTp ex =
+openMathConverterTp :: Bool -> Exercise a -> Evaluator XML XMLBuilder a
+openMathConverterTp withMF ex =
    Evaluator (xmlEncoder True f ex) (xmlDecoder True g ex)
  where
    f ctx = liftM (builder . toXML) $
@@ -130,13 +135,16 @@ openMathConverterTp ex =
          Just term | useFocus ->
             return (toOMOBJ (term :: Term))
          _ ->
-            fromContext ctx >>= toOpenMath ex
+            fromContext ctx >>= (handleMixedFractions . toOpenMath ex)
    g xml = do
       xob   <- findChild "OMOBJ" xml
       omobj <- liftEither (xml2omobj xob)
       case fromOpenMath ex (if useFocus then transform noFocus omobj else omobj) of
          Just a  -> return a
          Nothing -> fail "Invalid OpenMath object for this exercise"
+   
+   -- Remove special mixed-fraction symbol (depending on boolean argument)
+   handleMixedFractions = if withMF then id else liftM noMixedFractions
 
    markFocus :: Term -> Term
    markFocus = unary (newSymbol focusSymbol)

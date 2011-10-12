@@ -86,9 +86,9 @@ dontIncludeExercises  =  ["logic.propositional.dnf"
 generate :: String -> IO ()
 generate dir =
       do allExercises <- useIDEAS getExercises
-         let exercises = filter (\(Some ex) -> 
-                                     not (show (exerciseId ex) `elem` dontIncludeExercises)) 
-                                allExercises
+         let exercises = 
+               filter (\(Some ex) -> not (show (exerciseId ex) `elem` dontIncludeExercises)) 
+                      allExercises
          forM_ exercises $ \(Some ex) -> omdocexercisefileB dir ex
          recbookfileB dir (mapM_ (\(Some ex) -> omdocexerciserefsB ex) exercises)
 
@@ -127,17 +127,13 @@ recbookfileB dir exercisesrefs = do
   writeFile (dir ++ "omdoc/"  ++ "RecBook_Exercises.omdoc" ) filestring
   writeFile (dir ++ "oqmath/" ++ "RecBook_Exercises.oqmath") filestring
 
-omdocrefpath  :: String
-omdocrefpath  =  ""
-
 omdocexerciserefsB :: Exercise a -> XMLBuilder
 omdocexerciserefsB ex =
   let info             = mBExerciseInfo ! (exerciseId ex)
       langs            = langSupported info
       titleCmps        = map (\l -> title info l) langs
       len              = length (examples ex)
-      refs             = map (\i -> omdocrefpath  -- relative dir 
-                                ++  context info  -- filename
+      refs             = map (\i -> context info  -- filename
                                 ++  "/"
                                 ++  context info  -- exercise id
                                 ++  show i)       -- and nr
@@ -166,7 +162,7 @@ omdocexercisefileB dir ex = do
                          >> element "Date" (("action" .=. "changed") >> text lastChanged)    
                          >> titlesB langs (title info)
                          >> element "Creator" (("role" .=."aut") >> text author)
-                         >> versionB version (show revision)
+                         >> element "Version" (("number" .=. version) >> text (show revision))
                          ) 
                        element "theory" (("id" .=. context info) >> omdocexercisesB ex)
                )
@@ -228,17 +224,24 @@ omdocexerciseB
          (titles >>
           element "Format" (text "AMEL1.0") >>
           element "extradata" (element "difficulty" ("value" .=. dif) >>
-                               when (isJust maybefor) (relationB (fromJust maybefor))
+                               when (isJust maybefor) (element "relation" 
+                                                                (   ("type" .=. "for") 
+                                                                >>  element "ref" ("xref" .=. fromJust maybefor)
+                                                                )
+                                                      )
                               )
          ) >>
-       cmpsTaskB langs cmps >>
-       interaction_generatorB
-         interaction_generatorname
-         interaction_generatortype
-         (   parameterB "problemstatement" (text problemstatement)
-         >>  parameterB "context"          (text ctxt)
-         >>  parameterB "difficulty"       (text dif)
-         >>  parameterB "task"             task
+       zipWithM_ 
+         (\l (t,o) -> element "CMP" (("xml:lang" .=. show l) >> text t >> builder o)) 
+         langs 
+         cmps >>
+       element "interaction_generator"
+         (  ("name" .=. interaction_generatorname)
+         >> ("type" .=. interaction_generatortype)
+         >> element "parameter"  (("name" .=. "problemstatement") >> text problemstatement)
+         >> element "parameter"  (("name" .=. "context")          >> text ctxt)
+         >> element "parameter"  (("name" .=. "difficulty")       >> text dif)
+         >> element "parameter"  (("name" .=. "task")             >> task)
          )
        )
 
@@ -292,20 +295,6 @@ insertExercise ex exinfo = let idex = exerciseId ex in insert idex (exinfo idex)
 activemathdtd  :: String
 activemathdtd  =  "<!DOCTYPE omdoc SYSTEM \"../dtd/activemath.dtd\" []>\n"
 
-cmpsTaskB  :: [Lang] -> [(String,XML)] -> XMLBuilder
-cmpsTaskB  =  zipWithM_ (\l s -> cmpTaskB l s)
-
-cmpsTitleB  :: [Lang] -> [String] -> XMLBuilder
-cmpsTitleB  =  zipWithM_ (\l s -> cmpTitleB l s)
-
-cmpTaskB :: Lang -> (String,XML) -> XMLBuilder
-cmpTaskB lang (taskcmp,omo) =
-  element "CMP" (("xml:lang" .=. show lang) >> text taskcmp >> builder omo)
-
-cmpTitleB :: Lang -> String -> XMLBuilder
-cmpTitleB lang titlecmp =
-  element "CMP" (("xml:lang" .=. show lang) >> text titlecmp)
-
 exerciseB :: String -> Maybe String -> XMLBuilder -> XMLBuilder
 exerciseB idattr maybefor ls = 
   element "exercise" $ do
@@ -313,13 +302,6 @@ exerciseB idattr maybefor ls =
     unless (isNothing maybefor) ("for" .=. fromJust maybefor)
     ls
        
-interaction_generatorB :: String -> String -> XMLBuilder -> XMLBuilder
-interaction_generatorB interaction_generatorname interaction_generatortype ls = 
-  element "interaction_generator" $ do
-    ("name" .=. interaction_generatorname)
-    ("type" .=. interaction_generatortype)
-    ls
-
 metadataB :: String -> XMLBuilder -> XMLBuilder
 metadataB identifier ls =
   element "metadata" $ do
@@ -339,33 +321,18 @@ omgroupB identifier namespace ls =
     unless (null identifier) ("id" .=. identifier)
     ls
 
-parameterB :: String -> XMLBuilder -> XMLBuilder
-parameterB parametername ls =
-  element "parameter" $ do
-    ("name" .=. parametername)
-    ls
-
-relationB :: String -> XMLBuilder
-relationB relfor =
-  element "relation" $ do
-    ("type" .=. "for") >> element "ref" ("xref" .=. relfor)
-
-titlelangB :: Lang -> String -> XMLBuilder
-titlelangB lang titletext =
-  element "Title" $ do 
-     "xml:lang" .=. show lang
-     text titletext
-
 titlesB :: [Lang] -> (Lang -> String) -> XMLBuilder
-titlesB langs flang = mapM_ (\l -> titlelangB l (flang l)) langs
+titlesB langs flang = mapM_ (\l -> element "Title" $ do 
+                                     "xml:lang" .=. show l
+                                     text (flang l)) 
+                            langs
 
 titleMultLangB :: [Lang] -> [String] -> XMLBuilder
 titleMultLangB langs texts =
-  element "Title" $ do cmpsTitleB langs texts
-
-versionB :: String -> String -> XMLBuilder
-versionB rev ver = 
-  element "Version" (("number" .=. rev) >> text ver)
+  element "Title" $ do zipWithM_ (\l s -> element "CMP" (  ("xml:lang" .=. show l) 
+                                                        >> text s
+                                                        )
+                                 ) langs texts
 
 xmldecl  :: String
 xmldecl  =  "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"

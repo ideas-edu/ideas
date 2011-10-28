@@ -1,0 +1,8 @@
+<reply result="ok" version="1.0.1 (0)">
+  <buggy ruleid="algebra.equations.linear.balance.buggy.addbal16">
+    <argument description="term">
+      10*x
+    </argument>
+  </buggy>
+</reply>
+

@@ -31,6 +31,7 @@ buggyBalanceRules =
    , rule201
    , rule2111, rule2112, rule2113, rule2114
    , rule2121, rule2122, rule2131, rule2132
+   , rule2133, rule2134, rule2135, rule2136, rule2137, rule2138
    , rule2141, rule2142
    , rule221, rule222, rule2231, rule2232, rule2233, rule227
    , rule311, rule321, rule322, rule323
@@ -220,13 +221,17 @@ rule201 = describe "2.0.1: Links en rechts alleen maar verwisseld?" $
 -------------------------------------------------------------------
 -- 2.1 Links en rechts hetzelfde optellen/aftrekken
 
-{- schema addbal regels: (telkens paren met positief/negatief argument)
+{- 
+   schema addbal regels: (telkens paren met positief/negatief argument)
    1+2   constante naar rechts
    3+4   variabele naar links
    7+8   variabele naar rechts
    9+10  constante naar links
    ---
-   5/6   constante links weggehaald, maar rechts onveranderd gelaten
+   5/6    constante links  weggehaald, maar rechts onveranderd gelaten
+   11/12  constante rechts weggehaald, maar links  onveranderd gelaten
+   13/14  variabele links  weggehaald, maar rechts onveranderd gelaten
+   15/16  variabele rechts weggehaald, maar links  onveranderd gelaten
 -}
 
 -- ax+b=[cx]+d  -> ax=[cx]+d+b
@@ -295,26 +300,6 @@ rule2122 = describe "2.1.2.2: Links en rechts hetzelfde optellen; links -cx en r
              , termArg (fromRational (abs c)*x)
              )
 
--- ax+b=[cx]+d  -> ax=[cx]+d
-rule2131 :: Rule (Equation Expr)
-rule2131 = describe "2.1.3.1: Links en rechts hetzelfde optellen; links -b rechts niet(s)" $
-   buggyBalanceRuleArgs "addbal5" f
- where
-   f (lhs :==: rhs) = do
-      (ax, b) <- matchPlusCon lhs
-      guard (b > 0)
-      return (ax :==: rhs, termArg (fromRational b))
-
--- ax-b=[cx]+d  -> ax=[cx]+d
-rule2132 :: Rule (Equation Expr)
-rule2132 = describe "2.1.3.2: Links en rechts hetzelfde optellen; links+b en rechts niet(s)" $
-   buggyBalanceRuleArgs "addbal6" f
- where
-   f (lhs :==: rhs) = do
-      (ax, b) <- matchPlusCon lhs
-      guard (b < 0)
-      return (ax :==: rhs, termArg (fromRational (abs b)))
-
 -- ax+b=cx+d  ->  b=(a+c)*x+d
 rule2141 :: Rule (Equation Expr)
 rule2141 = describe "2.1.4.1: Links en rechts hetzelfde optellen; links -ax en rechts +ax" $
@@ -341,6 +326,86 @@ rule2142 = describe "2.1.4.2: Links en rechts hetzelfde optellen; links -cx en r
              , termArg (fromRational (abs a)*x)
              )
 
+-- ax+b=e  -> ax=e
+rule2131 :: Rule (Equation Expr)
+rule2131 = describe "2.1.3.1: Links en rechts hetzelfde optellen; links -b rechts niet(s)" $
+   buggyBalanceRuleArgs "addbal5" f
+ where
+   f (lhs :==: rhs) = do
+      (ax, b) <- matchPlusCon lhs
+      guard (b > 0)
+      return (ax :==: rhs, termArg (fromRational b))
+
+-- ax-b=e  -> ax=e
+rule2132 :: Rule (Equation Expr)
+rule2132 = describe "2.1.3.2: Links en rechts hetzelfde optellen; links +b en rechts niet(s)" $
+   buggyBalanceRuleArgs "addbal6" f
+ where
+   f (lhs :==: rhs) = do
+      (ax, b) <- matchPlusCon lhs
+      guard (b < 0)
+      return (ax :==: rhs, termArg (fromRational (abs b)))
+
+-- e=ax+b  -> e=ax
+rule2133 :: Rule (Equation Expr)
+rule2133 = describe "2.1.3.3: Links en rechts hetzelfde optellen; rechts -b links niet(s)" $
+   buggyBalanceRuleArgs "addbal11" f
+ where
+   f (lhs :==: rhs) = do
+      (ax, b) <- matchPlusCon rhs
+      guard (b > 0)
+      return (lhs :==: ax, termArg (fromRational b))
+
+-- e=ax-b  -> e=ax
+rule2134 :: Rule (Equation Expr)
+rule2134 = describe "2.1.3.4: Links en rechts hetzelfde optellen; rechts +b en links niet(s)" $
+   buggyBalanceRuleArgs "addbal12" f
+ where
+   f (lhs :==: rhs) = do
+      (ax, b) <- matchPlusCon rhs
+      guard (b < 0)
+      return (lhs :==: ax, termArg (fromRational (abs b)))
+
+-- ax+b=e  -> b=e
+rule2135 :: Rule (Equation Expr)
+rule2135 = describe "2.1.3.5: Links en rechts hetzelfde optellen; links -ax rechts niet(s)" $
+   buggyBalanceRuleArgs "addbal13" f
+ where
+   f (lhs :==: rhs) = do
+      (x, a, b) <- matchLin lhs
+      guard (a > 0)
+      return (fromRational b :==: rhs, termArg (fromRational a*x))
+
+-- -ax+b=e  -> b=e
+rule2136 :: Rule (Equation Expr)
+rule2136 = describe "2.1.3.6: Links en rechts hetzelfde optellen; links +ax en rechts niet(s)" $
+   buggyBalanceRuleArgs "addbal14" f
+ where
+   f (lhs :==: rhs) = do
+      (x, a, b) <- matchLin lhs
+      guard (a < 0)
+      return (fromRational b :==: rhs, termArg (fromRational (abs a)*x))
+
+-- e=ax+b  -> e=b
+rule2137 :: Rule (Equation Expr)
+rule2137 = describe "2.1.3.7: Links en rechts hetzelfde optellen; rechts -ax links niet(s)" $
+   buggyBalanceRuleArgs "addbal15" f
+ where
+   f (lhs :==: rhs) = do
+      (x, a, b) <- matchLin rhs
+      guard (a > 0)
+      return (lhs :==: fromRational b, termArg (fromRational a*x))
+
+-- e=-ax+b  -> e=b
+rule2138 :: Rule (Equation Expr)
+rule2138 = describe "2.1.3.8: Links en rechts hetzelfde optellen; rechts +ax en links niet(s)" $
+   buggyBalanceRuleArgs "addbal16" f
+ where
+   f (lhs :==: rhs) = do
+      (x, a, b) <- matchLin rhs
+      guard (a < 0)
+      return (lhs :==: fromRational b, termArg (fromRational (abs a)*x))
+      
 -------------------------------------------------------------------
 -- 2.2 Links en rechts hetzelfde vermenigvuldigen/delen
 

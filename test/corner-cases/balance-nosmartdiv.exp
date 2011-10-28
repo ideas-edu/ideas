@@ -10,6 +10,16 @@
         </expr>
       </state>
     </elem>
+    <elem ruleid="algebra.equations.linear.balance.negate" location="[]">
+      <state>
+        <prefix>
+          [4,0,1,1,1,1,1]
+        </prefix>
+        <expr>
+          4*x+4 == 12
+        </expr>
+      </state>
+    </elem>
   </list>
 </reply>
 

@@ -65,6 +65,7 @@ balanceOrder =
    , getId scaleToOne, getId flipEquation
    , getId divideCommonFactor, getId distribute
    , getId collect, getId divisionToFraction
+   , getId negateBothSides
    ]
 
 ------------------------------------------------------------
@@ -78,6 +79,7 @@ balanceStrategy = cleanUpStrategyAfter (applyTop cleaner) $
           <|> use distribute
           <|> use removeDivision
           <|> somewhere (use divisionToFraction)
+          <|> use negateBothSides
            ))
    <*> label "Phase 2" (repeatS
            (  use varLeftMinus <|> use varLeftPlus
@@ -177,6 +179,11 @@ divideCommonFactor = doAfter (fmap distributeDiv) $
               (Just n, _) | hasSomeVar b -> return n
               (_, Just n) | hasSomeVar a -> return n
               _ -> Nothing
+
+negateBothSides :: Rule (Equation Expr)
+negateBothSides = describe "Remove negation on both sides of an equation" $ 
+   rule (linbal, "negate") $ \a b -> 
+      (-a :==: -b) :~> (a :==: b)
 
 varLeftMinus, varLeftPlus :: Rule (Equation Expr)
 varLeftMinus = varLeft True  (linbal, "var-left-minus")

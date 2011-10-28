@@ -1,0 +1,7 @@
+<request service="allfirsts" exerciseid="algebra.equations.linear.balance" encoding="string" source="test">
+  <state>
+  	<expr>
+-(4*x+4) == -12
+  		</expr>
+  </state>
+</request>

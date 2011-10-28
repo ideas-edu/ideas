@@ -165,7 +165,7 @@ divideCommonFactor = doAfter (fmap distributeDiv) $
       | all (/=0) ns && n > 1 = Just (fromInteger n)
       | otherwise             = Nothing
     where
-       xs = from sumView lhs ++ from sumView rhs
+       xs = from simpleSumView lhs ++ from simpleSumView rhs
        ns = map getFactor xs
        n  = foldr1 gcd ns
 

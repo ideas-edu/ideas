@@ -159,7 +159,7 @@ buggyDistrTimesTooMany = describe "Strange distribution of times over plus: \
       [cleanUpExpr $ a*b+a*c+a*d]
 
 buggyDistrTimesDenom :: Rule Expr
-buggyDistrTimesDenom = describe "Incorrct distribution of times over plus: \
+buggyDistrTimesDenom = describe "Incorrect distribution of times over plus: \
    \one of the terms is a fraction, and the outer expression is multiplied by \
    \the fraction's denominator." $
    buggyRule $ makeSimpleRuleList "distr-times-denom" $ \expr -> do

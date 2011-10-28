@@ -1,0 +1,7 @@
+<request service="allfirsts" exerciseid="algebra.equations.linear.balance" encoding="string" source="test">
+  <state>
+  	<expr>
+-2*x == 4*x-3
+  		</expr>
+  </state>
+</request>

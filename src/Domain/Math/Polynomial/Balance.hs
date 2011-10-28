@@ -60,8 +60,8 @@ balanceOrder =
    [ getId removeDivision, getId collect
    , getId varRightMinus, getId varRightPlus
    , getId conLeftMinus, getId conLeftPlus
-   , getId varLeftMinus, getId varLeftPlus
-   , getId conRightMinus, getId conRightPlus
+   , getId varLeftMinus, getId varLeftPlus   -- prefer variable to left
+   , getId conRightMinus, getId conRightPlus -- or constant to right
    , getId scaleToOne, getId flipEquation
    , getId divideCommonFactor, getId distribute
    , getId collect, getId divisionToFraction
@@ -99,9 +99,9 @@ balanceStrategy = cleanUpStrategyAfter (applyTop cleaner) $
    p2 ceq = fromMaybe False $ do
       wb           <- fromContext ceq
       lhs :==: rhs <- either (const Nothing) Just (fromWithBool wb)
-      (x1, a, _)   <- matchLin lhs
+      (x1, a, c)   <- matchLin lhs
       (x2, b, _)   <- matchLin rhs
-      return (x1 == x2 && b > a && a /= 0)
+      return (x1 == x2 && b > a && a /= 0 && c /= 0)
 
 ------------------------------------------------------------
 -- Rules
@@ -227,7 +227,8 @@ conLeftPlus  = flipped (linbal, "con-left-plus")  conRightPlus
 
 flipped :: IsId a => a -> Rule (Equation b) -> Rule (Equation b)
 flipped rid = liftRule flipView . changeId (const (newId rid))
- where flipView = makeView (Just . flipSides) flipSides
+ where 
+   flipView = makeView (Just . flipSides) flipSides
 
 scaleToOne :: Rule (Equation Expr)
 scaleToOne = doAfter (fmap distributeDiv) $

@@ -21,7 +21,7 @@ module Common.Strategy.Core
    ) where
 
 import Common.Classes
-import Common.Transformation
+import Common.Rule
 import Common.Utils.QuickCheck
 import Common.Utils.Uniplate
 import Control.Applicative

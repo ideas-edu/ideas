@@ -84,7 +84,7 @@ argumentsForSteps a0 = flip rec a0 . stepsToRules
    rec [] _ = []
    rec (r:rs) a
       | isMinorRule r  = concatMap (rec rs) (applyAll r a)
-      | applicable r a = fromMaybe [] (expectedArguments r a)
+      | applicable r a = expectedArguments r a
       | otherwise      = []
 
 nextMajorForPrefix :: Prefix a -> a -> Maybe Id

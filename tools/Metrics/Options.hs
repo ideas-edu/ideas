@@ -1,24 +1,26 @@
-module Options where
+module Options 
+   ( Flag(..), Output(..), Metric(..)
+   , metrics, getOutput, readOptions, outputFile, saveFile, showStatistics
+   ) where
 
 import Data.Char
+import Data.Maybe
 import System.Console.GetOpt
 import System.Environment
 import System.Exit
 
-data Flag = Mode Mode | Output Output | Export Export 
-          | OutputAll | Limit Int | Stats | Save
+data Flag = Output Output | Metric Metric
+          | AllMetrics | Limit Int | Stats 
+          | OutputFile FilePath
+          | Save FilePath
    deriving Eq
 
-data Mode = Report | HTML
+data Output = Report | HTML | JavaScript 
    deriving Eq
 
-data Output = SystemSize | PackageSize | ModuleSize | FunctionSize 
-            | Imports | ImportsOf
+data Metric = SystemSize | PackageSize | ModuleSize | FunctionSize 
+            | Imports | ImportsOf | ImportGraph
    deriving (Eq, Enum)
-
-data Export = ExportLOC (Maybe FilePath) | ExportImports (Maybe FilePath)
-            | ImportGraph (Maybe FilePath)
-   deriving Eq
 
 header :: String
 header =
@@ -33,27 +35,25 @@ version = "version 0.1"
 
 options :: [OptDescr Flag]
 options =
-     [ option "report" (mode Report) "report mode (default)"
-     , option "html"   (mode HTML)   "write html"
-     , Option "s" ["system-size"]   (output SystemSize)    "system size"
-     , Option "p" ["package-size"]  (output PackageSize)   "package size"
-     , Option "m" ["module-size"]   (output ModuleSize)    "module size"
-     , Option "f" ["function-size"] (output FunctionSize)  "function size"
-     , option "all"           (NoArg OutputAll)      "all reports"
-     , option "imports"       (output Imports)       "#imports in module"
-     , option "imports-of"    (output ImportsOf)     "#imports of module"
+     [ option "report" (output Report) "report (default)"
+     , option "html"   (output HTML)   "write html"
+     , option "js"     (output JavaScript) "JavaScript data file"
+     , option "save"   saveArg         "save system information (to file)"
+     , Option "s" ["system-size"]   (metric SystemSize)    "system size"
+     , Option "p" ["package-size"]  (metric PackageSize)   "package size"
+     , Option "m" ["module-size"]   (metric ModuleSize)    "module size"
+     , Option "f" ["function-size"] (metric FunctionSize)  "function size"
+     , option "all"           (NoArg AllMetrics)      "all metrics"
+     , option "imports"       (metric Imports)       "#imports in module"
+     , option "imports-of"    (metric ImportsOf)     "#imports of module"
      , option "limit"         limitArg               "limit number of rows"
      , option "stats"         (NoArg Stats)          "show statistics"
-     , option "save"          (NoArg Save)           "save information to file"
-     , option "ex-loc"        (export ExportLOC)     "export lines of code"
-     , option "ex-imports"    (export ExportImports) "export module imports"
-     , option "import-graph"  (export ImportGraph)   "export the import graph"
+     , option "output" outputFileArg "write output to file"
      ]
  where
    option = Option "" . return
-   mode   = NoArg . Mode
    output = NoArg . Output
-   export f = OptArg (Export . f) "FILE"
+   metric = NoArg . Metric
    
 limitArg :: ArgDescr Flag
 limitArg = flip ReqArg "INT" $ \s ->
@@ -61,33 +61,53 @@ limitArg = flip ReqArg "INT" $ \s ->
    then Limit (read s)
    else error $ "Invalid argument: --limit=<INT>"
 
+outputFileArg :: ArgDescr Flag
+outputFileArg = ReqArg OutputFile "FILE"
+
+saveArg :: ArgDescr Flag
+saveArg = ReqArg Save "FILE"
+
 readOptions :: IO ([Flag], [FilePath])
 readOptions = do
    args <- getArgs
    case getOpt Permute options args of
       (flags, inputs, errs)
-         | null errs && not (null inputs) -> 
-              return (flags, inputs)
-         | otherwise -> do
+         | not (null errs) -> do
               putStrLn (concat errs ++ usageInfo header options)
               exitFailure
+         | null (inputs) -> do
+              putStrLn "No input files/directories"
+              exitFailure
+         | length (outputs flags) > 1 -> do
+              putStrLn "Multiple outputs"
+              exitFailure
+         | otherwise -> 
+              return (flags, inputs)
 
-modes :: [Flag] -> [Mode]
-modes flags =
-   case [ a | Mode a <- flags ] of
+getOutput :: [Flag] -> Output
+getOutput = head . outputs
+
+outputs :: [Flag] -> [Output]
+outputs flags =
+   case [ a | Output a <- flags ] of
       [] -> [Report]
       xs -> xs
 
-outputs :: [Flag] -> [Output]
-outputs flags 
-   | OutputAll `elem` flags = [SystemSize .. ImportsOf]
-   | otherwise =
-        case [ a | Output a <- flags]  of
-           [] -> [SystemSize]
-           xs -> xs
+outputFile :: [Flag] -> Maybe FilePath
+outputFile flags = listToMaybe $ 
+   [ a | OutputFile a <- flags ]
 
-exports :: [Flag] -> [Export]
-exports flags = [ a | Export a <- flags ]
+saveFile :: [Flag] -> Maybe FilePath
+saveFile flags = listToMaybe $ 
+   [ a | Save a <- flags ]
+
+metrics :: [Flag] -> [Metric]
+metrics flags 
+   | AllMetrics `elem` flags = [SystemSize .. ImportsOf]
+   | otherwise =
+        case [ a | Metric a <- flags]  of
+           [] | isNothing (saveFile flags) -> [SystemSize]
+           xs -> xs
 
 showStatistics :: [Flag] -> Bool
 showStatistics = elem Stats

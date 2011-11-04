@@ -4,7 +4,7 @@ module Model
    , Size, sizeOf, sizeLines, sizeChars, Sized(..)
    , overallLines, overallChars, linesOfCode, charsOfCode
    , Named(..), QName, makeQName, qualifiers, unqualified
-   , organize, folders, localItems, Hierarchy, F.toList
+   , organize, folders, localItems, singleton, folder, Hierarchy, F.toList
    ) where
 
 import Control.Monad

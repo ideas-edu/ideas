@@ -85,7 +85,7 @@ exercisePage exampleFileExists ex = do
        goUp = up (length (qualifiers ex))
        f r  = [ link (goUp ++ ruleFile r) $ ttText (showId r)
               , text $ showBool $ isBuggyRule r
-              , text $ showBool $ hasArguments r
+              , text $ showBool $ not $ null $ getDescriptors r
               , text $ showBool $ r `elem` rs
               , when (isRewriteRule r) $
                    ruleToHTML (Some ex) r
@@ -203,7 +203,7 @@ forStep n ((r, env), old) = do
           make | null (description r) = link target
                | otherwise = titleA (description r) . link target
       make (text (unqualified r))
-      let xs = fromMaybe [] (expectedArguments r old)
+      let xs = expectedArguments r old
           g (ArgValue descr x) = labelArgument descr ++ "=" ++ showArgument descr x
       unless (null xs) $ do
          br

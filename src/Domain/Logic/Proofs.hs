@@ -75,7 +75,7 @@ proofStrategy = label "proof equivalent" $
  where
    splitTop =  use topIsNot  <|> use topIsAnd <|> use topIsOr
            <|> use topIsImpl <|> use topIsEquiv
-   rest =  use notDNF <*> mapRulesS useC (repeatS dnfStrategyDWA)
+   rest =  use notDNF <*> useC (repeatS dnfStrategyDWA)
        <|> simpler
 
    simpler :: Strategy (Context [(SLogic, SLogic)])
@@ -130,7 +130,7 @@ useRules = alternatives . map liftToContext
 onceLeft :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onceLeft s = ruleMoveDown <*> s <*> ruleMoveUp
  where
-   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" (down 1)
+   ruleMoveDown = minorRule $ makeSimpleRule "MoveDown" (down 1)
    ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
 
    safeUp a = Just (fromMaybe a (up a))
@@ -138,7 +138,7 @@ onceLeft s = ruleMoveDown <*> s <*> ruleMoveUp
 onceRight :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onceRight s = ruleMoveDown <*> s <*> ruleMoveUp
  where
-   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" (down 2)
+   ruleMoveDown = minorRule $ makeSimpleRule "MoveDown" (down 2)
    ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
 
    safeUp a = Just (fromMaybe a (up a))

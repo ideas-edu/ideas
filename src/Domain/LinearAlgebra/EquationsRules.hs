@@ -12,7 +12,6 @@
 module Domain.LinearAlgebra.EquationsRules where
 
 import Common.Library hiding (simplify)
-import Common.Utils
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -36,7 +35,7 @@ equationsRules =
 ruleExchangeEquations :: Rule (Context (LinearSystem Expr))
 ruleExchangeEquations = describe "Exchange two equations" $
    simplifySystem $ makeRule "linearalgebra.linsystem.exchange" $
-   supply2 descr args (\x y -> liftTransContext $ exchange x y)
+   supply2 descr args (\x y -> liftToContext $ exchange x y)
  where
    descr = ("equation 1", "equation 2")
    args  = evalCM $ \ls -> do
@@ -49,14 +48,14 @@ ruleExchangeEquations = describe "Exchange two equations" $
 ruleEliminateVar :: Rule (Context (LinearSystem Expr))
 ruleEliminateVar = describe "Eliminate a variable (using addition)" $
    simplifySystem $ makeRule "linearalgebra.linsystem.eliminate" $
-   supply3 descr args (\x y z -> liftTransContext $ addEquations x y z)
+   supply3 descr args (\x y z -> liftToContext $ addEquations x y z)
  where
    descr = ("equation 1", "equation 2", "scale factor")
    args  = evalCM $ \ls -> do
       mv <- minvar ls
       hd:rest <- remaining ls
       let getCoef = coefficientOf mv . leftHandSide
-      (i, coef) <- maybeCM $ safeHead [ (i, c) | (i, eq) <- zip [0..] rest, let c = getCoef eq, c /= 0 ]
+      (i, coef) <- maybeCM $ listToMaybe [ (i, c) | (i, eq) <- zip [0..] rest, let c = getCoef eq, c /= 0 ]
       guard (getCoef hd /= 0)
       let v = negate coef / getCoef hd
       cov <- readVar covered
@@ -80,12 +79,12 @@ ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
 ruleScaleEquation :: Rule (Context (LinearSystem Expr))
 ruleScaleEquation = describe "Scale equation to one" $
    simplifySystem $ makeRule "linearalgebra.linsystem.scale" $
-   supply2 descr args (\x y -> liftTransContext $ scaleEquation x y)
+   supply2 descr args (\x y -> liftToContext $ scaleEquation x y)
  where
    descr = ("equation", "scale factor")
    args  = evalCM $ \ls -> do
       cov <- readVar covered
-      eq  <- maybeCM $ safeHead $ drop cov ls
+      eq  <- maybeCM $ listToMaybe $ drop cov ls
       let expr = leftHandSide eq
       mv <- minvar ls
       guard (coefficientOf mv expr /= 0)
@@ -95,14 +94,14 @@ ruleScaleEquation = describe "Scale equation to one" $
 ruleBackSubstitution :: Rule (Context (LinearSystem Expr))
 ruleBackSubstitution = describe "Back substitution" $
    simplifySystem $ makeRule "linearalgebra.linsystem.subst" $
-   supply3 descr args (\x y z -> liftTransContext $ addEquations x y z)
+   supply3 descr args (\x y z -> liftToContext $ addEquations x y z)
  where
    descr = ("equation 1", "equation 2", "scale factor")
    args  = evalCM $ \ls -> do
       cov <- readVar covered
-      eq  <- maybeCM $ safeHead $ drop cov ls
+      eq  <- maybeCM $ listToMaybe $ drop cov ls
       let expr = leftHandSide eq
-      mv <- maybeCM $ safeHead (vars expr)
+      mv <- maybeCM $ listToMaybe (vars expr)
       i  <- findIndexM ((/= 0) . coefficientOf mv . leftHandSide) (take cov ls)
       let coef = negate $ coefficientOf mv (leftHandSide (ls !! i))
       return (i, cov, coef)

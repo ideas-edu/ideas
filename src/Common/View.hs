@@ -27,6 +27,8 @@ module Common.View
    , View, identity, makeView, matcherView
      -- * Isomorphisms
    , Isomorphism, from, to
+     -- * Lifting with views
+   , LiftView(..)
      -- * Some combinators
    , swapView, listView, traverseView, ($<)
      -- * Packaging a view
@@ -224,6 +226,15 @@ instance HasId (Isomorphism a b) where
 
 instance Identify (Isomorphism a b) where
    (@>) = changeId . const . newId
+
+----------------------------------------------------------------------------------
+-- Type class for lifting with Views
+
+class LiftView f where
+   liftView   :: View a b -> f b -> f a
+   liftViewIn :: View a (b, c) -> f b -> f a
+   -- default definition
+   liftView v = liftViewIn (v &&& identity)
 
 ----------------------------------------------------------------------------------
 -- Some combinators

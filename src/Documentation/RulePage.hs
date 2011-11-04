@@ -84,8 +84,8 @@ rulePage ex exMap usedIn r = do
    let xs = getRewriteRules r
    unless (null xs) $ do
       h3 "Formal Mathematical Properties"
-      forM_ xs $ \(Some rr, b) -> para $ do
-         let fmp = rewriteRuleToFMP b rr
+      forM_ xs $ \(Some rr) -> para $ do
+         let fmp = rewriteRuleToFMP (not $ isBuggyRule r) rr
          highlightXML False $ XML.makeXML "FMP" $
             XML.builder (omobj2xml (toObject fmp))
 

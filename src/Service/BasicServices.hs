@@ -79,7 +79,7 @@ allfirsts state =
          Just (RuleStep r) | isMajorRule r -> return
             ( r
             , location (lastTerm d)
-            , fromMaybe [] (expectedArguments r ca)
+            , expectedArguments r ca
             , makeState (exercise state) (Just prefixEnd) (lastTerm d)
             )
          _ -> Nothing

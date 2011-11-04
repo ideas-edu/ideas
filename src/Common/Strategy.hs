@@ -42,7 +42,7 @@ module Common.Strategy
    , prefixToSteps, stepsToRules, lastStepInPrefix
      -- * Misc
    , cleanUpStrategy, cleanUpStrategyAfter
-   , rulesInStrategy, mapRules, mapRulesS
+   , rulesInStrategy
    ) where
 
 import Common.Strategy.Abstract

@@ -15,10 +15,10 @@ module Domain.Logic.BuggyRules (buggyRules) where
 
 import Common.Id
 import Common.Rewriting
-import Common.Transformation (Rule, buggyRule)
+import Common.Rule (Rule, buggyRule)
 import Domain.Logic.Formula
 import Domain.Logic.Generator()
-import qualified Common.Transformation as Rule
+import qualified Common.Rule as Rule
 
 -- Collection of all known buggy rules
 buggyRules :: [Rule SLogic]

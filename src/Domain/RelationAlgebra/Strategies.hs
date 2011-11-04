@@ -13,7 +13,7 @@ module Domain.RelationAlgebra.Strategies (toCNF) where
 
 import Common.Context
 import Common.Strategy
-import Common.Transformation
+import Common.Rule
 import Domain.RelationAlgebra.Formula
 import Domain.RelationAlgebra.Rules
 import Prelude hiding (repeat)

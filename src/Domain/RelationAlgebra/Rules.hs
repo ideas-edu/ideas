@@ -13,10 +13,10 @@ module Domain.RelationAlgebra.Rules where
 
 import Common.Id
 import Common.Rewriting
-import Common.Transformation (Rule, buggyRule)
+import Common.Rule (Rule, buggyRule)
 import Domain.RelationAlgebra.Formula
 import Domain.RelationAlgebra.Generator()
-import qualified Common.Transformation as Rule
+import qualified Common.Rule as Rule
 
 invRules :: [Rule RelAlg]
 invRules = [ ruleInvOverUnion, ruleInvOverIntersec, ruleInvOverComp

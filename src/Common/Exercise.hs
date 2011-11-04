@@ -48,6 +48,7 @@ import Common.Navigator
 import Common.Predicate
 import Common.Rewriting
 import Common.Strategy hiding (not, fail, repeat, replicate)
+import Common.Rule
 import Common.Transformation
 import Common.Utils (ShowString(..))
 import Common.Utils.TestSuite
@@ -231,7 +232,7 @@ recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [(L
 recognizeRule ex r ca cb = rec (fromMaybe ca (top ca))
  where
    rec x =
-      let here = case ruleRecognizer (similarity ex) r x cb of
+      let here = case recognizer (similarity ex) r x cb of
                     Just as -> [(location x, as)]
                     Nothing -> []
       in here ++ concatMap rec (allDowns x)
@@ -334,9 +335,8 @@ showDerivation ex a = show (present der) ++ extra
     where
       newl = "\n      "
       g (ArgValue descr x) = labelArgument descr ++ "=" ++ showArgument descr x
-      part1 = case expectedArguments b old of
-                 Just xs -> newl ++ intercalate ", " (map g xs)
-                 Nothing -> ""
+      args  = expectedArguments b old
+      part1 = newl ++ intercalate ", " (map g args)
       part2 | nullEnv env = ""
             | otherwise   = newl ++ show env
 
@@ -396,7 +396,7 @@ exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseId ex)) $ do
                    myView = makeView (return . fromS) (S (prettyPrinterContext ex))
                    args   = stdArgs {maxSize = 10, maxSuccess = 10, maxDiscard = 100}
                in addPropertyWith (showId r) args $
-                     propRuleSmart eq (liftRule myView r) myGen
+                     propRuleSmart eq (liftView myView r) myGen
 
          addProperty "soundness strategy/generator" $
             forAll showAsGen $

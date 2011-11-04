@@ -18,7 +18,7 @@ module Domain.LinearAlgebra.Strategies
 import Common.Context
 import Common.Id
 import Common.Strategy hiding (not)
-import Common.Transformation
+import Common.Rule
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.LinearSystem
@@ -88,11 +88,11 @@ linearSystemStrategy = label "General solution to a linear system" $
 
 systemWithMatrixStrategy :: LabeledStrategy (Context Expr)
 systemWithMatrixStrategy = label "General solution to a linear system (matrix approach)" $
-       repeat (mapRules useC dropEquation)
+       repeat (useC dropEquation)
    <*> conv1
-   <*> mapRules useC gaussianElimStrategy
+   <*> useC gaussianElimStrategy
    <*> conv2
-   <*> repeat (mapRules useC dropEquation)
+   <*> repeat (useC dropEquation)
 
 gramSchmidtStrategy :: LabeledStrategy (Context (VectorSpace (Simplified Expr)))
 gramSchmidtStrategy =

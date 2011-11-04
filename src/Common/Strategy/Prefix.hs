@@ -20,7 +20,7 @@ module Common.Strategy.Prefix
 import Common.DerivationTree
 import Common.Strategy.Abstract
 import Common.Strategy.Parsing
-import Common.Transformation
+import Common.Rule
 import Control.Monad
 import Data.Maybe
 

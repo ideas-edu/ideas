@@ -21,7 +21,7 @@ module Common.Strategy.Parsing
 import Common.Classes
 import Common.DerivationTree
 import Common.Strategy.Core
-import Common.Transformation
+import Common.Rule
 import Common.Utils.Uniplate
 import Control.Arrow
 import Control.Monad

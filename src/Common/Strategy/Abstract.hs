@@ -14,7 +14,8 @@ module Common.Strategy.Abstract
    ( Strategy, IsStrategy(..)
    , LabeledStrategy, label, unlabel
    , fullDerivationTree, derivationTree, rulesInStrategy
-   , mapRules, mapRulesS, mapRulesM, cleanUpStrategy, cleanUpStrategyAfter
+   -- , mapRules, mapRulesS, mapRulesM
+   , cleanUpStrategy, cleanUpStrategyAfter
      -- Accessors to the underlying representation
    , toCore, fromCore, liftCore, liftCore2, makeLabeledStrategy
    , toLabeledStrategy
@@ -28,12 +29,13 @@ import Common.Id
 import Common.Rewriting (RewriteRule)
 import Common.Strategy.Core
 import Common.Strategy.Parsing
+import Common.Rule
 import Common.Transformation
 import Common.Utils.Uniplate hiding (rewriteM)
+import Common.View
 import Control.Monad
 import Test.QuickCheck hiding (label)
 import Data.List
-import qualified Data.Traversable as T
 
 -----------------------------------------------------------
 --- Strategy data-type
@@ -193,16 +195,22 @@ derivationTree s = mergeMaybeSteps . mapFirst f . fullDerivationTree s
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]
 rulesInStrategy f = [ r | Rule r <- universe (toCore (toStrategy f)), isMajorRule r ]
 
+instance LiftView LabeledStrategy where
+   liftViewIn = mapRules . liftViewIn
+
+instance LiftView Strategy where
+   liftViewIn = mapRulesS . liftViewIn
+
 -- | Apply a function to all the rules that make up a labeled strategy
 mapRules :: (Rule a -> Rule b) -> LabeledStrategy a -> LabeledStrategy b
 mapRules f (LS n s) = LS n (mapRulesS f s)
 
 mapRulesS :: (Rule a -> Rule b) -> Strategy a -> Strategy b
 mapRulesS f = S . fmap f . toCore
-
+{-
 mapRulesM :: Monad m => (Rule a -> m (Rule a)) -> Strategy a -> m (Strategy a)
 mapRulesM f = liftM S . T.mapM f . toCore
-
+-}
 -- | Use a function as do-after hook for all rules in a labeled strategy, but
 -- also use the function beforehand
 cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a

@@ -26,7 +26,7 @@ import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Views
 import Prelude hiding ((^))
-import qualified Common.Transformation as Rule
+import qualified Common.Rule as Rule
 
 makeRule :: IsId n => n -> Transformation a -> Rule a
 makeSimpleRule :: IsId n => n -> (a -> Maybe a) -> Rule a

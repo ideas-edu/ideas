@@ -131,7 +131,7 @@ cancelTermsDiv = makeSimpleRule (ratId, "cancel-div") $ withCM $ \expr -> do
    rec xs ys = (xs, ys, [])
 
 fractionScale :: Rule Expr
-fractionScale = liftRule myView $
+fractionScale = liftView myView $
    makeSimpleRule (ratId, "rational-scale") $ \((a, e1), (b, e2)) -> do
       guard (e1 /= e2)
       let e3 = lcmExpr e1 e2
@@ -143,7 +143,7 @@ fractionScale = liftRule myView $
    myView = plusView >>> (divView *** divView)
 
 turnIntoFraction :: Rule Expr
-turnIntoFraction = liftRule plusView $
+turnIntoFraction = liftView plusView $
    makeSimpleRule (ratId, "to-rational") $ \(a, b) ->
       liftM (\c -> (c, b)) (f a b) `mplus`
       liftM (\c -> (a, c)) (f b a)

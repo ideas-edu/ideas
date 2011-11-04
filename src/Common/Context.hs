@@ -23,7 +23,7 @@ module Common.Context
      -- * Variables
    , Var, newVar, makeVar
      -- * Lifting
-   , liftToContext, liftTransContext
+   , liftToContext
    , use, useC, termNavigator, applyTop
      -- * Context Monad
    , ContextMonad, readVar, writeVar, modifyVar
@@ -33,7 +33,6 @@ module Common.Context
 import Common.Id
 import Common.Navigator
 import Common.Rewriting
-import Common.Transformation
 import Common.Utils (readM)
 import Common.View
 import Control.Monad
@@ -163,15 +162,16 @@ makeVar :: (a -> String) -> (String -> Maybe a) -> String -> a -> Var a
 makeVar showF readF s a = V s a showF readF
 
 ----------------------------------------------------------
--- Lifting rewrite rules
+-- Lifting rules
 
 -- | Lift a rule to operate on a term in a context
-liftToContext :: Rule a -> Rule (Context a)
-liftToContext = liftRuleIn contextView
-
-liftTransContext :: Transformation a -> Transformation (Context a)
-liftTransContext = liftTransIn contextView
-
+liftToContext :: LiftView f => f a -> f (Context a)
+liftToContext = liftViewIn cv
+ where
+   cv    = "views.contextView" @> makeView f g
+   f ctx = current ctx >>= \a -> Just (a, ctx)
+   g     = uncurry replace
+   
 -- | Apply a function at top-level. Afterwards, try to return the focus
 -- to the old position
 applyTop :: (a -> a) -> Context a -> Context a
@@ -197,17 +197,11 @@ termNavigator a = fromMaybe (noNavigator a) (make a)
             (ys, _:zs) -> ys ++ b:zs
             _          -> xs
 
-use :: (IsTerm a, IsTerm b) => Rule a -> Rule (Context b)
+use :: (LiftView f, IsTerm a, IsTerm b) => f a -> f (Context b)
 use = useC . liftToContext
 
-useC :: (IsTerm a, IsTerm b) => Rule (Context a) -> Rule (Context b)
-useC = liftRule (makeView (castT termView) (fromJust . castT termView))
-
-contextView :: View (Context a) (a, Context a)
-contextView = "views.contextView" @> makeView f g
- where
-   f ctx = current ctx >>= \a -> Just (a, ctx)
-   g = uncurry replace
+useC :: (LiftView f, IsTerm a, IsTerm b) => f (Context a) -> f (Context b)
+useC = liftView (makeView (castT termView) (fromJust . castT termView))
 
 ----------------------------------------------------------
 -- Context monad

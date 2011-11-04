@@ -23,11 +23,11 @@ module Domain.Logic.Rules
 
 import Common.Id
 import Common.Rewriting
-import Common.Transformation (Rule, minorRule)
+import Common.Rule (Rule, minorRule)
 import Domain.Logic.Formula
 import Domain.Logic.GeneralizedRules
 import Domain.Logic.Generator()
-import qualified Common.Transformation as Rule
+import qualified Common.Rule as Rule
 
 extraLogicRules :: [Rule SLogic]
 extraLogicRules =

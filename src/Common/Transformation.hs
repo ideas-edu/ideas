@@ -18,21 +18,15 @@
 module Common.Transformation
    ( -- * Transformations
      Transformation, makeTrans, makeTransList, makeRewriteTrans
+   , HasTransformation(..)
      -- * Arguments
    , ArgDescr(..), defaultArgDescr, Argument(..), ArgValue(..), ArgValues
    , supply1, supply2, supply3
-   , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
-   , Rule, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
-   , finalRule, isFinalRule, ruleSiblings, rule, ruleList
-   , makeRule, makeSimpleRule, makeSimpleRuleList
-   , idRule, checkRule, emptyRule, minorRule, buggyRule, doAfter
-   , siblingOf, transformation, getRewriteRules
-   , ruleRecognizer, useRecognizer, useSimpleRecognizer
-     -- * Lifting
-   , liftRule, liftTrans, liftRuleIn, liftTransIn
-     -- * QuickCheck
-   , testRule, propRuleSmart
+   , useRecognizer, useSimpleRecognizer, recognizer
+     -- EXTRA
+   , getDescriptors, expectedArguments, getRewriteRules
+   , smartApplyTrans, smartGenTrans
    ) where
 
 import Common.Classes
@@ -41,6 +35,7 @@ import Common.Rewriting
 import Common.Utils
 import Common.View
 import Control.Monad
+import Data.Foldable (Foldable, toList)
 import Data.Function
 import Data.Maybe
 import Data.Monoid
@@ -53,7 +48,7 @@ import Test.QuickCheck
 data Transformation a where
    Function    :: (a -> [a]) -> Transformation a
    RewriteRule :: RewriteRule a -> (a -> [a]) -> Transformation a
-   Abstraction :: ArgumentList b -> (a -> Maybe b) -> (b -> Transformation a) -> Transformation a
+   Abstraction :: ArgDescr b -> (a -> Maybe b) -> (b -> Transformation a) -> Transformation a
    LiftView    :: View a (b, c) -> Transformation b -> Transformation a
    Recognizer  :: (a -> a -> Maybe ArgValues) -> Transformation a -> Transformation a
    Choice      :: Transformation a -> Transformation a -> Transformation a
@@ -72,17 +67,29 @@ instance Apply Transformation where
          Recognizer _ t    -> applyAll t a
          Choice t1 t2      -> applyAll t1 a ++ applyAll t2 a
 
+instance LiftView Transformation where
+   liftViewIn = LiftView
+
 -- | Turn a function (which returns its result in the Maybe monad) into a transformation
 makeTrans :: (a -> Maybe a) -> Transformation a
-makeTrans f = makeTransList (maybe [] return . f)
+makeTrans = makeTransList
 
 -- | Turn a function (which returns a list of results) into a transformation
-makeTransList :: (a -> [a]) -> Transformation a
-makeTransList = Function
+makeTransList :: Foldable f => (a -> f a) -> Transformation a
+makeTransList f = Function (toList . f)
 
 -- | Turn a rewrite rule into a transformation
 makeRewriteTrans :: RewriteRule a -> Transformation a
 makeRewriteTrans r = RewriteRule r (rewriteM r)
+
+-----------------------------------------------------------
+--- HasTransformation type class
+
+class HasTransformation f where
+   transformation :: f a -> Transformation a
+
+instance HasTransformation Transformation where
+   transformation = id
 
 -----------------------------------------------------------
 --- Arguments
@@ -90,7 +97,7 @@ makeRewriteTrans r = RewriteRule r (rewriteM r)
 -- | A data type for describing an argument of a parameterized transformation
 data ArgDescr a = ArgDescr
    { labelArgument    :: String               -- ^ Label that is shown to the user when asked to supply the argument
-   , defaultArgument  :: Maybe a              -- ^ Default value that can be used
+   , defaultArgument  :: a                    -- ^ Default value that can be used
    , parseArgument    :: String -> Maybe a    -- ^ A parser
    , showArgument     :: a -> String          -- ^ A pretty-printer
    , termViewArgument :: View Term a          -- ^ Conversion to/from term
@@ -111,56 +118,49 @@ instance Eq ArgValue where
       build (termViewArgument d1) a1 == build (termViewArgument d2) a2
 
 -- | Constructor function for an argument descriptor that uses the Show and Read type classes
-defaultArgDescr :: (Show a, Read a, IsTerm a, Arbitrary a) => String -> ArgDescr a
-defaultArgDescr descr = ArgDescr descr Nothing readM show termView arbitrary
+defaultArgDescr :: (Show a, Read a, IsTerm a, Arbitrary a) => String -> a -> ArgDescr a
+defaultArgDescr descr a = ArgDescr descr a readM show termView arbitrary
 
 -- | A type class for types which have an argument descriptor
 class Arbitrary a => Argument a where
    makeArgDescr :: String -> ArgDescr a   -- ^ The first argument is the label of the argument descriptor
 
 instance Argument Int where
-   makeArgDescr = defaultArgDescr
+   makeArgDescr = flip defaultArgDescr 0
 
 -- | Parameterization with one argument using the provided label
 supply1 :: Argument x
                   => String -> (a -> Maybe x)
                   -> (x -> Transformation a) -> Transformation a
-supply1 s f t =
-   let args = Single (makeArgDescr s)
-   in Abstraction args f t
+supply1 = Abstraction . makeArgDescr
 
 -- | Parameterization with two arguments using the provided labels
 supply2 :: (Argument x, Argument y)
                    => (String, String) -> (a -> Maybe (x, y))
                    -> (x -> y -> Transformation a) -> Transformation a
 supply2 (s1, s2) f t =
-   let args = Pair (Single (makeArgDescr s1)) (Single (makeArgDescr s2))
-   in Abstraction args f (uncurry t)
+   supply1 s1 (fmap fst . f) $ \x ->
+   supply1 s2 (fmap snd . f) $ t x
 
 -- | Parameterization with three arguments using the provided labels
 supply3 :: (Argument x, Argument y, Argument z)
                   => (String, String, String) -> (a -> Maybe (x, y, z))
                   -> (x -> y -> z -> Transformation a) -> Transformation a
 supply3 (s1, s2, s3) f t =
-   let args = Pair (Single (makeArgDescr s1))
-                   (Pair (Single (makeArgDescr s2)) (Single (makeArgDescr s3)))
-       nest (a, b, c) = (a, (b, c))
-   in Abstraction args (fmap nest . f) (\(a, (b, c)) -> t a b c)
-
--- | Checks whether a rule is parameterized
-hasArguments :: Rule a -> Bool
-hasArguments = not . null . getDescriptors
+   supply1 s1 (fmap fst3 . f) $ \x -> 
+   supply1 s2 (fmap snd3 . f) $ \y -> 
+   supply1 s3 (fmap thd3 . f) $ t x y
 
 -- | Returns a list of argument descriptors
-getDescriptors :: Rule a -> [Some ArgDescr]
-getDescriptors = rec . transformation
+getDescriptors :: HasTransformation f => f a -> [Some ArgDescr]
+getDescriptors = rec . transformation 
  where
    rec :: Transformation a -> [Some ArgDescr]
    rec trans =
       case trans of
          Function _           -> []
          RewriteRule _ _      -> []
-         Abstraction args _ _ -> someArguments args
+         Abstraction args _ t -> Some args : rec (t (defaultArgument args))
          LiftView _ t         -> rec t
          Recognizer _ t       -> rec t
          Choice t1 t2         -> rec t1 ++ rec t2
@@ -168,245 +168,89 @@ getDescriptors = rec . transformation
 -- | Returns a list of pretty-printed expected arguments.
 -- Nothing indicates that there are no such arguments (or the arguments
 -- are not applicable for the current value)
-expectedArguments :: Rule a -> a -> Maybe ArgValues
+expectedArguments :: HasTransformation f => f a -> a -> ArgValues
 expectedArguments = rec . transformation
  where
-    rec :: Transformation a -> a -> Maybe ArgValues
-    rec trans a =
-       case trans of
-          Function _           -> Nothing
-          RewriteRule _ _      -> Nothing
-          Abstraction args f _ -> fmap (argumentValues args) (f a)
-          LiftView v t         -> match v a >>= rec t . fst
-          Recognizer _ t       -> rec t a
-          Choice t1 t2         -> liftM2 (++) (rec t1 a) (rec t2 a)
+   rec :: Transformation a -> a -> ArgValues
+   rec trans a = 
+      case trans of
+         Function _      -> []
+         RewriteRule _ _ -> []
+         Abstraction args f t -> 
+            case f a of
+               Just b  -> ArgValue args b : rec (t b) a
+               Nothing -> []
+         LiftView v t -> 
+            case match v a of
+               Just (b, _) -> rec t b
+               Nothing     -> []
+         Recognizer _ t -> 
+            rec t a
+         Choice t1 t2 -> 
+            rec t1 a ++ rec t2 a
 
+{-
 -- | Transform a rule and use a list of pretty-printed arguments. Nothing indicates that the arguments are
 -- invalid (not parsable), or that the wrong number of arguments was supplied
-useArguments :: [String] -> Rule a -> Maybe (Rule a)
-useArguments list r = do
-   new <- make (transformation r)
-   return r {transformation = new}
+useArgumentsTrans :: [String] -> Transformation a -> Maybe (Transformation a)
+useArgumentsTrans list = rec
  where
-   make :: Transformation a -> Maybe (Transformation a)
-   make trans =
+   rec :: Transformation a -> Maybe (Transformation a)
+   rec trans =
       case trans of
          Function _           -> Nothing
          RewriteRule _ _      -> Nothing
-         Abstraction args _ g -> fmap g (parseArguments args list)
-         LiftView v t         -> fmap (LiftView v) (make t)
-         Recognizer f t       -> fmap (Recognizer f) (make t)
-         Choice t1 t2         -> make t1 `mplus` make t2
-
------------------------------------------------------------
---- Internal machinery for arguments
-
-data ArgumentList a where
-   Single :: ArgDescr a -> ArgumentList a
-   Pair   :: ArgumentList a -> ArgumentList b -> ArgumentList (a, b)
-
-parseArguments :: ArgumentList a -> [String] -> Maybe a
-parseArguments (Single a) [x] = parseArgument a x
-parseArguments (Pair a b) xs =
-   let (ys, zs) = splitAt (numberOfArguments a) xs
-   in liftM2 (,) (parseArguments a ys) (parseArguments b zs)
-parseArguments _ _ = Nothing
-
-someArguments :: ArgumentList a -> [Some ArgDescr]
-someArguments (Single a) = [Some a]
-someArguments (Pair a b) = someArguments a ++ someArguments b
-
-argumentValues :: ArgumentList a -> a -> ArgValues
-argumentValues (Single a) x      = [ArgValue a x]
-argumentValues (Pair a b) (x, y) = argumentValues a x ++ argumentValues b y
-
-numberOfArguments :: ArgumentList a -> Int
-numberOfArguments = length . someArguments
-
+         Abstraction args _ g -> case list of
+                                    [hd] -> fmap g (parseArgument args hd)
+                                    _    -> Nothing
+         LiftView v t         -> fmap (LiftView v) (rec t)
+         Recognizer f t       -> fmap (Recognizer f) (rec t)
+         Choice t1 t2         -> rec t1 `mplus` rec t2
+-}
 -----------------------------------------------------------
 --- Rules
 
--- | Abstract data type for representing rules
-data Rule a = Rule
-   { ruleId         :: Id  -- ^ Unique identifier of the rule
-   , transformation :: Transformation a
-   , afterwards     :: a -> a
-   , isBuggyRule    :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
-   , isMinorRule    :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
-   , isFinalRule    :: Bool -- ^ Final (clean-up) step in derivation
-   , ruleSiblings   :: [Id]
-   }
-
-instance Show (Rule a) where
-   show = showId
-
-instance Eq (Rule a) where
-   r1 == r2 = ruleId r1 == ruleId r2
-
-instance Ord (Rule a) where
-   compare = compareId
-
-instance Apply Rule where
-   applyAll r a = do
-      b <- applyAll (transformation r) a
-      return (afterwards r b)
-
-instance HasId (Rule a) where
-   getId        = ruleId
-   changeId f r = r { ruleId = f (ruleId r) }
-
-instance (Arbitrary a, CoArbitrary a) => Arbitrary (Rule a) where
-   arbitrary = liftM3 make arbitrary arbitrary arbitrary
-    where
-      make minor n f
-         | minor     = minorRule $ makeSimpleRule n f
-         | otherwise = makeSimpleRule (n :: Id) f
-
--- | Returns whether or not the rule is major (i.e., not minor)
-isMajorRule :: Rule a -> Bool
-isMajorRule = not . isMinorRule
-
-isRewriteRule :: Rule a -> Bool
-isRewriteRule = not . null . getRewriteRules
-
-siblingOf :: HasId b => b -> Rule a -> Rule a
-siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
-
-ruleList :: (IsId n, RuleBuilder f a) => n -> [f] -> Rule a
-ruleList n = makeRule a . mconcat . map (makeRewriteTrans . rewriteRule a)
- where a = newId n
-
-rule :: (IsId n, RuleBuilder f a) => n -> f -> Rule a
-rule n = makeRule a . makeRewriteTrans . rewriteRule a
- where a = newId n
-
--- | Turn a transformation into a rule: the first argument is the rule's name
-makeRule :: IsId n => n -> Transformation a -> Rule a
-makeRule n t = Rule (newId n) t id False False False []
-
--- | Turn a function (which returns its result in the Maybe monad) into a rule: 
--- the first argument is the rule's name
-makeSimpleRule :: IsId n => n -> (a -> Maybe a) -> Rule a
-makeSimpleRule n = makeRule n . makeTrans
-
--- | Turn a function (which returns a list of results) into a rule: the first 
--- argument is the rule's name
-makeSimpleRuleList :: IsId n => n -> (a -> [a]) -> Rule a
-makeSimpleRuleList n = makeRule n . makeTransList
-
--- | A special (minor) rule that always returns the identity
-idRule :: Rule a
-idRule = minorRule $ makeSimpleRule "Identity" return
-
--- | A special (minor) rule that checks a predicate (and returns the identity
--- if the predicate holds)
-checkRule :: (a -> Bool) -> Rule a
-checkRule p = minorRule $ makeSimpleRule "Check" $ \a ->
-   if p a then Just a else Nothing
-
--- | A special (minor) rule that is never applicable (i.e., this rule always fails)
-emptyRule :: Rule a
-emptyRule = minorRule $ makeSimpleRule "Empty" (const Nothing)
-
--- | Mark the rule as minor (by default, rules are not minor)
-minorRule :: Rule a -> Rule a
-minorRule r = r {isMinorRule = True}
-
--- | Mark the rule as buggy (by default, rules are supposed to be sound)
-buggyRule :: Rule a -> Rule a
-buggyRule r = r {isBuggyRule = True}
-
--- | Mark the rule as final (by default, false). Final rules are used as a
--- final step in the derivation, to get the term in the expected form
-finalRule :: Rule a -> Rule a
-finalRule r = r {isFinalRule = True}
-
--- | Perform the function after the rule has been fired
-doAfter :: (a -> a) -> Rule a -> Rule a
-doAfter f r = r {afterwards = f . afterwards r}
-
-getRewriteRules :: Rule a -> [(Some RewriteRule, Bool)]
-getRewriteRules r = rec (transformation r)
+getRewriteRules :: HasTransformation f => f a -> [Some RewriteRule]
+getRewriteRules = rec . transformation 
  where
-   rec :: Transformation a -> [(Some RewriteRule, Bool)]
+   rec :: Transformation a -> [Some RewriteRule]
    rec trans =
       case trans of
          Function _        -> []
-         RewriteRule rr _  -> [(Some rr, not $ isBuggyRule r)]
+         RewriteRule rr _  -> [Some rr]
          Abstraction _ _ _ -> []
          LiftView _ t      -> rec t
          Recognizer _ t    -> rec t
          Choice t1 t2      -> rec t1 ++ rec t2
 
-ruleRecognizer :: (a -> a -> Bool) -> Rule a -> a -> a -> Maybe ArgValues
-ruleRecognizer eq r a b = transRecognizer eq (transformation r) a b
-
-transRecognizer :: (a -> a -> Bool) -> Transformation a -> a -> a -> Maybe ArgValues
-transRecognizer eq trans a b =
-   case trans of
-      Recognizer f t -> f a b `mplus` transRecognizer eq t a b
-      Choice t1 t2   -> transRecognizer eq t1 a b `mplus` transRecognizer eq t2 a b
-      LiftView v t   -> msum
-         [ transRecognizer (eq `on` f) t av bv
-         | (av, c) <- matchM v a
-         , (bv, _) <- matchM v b
-         , let f z = build v (z, c)
-         ]
-       `mplus`
-         noArg (any (`eq` b) (applyAll trans a)) -- is this really needed?
-      _ -> noArg $ any (`eq` b) (applyAll trans a)
+recognizer :: HasTransformation f 
+                => (a -> a -> Bool) -> f a -> a -> a -> Maybe ArgValues
+recognizer eq f a b = rec (transformation f)
  where
+   rec trans =
+      case trans of
+         Recognizer g t -> g a b `mplus` rec t
+         Choice t1 t2   -> rec t1 `mplus` rec t2
+         LiftView v t   -> msum
+            [ recognizer (eq `on` g) t av bv
+            | (av, c) <- matchM v a
+            , (bv, _) <- matchM v b
+            , let g z = build v (z, c)
+            ]
+          `mplus`
+            noArg (any (`eq` b) (applyAll trans a)) -- is this really needed?
+         _ -> noArg $ any (`eq` b) (applyAll trans a)
+ 
    noArg c = if c then Just [] else Nothing
 
 useRecognizer :: (a -> a -> Maybe ArgValues) -> Transformation a -> Transformation a
-useRecognizer = Recognizer
+useRecognizer f t = Recognizer f (transformation t)
 
 useSimpleRecognizer :: (a -> a -> Bool) -> Transformation a -> Transformation a
 useSimpleRecognizer p = useRecognizer $ \x y -> guard (p x y) >> return []
-
------------------------------------------------------------
---- Lifting
-
-liftTrans :: View a b -> Transformation b -> Transformation a
-liftTrans v = liftTransIn (v &&& identity)
-
-liftTransIn :: View a (b, c) -> Transformation b -> Transformation a
-liftTransIn = LiftView
-
-liftRule :: View a b -> Rule b -> Rule a
-liftRule v = liftRuleIn (v &&& identity)
-
-liftRuleIn :: View a (b, c) -> Rule b -> Rule a
-liftRuleIn v r = r
-   { transformation = liftTransIn v (transformation r)
-   , afterwards     = simplifyWith (mapFirst (afterwards r)) v
-   }
-
+   
 -----------------------------------------------------------
 --- QuickCheck
-
--- | Check the soundness of a rule: the equality function is passed explicitly
-testRule :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
-testRule eq r =
-   quickCheck (propRule eq r arbitrary)
-
--- | Check the soundness of a rule and use a "smart generator" for this. The smart generator
--- behaves differently on transformations constructed with a (|-), and for these transformations,
--- the left-hand side patterns are used (meta variables are instantiated with random terms)
-propRuleSmart :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
-propRuleSmart eq r = propRule eq r . smartGen r
-
-propRule :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
-propRule eq r gen =
-   forAll gen $ \a ->
-   forAll (smartApplyRule r a) $ \ma ->
-      isJust ma ==> (a `eq` fromJust ma)
-
-smartGen :: Rule a -> Gen a -> Gen a
-smartGen r gen = frequency [(2, gen), (1, smart)]
- where
-   smart = gen >>= \a ->
-      oneof (gen : maybeToList (smartGenTrans a (transformation r)))
 
 smartGenTrans :: a -> Transformation a -> Maybe (Gen a)
 smartGenTrans a trans =
@@ -422,19 +266,8 @@ smartGenTrans a trans =
          return (oneof xs)
       _ -> Nothing
 
-smartApplyRule :: Rule a -> a -> Gen (Maybe a)
-smartApplyRule r a = do
-   xs <- smartApplyTrans (transformation r) a
-   case xs of
-      [] -> return Nothing
-      _  -> elements $ map Just xs
-
 smartApplyTrans :: Transformation a -> a -> Gen [a]
 smartApplyTrans trans a =
    case trans of
-      Abstraction args _ g -> smartArgs args >>= \b -> smartApplyTrans (g b) a
+      Abstraction args _ g -> genArgument args >>= \b -> smartApplyTrans (g b) a
       _ -> return (applyAll trans a)
-
-smartArgs :: ArgumentList a -> Gen a
-smartArgs (Single a) = genArgument a
-smartArgs (Pair a b) = liftM2 (,) (smartArgs a) (smartArgs b)

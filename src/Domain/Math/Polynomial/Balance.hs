@@ -226,7 +226,7 @@ conLeftMinus = flipped (linbal, "con-left-minus") conRightMinus
 conLeftPlus  = flipped (linbal, "con-left-plus")  conRightPlus
 
 flipped :: IsId a => a -> Rule (Equation b) -> Rule (Equation b)
-flipped rid = liftRule flipView . changeId (const (newId rid))
+flipped rid = liftView flipView . changeId (const (newId rid))
  where 
    flipView = makeView (Just . flipSides) flipSides
 

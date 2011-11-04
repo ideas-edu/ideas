@@ -13,9 +13,10 @@ module Domain.LinearAlgebra.GramSchmidtRules where
 
 import Common.Context
 import Common.Navigator hiding (current)
+import Common.Rule
 import Common.Transformation
-import Common.Utils
 import Control.Monad
+import Data.Maybe
 import Domain.LinearAlgebra.Vector
 
 varI, varJ :: Var Int
@@ -83,7 +84,7 @@ setCurrent v vs = do
 transOrthogonal :: Floating a => Int -> Int -> Transformation (Context (VectorSpace a))
 transOrthogonal i j = contextTrans $ \xs ->
    do guard (i /= j && i >=0 && j >= 0)
-      u <- safeHead $ drop i (vectors xs)
+      u <- listToMaybe $ drop i (vectors xs)
       guard (isUnit u)
       case splitAt j (vectors xs) of
          (begin, v:end) -> Just $ makeVectorSpace $ begin ++ makeOrthogonal u v:end

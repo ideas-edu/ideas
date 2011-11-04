@@ -44,9 +44,10 @@ rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
       forM_ (ruleSiblings r) $ \s ->
          element "sibling" $ text $ showId s
       -- FMPs and CMPs
-      forM_ (getRewriteRules r) $ \(Some rr, b) -> do
-         let fmp = rewriteRuleToFMP b rr
-         case showRewriteRule b rr of
+      forM_ (getRewriteRules r) $ \(Some rr) -> do
+         let ok  = not $ isBuggyRule r
+             fmp = rewriteRuleToFMP ok rr
+         case showRewriteRule ok rr of
             Nothing -> return ()
             Just s  -> element "CMP" (text s)
          element "FMP" $

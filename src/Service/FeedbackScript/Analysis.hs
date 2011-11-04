@@ -13,9 +13,7 @@
 -----------------------------------------------------------------------------
 module Service.FeedbackScript.Analysis (withScripts) where
 
-import Common.Exercise
-import Common.Id
-import Common.Transformation
+import Common.Library
 import Common.Utils (Some(..))
 import Common.Utils.Uniplate
 import Control.Monad

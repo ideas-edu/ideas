@@ -92,7 +92,7 @@ gcdFrac r1 r2 =
 
 -- ax^2 + c = 0
 noLinFormula :: Rule (Equation Expr)
-noLinFormula = describe "No linear term ('b=0')" $ liftRule myView $
+noLinFormula = describe "No linear term ('b=0')" $ liftView myView $
    makeSimpleRule (quadreq, "no-lin") $ \((x, (a, b, c)), rhs) -> do
       guard (rhs == 0 && b == 0 && c /= 0)
       return $ if a>0 then ((x, (a, 0, 0)), -c)
@@ -132,7 +132,7 @@ niceFactorsNew = describe "Find a nice decomposition" $
 -- 3) If a<0, then also suggest to change sign (return two solutions)
 simplerPolynomial :: Rule (Equation Expr)
 simplerPolynomial = describe "simpler polynomial" $
-   rhsIsZero $ liftRuleIn (quadraticNF >>> toView swapView) $
+   rhsIsZero $ liftViewIn (quadraticNF >>> toView swapView) $
    makeSimpleRuleList (quadreq, "simpler-poly") $ \(a, b, c) -> do
       r <- findFactor (filter (/=0) [a, b, c])
       d <- if a >= 0 then [r] else [-r, r]
@@ -142,7 +142,7 @@ simplerPolynomial = describe "simpler polynomial" $
 -- Simplified variant of simplerPoly: just bring a to 1.
 -- Needed for quadratic strategy without square formula
 bringAToOne :: Rule (Equation Expr)
-bringAToOne = rhsIsZero $ liftRuleIn (quadraticNF >>> toView swapView) $
+bringAToOne = rhsIsZero $ liftViewIn (quadraticNF >>> toView swapView) $
    describe "Bring 'a' to one" $
    makeSimpleRule (quadreq, "scale") $ \(a, b, c) -> do
    guard (a `notElem` [0, 1])
@@ -156,7 +156,7 @@ mulZero :: Rule (OrList (Equation Expr))
 mulZero = describe "multiplication is zero" $
    makeSimpleRuleList (quadreq, "product-zero") $ oneDisjunct bothSides
  where
-   bothSides eq = oneSide eq `mplus` oneSide (flipSides eq)
+   bothSides eq = oneSide eq ++ oneSide (flipSides eq)
    oneSide (lhs :==: rhs) = do
       guard (rhs == 0)
       (_, xs) <- matchM productView lhs
@@ -242,7 +242,7 @@ squareBothSides = describe "square both sides" $
 -- prepare splitting a square; turn lhs into x^2+bx+c such that (b/2)^2 is c
 prepareSplitSquare :: Rule (Equation Expr)
 prepareSplitSquare = describe "prepare split square" $
-   liftRule myView $
+   liftView myView $
    makeSimpleRule (quadreq, "prepare-split") $ \((x, (a, b, c)), r) -> do
       let newC   = (b/2)*(b/2)
           newRHS = r + newC - c
@@ -357,7 +357,7 @@ sameFactor = describe "same factor" $
 sameConFactor :: Rule (Equation Expr)
 sameConFactor =
    describe "same constant factor" $
-   liftRule myView $
+   liftView myView $
    makeSimpleRule (quadreq, "same-con-factor") $ \(ps1 :==: ps2) -> do
       let (bs, zs) = unzip (ps1 ++ ps2)
           (rs, es) = unzip (map (f 1 []) zs)
@@ -423,7 +423,7 @@ substBackVar = describe "Substitute back a variable" $
 
 exposeSameFactor :: Rule (Equation Expr)
 exposeSameFactor = describe "expose same factor" $
-   liftRule (bothSidesView (toView productView)) $
+   liftView (bothSidesView (toView productView)) $
    makeSimpleRuleList (polyeq, "expose-factor") $ \((bx, xs) :==: (by, ys)) -> do
       (nx, ny) <- [ (xs, new) | x <- xs, isOk x, new <- exposeList x ys ] ++
                   [ (new, ys) | y <- ys, isOk y, new <- exposeList y xs ]

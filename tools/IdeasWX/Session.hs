@@ -21,6 +21,7 @@ module Session
 import Common.Library hiding (ready)
 import Common.Utils
 import Control.Monad
+import Data.List
 import Data.Maybe
 import Observable hiding (Id)
 import Service.BasicServices
@@ -189,8 +190,8 @@ hintOrStep verbose ref = do
          return $ unlines $
             [ "Use " ++ showRule r
             ] ++
-            [ "   with arguments " ++ commaList (map f (fromJust args))
-            | let args = expectedArguments r (currentContext d), isJust args
+            [ "   with arguments " ++ intercalate ", " (map f args)
+            | let args = expectedArguments r (currentContext d), not $ null args
             , let f (ArgValue descr a) = showArgument descr a
             ] ++ if verbose then
             [ "   to rewrite the term into:"

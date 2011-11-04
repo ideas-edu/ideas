@@ -26,6 +26,7 @@ import Common.Navigator as Export hiding (left, right)
 import Common.Predicate as Export
 import Common.Rewriting as Export
 import Common.Strategy as Export hiding (fail, not, repeat, replicate, sequence, until)
+import Common.Rule as Export
 import Common.Transformation as Export
 import Common.View as Export
 

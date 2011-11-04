@@ -2,7 +2,6 @@ module Main (main) where
 
 import Control.Monad
 import Data.List
-import Data.Maybe
 import Model
 import Scanner
 import Options
@@ -19,16 +18,14 @@ main = do
       sys <- if isf 
              then readJSON path
              else scanSystem path
+      case saveFile flags of
+         Just file -> writeFile file (compactJSON (toJSON sys))
+         Nothing   -> return ()
       unless (null $ systemModules sys) $ do
-         let ds = map (flagsData flags . flip outputData sys) (outputs flags)
-         forM_ (modes flags) $ \mode -> 
-            case mode of 
-               Report -> report ds
-               HTML   -> html   ds
-         forM_ (exports flags) $ 
-            export sys
-         when (Save `elem` flags) $
-            writeFile "out.json" (compactJSON $ toJSON sys)
+         maybe putStrLn writeFile (outputFile flags) $
+            outputForDatas (getOutput flags) $ 
+            map (flagsData flags . flip dataForMetric sys) $ 
+            metrics flags
     `catch`
       \_ -> return ()
 
@@ -38,17 +35,26 @@ readJSON path =
 
 data Data = TableString (Table String)
           | TableInt    (Table Int)
-          | Hierarchy String (Hierarchy Int)
+          | Hierarchy   String (Hierarchy Int)
+          | GraphString (Graph String)
 
-outputData :: Output -> System -> Data
-outputData output =
+outputForDatas :: Output -> [Data] -> String
+outputForDatas output =
    case output of
+      Report     -> report
+      HTML       -> html
+      JavaScript -> javaScript
+
+dataForMetric :: Metric -> System -> Data
+dataForMetric metric =
+   case metric of
       SystemSize   -> TableString . systemSizeTable
       PackageSize  -> packageSizeData
       ModuleSize   -> TableInt . moduleSizeTable
       FunctionSize -> TableInt . functionSizeTable
       Imports      -> TableInt . importsTable
       ImportsOf    -> TableInt . importsOfTable
+      ImportGraph  -> GraphString . importGraph
 
 flagsData :: [Flag] -> Data -> Data
 flagsData flags = f (limit . addStats)
@@ -65,37 +71,51 @@ flagsData flags = f (limit . addStats)
       | showStatistics flags = addAvgInt
       | otherwise = id
 
-report :: [Data] -> IO ()
-report ds = 
-   forM_ ds $ \item -> putStrLn $
+report :: [Data] -> String
+report = unlines . map (\item ->
    case item of
       TableInt a    -> showTable show a
       TableString a -> showTable id a
       Hierarchy s a -> showTable show (hierarchyTable sum s a)
+      GraphString _ -> error "graph not supported")
 
-html :: [Data] -> IO ()
-html ds = 
-   writeFile "out.html" $ show $ htmlPage "title" (Just "ideas.css") $  
+html :: [Data] -> String
+html ds = show $ htmlPage "title" (Just "ideas.css") $
    divClass "content" $ do
    forM_ ds $ \item -> 
       case item of
          TableInt a    -> tableToHTML show a
          TableString a -> tableToHTML id a
          Hierarchy s a -> tableToHTML show (hierarchyTable sum s a)
+         GraphString _ -> error "graph not supported"
 
 tableToHTML :: (a -> String) -> Table a -> HTMLBuilder
 tableToHTML f (title, xs) = do
    preText (unlines title)
    table False $ map (\(a, b) -> [text a, text (f b)]) xs 
 
+javaScript :: [Data] -> String
+javaScript = unlines . (decl:) . zipWith format [0::Int ..]
+ where
+   decl = "var metrics = {};"
+   format i item = "metrics.data" ++ show i ++ " = " ++ show (f item) ++ ";"
+   keyValue (k, a) = Object [("key", toJSON k), ("value", toJSON a)]
+   
+   f item = 
+      case item of
+         TableInt a    -> Array $ map keyValue (snd a)
+         TableString a -> Array $ map keyValue (snd a)
+         Hierarchy _ a -> toJSON a
+         GraphString _ -> error "graph not supported"
+
 systemSizeTable :: System -> Table String
 systemSizeTable sys = 
-   (["System size"], 
-            [ ("system",  name sys)
-            , ("modules", show (length (systemModules sys)))
-            , ("code size", show (size sys))
-            , ("full size", show (overallSize sys))
-            ])
+   ( ["System size"]
+   , [ ("system",  name sys)
+     , ("modules", show (length (systemModules sys)))
+     , ("code size", show (size sys))
+     , ("full size", show (overallSize sys))
+     ])
 
 packageSizeData :: System -> Data
 packageSizeData = 
@@ -103,31 +123,31 @@ packageSizeData =
 
 moduleSizeTable :: System -> Table Int
 moduleSizeTable sys =
-         sortTable (["Module size (LOC)"], 
-            [ (name m, linesOfCode m)
-            | m <- systemModules sys
-            ])
+   sortTable (["Module size (LOC)"], 
+      [ (name m, linesOfCode m)
+      | m <- systemModules sys
+      ])
             
 functionSizeTable :: System -> Table Int
 functionSizeTable sys = 
-         sortTable (["Function size (LOC)"], 
-            [ (name f ++ "  (" ++ name m ++ ")", linesOfCode f)
-            | m <- systemModules sys, f <- moduleFunctions m
-            ])
+   sortTable (["Function size (LOC)"], 
+      [ (name f ++ "  (" ++ name m ++ ")", linesOfCode f)
+      | m <- systemModules sys, f <- moduleFunctions m
+      ])
 
 importsTable :: System -> Table Int
 importsTable sys = sortTable (["Imports in module"], 
-            [ (name m, length (moduleImports m))
-            | m <- systemModules sys
-            ])
+   [ (name m, length (moduleImports m))
+   | m <- systemModules sys
+   ])
 
 importsOfTable :: System -> Table Int
 importsOfTable sys = sortTable (["Imports of module"], 
-            [ (show a, n)
-            | (a, n) <- M.toList table
-            ])
+   [ (show a, n)
+   | (a, n) <- M.toList myTable
+   ])
  where
-   table = foldr (\a -> M.insertWith (+) a 1) M.empty 
+   myTable = foldr (\a -> M.insertWith (+) a 1) M.empty 
                    $ filter (`elem` map qname (systemModules sys))
                    $ concatMap moduleImports (systemModules sys)
 
@@ -135,24 +155,16 @@ hierarchyTable :: ([a] -> a) -> String -> Hierarchy a -> Table a
 hierarchyTable f title h = ([title], rec 0 h)
  where
    rec i a = concat 
-      [ (spaces (i*2) ++ s, f (toList b)) : rec (i+1) b 
+      [ (replicate (i*2) ' ' ++ s, f (toList b)) : rec (i+1) b 
       | (s, b) <- folders a 
       ]
-   spaces n = replicate n ' '
 
-export :: System -> Export -> IO ()
-export sys export =
-   case export of
-      
-      ExportLOC mf -> do
-         writeFile (fromMaybe "loc.js" mf) $ 
-            "var metrics = {};\nmetrics.loc =" ++ show (moduleLOCS sys) ++ ";"
-            
-      ExportImports mf -> do
-         writeFile (fromMaybe "imports.js" mf) $ 
-            let (labs, dat) = modImports sys
-            in "var labs =" ++ show labs ++ ";\n" ++
-               "var data = " ++ show dat ++ ";"
+importGraph :: System -> Graph String 
+importGraph sys = impGraph [] (systemHierarchy sys) sys
+               
+               {-
+               
+               -- show $ href (importsFile [] ++ ".svg") $ 
                
       ImportGraph mf -> do --dot -Tsvg -O *.dot
          let rec pr h = 
@@ -161,8 +173,9 @@ export sys export =
          forM_ (rec [] (systemHierarchy sys)) $ \(pr, h) -> do
             print (importsFile pr)
             writeFile (maybe "" (++"/") mf ++ importsFile pr) $
-               impGraph pr h sys
- 
+               impGraph pr h sys -}
+
+{- 
 moduleLOCS :: System -> JSON
 moduleLOCS = rec . systemHierarchy
  where
@@ -179,7 +192,7 @@ modImports sys = (Array ms, Array is)
  where
    (ms, is) = unzip [ (toJSON (name m), toJSON (length (moduleImports m)))
                     | m <- systemModules sys 
-                    ]
+                    ] -}
 
 type Table a = ([String], [(String, a)])
 
@@ -219,7 +232,7 @@ avgStdev xs
    len   = fromIntegral (length xs)
    ys    = map fromIntegral xs
    avg   = sum ys / len
-   stdev = sqrt (sum [ (y-avg)^2 | y <- ys ] / len)
+   stdev = sqrt (sum [ (y-avg)^(2::Int) | y <- ys ] / len)
 
 showDouble :: Int -> Double -> String
 showDouble n = show . precision n 
@@ -250,8 +263,8 @@ cumulative = rec 0
 weighted :: [(Int, Int)] -> [(Int, Int)]
 weighted = map (\(a, b) -> (a, a*b)) -}
 
-alignr :: Int -> String -> String
-alignr n s = replicate (n - length s) ' ' ++ s
+--alignr :: Int -> String -> String
+--alignr n s = replicate (n - length s) ' ' ++ s
 
 alignl :: Int -> String -> String
 alignl n s = take n (s ++ repeat ' ')
@@ -259,8 +272,8 @@ alignl n s = take n (s ++ repeat ' ')
 importsFile :: [String] -> String
 importsFile prefix = intercalate "-" ("imports":prefix) ++ ".dot"
 
-impGraph :: [String] -> Hierarchy Module -> System -> String 
-impGraph prefix hier sys = show $ href (importsFile [] ++ ".svg") $ 
+impGraph :: [String] -> Hierarchy Module -> System -> Graph String 
+impGraph prefix hier sys = 
    sub `addTo` (graph (name sys) nodes3 (doubles edges2)) 
  where
    allms = systemModules sys 

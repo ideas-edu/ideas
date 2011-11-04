@@ -21,8 +21,8 @@ import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 
 plusT, minusT :: Functor f => Expr -> Transformation (f Expr)
-plusT  e = makeTrans $ return . fmap (:+: e)
-minusT e = makeTrans $ return . fmap (:-: e)
+plusT  e = makeTrans $ Just . fmap (:+: e)
+minusT e = makeTrans $ Just . fmap (:-: e)
 
 timesT :: Functor f => Expr -> Transformation (f Expr)
 timesT e = makeTrans $ unlessZero e . fmap (e :*:)
@@ -30,7 +30,7 @@ timesT e = makeTrans $ unlessZero e . fmap (e :*:)
 divisionT :: Expr -> Transformation (Equation Expr)
 divisionT e = makeTrans $ unlessZero e . fmap (:/: e)
 
-unlessZero :: MonadPlus m => Expr -> a -> m a
+unlessZero :: Expr -> a -> Maybe a
 unlessZero e a = do
    r <- matchM rationalView e
    guard (r /= 0)

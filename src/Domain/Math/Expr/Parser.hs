@@ -200,4 +200,4 @@ parens = P.parens lexer
 
 instance Argument Expr where
    makeArgDescr descr =
-      ArgDescr descr Nothing parseExprM show termView arbitrary
+      ArgDescr descr 0 parseExprM show termView arbitrary

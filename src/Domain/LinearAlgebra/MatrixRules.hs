@@ -13,6 +13,7 @@ module Domain.LinearAlgebra.MatrixRules where
 
 import Common.Context
 import Common.Navigator
+import Common.Rule
 import Common.Transformation
 import Control.Monad
 import Data.List

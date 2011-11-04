@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Numeric.Rules where
 
-import Common.Transformation
+import Common.Rule
 import Common.View
 import Control.Monad
 import Domain.Math.Expr

@@ -10,22 +10,21 @@ import System.Directory
 
 scanSystem :: FilePath -> IO System
 scanSystem path = do
-   files <- findFiles path
-   ms    <- mapM scanModule files
-   return (System path (organize (qualifiers . qname) ms))
+   ms <- findFiles path
+   return (System path (organize (qualifiers . qname) (toList ms)))
 
-findFiles :: FilePath -> IO [FilePath]
+findFiles :: FilePath -> IO (Hierarchy Module)
 findFiles path 
    | ".hs" `isSuffixOf` path = do
         b <- doesFileExist path
-        return [path | b]
+        if b then liftM singleton (scanModule path) else return mempty
    | otherwise = do
         cont <- getDirectoryContents path
-        let fs = filter ((/= ".") . take 1) cont
-        rest <- mapM (findFiles . ((path++"/")++)) fs
-        return $ concat rest
+        let fs   = filter ((/= ".") . take 1) cont
+            make = liftM (folder (head fs)) . findFiles . ((path++"/")++)
+        liftM mconcat (mapM make fs)
       `catch` 
-        \_ -> return []
+        \_ -> return mempty
 
 scanModule :: FilePath -> IO Module
 scanModule file = do

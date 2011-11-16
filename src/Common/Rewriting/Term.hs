@@ -29,7 +29,7 @@ module Common.Rewriting.Term
    , hasSomeVar, hasNoVar, variableView
      -- * Meta variables
    , WithMetaVars(..), isMetaVar
-   , metaVars, metaVarSet, hasMetaVar
+   , metaVars, metaVarSet, hasMetaVar, nextMetaVar
    ) where
 
 import Common.Id
@@ -241,6 +241,13 @@ metaVarSet = IS.fromList . metaVars
 
 hasMetaVar :: (Uniplate a, WithMetaVars a) => Int -> a -> Bool
 hasMetaVar i = (i `elem`) . metaVars
+
+nextMetaVar :: (Uniplate a, WithMetaVars a) => a -> Int
+nextMetaVar a
+   | null is   = 0
+   | otherwise = maximum is + 1
+ where
+   is = metaVars a
 
 -----------------------------------------------------------
 -- * Utility functions

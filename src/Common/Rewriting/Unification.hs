@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Common.Rewriting.Unification
-   ( unify, match, matchA, specialLeft, specialRight
+   ( unify, match, matchExtended
    , unificationTests
    ) where
 
@@ -62,18 +62,37 @@ match term1 term2 =
 -----------------------------------------------------------
 -- Matching (or: one-way unification)
 
--- second term should not have meta variables
-
-matchA :: Term -> Term -> [Substitution]
-matchA = rec True
+-- If the top-level symbol (of the left-hand side) is an associative binary 
+-- operator, extend both sides optionally with a meta-variable.
+matchExtended :: Term -> Term -> [(Substitution, Maybe Term, Maybe Term)]
+matchExtended x y = 
+   [ (sub, lookupVar mvLeft sub, lookupVar mvRight sub) 
+   | f   <- extensions
+   , sub <- matchA (f x) y 
+   ]
  where
-   rec _ (TMeta i) y =
+   mvLeft     = nextMetaVar x
+   mvRight    = mvLeft + 1
+   extensions = 
+      case getSpine x of
+         (TCon s, [_, _]) | isAssociative s -> 
+            let extLeft  = binary s (TMeta mvLeft)
+                extRight = flip (binary s) (TMeta mvRight)
+            in [ f . g | f <- [id, extLeft], g <- [id, extRight] ]
+         _ -> [id]
+
+-- second term should not have meta variables
+matchA :: Term -> Term -> [Substitution]
+matchA = rec
+ where
+   rec (TMeta i) y =
       return (singletonSubst i y)
 
-   rec isTop x y =
+   rec x y =
       case getSpine x of
          (TCon s, [a1, a2]) | isAssociative s ->
-            concatMap (uncurry recList . unzip) (associativeMatch isTop s a1 a2 y)
+            concatMap (uncurry recList . unzip) (associativeMatch s a1 a2 y)
+            -- | s == newSymbol "view.plus" -> matchComPlus [a1, a2] y
          (a, as) -> do
             let (b, bs) = getSpine y
             guard (a == b)
@@ -81,25 +100,27 @@ matchA = rec True
 
    recList [] [] = return emptySubst
    recList (x:xs) (y:ys) = do
-      s1 <- rec False x y
+      s1 <- rec x y
       s2 <- recList (map (s1 |->) xs) (map (s1 |->) ys)
       return (s2 @@ s1)
    recList _ _ = []
+   
+   {-
+   matchComPlus :: [Term] -> Term -> [Substitution]
+   matchComPlus [a1, a2] y = 
+      let (.+) = binary (newSymbol "arith1.plus") 
+      in rec False (a1 .+ a2) y ++ rec False (a2 .+ a1) y
+   matchComPlus _ _ = [] -}
 
-associativeMatch :: Bool -> Symbol -> Term -> Term -> Term -> [[(Term, Term)]]
-associativeMatch isTop s1 a1 a2 (TApp (TApp (TCon s2) b1) b2)
+
+associativeMatch :: Symbol -> Term -> Term -> Term -> [[(Term, Term)]]
+associativeMatch s1 a1 a2 (TApp (TApp (TCon s2) b1) b2)
    | s1==s2 = map (map make) result
  where
    as = collect a1 . collect a2 $ []
    bs = collect b1 . collect b2 $ []
-   list | isTop     = map ($ as) [id, extLeft, extRight, extBoth]
-        | otherwise = [as]
 
-   extLeft  = (TMeta specialLeft:)
-   extRight = (++[TMeta specialRight])
-   extBoth  = extLeft . extRight
-
-   result = concatMap (\zs -> pairingsA True zs bs) list
+   result = pairingsA True as bs
    make   = construct *** construct
 
    collect term =
@@ -110,11 +131,7 @@ associativeMatch isTop s1 a1 a2 (TApp (TApp (TCon s2) b1) b2)
    construct xs
       | null xs   = error "associativeMatcher: empty list"
       | otherwise = foldr1 (binary s1) xs
-associativeMatch _ _ _ _ _ = []
-
-specialLeft, specialRight :: Int -- special meta variables for context extension
-specialLeft  = maxBound
-specialRight = pred specialLeft
+associativeMatch _ _ _ _ = []
 
 -----------------------------------------------------------
 --- * Test unification properties

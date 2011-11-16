@@ -37,9 +37,7 @@ normalForm rs = run []
 rewriteTerm :: RewriteRule a -> Term -> [Term]
 rewriteTerm r t = do
    let lhs :~> rhs = ruleSpecTerm $
-          case metaVars t of
-             [] -> r
-             ns -> renumberRewriteRule (maximum ns+1) r
+          renumberRewriteRule (nextMetaVar t) r
    sub <- match lhs t
    return (sub |-> rhs)
 

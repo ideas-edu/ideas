@@ -98,12 +98,11 @@ fill i = rec
 
 buildSpec :: RuleSpec Term -> Term -> [Term]
 buildSpec (lhs :~> rhs) a = do
-   s <- matchA lhs a
-   let (b1, b2) = (specialLeft `IS.member` dom s, specialRight `IS.member` dom s)
-       sym      = maybe (error "buildSpec") fst (getFunction lhs)
-       extLeft  x = if b1 then binary sym (TMeta specialLeft) x else x
-       extRight x = if b2 then binary sym x (TMeta specialRight) else x
-   return (s |-> extLeft (extRight rhs))
+   (sub, ml, mr) <- matchExtended lhs a
+   let sym = maybe (error "buildSpec") fst (getFunction lhs)
+       extLeft  = maybe id (binary sym) ml
+       extRight = maybe id (flip (binary sym)) mr
+   return $ extLeft $ extRight $ sub |-> rhs
 
 rewriteRule :: (IsId n, RuleBuilder f a) => n -> f -> RewriteRule a
 rewriteRule s f = R (newId s) (buildRuleSpec 0 f) show termView (buildGenerator f)

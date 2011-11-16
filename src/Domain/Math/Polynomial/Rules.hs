@@ -461,7 +461,7 @@ distributeAll expr =
 -- Combine bottom-up, for example:  5*(x-5)*(x+5)
 -- However, in  -2x(2x+10)   (-2x) should be seen as "one term"
 distributionT :: Transformation Expr
-distributionT = makeTransList f
+distributionT = makeTransG f
  where
    f expr = do
       (b, xs) <- matchM simpleProductView expr

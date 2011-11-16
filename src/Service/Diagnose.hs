@@ -18,7 +18,7 @@ module Service.Diagnose
    ) where
 
 import Common.Library hiding (ready)
-import Data.List (sortBy)
+import Data.List (intercalate, sortBy)
 import Data.Maybe
 import Service.BasicServices hiding (apply)
 import Service.State
@@ -40,7 +40,7 @@ data Diagnosis a
 instance Show (Diagnosis a) where
    show diagnosis =
       case diagnosis of
-         Buggy _ r        -> "Buggy rule " ++ show (show r)
+         Buggy as r        -> "Buggy rule " ++ show (show r) ++ showArgs as
 --         Missing          -> "Missing solutions"
 --         IncorrectPart xs -> "Incorrect parts (" ++ show (length xs) ++ " items)"
          NotEquivalent    -> "Unknown mistake"
@@ -48,6 +48,10 @@ instance Show (Diagnosis a) where
          Expected _ _ r   -> "Rule " ++ show (show r) ++ ", expected by strategy"
          Detour _ _ _ r   -> "Rule " ++ show (show r) ++ ", not following strategy"
          Correct _ _      -> "Unknown step"
+    where
+      showArgs as
+         | null as   = "" 
+         | otherwise = " (" ++ intercalate ", " (map show as) ++ ")"
 
 newState :: Diagnosis a -> Maybe (State a)
 newState diagnosis =

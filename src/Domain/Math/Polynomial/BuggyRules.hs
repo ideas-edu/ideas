@@ -220,7 +220,7 @@ recognizeMultiplication a b = do
    return (coefficient (degree pb) pb / d)
 
 multiplyOneSide :: Expr -> Transformation (Equation Expr)
-multiplyOneSide r = makeTransList $ \(lhs :==: rhs) -> do
+multiplyOneSide r = makeTransG $ \(lhs :==: rhs) -> do
       xs <- matchM sumView lhs
       ys <- matchM sumView rhs
       let f = map (*r)
@@ -239,7 +239,7 @@ buggyMultiplyForgetOne = describe "Multiply the terms on both sides of the \
       || maybe False p (recognizeMultiplication a2 b2)
 
 multiplyForgetOne :: Expr -> Transformation (Equation Expr)
-multiplyForgetOne r = makeTransList $ \(lhs :==: rhs) -> do
+multiplyForgetOne r = makeTransG $ \(lhs :==: rhs) -> do
    xs <- matchM sumView lhs
    ys <- matchM sumView rhs
    let makeL i = f (zipWith (mul . (/=i)) [0..] xs) (map (mul True) ys)
@@ -416,7 +416,7 @@ abcBuggyRules = map (siblingOf abcFormula) [ minusB, twoA, minus4AC, oneSolution
 
 abcMisconception :: (String -> Rational -> Rational -> Rational -> [OrList (Equation Expr)])
                  -> Transformation (OrList (Equation Expr))
-abcMisconception f = makeTransList $
+abcMisconception f = makeTransG $
    oneDisjunct $ \(lhs :==: rhs) -> do
       guard (rhs == 0)
       (x, (a, b, c)) <- matchM (polyNormalForm rationalView >>> second quadraticPolyView) lhs

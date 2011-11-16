@@ -179,11 +179,12 @@ diagnosisPage ef ex = do
    diagnoseItem i (t0, t1, expl) = do
       h2 (show i ++ ".")
       preText (t0 ++ "\n  =>\n" ++ t1)
-      unless (null expl) $ para $ do
-         bold $ text "Description:"
-         space
-         text expl
-         br
+      para $ do
+         unless (null expl) $ do
+            bold $ text "Description:"
+            space
+            text expl
+            br
          bold $ text "Diagnosis:"
          space
          text (getDiagnosis t0 t1)

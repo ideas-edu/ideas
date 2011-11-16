@@ -12,7 +12,8 @@
 -----------------------------------------------------------------------------
 module Common.Algebra.Field
    ( -- * Semi-ring
-     SemiRing(..), leftDistributive, rightDistributive
+     SemiRing(..)
+   , leftDistributive, rightDistributive
    , distributiveLaws, semiRingLaws
      -- * Ring
    , Ring(..), leftNegateTimes, rightNegateTimes
@@ -45,9 +46,16 @@ class SemiRing a where
    -- additive
    (<+>) :: a -> a -> a
    zero  :: a
+   sum   :: [a] -> a
    -- multiplicative
-   (<*>) :: a -> a -> a
-   one   :: a
+   (<*>)   :: a -> a -> a
+   one     :: a
+   product :: [a] -> a
+   -- default implementation
+   sum     [] = zero
+   sum     xs = foldl1 (<+>) xs
+   product [] = one
+   product xs = foldl1 (<*>) xs
 
 leftDistributive :: SemiRing a => Law a
 leftDistributive = leftDistributiveFor (<*>) (<+>)

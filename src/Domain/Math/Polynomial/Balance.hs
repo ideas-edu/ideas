@@ -114,8 +114,8 @@ calculate = makeSimpleRule (linbal, "calculate") $ checkForChange $
 removeDivision :: Rule (Equation Expr)
 removeDivision = doAfter (fmap distributeTimes) $
    describe "remove division" $
-   makeRule (linbal, "remove-div") $ useSimpleRecognizer isTimesT $
-   supply1 "factor" removeDivisionArg timesT
+   makeRule (linbal, "remove-div") $ supplySimpleRecognizer isTimesT
+      "factor" removeDivisionArg timesT
  where
    removeDivisionArg (lhs :==: rhs) = do
       xs <- match simpleSumView lhs
@@ -160,8 +160,8 @@ divisionToFraction =
 divideCommonFactor :: Rule (Equation Expr)
 divideCommonFactor = doAfter (fmap distributeDiv) $
    describe "divide by common factor" $
-   makeRule (linbal, "smart-div") $ useSimpleRecognizer isTimesT $
-   supply1 "factor" getArg divisionT
+   makeRule (linbal, "smart-div") $ supplySimpleRecognizer isTimesT
+      "factor" getArg divisionT
  where
    getArg (lhs :==: rhs)
       | all (/=0) ns && n > 1 = Just (fromInteger n)
@@ -191,8 +191,8 @@ varLeftPlus  = varLeft False (linbal, "var-left-plus")
 
 varLeft :: IsId a => Bool -> a -> Rule (Equation Expr)
 varLeft useMinus rid = doAfter (fmap collectLocal) $
-   makeRule rid $ useSimpleRecognizer isPlusT $
-   supply1 "term" varLeftArg (if useMinus then minusT else plusT)
+   makeRule rid $ supplySimpleRecognizer isPlusT
+      "term" varLeftArg (if useMinus then minusT else plusT)
  where
     varLeftArg :: Equation Expr -> Maybe Expr
     varLeftArg (lhs :==: rhs) = do
@@ -207,8 +207,8 @@ conRightPlus  = conRight False (linbal, "con-right-plus")
 
 conRight :: IsId a => Bool -> a -> Rule (Equation Expr)
 conRight useMinus rid = doAfter (fmap collectLocal) $
-   makeRule rid $ useSimpleRecognizer isPlusT $
-   supply1 "term" conRightArg (if useMinus then minusT else plusT)
+   makeRule rid $ supplySimpleRecognizer isPlusT
+      "term" conRightArg (if useMinus then minusT else plusT)
  where
     conRightArg :: Equation Expr -> Maybe Expr
     conRightArg (lhs :==: _) = do
@@ -232,8 +232,8 @@ flipped rid = liftView flipView . changeId (const (newId rid))
 
 scaleToOne :: Rule (Equation Expr)
 scaleToOne = doAfter (fmap distributeDiv) $
-   makeRule (linbal, "scale-to-one") $ useSimpleRecognizer isTimesT $
-   supply1 "factor" scaleToOneArg divisionT
+   makeRule (linbal, "scale-to-one") $ supplySimpleRecognizer isTimesT
+      "factor" scaleToOneArg divisionT
  where
    scaleToOneArg :: Equation Expr -> Maybe Expr
    scaleToOneArg (lhs :==: rhs) = f lhs rhs `mplus` f rhs lhs

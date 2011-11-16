@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 module Documentation.ExampleFile
-   ( ExampleFile, items, Item(..)
+   ( ExampleFile, makeExampleFile, items, Item(..)
    , readExampleFile, writeExampleFile
    ) where
 
@@ -28,6 +28,9 @@ data ExampleFile = EF { fileId :: Id, items :: [Item] }
 instance Show ExampleFile where
    show a = "Example file for " ++ showId a ++
             " (" ++ show (length (items a)) ++ " items)"
+
+makeExampleFile :: Id -> [Item] -> ExampleFile
+makeExampleFile = EF
 
 instance HasId ExampleFile where
    getId = fileId

@@ -8,10 +8,9 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- This module defines transformations. Given a term, a transformation returns a list of
--- results (often a singleton list or the empty list). A transformation can be parameterized
--- with one or more arguments. A rule is in essence just a transformation with a name (which
--- should be unique). Both transformations and rules can be lifted to work on more complex domains.
+-- A rule is just a transformation with some meta-information, such as a name 
+-- (which should be unique) and properties such as "buggy" or "minor". Rules
+-- can be lifted with a view using the LiftView type class. 
 --
 -----------------------------------------------------------------------------
 module Common.Rule
@@ -22,19 +21,18 @@ module Common.Rule
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doAfter
    , siblingOf, transformation
      -- * QuickCheck
-   , testRule, propRuleSmart
+   , propRule, propRuleSmart
    ) where
 
+import qualified Common.Algebra.Field as Field
 import Common.Classes
 import Common.Id
 import Common.Rewriting
 import Common.Transformation
-import Common.Utils
 import Common.View
 import Control.Monad
 import Data.Foldable (Foldable)
 import Data.Maybe
-import Data.Monoid
 import Test.QuickCheck
 
 -----------------------------------------------------------
@@ -97,11 +95,11 @@ siblingOf :: HasId b => b -> Rule a -> Rule a
 siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
 
 ruleList :: (IsId n, RuleBuilder f a) => n -> [f] -> Rule a
-ruleList n = makeRule a . mconcat . map (makeRewriteTrans . rewriteRule a)
+ruleList n = makeRule a . Field.sum . map (transformation . rewriteRule a)
  where a = newId n
 
 rule :: (IsId n, RuleBuilder f a) => n -> f -> Rule a
-rule n = makeRule a . makeRewriteTrans . rewriteRule a
+rule n = makeRule a . transformation . rewriteRule a
  where a = newId n
 
 -- | Turn a transformation into a rule: the first argument is the rule's name
@@ -116,7 +114,7 @@ makeSimpleRule = makeSimpleRuleList
 -- | Turn a function (which returns a list of results) into a rule: the first 
 -- argument is the rule's name
 makeSimpleRuleList :: (IsId n, Foldable f) => n -> (a -> f a) -> Rule a
-makeSimpleRuleList n = makeRule n . makeTransList
+makeSimpleRuleList n = makeRule n . makeTransG
 
 -- | A special (minor) rule that always returns the identity
 idRule :: Rule a
@@ -152,32 +150,27 @@ doAfter f r = r {afterwards = f . afterwards r}
 -----------------------------------------------------------
 --- QuickCheck
 
--- | Check the soundness of a rule: the equality function is passed explicitly
-testRule :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
-testRule eq r =
-   quickCheck (propRule eq r arbitrary)
-
--- | Check the soundness of a rule and use a "smart generator" for this. The smart generator
--- behaves differently on transformations constructed with a (|-), and for these transformations,
--- the left-hand side patterns are used (meta variables are instantiated with random terms)
-propRuleSmart :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
-propRuleSmart eq r = propRule eq r . smartGen r
-
 propRule :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
 propRule eq r gen =
    forAll gen $ \a ->
    forAll (smartApplyRule r a) $ \ma ->
       isJust ma ==> (a `eq` fromJust ma)
 
-smartGen :: Rule a -> Gen a -> Gen a
-smartGen r gen = frequency [(2, gen), (1, smart)]
+-- | Check the soundness of a rule and use a "smart generator" for this. The smart generator
+-- behaves differently on transformations constructed with a (|-), and for these transformations,
+-- the left-hand side patterns are used (meta variables are instantiated with random terms)
+propRuleSmart :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
+propRuleSmart eq r = propRule eq r . smartGenRule r
+
+smartGenRule :: Rule a -> Gen a -> Gen a
+smartGenRule r gen = frequency [(2, gen), (1, smart)]
  where
    smart = gen >>= \a ->
-      oneof (gen : maybeToList (smartGenTrans a (transformation r)))
+      oneof (gen : maybeToList (smartGen r a))
 
 smartApplyRule :: Rule a -> a -> Gen (Maybe a)
 smartApplyRule r a = do
-   xs <- smartApplyTrans (transformation r) a
+   xs <- smartApply (transformation r) a
    case xs of
       [] -> return Nothing
       _  -> elements $ map Just xs

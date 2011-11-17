@@ -18,8 +18,8 @@ module Common.View
    , Control.Arrow.ArrowZero(..), Control.Arrow.ArrowPlus(..)
    , (>>>), (<<<)
      -- * @IsMatch@ type class
-   , IsMatch(..), matchM, belongsTo, viewEquivalent, viewEquivalentWith
-   , Match, makeMatch
+   , IsMatcher(..), matchM, belongsTo, viewEquivalent, viewEquivalentWith
+   , Matcher, makeMatcher
      -- * @IsView@ type class
    , IsView(..), simplify, simplifyWith
    , canonical, canonicalWith, canonicalWithM, isCanonical, isCanonicalWith
@@ -49,43 +49,43 @@ import qualified Data.Traversable as T
 ----------------------------------------------------------------------------------
 -- @IsMatch@ type class
 
-class IsMatch f where
+class IsMatcher f where
    match   :: f a b -> a -> Maybe b
-   matcher :: f a b -> Match a b
+   matcher :: f a b -> Matcher a b
    -- default definitions
    match   = runKleisli . unM . matcher
-   matcher = makeMatch . match
+   matcher = makeMatcher . match
 
 -- |generalized monadic variant of @match@
-matchM :: (Monad m, IsMatch f) => f a b -> a -> m b
+matchM :: (Monad m, IsMatcher f) => f a b -> a -> m b
 matchM v = maybe (fail "no match") return . match v
 
-belongsTo :: IsMatch f => a -> f a b -> Bool
+belongsTo :: IsMatcher f => a -> f a b -> Bool
 belongsTo a view = isJust (match view a)
 
-viewEquivalent :: (IsMatch f, Eq b) => f a b -> a -> a -> Bool
+viewEquivalent :: (IsMatcher f, Eq b) => f a b -> a -> a -> Bool
 viewEquivalent = viewEquivalentWith (==)
 
-viewEquivalentWith :: IsMatch f => (b -> b -> Bool) -> f a b -> a -> a -> Bool
+viewEquivalentWith :: IsMatcher f => (b -> b -> Bool) -> f a b -> a -> a -> Bool
 viewEquivalentWith eq view x y =
    case (match view x, match view y) of
       (Just a, Just b) -> a `eq` b
       _                -> False
 
-newtype Match a b = M { unM :: Kleisli Maybe a b }
+newtype Matcher a b = M { unM :: Kleisli Maybe a b }
    deriving (C.Category, Arrow, ArrowZero, ArrowPlus, ArrowChoice)
 
-instance IsMatch Match where
+instance IsMatcher Matcher where
    matcher = id
 
-makeMatch :: (a -> Maybe b) -> Match a b
-makeMatch = M . Kleisli
+makeMatcher :: (a -> Maybe b) -> Matcher a b
+makeMatcher = M . Kleisli
 
 ----------------------------------------------------------------------------------
 -- @IsView@ type class
 
 -- |Minimal complete definition: @toView@ or both @match@ and @build@.
-class IsMatch f => IsView f where
+class IsMatcher f => IsView f where
    build  :: f a b -> b -> a
    toView :: f a b -> View a b
    -- default definitions
@@ -118,7 +118,7 @@ simplifyWith f view a = fromMaybe a (canonicalWith f view a)
 -- Views
 
 data View a b where
-   Prim    :: Match a b -> (b -> a) -> View a b
+   Prim    :: Matcher a b -> (b -> a) -> View a b
    (:@)    :: Id -> View a b -> View a b
    (:>>>:) :: View a b -> View b c -> View a c
    (:***:) :: View a c -> View b d -> View (a, b) (c, d)
@@ -145,7 +145,7 @@ instance ArrowChoice View where
    (+++)   = (:+++:)
    f ||| g = (f +++ g) >>> merge
 
-instance IsMatch View where
+instance IsMatcher View where
    matcher view =
       case view of
          Prim m _   -> m
@@ -153,7 +153,7 @@ instance IsMatch View where
          v :>>>: w  -> matcher v >>> matcher w
          v :***: w  -> matcher v *** matcher w
          v :+++: w  -> matcher v +++ matcher w
-         Traverse v -> makeMatch $ T.mapM (match v)
+         Traverse v -> makeMatcher $ T.mapM (match v)
 
 instance IsView View where
    build view =
@@ -180,9 +180,9 @@ instance Identify (View a b) where
       a = newId n
 
 makeView :: (a -> Maybe b) -> (b -> a) -> View a b
-makeView = matcherView . makeMatch
+makeView = matcherView . makeMatcher
 
-matcherView :: Match a b -> (b -> a) -> View a b
+matcherView :: Matcher a b -> (b -> a) -> View a b
 matcherView = Prim
 
 identity :: C.Category f => f a a
@@ -214,7 +214,7 @@ instance ArrowChoice Isomorphism where
    p +++ q = from p +++ from q <-> to p +++ to q
    f ||| g = (f +++ g) >>> merge
 
-instance IsMatch Isomorphism where
+instance IsMatcher Isomorphism where
    match p = Just . from p
 
 instance IsView Isomorphism where

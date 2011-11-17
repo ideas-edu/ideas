@@ -21,6 +21,7 @@ module Common.Rewriting.RewriteRule
      -- * Using rewrite rules
    , rewrite, rewriteM, showRewriteRule, smartGenerator
    , metaInRewriteRule, renumberRewriteRule
+   , symbolMatcher
    ) where
 
 import Common.Classes
@@ -33,6 +34,7 @@ import Common.View hiding (match)
 import Control.Monad
 import Test.QuickCheck
 import qualified Data.IntSet as IS
+import qualified Data.Map as M
 
 ------------------------------------------------------
 -- Rewrite rules and specs
@@ -49,6 +51,7 @@ data RewriteRule a = R
    , ruleSpecTerm   :: RuleSpec Term
    , ruleShow       :: a -> String
    , ruleTermView   :: View Term a
+   , ruleMatchers   :: M.Map Symbol SymbolMatch
    , smartGenerator :: Gen a
    }
 
@@ -96,16 +99,20 @@ fill i = rec
       | a == b    = a
       | otherwise = TMeta i
 
-buildSpec :: RuleSpec Term -> Term -> [Term]
-buildSpec (lhs :~> rhs) a = do
-   (sub, ml, mr) <- matchExtended lhs a
+buildSpec :: M.Map Symbol SymbolMatch -> RuleSpec Term -> Term -> [Term]
+buildSpec sm (lhs :~> rhs) a = do
+   (sub, ml, mr) <- matchExtended sm lhs a
    let sym = maybe (error "buildSpec") fst (getFunction lhs)
        extLeft  = maybe id (binary sym) ml
        extRight = maybe id (flip (binary sym)) mr
    return $ extLeft $ extRight $ sub |-> rhs
 
 rewriteRule :: (IsId n, RuleBuilder f a) => n -> f -> RewriteRule a
-rewriteRule s f = R (newId s) (buildRuleSpec 0 f) show termView (buildGenerator f)
+rewriteRule s f = 
+   R (newId s) (buildRuleSpec 0 f) show termView M.empty (buildGenerator f)
+
+symbolMatcher :: Symbol -> SymbolMatch -> RewriteRule a -> RewriteRule a
+symbolMatcher s f r = r {ruleMatchers = M.insert s f (ruleMatchers r)}
 
 ------------------------------------------------------
 -- Using a rewrite rule
@@ -115,7 +122,9 @@ instance Apply RewriteRule where
 
 rewrite :: RewriteRule a -> a -> [a]
 rewrite r a =
-   concatMap (fromTermRR r) $ buildSpec (ruleSpecTerm r) $ toTermRR r a
+   concatMap (fromTermRR r) $ 
+   buildSpec (ruleMatchers r) (ruleSpecTerm r) $ 
+   toTermRR r a
 
 rewriteM :: MonadPlus m => RewriteRule a -> a -> m a
 rewriteM r = msum . map return . rewrite r

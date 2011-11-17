@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Common.Rewriting.Unification
    ( unify, match, matchExtended
+   , Match, SymbolMatch
    , unificationTests
    ) where
 
@@ -20,6 +21,7 @@ import Common.Rewriting.Term
 import Common.Utils.TestSuite
 import Control.Arrow
 import Control.Monad
+import qualified Data.Map as M
 
 -----------------------------------------------------------
 -- Unification (in both ways)
@@ -62,13 +64,16 @@ match term1 term2 =
 -----------------------------------------------------------
 -- Matching (or: one-way unification)
 
+type Match a = a -> a -> [Substitution]
+type SymbolMatch = Match Term -> [Term] -> Term -> [Substitution]
+
 -- If the top-level symbol (of the left-hand side) is an associative binary 
 -- operator, extend both sides optionally with a meta-variable.
-matchExtended :: Term -> Term -> [(Substitution, Maybe Term, Maybe Term)]
-matchExtended x y = 
+matchExtended :: M.Map Symbol SymbolMatch -> Term -> Term -> [(Substitution, Maybe Term, Maybe Term)]
+matchExtended sm x y = 
    [ (sub, lookupVar mvLeft sub, lookupVar mvRight sub) 
    | f   <- extensions
-   , sub <- matchA (f x) y 
+   , sub <- matchA sm (f x) y 
    ]
  where
    mvLeft     = nextMetaVar x
@@ -82,56 +87,51 @@ matchExtended x y =
          _ -> [id]
 
 -- second term should not have meta variables
-matchA :: Term -> Term -> [Substitution]
-matchA = rec
+matchA :: M.Map Symbol SymbolMatch -> Match Term
+matchA sm = rec 
  where
    rec (TMeta i) y =
       return (singletonSubst i y)
-
    rec x y =
-      case getSpine x of
-         (TCon s, [a1, a2]) | isAssociative s ->
-            concatMap (uncurry recList . unzip) (associativeMatch s a1 a2 y)
-            -- | s == newSymbol "view.plus" -> matchComPlus [a1, a2] y
-         (a, as) -> do
-            let (b, bs) = getSpine y
-            guard (a == b)
-            recList as bs
+      case getFunction x of
+         Just (s, as) -> 
+            case M.lookup s sm of 
+               Just f -> f rec as y
+               Nothing 
+                  | isAssociative s -> associativeMatch s rec as y
+                  | otherwise       -> defaultMatch rec x y
+         _ -> defaultMatch rec x y
 
-   recList [] [] = return emptySubst
-   recList (x:xs) (y:ys) = do
-      s1 <- rec x y
-      s2 <- recList (map (s1 |->) xs) (map (s1 |->) ys)
-      return (s2 @@ s1)
-   recList _ _ = []
-   
-   {-
-   matchComPlus :: [Term] -> Term -> [Substitution]
-   matchComPlus [a1, a2] y = 
-      let (.+) = binary (newSymbol "arith1.plus") 
-      in rec False (a1 .+ a2) y ++ rec False (a2 .+ a1) y
-   matchComPlus _ _ = [] -}
+defaultMatch :: Match Term -> Match Term
+defaultMatch f x y = do
+   let (a, as) = getSpine x
+       (b, bs) = getSpine y
+   guard (a == b)
+   matchList f as bs
 
-
-associativeMatch :: Symbol -> Term -> Term -> Term -> [[(Term, Term)]]
-associativeMatch s1 a1 a2 (TApp (TApp (TCon s2) b1) b2)
-   | s1==s2 = map (map make) result
+matchList :: Match Term -> Match [Term]
+matchList f = rec 
  where
-   as = collect a1 . collect a2 $ []
-   bs = collect b1 . collect b2 $ []
+   rec [] [] = return emptySubst
+   rec (x:xs) (y:ys) = do
+      s1 <- f x y
+      s2 <- rec (map (s1 |->) xs) (map (s1 |->) ys)
+      return (s2 @@ s1)
+   rec _ _ = fail "matchList: lengths differ"
 
-   result = pairingsA True as bs
+associativeMatch :: Symbol -> SymbolMatch
+associativeMatch s f as b =
+   concatMap (uncurry (matchList f) . unzip . map make) result
+ where
+   result = pairingsA True (collects as []) (collect b [])
    make   = construct *** construct
 
-   collect term =
-      case getFunction term of
-         Just (t, [a, b]) | s1==t -> collect a . collect b
-         _ -> (term:)
+   collects     = foldr ((.) . collect) id
+   collect term = maybe (term:) collects (isFunction s term)
 
    construct xs
-      | null xs   = error "associativeMatcher: empty list"
-      | otherwise = foldr1 (binary s1) xs
-associativeMatch _ _ _ _ = []
+      | null xs   = error "associativeMatch: empty list"
+      | otherwise = foldr1 (binary s) xs
 
 -----------------------------------------------------------
 --- * Test unification properties

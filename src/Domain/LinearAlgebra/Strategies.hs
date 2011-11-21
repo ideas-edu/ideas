@@ -15,10 +15,7 @@ module Domain.LinearAlgebra.Strategies
    , forwardPass
    ) where
 
-import Common.Context
-import Common.Id
-import Common.Strategy hiding (not)
-import Common.Rule
+import Common.Library hiding (simplify)
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.LinearSystem
@@ -27,7 +24,6 @@ import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.Vector
 import Domain.Math.Expr
 import Domain.Math.Simplification
-import Prelude hiding (repeat)
 
 gaussianElimStrategy :: LabeledStrategy (Context (Matrix Expr))
 gaussianElimStrategy = label "Gaussian elimination" $
@@ -36,18 +32,18 @@ gaussianElimStrategy = label "Gaussian elimination" $
 forwardPass :: LabeledStrategy (Context (Matrix Expr))
 forwardPass = label "Forward pass" $
    simplifyRule <*>
-   repeat   (   label "Find j-th column"      ruleFindColumnJ
+   repeatS  (   label "Find j-th column"      ruleFindColumnJ
            <*>  label "Exchange rows"         (try ruleExchangeNonZero)
            <*>  label "Scale row"             (try ruleScaleToOne)
-           <*>  label "Zeros in j-th column"  (repeat ruleZerosFP)
+           <*>  label "Zeros in j-th column"  (repeatS ruleZerosFP)
            <*>  label "Cover up top row"      ruleCoverRow
             )
 
 backwardPass :: LabeledStrategy (Context (Matrix Expr))
 backwardPass = label "Backward pass" $
    simplifyRule <*>
-   repeat   (   label "Uncover row"  ruleUncoverRow
-           <*>  label "Sweep"        (repeat ruleZerosBP)
+   repeatS  (   label "Uncover row"  ruleUncoverRow
+           <*>  label "Sweep"        (repeatS ruleZerosBP)
             )
 
 backSubstitutionSimple :: LabeledStrategy (Context (LinearSystem Expr))
@@ -55,10 +51,10 @@ backSubstitutionSimple =
    label "Back substitution with equally many variables and equations" $
        simplifyFirst
    <*> label "Cover all equations" ruleCoverAllEquations
-   <*> repeat (   label "Uncover one equation"  ruleUncoverEquation
-              <*> label "Scale equation to one" (try ruleScaleEquation)
-              <*> label "Back Substitution"     (repeat ruleBackSubstitution)
-              )
+   <*> repeatS (   label "Uncover one equation"  ruleUncoverEquation
+               <*> label "Scale equation to one" (try ruleScaleEquation)
+               <*> label "Back Substitution"     (repeatS ruleBackSubstitution)
+               )
 
 backSubstitution :: LabeledStrategy (Context (LinearSystem Expr))
 backSubstitution = label "Back substitution" $
@@ -68,11 +64,11 @@ systemToEchelonWithEEO :: LabeledStrategy (Context (LinearSystem Expr))
 systemToEchelonWithEEO =
    label "System to Echelon Form (EEO)" $
    simplifyFirst <*>
-   repeat  (  dropEquation
+   repeatS (  dropEquation
           <|> check (maybe False (not . null) . evalCM remaining)
           <*> label "Exchange equations"        (try ruleExchangeEquations)
           <*> label "Scale equation to one"     (option ruleScaleEquation)
-          <*> label "Eliminate variable"        (repeat ruleEliminateVar)
+          <*> label "Eliminate variable"        (repeatS ruleEliminateVar)
           <*> label "Cover up first equation"   ruleCoverUpEquation
            )
 
@@ -88,21 +84,21 @@ linearSystemStrategy = label "General solution to a linear system" $
 
 systemWithMatrixStrategy :: LabeledStrategy (Context Expr)
 systemWithMatrixStrategy = label "General solution to a linear system (matrix approach)" $
-       repeat (useC dropEquation)
+       repeatS (useC dropEquation)
    <*> conv1
    <*> useC gaussianElimStrategy
    <*> conv2
-   <*> repeat (useC dropEquation)
+   <*> repeatS (useC dropEquation)
 
 gramSchmidtStrategy :: LabeledStrategy (Context (VectorSpace (Simplified Expr)))
 gramSchmidtStrategy =
-   label "Gram-Schmidt" $ repeat $ label "Iteration" $
+   label "Gram-Schmidt" $ repeatS $ label "Iteration" $
        label "Consider next vector"   ruleNext
-   <*> label "Make vector orthogonal" (repeat (ruleNextOrthogonal <*> try ruleOrthogonal))
+   <*> label "Make vector orthogonal" (repeatS (ruleNextOrthogonal <*> try ruleOrthogonal))
    <*> label "Normalize"              (try ruleNormalize)
 
-varVars :: Var [String]
-varVars = newVar "variables" []
+varVars :: ArgDescr [String]
+varVars = simpleArgDescr "variables" []
 
 simplifyFirst :: Rule (Context (LinearSystem Expr))
 simplifyFirst = simplifySystem idRule

@@ -11,10 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.MatrixRules where
 
-import Common.Context
-import Common.Navigator
-import Common.Rule
-import Common.Transformation
+import Common.Library hiding (simplify, isEmpty)
 import Control.Monad
 import Data.List
 import Domain.LinearAlgebra.Matrix
@@ -134,9 +131,9 @@ validRow i m = i >= 0 && i < fst (dimensions m)
 nonEmpty :: Matrix a -> ContextMonad ()
 nonEmpty m = subMatrix m >>= guard . not . isEmpty
 
-covered, columnJ :: Var Int
-covered = newVar "covered" 0
-columnJ = newVar "columnJ" 0
+covered, columnJ :: ArgDescr Int
+covered = simpleArgDescr "covered" 0
+columnJ = simpleArgDescr "columnJ" 0
 
 subMatrix :: Matrix a -> ContextMonad (Matrix a)
 subMatrix m = do

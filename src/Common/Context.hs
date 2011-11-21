@@ -20,8 +20,6 @@ module Common.Context
      -- * Key-value pair environment (abstract)
    , Environment, emptyEnv, nullEnv, keysEnv, lookupEnv, storeEnv
    , diffEnv, deleteEnv
-     -- * Variables
-   , Var, newVar, makeVar
      -- * Lifting
    , liftToContext
    , use, useC, termNavigator, applyTop
@@ -30,10 +28,10 @@ module Common.Context
    , maybeCM, withCM, evalCM
    ) where
 
+import Common.Argument
 import Common.Id
 import Common.Navigator
 import Common.Rewriting
-import Common.Utils (readM)
 import Common.View
 import Control.Monad
 import Data.Dynamic
@@ -140,28 +138,6 @@ deleteEnv :: String -> Environment -> Environment
 deleteEnv s (Env m) = Env (M.delete s m)
 
 ----------------------------------------------------------
--- Variables
-
--- | A variable has a name and a default value (for initializing). Each
--- stored value must be readable and showable.
-data Var a = V
-   { varName    :: String
-   , varInitial :: a
-   , varShow    :: a -> String
-   , varRead    :: String -> Maybe a
-   }
-
--- | Simple constructor function for creating a variable. Uses the
--- Show and Read type classes
-newVar :: (Show a, Read a) => String -> a -> Var a
-newVar = makeVar show readM
-
--- | Extended constructor function for creating a variable. The show
--- and read functions are supplied explicitly.
-makeVar :: (a -> String) -> (String -> Maybe a) -> String -> a -> Var a
-makeVar showF readF s a = V s a showF readF
-
-----------------------------------------------------------
 -- Lifting rules
 
 -- | Lift a rule to operate on a term in a context
@@ -235,21 +211,21 @@ instance MonadPlus ContextMonad where
    mzero = CM (const mzero)
    mplus (CM f) (CM g) = CM (\env -> f env `mplus` g env)
 
-readVar :: Typeable a => Var a -> ContextMonad a
+readVar :: Typeable a => ArgDescr a -> ContextMonad a
 readVar var = CM $ \env -> return $
-   let name = varName var
+   let name = labelArgument var
        txt  = fromMaybe "" $ lookupEnv name env
-   in case (lookupEnv name env, varRead var txt) of
+   in case (lookupEnv name env, parseArgument var txt) of
          (Just a, _) -> (a, env)
-         (_, Just a) -> (a, storeEnvWith (varShow var) name a env)
-         _           -> (varInitial var, env)
+         (_, Just a) -> (a, storeEnvWith (showArgument var) name a env)
+         _           -> (defaultArgument var, env)
 
-writeVar  :: Typeable a => Var a -> a -> ContextMonad ()
+writeVar  :: Typeable a => ArgDescr a -> a -> ContextMonad ()
 writeVar var a =
-   let f = storeEnvWith (varShow var) (varName var) a
+   let f = storeEnvWith (showArgument var) (labelArgument var) a
    in CM $ \env -> return ((), f env)
 
-modifyVar :: Typeable a => Var a -> (a -> a) -> ContextMonad ()
+modifyVar :: Typeable a => ArgDescr a -> (a -> a) -> ContextMonad ()
 modifyVar var f = readVar var >>= (writeVar var  . f)
 
 maybeCM :: Maybe a -> ContextMonad a

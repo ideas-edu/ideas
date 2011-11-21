@@ -222,6 +222,7 @@ rule201 = describe "2.0.1: Links en rechts alleen maar verwisseld?" $
 -- 2.1 Links en rechts hetzelfde optellen/aftrekken
 
 {- 
+
    schema addbal regels: (telkens paren met positief/negatief argument)
    1+2   constante naar rechts
    3+4   variabele naar links
@@ -243,6 +244,8 @@ rule2111 = describe "2.1.1.1: Links en rechts hetzelfde optellen; links +b en re
       (ax, b) <- matchPlusCon lhs
       guard (b>0)
       return (ax :==: rhs+fromRational b, termArg (fromRational b))
+   -- buggyBalanceRewriteRule "addbal1" [(1, makeArgDescr "term")] $ rewriteRule "addbal1" $ \a b c ->
+   --   (plusCon a+b :==: c) :~> (a :==: c+b)
 
 -- ax-b=[cx]+d  -> ax=[cx+d-b
 rule2112 :: Rule (Equation Expr)

@@ -21,6 +21,7 @@ module Domain.Math.Expr.Clipboard
    , maybeOnClipboardG
    ) where
 
+import Common.Argument
 import Common.Context
 import Common.Rewriting
 import Control.Monad
@@ -33,10 +34,10 @@ import qualified Data.Map as M
 ---------------------------------------------------------------------
 -- Expression variables (internal)
 
-newtype ExprVar a = ExprVar (Var Term)
+newtype ExprVar a = ExprVar (ArgDescr Term)
 
 exprVar :: (Show a, IsTerm a) => String -> a -> ExprVar a
-exprVar s a = ExprVar (makeVar showF readF s (toTerm a))
+exprVar s a = ExprVar (newArgDescr s (toTerm a) showF readF)
  where
    showF = show . toExpr -- pretty-print as an Expr
    readF = liftM toTerm . parseExprM

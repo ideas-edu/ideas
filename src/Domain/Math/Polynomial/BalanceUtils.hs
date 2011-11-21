@@ -16,6 +16,7 @@ module Domain.Math.Polynomial.BalanceUtils
    , linbal, checkForChange
    , termArg, factorArg, factorArgs
    , buggyBalanceRule, buggyBalanceRuleArgs
+   , buggyBalanceRewriteRule
    , buggyBalanceExprRule, buggyBalanceRecognizer
    , collectLocal, collectGlobal
    , distributeDiv, distributeTimes
@@ -23,7 +24,7 @@ module Domain.Math.Polynomial.BalanceUtils
    , isTimesT, diffTimes
    ) where
 
-import Common.Library
+import Common.Library hiding (rewrite)
 import Common.Utils (fixpoint)
 import Common.Utils.Uniplate
 import Control.Monad
@@ -144,11 +145,22 @@ buggyBalanceRule :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr)) -> R
 buggyBalanceRule n f = buggyBalanceRuleArgs n (fmap (\x -> (x, [])) . f)
 
 buggyBalanceRuleArgs :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr, ArgValues)) -> Rule (Equation Expr)
-buggyBalanceRuleArgs n f = bugbalRule n (fmap fst . f) $ \old (a1 :==: a2) -> do
-   (b1 :==: b2, as) <- f old
-   let h = viewEquivalent (polyViewWith rationalView)
-   guard (h a1 b1 && h a2 b2)
-   return as
+buggyBalanceRuleArgs n f = bugbalRule n (makeTrans (fmap fst . f)) $ 
+   \old (a1 :==: a2) -> do
+      (b1 :==: b2, as) <- f old
+      let h = viewEquivalent (polyViewWith rationalView)
+      guard (h a1 b1 && h a2 b2)
+      return as
+
+buggyBalanceRewriteRule :: IsId n => n -> [(Int, ArgDescr Expr)] -> RewriteRule (Equation Expr) -> Rule (Equation Expr)
+buggyBalanceRewriteRule n ps r = bugbalRule n (transformation r) $ 
+   \old (a1 :==: a2) -> do
+      (b1 :==: b2, args) <- listToMaybe (rewriteArgs r old)
+      let h = viewEquivalent (polyViewWith rationalView)
+      guard (h a1 b1 && h a2 b2)
+      let make (i, descr) = 
+             ArgValue descr $ maybe 0 toExpr $ listToMaybe $ drop i args
+      return (map make ps)
 
 buggyBalanceExprRule :: IsId n => n -> (Expr -> Maybe Expr) -> Rule (Equation Expr)
 buggyBalanceExprRule n f = buggyBalanceRule n $ \(lhs :==: rhs) ->
@@ -157,12 +169,12 @@ buggyBalanceExprRule n f = buggyBalanceRule n $ \(lhs :==: rhs) ->
    in liftM (:==: rhs) (rec lhs) `mplus` liftM (lhs :==:) (rec rhs)
 
 buggyBalanceRecognizer :: IsId n => n -> (a -> a -> Maybe ArgValues) -> Rule a
-buggyBalanceRecognizer n = bugbalRule n(const Nothing)
+buggyBalanceRecognizer n = bugbalRule n (makeTrans (const Nothing))
 
 -- generalized helper
-bugbalRule :: IsId n => n -> (a -> Maybe a) -> (a -> a -> Maybe ArgValues) -> Rule a
-bugbalRule n f p =
-   buggyRule $ makeRule (linbal, "buggy", n) $ useRecognizer p $ makeTrans f
+bugbalRule :: IsId n => n -> Transformation a -> (a -> a -> Maybe ArgValues) -> Rule a
+bugbalRule n t p =
+   buggyRule $ makeRule (linbal, "buggy", n) $ useRecognizer p t
 
 ------------------------------------------------------------
 -- Helpers

@@ -39,6 +39,7 @@ module Common.Exercise
    , checkExamples, exerciseTestSuite
    ) where
 
+import Common.Argument
 import Common.Classes
 import Common.Context
 import Common.Derivation

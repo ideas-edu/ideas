@@ -17,11 +17,7 @@ module Domain.Math.Expr.Parser
    , parseExprTuple
    ) where
 
-import Common.Algebra.Boolean hiding (ors)
-import Common.Classes
-import Common.Id
-import Common.Rewriting
-import Common.Transformation
+import Common.Library hiding ((<*>), (<|>), many, many1, try, ors)
 import Control.Monad
 import Data.Monoid
 import Domain.Logic.Formula (Logic, catLogic)
@@ -31,7 +27,6 @@ import Domain.Math.Data.WithBool
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbols
 import Prelude hiding ((^))
-import Test.QuickCheck (arbitrary)
 import Text.Parsing
 import qualified Text.ParserCombinators.Parsec.Token as P
 
@@ -198,6 +193,12 @@ parens = P.parens lexer
 -----------------------------------------------------------------------
 -- Argument descriptor (for parameterized rules)
 
+instance Read Expr where
+   readsPrec _ input = 
+      case parseExpr input of
+         Left _  -> []
+         Right a -> [(a, "")]
+
 instance Argument Expr where
    makeArgDescr descr =
-      ArgDescr descr 0 parseExprM show termView arbitrary
+      defaultArgDescr descr 0

@@ -19,9 +19,9 @@ module Common.Rewriting.RewriteRule
      -- * Compiling rewrite rules
    , rewriteRule, RuleBuilder(..)
      -- * Using rewrite rules
-   , rewrite, rewriteM, showRewriteRule, smartGenerator
+   , rewrite, rewriteM, rewriteArgs, showRewriteRule, smartGenerator
    , metaInRewriteRule, renumberRewriteRule
-   , symbolMatcher
+   , symbolMatcher, symbolBuilder
    ) where
 
 import Common.Classes
@@ -32,6 +32,7 @@ import Common.Rewriting.Unification
 import Common.Utils.Uniplate (descend)
 import Common.View hiding (match)
 import Control.Monad
+import Data.Maybe
 import Test.QuickCheck
 import qualified Data.IntSet as IS
 import qualified Data.Map as M
@@ -52,6 +53,7 @@ data RewriteRule a = R
    , ruleShow       :: a -> String
    , ruleTermView   :: View Term a
    , ruleMatchers   :: M.Map Symbol SymbolMatch
+   , ruleBuilders   :: M.Map Symbol ([Term] -> Term)
    , smartGenerator :: Gen a
    }
 
@@ -99,20 +101,36 @@ fill i = rec
       | a == b    = a
       | otherwise = TMeta i
 
-buildSpec :: M.Map Symbol SymbolMatch -> RuleSpec Term -> Term -> [Term]
-buildSpec sm (lhs :~> rhs) a = do
+buildSpec :: M.Map Symbol SymbolMatch 
+          -> M.Map Symbol ([Term] -> Term)
+          -> RuleSpec Term -> Term -> [(Term, [Term])]
+buildSpec sm sb (lhs :~> rhs) a = do
    (sub, ml, mr) <- matchExtended sm lhs a
    let sym = maybe (error "buildSpec") fst (getFunction lhs)
        extLeft  = maybe id (binary sym) ml
        extRight = maybe id (flip (binary sym)) mr
-   return $ extLeft $ extRight $ sub |-> rhs
+       new  = useBuilders $ extLeft $ extRight $ sub |-> rhs
+       args = catMaybes $ map (`lookupVar` sub) $ IS.toList $ dom sub
+   return (new, args)
+ where
+   useBuilders
+      | M.null sb = id
+      | otherwise = rec
+    where
+      rec term = 
+         let (b, bs) = mapSecond (map rec) (getSpine term)
+             make = fromMaybe (makeTerm b) (getSymbol b >>= (`M.lookup` sb))
+         in make bs
 
 rewriteRule :: (IsId n, RuleBuilder f a) => n -> f -> RewriteRule a
 rewriteRule s f = 
-   R (newId s) (buildRuleSpec 0 f) show termView M.empty (buildGenerator f)
+   R (newId s) (buildRuleSpec 0 f) show termView M.empty M.empty (buildGenerator f)
 
 symbolMatcher :: Symbol -> SymbolMatch -> RewriteRule a -> RewriteRule a
 symbolMatcher s f r = r {ruleMatchers = M.insert s f (ruleMatchers r)}
+
+symbolBuilder :: Symbol -> ([Term] -> Term) -> RewriteRule a -> RewriteRule a
+symbolBuilder s f r = r {ruleBuilders = M.insert s f (ruleBuilders r)}
 
 ------------------------------------------------------
 -- Using a rewrite rule
@@ -120,11 +138,15 @@ symbolMatcher s f r = r {ruleMatchers = M.insert s f (ruleMatchers r)}
 instance Apply RewriteRule where
    applyAll = rewrite
 
+rewriteArgs :: RewriteRule a -> a -> [(a, [Term])]
+rewriteArgs r a = do
+   let term = toTermRR r a
+   (out, args) <- buildSpec (ruleMatchers r) (ruleBuilders r) (ruleSpecTerm r) term
+   b   <- fromTermRR r out 
+   return (b, args)
+
 rewrite :: RewriteRule a -> a -> [a]
-rewrite r a =
-   concatMap (fromTermRR r) $ 
-   buildSpec (ruleMatchers r) (ruleSpecTerm r) $ 
-   toTermRR r a
+rewrite r = map fst . rewriteArgs r
 
 rewriteM :: MonadPlus m => RewriteRule a -> a -> m a
 rewriteM r = msum . map return . rewrite r

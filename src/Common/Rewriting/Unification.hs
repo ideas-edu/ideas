@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Common.Rewriting.Unification
-   ( unify, match, matchExtended
+   ( unify, match, matchExtended, matchList
    , Match, SymbolMatch
    , unificationTests
    ) where

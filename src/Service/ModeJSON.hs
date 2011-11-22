@@ -18,7 +18,6 @@ import Common.Library hiding (exerciseId)
 import Common.Utils (Some(..), distinct, readM)
 import Control.Monad.Error
 import Data.Char
-import Data.Maybe
 import Service.DomainReasoner
 import Service.Evaluator
 import Service.Request
@@ -191,13 +190,13 @@ encodeState f st = do
       [ String (showId (exercise st))
       , String (maybe "NoPrefix" show (statePrefix st))
       , theTerm
-      , encodeContext (getEnvironment (stateContext st))
+      , encodeContext (stateContext st)
       ]
 
-encodeContext :: Environment -> JSON
-encodeContext env = Object (map f (keysEnv env))
+encodeContext :: Context a -> JSON
+encodeContext ctx = Object (map f (getArgValues ctx))
  where
-   f k = (k, String $ fromMaybe "" $ lookupEnv k env)
+   f (ArgValue descr a) = (labelArgument descr, String $ showArgument descr a)
 
 decodeState :: Monad m => Exercise a -> (JSON -> m a) -> JSON -> m (State a)
 decodeState ex f (Array [a]) = decodeState ex f a
@@ -212,7 +211,7 @@ decodeContext :: Monad m => JSON -> m Environment
 decodeContext (String "") = decodeContext (Object []) -- Being backwards compatible (for now)
 decodeContext (Object xs) = foldM add emptyEnv xs
  where
-   add env (k, String s) = return (storeEnv k s env)
+   add env (k, String s) = return (storeEnvString k s env)
    add _ _ = fail "invalid item in context"
 decodeContext json = fail $ "invalid context: " ++ show json
 

@@ -284,11 +284,11 @@ decodeEnvironment b xml =
             case xml2omobj this >>= fromOMOBJ of
                Left err -> fail err
                Right term ->
-                  return (storeEnv n (term :: Term) env)
+                  return (storeEnvTerm n term env)
          -- Simple value in attribute
          _ -> do
             value <- findAttribute "value" item
-            return (storeEnv n value env)
+            return (storeEnvString n value env)
 
 decodeConfiguration :: MonadPlus m => XML -> m StrategyConfiguration
 decodeConfiguration xml =
@@ -305,33 +305,41 @@ decodeConfiguration xml =
       cfgloc <- findAttribute "name" item
       return (byName (newId cfgloc), action)
 
-encodeEnvironment :: Bool -> Location -> Environment -> XMLBuilder
-encodeEnvironment b loc env0
-   | nullEnv env = return ()
-   | otherwise   = element "context" $
-        forM_ (keysEnv env) $ \k ->
+encodeEnvironment :: Bool -> Context a -> XMLBuilder
+encodeEnvironment b ctx
+   | null values = return ()
+   | otherwise = element "context" $
+        forM_ values $ \(ArgValue descr a) ->
            element "item" $ do
-              "name"  .=. k
-              case lookupEnv k env of
-                 Just term | b -> builder (omobj2xml (toOMOBJ (term :: Term)))
-                 _             -> "value" .=. fromMaybe "" (lookupEnv k env)
+              "name"  .=. labelArgument descr
+              case termViewArgument descr of
+                 Just v | b -> 
+                    builder (omobj2xml (toOMOBJ (build v a)))
+                 _ -> "value" .=. showArgument descr a
  where
-   env | null loc  = env0
-       | otherwise = storeEnv "location" loc env0
+   loc    = location ctx
+   values = getArgValues (withLoc ctx)
+   withLoc
+      | null loc  = id
+      | otherwise = modifyEnvironment (storeArg locDescr loc)
+
+locDescr :: ArgDescr Location
+locDescr = simpleArgDescr "location" []
 
 encodeContext :: Monad m => Bool -> (Context a -> m XMLBuilder) -> Context a -> m XMLBuilder
 encodeContext b f ctx = do
    xml <- f ctx
-   return (xml >> encodeEnvironment b (location ctx) (getEnvironment ctx))
+   return (xml >> encodeEnvironment b ctx)
 
 encodeArgValue :: Bool -> ArgValue -> XMLBuilder
 encodeArgValue b (ArgValue descr a) = element "argument" $ do
    "description" .=. labelArgument descr
    showValue a
  where
-   showValue
-      | b         = builder . omobj2xml . toOMOBJ . build (termViewArgument descr)
-      | otherwise = text . showArgument descr
+   showValue =
+      case termViewArgument descr of
+         Just v | b -> builder . omobj2xml . toOMOBJ . build v
+         _          -> text . showArgument descr
 
 encodeText :: Encoder s a -> Exercise a -> Text -> DomainReasoner s
 encodeText enc ex = liftM (encodeTuple enc) . mapM f . textItems

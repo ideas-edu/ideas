@@ -16,9 +16,10 @@
 module Common.Context
    ( -- * Abstract data type
      Context, fromContext, fromContextWith, fromContextWith2
-   , newContext, getEnvironment, modifyEnvironment
+   , newContext, getEnvironment, modifyEnvironment, getArgValues
      -- * Key-value pair environment (abstract)
-   , Environment, emptyEnv, nullEnv, keysEnv, lookupEnv, storeEnv
+   , Environment, emptyEnv, nullEnv
+   , storeEnvString, storeEnvTerm, storeArg, lookupArg
    , diffEnv, deleteEnv
      -- * Lifting
    , liftToContext
@@ -34,9 +35,9 @@ import Common.Navigator
 import Common.Rewriting
 import Common.View
 import Control.Monad
-import Data.Dynamic
 import Data.List
 import Data.Maybe
+import Data.Typeable
 import qualified Data.Map as M
 
 ----------------------------------------------------------
@@ -63,8 +64,8 @@ instance Eq a => Eq (Context a) where
 
 instance Show a => Show (Context a) where
    show (C env a) =
-      let rest | null (keysEnv env) = ""
-               | otherwise = "  {" ++ show env ++ "}"
+      let rest | nullEnv env = ""
+               | otherwise   = "  {" ++ show env ++ "}"
       in show a ++ rest
 
 instance IsNavigator Context where
@@ -87,52 +88,47 @@ newContext = C
 modifyEnvironment :: (Environment -> Environment) -> Context a -> Context a
 modifyEnvironment f c = c {getEnvironment = f (getEnvironment c)}
 
+getArgValues :: Context a -> ArgValues
+getArgValues = M.elems . envMap . getEnvironment
+
 ----------------------------------------------------------
 -- Key-value pair environment (abstract)
 
-newtype Environment = Env { envMap :: M.Map String (Maybe Dynamic, String) }
+newtype Environment = Env { envMap :: M.Map String ArgValue }
 
 instance Show Environment where
-   show =
-      let f (k, (_, v)) = k ++ "=" ++ v
-      in intercalate ", " . map f . M.toList . envMap
+   show = intercalate ", " . map show . M.elems . envMap
+
+showItem :: ArgValue -> String
+showItem (ArgValue descr a) = showArgument descr a
 
 emptyEnv :: Environment
 emptyEnv = Env M.empty
 
 nullEnv :: Environment -> Bool
-nullEnv = null . keysEnv
+nullEnv = M.null . envMap
+ 
+lookupArg :: Typeable a => ArgDescr a -> Environment -> a
+lookupArg descr (Env m) = 
+   fromMaybe (defaultArgument descr) $ do 
+      a <- M.lookup (labelArgument descr) m
+      fromArgValue a `mplus`
+         (fromArgValue a >>= parseArgument descr) `mplus`
+         (join $ liftM2 match (termViewArgument descr) (fromArgValue a))
 
-keysEnv :: Environment -> [String]
-keysEnv = M.keys . envMap
+storeArg :: ArgDescr a -> a -> Environment -> Environment
+storeArg descr a (Env m) = 
+   Env (M.insert (labelArgument descr) (ArgValue descr a) m) 
 
-lookupEnv :: Typeable a => String -> Environment -> Maybe a
-lookupEnv s (Env m) = result
- where
-   result -- Special case for result type String
-    | typeOf result == typeOf (Just "") = do
-         (_, txt) <- M.lookup s m
-         cast txt
-    | otherwise = do
-         (md, _) <- M.lookup s m
-         d <- md
-         fromDynamic d
+storeEnvString :: String -> String -> Environment -> Environment
+storeEnvString = storeArg . makeArgDescr
 
-storeEnv :: (Typeable a, Show a) => String -> a -> Environment -> Environment
-storeEnv = storeEnvWith show
-
--- Generalized helper-function
-storeEnvWith :: Typeable a => (a -> String) -> String -> a -> Environment -> Environment
-storeEnvWith f s a (Env m) = Env (M.insert s pair m)
- where -- Special case for type String
-   pair =
-      case cast a of
-         Just txt -> (Nothing, txt)
-         Nothing  -> (Just (toDyn a), f a)
+storeEnvTerm :: String -> Term -> Environment -> Environment
+storeEnvTerm = storeArg . makeArgDescr
 
 diffEnv :: Environment -> Environment -> Environment
 diffEnv (Env m1) (Env m2) = Env (M.filterWithKey p m1)
- where p k (_, s) = maybe True ((/=s) . snd) (M.lookup k m2)
+ where p k a = maybe False ((/= showItem a) . showItem) (M.lookup k m2)
 
 deleteEnv :: String -> Environment -> Environment
 deleteEnv s (Env m) = Env (M.delete s m)
@@ -212,18 +208,10 @@ instance MonadPlus ContextMonad where
    mplus (CM f) (CM g) = CM (\env -> f env `mplus` g env)
 
 readVar :: Typeable a => ArgDescr a -> ContextMonad a
-readVar var = CM $ \env -> return $
-   let name = labelArgument var
-       txt  = fromMaybe "" $ lookupEnv name env
-   in case (lookupEnv name env, parseArgument var txt) of
-         (Just a, _) -> (a, env)
-         (_, Just a) -> (a, storeEnvWith (showArgument var) name a env)
-         _           -> (defaultArgument var, env)
+readVar var = CM $ \env -> Just (lookupArg var env, env)
 
 writeVar  :: Typeable a => ArgDescr a -> a -> ContextMonad ()
-writeVar var a =
-   let f = storeEnvWith (showArgument var) (labelArgument var) a
-   in CM $ \env -> return ((), f env)
+writeVar var a = CM $ \env -> return ((), storeArg var a env)
 
 modifyVar :: Typeable a => ArgDescr a -> (a -> a) -> ContextMonad ()
 modifyVar var f = readVar var >>= (writeVar var  . f)

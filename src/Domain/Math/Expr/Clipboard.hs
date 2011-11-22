@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -25,7 +26,7 @@ import Common.Argument
 import Common.Context
 import Common.Rewriting
 import Control.Monad
-import Data.Maybe
+import Data.Typeable
 import Domain.Math.Data.Relation
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Parser
@@ -34,29 +35,16 @@ import qualified Data.Map as M
 ---------------------------------------------------------------------
 -- Expression variables (internal)
 
-newtype ExprVar a = ExprVar (ArgDescr Term)
-
-exprVar :: (Show a, IsTerm a) => String -> a -> ExprVar a
-exprVar s a = ExprVar (newArgDescr s (toTerm a) showF readF)
- where
-   showF = show . toExpr -- pretty-print as an Expr
-   readF = liftM toTerm . parseExprM
-
-readExprVar :: IsTerm a => ExprVar a -> ContextMonad a
-readExprVar (ExprVar var) = do
-   term <- readVar var
-   maybeCM (fromTerm term)
-
-modifyExprVar :: IsTerm a => ExprVar a -> (a -> a) -> ContextMonad ()
-modifyExprVar (ExprVar var) f =
-   let safe h a = fromMaybe a (h a)
-       g = fmap (toTerm . f) . fromTerm
-   in modifyVar var (safe g)
+exprVar :: (Typeable a, IsTerm a) => String -> a -> ArgDescr a
+exprVar s a = (emptyArgDescr s a (show . toExpr))
+   { parseArgument    = join . liftM fromExpr . parseExprM
+   , termViewArgument = Just termView 
+   }
 
 ---------------------------------------------------------------------
 -- Clipboard variable
 
-newtype Key = Key String deriving (Show, Eq, Ord)
+newtype Key = Key String deriving (Show, Eq, Ord, Typeable)
 
 instance (IsTerm k, Ord k, IsTerm a) => IsTerm (M.Map k a) where
    toTerm = toTerm . map (\(k, a) -> toTerm k :==: toTerm a) . M.toList
@@ -70,7 +58,7 @@ instance IsTerm Key where
    toTerm (Key s) = variable s
    fromTerm       = liftM Key . getVariable
 
-clipboard :: ExprVar (M.Map Key Expr)
+clipboard :: ArgDescr (M.Map Key Expr)
 clipboard = exprVar "clipboard" M.empty
 
 ---------------------------------------------------------------------
@@ -90,26 +78,26 @@ lookupListClipboard = lookupListClipboardG
 
 removeClipboard :: String -> ContextMonad ()
 removeClipboard s =
-   modifyExprVar clipboard (M.delete (Key s))
+   modifyVar clipboard (M.delete (Key s))
 
 ---------------------------------------------------------------------
 -- Generalized interface to work with clipboard
 
 addToClipboardG :: IsTerm a => String -> a -> ContextMonad ()
-addToClipboardG s a = modifyExprVar clipboard (M.insert (Key s) (toExpr a))
+addToClipboardG s a = modifyVar clipboard (M.insert (Key s) (toExpr a))
 
 addListToClipboardG :: IsTerm a => [String] -> [a] -> ContextMonad ()
 addListToClipboardG = zipWithM_ addToClipboardG
 
 lookupClipboardG :: IsTerm a => String -> ContextMonad a
 lookupClipboardG s = do
-   m    <- readExprVar clipboard
+   m    <- readVar clipboard
    expr <- maybeCM (M.lookup (Key s) m)
    fromExpr expr
 
 maybeOnClipboardG :: IsTerm a => String -> ContextMonad (Maybe a)
 maybeOnClipboardG s = do
-   m <- readExprVar clipboard
+   m <- readVar clipboard
    return (M.lookup (Key s) m >>= fromExpr)
 
 lookupListClipboardG :: IsTerm a => [String] -> ContextMonad [a]

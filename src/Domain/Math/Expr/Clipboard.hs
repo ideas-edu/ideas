@@ -14,7 +14,8 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Clipboard
-   ( addToClipboard, addListToClipboard
+   ( Clipboard 
+   , addToClipboard, addListToClipboard
    , lookupClipboard, lookupListClipboard, removeClipboard
      -- generalized interface
    , addToClipboardG, addListToClipboardG
@@ -22,44 +23,34 @@ module Domain.Math.Expr.Clipboard
    , maybeOnClipboardG
    ) where
 
-import Common.Argument
-import Common.Context
-import Common.Rewriting
+import Common.Library
 import Control.Monad
-import Data.Typeable
 import Domain.Math.Data.Relation
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Parser
 import qualified Data.Map as M
 
 ---------------------------------------------------------------------
--- Expression variables (internal)
-
-exprVar :: (Typeable a, IsTerm a) => String -> a -> ArgDescr a
-exprVar s a = (emptyArgDescr s a (show . toExpr))
-   { parseArgument    = join . liftM fromExpr . parseExprM
-   , termViewArgument = Just termView 
-   }
-
----------------------------------------------------------------------
 -- Clipboard variable
 
-newtype Key = Key String deriving (Show, Eq, Ord, Typeable)
+type Clipboard = M.Map String Expr
 
-instance (IsTerm k, Ord k, IsTerm a) => IsTerm (M.Map k a) where
-   toTerm = toTerm . map (\(k, a) -> toTerm k :==: toTerm a) . M.toList
-   fromTerm term = do
-      eqs <- fromTerm term
-      xs  <- forM eqs $ \(a :==: b) ->
-                liftM2 (,) (fromTerm a) (fromTerm b)
-      return (M.fromList xs)
-
-instance IsTerm Key where
-   toTerm (Key s) = variable s
-   fromTerm       = liftM Key . getVariable
-
-clipboard :: ArgDescr (M.Map Key Expr)
-clipboard = exprVar "clipboard" M.empty
+clipboard :: ArgDescr Clipboard
+clipboard = (emptyArgDescr "clipboard" M.empty (show . toExpr . fromMap)) -- TODO: remove toExpr
+   { parseArgument    = \txt -> parseExprM txt >>= fromExpr >>= toMap
+   , termViewArgument = Just mapView
+   }
+ where
+   mapView :: View Term Clipboard
+   mapView = makeView (toMap . fromTerm) (toTerm . fromMap)
+ 
+   fromMap :: Clipboard -> Equations Expr
+   fromMap = map (uncurry ((:==:) . Var)) . M.toList
+   
+   toMap :: Equations Expr -> Maybe Clipboard
+   toMap = liftM M.fromList . mapM f
+    where
+      f (x :==: a) = liftM (\k -> (k, a)) (getVariable x)
 
 ---------------------------------------------------------------------
 -- Interface to work with clipboard
@@ -77,14 +68,13 @@ lookupListClipboard :: [String] -> ContextMonad [Expr]
 lookupListClipboard = lookupListClipboardG
 
 removeClipboard :: String -> ContextMonad ()
-removeClipboard s =
-   modifyVar clipboard (M.delete (Key s))
+removeClipboard = modifyVar clipboard . M.delete
 
 ---------------------------------------------------------------------
 -- Generalized interface to work with clipboard
 
 addToClipboardG :: IsTerm a => String -> a -> ContextMonad ()
-addToClipboardG s a = modifyVar clipboard (M.insert (Key s) (toExpr a))
+addToClipboardG s = modifyVar clipboard . M.insert s . toExpr
 
 addListToClipboardG :: IsTerm a => [String] -> [a] -> ContextMonad ()
 addListToClipboardG = zipWithM_ addToClipboardG
@@ -92,13 +82,13 @@ addListToClipboardG = zipWithM_ addToClipboardG
 lookupClipboardG :: IsTerm a => String -> ContextMonad a
 lookupClipboardG s = do
    m    <- readVar clipboard
-   expr <- maybeCM (M.lookup (Key s) m)
+   expr <- maybeCM (M.lookup s m)
    fromExpr expr
 
 maybeOnClipboardG :: IsTerm a => String -> ContextMonad (Maybe a)
 maybeOnClipboardG s = do
    m <- readVar clipboard
-   return (M.lookup (Key s) m >>= fromExpr)
+   return (M.lookup s m >>= fromExpr)
 
 lookupListClipboardG :: IsTerm a => [String] -> ContextMonad [a]
 lookupListClipboardG = mapM lookupClipboardG

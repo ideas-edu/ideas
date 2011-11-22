@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.inequalities.to-equation">
       <expr>
         (2*x-3)^4 == 1
       </expr>
       <context>
-        <item name="clipboard" value="[ineq==((2*x-3)^4>1)]"/>
+        <item name="clipboard" value="[ineq == ((2*x-3)^4 > 1)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.power">
@@ -13,7 +13,7 @@
         2*x-3 == 1 or 2*x-3 == -1
       </expr>
       <context>
-        <item name="clipboard" value="[ineq==((2*x-3)^4>1)]"/>
+        <item name="clipboard" value="[ineq == ((2*x-3)^4 > 1)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.onevar.minus-left">
@@ -21,7 +21,7 @@
         2*x == 4 or 2*x-3 == -1
       </expr>
       <context>
-        <item name="clipboard" value="[ineq==((2*x-3)^4>1)]"/>
+        <item name="clipboard" value="[ineq == ((2*x-3)^4 > 1)]"/>
         <item name="location" value="[1]"/>
       </context>
     </elem>
@@ -30,7 +30,7 @@
         x == 2 or 2*x-3 == -1
       </expr>
       <context>
-        <item name="clipboard" value="[ineq==((2*x-3)^4>1)]"/>
+        <item name="clipboard" value="[ineq == ((2*x-3)^4 > 1)]"/>
         <item name="location" value="[1]"/>
       </context>
     </elem>
@@ -39,7 +39,7 @@
         x == 2 or 2*x == 2
       </expr>
       <context>
-        <item name="clipboard" value="[ineq==((2*x-3)^4>1)]"/>
+        <item name="clipboard" value="[ineq == ((2*x-3)^4 > 1)]"/>
         <item name="location" value="[2]"/>
       </context>
     </elem>
@@ -48,7 +48,7 @@
         x == 2 or x == 1
       </expr>
       <context>
-        <item name="clipboard" value="[ineq==((2*x-3)^4>1)]"/>
+        <item name="clipboard" value="[ineq == ((2*x-3)^4 > 1)]"/>
         <item name="location" value="[2]"/>
       </context>
     </elem>

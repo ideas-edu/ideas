@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.polynomial.subst">
       <expr>
         2*p^2+p-1 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[subst==(p==x^3)]"/>
+        <item name="clipboard" value="[subst == (p == x^3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.abc">
@@ -13,7 +13,7 @@
         p == 1/2 or p == -1
       </expr>
       <context>
-        <item name="clipboard" value="[D==9, a==2, b==1, c==-1, subst==(p==x^3)]"/>
+        <item name="clipboard" value="[D == 9, a == 2, b == 1, c == -1, subst == (p == x^3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.polynomial.back-subst">
@@ -21,7 +21,7 @@
         x^3 == 1/2 or x^3 == -1
       </expr>
       <context>
-        <item name="clipboard" value="[D==9, a==2, b==1, c==-1, subst==(p==x^3)]"/>
+        <item name="clipboard" value="[D == 9, a == 2, b == 1, c == -1, subst == (p == x^3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.power">
@@ -29,7 +29,7 @@
         x == 1/root 2 3 or x^3 == -1
       </expr>
       <context>
-        <item name="clipboard" value="[D==9, a==2, b==1, c==-1, subst==(p==x^3)]"/>
+        <item name="clipboard" value="[D == 9, a == 2, b == 1, c == -1, subst == (p == x^3)]"/>
         <item name="location" value="[1]"/>
       </context>
     </elem>
@@ -38,7 +38,7 @@
         x == 1/root 2 3 or x == -1
       </expr>
       <context>
-        <item name="clipboard" value="[D==9, a==2, b==1, c==-1, subst==(p==x^3)]"/>
+        <item name="clipboard" value="[D == 9, a == 2, b == 1, c == -1, subst == (p == x^3)]"/>
         <item name="location" value="[2]"/>
       </context>
     </elem>

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.9">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.simpler-poly">
       <expr>
@@ -10,7 +10,7 @@
         x == (-2+sqrt 20)/2 or x == (-2-sqrt 20)/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==20, a==1, b==2, c==-4]"/>
+        <item name="clipboard" value="[D == 20, a == 1, b == 2, c == -4]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.simpler-sqrt">
@@ -18,7 +18,7 @@
         x == -1+sqrt 5 or x == -1-sqrt 5
       </expr>
       <context>
-        <item name="clipboard" value="[D==20, a==1, b==2, c==-4]"/>
+        <item name="clipboard" value="[D == 20, a == 1, b == 2, c == -4]"/>
       </context>
     </elem>
   </list>

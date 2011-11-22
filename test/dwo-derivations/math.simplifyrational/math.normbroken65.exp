@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.6 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
@@ -29,7 +29,7 @@
         a*(a+4)/(a+3)
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(a/=-3)]"/>
+        <item name="clipboard" value="[condition == (a /= -3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.distr-times">
@@ -37,7 +37,7 @@
         (a^2+4*a)/(a+3)
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(a/=-3)]"/>
+        <item name="clipboard" value="[condition == (a /= -3)]"/>
       </context>
     </elem>
   </list>

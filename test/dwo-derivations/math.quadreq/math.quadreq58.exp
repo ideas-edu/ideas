@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.9">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
@@ -15,7 +15,7 @@
         x == (8+sqrt 48)/2 or x == (8-sqrt 48)/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==48, a==1, b==-8, c==4]"/>
+        <item name="clipboard" value="[D == 48, a == 1, b == -8, c == 4]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.simpler-sqrt">
@@ -23,7 +23,7 @@
         x == 4+2*sqrt 3 or x == 4-2*sqrt 3
       </expr>
       <context>
-        <item name="clipboard" value="[D==48, a==1, b==-8, c==4]"/>
+        <item name="clipboard" value="[D == 48, a == 1, b == -8, c == 4]"/>
       </context>
     </elem>
   </list>

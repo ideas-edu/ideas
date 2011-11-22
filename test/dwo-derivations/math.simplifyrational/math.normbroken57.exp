@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
@@ -21,7 +21,7 @@
         2*p/(p-4)
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(p/=-4)]"/>
+        <item name="clipboard" value="[condition == (p /= -4)]"/>
       </context>
     </elem>
   </list>

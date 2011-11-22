@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.rational.cross-multiply">
       <expr>
         4*x == (x+1)*7
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=-1)]"/>
+        <item name="clipboard" value="[condition == (x /= -1)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.move-left">
@@ -13,7 +13,7 @@
         -(x+1)*7+4*x == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=-1)]"/>
+        <item name="clipboard" value="[condition == (x /= -1)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.distr-times">
@@ -21,7 +21,7 @@
         -7*x-7+4*x == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=-1)]"/>
+        <item name="clipboard" value="[condition == (x /= -1)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.merge">
@@ -29,7 +29,7 @@
         -3*x-7 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=-1)]"/>
+        <item name="clipboard" value="[condition == (x /= -1)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.onevar.minus-left">
@@ -37,7 +37,7 @@
         -3*x == 7
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=-1)]"/>
+        <item name="clipboard" value="[condition == (x /= -1)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.times">
@@ -45,7 +45,7 @@
         x == -7/3
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=-1)]"/>
+        <item name="clipboard" value="[condition == (x /= -1)]"/>
       </context>
     </elem>
   </list>

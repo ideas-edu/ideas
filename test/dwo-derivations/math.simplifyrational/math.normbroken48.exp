@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
@@ -21,7 +21,7 @@
         (x+4)/(x+2)
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=-3)]"/>
+        <item name="clipboard" value="[condition == (x /= -3)]"/>
       </context>
     </elem>
   </list>

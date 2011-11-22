@@ -204,12 +204,14 @@ data Associativity = InfixLeft | InfixRight | PrefixNon
 
 operatorTable :: OperatorTable
 operatorTable =
-     (InfixNon, [ (s, op) | (_, (op, s)) <- relationSymbols]) :
+     (InfixNon, [ (s, space op) | (_, (op, s)) <- relationSymbols]) :
    [ (InfixLeft,  [(plusSymbol, "+"), (minusSymbol, "-")])    -- 6
    , (PrefixNon,  [(negateSymbol, "-")])                      -- 6+
    , (InfixLeft,  [(timesSymbol, "*"), (divideSymbol, "/")])  -- 7
    , (InfixRight, [(powerSymbol, "^")])                       -- 8
    ]
+ where
+   space a = " " ++ a ++ " " -- for consistency with Show Equation
 
 instance SemiRing Expr where
    (<+>) = (+)

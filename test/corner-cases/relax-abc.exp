@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.4 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.nice-factors" location="[]">
       <state>
@@ -19,7 +19,7 @@
           x == 13 or x == 12
         </expr>
         <context>
-          <item name="clipboard" value="[D==1, a==1, b==-25, c==156]"/>
+          <item name="clipboard" value="[D == 1, a == 1, b == -25, c == 156]"/>
         </context>
       </state>
     </elem>

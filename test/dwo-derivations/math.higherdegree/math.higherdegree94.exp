@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.6 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.polynomial.expose-factor">
       <expr>
@@ -39,7 +39,7 @@
         x == 1 or x == 0 or x == (3+sqrt 33)/2 or x == (3-sqrt 33)/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==33, a==1, b==-3, c==-6]"/>
+        <item name="clipboard" value="[D == 33, a == 1, b == -3, c == -6]"/>
         <item name="location" value="[2,2]"/>
       </context>
     </elem>
@@ -48,7 +48,7 @@
         x == 1 or x == 0 or x == 3/2+sqrt 33/2 or x == 3/2-sqrt 33/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==33, a==1, b==-3, c==-6]"/>
+        <item name="clipboard" value="[D == 33, a == 1, b == -3, c == -6]"/>
       </context>
     </elem>
   </list>

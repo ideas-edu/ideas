@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.rational.cross-multiply">
       <expr>
         (x-2)*2 == (x-3)*x
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=3)]"/>
+        <item name="clipboard" value="[condition == (x /= 3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.move-left">
@@ -13,7 +13,7 @@
         (x-2)*2-(x-3)*x == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=3)]"/>
+        <item name="clipboard" value="[condition == (x /= 3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.distr-times">
@@ -21,7 +21,7 @@
         2*x-4-x^2+3*x == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=3)]"/>
+        <item name="clipboard" value="[condition == (x /= 3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.merge">
@@ -29,7 +29,7 @@
         5*x-4-x^2 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=3)]"/>
+        <item name="clipboard" value="[condition == (x /= 3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.simpler-poly">
@@ -37,7 +37,7 @@
         x^2-5*x+4 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=3)]"/>
+        <item name="clipboard" value="[condition == (x /= 3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
@@ -45,7 +45,7 @@
         (x-1)*(x-4) == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=3)]"/>
+        <item name="clipboard" value="[condition == (x /= 3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.product-zero">
@@ -53,7 +53,7 @@
         x == 1 or x == 4
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=3)]"/>
+        <item name="clipboard" value="[condition == (x /= 3)]"/>
       </context>
     </elem>
   </list>

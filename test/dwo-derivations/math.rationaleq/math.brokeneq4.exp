@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.rational.division-zero">
       <expr>
         4*x^2-24 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=-1/3*sqrt 3) (x/=1/3*sqrt 3)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= -1/3*sqrt 3) (x /= 1/3*sqrt 3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.onevar.minus-left">
@@ -13,7 +13,7 @@
         4*x^2 == 24
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=-1/3*sqrt 3) (x/=1/3*sqrt 3)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= -1/3*sqrt 3) (x /= 1/3*sqrt 3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.times">
@@ -21,7 +21,7 @@
         x^2 == 6
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=-1/3*sqrt 3) (x/=1/3*sqrt 3)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= -1/3*sqrt 3) (x /= 1/3*sqrt 3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.power">
@@ -29,7 +29,7 @@
         x == sqrt 6 or x == -sqrt 6
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=-1/3*sqrt 3) (x/=1/3*sqrt 3)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= -1/3*sqrt 3) (x /= 1/3*sqrt 3)]"/>
       </context>
     </elem>
   </list>

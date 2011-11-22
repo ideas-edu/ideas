@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.4 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <expected ready="true" ruleid="algebra.equations.quadratic.abc">
     <state>
       <prefix>
@@ -8,7 +8,7 @@
         x == -3/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==0, a==1, b==3, c==9/4]"/>
+        <item name="clipboard" value="[D == 0, a == 1, b == 3, c == 9/4]"/>
       </context>
     </state>
   </expected>

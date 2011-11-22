@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.rational.cross-multiply">
       <expr>
         (2*x+3)*(x-2) == (x-1)*(2*x-1)
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 1) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.move-left">
@@ -13,7 +13,7 @@
         (2*x+3)*(x-2)-(x-1)*(2*x-1) == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 1) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.distr-times">
@@ -21,7 +21,7 @@
         2*x^2-x-6-2*x^2+3*x-1 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 1) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.merge">
@@ -29,7 +29,7 @@
         2*x-7 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 1) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.onevar.minus-left">
@@ -37,7 +37,7 @@
         2*x == 7
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 1) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.times">
@@ -45,7 +45,7 @@
         x == 7/2
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 1) (x /= 2)]"/>
       </context>
     </elem>
   </list>

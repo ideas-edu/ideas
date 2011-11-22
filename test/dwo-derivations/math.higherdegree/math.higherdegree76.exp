@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.polynomial.subst">
       <expr>
         4*p^2-29*p-24 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[subst==(p==x^2)]"/>
+        <item name="clipboard" value="[subst == (p == x^2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.abc">
@@ -13,7 +13,7 @@
         p == 8 or p == -3/4
       </expr>
       <context>
-        <item name="clipboard" value="[D==1225, a==4, b==-29, c==-24, subst==(p==x^2)]"/>
+        <item name="clipboard" value="[D == 1225, a == 4, b == -29, c == -24, subst == (p == x^2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.polynomial.back-subst">
@@ -21,7 +21,7 @@
         x^2 == 8 or x^2 == -3/4
       </expr>
       <context>
-        <item name="clipboard" value="[D==1225, a==4, b==-29, c==-24, subst==(p==x^2)]"/>
+        <item name="clipboard" value="[D == 1225, a == 4, b == -29, c == -24, subst == (p == x^2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.power">
@@ -29,7 +29,7 @@
         x == sqrt 8 or x == -sqrt 8 or x^2 == -3/4
       </expr>
       <context>
-        <item name="clipboard" value="[D==1225, a==4, b==-29, c==-24, subst==(p==x^2)]"/>
+        <item name="clipboard" value="[D == 1225, a == 4, b == -29, c == -24, subst == (p == x^2)]"/>
         <item name="location" value="[1]"/>
       </context>
     </elem>
@@ -38,7 +38,7 @@
         x == sqrt 8 or x == -sqrt 8
       </expr>
       <context>
-        <item name="clipboard" value="[D==1225, a==4, b==-29, c==-24, subst==(p==x^2)]"/>
+        <item name="clipboard" value="[D == 1225, a == 4, b == -29, c == -24, subst == (p == x^2)]"/>
         <item name="location" value="[2,2]"/>
       </context>
     </elem>

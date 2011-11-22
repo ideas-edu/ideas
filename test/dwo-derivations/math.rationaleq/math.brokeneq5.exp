@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.rational.same-divisor">
       <expr>
         x^2 == 3*x+4
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=-4)]"/>
+        <item name="clipboard" value="[condition == (x /= -4)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.move-left">
@@ -13,7 +13,7 @@
         x^2-3*x-4 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=-4)]"/>
+        <item name="clipboard" value="[condition == (x /= -4)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
@@ -21,7 +21,7 @@
         (x+1)*(x-4) == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=-4)]"/>
+        <item name="clipboard" value="[condition == (x /= -4)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.product-zero">
@@ -29,7 +29,7 @@
         x == -1 or x == 4
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=-4)]"/>
+        <item name="clipboard" value="[condition == (x /= -4)]"/>
       </context>
     </elem>
   </list>

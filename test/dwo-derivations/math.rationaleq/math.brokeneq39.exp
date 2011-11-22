@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.rational.cross-multiply">
       <expr>
         (x+1)*(x-2) == (x-1)*(3*x-7)
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 1) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.move-left">
@@ -13,7 +13,7 @@
         (x+1)*(x-2)-(x-1)*(3*x-7) == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 1) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.distr-times">
@@ -21,7 +21,7 @@
         x^2-x-2-3*x^2+10*x-7 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 1) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.merge">
@@ -29,7 +29,7 @@
         -2*x^2+9*x-9 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 1) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.simpler-poly">
@@ -37,7 +37,7 @@
         2*x^2-9*x+9 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 1) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.abc">
@@ -45,7 +45,7 @@
         x == 3 or x == 3/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==9, a==2, b==-9, c==9, condition==logic1.and (x/=1) (x/=2)]"/>
+        <item name="clipboard" value="[D == 9, a == 2, b == -9, c == 9, condition == logic1.and (x /= 1) (x /= 2)]"/>
       </context>
     </elem>
   </list>

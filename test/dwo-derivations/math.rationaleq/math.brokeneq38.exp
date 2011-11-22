@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.rational.cross-multiply">
       <expr>
         (2*x-7)*(3*x-7) == (5-x)*(x+1)
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=7/3)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 5) (x /= 7/3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.move-left">
@@ -13,7 +13,7 @@
         (2*x-7)*(3*x-7)-(5-x)*(x+1) == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=7/3)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 5) (x /= 7/3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.distr-times">
@@ -21,7 +21,7 @@
         6*x^2-35*x+49-4*x-5+x^2 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=7/3)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 5) (x /= 7/3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.merge">
@@ -29,7 +29,7 @@
         7*x^2-39*x+44 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=7/3)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 5) (x /= 7/3)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.abc">
@@ -37,7 +37,7 @@
         x == 4 or x == 11/7
       </expr>
       <context>
-        <item name="clipboard" value="[D==289, a==7, b==-39, c==44, condition==logic1.and (x/=5) (x/=7/3)]"/>
+        <item name="clipboard" value="[D == 289, a == 7, b == -39, c == 44, condition == logic1.and (x /= 5) (x /= 7/3)]"/>
       </context>
     </elem>
   </list>

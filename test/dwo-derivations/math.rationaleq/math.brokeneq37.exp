@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.rational.cross-multiply">
       <expr>
         (x+1)*(2*x-4) == (x+2)*(7*x+1)
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=-2) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= -2) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.move-left">
@@ -13,7 +13,7 @@
         (x+1)*(2*x-4)-(x+2)*(7*x+1) == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=-2) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= -2) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.distr-times">
@@ -21,7 +21,7 @@
         2*x^2-2*x-4-7*x^2-15*x-2 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=-2) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= -2) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.merge">
@@ -29,7 +29,7 @@
         -5*x^2-17*x-6 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=-2) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= -2) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.simpler-poly">
@@ -37,7 +37,7 @@
         5*x^2+17*x+6 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=-2) (x/=2)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= -2) (x /= 2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.abc">
@@ -45,7 +45,7 @@
         x == -2/5 or x == -3
       </expr>
       <context>
-        <item name="clipboard" value="[D==169, a==5, b==17, c==6, condition==logic1.and (x/=-2) (x/=2)]"/>
+        <item name="clipboard" value="[D == 169, a == 5, b == 17, c == 6, condition == logic1.and (x /= -2) (x /= 2)]"/>
       </context>
     </elem>
   </list>

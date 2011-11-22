@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.distr-square">
       <expr>
@@ -28,7 +28,7 @@
         x == 17/2 or x == 1/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==1024, a==4, b==-36, c==17]"/>
+        <item name="clipboard" value="[D == 1024, a == 4, b == -36, c == 17]"/>
       </context>
     </elem>
   </list>

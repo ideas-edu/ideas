@@ -36,7 +36,7 @@ import qualified Data.Map as M
 type Clipboard = M.Map String Expr
 
 clipboard :: ArgDescr Clipboard
-clipboard = (emptyArgDescr "clipboard" M.empty (show . toExpr . fromMap)) -- TODO: remove toExpr
+clipboard = (emptyArgDescr "clipboard" M.empty (show . toExpr . fromMap))
    { parseArgument    = \txt -> parseExprM txt >>= fromExpr >>= toMap
    , termViewArgument = Just mapView
    }

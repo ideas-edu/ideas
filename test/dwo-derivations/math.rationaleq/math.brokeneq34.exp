@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.rational.cross-multiply">
       <expr>
         (x+9)*x == (x-5)*2
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=0)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 5) (x /= 0)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.move-left">
@@ -13,7 +13,7 @@
         (x+9)*x-(x-5)*2 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=0)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 5) (x /= 0)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.distr-times">
@@ -21,7 +21,7 @@
         x^2+9*x-2*x+10 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=0)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 5) (x /= 0)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.merge">
@@ -29,7 +29,7 @@
         x^2+7*x+10 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=0)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 5) (x /= 0)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
@@ -37,7 +37,7 @@
         (x+2)*(x+5) == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=0)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 5) (x /= 0)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.product-zero">
@@ -45,7 +45,7 @@
         x == -2 or x == -5
       </expr>
       <context>
-        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=0)]"/>
+        <item name="clipboard" value="[condition == logic1.and (x /= 5) (x /= 0)]"/>
       </context>
     </elem>
   </list>

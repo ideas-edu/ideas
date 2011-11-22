@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.rational.cross-multiply">
       <expr>
         (x+2)*3 == 12*x
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=0)]"/>
+        <item name="clipboard" value="[condition == (x /= 0)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.same-con-factor">
@@ -13,7 +13,7 @@
         x+2 == 4*x
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=0)]"/>
+        <item name="clipboard" value="[condition == (x /= 0)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.move-left">
@@ -21,7 +21,7 @@
         -3*x+2 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=0)]"/>
+        <item name="clipboard" value="[condition == (x /= 0)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.onevar.plus">
@@ -29,7 +29,7 @@
         -3*x == -2
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=0)]"/>
+        <item name="clipboard" value="[condition == (x /= 0)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.times">
@@ -37,7 +37,7 @@
         x == 2/3
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(x/=0)]"/>
+        <item name="clipboard" value="[condition == (x /= 0)]"/>
       </context>
     </elem>
   </list>

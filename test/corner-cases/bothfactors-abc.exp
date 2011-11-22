@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.4 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.simpler-poly" location="[]">
       <state>
@@ -29,7 +29,7 @@
           false
         </expr>
         <context>
-          <item name="clipboard" value="[D==-48, a==-2, b==4, c==-8]"/>
+          <item name="clipboard" value="[D == -48, a == -2, b == 4, c == -8]"/>
         </context>
       </state>
     </elem>

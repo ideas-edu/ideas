@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.common-factor">
       <expr>
@@ -21,7 +21,7 @@
         (p-2)/(4*p)
       </expr>
       <context>
-        <item name="clipboard" value="[condition==(p/=-2)]"/>
+        <item name="clipboard" value="[condition == (p /= -2)]"/>
       </context>
     </elem>
   </list>

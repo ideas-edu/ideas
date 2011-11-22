@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
@@ -10,7 +10,7 @@
         16*p^2-136*p+225 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[subst==(p==x^2)]"/>
+        <item name="clipboard" value="[subst == (p == x^2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.abc">
@@ -18,7 +18,7 @@
         p == 25/4 or p == 9/4
       </expr>
       <context>
-        <item name="clipboard" value="[D==4096, a==16, b==-136, c==225, subst==(p==x^2)]"/>
+        <item name="clipboard" value="[D == 4096, a == 16, b == -136, c == 225, subst == (p == x^2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.polynomial.back-subst">
@@ -26,7 +26,7 @@
         x^2 == 25/4 or x^2 == 9/4
       </expr>
       <context>
-        <item name="clipboard" value="[D==4096, a==16, b==-136, c==225, subst==(p==x^2)]"/>
+        <item name="clipboard" value="[D == 4096, a == 16, b == -136, c == 225, subst == (p == x^2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.power">
@@ -34,7 +34,7 @@
         x == sqrt (25/4) or x == -sqrt (25/4) or x^2 == 9/4
       </expr>
       <context>
-        <item name="clipboard" value="[D==4096, a==16, b==-136, c==225, subst==(p==x^2)]"/>
+        <item name="clipboard" value="[D == 4096, a == 16, b == -136, c == 225, subst == (p == x^2)]"/>
         <item name="location" value="[1]"/>
       </context>
     </elem>
@@ -43,7 +43,7 @@
         x == sqrt (25/4) or x == -sqrt (25/4) or x == sqrt (9/4) or x == -sqrt (9/4)
       </expr>
       <context>
-        <item name="clipboard" value="[D==4096, a==16, b==-136, c==225, subst==(p==x^2)]"/>
+        <item name="clipboard" value="[D == 4096, a == 16, b == -136, c == 225, subst == (p == x^2)]"/>
         <item name="location" value="[2,2]"/>
       </context>
     </elem>

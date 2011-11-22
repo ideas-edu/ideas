@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.9">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
@@ -15,7 +15,7 @@
         x == (5+sqrt 53)/2 or x == (5-sqrt 53)/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==53, a==1, b==-5, c==-7]"/>
+        <item name="clipboard" value="[D == 53, a == 1, b == -5, c == -7]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.distr-div">
@@ -23,7 +23,7 @@
         x == 5/2+sqrt 53/2 or x == 5/2-sqrt 53/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==53, a==1, b==-5, c==-7]"/>
+        <item name="clipboard" value="[D == 53, a == 1, b == -5, c == -7]"/>
       </context>
     </elem>
   </list>

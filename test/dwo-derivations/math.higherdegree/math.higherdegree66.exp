@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
@@ -10,7 +10,7 @@
         p^2-p-12 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[subst==(p==x^2)]"/>
+        <item name="clipboard" value="[subst == (p == x^2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
@@ -18,7 +18,7 @@
         (p+3)*(p-4) == 0
       </expr>
       <context>
-        <item name="clipboard" value="[subst==(p==x^2)]"/>
+        <item name="clipboard" value="[subst == (p == x^2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.product-zero">
@@ -26,7 +26,7 @@
         p == -3 or p == 4
       </expr>
       <context>
-        <item name="clipboard" value="[subst==(p==x^2)]"/>
+        <item name="clipboard" value="[subst == (p == x^2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.polynomial.back-subst">
@@ -34,7 +34,7 @@
         x^2 == -3 or x^2 == 4
       </expr>
       <context>
-        <item name="clipboard" value="[subst==(p==x^2)]"/>
+        <item name="clipboard" value="[subst == (p == x^2)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.power">
@@ -42,7 +42,7 @@
         x^2 == 4
       </expr>
       <context>
-        <item name="clipboard" value="[subst==(p==x^2)]"/>
+        <item name="clipboard" value="[subst == (p == x^2)]"/>
         <item name="location" value="[1]"/>
       </context>
     </elem>
@@ -51,7 +51,7 @@
         x == 2 or x == -2
       </expr>
       <context>
-        <item name="clipboard" value="[subst==(p==x^2)]"/>
+        <item name="clipboard" value="[subst == (p == x^2)]"/>
       </context>
     </elem>
   </list>

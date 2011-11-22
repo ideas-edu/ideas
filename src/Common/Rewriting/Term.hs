@@ -74,6 +74,7 @@ makeAssociative (S _ a) = S True a
 data Term = TVar   String
           | TCon   Symbol
           | TApp   Term Term
+          | TList  [Term]
           | TNum   Integer
           | TFloat Double
           | TMeta  Int
@@ -81,6 +82,7 @@ data Term = TVar   String
 
 instance Uniplate Term where
    uniplate (TApp f a) = plate TApp |* f |* a
+   uniplate (TList xs) = plate TList ||* xs
    uniplate term       = plate term
 
 -----------------------------------------------------------
@@ -121,6 +123,11 @@ instance IsTerm Double where
    toTerm = TFloat
    fromTerm (TFloat a) = return a
    fromTerm _          = fail "fromTerm"
+
+instance IsTerm a => IsTerm [a] where
+   toTerm = TList . map toTerm
+   fromTerm (TList xs) = mapM fromTerm xs
+   fromTerm _ = fail "fromTerm"
 
 fromTermM :: (Monad m, IsTerm a) => Term -> m a
 fromTermM = maybe (fail "fromTermM") return . fromTerm

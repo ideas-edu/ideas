@@ -25,6 +25,7 @@ import Text.OpenMath.Dictionary.Arith1
 import Text.OpenMath.Dictionary.Fns1
 import Text.OpenMath.Object
 import qualified Text.OpenMath.Symbol as OM
+import qualified Text.OpenMath.Dictionary.List1 as OM
 
 -----------------------------------------------------------------------------
 -- Utility functions for conversion to/from OpenMath
@@ -50,6 +51,7 @@ toOMOBJ = rec . toTerm
          TMeta i   -> OMV ('$' : show i)
          TNum n    -> OMI n
          TFloat d  -> OMF d
+         TList xs  -> rec (function (newSymbol OM.listSymbol) xs)
          TApp _ _  -> let (f, xs) = getSpine term
                       in make (map rec (f:xs))
 
@@ -68,7 +70,9 @@ fromOMOBJ = (>>= fromTerm) . rec
          OMS s -> return (symbol (newSymbol (OM.dictionary s # OM.symbolName s)))
          OMI n -> return (TNum n)
          OMF a -> return (TFloat a)
-         OMA (x:xs) -> liftM2 makeTerm (rec x) (mapM rec xs)
+         OMA (x:xs) -> case x of
+                          OMS s | s == OM.listSymbol -> liftM TList (mapM rec xs)
+                          _ -> liftM2 makeTerm (rec x) (mapM rec xs)
          OMBIND binder xs body ->
             rec (OMA (binder:map OMV xs++[body]))
          _ -> fail "Invalid OpenMath object"

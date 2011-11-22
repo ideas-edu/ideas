@@ -35,13 +35,20 @@ unify term1 term2 =
          return (singletonSubst i term2)
       (_, TMeta j) | not (j `hasMetaVar` term1) ->
          return (singletonSubst j term1)
-      (TApp f a, TApp g b) -> do
-         s1 <- unify f g
-         s2 <- unify (s1 |-> a) (s1 |-> b)
-         return (s2 @@ s1)
+      (TApp f a, TApp g b) -> 
+         rec [f, a] [g, b]
+      (TList xs, TList ys) -> 
+         rec xs ys
       _ | term1 == term2 ->
          return emptySubst
       _ -> Nothing
+ where
+   rec [] [] = return emptySubst
+   rec (x:xs) (y:ys) = do
+      s1 <- unify x y
+      s2 <- rec (map (s1 |->) xs) (map (s1 |->) ys)
+      return (s2 @@ s1)
+   rec _ _ = fail "match: no unifier" 
 
 match :: MonadPlus m => Term -> Term -> m Substitution
 match term1 term2 =
@@ -51,15 +58,23 @@ match term1 term2 =
       (TMeta i, _) | not (i `hasMetaVar` term2) ->
          return (singletonSubst i term2)
       (_, TMeta _) ->
-         fail "unifyM: no unifier"
+         fail "match: no unifier"
       (TApp f a, TApp g b) -> do
-         s1 <- match f g
-         s2 <- match (s1 |-> a) b
-         guard (composable s1 s2)
-         return (s1 @@ s2)
+         rec [f, a] [g, b]
+      (TList xs, TList ys) ->
+         rec xs ys
       _ | term1 == term2 ->
          return emptySubst
-      _ -> fail "unifyM: no unifier"
+      _ -> fail "match: no unifier"
+ where
+   rec [] [] = return emptySubst
+   rec (x:xs) (y:ys) = do
+      s1 <- match x y
+      s2 <- rec (map (s1 |->) xs) ys
+      guard (composable s1 s2)
+      return (s1 @@ s2)
+   rec _ _ = fail "match: no unifier"
+   
 
 -----------------------------------------------------------
 -- Matching (or: one-way unification)
@@ -92,6 +107,8 @@ matchA sm = rec
  where
    rec (TMeta i) y =
       return (singletonSubst i y)
+   rec (TList xs) (TList ys) =
+      matchList rec xs ys
    rec x y =
       case getFunction x of
          Just (s, as) -> 

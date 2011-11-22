@@ -248,24 +248,21 @@ instance IsTerm Expr where
    toTerm (Var v)    = TVar v
    toTerm expr =
       case getFunction expr of
-         Just (s, xs) -> function s (map toTerm xs)
+         Just (s, xs) 
+            | s == listSymbol -> TList (map toTerm xs)
+            | otherwise       -> function s (map toTerm xs)
          Nothing      -> error "IsTerm Expr"
 
    fromTerm (TNum n)   = return (fromInteger n)
    fromTerm (TFloat d) = return (fromDouble d)
    fromTerm (TVar v)   = return (Var v)
+   fromTerm (TList xs) = liftM (function listSymbol) (mapM fromTerm xs)
    fromTerm t =
       case getFunction t of
          Just (s, xs) -> do
             ys <- mapM fromTerm xs
             return (function s ys)
          _ -> fail "fromTerm"
-
-instance IsTerm a => IsTerm [a] where
-   toTerm = function listSymbol . map toTerm
-   fromTerm a = do
-      xs <- isFunction listSymbol a
-      mapM fromTerm xs
 
 toExpr :: IsTerm a => a -> Expr
 toExpr = fromJust . fromTerm . toTerm

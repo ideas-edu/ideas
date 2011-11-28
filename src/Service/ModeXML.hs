@@ -324,7 +324,7 @@ encodeEnvironment b ctx
       | otherwise = modifyEnvironment (storeArg locDescr loc)
 
 locDescr :: Binding Location
-locDescr = bindingParser readM $ emptyArgDescr "location" [] show
+locDescr = "location" .<-. []
 
 encodeContext :: Monad m => Bool -> (Context a -> m XMLBuilder) -> Context a -> m XMLBuilder
 encodeContext b f ctx = do

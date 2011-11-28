@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification, Rank2Types, TypeSynonymInstances #-}
+{-# LANGUAGE ExistentialQuantification #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -13,11 +13,15 @@
 --
 -----------------------------------------------------------------------------
 module Common.Binding
-   ( -- * Binding
-     Binding, getValue, setValue, showValue, readBinding, bindingParser
-   , bindingTermView, readTermBinding, getTermValue
-   , defaultArgDescr, emptyArgDescr
-   , Argument(..), ArgValue(..), ArgValues, fromArgValue
+   ( -- * Binding data type 
+     Binding
+     -- * Constructor and type class
+   , Bindable(..), makeBindingWith, (.<-.)
+   , stringBinding, termBinding
+     -- * Utility functions
+   , getValue, setValue, showValue, getTermValue 
+   , readBinding, readTermBinding  
+   , ArgValue(..), ArgValues, fromArgValue
    ) where
 
 import Common.Id
@@ -27,14 +31,14 @@ import Common.View
 import Data.Typeable
 
 -----------------------------------------------------------
---- Arguments
+-- Binding data type 
 
 -- | A data type for bindings (identifier and value)
 data Binding a = Binding
    { identifier  :: Id                   -- ^ Identifier
    , value       :: a                    -- ^ Current value
-   , parser      :: String -> Maybe a    -- ^ A parser
    , printer     :: a -> String          -- ^ A pretty-printer
+   , parser      :: String -> Maybe a    -- ^ A parser
    , bindingView :: Maybe (View Term a)  -- ^ Conversion to/from term
    }
 
@@ -44,6 +48,32 @@ instance HasId (Binding a) where
 
 instance Show (Binding a) where
    show a = showId a ++ "=" ++ showValue a
+
+-----------------------------------------------------------
+-- Constructor and type class
+
+-- | A type class for types with bindings
+class Typeable a => Bindable a where
+   makeBinding :: IsId n => n -> Binding a
+
+instance Bindable Int where
+   makeBinding = makeBindingWith 0
+
+-- | Construct a new binding
+makeBindingWith :: (Show a, Read a, IsTerm a, IsId n) => a -> n -> Binding a
+makeBindingWith = flip (.<-.)
+
+(.<-.) :: (Show a, Read a, IsTerm a, IsId n) => n -> a -> Binding a
+n .<-. a = Binding (newId n) a show readM (Just termView)
+
+stringBinding :: IsId n => n -> Binding String
+stringBinding n = Binding (newId n) "" id Just (Just variableView)
+
+termBinding :: IsId n => n -> Binding Term
+termBinding n = Binding (newId n) (TNum 0) show (const Nothing) (Just termView)
+
+-----------------------------------------------------------
+-- Utility functions
 
 showValue :: Binding a -> String
 showValue a = printer a (value a)
@@ -61,37 +91,9 @@ readBinding :: Binding a -> String -> Maybe a
 readBinding = parser
 
 readTermBinding :: Binding a -> Term -> Maybe a
-readTermBinding b term = do
-   v <- bindingView b
-   match v term
+readTermBinding b term =
+   bindingView b >>= (`match` term)
 
-bindingParser :: (String -> Maybe a) -> Binding a -> Binding a
-bindingParser f b = b {parser = f}
-
-bindingTermView :: View Term a -> Binding a -> Binding a
-bindingTermView v b = b {bindingView = Just v}
-
--- | Constructor function for an argument descriptor that default type classes
-defaultArgDescr :: (Show a, Read a, IsTerm a, IsId n) => n -> a -> Binding a
-defaultArgDescr n a = Binding (newId n) a readM show (Just termView)
-
-emptyArgDescr :: IsId n => n -> a -> (a -> String) -> Binding a
-emptyArgDescr n a f = 
-   Binding (newId n) a (const Nothing) f Nothing
-
--- | A type class for types which have an argument descriptor
-class Typeable a => Argument a where
-   makeArgDescr :: IsId n => n -> Binding a
-
-instance Argument Int where
-   makeArgDescr = flip defaultArgDescr 0
-   
-instance Argument String where
-   makeArgDescr n = Binding (newId n) "" Just id Nothing
-   
-instance Argument Term where
-   makeArgDescr n = Binding (newId n) (TNum 0) (const Nothing) show (Just termView)
-   
 ---------------------
 
 -- | An argument descriptor, paired with a value

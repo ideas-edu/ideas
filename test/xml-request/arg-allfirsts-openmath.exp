@@ -1,4 +1,4 @@
-<reply result="ok" version="1.0.1 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.balance.remove-div" location="[]">
       <argument description="factor">
@@ -102,7 +102,16 @@
           </OMA>
         </OMOBJ>
         <context>
-          <item name="location" value="[2]"/>
+          <item name="location">
+            <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+              <OMA>
+                <OMS cd="list1" name="list"/>
+                <OMI>
+                  2
+                </OMI>
+              </OMA>
+            </OMOBJ>
+          </item>
         </context>
       </state>
     </elem>

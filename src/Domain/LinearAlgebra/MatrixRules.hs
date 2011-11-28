@@ -11,14 +11,13 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.MatrixRules where
 
-import Common.Utils (readM)
 import Common.Library hiding (simplify, isEmpty)
 import Control.Monad
 import Data.List
 import Domain.LinearAlgebra.Matrix
 import Domain.Math.Simplification
 
-matrixRules :: (Argument a, Fractional a) => [Rule (Context (Matrix a))]
+matrixRules :: (Bindable a, Fractional a) => [Rule (Context (Matrix a))]
 matrixRules =
    let noArgs f = f (const Nothing)
    in [ noArgs ruleScaleRow
@@ -42,7 +41,7 @@ ruleExchangeNonZero = simplify $ ruleExchangeRows $ evalCM $ \m -> do
    cov <- readVar covered
    return (cov, i + cov)
 
-ruleScaleToOne :: (Argument a, Simplify a, Fractional a) => Rule (Context (Matrix a))
+ruleScaleToOne :: (Bindable a, Simplify a, Fractional a) => Rule (Context (Matrix a))
 ruleScaleToOne = simplify $ ruleScaleRow $ evalCM $ \m -> do
    nonEmpty m
    j   <- readVar columnJ
@@ -51,7 +50,7 @@ ruleScaleToOne = simplify $ ruleScaleRow $ evalCM $ \m -> do
    cov <- readVar covered
    return (cov, 1 / pv)
 
-ruleZerosFP :: (Argument a, Simplify a, Fractional a) => Rule (Context (Matrix a))
+ruleZerosFP :: (Bindable a, Simplify a, Fractional a) => Rule (Context (Matrix a))
 ruleZerosFP = simplify $ ruleAddMultiple $ evalCM $ \m -> do
    nonEmpty m
    j   <- readVar columnJ
@@ -61,7 +60,7 @@ ruleZerosFP = simplify $ ruleAddMultiple $ evalCM $ \m -> do
    let v = negate (col!!i)
    return (i + cov + 1, cov, v)
 
-ruleZerosBP :: (Argument a, Simplify a, Fractional a) => Rule (Context (Matrix a))
+ruleZerosBP :: (Bindable a, Simplify a, Fractional a) => Rule (Context (Matrix a))
 ruleZerosBP = simplify $ ruleAddMultiple $ evalCM $ \m -> do
    nonEmpty m
    ri <- liftM (row 0) (subMatrix m)
@@ -82,7 +81,7 @@ ruleUncoverRow = minorRule $ makeRule "linearalgebra.gaussianelim.UncoverRow" $ 
 ---------------------------------------------------------------------------------
 -- Parameterized rules
 
-ruleScaleRow :: (Argument a, Fractional a) => (Context (Matrix a) -> Maybe (Int, a)) -> Rule (Context (Matrix a))
+ruleScaleRow :: (Bindable a, Fractional a) => (Context (Matrix a) -> Maybe (Int, a)) -> Rule (Context (Matrix a))
 ruleScaleRow f = makeRule "linearalgebra.gaussianelim.scale" (supply2 descr f rowScale)
  where descr  = ("row", "scale factor")
 
@@ -90,7 +89,7 @@ ruleExchangeRows :: Num a => (Context (Matrix a) -> Maybe (Int, Int)) -> Rule (C
 ruleExchangeRows f = makeRule "linearalgebra.gaussianelim.exchange" (supply2 descr f rowExchange)
  where descr = ("row 1", "row 2")
 
-ruleAddMultiple :: (Argument a, Fractional a) => (Context (Matrix a) -> Maybe (Int, Int, a)) -> Rule (Context (Matrix a))
+ruleAddMultiple :: (Bindable a, Fractional a) => (Context (Matrix a) -> Maybe (Int, Int, a)) -> Rule (Context (Matrix a))
 ruleAddMultiple f = makeRule "linearalgebra.gaussianelim.add" (supply3 descr f  rowAdd)
  where descr  = ("row 1", "row2", "scale factor")
 
@@ -133,8 +132,8 @@ nonEmpty :: Matrix a -> ContextMonad ()
 nonEmpty m = subMatrix m >>= guard . not . isEmpty
 
 covered, columnJ :: Binding Int
-covered = bindingParser readM $ emptyArgDescr "covered" 0 show
-columnJ = bindingParser readM $ emptyArgDescr "columnj" 0 show
+covered = "covered" .<-. 0
+columnJ = "columnj" .<-. 0
 
 subMatrix :: Matrix a -> ContextMonad (Matrix a)
 subMatrix m = do

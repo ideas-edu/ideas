@@ -79,7 +79,7 @@ allfirsts state =
          Just (RuleStep r) | isMajorRule r -> return
             ( r
             , location (lastTerm d)
-            , expectedArguments r ca
+            , expectedBindings r ca
             , makeState (exercise state) (Just prefixEnd) (lastTerm d)
             )
          _ -> Nothing

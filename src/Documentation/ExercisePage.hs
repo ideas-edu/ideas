@@ -204,7 +204,7 @@ forStep n ((r, env), old) = do
           make | null (description r) = link target
                | otherwise = titleA (description r) . link target
       make (text (unqualified r))
-      let xs = expectedArguments r old
+      let xs = expectedBindings r old
       unless (null xs) $ do
          br
          spaces 6

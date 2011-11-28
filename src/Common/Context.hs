@@ -118,10 +118,10 @@ storeArg descr a (Env m) =
    Env (M.insert (showId descr) (ArgValue (setValue a descr)) m) 
 
 storeEnvString :: String -> String -> Environment -> Environment
-storeEnvString = storeArg . makeArgDescr
+storeEnvString = storeArg . stringBinding
 
 storeEnvTerm :: String -> Term -> Environment -> Environment
-storeEnvTerm = storeArg . makeArgDescr
+storeEnvTerm = storeArg . termBinding
 
 diffEnv :: Environment -> Environment -> Environment
 diffEnv (Env m1) (Env m2) = Env (M.filterWithKey p m1)

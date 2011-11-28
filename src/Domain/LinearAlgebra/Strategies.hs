@@ -15,7 +15,6 @@ module Domain.LinearAlgebra.Strategies
    , forwardPass
    ) where
 
-import Common.Utils (readM)
 import Common.Library hiding (simplify)
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
@@ -98,8 +97,8 @@ gramSchmidtStrategy =
    <*> label "Make vector orthogonal" (repeatS (ruleNextOrthogonal <*> try ruleOrthogonal))
    <*> label "Normalize"              (try ruleNormalize)
 
-varVars :: Binding [String]
-varVars = bindingParser readM $ emptyArgDescr "variables" [] show
+varVars :: Binding [Expr]
+varVars = "variables" .<-. []
 
 simplifyFirst :: Rule (Context (LinearSystem Expr))
 simplifyFirst = simplifySystem idRule
@@ -109,13 +108,14 @@ conv1 = describe "Convert linear system to matrix" $
    makeSimpleRule "linearalgebra.linsystem.tomatrix" $ withCM $ \expr -> do
       ls <- fromExpr expr
       let (m, vs) = systemToMatrix ls
-      writeVar varVars vs
+      writeVar varVars (map Var vs)
       return (toExpr (simplify (m :: Matrix Expr)))
 
 conv2 :: Rule (Context Expr)
 conv2 = describe "Convert matrix to linear system" $
    makeSimpleRule "linearalgebra.linsystem.frommatrix" $ withCM $ \expr -> do
-      vs <- readVar varVars
-      m  <- fromExpr expr
+      evs <- readVar varVars
+      m   <- fromExpr expr
       let linsys = matrixToSystemWith vs (m :: Matrix Expr)
+          vs = [ v | Var v <- evs ]
       return $ simplify $ toExpr linsys

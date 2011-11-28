@@ -63,7 +63,13 @@
         </OMA>
       </OMOBJ>
       <context>
-        <item name="columnj" value="0"/>
+        <item name="columnj">
+          <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+            <OMI>
+              0
+            </OMI>
+          </OMOBJ>
+        </item>
       </context>
     </elem>
     <elem ruleid="linearalgebra.gaussianelim.add">
@@ -148,7 +154,13 @@
         </OMA>
       </OMOBJ>
       <context>
-        <item name="columnj" value="0"/>
+        <item name="columnj">
+          <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+            <OMI>
+              0
+            </OMI>
+          </OMOBJ>
+        </item>
       </context>
     </elem>
     <elem ruleid="linearalgebra.gaussianelim.scale">
@@ -226,8 +238,20 @@
         </OMA>
       </OMOBJ>
       <context>
-        <item name="columnj" value="1"/>
-        <item name="covered" value="1"/>
+        <item name="columnj">
+          <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+            <OMI>
+              1
+            </OMI>
+          </OMOBJ>
+        </item>
+        <item name="covered">
+          <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+            <OMI>
+              1
+            </OMI>
+          </OMOBJ>
+        </item>
       </context>
     </elem>
     <elem ruleid="linearalgebra.gaussianelim.add">
@@ -294,8 +318,20 @@
         </OMA>
       </OMOBJ>
       <context>
-        <item name="columnj" value="1"/>
-        <item name="covered" value="1"/>
+        <item name="columnj">
+          <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+            <OMI>
+              1
+            </OMI>
+          </OMOBJ>
+        </item>
+        <item name="covered">
+          <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+            <OMI>
+              1
+            </OMI>
+          </OMOBJ>
+        </item>
       </context>
     </elem>
   </list>

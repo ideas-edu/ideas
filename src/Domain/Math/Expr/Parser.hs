@@ -199,6 +199,5 @@ instance Read Expr where
          Left _  -> []
          Right a -> [(a, "")]
 
-instance Argument Expr where
-   makeArgDescr descr =
-      defaultArgDescr descr 0
+instance Bindable Expr where
+   makeBinding = makeBindingWith 0

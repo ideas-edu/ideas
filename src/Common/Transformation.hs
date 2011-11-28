@@ -11,7 +11,7 @@
 --
 -- This module defines transformations. Given a term, a transformation returns 
 -- a list of results (often a singleton list or the empty list). A 
--- transformation can be parameterized with one or more arguments. 
+-- transformation can be parameterized with one or more Bindables. 
 -- Transformations rules can be lifted to work on more complex domains with
 -- the LiftView type class.
 --
@@ -20,13 +20,13 @@ module Common.Transformation
    ( -- * Transformations
      Transformation, HasTransformation(..)
    , makeTrans, makeArgTrans, makeTransG
-     -- * Arguments
+     -- * Bindables
    , supply1, supply2, supply3
      -- * Recognizers
    , useRecognizer, useSimpleRecognizer, recognizer
    , supplyRecognizer, supplySimpleRecognizer
      -- * Extract information
-   , getDescriptors, expectedArguments, getRewriteRules
+   , getDescriptors, expectedBindings, getRewriteRules
      -- * QuickCheck generators
    , smartApply, smartGen
    ) where
@@ -117,24 +117,24 @@ instance HasTransformation RewriteRule where
    transformation r = RewriteRule r (toResults . rewriteM r)
 
 -----------------------------------------------------------
---- Arguments
+--- Bindables
 
--- | Parameterization with one argument using the provided label
-supply1 :: Argument x
+-- | Parameterization with one Bindable using the provided label
+supply1 :: Bindable x
                   => String -> (a -> Maybe x)
                   -> (x -> Transformation a) -> Transformation a
-supply1 = Abstraction . makeArgDescr
+supply1 = Abstraction . makeBinding
 
--- | Parameterization with two arguments using the provided labels
-supply2 :: (Argument x, Argument y)
+-- | Parameterization with two Bindables using the provided labels
+supply2 :: (Bindable x, Bindable y)
                    => (String, String) -> (a -> Maybe (x, y))
                    -> (x -> y -> Transformation a) -> Transformation a
 supply2 (s1, s2) f t =
    supply1 s1 (fmap fst . f) $ \x ->
    supply1 s2 (fmap snd . f) $ t x
 
--- | Parameterization with three arguments using the provided labels
-supply3 :: (Argument x, Argument y, Argument z)
+-- | Parameterization with three Bindables using the provided labels
+supply3 :: (Bindable x, Bindable y, Bindable z)
                   => (String, String, String) -> (a -> Maybe (x, y, z))
                   -> (x -> y -> z -> Transformation a) -> Transformation a
 supply3 (s1, s2, s3) f t =
@@ -142,7 +142,7 @@ supply3 (s1, s2, s3) f t =
    supply1 s2 (fmap snd3 . f) $ \y -> 
    supply1 s3 (fmap thd3 . f) $ t x y
 
--- | Returns a list of argument descriptors
+-- | Returns a list of Bindable descriptors
 getDescriptors :: HasTransformation f => f a -> [Some Binding]
 getDescriptors = rec . transformation 
  where
@@ -157,11 +157,11 @@ getDescriptors = rec . transformation
          t1 :|: t2            -> rec t1 ++ rec t2
          t1 :*: t2            -> rec t1 ++ rec t2
 
--- | Returns a list of pretty-printed expected arguments.
--- Nothing indicates that there are no such arguments (or the arguments
+-- | Returns a list of pretty-printed expected Bindables.
+-- Nothing indicates that there are no such Bindables (or the Bindables
 -- are not applicable for the current value)
-expectedArguments :: HasTransformation f => f a -> a -> ArgValues
-expectedArguments = rec . transformation
+expectedBindings :: HasTransformation f => f a -> a -> ArgValues
+expectedBindings = rec . transformation
  where
    rec :: Transformation a -> a -> ArgValues
    rec trans a = 
@@ -181,10 +181,10 @@ expectedArguments = rec . transformation
          t1 :*: t2      -> rec t1 a ++ rec t2 a
 
 {-
--- | Transform a rule and use a list of pretty-printed arguments. Nothing indicates that the arguments are
--- invalid (not parsable), or that the wrong number of arguments was supplied
-useArgumentsTrans :: [String] -> Transformation a -> Maybe (Transformation a)
-useArgumentsTrans list = rec
+-- | Transform a rule and use a list of pretty-printed Bindables. Nothing indicates that the Bindables are
+-- invalid (not parsable), or that the wrong number of Bindables was supplied
+useBindablesTrans :: [String] -> Transformation a -> Maybe (Transformation a)
+useBindablesTrans list = rec
  where
    rec :: Transformation a -> Maybe (Transformation a)
    rec trans =
@@ -192,7 +192,7 @@ useArgumentsTrans list = rec
          Function _           -> Nothing
          RewriteRule _ _      -> Nothing
          Abstraction args _ g -> case list of
-                                    [hd] -> fmap g (parseArgument args hd)
+                                    [hd] -> fmap g (parseBindable args hd)
                                     _    -> Nothing
          LiftView v t         -> fmap (LiftView v) (rec t)
          Recognizer f t       -> fmap (Recognizer f) (rec t)
@@ -241,12 +241,12 @@ useRecognizer f t = Recognizer f (transformation t)
 useSimpleRecognizer :: (a -> a -> Bool) -> Transformation a -> Transformation a
 useSimpleRecognizer p = useRecognizer $ \x y -> guard (p x y) >> return []
 
-supplyRecognizer :: Argument x
+supplyRecognizer :: Bindable x
         => (a -> a -> Maybe ArgValues) -> String -> (a -> Maybe x)
         -> (x -> Transformation a) -> Transformation a
 supplyRecognizer rec s f = useRecognizer rec . supply1 s f
 
-supplySimpleRecognizer :: Argument x
+supplySimpleRecognizer :: Bindable x
         => (a -> a -> Bool) -> String -> (a -> Maybe x)
         -> (x -> Transformation a) -> Transformation a
 supplySimpleRecognizer eq s f = useSimpleRecognizer eq . supply1 s f
@@ -278,7 +278,7 @@ smartApply :: HasTransformation f => f a -> a -> Gen [a]
 smartApply t a =
    case transformation t of
 {-      Abstraction args _ g -> do
-         b <- genArgument args
+         b <- genBindable args
          smartApply (g b) a -}
       trans -> return (applyAll trans a)
       

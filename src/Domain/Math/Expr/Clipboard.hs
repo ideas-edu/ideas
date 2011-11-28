@@ -25,6 +25,7 @@ module Domain.Math.Expr.Clipboard
 
 import Common.Library
 import Control.Monad
+import Data.Typeable
 import Domain.Math.Data.Relation
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Parser
@@ -33,23 +34,28 @@ import qualified Data.Map as M
 ---------------------------------------------------------------------
 -- Clipboard variable
 
-type Clipboard = M.Map String Expr
+newtype Clipboard = C {unC :: M.Map String Expr}
+   deriving Typeable
+
+instance Show Clipboard where
+   show = show . toExpr
+
+instance Read Clipboard where
+   readsPrec _ txt = do
+      expr <- parseExprM txt
+      clip <- fromExpr expr
+      return (clip, "")
+      
+instance IsTerm Clipboard where
+   toTerm = 
+      let f (s, a) = Var s :==: a
+      in toTerm . map f . M.toList . unC
+   fromTerm = 
+      let f (x :==: a) = liftM (\k -> (k, a)) (getVariable x)
+      in liftM (C . M.fromList) . mapM f . fromTerm
 
 clipboard :: Binding Clipboard
-clipboard = bindingParser (\txt -> parseExprM txt >>= fromExpr >>= toMap) $
-   bindingTermView mapView $ 
-   emptyArgDescr "clipboard" M.empty (show . toExpr . fromMap)
- where
-   mapView :: View Term Clipboard
-   mapView = makeView (toMap . fromTerm) (toTerm . fromMap)
- 
-   fromMap :: Clipboard -> Equations Expr
-   fromMap = map (uncurry ((:==:) . Var)) . M.toList
-   
-   toMap :: Equations Expr -> Maybe Clipboard
-   toMap = liftM M.fromList . mapM f
-    where
-      f (x :==: a) = liftM (\k -> (k, a)) (getVariable x)
+clipboard = makeBindingWith (C M.empty) "clipboard"
 
 ---------------------------------------------------------------------
 -- Interface to work with clipboard
@@ -67,13 +73,13 @@ lookupListClipboard :: [String] -> ContextMonad [Expr]
 lookupListClipboard = lookupListClipboardG
 
 removeClipboard :: String -> ContextMonad ()
-removeClipboard = modifyVar clipboard . M.delete
+removeClipboard s = modifyVar clipboard (C . M.delete s . unC)
 
 ---------------------------------------------------------------------
 -- Generalized interface to work with clipboard
 
 addToClipboardG :: IsTerm a => String -> a -> ContextMonad ()
-addToClipboardG s = modifyVar clipboard . M.insert s . toExpr
+addToClipboardG s a = modifyVar clipboard (C . M.insert s (toExpr a) . unC)
 
 addListToClipboardG :: IsTerm a => [String] -> [a] -> ContextMonad ()
 addListToClipboardG = zipWithM_ addToClipboardG
@@ -81,13 +87,13 @@ addListToClipboardG = zipWithM_ addToClipboardG
 lookupClipboardG :: IsTerm a => String -> ContextMonad a
 lookupClipboardG s = do
    m    <- readVar clipboard
-   expr <- maybeCM (M.lookup s m)
+   expr <- maybeCM (M.lookup s (unC m))
    fromExpr expr
 
 maybeOnClipboardG :: IsTerm a => String -> ContextMonad (Maybe a)
 maybeOnClipboardG s = do
    m <- readVar clipboard
-   return (M.lookup s m >>= fromExpr)
+   return (M.lookup s (unC m) >>= fromExpr)
 
 lookupListClipboardG :: IsTerm a => [String] -> ContextMonad [a]
 lookupListClipboardG = mapM lookupClipboardG

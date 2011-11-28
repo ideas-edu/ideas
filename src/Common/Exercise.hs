@@ -336,7 +336,7 @@ showDerivation ex a = show (present der) ++ extra
    f ((b, env), old) = showId b ++ part1 ++ part2
     where
       newl = "\n      "
-      args  = expectedArguments b old
+      args  = expectedBindings b old
       part1 = newl ++ intercalate ", " (map show args)
       part2 | nullEnv env = ""
             | otherwise   = newl ++ show env

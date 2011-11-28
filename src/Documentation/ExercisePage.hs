@@ -205,7 +205,7 @@ forStep n ((r, env), old) = do
                | otherwise = titleA (description r) . link target
       make (text (unqualified r))
       let xs = expectedArguments r old
-          g (ArgValue descr x) = labelArgument descr ++ "=" ++ showArgument descr x
+          g (ArgValue descr) = showId descr ++ "=" ++ showArgument descr (defaultArgument descr)
       unless (null xs) $ do
          br
          spaces 6

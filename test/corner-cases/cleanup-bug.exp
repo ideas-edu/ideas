@@ -1,10 +1,10 @@
-<reply result="ok" version="0.7.3 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="linearalgebra.gaussianelim.scale" location="[]">
       <argument description="row">
         0
       </argument>
-      <argument description="scale factor">
+      <argument description="scalefactor">
         1/1
       </argument>
       <state>
@@ -16,7 +16,7 @@
 (-4, 2, 7)
         </expr>
         <context>
-          <item name="columnJ" value="0"/>
+          <item name="columnj" value="0"/>
         </context>
       </state>
     </elem>

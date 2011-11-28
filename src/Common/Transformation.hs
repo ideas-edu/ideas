@@ -19,7 +19,7 @@
 module Common.Transformation
    ( -- * Transformations
      Transformation, HasTransformation(..)
-   , makeTrans, makeTransG
+   , makeTrans, makeArgTrans, makeTransG
      -- * Arguments
    , supply1, supply2, supply3
      -- * Recognizers
@@ -40,17 +40,20 @@ import Common.View
 import Control.Monad
 import Data.Foldable (Foldable, toList)
 import Data.Function
+import Data.Typeable
 import Data.Maybe
 import Test.QuickCheck
 
 -----------------------------------------------------------
 --- Transformations
 
+type Results a = [(a, ArgValues)]
+
 -- | Abstract data type for representing transformations
 data Transformation a where
-   Function    :: (a -> [a]) -> Transformation a
-   RewriteRule :: RewriteRule a -> (a -> [a]) -> Transformation a
-   Abstraction :: ArgDescr b -> (a -> Maybe b) -> (b -> Transformation a) -> Transformation a
+   Function    :: (a -> Results a) -> Transformation a
+   RewriteRule :: RewriteRule a -> (a -> Results a) -> Transformation a
+   Abstraction :: Typeable b => ArgDescr b -> (a -> Maybe b) -> (b -> Transformation a) -> Transformation a
    LiftView    :: View a (b, c) -> Transformation b -> Transformation a
    Recognizer  :: (a -> a -> Maybe ArgValues) -> Transformation a -> Transformation a
    (:|:)       :: Transformation a -> Transformation a -> Transformation a
@@ -65,13 +68,24 @@ instance SemiRing (Transformation a) where
 instance Apply Transformation where
    applyAll trans a =
       case trans of
-         Function f        -> f a
-         RewriteRule _ f   -> f a
+         Function f        -> map fst (f a)
+         RewriteRule _ f   -> map fst (f a)
          Abstraction _ f g -> maybe [] (\b -> applyAll (g b) a) (f a)
          LiftView v t      -> [ build v (b, c) | (b0, c) <- matchM v a, b <- applyAll t b0  ]
          Recognizer _ t    -> applyAll t a
          t1 :|: t2         -> applyAll t1 a ++ applyAll t2 a
          t1 :*: t2         -> [ c | b <- applyAll t1 a, c <- applyAll t2 b ]
+   
+applyArgs :: Transformation a -> a -> [(a, ArgValues)]
+applyArgs trans a =
+   case trans of
+      Function f        -> f a
+      RewriteRule _ f   -> f a
+      Abstraction _ f g -> maybe [] (\b -> applyArgs (g b) a) (f a)
+      LiftView v t      -> [ (build v (b, c), xs) | (b0, c) <- matchM v a, (b, xs) <- applyArgs t b0  ]
+      Recognizer _ t    -> applyArgs t a
+      t1 :|: t2         -> applyArgs t1 a ++ applyArgs t2 a
+      t1 :*: t2         -> [ (c, xs++ys) | (b, xs) <- applyArgs t1 a, (c, ys) <- applyArgs t2 b ]
 
 instance LiftView Transformation where
    liftViewIn = LiftView
@@ -80,9 +94,15 @@ instance LiftView Transformation where
 makeTrans :: (a -> Maybe a) -> Transformation a
 makeTrans = makeTransG
 
+makeArgTrans :: (a -> Maybe (a, ArgValues)) -> Transformation a
+makeArgTrans f = Function (toList . f)
+
 -- | Turn a function (which returns a list of results) into a transformation
 makeTransG :: Foldable f => (a -> f a) -> Transformation a
-makeTransG f = Function (toList . f)
+makeTransG f = Function (toResults . toList . f)
+
+toResults :: [a] -> Results a
+toResults = map (\a -> (a, []))
 
 -----------------------------------------------------------
 --- HasTransformation type class
@@ -94,7 +114,7 @@ instance HasTransformation Transformation where
    transformation = id
 
 instance HasTransformation RewriteRule where
-   transformation r = RewriteRule r (rewriteM r)
+   transformation r = RewriteRule r (toResults . rewriteM r)
 
 -----------------------------------------------------------
 --- Arguments
@@ -150,7 +170,7 @@ expectedArguments = rec . transformation
          RewriteRule _ _ -> []
          Abstraction args f t -> 
             case f a of
-               Just b  -> ArgValue args b : rec (t b) a
+               Just b  -> ArgValue args {defaultArgument = b} : rec (t b) a
                Nothing -> []
          LiftView v t -> 
             case match v a of
@@ -210,10 +230,10 @@ recognizer eq f a b = rec (transformation f)
             , let g z = build v (z, c)
             ]
           `mplus`
-            noArg (any (`eq` b) (applyAll trans a)) -- is this really needed?
-         _ -> noArg $ any (`eq` b) (applyAll trans a)
+              transArg trans -- is this really needed?
+         _ -> transArg trans
  
-   noArg c = if c then Just [] else Nothing
+   transArg t = listToMaybe [ args | (x, args) <- applyArgs t a, x `eq` b ]
 
 useRecognizer :: (a -> a -> Maybe ArgValues) -> Transformation a -> Transformation a
 useRecognizer f t = Recognizer f (transformation t)
@@ -257,7 +277,33 @@ smartGen = flip rec . transformation
 smartApply :: HasTransformation f => f a -> a -> Gen [a]
 smartApply t a =
    case transformation t of
-      Abstraction args _ g -> do
+{-      Abstraction args _ g -> do
          b <- genArgument args
-         smartApply (g b) a
+         smartApply (g b) a -}
       trans -> return (applyAll trans a)
+      
+---------------------------------------------------
+
+{-
+newtype Results a = Results [(a, [ArgValues])]
+
+instance Monad Results
+
+class HasResults f where
+   getResults :: f a -> Results a
+   
+instance HasResults Maybe
+instance HasResults []
+instance HasResults Results
+   
+conv :: HasResults f => (a -> f a) -> a -> Results a
+conv f = getResults . f
+
+report :: ArgValue -> Results ()
+report = undefined
+
+maf :: (a -> Maybe (a, ArgValues)) -> a -> Results a
+maf f a = do
+   (b, vs) <- getResults (f a) 
+   mapM_ report vs
+   return b -}

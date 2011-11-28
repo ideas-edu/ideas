@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.1 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <correct>
     <location>
       gaussianelimination
@@ -31,7 +31,7 @@
         </OMA>
       </OMOBJ>
       <context>
-        <item name="columnJ" value="1"/>
+        <item name="columnj" value="1"/>
         <item name="covered" value="0"/>
       </context>
     </state>

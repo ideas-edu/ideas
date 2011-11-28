@@ -19,7 +19,7 @@ module Common.Rule
    , finalRule, isFinalRule, ruleSiblings, rule, ruleList
    , makeRule, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doAfter
-   , siblingOf, transformation
+   , siblingOf, useEquality, ruleEquality, transformation
      -- * QuickCheck
    , propRule, propRuleSmart
    ) where
@@ -32,6 +32,7 @@ import Common.Transformation
 import Common.View
 import Control.Monad
 import Data.Foldable (Foldable)
+import Data.Function
 import Data.Maybe
 import Test.QuickCheck
 
@@ -47,6 +48,7 @@ data Rule a = Rule
    , isMinorRule  :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
    , isFinalRule  :: Bool -- ^ Final (clean-up) step in derivation
    , ruleSiblings :: [Id]
+   , ruleEquality :: Maybe (a -> a -> Bool)
    }
 
 instance Show (Rule a) where
@@ -69,9 +71,13 @@ instance HasId (Rule a) where
 
 instance LiftView Rule where
    liftViewIn v r = r
-      { ruleTrans  = liftViewIn v (ruleTrans r)
-      , afterwards = simplifyWith (mapFirst (afterwards r)) v
+      { ruleTrans    = liftViewIn v (ruleTrans r)
+      , afterwards   = simplifyWith (mapFirst (afterwards r)) v
+      , ruleEquality = fmap liftEq (ruleEquality r)
       }
+    where
+       liftEq eq x y = fromMaybe False $ 
+          liftM2 (on eq fst) (match v x) (match v y)
 
 instance HasTransformation Rule where
    transformation = ruleTrans
@@ -104,7 +110,7 @@ rule n = makeRule a . transformation . rewriteRule a
 
 -- | Turn a transformation into a rule: the first argument is the rule's name
 makeRule :: IsId n => n -> Transformation a -> Rule a
-makeRule n t = Rule (newId n) t id False False False []
+makeRule n t = Rule (newId n) t id False False False [] Nothing
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: 
 -- the first argument is the rule's name
@@ -146,6 +152,9 @@ finalRule r = r {isFinalRule = True}
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a
 doAfter f r = r {afterwards = f . afterwards r}
+
+useEquality :: (a -> a -> Bool) -> Rule a -> Rule a
+useEquality eq r = r {ruleEquality = Just eq}
 
 -----------------------------------------------------------
 --- QuickCheck

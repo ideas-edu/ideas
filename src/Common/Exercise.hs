@@ -233,7 +233,8 @@ recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [(L
 recognizeRule ex r ca cb = rec (fromMaybe ca (top ca))
  where
    rec x =
-      let here = case recognizer (similarity ex) r x cb of
+      let eq   = fromMaybe (similarity ex) (ruleEquality r)
+          here = case recognizer eq r x cb of
                     Just as -> [(location x, as)]
                     Nothing -> []
       in here ++ concatMap rec (allDowns x)
@@ -335,7 +336,7 @@ showDerivation ex a = show (present der) ++ extra
    f ((b, env), old) = showId b ++ part1 ++ part2
     where
       newl = "\n      "
-      g (ArgValue descr x) = labelArgument descr ++ "=" ++ showArgument descr x
+      g (ArgValue descr) = showId descr ++ "=" ++ showArgument descr (defaultArgument descr)
       args  = expectedArguments b old
       part1 = newl ++ intercalate ", " (map g args)
       part2 | nullEnv env = ""

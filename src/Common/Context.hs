@@ -100,7 +100,7 @@ instance Show Environment where
    show = intercalate ", " . map show . M.elems . envMap
 
 showItem :: ArgValue -> String
-showItem (ArgValue descr a) = showArgument descr a
+showItem (ArgValue a) = showArgument a (defaultArgument a)
 
 emptyEnv :: Environment
 emptyEnv = Env M.empty
@@ -111,14 +111,14 @@ nullEnv = M.null . envMap
 lookupArg :: Typeable a => ArgDescr a -> Environment -> a
 lookupArg descr (Env m) = 
    fromMaybe (defaultArgument descr) $ do 
-      a <- M.lookup (labelArgument descr) m
+      a <- M.lookup (showId descr) m
       fromArgValue a `mplus`
          (fromArgValue a >>= parseArgument descr) `mplus`
          (join $ liftM2 match (termViewArgument descr) (fromArgValue a))
 
-storeArg :: ArgDescr a -> a -> Environment -> Environment
+storeArg :: Typeable a => ArgDescr a -> a -> Environment -> Environment
 storeArg descr a (Env m) = 
-   Env (M.insert (labelArgument descr) (ArgValue descr a) m) 
+   Env (M.insert (showId descr) (ArgValue descr {defaultArgument = a}) m) 
 
 storeEnvString :: String -> String -> Environment -> Environment
 storeEnvString = storeArg . makeArgDescr

@@ -16,7 +16,7 @@ module Domain.Math.Polynomial.BalanceUtils
    , linbal, checkForChange
    , termArg, factorArg, factorArgs
    , buggyBalanceRule, buggyBalanceRuleArgs
-   , buggyBalanceRewriteRule
+   -- , buggyBalanceRewriteRule
    , buggyBalanceExprRule, buggyBalanceRecognizer
    , collectLocal, collectGlobal
    , distributeDiv, distributeTimes
@@ -122,14 +122,14 @@ nonsense = any p . universe
 -- Arguments
 
 termArg :: Expr -> ArgValues
-termArg expr = [ArgValue (makeArgDescr "term") expr]
+termArg expr = [ArgValue (makeArgDescr "term") {defaultArgument=expr}]
 
 factorArg :: Expr -> ArgValues
-factorArg expr = [ArgValue (makeArgDescr "factor") expr]
+factorArg expr = [ArgValue (makeArgDescr "factor") {defaultArgument=expr}]
 
 factorArgs :: [Expr] -> ArgValues
 factorArgs =
-   let f = ArgValue . makeArgDescr . ("factor" ++) . show
+   let f a b = ArgValue ((makeArgDescr ("factor" ++ show a)) {defaultArgument=b})
    in zipWith f [1::Int ..]
 
 ------------------------------------------------------------
@@ -138,20 +138,24 @@ factorArgs =
 linbal :: Id
 linbal = newId "algebra.equations.linear.balance"
 
+bugbal :: IsId n => n -> Id
+bugbal n = newId (linbal, "buggy", n)
+
 checkForChange :: (MonadPlus m, Eq a) => (a -> m a) -> a -> m a
 checkForChange f a = f a >>= \b -> guard (a /= b) >> return b
 
 buggyBalanceRule :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr)) -> Rule (Equation Expr)
-buggyBalanceRule n f = buggyBalanceRuleArgs n (fmap (\x -> (x, [])) . f)
+buggyBalanceRule n f = useEquality eq $ buggyRule $ 
+   makeRule (bugbal n) $ makeTrans f
+ where
+   eq = viewEquivalent (traverseView (polyViewWith rationalView))
 
 buggyBalanceRuleArgs :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr, ArgValues)) -> Rule (Equation Expr)
-buggyBalanceRuleArgs n f = bugbalRule n (makeTrans (fmap fst . f)) $ 
-   \old (a1 :==: a2) -> do
-      (b1 :==: b2, as) <- f old
-      let h = viewEquivalent (polyViewWith rationalView)
-      guard (h a1 b1 && h a2 b2)
-      return as
-
+buggyBalanceRuleArgs n f = useEquality eq $ buggyRule $ 
+   makeRule (bugbal n) $ makeArgTrans f
+ where
+   eq = viewEquivalent (traverseView (polyViewWith rationalView))
+{-
 buggyBalanceRewriteRule :: IsId n => n -> [(Int, ArgDescr Expr)] -> RewriteRule (Equation Expr) -> Rule (Equation Expr)
 buggyBalanceRewriteRule n ps r = bugbalRule n (transformation r) $ 
    \old (a1 :==: a2) -> do
@@ -160,13 +164,17 @@ buggyBalanceRewriteRule n ps r = bugbalRule n (transformation r) $
       guard (h a1 b1 && h a2 b2)
       let make (i, descr) = 
              ArgValue descr $ maybe 0 toExpr $ listToMaybe $ drop i args
-      return (map make ps)
+      return (map make ps) -}
 
-buggyBalanceExprRule :: IsId n => n -> (Expr -> Maybe Expr) -> Rule (Equation Expr)
-buggyBalanceExprRule n f = buggyBalanceRule n $ \(lhs :==: rhs) ->
+buggyBalanceExprRule :: IsId n => n -> (Expr -> Maybe Expr) -> Rule Expr
+buggyBalanceExprRule n f = 
+   buggyRule $ makeSimpleRule (bugbal n) f
+
+ {- 
+   buggyBalanceRule n $ \(lhs :==: rhs) ->
    let -- to do: deal with associativity
        rec = msum .  map (\(a,h) -> liftM h (f a)) . contexts
-   in liftM (:==: rhs) (rec lhs) `mplus` liftM (lhs :==:) (rec rhs)
+   in liftM (:==: rhs) (rec lhs) `mplus` liftM (lhs :==:) (rec rhs) -}
 
 buggyBalanceRecognizer :: IsId n => n -> (a -> a -> Maybe ArgValues) -> Rule a
 buggyBalanceRecognizer n = bugbalRule n (makeTrans (const Nothing))
@@ -174,7 +182,7 @@ buggyBalanceRecognizer n = bugbalRule n (makeTrans (const Nothing))
 -- generalized helper
 bugbalRule :: IsId n => n -> Transformation a -> (a -> a -> Maybe ArgValues) -> Rule a
 bugbalRule n t p =
-   buggyRule $ makeRule (linbal, "buggy", n) $ useRecognizer p t
+   buggyRule $ makeRule (bugbal n) $ useRecognizer p t
 
 ------------------------------------------------------------
 -- Helpers

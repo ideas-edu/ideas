@@ -309,13 +309,13 @@ encodeEnvironment :: Bool -> Context a -> XMLBuilder
 encodeEnvironment b ctx
    | null values = return ()
    | otherwise = element "context" $
-        forM_ values $ \(ArgValue descr a) ->
+        forM_ values $ \(ArgValue descr) ->
            element "item" $ do
-              "name"  .=. labelArgument descr
+              "name"  .=. showId descr
               case termViewArgument descr of
                  Just v | b -> 
-                    builder (omobj2xml (toOMOBJ (build v a)))
-                 _ -> "value" .=. showArgument descr a
+                    builder (omobj2xml (toOMOBJ (build v (defaultArgument descr))))
+                 _ -> "value" .=. showArgument descr (defaultArgument descr)
  where
    loc    = location ctx
    values = getArgValues (withLoc ctx)
@@ -332,9 +332,9 @@ encodeContext b f ctx = do
    return (xml >> encodeEnvironment b ctx)
 
 encodeArgValue :: Bool -> ArgValue -> XMLBuilder
-encodeArgValue b (ArgValue descr a) = element "argument" $ do
-   "description" .=. labelArgument descr
-   showValue a
+encodeArgValue b (ArgValue descr) = element "argument" $ do
+   "description" .=. showId descr
+   showValue (defaultArgument descr)
  where
    showValue =
       case termViewArgument descr of

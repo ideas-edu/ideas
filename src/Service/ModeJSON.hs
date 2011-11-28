@@ -118,8 +118,8 @@ jsonEncoder ex = Encoder
 
               Tp.List t     -> liftM Array (mapM (encode enc t) a)
               Tp.ArgValueTp -> case a of
-                                  ArgValue descr x -> return $
-                                     Object [(labelArgument descr, String (showArgument descr x))]
+                                  ArgValue descr -> return $
+                                     Object [(showId descr, String (showArgument descr (defaultArgument descr)))]
               Tp.Text       -> return (toJSON (show a))
               Tp.Tag s t    -> liftM (\b -> Object [(s, b)]) (encode enc t a)
               Tp.Int        -> return (toJSON a)
@@ -196,7 +196,7 @@ encodeState f st = do
 encodeContext :: Context a -> JSON
 encodeContext ctx = Object (map f (getArgValues ctx))
  where
-   f (ArgValue descr a) = (labelArgument descr, String $ showArgument descr a)
+   f (ArgValue descr) = (showId descr, String $ showArgument descr (defaultArgument descr))
 
 decodeState :: Monad m => Exercise a -> (JSON -> m a) -> JSON -> m (State a)
 decodeState ex f (Array [a]) = decodeState ex f a

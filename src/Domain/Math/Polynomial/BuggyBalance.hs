@@ -11,7 +11,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.BuggyBalance
-   ( buggyBalanceRules, buggyPriority
+   ( buggyBalanceRules, buggyBalanceExprRules, buggyPriority
    ) where
 
 import Common.Library
@@ -25,27 +25,31 @@ import Domain.Math.Polynomial.Views
 
 buggyBalanceRules :: [Rule (Equation Expr)]
 buggyBalanceRules =
-   [ rule121, rule122, rule1231, rule1232, rule1234
-   , rule1311, rule1312, rule1314, rule1321, rule1322
-   , rule133, rule134, rule135, rule136, rule137
-   , rule201
-   , rule2111, rule2112, rule2113, rule2114
-   , rule2121, rule2122, rule2131, rule2132
-   , rule2133, rule2134, rule2135, rule2136, rule2137, rule2138
-   , rule2141, rule2142
+   [ rule1234, rule201, rule2111, rule2112, rule2113, rule2114
+   , rule2121, rule2122, rule2131, rule2132, rule2133, rule2134
+   , rule2135, rule2136, rule2137, rule2138, rule2141, rule2142
    , rule221, rule222, rule2231, rule2232, rule2233, rule227
    , rule311, rule321, rule322, rule323
    ]
 
+buggyBalanceExprRules :: [Rule Expr]
+buggyBalanceExprRules =
+   [ rule121, rule122, rule1231, rule1232, rule1311, rule1312
+   , rule1314, rule1321, rule1322, rule133, rule134, rule135
+   , rule136, rule137
+   ]
+
 buggyPriority :: [Id]
-buggyPriority = map getId
-   [rule1312, rule121, rule221, rule222, rule2232, rule2233, rule227, rule323]
+buggyPriority = 
+   [ getId rule1312, getId rule121, getId rule221, getId rule222
+   , getId rule2232, getId rule2233, getId rule227, getId rule323
+   ]
 
 -------------------------------------------------------------------
 -- 1.2 Fout bij vermenigvuldigen
 
 -- (a*b)/c  ->  a/(b*c)
-rule121 :: Rule (Equation Expr)
+rule121 :: Rule Expr
 rule121 = describe "1.2.1: fout bij vermenigvuldigen" $
    buggyBalanceExprRule "multiply1" f
  where
@@ -55,7 +59,7 @@ rule121 = describe "1.2.1: fout bij vermenigvuldigen" $
    f _ = Nothing
 
 -- a*(bx+c)  ->  x/(ab) + ac
-rule122 :: Rule (Equation Expr)
+rule122 :: Rule Expr
 rule122 = describe "1.2.2: fout bij vermenigvuldigen" $
    buggyBalanceExprRule "multiply2" f
  where
@@ -65,7 +69,7 @@ rule122 = describe "1.2.2: fout bij vermenigvuldigen" $
    f _ = Nothing
 
 -- a(b-cx)  -> ab+acx
-rule1231 :: Rule (Equation Expr)
+rule1231 :: Rule Expr
 rule1231 = describe "1.2.3.1: fout bij vermenigvuldigen; min raakt kwijt" $
    buggyBalanceExprRule "multiply3" f
  where
@@ -75,7 +79,7 @@ rule1231 = describe "1.2.3.1: fout bij vermenigvuldigen; min raakt kwijt" $
    f _ = Nothing
 
 -- -a*(x-b)  -> -ax-ab
-rule1232 :: Rule (Equation Expr)
+rule1232 :: Rule Expr
 rule1232 = describe "1.2.3.2: fout bij vermenigvuldigen; min te veel" $
    buggyBalanceExprRule "multiply4" f
  where
@@ -96,7 +100,7 @@ rule1234 = describe "1.2.3.4: fout bij vermenigvuldigen; delen door negatief get
 -- 1.3 Fout bij haakjes wegwerken
 
 -- a(x-b)  ->  ax-b    (verruimt naar +)
-rule1311 :: Rule (Equation Expr)
+rule1311 :: Rule Expr
 rule1311 = describe "1.3.1.1: fout bij haakjes wegwerken; haakjes staan er niet voor niets" $
    buggyBalanceExprRule "par1" f
  where
@@ -105,7 +109,7 @@ rule1311 = describe "1.3.1.1: fout bij haakjes wegwerken; haakjes staan er niet 
       return $ a*x+b
 
 -- 1/a*(x-b)  -> 1/a*x-b   (specialized version of par1)
-rule1312 :: Rule (Equation Expr)
+rule1312 :: Rule Expr
 rule1312 = describe "1.3.1.2: fout bij haakjes wegwerken; haakjes staan er niet voor niets" $
    buggyBalanceExprRule "par2" f
  where
@@ -130,7 +134,7 @@ r niet voor niets" $
    f _ = Nothing -}
 
 -- -(a+b)  ->  -a+b
-rule1314 :: Rule (Equation Expr)
+rule1314 :: Rule Expr
 rule1314 = describe "1.3.1.4: fout bij haakjes wegwerken met unaire min; haakjes staan er niet voor niets" $
    buggyBalanceExprRule "par11" f
  where
@@ -139,7 +143,7 @@ rule1314 = describe "1.3.1.4: fout bij haakjes wegwerken met unaire min; haakjes
       return $ -a+b
 
 -- a(bx+c)  ->  ax+ac
-rule1321 :: Rule (Equation Expr)
+rule1321 :: Rule Expr
 rule1321 = describe "1.3.2.1: fout bij haakjes wegwerken; haakjes goed uitwerken" $
    buggyBalanceExprRule "par4" f
  where
@@ -149,7 +153,7 @@ rule1321 = describe "1.3.2.1: fout bij haakjes wegwerken; haakjes goed uitwerken
    f _ = Nothing
 
 -- a(b-cx)  -> ab-ax
-rule1322 :: Rule (Equation Expr)
+rule1322 :: Rule Expr
 rule1322 = describe "1.3.2.2: fout bij haakjes wegwerken; haakjes goed uitwerken" $
    buggyBalanceExprRule "par5" f
  where
@@ -159,7 +163,7 @@ rule1322 = describe "1.3.2.2: fout bij haakjes wegwerken; haakjes goed uitwerken
    f _ = Nothing
 
 -- a(bx+c)  -> bx+ac
-rule133 :: Rule (Equation Expr)
+rule133 :: Rule Expr
 rule133 = describe "1.3.3: fout bij haakjes wegwerken; haakjes goed uitwerken" $
    buggyBalanceExprRule "par6" f
  where
@@ -169,7 +173,7 @@ rule133 = describe "1.3.3: fout bij haakjes wegwerken; haakjes goed uitwerken" $
    f _ = Nothing
 
 -- a-(b+c)  -> a-b+c
-rule134 :: Rule (Equation Expr)
+rule134 :: Rule Expr
 rule134 = describe "1.3.4: fout bij haakjes wegwerken; haakjes goed uitwerken" $
    buggyBalanceExprRule "par7" f
  where
@@ -178,7 +182,7 @@ rule134 = describe "1.3.4: fout bij haakjes wegwerken; haakjes goed uitwerken" $
       return $ a-b+c
 
 -- a*(b-c)-d  ->  ab-ac-ad
-rule135 :: Rule (Equation Expr)
+rule135 :: Rule Expr
 rule135 = describe "1.3.5: fout bij haakjes wegwerken; kijk goed waar de haakjes staan" $
    buggyBalanceExprRule "par8" f
  where
@@ -187,7 +191,7 @@ rule135 = describe "1.3.5: fout bij haakjes wegwerken; kijk goed waar de haakjes
       return $ a*b-a*c-a*d
 
 --  a(bx+c)  ->  (a+b)x+ac
-rule136 :: Rule (Equation Expr)
+rule136 :: Rule Expr
 rule136 = describe "1.3.6: fout bij haakjes wegwerken; haakjes goed uitwerken" $
    buggyBalanceExprRule "par9" f
  where
@@ -197,7 +201,7 @@ rule136 = describe "1.3.6: fout bij haakjes wegwerken; haakjes goed uitwerken" $
    f _ = Nothing
 
 -- a+b(x-c)  -> (a+b)(x-c)
-rule137 :: Rule (Equation Expr)
+rule137 :: Rule Expr
 rule137 = describe "1.3.7: fout bij haakjes wegwerken; denk aan 'voorrangsregels'" $
    buggyBalanceExprRule "par10" f
  where

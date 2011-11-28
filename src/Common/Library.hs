@@ -16,7 +16,7 @@ module Common.Library
    , failS, notS, repeatS, replicateS, sequenceS, untilS
    ) where
 
-import Common.Argument as Export
+import Common.Binding as Export
 import Common.Classes as Export
 import Common.Context as Export
 import Common.Derivation as Export

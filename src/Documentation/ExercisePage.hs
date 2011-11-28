@@ -205,11 +205,10 @@ forStep n ((r, env), old) = do
                | otherwise = titleA (description r) . link target
       make (text (unqualified r))
       let xs = expectedArguments r old
-          g (ArgValue descr) = showId descr ++ "=" ++ showArgument descr (defaultArgument descr)
       unless (null xs) $ do
          br
          spaces 6
-         text (intercalate ", " (map g xs))
+         text (intercalate ", " (map show xs))
       unless (nullEnv env) $ do
          br
          spaces 6

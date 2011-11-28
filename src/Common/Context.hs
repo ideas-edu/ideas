@@ -29,7 +29,7 @@ module Common.Context
    , maybeCM, withCM, evalCM
    ) where
 
-import Common.Argument
+import Common.Binding
 import Common.Id
 import Common.Navigator
 import Common.Rewriting
@@ -99,26 +99,23 @@ newtype Environment = Env { envMap :: M.Map String ArgValue }
 instance Show Environment where
    show = intercalate ", " . map show . M.elems . envMap
 
-showItem :: ArgValue -> String
-showItem (ArgValue a) = showArgument a (defaultArgument a)
-
 emptyEnv :: Environment
 emptyEnv = Env M.empty
 
 nullEnv :: Environment -> Bool
 nullEnv = M.null . envMap
  
-lookupArg :: Typeable a => ArgDescr a -> Environment -> a
+lookupArg :: Typeable a => Binding a -> Environment -> a
 lookupArg descr (Env m) = 
-   fromMaybe (defaultArgument descr) $ do 
+   fromMaybe (getValue descr) $ do 
       a <- M.lookup (showId descr) m
       fromArgValue a `mplus`
-         (fromArgValue a >>= parseArgument descr) `mplus`
-         (join $ liftM2 match (termViewArgument descr) (fromArgValue a))
+         (fromArgValue a >>= readBinding descr) `mplus`
+         (fromArgValue a >>= readTermBinding descr)
 
-storeArg :: Typeable a => ArgDescr a -> a -> Environment -> Environment
+storeArg :: Typeable a => Binding a -> a -> Environment -> Environment
 storeArg descr a (Env m) = 
-   Env (M.insert (showId descr) (ArgValue descr {defaultArgument = a}) m) 
+   Env (M.insert (showId descr) (ArgValue (setValue a descr)) m) 
 
 storeEnvString :: String -> String -> Environment -> Environment
 storeEnvString = storeArg . makeArgDescr
@@ -128,7 +125,7 @@ storeEnvTerm = storeArg . makeArgDescr
 
 diffEnv :: Environment -> Environment -> Environment
 diffEnv (Env m1) (Env m2) = Env (M.filterWithKey p m1)
- where p k a = maybe False ((/= showItem a) . showItem) (M.lookup k m2)
+ where p k a = maybe False (/= a) (M.lookup k m2)
 
 deleteEnv :: String -> Environment -> Environment
 deleteEnv s (Env m) = Env (M.delete s m)
@@ -207,13 +204,13 @@ instance MonadPlus ContextMonad where
    mzero = CM (const mzero)
    mplus (CM f) (CM g) = CM (\env -> f env `mplus` g env)
 
-readVar :: Typeable a => ArgDescr a -> ContextMonad a
+readVar :: Typeable a => Binding a -> ContextMonad a
 readVar var = CM $ \env -> Just (lookupArg var env, env)
 
-writeVar  :: Typeable a => ArgDescr a -> a -> ContextMonad ()
+writeVar  :: Typeable a => Binding a -> a -> ContextMonad ()
 writeVar var a = CM $ \env -> return ((), storeArg var a env)
 
-modifyVar :: Typeable a => ArgDescr a -> (a -> a) -> ContextMonad ()
+modifyVar :: Typeable a => Binding a -> (a -> a) -> ContextMonad ()
 modifyVar var f = readVar var >>= (writeVar var  . f)
 
 maybeCM :: Maybe a -> ContextMonad a

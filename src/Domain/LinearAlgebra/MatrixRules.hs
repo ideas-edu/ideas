@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.MatrixRules where
 
+import Common.Utils (readM)
 import Common.Library hiding (simplify, isEmpty)
 import Control.Monad
 import Data.List
@@ -131,9 +132,9 @@ validRow i m = i >= 0 && i < fst (dimensions m)
 nonEmpty :: Matrix a -> ContextMonad ()
 nonEmpty m = subMatrix m >>= guard . not . isEmpty
 
-covered, columnJ :: ArgDescr Int
-covered = simpleArgDescr "covered" 0
-columnJ = simpleArgDescr "columnJ" 0
+covered, columnJ :: Binding Int
+covered = bindingParser readM $ emptyArgDescr "covered" 0 show
+columnJ = bindingParser readM $ emptyArgDescr "columnj" 0 show
 
 subMatrix :: Matrix a -> ContextMonad (Matrix a)
 subMatrix m = do

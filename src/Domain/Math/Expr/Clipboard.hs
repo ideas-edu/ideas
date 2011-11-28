@@ -35,11 +35,10 @@ import qualified Data.Map as M
 
 type Clipboard = M.Map String Expr
 
-clipboard :: ArgDescr Clipboard
-clipboard = (emptyArgDescr "clipboard" M.empty (show . toExpr . fromMap))
-   { parseArgument    = \txt -> parseExprM txt >>= fromExpr >>= toMap
-   , termViewArgument = Just mapView
-   }
+clipboard :: Binding Clipboard
+clipboard = bindingParser (\txt -> parseExprM txt >>= fromExpr >>= toMap) $
+   bindingTermView mapView $ 
+   emptyArgDescr "clipboard" M.empty (show . toExpr . fromMap)
  where
    mapView :: View Term Clipboard
    mapView = makeView (toMap . fromTerm) (toTerm . fromMap)

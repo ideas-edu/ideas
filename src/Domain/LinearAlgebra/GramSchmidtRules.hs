@@ -11,14 +11,15 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.GramSchmidtRules where
 
+import Common.Utils (readM)
 import Common.Library hiding (current)
 import Control.Monad
 import Data.Maybe
 import Domain.LinearAlgebra.Vector
 
-varI, varJ :: ArgDescr Int
-varI = simpleArgDescr "considered" 0
-varJ = simpleArgDescr "j" 0
+varI, varJ :: Binding Int
+varI = bindingParser readM $ emptyArgDescr "considered" 0 show
+varJ = bindingParser readM $ emptyArgDescr "j" 0 show
 
 rulesGramSchmidt :: Floating a => [Rule (Context (VectorSpace a))]
 rulesGramSchmidt = [ruleNormalize, ruleOrthogonal, ruleNext]

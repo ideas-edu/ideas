@@ -312,10 +312,10 @@ encodeEnvironment b ctx
         forM_ values $ \(ArgValue descr) ->
            element "item" $ do
               "name"  .=. showId descr
-              case termViewArgument descr of
-                 Just v | b -> 
-                    builder (omobj2xml (toOMOBJ (build v (defaultArgument descr))))
-                 _ -> "value" .=. showArgument descr (defaultArgument descr)
+              case getTermValue descr of
+                 Just term | b -> 
+                    builder (omobj2xml (toOMOBJ term))
+                 _ -> "value" .=. showValue descr
  where
    loc    = location ctx
    values = getArgValues (withLoc ctx)
@@ -323,8 +323,8 @@ encodeEnvironment b ctx
       | null loc  = id
       | otherwise = modifyEnvironment (storeArg locDescr loc)
 
-locDescr :: ArgDescr Location
-locDescr = simpleArgDescr "location" []
+locDescr :: Binding Location
+locDescr = bindingParser readM $ emptyArgDescr "location" [] show
 
 encodeContext :: Monad m => Bool -> (Context a -> m XMLBuilder) -> Context a -> m XMLBuilder
 encodeContext b f ctx = do
@@ -334,12 +334,10 @@ encodeContext b f ctx = do
 encodeArgValue :: Bool -> ArgValue -> XMLBuilder
 encodeArgValue b (ArgValue descr) = element "argument" $ do
    "description" .=. showId descr
-   showValue (defaultArgument descr)
- where
-   showValue =
-      case termViewArgument descr of
-         Just v | b -> builder . omobj2xml . toOMOBJ . build v
-         _          -> text . showArgument descr
+   case getTermValue descr of
+      Just term | b -> builder $ 
+         omobj2xml $ toOMOBJ term
+      _ -> text (showValue descr)
 
 encodeText :: Encoder s a -> Exercise a -> Text -> DomainReasoner s
 encodeText enc ex = liftM (encodeTuple enc) . mapM f . textItems

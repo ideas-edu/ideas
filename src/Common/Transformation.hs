@@ -32,7 +32,7 @@ module Common.Transformation
    ) where
 
 import Common.Algebra.Field
-import Common.Argument
+import Common.Binding
 import Common.Classes
 import Common.Rewriting
 import Common.Utils
@@ -53,7 +53,7 @@ type Results a = [(a, ArgValues)]
 data Transformation a where
    Function    :: (a -> Results a) -> Transformation a
    RewriteRule :: RewriteRule a -> (a -> Results a) -> Transformation a
-   Abstraction :: Typeable b => ArgDescr b -> (a -> Maybe b) -> (b -> Transformation a) -> Transformation a
+   Abstraction :: Typeable b => Binding b -> (a -> Maybe b) -> (b -> Transformation a) -> Transformation a
    LiftView    :: View a (b, c) -> Transformation b -> Transformation a
    Recognizer  :: (a -> a -> Maybe ArgValues) -> Transformation a -> Transformation a
    (:|:)       :: Transformation a -> Transformation a -> Transformation a
@@ -143,15 +143,15 @@ supply3 (s1, s2, s3) f t =
    supply1 s3 (fmap thd3 . f) $ t x y
 
 -- | Returns a list of argument descriptors
-getDescriptors :: HasTransformation f => f a -> [Some ArgDescr]
+getDescriptors :: HasTransformation f => f a -> [Some Binding]
 getDescriptors = rec . transformation 
  where
-   rec :: Transformation a -> [Some ArgDescr]
+   rec :: Transformation a -> [Some Binding]
    rec trans =
       case trans of
          Function _           -> []
          RewriteRule _ _      -> []
-         Abstraction args _ t -> Some args : rec (t (defaultArgument args))
+         Abstraction args _ t -> Some args : rec (t (getValue args))
          LiftView _ t         -> rec t
          Recognizer _ t       -> rec t
          t1 :|: t2            -> rec t1 ++ rec t2
@@ -170,7 +170,7 @@ expectedArguments = rec . transformation
          RewriteRule _ _ -> []
          Abstraction args f t -> 
             case f a of
-               Just b  -> ArgValue args {defaultArgument = b} : rec (t b) a
+               Just b  -> ArgValue (setValue b args) : rec (t b) a
                Nothing -> []
          LiftView v t -> 
             case match v a of

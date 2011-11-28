@@ -15,6 +15,7 @@ module Domain.LinearAlgebra.Strategies
    , forwardPass
    ) where
 
+import Common.Utils (readM)
 import Common.Library hiding (simplify)
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
@@ -97,8 +98,8 @@ gramSchmidtStrategy =
    <*> label "Make vector orthogonal" (repeatS (ruleNextOrthogonal <*> try ruleOrthogonal))
    <*> label "Normalize"              (try ruleNormalize)
 
-varVars :: ArgDescr [String]
-varVars = simpleArgDescr "variables" []
+varVars :: Binding [String]
+varVars = bindingParser readM $ emptyArgDescr "variables" [] show
 
 simplifyFirst :: Rule (Context (LinearSystem Expr))
 simplifyFirst = simplifySystem idRule

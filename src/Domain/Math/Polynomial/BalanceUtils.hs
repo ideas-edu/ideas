@@ -122,14 +122,14 @@ nonsense = any p . universe
 -- Arguments
 
 termArg :: Expr -> ArgValues
-termArg expr = [ArgValue (makeArgDescr "term") {defaultArgument=expr}]
+termArg expr = [ArgValue (setValue expr $ makeArgDescr "term")]
 
 factorArg :: Expr -> ArgValues
-factorArg expr = [ArgValue (makeArgDescr "factor") {defaultArgument=expr}]
+factorArg expr = [ArgValue (setValue expr $ makeArgDescr "factor")]
 
 factorArgs :: [Expr] -> ArgValues
 factorArgs =
-   let f a b = ArgValue ((makeArgDescr ("factor" ++ show a)) {defaultArgument=b})
+   let f a b = ArgValue (setValue b $ makeArgDescr $ "factor" ++ show a)
    in zipWith f [1::Int ..]
 
 ------------------------------------------------------------

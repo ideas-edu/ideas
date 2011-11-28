@@ -39,7 +39,7 @@ module Common.Exercise
    , checkExamples, exerciseTestSuite
    ) where
 
-import Common.Argument
+import Common.Binding
 import Common.Classes
 import Common.Context
 import Common.Derivation
@@ -336,9 +336,8 @@ showDerivation ex a = show (present der) ++ extra
    f ((b, env), old) = showId b ++ part1 ++ part2
     where
       newl = "\n      "
-      g (ArgValue descr) = showId descr ++ "=" ++ showArgument descr (defaultArgument descr)
       args  = expectedArguments b old
-      part1 = newl ++ intercalate ", " (map g args)
+      part1 = newl ++ intercalate ", " (map show args)
       part2 | nullEnv env = ""
             | otherwise   = newl ++ show env
 

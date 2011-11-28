@@ -764,7 +764,7 @@ simplifyRationalExerciseInfo identifier = MBExerciseInfo
                           FR -> "Simplification de rationnel "
                           NL -> "Breuken vereenvoudigen"
                           FI -> "Murtolausekkeiden sieventäminen"
-                          HU -> ""
+                          HU -> "Törtek egyszerűsítése"
   , for               = "mbase://mb_concepts/mb_algebra_and_number_theory/_03_01_02_Algebraic_Manipulation"
   , langSupported     = [EN,ES,DE,FR,NL,FI,HU]
   , cmp               = \l -> case l of

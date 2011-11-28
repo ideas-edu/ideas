@@ -131,7 +131,6 @@ omdocexerciserefsB :: Exercise a -> XMLBuilder
 omdocexerciserefsB ex =
   let info             = mBExerciseInfo ! (exerciseId ex)
       langs            = langSupported info
-      titleCmps        = map (\l -> title info l) langs
       len              = length (examples ex)
       refs             = map (\i -> context info  -- filename
                                 ++  "/"
@@ -139,7 +138,7 @@ omdocexerciserefsB ex =
                                 ++  show i)       -- and nr
                              [0..len-1]
       exercises        = mapM_ (\ref -> element "ref" ("xref" .=. ref)) refs
-  in omgroupB "" "" $ do metadataB "" $ do titleMultLangB langs titleCmps 
+  in omgroupB "" "" $ do metadataB "" $ do titlesB langs (title info) 
                          exercises
 
 --------------------------------------------------------------------------------
@@ -326,13 +325,6 @@ titlesB langs flang = mapM_ (\l -> element "Title" $ do
                                      "xml:lang" .=. show l
                                      text (flang l)) 
                             langs
-
-titleMultLangB :: [Lang] -> [String] -> XMLBuilder
-titleMultLangB langs texts =
-  element "Title" $ do zipWithM_ (\l s -> element "CMP" (  ("xml:lang" .=. show l) 
-                                                        >> text s
-                                                        )
-                                 ) langs texts
 
 xmldecl  :: String
 xmldecl  =  "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"

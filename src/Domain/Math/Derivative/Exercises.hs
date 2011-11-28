@@ -104,7 +104,8 @@ derivativeExercise = makeExercise
    , ruleOrdering = derivativeOrdering
    , equivalence   = withoutContext eqQuotientDiff
    , navigation   = navigator
-   , examples     = level Medium $ concat $ diffSet3++diffSet4++diffSet5
+   , examples     = level Medium $ concat $ diffSet3++diffSet4++diffSet5++
+                                            diffSet6++diffSet7++diffSet8
                             {- diffSet6 -- ++diffSet7++diffSet8 -}
    }
 

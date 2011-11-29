@@ -17,6 +17,7 @@ import Common.Utils.TestSuite
 import Common.View
 import Control.Monad
 import Data.Maybe
+import Data.Monoid
 import Domain.Math.Expr
 import Domain.Math.Numeric.Generators
 import Domain.Math.Numeric.Strategies
@@ -63,7 +64,7 @@ main = suite "Numeric tests" $ do
       let f l s pre post = forM_ numGenerators $ \g ->
              addProperty l $ forAll g $ \a ->
                 let run = fromMaybe a . fromContext . applyD s
-                        . newContext emptyEnv . termNavigator
+                        . newContext mempty . termNavigator
                 in not (a `belongsTo` pre) || run a `belongsTo` post
       f "natural"  naturalStrategy  integerView  integerNF
       f "integer"  integerStrategy  integerView  integerNF

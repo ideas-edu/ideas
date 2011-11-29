@@ -117,8 +117,8 @@ jsonEncoder ex = Encoder
                       encodeState (encodeTerm enc) (conv a)
 
               Tp.List t     -> liftM Array (mapM (encode enc t) a)
-              Tp.ArgValueTp -> case a of
-                                  ArgValue descr -> return $
+              Tp.BindingTp  -> case a of
+                                  Typed descr -> return $
                                      Object [(showId descr, String (showValue descr))]
               Tp.Text       -> return (toJSON (show a))
               Tp.Tag s t    -> liftM (\b -> Object [(s, b)]) (encode enc t a)
@@ -194,9 +194,9 @@ encodeState f st = do
       ]
 
 encodeContext :: Context a -> JSON
-encodeContext ctx = Object (map f (getArgValues ctx))
+encodeContext ctx = Object (map f (typedBindings ctx))
  where
-   f (ArgValue descr) = (showId descr, String $ showValue descr)
+   f (Typed descr) = (showId descr, String $ showValue descr)
 
 decodeState :: Monad m => Exercise a -> (JSON -> m a) -> JSON -> m (State a)
 decodeState ex f (Array [a]) = decodeState ex f a
@@ -209,7 +209,7 @@ decodeState _ _ s = fail $ "invalid state" ++ show s
 
 decodeContext :: Monad m => JSON -> m Environment
 decodeContext (String "") = decodeContext (Object []) -- Being backwards compatible (for now)
-decodeContext (Object xs) = foldM add emptyEnv xs
+decodeContext (Object xs) = foldM add mempty xs
  where
    add env (k, String s) = return (storeEnvString k s env)
    add _ _ = fail "invalid item in context"

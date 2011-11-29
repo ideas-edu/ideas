@@ -28,13 +28,13 @@ import Service.Types
 -- Result types for diagnose service
 
 data Diagnosis a
-   = Buggy          ArgValues (Rule (Context a))
+   = Buggy          [Typed Binding] (Rule (Context a))
 --   | Missing
 --   | IncorrectPart  [a]
    | NotEquivalent
    | Similar        Bool (State a)
    | Expected       Bool (State a) (Rule (Context a))
-   | Detour         Bool (State a) ArgValues (Rule (Context a))
+   | Detour         Bool (State a) [Typed Binding] (Rule (Context a))
    | Correct        Bool (State a)
 
 instance Show (Diagnosis a) where
@@ -155,7 +155,7 @@ diagnosisType = Iso (f <-> g) tp
    g (Correct b s)      = Right (Right (Right (Right (b, s))))
 
    tp  =
-       (  Tag "buggy"         (Pair (List ArgValueTp) Rule)
+       (  Tag "buggy"         (Pair (List BindingTp) Rule)
 --      :|: Tag "missing"       Unit
 --      :|: Tag "incorrectpart" (List Term)
       :|: Tag "notequiv"      Unit
@@ -163,7 +163,7 @@ diagnosisType = Iso (f <-> g) tp
       :|:
        (  Tag "similar"  (Pair   readyBool stateType)
       :|: Tag "expected" (tuple3 readyBool stateType Rule)
-      :|: Tag "detour"   (tuple4 readyBool stateType (List ArgValueTp) Rule)
+      :|: Tag "detour"   (tuple4 readyBool stateType (List BindingTp) Rule)
       :|: Tag "correct"  (Pair   readyBool stateType)
        )
 

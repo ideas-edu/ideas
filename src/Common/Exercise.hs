@@ -145,7 +145,7 @@ makeContext ex env = newContext env . navigation ex
 
 -- | Put a value into an empty environment
 inContext :: Exercise a -> a -> Context a
-inContext = flip makeContext emptyEnv
+inContext = flip makeContext mempty
 
 ---------------------------------------------------------------
 -- Difficulty levels
@@ -229,7 +229,7 @@ differenceEqual ex a b = do
    Diff.differenceEqualWith v (simpleEquivalence ex) a b
 
 -- Recognize a rule at (possibly multiple) locations
-recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [(Location, ArgValues)]
+recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [(Location, [Typed Binding])]
 recognizeRule ex r ca cb = rec (fromMaybe ca (top ca))
  where
    rec x =

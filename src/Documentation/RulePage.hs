@@ -77,7 +77,7 @@ rulePage ex exMap usedIn r = do
       h3 "Examples"
       forM_ (take 3 ys) $ \(a, b) -> para $ divClass "step" $ pre $ do
          forTerm ex (inContext ex a)
-         forStep upn (getId r, emptyEnv)
+         forStep upn (getId r, mempty)
          forTerm ex (inContext ex b)
 
    -- FMPS

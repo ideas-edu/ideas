@@ -121,15 +121,15 @@ nonsense = any p . universe
 ------------------------------------------------------------
 -- Arguments
 
-termArg :: Expr -> ArgValues
-termArg expr = [ArgValue ("term" .<-. expr)]
+termArg :: Expr -> [Typed Binding]
+termArg expr = [Typed ("term" .<-. expr)]
 
-factorArg :: Expr -> ArgValues
-factorArg expr = [ArgValue ("factor" .<-. expr)]
+factorArg :: Expr -> [Typed Binding]
+factorArg expr = [Typed ("factor" .<-. expr)]
 
-factorArgs :: [Expr] -> ArgValues
+factorArgs :: [Expr] -> [Typed Binding]
 factorArgs =
-   let f a b = ArgValue $ ("factor" ++ show a) .<-. b
+   let f a b = Typed $ ("factor" ++ show a) .<-. b
    in zipWith f [1::Int ..]
 
 ------------------------------------------------------------
@@ -150,7 +150,7 @@ buggyBalanceRule n f = useEquality eq $ buggyRule $
  where
    eq = viewEquivalent (traverseView (polyViewWith rationalView))
 
-buggyBalanceRuleArgs :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr, ArgValues)) -> Rule (Equation Expr)
+buggyBalanceRuleArgs :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr, [Typed Binding])) -> Rule (Equation Expr)
 buggyBalanceRuleArgs n f = useEquality eq $ buggyRule $ 
    makeRule (bugbal n) $ makeArgTrans f
  where
@@ -176,11 +176,11 @@ buggyBalanceExprRule n f =
        rec = msum .  map (\(a,h) -> liftM h (f a)) . contexts
    in liftM (:==: rhs) (rec lhs) `mplus` liftM (lhs :==:) (rec rhs) -}
 
-buggyBalanceRecognizer :: IsId n => n -> (a -> a -> Maybe ArgValues) -> Rule a
+buggyBalanceRecognizer :: IsId n => n -> (a -> a -> Maybe [Typed Binding]) -> Rule a
 buggyBalanceRecognizer n = bugbalRule n (makeTrans (const Nothing))
 
 -- generalized helper
-bugbalRule :: IsId n => n -> Transformation a -> (a -> a -> Maybe ArgValues) -> Rule a
+bugbalRule :: IsId n => n -> Transformation a -> (a -> a -> Maybe [Typed Binding]) -> Rule a
 bugbalRule n t p =
    buggyRule $ makeRule (bugbal n) $ useRecognizer p t
 

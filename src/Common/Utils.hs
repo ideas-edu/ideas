@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 module Common.Utils
-   ( Some(..), ShowString(..), readInt, readM
+   ( Some(..), Typed(..), ShowString(..), readInt, readM
    , subsets, isSubsetOf
    , cartesian, distinct, allsame
    , safeHead, fixpoint
@@ -24,9 +24,12 @@ module Common.Utils
 import Data.Char
 import Data.List
 import Data.Maybe
+import Data.Typeable
 import System.Random
 
 data Some f = forall a . Some (f a)
+
+data Typed f = forall a . Typeable a => Typed (f a)
 
 data ShowString = ShowString { fromShowString :: String }
    deriving (Eq, Ord)

@@ -67,7 +67,7 @@ runPrefixLocation loc p0 =
     where
       rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
 
-firstMajorInPrefix :: Prefix a -> Prefix a -> a -> Maybe (Id, ArgValues)
+firstMajorInPrefix :: Prefix a -> Prefix a -> a -> Maybe (Id, [Typed Binding])
 firstMajorInPrefix p0 p a = do
    let newSteps = drop (length $ prefixToSteps p0) (prefixToSteps p)
    is <- firstLocation newSteps
@@ -78,7 +78,7 @@ firstMajorInPrefix p0 p a = do
    firstLocation (Enter info:RuleStep r:_) | isMajorRule r = Just (getId info)
    firstLocation (_:rest) = firstLocation rest
 
-argumentsForSteps :: a -> [Step l a] -> ArgValues
+argumentsForSteps :: a -> [Step l a] -> [Typed Binding]
 argumentsForSteps a0 = flip rec a0 . stepsToRules
  where
    rec [] _ = []
@@ -110,7 +110,7 @@ runPrefixMajor p0 =
 -- Data types for replies
 
 data Reply a = Ok Id (State a)
-             | Incorrect Bool Id (State a) ArgValues
+             | Incorrect Bool Id (State a) [Typed Binding]
 
 ------------------------------------------------------------------------
 -- Type definition
@@ -125,7 +125,7 @@ replyType = Iso (f <-> g) tp
    g (Incorrect a b c d) = Right (a, b, c, d)
 
    tp  =  Tag "correct"   (tuple2 locType stateType)
-      :|: Tag "incorrect" (tuple4 (Tag "equivalent" Bool) locType stateType argsType)
+      :|: Tag "incorrect" (tuple4 (Tag "equivalent" Bool) locType stateType bindingsType)
 
-   locType  = Tag "location" Id
-   argsType = List ArgValueTp
+   locType = Tag "location" Id
+   bindingsType = List BindingTp

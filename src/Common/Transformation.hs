@@ -47,7 +47,7 @@ import Test.QuickCheck
 -----------------------------------------------------------
 --- Transformations
 
-type Results a = [(a, ArgValues)]
+type Results a = [(a, [Typed Binding])]
 
 -- | Abstract data type for representing transformations
 data Transformation a where
@@ -55,7 +55,7 @@ data Transformation a where
    RewriteRule :: RewriteRule a -> (a -> Results a) -> Transformation a
    Abstraction :: Typeable b => Binding b -> (a -> Maybe b) -> (b -> Transformation a) -> Transformation a
    LiftView    :: View a (b, c) -> Transformation b -> Transformation a
-   Recognizer  :: (a -> a -> Maybe ArgValues) -> Transformation a -> Transformation a
+   Recognizer  :: (a -> a -> Maybe [Typed Binding]) -> Transformation a -> Transformation a
    (:|:)       :: Transformation a -> Transformation a -> Transformation a
    (:*:)       :: Transformation a -> Transformation a -> Transformation a
 
@@ -76,7 +76,7 @@ instance Apply Transformation where
          t1 :|: t2         -> applyAll t1 a ++ applyAll t2 a
          t1 :*: t2         -> [ c | b <- applyAll t1 a, c <- applyAll t2 b ]
    
-applyArgs :: Transformation a -> a -> [(a, ArgValues)]
+applyArgs :: Transformation a -> a -> [(a, [Typed Binding])]
 applyArgs trans a =
    case trans of
       Function f        -> f a
@@ -94,7 +94,7 @@ instance LiftView Transformation where
 makeTrans :: (a -> Maybe a) -> Transformation a
 makeTrans = makeTransG
 
-makeArgTrans :: (a -> Maybe (a, ArgValues)) -> Transformation a
+makeArgTrans :: (a -> Maybe (a, [Typed Binding])) -> Transformation a
 makeArgTrans f = Function (toList . f)
 
 -- | Turn a function (which returns a list of results) into a transformation
@@ -160,17 +160,17 @@ getDescriptors = rec . transformation
 -- | Returns a list of pretty-printed expected Bindables.
 -- Nothing indicates that there are no such Bindables (or the Bindables
 -- are not applicable for the current value)
-expectedBindings :: HasTransformation f => f a -> a -> ArgValues
+expectedBindings :: HasTransformation f => f a -> a -> [Typed Binding]
 expectedBindings = rec . transformation
  where
-   rec :: Transformation a -> a -> ArgValues
+   rec :: Transformation a -> a -> [Typed Binding]
    rec trans a = 
       case trans of
          Function _      -> []
          RewriteRule _ _ -> []
          Abstraction args f t -> 
             case f a of
-               Just b  -> ArgValue (setValue b args) : rec (t b) a
+               Just b  -> Typed (setValue b args) : rec (t b) a
                Nothing -> []
          LiftView v t -> 
             case match v a of
@@ -216,7 +216,7 @@ getRewriteRules = rec . transformation
          t1 :*: t2         -> rec t1 ++ rec t2
 
 recognizer :: HasTransformation f 
-                => (a -> a -> Bool) -> f a -> a -> a -> Maybe ArgValues
+                => (a -> a -> Bool) -> f a -> a -> a -> Maybe [Typed Binding]
 recognizer eq f a b = rec (transformation f)
  where
    rec trans =
@@ -235,14 +235,14 @@ recognizer eq f a b = rec (transformation f)
  
    transArg t = listToMaybe [ args | (x, args) <- applyArgs t a, x `eq` b ]
 
-useRecognizer :: (a -> a -> Maybe ArgValues) -> Transformation a -> Transformation a
+useRecognizer :: (a -> a -> Maybe [Typed Binding]) -> Transformation a -> Transformation a
 useRecognizer f t = Recognizer f (transformation t)
 
 useSimpleRecognizer :: (a -> a -> Bool) -> Transformation a -> Transformation a
 useSimpleRecognizer p = useRecognizer $ \x y -> guard (p x y) >> return []
 
 supplyRecognizer :: Bindable x
-        => (a -> a -> Maybe ArgValues) -> String -> (a -> Maybe x)
+        => (a -> a -> Maybe [Typed Binding]) -> String -> (a -> Maybe x)
         -> (x -> Transformation a) -> Transformation a
 supplyRecognizer rec s f = useRecognizer rec . supply1 s f
 

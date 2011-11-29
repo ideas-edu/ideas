@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -21,13 +21,21 @@ module Common.Binding
      -- * Utility functions
    , getValue, setValue, showValue, getTermValue 
    , readBinding, readTermBinding  
-   , ArgValue(..), ArgValues, fromArgValue
+     -- * Heterogeneous environment
+   , Environment, bindings, insertBinding, insertTypedBinding, deleteBinding
+   , lookupTypedBinding, lookupBinding, lookupValue
+   , Typed(..)
    ) where
 
+import Control.Monad
 import Common.Id
 import Common.Rewriting.Term
 import Common.Utils
 import Common.View
+import Data.Function
+import Data.List
+import Data.Monoid
+import qualified Data.Map as M
 import Data.Typeable
 
 -----------------------------------------------------------
@@ -35,11 +43,11 @@ import Data.Typeable
 
 -- | A data type for bindings (identifier and value)
 data Binding a = Binding
-   { identifier  :: Id                   -- ^ Identifier
-   , value       :: a                    -- ^ Current value
-   , printer     :: a -> String          -- ^ A pretty-printer
-   , parser      :: String -> Maybe a    -- ^ A parser
-   , bindingView :: Maybe (View Term a)  -- ^ Conversion to/from term
+   { identifier  :: Id                -- ^ Identifier
+   , value       :: a                 -- ^ Current value
+   , printer     :: a -> String       -- ^ A pretty-printer
+   , parser      :: String -> Maybe a -- ^ A parser
+   , bindingView :: View Term a       -- ^ Conversion to/from term
    }
 
 instance HasId (Binding a) where
@@ -48,6 +56,16 @@ instance HasId (Binding a) where
 
 instance Show (Binding a) where
    show a = showId a ++ "=" ++ showValue a
+
+instance Eq (Binding a) where
+   (==) = let f a = (getId a, getTermValue a)
+          in (==) `on` f
+
+instance Show (Typed Binding) where
+   show (Typed a) = show a
+
+instance Eq (Typed Binding) where
+   Typed a == Typed b = maybe False (==b) (gcast a)
 
 -----------------------------------------------------------
 -- Constructor and type class
@@ -64,13 +82,13 @@ makeBindingWith :: (Show a, Read a, IsTerm a, IsId n) => a -> n -> Binding a
 makeBindingWith = flip (.<-.)
 
 (.<-.) :: (Show a, Read a, IsTerm a, IsId n) => n -> a -> Binding a
-n .<-. a = Binding (newId n) a show readM (Just termView)
+n .<-. a = Binding (newId n) a show readM termView
 
 stringBinding :: IsId n => n -> Binding String
-stringBinding n = Binding (newId n) "" id Just (Just variableView)
+stringBinding n = Binding (newId n) "" id Just variableView
 
 termBinding :: IsId n => n -> Binding Term
-termBinding n = Binding (newId n) (TNum 0) show (const Nothing) (Just termView)
+termBinding n = Binding (newId n) (TNum 0) show (const Nothing) termView
 
 -----------------------------------------------------------
 -- Utility functions
@@ -84,33 +102,46 @@ getValue = value
 setValue :: a -> Binding a -> Binding a
 setValue a b = b {value = a}
 
-getTermValue :: Binding a -> Maybe Term
-getTermValue a = fmap (`build` value a) (bindingView a)
+getTermValue :: Binding a -> Term
+getTermValue a = build (bindingView a) (value a)
 
 readBinding :: Binding a -> String -> Maybe a
 readBinding = parser
 
 readTermBinding :: Binding a -> Term -> Maybe a
-readTermBinding b term =
-   bindingView b >>= (`match` term)
+readTermBinding = match . bindingView
 
----------------------
+-----------------------------------------------------------
+-- Heterogeneous environment
 
--- | An argument descriptor, paired with a value
-data ArgValue = forall a . Typeable a => ArgValue (Binding a)
+newtype Environment = Env { envMap :: M.Map Id (Typed Binding) }
 
-fromArgValue :: Typeable a => ArgValue -> Maybe a
-fromArgValue (ArgValue d) = cast (value d)
+instance Show Environment where
+   show = intercalate ", " . map show . bindings
 
--- | List of argument values
-type ArgValues = [ArgValue]
+instance Monoid Environment where
+   mempty = Env mempty
+   mappend a b = Env (envMap a `mappend` envMap b)
 
-instance Show ArgValue where
-   show (ArgValue a) = show a
+bindings :: Environment -> [Typed Binding]
+bindings = M.elems . envMap
 
-instance Eq ArgValue where
-   ArgValue d1 == ArgValue d2 =
-      case (getTermValue d1, getTermValue d2) of
-         (Just t1, Just t2) -> t1 == t2
-         (Nothing, Nothing) -> showValue d1 == showValue d2
-         _                  -> False
+insertTypedBinding :: Typed Binding -> Environment -> Environment
+insertTypedBinding t@(Typed a) = Env . M.insert (getId a) t . envMap
+
+insertBinding :: Typeable a => Binding a -> Environment -> Environment
+insertBinding = insertTypedBinding . Typed
+
+deleteBinding :: HasId a => a -> Environment -> Environment
+deleteBinding a = Env . M.delete (getId a) . envMap
+
+lookupTypedBinding :: HasId a => a -> Environment -> Maybe (Typed Binding)
+lookupTypedBinding a = M.lookup (getId a) . envMap
+
+lookupBinding :: (Typeable a, HasId b) => b -> Environment -> Maybe (Binding a)
+lookupBinding a env = do
+   Typed b <- lookupTypedBinding a env
+   gcast b
+         
+lookupValue :: (Typeable a, HasId b) => b -> Environment -> Maybe a
+lookupValue a = liftM getValue . lookupBinding a

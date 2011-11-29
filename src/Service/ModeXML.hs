@@ -179,7 +179,7 @@ xmlEncodeType b enc ex serviceType =
       Tp.Term       -> encodeTerm enc
       Tp.Context    -> encodeContext b (encodeCtxTerm enc)
       Tp.Location   -> return . ("location" .=.) . show
-      Tp.ArgValueTp -> return . encodeArgValue b
+      Tp.BindingTp  -> return . encodeTypedBinding b
       Tp.Text       -> encodeText enc ex
       Tp.Bool       -> return . text . map toLower . show
       Tp.String     -> return . text
@@ -271,8 +271,8 @@ decodeContext b ex f xml = do
 decodeEnvironment :: Monad m => Bool -> XML -> m Environment
 decodeEnvironment b xml =
    case findChild "context" xml of
-      Just this -> foldM add emptyEnv (children this)
-      Nothing   -> return emptyEnv
+      Just this -> foldM add mempty (children this)
+      Nothing   -> return mempty
  where
    add env item = do
       unless (name item == "item") $
@@ -309,16 +309,16 @@ encodeEnvironment :: Bool -> Context a -> XMLBuilder
 encodeEnvironment b ctx
    | null values = return ()
    | otherwise = element "context" $
-        forM_ values $ \(ArgValue descr) ->
+        forM_ values $ \(Typed descr) ->
            element "item" $ do
               "name"  .=. showId descr
               case getTermValue descr of
-                 Just term | b -> 
+                 term | b -> 
                     builder (omobj2xml (toOMOBJ term))
                  _ -> "value" .=. showValue descr
  where
    loc    = location ctx
-   values = getArgValues (withLoc ctx)
+   values = typedBindings (withLoc ctx)
    withLoc
       | null loc  = id
       | otherwise = modifyEnvironment (storeArg locDescr loc)
@@ -331,11 +331,11 @@ encodeContext b f ctx = do
    xml <- f ctx
    return (xml >> encodeEnvironment b ctx)
 
-encodeArgValue :: Bool -> ArgValue -> XMLBuilder
-encodeArgValue b (ArgValue descr) = element "argument" $ do
+encodeTypedBinding :: Bool -> Typed Binding -> XMLBuilder
+encodeTypedBinding b (Typed descr) = element "argument" $ do
    "description" .=. showId descr
    case getTermValue descr of
-      Just term | b -> builder $ 
+      term | b -> builder $ 
          omobj2xml $ toOMOBJ term
       _ -> text (showValue descr)
 

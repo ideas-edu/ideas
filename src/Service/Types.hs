@@ -67,7 +67,7 @@ equal type1 type2 =
       (Exercise,    Exercise   ) -> Just id
       (Script,      Script     ) -> Just id
       (Context,     Context    ) -> Just id
-      (ArgValueTp,  ArgValueTp ) -> Just id
+      (BindingTp,   BindingTp  ) -> Just id
       (Text,        Text       ) -> Just id
       (StdGen,      StdGen     ) -> Just id
       (IO a,        IO b       ) -> fmap liftM (equal a b)
@@ -162,7 +162,7 @@ data Type a t where
    Location     :: Type a Location
    Id           :: Type a Id
    StrategyCfg  :: Type a StrategyConfiguration
-   ArgValueTp   :: Type a ArgValue
+   BindingTp    :: Type a (Typed Binding)
    Text         :: Type a Text
    -- Basic types
    Bool         :: Type a Bool
@@ -203,7 +203,7 @@ showGroundType tp =
       Location     -> Just "Location"
       Id           -> Just "Id"
       StrategyCfg  -> Just "StrategyConfiguration"
-      ArgValueTp   -> Just "ArgumentValue"
+      BindingTp    -> Just "Binding"
       Text         -> Just "TextMessage"
       StdGen       -> Just "StdGen"
       Exception    -> Just "Exception"

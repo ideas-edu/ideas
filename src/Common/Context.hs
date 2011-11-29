@@ -16,9 +16,9 @@
 module Common.Context
    ( -- * Abstract data type
      Context, fromContext, fromContextWith, fromContextWith2
-   , newContext, getEnvironment, modifyEnvironment, getArgValues
+   , newContext, getEnvironment, modifyEnvironment, typedBindings
      -- * Key-value pair environment (abstract)
-   , Environment, emptyEnv, nullEnv
+   , Environment, nullEnv
    , storeEnvString, storeEnvTerm, storeArg, lookupArg
    , diffEnv, deleteEnv
      -- * Lifting
@@ -35,10 +35,8 @@ import Common.Navigator
 import Common.Rewriting
 import Common.View
 import Control.Monad
-import Data.List
 import Data.Maybe
 import Data.Typeable
-import qualified Data.Map as M
 
 ----------------------------------------------------------
 -- Abstract data type
@@ -88,34 +86,25 @@ newContext = C
 modifyEnvironment :: (Environment -> Environment) -> Context a -> Context a
 modifyEnvironment f c = c {getEnvironment = f (getEnvironment c)}
 
-getArgValues :: Context a -> ArgValues
-getArgValues = M.elems . envMap . getEnvironment
+typedBindings :: Context a -> [Typed Binding]
+typedBindings = bindings . getEnvironment
 
 ----------------------------------------------------------
 -- Key-value pair environment (abstract)
 
-newtype Environment = Env { envMap :: M.Map String ArgValue }
-
-instance Show Environment where
-   show = intercalate ", " . map show . M.elems . envMap
-
-emptyEnv :: Environment
-emptyEnv = Env M.empty
-
 nullEnv :: Environment -> Bool
-nullEnv = M.null . envMap
+nullEnv = null . bindings
  
 lookupArg :: Typeable a => Binding a -> Environment -> a
-lookupArg descr (Env m) = 
-   fromMaybe (getValue descr) $ do 
-      a <- M.lookup (showId descr) m
-      fromArgValue a `mplus`
-         (fromArgValue a >>= readBinding descr) `mplus`
-         (fromArgValue a >>= readTermBinding descr)
+lookupArg a env = fromMaybe (getValue a) $ 
+   lookupValue a env
+ `mplus`
+   (lookupValue a env >>= readBinding a)
+ `mplus`
+   (lookupValue a env >>= readTermBinding a)
 
 storeArg :: Typeable a => Binding a -> a -> Environment -> Environment
-storeArg descr a (Env m) = 
-   Env (M.insert (showId descr) (ArgValue (setValue a descr)) m) 
+storeArg descr a = insertBinding (setValue a descr)
 
 storeEnvString :: String -> String -> Environment -> Environment
 storeEnvString = storeArg . stringBinding
@@ -124,11 +113,15 @@ storeEnvTerm :: String -> Term -> Environment -> Environment
 storeEnvTerm = storeArg . termBinding
 
 diffEnv :: Environment -> Environment -> Environment
-diffEnv (Env m1) (Env m2) = Env (M.filterWithKey p m1)
- where p k a = maybe False (/= a) (M.lookup k m2)
+diffEnv env1 env2 = foldr op mempty (bindings env1)
+ where 
+   p a = a `elem` bindings env2
+   op a new 
+      | p a       = new
+      | otherwise = insertTypedBinding a new
 
 deleteEnv :: String -> Environment -> Environment
-deleteEnv s (Env m) = Env (M.delete s m)
+deleteEnv = deleteBinding . newId
 
 ----------------------------------------------------------
 -- Lifting rules

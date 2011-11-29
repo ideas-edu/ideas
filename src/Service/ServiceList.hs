@@ -52,7 +52,7 @@ derivationS = makeService "derivation"
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $
    -- derivationTemp ::: maybeType StrategyCfg :-> stateType :-> errorType (derivationType Rule Context)
-   derivation ::: maybeType StrategyCfg :-> stateType :-> errorType (derivationType (tuple2 Rule (List ArgValueTp)) Context)
+   derivation ::: maybeType StrategyCfg :-> stateType :-> errorType (derivationType (tuple2 Rule (List BindingTp)) Context)
 
 allfirstsS :: Service
 allfirstsS = makeService "allfirsts"
@@ -60,7 +60,7 @@ allfirstsS = makeService "allfirsts"
    \onefirst service to get only one suggestion. For each suggestion, a new \
    \state, the rule used, and the location where the rule was applied are \
    \returned." $
-   allfirsts ::: stateType :-> errorType (listType (tuple4 Rule Location (List ArgValueTp) stateType))
+   allfirsts ::: stateType :-> errorType (listType (tuple4 Rule Location (List BindingTp) stateType))
 
 onefirstS :: Service
 onefirstS = makeService "onefirst"
@@ -68,7 +68,7 @@ onefirstS = makeService "onefirst"
    \service to get all possible steps that are allowed by the strategy. In \
    \addition to a new state, the rule used and the location where to apply \
    \this rule are returned." $
-   onefirst ::: stateType :-> elemType (errorType (tuple4 Rule Location (List ArgValueTp) stateType))
+   onefirst ::: stateType :-> elemType (errorType (tuple4 Rule Location (List BindingTp) stateType))
 
 readyS :: Service
 readyS = makeService "ready"
@@ -123,7 +123,7 @@ findbuggyrulesS = makeService "findbuggyrules"
    "Search for common misconceptions (buggy rules) in an expression (compared \
    \to the current state). It is assumed that the expression is indeed not \
    \correct. This service has been superseded by the diagnose service." $
-   findbuggyrules ::: stateType :-> Term :-> listType (tuple3 Rule Location (List ArgValueTp))
+   findbuggyrules ::: stateType :-> Term :-> listType (tuple3 Rule Location (List BindingTp))
 
 submitS :: Service
 submitS = deprecate $ makeService "submit"

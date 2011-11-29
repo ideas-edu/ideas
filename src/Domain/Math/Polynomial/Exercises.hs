@@ -55,6 +55,7 @@ linearExercise = makeExercise
                     <||> predicateView (equationSolvedWith doubleNF)
    , extraRules   = map use buggyRulesEquation ++
                     map use buggyRulesExpr
+   , recognizers  = map use buggyRecognizers
    , ruleOrdering = ruleOrderingWithId
                        [ getId coverUpTimes, getId flipEquation
                        , getId removeDivision
@@ -86,6 +87,7 @@ quadraticExercise = makeExercise
    , ready        = predicateView relationsSolvedForm
    , extraRules   = map use abcBuggyRules ++ buggyQuadratic ++
                     map use buggyRulesEquation ++ map use buggyRulesExpr
+   , recognizers  = map use buggyRecognizers
    , ruleOrdering = ruleOrderingWithId $
                        quadraticRuleOrder ++ [getId buggySquareMultiplication]
    , strategy     = quadraticStrategy
@@ -106,6 +108,7 @@ higherDegreeExercise = makeExercise
    , ready         = predicateView relationsSolvedForm
    , extraRules    = map use abcBuggyRules ++ buggyQuadratic ++
                      map use buggyRulesEquation ++ map use buggyRulesExpr
+   , recognizers   = map use buggyRecognizers
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , strategy      = higherDegreeStrategy
    , navigation    = termNavigator

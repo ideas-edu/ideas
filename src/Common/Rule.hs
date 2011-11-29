@@ -19,7 +19,7 @@ module Common.Rule
    , finalRule, isFinalRule, ruleSiblings, rule, ruleList
    , makeRule, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doAfter
-   , siblingOf, useEquality, ruleEquality, transformation
+   , siblingOf, useEquality, ruleEquality, transformation, ruleRecognizer
      -- * QuickCheck
    , propRule, propRuleSmart
    ) where
@@ -155,6 +155,11 @@ doAfter f r = r {afterwards = f . afterwards r}
 
 useEquality :: (a -> a -> Bool) -> Rule a -> Rule a
 useEquality eq r = r {ruleEquality = Just eq}
+
+ruleRecognizer :: (a -> a -> Bool) -> Rule a -> Recognizer a
+ruleRecognizer eq0 r = 
+   let eq = fromMaybe eq0 (ruleEquality r)
+   in transRecognizer eq (getId r) (transformation r)
 
 -----------------------------------------------------------
 --- QuickCheck

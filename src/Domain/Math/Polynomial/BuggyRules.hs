@@ -55,8 +55,11 @@ buggyRulesEquation =
    [ buggyPlus, buggyNegateOneSide, siblingOf flipEquation buggyFlipNegateOneSide
    , buggyNegateAll
    , buggyDivNegate, buggyDivNumDenom, buggyCancelMinus
-   , buggyMultiplyOneSide, buggyMultiplyForgetOne
    ]
+
+buggyRecognizers :: [Recognizer (Equation Expr)]
+buggyRecognizers = [buggyMultiplyOneSide, buggyMultiplyForgetOne]
+   
 
 buggyPlus :: Rule (Equation Expr)
 buggyPlus = describe "Moving a term from the left-hand side to the \
@@ -200,10 +203,9 @@ buggyPriorityTimes = describe "Prioity of operators is changed, possibly by \
       ((a, b), c) <- matchM (plusView >>> first timesView) expr
       [a*(b+c)]
 
-buggyMultiplyOneSide :: Rule (Equation Expr)
+buggyMultiplyOneSide :: Recognizer (Equation Expr)
 buggyMultiplyOneSide = describe "Multiplication on one side of the equation only" $
-   buggyRule $ makeRule "multiply-one-side" $
-   useSimpleRecognizer recognizeEq $ supply1 "factor" (const (Just 2)) multiplyOneSide
+   buggyRecognizer $ buggyName simpleRecognizer "multiply-one-side" recognizeEq
  where
    recognizeEq eq1@(a1 :==: a2) eq2@(b1 :==: b2) =
       let p r  = r `notElem` [-1, 0, 1] &&
@@ -226,11 +228,10 @@ multiplyOneSide r = makeTransG $ \(lhs :==: rhs) -> do
       let f = map (*r)
       [build sumView (f xs) :==: rhs, lhs :==: build sumView (f ys)]
 
-buggyMultiplyForgetOne :: Rule (Equation Expr)
+buggyMultiplyForgetOne :: Recognizer (Equation Expr)
 buggyMultiplyForgetOne = describe "Multiply the terms on both sides of the \
    \equation, but forget one." $
-   buggyRule $ makeRule "multiply-forget-one" $
-   useSimpleRecognizer recognizeEq $ supply1 "factor" (const (Just 2)) multiplyForgetOne
+   buggyRecognizer $ buggyName simpleRecognizer "multiply-forget-one" recognizeEq
  where
    recognizeEq eq1@(a1 :==: a2) eq2@(b1 :==: b2) =
       let p r  = r `notElem` [-1, 0, 1] &&

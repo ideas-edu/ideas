@@ -155,34 +155,14 @@ buggyBalanceRuleArgs n f = useEquality eq $ buggyRule $
    makeRule (bugbal n) $ makeEnvTrans f
  where
    eq = viewEquivalent (traverseView (polyViewWith rationalView))
-{-
-buggyBalanceRewriteRule :: IsId n => n -> [(Int, ArgDescr Expr)] -> RewriteRule (Equation Expr) -> Rule (Equation Expr)
-buggyBalanceRewriteRule n ps r = bugbalRule n (transformation r) $ 
-   \old (a1 :==: a2) -> do
-      (b1 :==: b2, args) <- listToMaybe (rewriteArgs r old)
-      let h = viewEquivalent (polyViewWith rationalView)
-      guard (h a1 b1 && h a2 b2)
-      let make (i, descr) = 
-             ArgValue descr $ maybe 0 toExpr $ listToMaybe $ drop i args
-      return (map make ps) -}
 
 buggyBalanceExprRule :: IsId n => n -> (Expr -> Maybe Expr) -> Rule Expr
 buggyBalanceExprRule n f = 
    buggyRule $ makeSimpleRule (bugbal n) f
 
- {- 
-   buggyBalanceRule n $ \(lhs :==: rhs) ->
-   let -- to do: deal with associativity
-       rec = msum .  map (\(a,h) -> liftM h (f a)) . contexts
-   in liftM (:==: rhs) (rec lhs) `mplus` liftM (lhs :==:) (rec rhs) -}
-
-buggyBalanceRecognizer :: IsId n => n -> (a -> a -> Maybe Environment) -> Rule a
-buggyBalanceRecognizer n = bugbalRule n (makeTrans (const Nothing))
-
--- generalized helper
-bugbalRule :: IsId n => n -> Transformation a -> (a -> a -> Maybe Environment) -> Rule a
-bugbalRule n t p =
-   buggyRule $ makeRule (bugbal n) $ useRecognizer p t
+buggyBalanceRecognizer :: IsId n => n -> (a -> a -> Maybe Environment) -> Recognizer a
+buggyBalanceRecognizer n p = 
+   buggyRecognizer $ makeRecognizer (bugbal n) p
 
 ------------------------------------------------------------
 -- Helpers

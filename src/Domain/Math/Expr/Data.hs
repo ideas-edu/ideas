@@ -92,9 +92,10 @@ instance Floating Expr where
    acosh   = unary acoshSymbol
 
 instance WithFunctions Expr where
+   function s (a:as) -- make binary
+      | s == plusSymbol   = foldl (:+:) a as
+      | s == timesSymbol  = foldl (:*:) a as
    function s [a, b]
-      | s == plusSymbol   = a :+: b
-      | s == timesSymbol  = a :*: b
       | s == minusSymbol  = a :-: b
       | s == divideSymbol = a :/: b
       | isRootSymbol s && b == Nat 2 = Sqrt a

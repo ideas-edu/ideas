@@ -11,7 +11,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.BuggyBalance
-   ( buggyBalanceRules, buggyBalanceExprRules, buggyPriority
+   ( buggyBalanceRules, buggyBalanceExprRules, buggyRecognizers, buggyPriority
    ) where
 
 import Common.Library
@@ -28,8 +28,8 @@ buggyBalanceRules =
    [ rule1234, rule201, rule2111, rule2112, rule2113, rule2114
    , rule2121, rule2122, rule2131, rule2132, rule2133, rule2134
    , rule2135, rule2136, rule2137, rule2138, rule2141, rule2142
-   , rule221, rule222, rule2231, rule2232, rule2233, rule227
-   , rule311, rule321, rule322, rule323
+   , rule221, rule222, rule2232, rule2233
+   , rule311, rule322
    ]
 
 buggyBalanceExprRules :: [Rule Expr]
@@ -38,6 +38,10 @@ buggyBalanceExprRules =
    , rule1314, rule1321, rule1322, rule133, rule134, rule135
    , rule136, rule137
    ]
+
+buggyRecognizers :: [Recognizer (Equation Expr)]
+buggyRecognizers = 
+   [rule2231, rule227, rule321, rule323]
 
 buggyPriority :: [Id]
 buggyPriority = 
@@ -248,8 +252,6 @@ rule2111 = describe "2.1.1.1: Links en rechts hetzelfde optellen; links +b en re
       (ax, b) <- matchPlusCon lhs
       guard (b>0)
       return (ax :==: rhs+fromRational b, termArg (fromRational b))
-   -- buggyBalanceRewriteRule "addbal1" [(1, makeArgDescr "term")] $ rewriteRule "addbal1" $ \a b c ->
-   --   (plusCon a+b :==: c) :~> (a :==: c+b)
 
 -- ax-b=[cx]+d  -> ax=[cx+d-b
 rule2112 :: Rule (Equation Expr)
@@ -443,7 +445,7 @@ rule222 = describe "2.2.2: Links en rechts hetzelfde vermenigvuldigen; links *a;
              )
 
 -- ax-b=cx+d  -> pax-pb=cx+d
-rule2231 :: Rule (Equation Expr)
+rule2231 :: Recognizer (Equation Expr)
 rule2231 = describe "2.2.3.1: Links en rechts hetzelfde vermenigvuldigen; links *p, rechts niet (of andersom)" $
    buggyBalanceRecognizer "mulbal3" p
  where -- currently, symmetric
@@ -475,7 +477,7 @@ rule2233 = describe "2.2.3.3: Links en rechts hetzelfde vermenigvuldigen; links 
       return $ -a-b :==: c
 
 -- pa+pb=c -> a+b=c
-rule227 :: Rule (Equation Expr)
+rule227 :: Recognizer (Equation Expr)
 rule227 = describe "2.2.7: Links en rechts hetzelfde vermenigvuldigen; een kant door p delen, andere kant niets" $
    buggyBalanceRecognizer "mulbal6" p
  where -- currently, symmetric
@@ -505,7 +507,7 @@ rule311 = describe "3.1.1: Doe je wat je wilt doen?" $
       return (fromRational (c-a)*x+fromRational b :==: fromRational d)
 
 -- ax-b=cd+d  -> pax-b=pcx+pd
-rule321 :: Rule (Equation Expr)
+rule321 :: Recognizer (Equation Expr)
 rule321 = describe "3.2.1: Doe je wat je wilt doen? vermenigvuldig de hele linkerkant met p" $
    buggyBalanceRecognizer "misc2" p
  where -- currently, not symmetric
@@ -529,7 +531,7 @@ rule322 = describe "3.2.2: Doe je wat je wilt doen? neem het tegengestelde van d
       return $ -a-b :==: -c
 
 -- pax+pb=pc  ->  ax+pb=c
-rule323 :: Rule (Equation Expr)
+rule323 :: Recognizer (Equation Expr)
 rule323 = describe "3.2.3: Doe je wat je wilt doen? Deel de hele linkerkant door p" $
    buggyBalanceRecognizer "misc4" p
    -- REFACTOR: code copied from rule misc2

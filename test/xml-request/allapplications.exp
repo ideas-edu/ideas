@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.4 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.flip" location="[]">
       <state>
@@ -105,20 +105,6 @@
       <state>
         <expr>
           x/2 == -5*(x-1)
-        </expr>
-      </state>
-    </elem>
-    <elem ruleid="algebra.equations.buggy.multiply-one-side" location="[]">
-      <state>
-        <expr>
-          5*(x-1)*2 == x/2
-        </expr>
-      </state>
-    </elem>
-    <elem ruleid="algebra.equations.buggy.multiply-one-side" location="[]">
-      <state>
-        <expr>
-          5*(x-1) == x/2*2
         </expr>
       </state>
     </elem>

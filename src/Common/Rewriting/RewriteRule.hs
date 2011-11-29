@@ -110,7 +110,7 @@ buildSpec sm sb (lhs :~> rhs) a = do
        extLeft  = maybe id (binary sym) ml
        extRight = maybe id (flip (binary sym)) mr
        new  = useBuilders $ extLeft $ extRight $ sub |-> rhs
-       args = catMaybes $ map (`lookupVar` sub) $ IS.toList $ dom sub
+       args = mapMaybe (`lookupVar` sub) $ IS.toList $ dom sub
    return (new, args)
  where
    useBuilders

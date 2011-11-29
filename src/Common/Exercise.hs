@@ -18,7 +18,7 @@ module Common.Exercise
    , exerciseId, status, parser, prettyPrinter
    , equivalence, similarity, ready, suitable, isReady, isSuitable
    , hasTermView
-   , strategy, navigation, canBeRestarted, extraRules, ruleOrdering
+   , strategy, navigation, canBeRestarted, extraRules, recognizers, ruleOrdering
    , difference, differenceEqual
    , testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
@@ -86,6 +86,7 @@ data Exercise a = Exercise
    , navigation     :: a -> Navigator a
    , canBeRestarted :: Bool                -- By default, assumed to be the case
    , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
+   , recognizers    :: [Recognizer (Context a)]
    , ruleOrdering   :: Rule (Context a) -> Rule (Context a) -> Ordering -- Ordering on rules (for onefirst)
      -- testing and exercise generation
    , testGenerator  :: Maybe (Gen a)
@@ -133,6 +134,7 @@ emptyExercise = Exercise
    , navigation     = noNavigator
    , canBeRestarted = True
    , extraRules     = []
+   , recognizers    = []
    , ruleOrdering   = compareId
      -- testing and exercise generation
    , testGenerator  = Nothing
@@ -233,8 +235,7 @@ recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [(L
 recognizeRule ex r ca cb = rec (fromMaybe ca (top ca))
  where
    rec x =
-      let eq   = fromMaybe (similarity ex) (ruleEquality r)
-          here = case recognizer eq r x cb of
+      let here = case recognize (ruleRecognizer (similarity ex) r) x cb of
                     Just as -> [(location x, as)]
                     Nothing -> []
       in here ++ concatMap rec (allDowns x)

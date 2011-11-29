@@ -23,23 +23,25 @@ module Common.Transformation
      -- * Bindables
    , supply1, supply2, supply3
      -- * Recognizers
-   , useRecognizer, useSimpleRecognizer, recognizer
-   , supplyRecognizer, supplySimpleRecognizer
+   , transRecognizer
      -- * Extract information
    , getParameters, expectedEnvironment, getRewriteRules
      -- * QuickCheck generator
    , smartGen
+     -- * Recognizer
+   , Recognizer, makeRecognizer, simpleRecognizer
+   , recognize, buggyRecognizer, isBuggyRecognizer
    ) where
 
 import Common.Algebra.Field
 import Common.Binding
 import Common.Classes
+import Common.Id
 import Common.Rewriting
 import Common.Utils
 import Common.View
 import Control.Monad
 import Data.Foldable (Foldable, toList)
-import Data.Function
 import Data.Monoid
 import Data.Typeable
 import Data.Maybe
@@ -56,7 +58,6 @@ data Transformation a where
    RewriteRule :: RewriteRule a -> (a -> Results a) -> Transformation a
    Abstraction :: Typeable b => Binding b -> (a -> Maybe b) -> (b -> Transformation a) -> Transformation a
    LiftView    :: View a (b, c) -> Transformation b -> Transformation a
-   Recognizer  :: (a -> a -> Maybe Environment) -> Transformation a -> Transformation a
    (:|:)       :: Transformation a -> Transformation a -> Transformation a
    (:*:)       :: Transformation a -> Transformation a -> Transformation a
 
@@ -76,7 +77,6 @@ getResults trans a =
       RewriteRule _ f   -> f a
       Abstraction _ f g -> maybe [] (\b -> getResults (g b) a) (f a)
       LiftView v t      -> [ (build v (b, c), xs) | (b0, c) <- matchM v a, (b, xs) <- getResults t b0  ]
-      Recognizer _ t    -> getResults t a
       t1 :|: t2         -> getResults t1 a ++ getResults t2 a
       t1 :*: t2         -> [ (c, xs `mappend` ys) | (b, xs) <- getResults t1 a, (c, ys) <- getResults t2 b ]
 
@@ -146,7 +146,6 @@ getParameters = rec . transformation
          RewriteRule _ _     -> mempty
          Abstraction env _ t -> insertBinding env (rec (t (getValue env)))
          LiftView _ t        -> rec t
-         Recognizer _ t      -> rec t
          t1 :|: t2           -> rec t1 `mappend` rec t2
          t1 :*: t2           -> rec t1 `mappend` rec t2
 
@@ -169,7 +168,6 @@ expectedEnvironment = rec . transformation
             case match v a of
                Just (b, _) -> rec t b
                Nothing     -> mempty
-         Recognizer _ t -> rec t a
          t1 :|: t2      -> rec t1 a `mappend` rec t2 a
          t1 :*: t2      -> rec t1 a `mappend` rec t2 a
 
@@ -204,45 +202,13 @@ getRewriteRules = rec . transformation
          RewriteRule rr _  -> [Some rr]
          Abstraction _ _ _ -> []
          LiftView _ t      -> rec t
-         Recognizer _ t    -> rec t
          t1 :|: t2         -> rec t1 ++ rec t2
          t1 :*: t2         -> rec t1 ++ rec t2
 
-recognizer :: HasTransformation f 
-                => (a -> a -> Bool) -> f a -> a -> a -> Maybe Environment
-recognizer eq f a b = rec (transformation f)
- where
-   rec trans =
-      case trans of
-         Recognizer g t -> g a b `mplus` rec t
-         t1 :|: t2      -> rec t1 `mplus` rec t2
-         LiftView v t   -> msum
-            [ recognizer (eq `on` g) t av bv
-            | (av, c) <- matchM v a
-            , (bv, _) <- matchM v b
-            , let g z = build v (z, c)
-            ]
-          `mplus`
-              transArg trans -- is this really needed?
-         _ -> transArg trans
- 
-   transArg t = listToMaybe [ env | (x, env) <- getResults t a, x `eq` b ]
-
-useRecognizer :: (a -> a -> Maybe Environment) -> Transformation a -> Transformation a
-useRecognizer f t = Recognizer f (transformation t)
-
-useSimpleRecognizer :: (a -> a -> Bool) -> Transformation a -> Transformation a
-useSimpleRecognizer p = useRecognizer $ \x y -> guard (p x y) >> return mempty
-
-supplyRecognizer :: Bindable x
-        => (a -> a -> Maybe Environment) -> String -> (a -> Maybe x)
-        -> (x -> Transformation a) -> Transformation a
-supplyRecognizer rec s f = useRecognizer rec . supply1 s f
-
-supplySimpleRecognizer :: Bindable x
-        => (a -> a -> Bool) -> String -> (a -> Maybe x)
-        -> (x -> Transformation a) -> Transformation a
-supplySimpleRecognizer eq s f = useSimpleRecognizer eq . supply1 s f
+transRecognizer :: (IsId n, HasTransformation f)
+                => (a -> a -> Bool) -> n -> f a -> Recognizer a
+transRecognizer eq n f = makeRecognizer n $ \a b -> listToMaybe 
+   [ env | (x, env) <- getResults (transformation f) a, x `eq` b ]
 
 -----------------------------------------------------------
 --- QuickCheck
@@ -262,7 +228,38 @@ smartGen = flip rec . transformation
          t1 :*: t2 -> recs [t1, t2]
          _ -> Nothing
     where
-      recs ts = do
+      recs ts =
          case mapMaybe (rec a) ts of
             [] -> Nothing
             xs -> return (oneof xs)
+            
+-----------------------------------------------------------
+--- Recognizer
+
+data Recognizer a = R 
+   { recognizerId      :: Id
+   , recognize         :: a -> a -> Maybe Environment
+   , isBuggyRecognizer :: Bool
+   }
+
+instance HasId (Recognizer a) where
+   getId = recognizerId 
+   changeId f r = r {recognizerId = f (recognizerId r)}
+
+instance LiftView Recognizer where
+   liftViewIn v r = r {recognize = make}
+    where
+      make a b = do
+         (x, _) <- match v a
+         (y, _) <- match v b
+         recognize r x y
+
+makeRecognizer :: IsId n => n -> (a -> a -> Maybe Environment) -> Recognizer a
+makeRecognizer n f = R (newId n) f False
+
+simpleRecognizer :: IsId n => n -> (a -> a -> Bool) -> Recognizer a
+simpleRecognizer n eq = makeRecognizer n $ \a b ->
+   guard (eq a b) >> return mempty
+
+buggyRecognizer :: Recognizer a -> Recognizer a
+buggyRecognizer r = r {isBuggyRecognizer = True}

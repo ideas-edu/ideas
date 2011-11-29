@@ -59,7 +59,7 @@ match term1 term2 =
          return (singletonSubst i term2)
       (_, TMeta _) ->
          fail "match: no unifier"
-      (TApp f a, TApp g b) -> do
+      (TApp f a, TApp g b) ->
          rec [f, a] [g, b]
       (TList xs, TList ys) ->
          rec xs ys

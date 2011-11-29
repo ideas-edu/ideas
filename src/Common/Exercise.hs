@@ -335,11 +335,11 @@ showDerivation ex a = show (present der) ++ extra
    present = biMap (ShowString . f) (ShowString . prettyPrinterContext ex)
    f ((b, env), old) = showId b ++ part1 ++ part2
     where
-      newl = "\n      "
-      args  = expectedBindings b old
-      part1 = newl ++ show args
-      part2 | noBindings env = ""
-            | otherwise      = newl ++ show env
+      newl   = "\n      "
+      expenv = expectedEnvironment b old
+      part1  = newl ++ show expenv
+      part2  | noBindings env = ""
+             | otherwise      = newl ++ show env
 
 type ExerciseDerivation a = Derivation (Rule (Context a)) (Context a)
 

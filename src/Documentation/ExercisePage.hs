@@ -84,7 +84,7 @@ exercisePage exampleFileExists ex = do
        goUp = up (length (qualifiers ex))
        f r  = [ link (goUp ++ ruleFile r) $ ttText (showId r)
               , text $ showBool $ isBuggyRule r
-              , text $ showBool $ not $ noBindings $ getDescriptors r
+              , text $ showBool $ not $ noBindings $ getParameters r
               , text $ showBool $ r `elem` rs
               , when (isRewriteRule r) $
                    ruleToHTML (Some ex) r
@@ -203,7 +203,7 @@ forStep n ((r, env), old) = do
           make | null (description r) = link target
                | otherwise = titleA (description r) . link target
       make (text (unqualified r))
-      let oldEnv = expectedBindings r old
+      let oldEnv = expectedEnvironment r old
       unless (noBindings oldEnv) $ do
          br
          spaces 6

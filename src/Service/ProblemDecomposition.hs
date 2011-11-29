@@ -85,7 +85,7 @@ argumentsForSteps a0 = flip rec a0 . stepsToRules
    rec [] _ = mempty
    rec (r:rs) a
       | isMinorRule r  = mconcat (map (rec rs) (applyAll r a))
-      | applicable r a = expectedBindings r a
+      | applicable r a = expectedEnvironment r a
       | otherwise      = mempty
 
 nextMajorForPrefix :: Prefix a -> a -> Maybe Id

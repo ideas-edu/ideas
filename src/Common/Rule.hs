@@ -162,8 +162,10 @@ useEquality eq r = r {ruleEquality = Just eq}
 propRule :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
 propRule eq r gen =
    forAll gen $ \a ->
-   forAll (smartApplyRule r a) $ \ma ->
-      isJust ma ==> (a `eq` fromJust ma)
+   let xs = applyAll r a in 
+   not (null xs) ==> 
+   forAll (elements xs) $ \b -> 
+   a `eq` b
 
 -- | Check the soundness of a rule and use a "smart generator" for this. The smart generator
 -- behaves differently on transformations constructed with a (|-), and for these transformations,
@@ -176,10 +178,3 @@ smartGenRule r gen = frequency [(2, gen), (1, smart)]
  where
    smart = gen >>= \a ->
       oneof (gen : maybeToList (smartGen r a))
-
-smartApplyRule :: Rule a -> a -> Gen (Maybe a)
-smartApplyRule r a = do
-   xs <- smartApply (transformation r) a
-   case xs of
-      [] -> return Nothing
-      _  -> elements $ map Just xs

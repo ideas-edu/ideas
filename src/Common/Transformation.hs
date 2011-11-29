@@ -19,16 +19,16 @@
 module Common.Transformation
    ( -- * Transformations
      Transformation, HasTransformation(..)
-   , makeTrans, makeArgTrans, makeTransG
+   , makeTrans, makeEnvTrans, makeTransG
      -- * Bindables
    , supply1, supply2, supply3
      -- * Recognizers
    , useRecognizer, useSimpleRecognizer, recognizer
    , supplyRecognizer, supplySimpleRecognizer
      -- * Extract information
-   , getDescriptors, expectedBindings, getRewriteRules
-     -- * QuickCheck generators
-   , smartApply, smartGen
+   , getParameters, expectedEnvironment, getRewriteRules
+     -- * QuickCheck generator
+   , smartGen
    ) where
 
 import Common.Algebra.Field
@@ -67,26 +67,18 @@ instance SemiRing (Transformation a) where
    (<*>) = (:*:)
 
 instance Apply Transformation where
-   applyAll trans a =
-      case trans of
-         Function f        -> map fst (f a)
-         RewriteRule _ f   -> map fst (f a)
-         Abstraction _ f g -> maybe [] (\b -> applyAll (g b) a) (f a)
-         LiftView v t      -> [ build v (b, c) | (b0, c) <- matchM v a, b <- applyAll t b0  ]
-         Recognizer _ t    -> applyAll t a
-         t1 :|: t2         -> applyAll t1 a ++ applyAll t2 a
-         t1 :*: t2         -> [ c | b <- applyAll t1 a, c <- applyAll t2 b ]
+   applyAll trans = map fst . getResults trans
    
-applyArgs :: Transformation a -> a -> [(a, Environment)]
-applyArgs trans a =
+getResults :: Transformation a -> a -> Results a
+getResults trans a =
    case trans of
       Function f        -> f a
       RewriteRule _ f   -> f a
-      Abstraction _ f g -> maybe [] (\b -> applyArgs (g b) a) (f a)
-      LiftView v t      -> [ (build v (b, c), xs) | (b0, c) <- matchM v a, (b, xs) <- applyArgs t b0  ]
-      Recognizer _ t    -> applyArgs t a
-      t1 :|: t2         -> applyArgs t1 a ++ applyArgs t2 a
-      t1 :*: t2         -> [ (c, xs `mappend` ys) | (b, xs) <- applyArgs t1 a, (c, ys) <- applyArgs t2 b ]
+      Abstraction _ f g -> maybe [] (\b -> getResults (g b) a) (f a)
+      LiftView v t      -> [ (build v (b, c), xs) | (b0, c) <- matchM v a, (b, xs) <- getResults t b0  ]
+      Recognizer _ t    -> getResults t a
+      t1 :|: t2         -> getResults t1 a ++ getResults t2 a
+      t1 :*: t2         -> [ (c, xs `mappend` ys) | (b, xs) <- getResults t1 a, (c, ys) <- getResults t2 b ]
 
 instance LiftView Transformation where
    liftViewIn = LiftView
@@ -95,8 +87,8 @@ instance LiftView Transformation where
 makeTrans :: (a -> Maybe a) -> Transformation a
 makeTrans = makeTransG
 
-makeArgTrans :: (a -> Maybe (a, Environment)) -> Transformation a
-makeArgTrans f = Function (toList . f)
+makeEnvTrans :: (a -> Maybe (a, Environment)) -> Transformation a
+makeEnvTrans f = Function (toList . f)
 
 -- | Turn a function (which returns a list of results) into a transformation
 makeTransG :: Foldable f => (a -> f a) -> Transformation a
@@ -143,35 +135,35 @@ supply3 (s1, s2, s3) f t =
    supply1 s2 (fmap snd3 . f) $ \y -> 
    supply1 s3 (fmap thd3 . f) $ t x y
 
--- | Returns a list of Bindable descriptors
-getDescriptors :: HasTransformation f => f a -> Environment
-getDescriptors = rec . transformation 
+-- | Returns a list of rule parameters
+getParameters :: HasTransformation f => f a -> Environment
+getParameters = rec . transformation 
  where
    rec :: Transformation a -> Environment
    rec trans =
       case trans of
-         Function _           -> mempty
-         RewriteRule _ _      -> mempty
-         Abstraction args _ t -> insertBinding args (rec (t (getValue args)))
-         LiftView _ t         -> rec t
-         Recognizer _ t       -> rec t
-         t1 :|: t2            -> rec t1 `mappend` rec t2
-         t1 :*: t2            -> rec t1 `mappend` rec t2
+         Function _          -> mempty
+         RewriteRule _ _     -> mempty
+         Abstraction env _ t -> insertBinding env (rec (t (getValue env)))
+         LiftView _ t        -> rec t
+         Recognizer _ t      -> rec t
+         t1 :|: t2           -> rec t1 `mappend` rec t2
+         t1 :*: t2           -> rec t1 `mappend` rec t2
 
 -- | Returns a list of pretty-printed expected Bindables.
 -- Nothing indicates that there are no such Bindables (or the Bindables
 -- are not applicable for the current value)
-expectedBindings :: HasTransformation f => f a -> a -> Environment
-expectedBindings = rec . transformation
+expectedEnvironment :: HasTransformation f => f a -> a -> Environment
+expectedEnvironment = rec . transformation
  where
    rec :: Transformation a -> a -> Environment
    rec trans a = 
       case trans of
          Function _      -> mempty
          RewriteRule _ _ -> mempty
-         Abstraction args f t -> 
+         Abstraction env f t -> 
             case f a of
-               Just b  -> insertBinding (setValue b args) (rec (t b) a)
+               Just b  -> insertBinding (setValue b env) (rec (t b) a)
                Nothing -> mempty
          LiftView v t -> 
             case match v a of
@@ -192,8 +184,8 @@ useBindablesTrans list = rec
       case trans of
          Function _           -> Nothing
          RewriteRule _ _      -> Nothing
-         Abstraction args _ g -> case list of
-                                    [hd] -> fmap g (parseBindable args hd)
+         Abstraction env _ g -> case list of
+                                    [hd] -> fmap g (parseBindable env hd)
                                     _    -> Nothing
          LiftView v t         -> fmap (LiftView v) (rec t)
          Recognizer f t       -> fmap (Recognizer f) (rec t)
@@ -234,7 +226,7 @@ recognizer eq f a b = rec (transformation f)
               transArg trans -- is this really needed?
          _ -> transArg trans
  
-   transArg t = listToMaybe [ env | (x, env) <- applyArgs t a, x `eq` b ]
+   transArg t = listToMaybe [ env | (x, env) <- getResults t a, x `eq` b ]
 
 useRecognizer :: (a -> a -> Maybe Environment) -> Transformation a -> Transformation a
 useRecognizer f t = Recognizer f (transformation t)
@@ -274,37 +266,3 @@ smartGen = flip rec . transformation
          case mapMaybe (rec a) ts of
             [] -> Nothing
             xs -> return (oneof xs)
-
-smartApply :: HasTransformation f => f a -> a -> Gen [a]
-smartApply t a =
-   case transformation t of
-{-      Abstraction args _ g -> do
-         b <- genBindable args
-         smartApply (g b) a -}
-      trans -> return (applyAll trans a)
-      
----------------------------------------------------
-
-{-
-newtype Results a = Results [(a, [ArgValues])]
-
-instance Monad Results
-
-class HasResults f where
-   getResults :: f a -> Results a
-   
-instance HasResults Maybe
-instance HasResults []
-instance HasResults Results
-   
-conv :: HasResults f => (a -> f a) -> a -> Results a
-conv f = getResults . f
-
-report :: ArgValue -> Results ()
-report = undefined
-
-maf :: (a -> Maybe (a, ArgValues)) -> a -> Results a
-maf f a = do
-   (b, vs) <- getResults (f a) 
-   mapM_ report vs
-   return b -}

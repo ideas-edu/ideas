@@ -28,7 +28,7 @@ generate rng ex dif =
    emptyState ex (randomTermWith rng dif ex)
 
 -- TODO: add a location to each step
-derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a), [Typed Binding]) (Context a))
+derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))
 derivation mcfg state =
    mapSecond (biMap (\(r, _, as) -> (r, as)) stateContext) $
    case (statePrefix state, mcfg) of
@@ -58,7 +58,7 @@ derivation mcfg state =
 
 -- Note that we have to inspect the last step of the prefix afterwards, because
 -- the remaining part of the derivation could consist of minor rules only.
-allfirsts :: State a -> Either String [(Rule (Context a), Location, [Typed Binding], State a)]
+allfirsts :: State a -> Either String [(Rule (Context a), Location, Environment, State a)]
 allfirsts state =
    case statePrefix state of
       Nothing ->
@@ -91,7 +91,7 @@ allfirsts state =
       r1==r2 && l1==l2 && a1==a2 && exercise s1 == exercise s2
       && similarity (exercise s1) (stateContext s1) (stateContext s2)
 
-onefirst :: State a -> Either String (Rule (Context a), Location, [Typed Binding], State a)
+onefirst :: State a -> Either String (Rule (Context a), Location, Environment, State a)
 onefirst state =
    case allfirsts state of
       Right []     -> Left "No step possible"
@@ -148,7 +148,7 @@ ready state = isReady (exercise state) (stateTerm state)
 stepsremaining :: State a -> Either String Int
 stepsremaining = mapSecond derivationLength . derivation Nothing
 
-findbuggyrules :: State a -> a -> [(Rule (Context a), Location, [Typed Binding])]
+findbuggyrules :: State a -> a -> [(Rule (Context a), Location, Environment)]
 findbuggyrules state a =
    [ (r, loc, as)
    | r         <- filter isBuggyRule (ruleset ex)

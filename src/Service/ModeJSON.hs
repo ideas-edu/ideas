@@ -194,7 +194,7 @@ encodeState f st = do
       ]
 
 encodeContext :: Context a -> JSON
-encodeContext ctx = Object (map f (typedBindings ctx))
+encodeContext ctx = Object (map f (bindings (getEnvironment ctx)))
  where
    f (Typed descr) = (showId descr, String $ showValue descr)
 
@@ -209,10 +209,11 @@ decodeState _ _ s = fail $ "invalid state" ++ show s
 
 decodeContext :: Monad m => JSON -> m Environment
 decodeContext (String "") = decodeContext (Object []) -- Being backwards compatible (for now)
-decodeContext (Object xs) = foldM add mempty xs
+decodeContext (Object xs) = foldM (flip add) mempty xs
  where
-   add env (k, String s) = return (storeEnvString k s env)
-   add _ _ = fail "invalid item in context"
+   add :: Monad m => (String, JSON) -> Environment -> m Environment
+   add (k, String s) = return . insertBinding (setValue s $ stringBinding k)
+   add _             = fail "invalid item in context"
 decodeContext json = fail $ "invalid context: " ++ show json
 
 encodeResult :: Encoder JSON a -> Result a -> DomainReasoner JSON

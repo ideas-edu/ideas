@@ -61,6 +61,16 @@
       </context>
     </elem>
     <elem ruleid="linearalgebra.gaussianelim.add">
+      <argument description="scalefactor">
+        <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMI>
+              2
+            </OMI>
+          </OMA>
+        </OMOBJ>
+      </argument>
       <argument description="row1">
         <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
           <OMI>
@@ -73,16 +83,6 @@
           <OMI>
             0
           </OMI>
-        </OMOBJ>
-      </argument>
-      <argument description="scalefactor">
-        <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-          <OMA>
-            <OMS cd="arith1" name="unary_minus"/>
-            <OMI>
-              2
-            </OMI>
-          </OMA>
         </OMOBJ>
       </argument>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -192,20 +192,6 @@
       </context>
     </elem>
     <elem ruleid="linearalgebra.gaussianelim.add">
-      <argument description="row1">
-        <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-          <OMI>
-            0
-          </OMI>
-        </OMOBJ>
-      </argument>
-      <argument description="row2">
-        <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-          <OMI>
-            1
-          </OMI>
-        </OMOBJ>
-      </argument>
       <argument description="scalefactor">
         <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
           <OMA>
@@ -220,6 +206,20 @@
               </OMI>
             </OMA>
           </OMA>
+        </OMOBJ>
+      </argument>
+      <argument description="row1">
+        <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+          <OMI>
+            0
+          </OMI>
+        </OMOBJ>
+      </argument>
+      <argument description="row2">
+        <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+          <OMI>
+            1
+          </OMI>
         </OMOBJ>
       </argument>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">

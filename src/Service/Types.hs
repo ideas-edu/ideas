@@ -17,7 +17,7 @@ module Service.Types
      -- * Types
    , Type(..), TypedValue(..), tuple2, tuple3, tuple4
    , maybeType, optionType
-   , errorType, difficultyType, listType, elemType
+   , errorType, difficultyType, listType, envType, elemType
    , derivationType, messageType
    , equal, equalM
    ) where
@@ -119,6 +119,9 @@ errorType t = Exception :|: t
 
 listType :: Type a t -> Type a [t] -- with list "tag"
 listType = Tag "list" . List . elemType
+
+envType :: Type a Environment
+envType = Iso (makeEnvironment <-> bindings) (List BindingTp)
 
 elemType :: Type a t -> Type a t
 elemType = Tag "elem"

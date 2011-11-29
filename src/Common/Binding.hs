@@ -22,7 +22,9 @@ module Common.Binding
    , getValue, setValue, showValue, getTermValue 
    , readBinding, readTermBinding  
      -- * Heterogeneous environment
-   , Environment, bindings, insertBinding, insertTypedBinding, deleteBinding
+   , Environment, makeEnvironment, singleBinding
+   , bindings, noBindings
+   , insertBinding, insertTypedBinding, deleteBinding
    , lookupTypedBinding, lookupBinding, lookupValue
    , Typed(..)
    ) where
@@ -50,10 +52,6 @@ data Binding a = Binding
    , bindingView :: View Term a       -- ^ Conversion to/from term
    }
 
-instance HasId (Binding a) where
-   getId = identifier
-   changeId f d = d {identifier = f (identifier d)}
-
 instance Show (Binding a) where
    show a = showId a ++ "=" ++ showValue a
 
@@ -61,11 +59,19 @@ instance Eq (Binding a) where
    (==) = let f a = (getId a, getTermValue a)
           in (==) `on` f
 
+instance HasId (Binding a) where
+   getId = identifier
+   changeId f d = d {identifier = f (identifier d)}
+
 instance Show (Typed Binding) where
    show (Typed a) = show a
 
 instance Eq (Typed Binding) where
    Typed a == Typed b = maybe False (==b) (gcast a)
+
+instance HasId (Typed Binding) where
+   getId (Typed a) = getId a
+   changeId f (Typed a) = Typed (changeId f a)
 
 -----------------------------------------------------------
 -- Constructor and type class
@@ -115,6 +121,7 @@ readTermBinding = match . bindingView
 -- Heterogeneous environment
 
 newtype Environment = Env { envMap :: M.Map Id (Typed Binding) }
+   deriving Eq
 
 instance Show Environment where
    show = intercalate ", " . map show . bindings
@@ -126,8 +133,17 @@ instance Monoid Environment where
 bindings :: Environment -> [Typed Binding]
 bindings = M.elems . envMap
 
+makeEnvironment :: [Typed Binding] -> Environment
+makeEnvironment xs = Env $ M.fromList [ (getId a, a) | a <- xs ]
+
+singleBinding :: Typeable a => Binding a -> Environment
+singleBinding = makeEnvironment . return . Typed
+
+noBindings :: Environment -> Bool
+noBindings = M.null . envMap
+
 insertTypedBinding :: Typed Binding -> Environment -> Environment
-insertTypedBinding t@(Typed a) = Env . M.insert (getId a) t . envMap
+insertTypedBinding a = Env . M.insert (getId a) a . envMap
 
 insertBinding :: Typeable a => Binding a -> Environment -> Environment
 insertBinding = insertTypedBinding . Typed

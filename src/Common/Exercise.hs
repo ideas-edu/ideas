@@ -229,7 +229,7 @@ differenceEqual ex a b = do
    Diff.differenceEqualWith v (simpleEquivalence ex) a b
 
 -- Recognize a rule at (possibly multiple) locations
-recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [(Location, [Typed Binding])]
+recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [(Location, Environment)]
 recognizeRule ex r ca cb = rec (fromMaybe ca (top ca))
  where
    rec x =
@@ -337,9 +337,9 @@ showDerivation ex a = show (present der) ++ extra
     where
       newl = "\n      "
       args  = expectedBindings b old
-      part1 = newl ++ intercalate ", " (map show args)
-      part2 | nullEnv env = ""
-            | otherwise   = newl ++ show env
+      part1 = newl ++ show args
+      part2 | noBindings env = ""
+            | otherwise      = newl ++ show env
 
 type ExerciseDerivation a = Derivation (Rule (Context a)) (Context a)
 
@@ -351,9 +351,10 @@ defaultDerivation ex a =
    in fromMaybe single (derivation tree)
 
 derivationDiffEnv :: Derivation s (Context a) -> Derivation (s, Environment) (Context a)
-derivationDiffEnv = updateSteps $ \y b x ->
-   let env = diffEnv (getEnvironment x) (getEnvironment y)
-   in (b, deleteEnv "location" env)
+derivationDiffEnv = updateSteps $ \old a new ->
+   let keep x = not (getId x `sameId` "location" || x `elem` list)
+       list = bindings $ getEnvironment old
+   in (a, makeEnvironment $ filter keep $ bindings $ getEnvironment new)
 
 -- helper, needed for showing arguments
 derivationPrevious :: Derivation s a -> Derivation (s, a) a

@@ -14,7 +14,6 @@ module Documentation.ExercisePage (makeExercisePage, idboxHTML) where
 import Common.Library hiding (up)
 import Common.Utils (Some(..))
 import Control.Monad
-import Data.List
 import Data.Maybe
 import Documentation.DefaultPage
 import Documentation.ExampleFile
@@ -85,7 +84,7 @@ exercisePage exampleFileExists ex = do
        goUp = up (length (qualifiers ex))
        f r  = [ link (goUp ++ ruleFile r) $ ttText (showId r)
               , text $ showBool $ isBuggyRule r
-              , text $ showBool $ not $ null $ getDescriptors r
+              , text $ showBool $ not $ noBindings $ getDescriptors r
               , text $ showBool $ r `elem` rs
               , when (isRewriteRule r) $
                    ruleToHTML (Some ex) r
@@ -204,12 +203,12 @@ forStep n ((r, env), old) = do
           make | null (description r) = link target
                | otherwise = titleA (description r) . link target
       make (text (unqualified r))
-      let xs = expectedBindings r old
-      unless (null xs) $ do
+      let oldEnv = expectedBindings r old
+      unless (noBindings oldEnv) $ do
          br
          spaces 6
-         text (intercalate ", " (map show xs))
-      unless (nullEnv env) $ do
+         text (show oldEnv)
+      unless (noBindings env) $ do
          br
          spaces 6
          text (show env)

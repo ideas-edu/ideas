@@ -15,6 +15,7 @@ module Service.ProblemDecomposition
 
 import Common.Library
 import Data.Maybe
+import Data.Monoid
 import Service.State
 import Service.Types
 
@@ -41,7 +42,7 @@ problemDecomposition msloc state answer
                newLocation = subTaskLocation (strategy ex) sloc loc
                expState = makeState ex (Just pref) expected
                isEquiv  = maybe False (equivalence ex expected) maybeAnswer
-               (loc, arguments) = fromMaybe (topId, []) $
+               (loc, arguments) = fromMaybe (topId, mempty) $
                                      firstMajorInPrefix pr pref requestedTerm
  where
    ex    = exercise state
@@ -67,7 +68,7 @@ runPrefixLocation loc p0 =
     where
       rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
 
-firstMajorInPrefix :: Prefix a -> Prefix a -> a -> Maybe (Id, [Typed Binding])
+firstMajorInPrefix :: Prefix a -> Prefix a -> a -> Maybe (Id, Environment)
 firstMajorInPrefix p0 p a = do
    let newSteps = drop (length $ prefixToSteps p0) (prefixToSteps p)
    is <- firstLocation newSteps
@@ -78,14 +79,14 @@ firstMajorInPrefix p0 p a = do
    firstLocation (Enter info:RuleStep r:_) | isMajorRule r = Just (getId info)
    firstLocation (_:rest) = firstLocation rest
 
-argumentsForSteps :: a -> [Step l a] -> [Typed Binding]
+argumentsForSteps :: a -> [Step l a] -> Environment
 argumentsForSteps a0 = flip rec a0 . stepsToRules
  where
-   rec [] _ = []
+   rec [] _ = mempty
    rec (r:rs) a
-      | isMinorRule r  = concatMap (rec rs) (applyAll r a)
+      | isMinorRule r  = mconcat (map (rec rs) (applyAll r a))
       | applicable r a = expectedBindings r a
-      | otherwise      = []
+      | otherwise      = mempty
 
 nextMajorForPrefix :: Prefix a -> a -> Maybe Id
 nextMajorForPrefix p0 a = do
@@ -110,7 +111,7 @@ runPrefixMajor p0 =
 -- Data types for replies
 
 data Reply a = Ok Id (State a)
-             | Incorrect Bool Id (State a) [Typed Binding]
+             | Incorrect Bool Id (State a) Environment
 
 ------------------------------------------------------------------------
 -- Type definition
@@ -125,7 +126,6 @@ replyType = Iso (f <-> g) tp
    g (Incorrect a b c d) = Right (a, b, c, d)
 
    tp  =  Tag "correct"   (tuple2 locType stateType)
-      :|: Tag "incorrect" (tuple4 (Tag "equivalent" Bool) locType stateType bindingsType)
+      :|: Tag "incorrect" (tuple4 (Tag "equivalent" Bool) locType stateType envType)
 
    locType = Tag "location" Id
-   bindingsType = List BindingTp

@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -16,11 +15,7 @@
 module Common.Context
    ( -- * Abstract data type
      Context, fromContext, fromContextWith, fromContextWith2
-   , newContext, getEnvironment, modifyEnvironment, typedBindings
-     -- * Key-value pair environment (abstract)
-   , Environment, nullEnv
-   , storeEnvString, storeEnvTerm, storeArg, lookupArg
-   , diffEnv, deleteEnv
+   , newContext, getEnvironment, modifyEnvironment
      -- * Lifting
    , liftToContext
    , use, useC, termNavigator, applyTop
@@ -62,8 +57,8 @@ instance Eq a => Eq (Context a) where
 
 instance Show a => Show (Context a) where
    show (C env a) =
-      let rest | nullEnv env = ""
-               | otherwise   = "  {" ++ show env ++ "}"
+      let rest | noBindings env = ""
+               | otherwise      = "  {" ++ show env ++ "}"
       in show a ++ rest
 
 instance IsNavigator Context where
@@ -85,43 +80,6 @@ newContext = C
 
 modifyEnvironment :: (Environment -> Environment) -> Context a -> Context a
 modifyEnvironment f c = c {getEnvironment = f (getEnvironment c)}
-
-typedBindings :: Context a -> [Typed Binding]
-typedBindings = bindings . getEnvironment
-
-----------------------------------------------------------
--- Key-value pair environment (abstract)
-
-nullEnv :: Environment -> Bool
-nullEnv = null . bindings
- 
-lookupArg :: Typeable a => Binding a -> Environment -> a
-lookupArg a env = fromMaybe (getValue a) $ 
-   lookupValue a env
- `mplus`
-   (lookupValue a env >>= readBinding a)
- `mplus`
-   (lookupValue a env >>= readTermBinding a)
-
-storeArg :: Typeable a => Binding a -> a -> Environment -> Environment
-storeArg descr a = insertBinding (setValue a descr)
-
-storeEnvString :: String -> String -> Environment -> Environment
-storeEnvString = storeArg . stringBinding
-
-storeEnvTerm :: String -> Term -> Environment -> Environment
-storeEnvTerm = storeArg . termBinding
-
-diffEnv :: Environment -> Environment -> Environment
-diffEnv env1 env2 = foldr op mempty (bindings env1)
- where 
-   p a = a `elem` bindings env2
-   op a new 
-      | p a       = new
-      | otherwise = insertTypedBinding a new
-
-deleteEnv :: String -> Environment -> Environment
-deleteEnv = deleteBinding . newId
 
 ----------------------------------------------------------
 -- Lifting rules
@@ -198,10 +156,17 @@ instance MonadPlus ContextMonad where
    mplus (CM f) (CM g) = CM (\env -> f env `mplus` g env)
 
 readVar :: Typeable a => Binding a -> ContextMonad a
-readVar var = CM $ \env -> Just (lookupArg var env, env)
+readVar var = CM $ \env -> Just (f env, env)
+ where
+   f env = fromMaybe (getValue var) $ 
+      lookupValue var env -- typed value
+    `mplus`
+      (lookupValue var env >>= readBinding var) -- value as string
+    `mplus`
+      (lookupValue var env >>= readTermBinding var) -- value as term
 
 writeVar  :: Typeable a => Binding a -> a -> ContextMonad ()
-writeVar var a = CM $ \env -> return ((), storeArg var a env)
+writeVar var a = CM $ \env -> return ((), insertBinding (setValue a var) env)
 
 modifyVar :: Typeable a => Binding a -> (a -> a) -> ContextMonad ()
 modifyVar var f = readVar var >>= (writeVar var  . f)

@@ -18,7 +18,7 @@ module Service.Diagnose
    ) where
 
 import Common.Library hiding (ready)
-import Data.List (intercalate, sortBy)
+import Data.List (sortBy)
 import Data.Maybe
 import Service.BasicServices hiding (apply)
 import Service.State
@@ -28,13 +28,13 @@ import Service.Types
 -- Result types for diagnose service
 
 data Diagnosis a
-   = Buggy          [Typed Binding] (Rule (Context a))
+   = Buggy          Environment (Rule (Context a))
 --   | Missing
 --   | IncorrectPart  [a]
    | NotEquivalent
    | Similar        Bool (State a)
    | Expected       Bool (State a) (Rule (Context a))
-   | Detour         Bool (State a) [Typed Binding] (Rule (Context a))
+   | Detour         Bool (State a) Environment (Rule (Context a))
    | Correct        Bool (State a)
 
 instance Show (Diagnosis a) where
@@ -50,8 +50,8 @@ instance Show (Diagnosis a) where
          Correct _ _      -> "Unknown step"
     where
       showArgs as
-         | null as   = "" 
-         | otherwise = " (" ++ intercalate ", " (map show as) ++ ")"
+         | noBindings as = "" 
+         | otherwise     = " (" ++ show as ++ ")"
 
 newState :: Diagnosis a -> Maybe (State a)
 newState diagnosis =
@@ -155,7 +155,7 @@ diagnosisType = Iso (f <-> g) tp
    g (Correct b s)      = Right (Right (Right (Right (b, s))))
 
    tp  =
-       (  Tag "buggy"         (Pair (List BindingTp) Rule)
+       (  Tag "buggy"         (Pair envType Rule)
 --      :|: Tag "missing"       Unit
 --      :|: Tag "incorrectpart" (List Term)
       :|: Tag "notequiv"      Unit
@@ -163,7 +163,7 @@ diagnosisType = Iso (f <-> g) tp
       :|:
        (  Tag "similar"  (Pair   readyBool stateType)
       :|: Tag "expected" (tuple3 readyBool stateType Rule)
-      :|: Tag "detour"   (tuple4 readyBool stateType (List BindingTp) Rule)
+      :|: Tag "detour"   (tuple4 readyBool stateType envType Rule)
       :|: Tag "correct"  (Pair   readyBool stateType)
        )
 

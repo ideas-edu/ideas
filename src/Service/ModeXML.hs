@@ -284,11 +284,11 @@ decodeEnvironment b xml =
             case xml2omobj this >>= fromOMOBJ of
                Left err -> fail err
                Right term ->
-                  return (storeEnvTerm n term env)
+                  return $ insertBinding (setValue term $ termBinding n) env
          -- Simple value in attribute
          _ -> do
             value <- findAttribute "value" item
-            return (storeEnvString n value env)
+            return $ insertBinding (setValue value $ stringBinding n) env
 
 decodeConfiguration :: MonadPlus m => XML -> m StrategyConfiguration
 decodeConfiguration xml =
@@ -318,10 +318,10 @@ encodeEnvironment b ctx
                  _ -> "value" .=. showValue descr
  where
    loc    = location ctx
-   values = typedBindings (withLoc ctx)
+   values = bindings $ withLoc $ getEnvironment ctx
    withLoc
       | null loc  = id
-      | otherwise = modifyEnvironment (storeArg locDescr loc)
+      | otherwise = insertBinding $ setValue loc locDescr
 
 locDescr :: Binding Location
 locDescr = "location" .<-. []

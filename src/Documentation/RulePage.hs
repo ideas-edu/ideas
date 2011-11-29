@@ -99,7 +99,7 @@ forStep n (i, env) = do
                | otherwise = titleA (description i) . link target
       make (text (unqualified i))
       br
-      unless (nullEnv env) $ do
+      unless (noBindings env) $ do
          spaces 6
          text (show env)
          br

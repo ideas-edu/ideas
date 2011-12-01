@@ -128,7 +128,7 @@ instance Show Environment where
 
 instance Monoid Environment where
    mempty = Env mempty
-   mappend a b = Env (envMap a `mappend` envMap b)
+   mappend a b = Env (envMap a `mappend` envMap b) -- left has presedence
 
 bindings :: Environment -> [Typed Binding]
 bindings = M.elems . envMap

@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, ExistentialQuantification #-}
+{-# LANGUAGE ExistentialQuantification #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -25,12 +25,13 @@ module Common.Transformation
      -- * Recognizers
    , transRecognizer
      -- * Extract information
-   , getParameters, expectedEnvironment, getRewriteRules
+   , expectedEnvironment, getRewriteRules
      -- * QuickCheck generator
    , smartGen
      -- * Recognizer
-   , Recognizer, makeRecognizer, simpleRecognizer
-   , recognize, buggyRecognizer, isBuggyRecognizer
+   , Recognizer, makeRecognizer, makeListRecognizer, simpleRecognizer
+   , recognize, recognizeList, buggyRecognizer, isBuggyRecognizer
+   , changeEnvironment -- tmp
    ) where
 
 import Common.Algebra.Field
@@ -43,23 +44,56 @@ import Common.View
 import Control.Monad
 import Data.Foldable (Foldable, toList)
 import Data.Monoid
-import Data.Typeable
 import Data.Maybe
+import Data.Typeable
 import Test.QuickCheck
 
 -----------------------------------------------------------
 --- Transformations
 
-type Results a = [(a, Environment)]
+newtype Results a = R (Environment -> [(a, Environment)])
+
+instance Monoid (Results a) where
+   mempty = R $ const []
+   R f `mappend` R g = R $ \env -> f env ++ g env
+
+instance Functor Results where
+   fmap = liftM
+
+instance Monad Results where
+   return a  = R $ \env -> [(a, env)]
+   fail _    = mempty
+   R f >>= g = R $ \old -> do
+      (a, env) <- f old
+      let R h = g a
+      h env
+
+instance MonadPlus Results where
+   mzero = mempty
+   mplus = mappend
+
+getEnvironment :: Results Environment
+getEnvironment = R $ \env -> [(env, env)]
+
+changeEnvironment :: (Environment -> Environment) -> Results ()
+changeEnvironment f = R $ return . (,) () . f
+
+localBinding :: Typeable a => Binding a -> Results ()
+localBinding = changeEnvironment . insertBinding
+
+toResults :: Foldable f => f a -> Results a
+toResults = mconcat . map return . toList
+
+fromResults :: Results a -> [a]
+fromResults (R f) = map fst (f mempty)
 
 -- | Abstract data type for representing transformations
-data Transformation a where
-   Function    :: (a -> Results a) -> Transformation a
-   RewriteRule :: RewriteRule a -> (a -> Results a) -> Transformation a
-   Abstraction :: Typeable b => Binding b -> (a -> Maybe b) -> (b -> Transformation a) -> Transformation a
-   LiftView    :: View a (b, c) -> Transformation b -> Transformation a
-   (:|:)       :: Transformation a -> Transformation a -> Transformation a
-   (:*:)       :: Transformation a -> Transformation a -> Transformation a
+data Transformation a
+   = Function (a -> Results a)
+   | RewriteRule (RewriteRule a) (a -> Results a)
+   | forall b c . LiftView (View a (b, c)) (Transformation b)
+   | Transformation a :*: Transformation a
+   | Transformation a :|: Transformation a
 
 instance SemiRing (Transformation a) where
    zero  = makeTrans (const Nothing)
@@ -68,17 +102,18 @@ instance SemiRing (Transformation a) where
    (<*>) = (:*:)
 
 instance Apply Transformation where
-   applyAll trans = map fst . getResults trans
+   applyAll trans = fromResults . getResults trans
    
 getResults :: Transformation a -> a -> Results a
 getResults trans a =
    case trans of
-      Function f        -> f a
-      RewriteRule _ f   -> f a
-      Abstraction _ f g -> maybe [] (\b -> getResults (g b) a) (f a)
-      LiftView v t      -> [ (build v (b, c), xs) | (b0, c) <- matchM v a, (b, xs) <- getResults t b0  ]
-      t1 :|: t2         -> getResults t1 a ++ getResults t2 a
-      t1 :*: t2         -> [ (c, xs `mappend` ys) | (b, xs) <- getResults t1 a, (c, ys) <- getResults t2 b ]
+      Function f      -> f a
+      RewriteRule _ f -> f a
+      LiftView v t    -> do (b0, c) <- matchM v a
+                            b <- getResults t b0
+                            return (build v (b, c))
+      t1 :|: t2       -> getResults t1 a `mappend` getResults t2 a
+      t1 :*: t2       -> getResults t1 a >>= getResults t2
 
 instance LiftView Transformation where
    liftViewIn = LiftView
@@ -87,15 +122,12 @@ instance LiftView Transformation where
 makeTrans :: (a -> Maybe a) -> Transformation a
 makeTrans = makeTransG
 
-makeEnvTrans :: (a -> Maybe (a, Environment)) -> Transformation a
-makeEnvTrans f = Function (toList . f)
+makeEnvTrans :: (a -> Results a) -> Transformation a
+makeEnvTrans = Function
 
 -- | Turn a function (which returns a list of results) into a transformation
 makeTransG :: Foldable f => (a -> f a) -> Transformation a
-makeTransG f = Function (toResults . toList . f)
-
-toResults :: [a] -> Results a
-toResults = map (\a -> (a, mempty))
+makeTransG f = Function (toResults . f)
 
 -----------------------------------------------------------
 --- HasTransformation type class
@@ -107,7 +139,7 @@ instance HasTransformation Transformation where
    transformation = id
 
 instance HasTransformation RewriteRule where
-   transformation r = RewriteRule r (toResults . rewriteM r)
+   transformation r = RewriteRule r (rewriteM r)
 
 -----------------------------------------------------------
 --- Bindables
@@ -116,7 +148,10 @@ instance HasTransformation RewriteRule where
 supply1 :: Bindable x
                   => String -> (a -> Maybe x)
                   -> (x -> Transformation a) -> Transformation a
-supply1 = Abstraction . makeBinding
+supply1 s f g = Function $ \a -> do
+   x <- toResults (f a)
+   localBinding (setValue x $ makeBinding s)
+   getResults (g x) a
 
 -- | Parameterization with two Bindables using the provided labels
 supply2 :: (Bindable x, Bindable y)
@@ -135,60 +170,11 @@ supply3 (s1, s2, s3) f t =
    supply1 s2 (fmap snd3 . f) $ \y -> 
    supply1 s3 (fmap thd3 . f) $ t x y
 
--- | Returns a list of rule parameters
-getParameters :: HasTransformation f => f a -> Environment
-getParameters = rec . transformation 
- where
-   rec :: Transformation a -> Environment
-   rec trans =
-      case trans of
-         Function _          -> mempty
-         RewriteRule _ _     -> mempty
-         Abstraction env _ t -> insertBinding env (rec (t (getValue env)))
-         LiftView _ t        -> rec t
-         t1 :|: t2           -> rec t1 `mappend` rec t2
-         t1 :*: t2           -> rec t1 `mappend` rec t2
-
--- | Returns a list of pretty-printed expected Bindables.
--- Nothing indicates that there are no such Bindables (or the Bindables
--- are not applicable for the current value)
+-- temporary solution
 expectedEnvironment :: HasTransformation f => f a -> a -> Environment
-expectedEnvironment = rec . transformation
- where
-   rec :: Transformation a -> a -> Environment
-   rec trans a = 
-      case trans of
-         Function _      -> mempty
-         RewriteRule _ _ -> mempty
-         Abstraction env f t -> 
-            case f a of
-               Just b  -> insertBinding (setValue b env) (rec (t b) a)
-               Nothing -> mempty
-         LiftView v t -> 
-            case match v a of
-               Just (b, _) -> rec t b
-               Nothing     -> mempty
-         t1 :|: t2      -> rec t1 a `mappend` rec t2 a
-         t1 :*: t2      -> rec t1 a `mappend` rec t2 a
+expectedEnvironment f a = fromMaybe mempty $ listToMaybe $ fromResults $
+   getResults (transformation f) a >> getEnvironment
 
-{-
--- | Transform a rule and use a list of pretty-printed Bindables. Nothing indicates that the Bindables are
--- invalid (not parsable), or that the wrong number of Bindables was supplied
-useBindablesTrans :: [String] -> Transformation a -> Maybe (Transformation a)
-useBindablesTrans list = rec
- where
-   rec :: Transformation a -> Maybe (Transformation a)
-   rec trans =
-      case trans of
-         Function _           -> Nothing
-         RewriteRule _ _      -> Nothing
-         Abstraction env _ g -> case list of
-                                    [hd] -> fmap g (parseBindable env hd)
-                                    _    -> Nothing
-         LiftView v t         -> fmap (LiftView v) (rec t)
-         Recognizer f t       -> fmap (Recognizer f) (rec t)
-         Choice t1 t2         -> rec t1 `mplus` rec t2
--}
 -----------------------------------------------------------
 --- Rules
 
@@ -200,15 +186,16 @@ getRewriteRules = rec . transformation
       case trans of
          Function _        -> []
          RewriteRule rr _  -> [Some rr]
-         Abstraction _ _ _ -> []
          LiftView _ t      -> rec t
          t1 :|: t2         -> rec t1 ++ rec t2
          t1 :*: t2         -> rec t1 ++ rec t2
 
 transRecognizer :: (IsId n, HasTransformation f)
                 => (a -> a -> Bool) -> n -> f a -> Recognizer a
-transRecognizer eq n f = makeRecognizer n $ \a b -> listToMaybe 
-   [ env | (x, env) <- getResults (transformation f) a, x `eq` b ]
+transRecognizer eq n f = makeListRecognizer n $ \a b -> fromResults $ do
+   x <- getResults (transformation f) a
+   guard (x `eq` b)
+   getEnvironment
 
 -----------------------------------------------------------
 --- QuickCheck
@@ -236,9 +223,9 @@ smartGen = flip rec . transformation
 -----------------------------------------------------------
 --- Recognizer
 
-data Recognizer a = R 
+data Recognizer a = Recognizer 
    { recognizerId      :: Id
-   , recognize         :: a -> a -> Maybe Environment
+   , recognizeList     :: a -> a -> [Environment]
    , isBuggyRecognizer :: Bool
    }
 
@@ -247,19 +234,25 @@ instance HasId (Recognizer a) where
    changeId f r = r {recognizerId = f (recognizerId r)}
 
 instance LiftView Recognizer where
-   liftViewIn v r = r {recognize = make}
+   liftViewIn v r = r {recognizeList = make}
     where
       make a b = do
-         (x, _) <- match v a
-         (y, _) <- match v b
-         recognize r x y
+         (x, _) <- matchM v a
+         (y, _) <- matchM v b
+         recognizeList r x y
 
 makeRecognizer :: IsId n => n -> (a -> a -> Maybe Environment) -> Recognizer a
-makeRecognizer n f = R (newId n) f False
+makeRecognizer n f = makeListRecognizer n (\a b -> maybeToList $ f a b)
+
+makeListRecognizer :: IsId n => n -> (a -> a -> [Environment]) -> Recognizer a
+makeListRecognizer n f = Recognizer (newId n) f False
 
 simpleRecognizer :: IsId n => n -> (a -> a -> Bool) -> Recognizer a
 simpleRecognizer n eq = makeRecognizer n $ \a b ->
    guard (eq a b) >> return mempty
+
+recognize :: Recognizer a -> a -> a -> Maybe Environment
+recognize r a b = listToMaybe $ recognizeList r a b 
 
 buggyRecognizer :: Recognizer a -> Recognizer a
 buggyRecognizer r = r {isBuggyRecognizer = True}

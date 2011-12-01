@@ -129,17 +129,15 @@ useC = liftView (makeView (castT termView) (fromJust . castT termView))
 newtype ContextMonad a = CM { unCM :: Environment -> Maybe (a, Environment) }
 
 withCM :: (a -> ContextMonad a) -> Context a -> Maybe (Context a)
-withCM f c = do
-   a0       <- current c
-   (a, env) <- unCM (f a0) (getEnvironment c)
-   let nav = replace a (getNavigator c)
-   return (newContext env nav)
+withCM f c = liftM (flip g c) (runCM f c)
+ where
+   g (a, env) = newContext env . replace a . getNavigator
 
 evalCM :: (a -> ContextMonad b) -> Context a -> Maybe b
-evalCM f c = do
-   a0     <- current c
-   (b, _) <- unCM (f a0) (getEnvironment c)
-   return b
+evalCM f = liftM fst . runCM f
+
+runCM :: (a -> ContextMonad b) -> Context a -> Maybe (b, Environment)
+runCM f c = liftM f (current c) >>= (`unCM` getEnvironment c)
 
 instance Functor ContextMonad where
    fmap = liftM

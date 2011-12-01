@@ -84,13 +84,12 @@ exercisePage exampleFileExists ex = do
        goUp = up (length (qualifiers ex))
        f r  = [ link (goUp ++ ruleFile r) $ ttText (showId r)
               , text $ showBool $ isBuggyRule r
-              , text $ showBool $ not $ noBindings $ getParameters r
               , text $ showBool $ r `elem` rs
               , when (isRewriteRule r) $
                    ruleToHTML (Some ex) r
               ]
    table True
-      ( [ text "Rule name", text "Buggy", text "Args"
+      ( [ text "Rule name", text "Buggy"
         , text "Used", text "Rewrite rule"
         ]
       : map f (ruleset ex)

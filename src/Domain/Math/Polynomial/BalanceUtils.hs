@@ -30,6 +30,7 @@ import Common.Utils.Uniplate
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Data.Monoid
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
 import Domain.Math.Data.WithBool
@@ -152,9 +153,12 @@ buggyBalanceRule n f = useEquality eq $ buggyRule $
 
 buggyBalanceRuleArgs :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr, Environment)) -> Rule (Equation Expr)
 buggyBalanceRuleArgs n f = useEquality eq $ buggyRule $ 
-   makeRule (bugbal n) $ makeEnvTrans f
+   makeRule (bugbal n) $ makeEnvTrans g
  where
    eq = viewEquivalent (traverseView (polyViewWith rationalView))
+   g a = case f a of
+            Just (b, env) -> changeEnvironment (mappend env) >> return b
+            Nothing -> mempty
 
 buggyBalanceExprRule :: IsId n => n -> (Expr -> Maybe Expr) -> Rule Expr
 buggyBalanceExprRule n f = 

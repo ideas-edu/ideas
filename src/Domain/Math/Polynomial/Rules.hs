@@ -381,7 +381,7 @@ sameConFactor =
 
 abcFormula :: Rule (Context (OrList (Equation Expr)))
 abcFormula = describe "quadratic formula (abc formule)" $
-   makeSimpleRule (quadreq, "abc") $ withCM $ oneDisjunct $ \(lhs :==: rhs) -> do
+   makeEnvRule (quadreq, "abc") $ withCM2 $ oneDisjunct $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (x, (a, b, c)) <- matchM quadraticNF lhs
    addListToClipboard ["a", "b", "c"] (map fromRational [a, b, c])
@@ -399,7 +399,7 @@ abcFormula = describe "quadratic formula (abc formule)" $
 
 higherSubst :: Rule (Context (Equation Expr))
 higherSubst = describe "Substitute variable" $
-   makeSimpleRule (polyeq, "subst") $ withCM $ \(lhs :==: rhs) -> do
+   makeEnvRule (polyeq, "subst") $ withCM2 $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    let myView = polyView >>> second trinomialPolyView
    (x, ((a, n1), (b, n2), (c, n3))) <- matchM myView lhs
@@ -410,7 +410,7 @@ higherSubst = describe "Substitute variable" $
 
 substBackVar :: Rule (Context Expr)
 substBackVar = describe "Substitute back a variable" $
-   makeSimpleRule (polyeq, "back-subst") $ withCM $ \a -> do
+   makeEnvRule (polyeq, "back-subst") $ withCM2 $ \a -> do
    expr <- lookupClipboard "subst"
    case fromExpr expr of
       Just (Var p :==: rhs) -> do
@@ -492,7 +492,7 @@ varToLeft :: Rule (Relation Expr)
 varToLeft = doAfter (fmap collectLikeTerms) $
    describe "variable to left" $
    makeRule (lineq, "var-left") $ flip (supply1 "term") minusT $ \eq -> do
-      (x, a, _) <- match (linearViewWith rationalView) (rightHandSide eq)
+      (x, a, _) <- matchM (linearViewWith rationalView) (rightHandSide eq)
       guard (a/=0)
       return (fromRational a * Var x)
 
@@ -501,12 +501,12 @@ removeDivision :: Rule (Relation Expr)
 removeDivision = doAfter (fmap (collectLikeTerms . distributeAll)) $
    describe "remove division" $
    makeRule (lineq, "remove-div") $ flip (supply1 "factor") timesT $ \eq -> do
-      xs <- match sumView (leftHandSide eq)
-      ys <- match sumView (rightHandSide eq)
+      xs <- matchM sumView (leftHandSide eq)
+      ys <- matchM sumView (rightHandSide eq)
       -- also consider parts without variables
       -- (but at least one participant should have a variable)
       zs <- forM (xs ++ ys) $ \a -> do
-               (_, list) <- match productView a
+               (_, list) <- matchM productView a
                return [ (hasSomeVar a, e) | e <- list ]
       let f (b, e) = do
              (_, this) <- match (divView >>> second integerView) e

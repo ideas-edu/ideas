@@ -318,7 +318,7 @@ encodeEnvironment b ctx
                  _ -> "value" .=. showValue descr
  where
    loc    = location ctx
-   values = bindings $ withLoc $ getEnvironment ctx
+   values = sortBy (\a b -> showId a `compare` showId b) $ bindings $ withLoc $ getEnvironment ctx
    withLoc
       | null loc  = id
       | otherwise = insertBinding $ setValue loc locDescr

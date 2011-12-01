@@ -16,7 +16,6 @@ module Domain.Math.Polynomial.BalanceUtils
    , linbal, checkForChange
    , termArg, factorArg, factorArgs
    , buggyBalanceRule, buggyBalanceRuleArgs
-   -- , buggyBalanceRewriteRule
    , buggyBalanceExprRule, buggyBalanceRecognizer
    , collectLocal, collectGlobal
    , distributeDiv, distributeTimes
@@ -24,13 +23,13 @@ module Domain.Math.Polynomial.BalanceUtils
    , isTimesT, diffTimes
    ) where
 
-import Common.Library hiding (rewrite)
+import Common.Library
+import Common.Results (addEnvironment)
 import Common.Utils (fixpoint)
 import Common.Utils.Uniplate
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Data.Monoid
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
 import Domain.Math.Data.WithBool
@@ -157,8 +156,8 @@ buggyBalanceRuleArgs n f = useEquality eq $ buggyRule $
  where
    eq = viewEquivalent (traverseView (polyViewWith rationalView))
    g a = case f a of
-            Just (b, env) -> changeEnvironment (mappend env) >> return b
-            Nothing -> mempty
+            Just (b, env) -> addEnvironment env >> return b
+            Nothing -> mzero
 
 buggyBalanceExprRule :: IsId n => n -> (Expr -> Maybe Expr) -> Rule Expr
 buggyBalanceExprRule n f = 

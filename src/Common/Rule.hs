@@ -17,7 +17,7 @@ module Common.Rule
    ( -- * Rules
      Rule, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
    , finalRule, isFinalRule, ruleSiblings, rule, ruleList
-   , makeRule, makeSimpleRule, makeSimpleRuleList
+   , makeRule, makeSimpleRule, makeSimpleRuleList, makeEnvRule
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doAfter
    , siblingOf, useEquality, ruleEquality, transformation, ruleRecognizer
      -- * QuickCheck
@@ -27,6 +27,7 @@ module Common.Rule
 import qualified Common.Algebra.Field as Field
 import Common.Classes
 import Common.Id
+import Common.Results
 import Common.Rewriting
 import Common.Transformation
 import Common.View
@@ -61,9 +62,10 @@ instance Ord (Rule a) where
    compare = compareId
 
 instance Apply Rule where
-   applyAll r a = do
-      b <- applyAll (transformation r) a
-      return (afterwards r b)
+   applyAll r = fromResults . applyResults r
+
+instance ApplyResults Rule where
+   applyResults r = liftM (afterwards r) . applyResults (transformation r)
 
 instance HasId (Rule a) where
    getId        = ruleId
@@ -121,6 +123,9 @@ makeSimpleRule = makeSimpleRuleList
 -- argument is the rule's name
 makeSimpleRuleList :: (IsId n, Foldable f) => n -> (a -> f a) -> Rule a
 makeSimpleRuleList n = makeRule n . makeTransG
+
+makeEnvRule :: IsId n => n -> (a -> Results a) -> Rule a
+makeEnvRule n = makeRule n . makeEnvTrans
 
 -- | A special (minor) rule that always returns the identity
 idRule :: Rule a

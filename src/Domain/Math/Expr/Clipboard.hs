@@ -20,10 +20,12 @@ module Domain.Math.Expr.Clipboard
      -- generalized interface
    , addToClipboardG, addListToClipboardG
    , lookupClipboardG, lookupListClipboardG
+   , lookupClipboardIn
    , maybeOnClipboardG
    ) where
 
 import Common.Library
+import Common.Results
 import Control.Monad
 import Data.Typeable
 import Domain.Math.Data.Relation
@@ -60,40 +62,46 @@ clipboard = makeBindingWith (C M.empty) "clipboard"
 ---------------------------------------------------------------------
 -- Interface to work with clipboard
 
-addToClipboard :: String -> Expr -> ContextMonad ()
+addToClipboard :: String -> Expr -> Results ()
 addToClipboard = addToClipboardG
 
-addListToClipboard :: [String] -> [Expr] -> ContextMonad ()
+addListToClipboard :: [String] -> [Expr] -> Results ()
 addListToClipboard = addListToClipboardG
 
-lookupClipboard :: String -> ContextMonad Expr
+lookupClipboard :: String -> Results Expr
 lookupClipboard = lookupClipboardG
 
-lookupListClipboard :: [String] -> ContextMonad [Expr]
+lookupListClipboard :: [String] -> Results [Expr]
 lookupListClipboard = lookupListClipboardG
 
-removeClipboard :: String -> ContextMonad ()
+removeClipboard :: String -> Results ()
 removeClipboard s = modifyVar clipboard (C . M.delete s . unC)
 
 ---------------------------------------------------------------------
 -- Generalized interface to work with clipboard
 
-addToClipboardG :: IsTerm a => String -> a -> ContextMonad ()
+addToClipboardG :: IsTerm a => String -> a -> Results ()
 addToClipboardG s a = modifyVar clipboard (C . M.insert s (toExpr a) . unC)
 
-addListToClipboardG :: IsTerm a => [String] -> [a] -> ContextMonad ()
+addListToClipboardG :: IsTerm a => [String] -> [a] -> Results ()
 addListToClipboardG = zipWithM_ addToClipboardG
 
-lookupClipboardG :: IsTerm a => String -> ContextMonad a
+lookupClipboardG :: IsTerm a => String -> Results a
 lookupClipboardG s = do
    m    <- readVar clipboard
-   expr <- maybeCM (M.lookup s (unC m))
+   expr <- toResults (M.lookup s (unC m))
    fromExpr expr
 
-maybeOnClipboardG :: IsTerm a => String -> ContextMonad (Maybe a)
+lookupClipboardIn :: IsTerm a => String -> Environment -> Maybe a
+lookupClipboardIn s env = do 
+   clip <- lookupValue (getId clipboard) env
+   expr <- M.lookup s (unC clip)
+   fromExpr expr
+
+maybeOnClipboardG :: IsTerm a => String -> Results (Maybe a)
 maybeOnClipboardG s = do
    m <- readVar clipboard
    return (M.lookup s (unC m) >>= fromExpr)
 
-lookupListClipboardG :: IsTerm a => [String] -> ContextMonad [a]
+lookupListClipboardG :: IsTerm a => [String] -> Results [a]
 lookupListClipboardG = mapM lookupClipboardG

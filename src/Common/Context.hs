@@ -15,18 +15,19 @@
 module Common.Context
    ( -- * Abstract data type
      Context, fromContext, fromContextWith, fromContextWith2
-   , newContext, getEnvironment, modifyEnvironment
+   , newContext, getEnvironment
      -- * Lifting
    , liftToContext
    , use, useC, termNavigator, applyTop
      -- * Context Monad
-   , ContextMonad, readVar, writeVar, modifyVar
-   , maybeCM, withCM, evalCM
+   , readVar, writeVar, modifyVar
+   , withCM2, evalCM2
    ) where
 
 import Common.Binding
 import Common.Id
 import Common.Navigator
+import Common.Results
 import Common.Rewriting
 import Common.View
 import Control.Monad
@@ -78,9 +79,6 @@ instance TypedNavigator Context where
 newContext :: Environment -> Navigator a -> Context a
 newContext = C
 
-modifyEnvironment :: (Environment -> Environment) -> Context a -> Context a
-modifyEnvironment f c = c {getEnvironment = f (getEnvironment c)}
-
 ----------------------------------------------------------
 -- Lifting rules
 
@@ -124,50 +122,38 @@ useC :: (LiftView f, IsTerm a, IsTerm b) => f (Context a) -> f (Context b)
 useC = liftView (makeView (castT termView) (fromJust . castT termView))
 
 ----------------------------------------------------------
--- Context monad
+-- Legacy code
 
-newtype ContextMonad a = CM { unCM :: Environment -> Maybe (a, Environment) }
+withCM2 :: (a -> Results a) -> Context a -> Results (Context a)
+withCM2 f c = do 
+   old <- resultsEnvironment
+   setEnvironment (getEnvironment c)
+   a   <- current c
+   b   <- f a
+   env <- resultsEnvironment
+   setEnvironment old
+   return (replace b c) {getEnvironment = env}
 
-withCM :: (a -> ContextMonad a) -> Context a -> Maybe (Context a)
-withCM f c = liftM (flip g c) (runCM f c)
- where
-   g (a, env) = newContext env . replace a . getNavigator
+evalCM2 :: (a -> Results b) -> Context a -> Results b
+evalCM2 f c = do 
+   old <- resultsEnvironment
+   setEnvironment (getEnvironment c)
+   a <- current c >>= f
+   setEnvironment old
+   return a
 
-evalCM :: (a -> ContextMonad b) -> Context a -> Maybe b
-evalCM f = liftM fst . runCM f
-
-runCM :: (a -> ContextMonad b) -> Context a -> Maybe (b, Environment)
-runCM f c = liftM f (current c) >>= (`unCM` getEnvironment c)
-
-instance Functor ContextMonad where
-   fmap = liftM
-
-instance Monad ContextMonad where
-   fail       = const mzero
-   return a   = CM (\env -> return (a, env))
-   CM m >>= f = CM (\env -> do (a, e) <- m env
-                               let CM g = f a
-                               g e)
-
-instance MonadPlus ContextMonad where
-   mzero = CM (const mzero)
-   mplus (CM f) (CM g) = CM (\env -> f env `mplus` g env)
-
-readVar :: Typeable a => Binding a -> ContextMonad a
-readVar var = CM $ \env -> Just (f env, env)
- where
-   f env = fromMaybe (getValue var) $ 
+readVar :: Typeable a => Binding a -> Results a
+readVar var = do
+   env <- resultsEnvironment
+   return $ fromMaybe (getValue var) $ 
       lookupValue var env -- typed value
     `mplus`
       (lookupValue var env >>= readBinding var) -- value as string
     `mplus`
       (lookupValue var env >>= readTermBinding var) -- value as term
 
-writeVar  :: Typeable a => Binding a -> a -> ContextMonad ()
-writeVar var a = CM $ \env -> return ((), insertBinding (setValue a var) env)
+writeVar  :: Typeable a => Binding a -> a -> Results ()
+writeVar var a = localBinding (setValue a var)
 
-modifyVar :: Typeable a => Binding a -> (a -> a) -> ContextMonad ()
+modifyVar :: Typeable a => Binding a -> (a -> a) -> Results ()
 modifyVar var f = readVar var >>= (writeVar var  . f)
-
-maybeCM :: Maybe a -> ContextMonad a
-maybeCM = maybe mzero return

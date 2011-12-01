@@ -14,7 +14,7 @@ module Domain.Math.Power.Equation.NormViews
    , normPowerEqView, normPowerEqView'
    ) where
 
-import Common.Rewriting hiding (rewrite)
+import Common.Rewriting
 import Common.Utils.Uniplate
 import Common.View
 import Control.Monad

@@ -12,6 +12,7 @@
 module Domain.LinearAlgebra.GramSchmidtRules where
 
 import Common.Library hiding (current)
+import Common.Results
 import Control.Monad
 import Data.Maybe
 import Domain.LinearAlgebra.Vector
@@ -26,7 +27,7 @@ rulesGramSchmidt = [ruleNormalize, ruleOrthogonal, ruleNext]
 -- Make the current vector of length 1
 -- (only applicable if this is not already the case)
 ruleNormalize :: Floating a => Rule (Context (VectorSpace a))
-ruleNormalize = makeSimpleRule "Turn into unit Vector" $ withCM $ \vs -> do
+ruleNormalize = makeEnvRule "Turn into unit Vector" $ withCM2 $ \vs -> do
    v <- current vs
    guard (norm v `notElem` [0, 1])
    setCurrent (toUnit v) vs
@@ -34,18 +35,18 @@ ruleNormalize = makeSimpleRule "Turn into unit Vector" $ withCM $ \vs -> do
 -- Make the current vector orthogonal with some other vector
 -- that has already been considered
 ruleOrthogonal :: Floating a => Rule (Context (VectorSpace a))
-ruleOrthogonal = makeRule "Make orthogonal" $ supply2 descr args transOrthogonal
+ruleOrthogonal = makeRule "Make orthogonal" $ supply2 descr (evalCM2 args) transOrthogonal
  where
    descr = ("vector 1", "vector 2")
-   args  = evalCM $ \_ -> do
-              i <- liftM pred (readVar varI)
-              j <- liftM pred (readVar varJ)
-              guard (i>j)
-              return (j, i)
+   args _ = do
+      i <- liftM pred (readVar varI)
+      j <- liftM pred (readVar varJ)
+      guard (i>j)
+      return (j, i)
 
 -- Variable "j" is for administrating which vectors are already orthogonal
 ruleNextOrthogonal :: Rule (Context (VectorSpace a))
-ruleNextOrthogonal = minorRule $ makeSimpleRule "Orthogonal to next" $ withCM $ \vs -> do
+ruleNextOrthogonal = minorRule $ makeEnvRule "Orthogonal to next" $ withCM2 $ \vs -> do
    i <- readVar varI
    j <- liftM succ (readVar varJ)
    guard (j < i)
@@ -55,21 +56,21 @@ ruleNextOrthogonal = minorRule $ makeSimpleRule "Orthogonal to next" $ withCM $ 
 -- Consider the next vector
 -- This rule should fail if there are no vectors left
 ruleNext :: Rule (Context (VectorSpace a))
-ruleNext = minorRule $ makeSimpleRule "Consider next vector" $ withCM $ \vs -> do
+ruleNext = minorRule $ makeEnvRule "Consider next vector" $ withCM2 $ \vs -> do
    i <- readVar varI
    guard (i < length (vectors vs))
    writeVar varI (i+1)
    writeVar varJ 0
    return vs
 
-current :: VectorSpace a -> ContextMonad (Vector a)
+current :: VectorSpace a -> Results (Vector a)
 current vs = do
    i <- readVar varI
    case drop (i-1) (vectors vs) of
       v:_ -> return v
       _   -> mzero
 
-setCurrent :: Vector a -> VectorSpace a -> ContextMonad (VectorSpace a)
+setCurrent :: Vector a -> VectorSpace a -> Results (VectorSpace a)
 setCurrent v vs = do
    i <- readVar varI
    case splitAt (i-1) (vectors vs) of

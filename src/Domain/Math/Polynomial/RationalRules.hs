@@ -16,6 +16,7 @@ module Domain.Math.Polynomial.RationalRules
    ) where
 
 import Common.Library
+import Common.Results
 import Control.Monad
 import Data.Maybe
 import Domain.Logic.Formula hiding (Var)
@@ -39,7 +40,7 @@ ratId = newId "algebra.equations.rational"
 
 -- a/b = 0  iff  a=0 (and b/=0)
 divisionIsZero :: Rule (Context (Equation Expr))
-divisionIsZero = makeSimpleRule (ratId, "division-zero") $ withCM $ \(lhs :==: rhs) -> do
+divisionIsZero = makeEnvRule (ratId, "division-zero") $ withCM2 $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (a, b) <- matchM divView lhs
    conditionNotZero b
@@ -47,7 +48,7 @@ divisionIsZero = makeSimpleRule (ratId, "division-zero") $ withCM $ \(lhs :==: r
 
 -- a/b = 1  iff  a=b (and b/=0)
 divisionIsOne :: Rule (Context (Equation Expr))
-divisionIsOne = makeSimpleRule (ratId, "division-one") $ withCM $ \(lhs :==: rhs) -> do
+divisionIsOne = makeEnvRule (ratId, "division-one") $ withCM2 $ \(lhs :==: rhs) -> do
    guard (rhs == 1)
    (a, b) <- matchM divView lhs
    conditionNotZero b
@@ -55,7 +56,7 @@ divisionIsOne = makeSimpleRule (ratId, "division-one") $ withCM $ \(lhs :==: rhs
 
 -- a/c = b/c  iff  a=b (and c/=0)
 sameDivisor :: Rule (Context (Equation Expr))
-sameDivisor = makeSimpleRule (ratId, "same-divisor") $ withCM $ \(lhs :==: rhs) -> do
+sameDivisor = makeEnvRule (ratId, "same-divisor") $ withCM2 $ \(lhs :==: rhs) -> do
    (a, c1) <- matchM divView lhs
    (b, c2) <- matchM divView rhs
    guard (c1==c2)
@@ -64,7 +65,7 @@ sameDivisor = makeSimpleRule (ratId, "same-divisor") $ withCM $ \(lhs :==: rhs) 
 
 -- a/b = a/c  iff  a=0 or b=c (and b/=0 and c/=0)
 sameDividend :: Rule (Context (OrList (Equation Expr)))
-sameDividend = makeSimpleRule (ratId, "same-dividend") $ withCM $ oneDisjunct $ \(lhs :==: rhs) -> do
+sameDividend = makeEnvRule (ratId, "same-dividend") $ withCM2 $ oneDisjunct $ \(lhs :==: rhs) -> do
    (a1, b) <- matchM divView lhs
    (a2, c) <- matchM divView rhs
    guard (a1==a2)
@@ -74,7 +75,7 @@ sameDividend = makeSimpleRule (ratId, "same-dividend") $ withCM $ oneDisjunct $ 
 
 -- a/b = c/d  iff  a*d = b*c   (and b/=0 and d/=0)
 crossMultiply :: Rule (Context (Equation Expr))
-crossMultiply = makeSimpleRule (ratId, "cross-multiply") $ withCM $ \(lhs :==: rhs) -> do
+crossMultiply = makeEnvRule (ratId, "cross-multiply") $ withCM2 $ \(lhs :==: rhs) -> do
    (a, b) <- matchM divView lhs
    (c, d) <- matchM divView rhs
    conditionNotZero b
@@ -83,7 +84,7 @@ crossMultiply = makeSimpleRule (ratId, "cross-multiply") $ withCM $ \(lhs :==: r
 
 -- a/b = c  iff  a = b*c  (and b/=0)
 multiplyOneDiv :: Rule (Context (Equation Expr))
-multiplyOneDiv = makeSimpleRule (ratId, "multiply-one-div") $ withCM $ \(lhs :==: rhs) ->
+multiplyOneDiv = makeEnvRule (ratId, "multiply-one-div") $ withCM2 $ \(lhs :==: rhs) ->
    f (:==:) lhs rhs `mplus` f (flip (:==:)) rhs lhs
  where
    f eq ab c = do
@@ -104,7 +105,7 @@ fractionPlus = makeSimpleRule (ratId, "rational-plus") $ \expr -> do
 -- ab/ac  =>  b/c  (if a/=0)
 -- Note that the common term can be squared (in one of the parts)
 cancelTermsDiv :: Rule (Context Expr)
-cancelTermsDiv = makeSimpleRule (ratId, "cancel-div") $ withCM $ \expr -> do
+cancelTermsDiv = makeEnvRule (ratId, "cancel-div") $ withCM2 $ \expr -> do
    ((b, xs), (c, ys)) <- matchM myView expr
    let (ps, qs, rs) = rec (map f xs) (map f ys)
    guard (not (null rs))
@@ -155,8 +156,8 @@ turnIntoFraction = liftView plusView $
 
 -- A simple implementation that considers the condition stored in the context
 checkSolution :: Rule (Context (OrList (Equation Expr)))
-checkSolution = makeSimpleRule (ratId, "check-solution") $
-   withCM $ oneDisjunct $ \(x :==: a) -> do
+checkSolution = makeEnvRule (ratId, "check-solution") $
+   withCM2 $ oneDisjunct $ \(x :==: a) -> do
       c  <- lookupClipboardG "condition"
       xs <- matchM andView c
       guard ((x ./=. a) `elem` xs)
@@ -165,13 +166,13 @@ checkSolution = makeSimpleRule (ratId, "check-solution") $
 ---------------------------------------------------------------
 -- Helper-code
 
-condition :: Logic (Relation Expr) -> ContextMonad ()
+condition :: Logic (Relation Expr) -> Results ()
 condition c = do
    mp <- maybeOnClipboardG "condition"
    let a = maybe id (.&&.) mp c
    unless (a==T) (addToClipboardG "condition" a)
 
-conditionNotZero :: Expr -> ContextMonad ()
+conditionNotZero :: Expr -> Results ()
 conditionNotZero expr = condition (f xs)
  where
    f  = pushNotWith (Logic.Var . notRelation) . Not

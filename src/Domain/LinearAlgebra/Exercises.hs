@@ -21,7 +21,6 @@ import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.Matrix
-import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.Parser
 import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.Vector
@@ -81,7 +80,6 @@ gaussianElimExercise = makeExercise
                                Left msg -> Left msg
    , prettyPrinter  = ppMatrixWith show
    , equivalence    = withoutContext (eqMatrix `on` fmap simplified)
-   , extraRules     = matrixRules
    , ready          = predicate inRowReducedEchelonForm
    , strategy       = gaussianElimStrategy
    , randomExercise = simpleGenerator arbMatrix
@@ -109,7 +107,6 @@ systemWithMatrixExercise = makeExercise
                               in case (f x, f y) of
                                     (Just a, Just b) -> simpleEquivalence linearSystemExercise a b
                                     _ -> False
-   , extraRules     = map useC equationsRules ++ map useC (matrixRules :: [Rule (Context (Matrix Expr))])
    , ready          = predicate (inSolvedForm . (fromExpr :: Expr -> Equations Expr))
    , strategy       = systemWithMatrixStrategy
    , randomExercise = simpleGenerator (fmap (toExpr . matrixToSystem) (arbMatrix :: Gen (Matrix Expr)))

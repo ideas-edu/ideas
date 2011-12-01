@@ -19,13 +19,15 @@ module Common.Rewriting.RewriteRule
      -- * Compiling rewrite rules
    , rewriteRule, RuleBuilder(..)
      -- * Using rewrite rules
-   , rewrite, rewriteM, rewriteArgs, showRewriteRule, smartGenerator
+   , showRewriteRule, smartGenerator
    , metaInRewriteRule, renumberRewriteRule
    , symbolMatcher, symbolBuilder
    ) where
 
+import Common.Binding
 import Common.Classes
 import Common.Id
+import Common.Results
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
 import Common.Rewriting.Unification
@@ -136,20 +138,16 @@ symbolBuilder s f r = r {ruleBuilders = M.insert s f (ruleBuilders r)}
 -- Using a rewrite rule
 
 instance Apply RewriteRule where
-   applyAll = rewrite
+   applyAll r = fromResults . applyResults r
 
-rewriteArgs :: RewriteRule a -> a -> [(a, [Term])]
-rewriteArgs r a = do
-   let term = toTermRR r a
-   (out, args) <- buildSpec (ruleMatchers r) (ruleBuilders r) (ruleSpecTerm r) term
-   b   <- fromTermRR r out 
-   return (b, args)
-
-rewrite :: RewriteRule a -> a -> [a]
-rewrite r = map fst . rewriteArgs r
-
-rewriteM :: MonadPlus m => RewriteRule a -> a -> m a
-rewriteM r = msum . map return . rewrite r
+instance ApplyResults RewriteRule where
+   applyResults r a = do
+      let builder = buildSpec (ruleMatchers r) (ruleBuilders r) (ruleSpecTerm r)
+          term    = toTermRR r a
+      (out, xs) <- toResults (builder term)
+      let make t = Typed . setValue t . termBinding . show
+      addEnvironment $ makeEnvironment $ zipWith make xs [1::Int ..]
+      fromTermRR r out
 
 -----------------------------------------------------------
 -- Pretty-print a rewriteRule

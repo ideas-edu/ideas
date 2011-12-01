@@ -16,6 +16,7 @@ module Domain.LinearAlgebra.Strategies
    ) where
 
 import Common.Library hiding (simplify)
+import Common.Results
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.LinearSystem
@@ -65,7 +66,7 @@ systemToEchelonWithEEO =
    label "System to Echelon Form (EEO)" $
    simplifyFirst <*>
    repeatS (  dropEquation
-          <|> check (maybe False (not . null) . evalCM remaining)
+          <|> check (all (not . null) . fromResults . evalCM2 remaining)
           <*> label "Exchange equations"        (try ruleExchangeEquations)
           <*> label "Scale equation to one"     (option ruleScaleEquation)
           <*> label "Eliminate variable"        (repeatS ruleEliminateVar)
@@ -105,7 +106,7 @@ simplifyFirst = simplifySystem idRule
 
 conv1 :: Rule (Context Expr)
 conv1 = describe "Convert linear system to matrix" $
-   makeSimpleRule "linearalgebra.linsystem.tomatrix" $ withCM $ \expr -> do
+   makeEnvRule "linearalgebra.linsystem.tomatrix" $ withCM2 $ \expr -> do
       ls <- fromExpr expr
       let (m, vs) = systemToMatrix ls
       writeVar varVars (map Var vs)
@@ -113,7 +114,7 @@ conv1 = describe "Convert linear system to matrix" $
 
 conv2 :: Rule (Context Expr)
 conv2 = describe "Convert matrix to linear system" $
-   makeSimpleRule "linearalgebra.linsystem.frommatrix" $ withCM $ \expr -> do
+   makeEnvRule "linearalgebra.linsystem.frommatrix" $ withCM2 $ \expr -> do
       evs <- readVar varVars
       m   <- fromExpr expr
       let linsys = matrixToSystemWith vs (m :: Matrix Expr)

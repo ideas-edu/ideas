@@ -96,7 +96,8 @@ simIneqContext a b =
    sameClipboard a b &&
    withoutContext (simLogic (fmap cleanUpExpr . flipGT)) a b
  where
-   sameClipboard = (==) `on` evalCM (const (lookupClipboard "ineq"))
+   sameClipboard = eqExpr `on` (lookupClipboardIn "ineq" . getEnvironment)
+   eqExpr = (==) :: Maybe Expr -> Maybe Expr -> Bool
 
 --inEquation <- lookupClipboard "ineq" >>= fromExpr
 
@@ -228,7 +229,7 @@ trivialRelation =
 
 turnIntoEquation :: Rule (Context (Relation Expr))
 turnIntoEquation = describe "Turn into equation" $
-   makeSimpleRule (ineq, "to-equation") $ withCM $ \r -> do
+   makeEnvRule (ineq, "to-equation") $ withCM2 $ \r -> do
    guard (relationType r `elem` ineqTypes)
    addToClipboard "ineq" (toExpr r)
    return (leftHandSide r .==. rightHandSide r)
@@ -239,11 +240,11 @@ turnIntoEquation = describe "Turn into equation" $
 -- Todo: cleanup this function
 solutionInequation :: Rule (Context (Logic (Relation Expr)))
 solutionInequation = describe "Determine solution for inequality" $
-   makeSimpleRule (ineq, "give-solution") $ withCM $ \r -> do
+   makeEnvRule (ineq, "give-solution") $ withCM2 $ \r -> do
    inEquation <- lookupClipboard "ineq" >>= fromExpr
    let rt = relationType inEquation
    removeClipboard "ineq"
-   orv  <- maybeCM (matchM orListView r)
+   orv  <- matchM orListView r
    case toList orv of
       _ | isTrue orv ->
          return $ fromBool $

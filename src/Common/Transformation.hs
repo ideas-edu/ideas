@@ -31,61 +31,23 @@ module Common.Transformation
      -- * Recognizer
    , Recognizer, makeRecognizer, makeListRecognizer, simpleRecognizer
    , recognize, recognizeList, buggyRecognizer, isBuggyRecognizer
-   , changeEnvironment -- tmp
    ) where
 
 import Common.Algebra.Field
 import Common.Binding
 import Common.Classes
 import Common.Id
+import Common.Results
 import Common.Rewriting
 import Common.Utils
 import Common.View
 import Control.Monad
-import Data.Foldable (Foldable, toList)
-import Data.Monoid
+import Data.Foldable (Foldable)
 import Data.Maybe
-import Data.Typeable
 import Test.QuickCheck
 
 -----------------------------------------------------------
 --- Transformations
-
-newtype Results a = R (Environment -> [(a, Environment)])
-
-instance Monoid (Results a) where
-   mempty = R $ const []
-   R f `mappend` R g = R $ \env -> f env ++ g env
-
-instance Functor Results where
-   fmap = liftM
-
-instance Monad Results where
-   return a  = R $ \env -> [(a, env)]
-   fail _    = mempty
-   R f >>= g = R $ \old -> do
-      (a, env) <- f old
-      let R h = g a
-      h env
-
-instance MonadPlus Results where
-   mzero = mempty
-   mplus = mappend
-
-getEnvironment :: Results Environment
-getEnvironment = R $ \env -> [(env, env)]
-
-changeEnvironment :: (Environment -> Environment) -> Results ()
-changeEnvironment f = R $ return . (,) () . f
-
-localBinding :: Typeable a => Binding a -> Results ()
-localBinding = changeEnvironment . insertBinding
-
-toResults :: Foldable f => f a -> Results a
-toResults = mconcat . map return . toList
-
-fromResults :: Results a -> [a]
-fromResults (R f) = map fst (f mempty)
 
 -- | Abstract data type for representing transformations
 data Transformation a
@@ -102,18 +64,18 @@ instance SemiRing (Transformation a) where
    (<*>) = (:*:)
 
 instance Apply Transformation where
-   applyAll trans = fromResults . getResults trans
-   
-getResults :: Transformation a -> a -> Results a
-getResults trans a =
-   case trans of
-      Function f      -> f a
-      RewriteRule _ f -> f a
-      LiftView v t    -> do (b0, c) <- matchM v a
-                            b <- getResults t b0
-                            return (build v (b, c))
-      t1 :|: t2       -> getResults t1 a `mappend` getResults t2 a
-      t1 :*: t2       -> getResults t1 a >>= getResults t2
+   applyAll t = fromResults . applyResults t
+
+instance ApplyResults Transformation where
+   applyResults trans a =
+      case trans of
+         Function f      -> f a
+         RewriteRule _ f -> f a
+         LiftView v t    -> do (b0, c) <- matchM v a
+                               b <- applyResults t b0
+                               return (build v (b, c))
+         t1 :|: t2       -> applyResults t1 a `mplus` applyResults t2 a
+         t1 :*: t2       -> applyResults t1 a >>= applyResults t2
 
 instance LiftView Transformation where
    liftViewIn = LiftView
@@ -139,23 +101,24 @@ instance HasTransformation Transformation where
    transformation = id
 
 instance HasTransformation RewriteRule where
-   transformation r = RewriteRule r (rewriteM r)
+   -- no matching information is used
+   transformation r = RewriteRule r (toResults . applyAll r)
 
 -----------------------------------------------------------
 --- Bindables
 
 -- | Parameterization with one Bindable using the provided label
 supply1 :: Bindable x
-                  => String -> (a -> Maybe x)
+                  => String -> (a -> Results x)
                   -> (x -> Transformation a) -> Transformation a
 supply1 s f g = Function $ \a -> do
-   x <- toResults (f a)
+   x <- f a
    localBinding (setValue x $ makeBinding s)
-   getResults (g x) a
+   applyResults (g x) a
 
 -- | Parameterization with two Bindables using the provided labels
 supply2 :: (Bindable x, Bindable y)
-                   => (String, String) -> (a -> Maybe (x, y))
+                   => (String, String) -> (a -> Results (x, y))
                    -> (x -> y -> Transformation a) -> Transformation a
 supply2 (s1, s2) f t =
    supply1 s1 (fmap fst . f) $ \x ->
@@ -163,7 +126,7 @@ supply2 (s1, s2) f t =
 
 -- | Parameterization with three Bindables using the provided labels
 supply3 :: (Bindable x, Bindable y, Bindable z)
-                  => (String, String, String) -> (a -> Maybe (x, y, z))
+                  => (String, String, String) -> (a -> Results (x, y, z))
                   -> (x -> y -> z -> Transformation a) -> Transformation a
 supply3 (s1, s2, s3) f t =
    supply1 s1 (fmap fst3 . f) $ \x -> 
@@ -172,8 +135,8 @@ supply3 (s1, s2, s3) f t =
 
 -- temporary solution
 expectedEnvironment :: HasTransformation f => f a -> a -> Environment
-expectedEnvironment f a = fromMaybe mempty $ listToMaybe $ fromResults $
-   getResults (transformation f) a >> getEnvironment
+expectedEnvironment f = maybe mempty snd . listToMaybe .
+   runResults mempty . applyResults (transformation f)
 
 -----------------------------------------------------------
 --- Rules
@@ -192,10 +155,10 @@ getRewriteRules = rec . transformation
 
 transRecognizer :: (IsId n, HasTransformation f)
                 => (a -> a -> Bool) -> n -> f a -> Recognizer a
-transRecognizer eq n f = makeListRecognizer n $ \a b -> fromResults $ do
-   x <- getResults (transformation f) a
-   guard (x `eq` b)
-   getEnvironment
+transRecognizer eq n f = makeListRecognizer n $ \a b -> 
+   map snd $ runResults mempty $ do
+      x <- applyResults (transformation f) a
+      guard (x `eq` b)
 
 -----------------------------------------------------------
 --- QuickCheck

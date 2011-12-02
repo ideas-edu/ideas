@@ -11,9 +11,14 @@
 --
 -----------------------------------------------------------------------------
 module Common.Results 
-   ( ApplyResults(..), Results
-   , resultsEnvironment, setEnvironment, addEnvironment, runResults
-   , localBinding, toResults, fromResults
+   ( -- * Type and type class
+     ApplyResults(..), Results
+     -- * Conversion
+   , toResults, runResults, fromResults
+     -- * Global environment
+   , globalBinding, getGlobals, addGlobalEnvironment, setGlobals
+     -- * Local environment
+   , localBinding, getLocals, addLocalEnvironment
    ) where
 
 import Common.Binding
@@ -30,29 +35,43 @@ import Data.Monoid
 class Apply f => ApplyResults f where
    applyResults :: f a -> a -> Results a
 
-newtype Results a = R (StateT Environment [] a)
+newtype Results a = R (StateT St [] a)
    deriving (Functor, Monad, MonadPlus)
+   
+data St = St {local :: Environment, global :: Environment}
 
-resultsEnvironment :: Results Environment
-resultsEnvironment = R get
+getGlobals :: Results Environment
+getGlobals = R $ gets global
 
-changeEnvironment :: (Environment -> Environment) -> Results ()
-changeEnvironment = R . modify
+changeGlobal :: (Environment -> Environment) -> Results ()
+changeGlobal f = R $ modify $ \st -> st {global = f (global st)}
 
-addEnvironment :: Environment -> Results ()
-addEnvironment = changeEnvironment . mappend
-
-setEnvironment :: Environment -> Results ()
-setEnvironment = changeEnvironment . const
+setGlobals :: Environment -> Results ()
+setGlobals = changeGlobal . const
 
 runResults :: Environment -> Results a -> [(a, Environment)]
-runResults env (R m) = runStateT m env
+runResults env (R m) = map (mapSecond global) $ runStateT m (St mempty env)
 
-localBinding :: Typeable a => Binding a -> Results ()
-localBinding = changeEnvironment . insertBinding
+globalBinding :: Typeable a => Binding a -> Results ()
+globalBinding = changeGlobal . insertBinding
+
+addGlobalEnvironment :: Environment -> Results ()
+addGlobalEnvironment = changeGlobal . mappend
 
 toResults :: Foldable f => f a -> Results a
 toResults = msum . map return . toList
 
 fromResults :: Results a -> [a]
 fromResults = map fst . runResults mempty
+
+changeLocal :: (Environment -> Environment) -> Results ()
+changeLocal f = R $ modify $ \st -> st {local = f (local st)}
+
+localBinding :: Typeable a => Binding a -> Results ()
+localBinding = changeLocal . insertBinding
+
+addLocalEnvironment :: Environment -> Results ()
+addLocalEnvironment = changeLocal . mappend
+
+getLocals :: Results Environment
+getLocals = R $ gets local

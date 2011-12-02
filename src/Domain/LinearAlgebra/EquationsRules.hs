@@ -36,7 +36,7 @@ equationsRules =
 ruleExchangeEquations :: Rule (Context (LinearSystem Expr))
 ruleExchangeEquations = describe "Exchange two equations" $
    simplifySystem $ makeRule "linearalgebra.linsystem.exchange" $
-   supply2 descr (evalCM2 args) (\x y -> liftToContext $ exchange x y)
+   supply2 descr (evalCM args) (\x y -> liftToContext $ exchange x y)
  where
    descr = ("equation 1", "equation 2")
    args ls = do
@@ -49,7 +49,7 @@ ruleExchangeEquations = describe "Exchange two equations" $
 ruleEliminateVar :: Rule (Context (LinearSystem Expr))
 ruleEliminateVar = describe "Eliminate a variable (using addition)" $
    simplifySystem $ makeRule "linearalgebra.linsystem.eliminate" $
-   supply3 descr (evalCM2 args) (\x y z -> liftToContext $ addEquations x y z)
+   supply3 descr (evalCM args) (\x y z -> liftToContext $ addEquations x y z)
  where
    descr = ("equation 1", "equation 2", "scale factor")
    args ls = do
@@ -64,14 +64,14 @@ ruleEliminateVar = describe "Eliminate a variable (using addition)" $
 
 ruleDropEquation :: Rule (Context (LinearSystem Expr))
 ruleDropEquation = describe "Drop trivial equations (such as 0=0)" $
-   simplifySystem $ makeEnvRule "linearalgebra.linsystem.trivial" $ withCM2 $ \ls -> do
+   simplifySystem $ makeEnvRule "linearalgebra.linsystem.trivial" $ withCM $ \ls -> do
       i   <- findIndexM (fromMaybe False . testConstants (==)) ls
       modifyVar covered (\n -> if i < n then n-1 else n)
       return (deleteIndex i ls)
 
 ruleInconsistentSystem :: Rule (Context (LinearSystem Expr))
 ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
-   simplifySystem $ makeEnvRule "linearalgebra.linsystem.inconsistent" $ withCM2 $ \ls -> do
+   simplifySystem $ makeEnvRule "linearalgebra.linsystem.inconsistent" $ withCM $ \ls -> do
       let stop = [0 :==: 1]
       guard (invalidSystem ls && ls /= stop)
       writeVar covered 1
@@ -80,7 +80,7 @@ ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
 ruleScaleEquation :: Rule (Context (LinearSystem Expr))
 ruleScaleEquation = describe "Scale equation to one" $
    simplifySystem $ makeRule "linearalgebra.linsystem.scale" $
-   supply2 descr (evalCM2 args) (\x y -> liftToContext $ scaleEquation x y)
+   supply2 descr (evalCM args) (\x y -> liftToContext $ scaleEquation x y)
  where
    descr = ("equation", "scale factor")
    args ls = do
@@ -95,7 +95,7 @@ ruleScaleEquation = describe "Scale equation to one" $
 ruleBackSubstitution :: Rule (Context (LinearSystem Expr))
 ruleBackSubstitution = describe "Back substitution" $
    simplifySystem $ makeRule "linearalgebra.linsystem.subst" $
-   supply3 descr (evalCM2 args) (\x y z -> liftToContext $ addEquations x y z)
+   supply3 descr (evalCM args) (\x y z -> liftToContext $ addEquations x y z)
  where
    descr = ("equation 1", "equation 2", "scale factor")
    args ls = do
@@ -109,7 +109,7 @@ ruleBackSubstitution = describe "Back substitution" $
 
 ruleIdentifyFreeVariables :: IsLinear a => Rule (Context (LinearSystem a))
 ruleIdentifyFreeVariables = describe "Identify free variables" $
-   minorRule $ makeEnvRule "linearalgebra.linsystem.freevars" $ withCM2 $ \ls ->
+   minorRule $ makeEnvRule "linearalgebra.linsystem.freevars" $ withCM $ \ls ->
    let vs = [ head ys | ys <- map (vars . leftHandSide) ls, not (null ys) ]
        f eq =
           let (e1, e2) = splitLinearExpr (`notElem` vs) (leftHandSide eq) -- constant ends up in e1
@@ -126,7 +126,7 @@ ruleUncoverEquation = describe "Uncover one equation" $
 
 ruleCoverAllEquations :: Rule (Context (LinearSystem a))
 ruleCoverAllEquations = describe "Cove all equations" $
-   minorRule $ makeEnvRule "linearalgebra.linsystem.coverall" $ withCM2 $ \ls -> do
+   minorRule $ makeEnvRule "linearalgebra.linsystem.coverall" $ withCM $ \ls -> do
       writeVar covered (length ls)
       return ls
 
@@ -171,7 +171,7 @@ addEquations i j a = makeTrans $ \xs -> do
    return $ begin++[combineWith (+) this (fmap (a*) exprj)]++end
 
 changeCover :: (Int -> Int) -> Transformation (Context (LinearSystem a))
-changeCover f = makeEnvTrans $ withCM2 $ \ls -> do
+changeCover f = makeEnvTrans $ withCM $ \ls -> do
    new <- liftM f (readVar covered)
    guard (new >= 0 && new <= length ls)
    writeVar covered new

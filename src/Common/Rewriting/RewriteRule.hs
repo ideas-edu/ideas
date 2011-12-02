@@ -145,8 +145,8 @@ instance ApplyResults RewriteRule where
       let builder = buildSpec (ruleMatchers r) (ruleBuilders r) (ruleSpecTerm r)
           term    = toTermRR r a
       (out, xs) <- toResults (builder term)
-      let make t = Typed . setValue t . termBinding . show
-      addEnvironment $ makeEnvironment $ zipWith make xs [1::Int ..]
+      let make t = localBinding . setValue t . termBinding . show
+      zipWithM_ make xs [1::Int ..]
       fromTermRR r out
 
 -----------------------------------------------------------

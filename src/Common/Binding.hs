@@ -131,7 +131,7 @@ instance Monoid Environment where
    mappend a b = Env (envMap a `mappend` envMap b) -- left has presedence
 
 bindings :: Environment -> [Typed Binding]
-bindings = M.elems . envMap
+bindings = sortBy compareId . M.elems . envMap
 
 makeEnvironment :: [Typed Binding] -> Environment
 makeEnvironment xs = Env $ M.fromList [ (getId a, a) | a <- xs ]

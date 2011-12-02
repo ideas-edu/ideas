@@ -135,8 +135,8 @@ supply3 (s1, s2, s3) f t =
 
 -- temporary solution
 expectedEnvironment :: HasTransformation f => f a -> a -> Environment
-expectedEnvironment f = maybe mempty snd . listToMaybe .
-   runResults mempty . applyResults (transformation f)
+expectedEnvironment f a = fromMaybe mempty $ listToMaybe $ fromResults $
+   applyResults (transformation f) a >> getLocals
 
 -----------------------------------------------------------
 --- Rules
@@ -156,9 +156,10 @@ getRewriteRules = rec . transformation
 transRecognizer :: (IsId n, HasTransformation f)
                 => (a -> a -> Bool) -> n -> f a -> Recognizer a
 transRecognizer eq n f = makeListRecognizer n $ \a b -> 
-   map snd $ runResults mempty $ do
+   fromResults $ do
       x <- applyResults (transformation f) a
       guard (x `eq` b)
+      getLocals
 
 -----------------------------------------------------------
 --- QuickCheck

@@ -24,7 +24,7 @@ module Domain.Math.Polynomial.BalanceUtils
    ) where
 
 import Common.Library
-import Common.Results (addEnvironment)
+import Common.Results (addLocalEnvironment)
 import Common.Utils (fixpoint)
 import Common.Utils.Uniplate
 import Control.Monad
@@ -156,7 +156,7 @@ buggyBalanceRuleArgs n f = useEquality eq $ buggyRule $
  where
    eq = viewEquivalent (traverseView (polyViewWith rationalView))
    g a = case f a of
-            Just (b, env) -> addEnvironment env >> return b
+            Just (b, env) -> addLocalEnvironment env >> return b
             Nothing -> mzero
 
 buggyBalanceExprRule :: IsId n => n -> (Expr -> Maybe Expr) -> Rule Expr

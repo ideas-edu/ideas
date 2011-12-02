@@ -19,7 +19,7 @@ import Domain.LinearAlgebra.Matrix
 import Domain.Math.Simplification
 
 ruleFindColumnJ :: Num a => Rule (Context (Matrix a))
-ruleFindColumnJ = minorRule $ makeEnvRule "linearalgebra.gaussianelim.FindColumnJ" $ withCM2 $ \m -> do
+ruleFindColumnJ = minorRule $ makeEnvRule "linearalgebra.gaussianelim.FindColumnJ" $ withCM $ \m -> do
    cols <- liftM columns (subMatrix m)
    i    <- findIndexM nonZero cols
    writeVar columnJ i
@@ -76,19 +76,19 @@ ruleUncoverRow = minorRule $ makeRule "linearalgebra.gaussianelim.UncoverRow" $ 
 
 ruleScaleRow :: (Bindable a, Fractional a) => (Matrix a -> Results (Int, a)) -> Rule (Context (Matrix a))
 ruleScaleRow f = makeRule "linearalgebra.gaussianelim.scale" $ 
-   supply2 descr (evalCM2 f) rowScale
+   supply2 descr (evalCM f) rowScale
  where 
    descr  = ("row", "scale factor")
 
 ruleExchangeRows :: Num a => (Matrix a -> Results (Int, Int)) -> Rule (Context (Matrix a))
 ruleExchangeRows f = makeRule "linearalgebra.gaussianelim.exchange" $
-   supply2 descr (evalCM2 f) rowExchange
+   supply2 descr (evalCM f) rowExchange
  where 
    descr = ("row 1", "row 2")
 
 ruleAddMultiple :: (Bindable a, Fractional a) => (Matrix a -> Results (Int, Int, a)) -> Rule (Context (Matrix a))
 ruleAddMultiple f = makeRule "linearalgebra.gaussianelim.add" $
-   supply3 descr (evalCM2 f)  rowAdd
+   supply3 descr (evalCM f)  rowAdd
  where 
    descr  = ("row 1", "row2", "scale factor") 
 
@@ -111,7 +111,7 @@ rowAdd i j k = matrixTrans $ \m -> do
    return (addRow i j k m)
 
 changeCover :: (Int -> Int) -> Transformation (Context (Matrix a))
-changeCover f = makeEnvTrans $ withCM2 $ \m -> do
+changeCover f = makeEnvTrans $ withCM $ \m -> do
    new <- liftM f (readVar covered)
    guard (new >= 0 && new <= fst (dimensions m))
    writeVar covered new

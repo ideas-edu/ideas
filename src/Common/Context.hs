@@ -21,7 +21,7 @@ module Common.Context
    , use, useC, termNavigator, applyTop
      -- * Context Monad
    , readVar, writeVar, modifyVar
-   , withCM2, evalCM2
+   , withCM, evalCM
    ) where
 
 import Common.Binding
@@ -124,27 +124,20 @@ useC = liftView (makeView (castT termView) (fromJust . castT termView))
 ----------------------------------------------------------
 -- Legacy code
 
-withCM2 :: (a -> Results a) -> Context a -> Results (Context a)
-withCM2 f c = do 
-   old <- resultsEnvironment
-   setEnvironment (getEnvironment c)
-   a   <- current c
-   b   <- f a
-   env <- resultsEnvironment
-   setEnvironment old
-   return (replace b c) {getEnvironment = env}
+withCM :: (a -> Results a) -> Context a -> Results (Context a)
+withCM f c = do 
+   let g a = liftM2 (,) (f a) getGlobals
+   (a, env) <- evalCM g c
+   return (replace a c) {getEnvironment = env}
 
-evalCM2 :: (a -> Results b) -> Context a -> Results b
-evalCM2 f c = do 
-   old <- resultsEnvironment
-   setEnvironment (getEnvironment c)
-   a <- current c >>= f
-   setEnvironment old
-   return a
+evalCM :: (a -> Results b) -> Context a -> Results b
+evalCM f c = do
+   setGlobals (getEnvironment c)
+   current c >>= f
 
 readVar :: Typeable a => Binding a -> Results a
 readVar var = do
-   env <- resultsEnvironment
+   env <- getGlobals
    return $ fromMaybe (getValue var) $ 
       lookupValue var env -- typed value
     `mplus`
@@ -153,7 +146,7 @@ readVar var = do
       (lookupValue var env >>= readTermBinding var) -- value as term
 
 writeVar  :: Typeable a => Binding a -> a -> Results ()
-writeVar var a = localBinding (setValue a var)
+writeVar var a = globalBinding (setValue a var)
 
 modifyVar :: Typeable a => Binding a -> (a -> a) -> Results ()
 modifyVar var f = readVar var >>= (writeVar var  . f)

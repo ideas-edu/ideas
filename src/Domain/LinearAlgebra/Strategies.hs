@@ -66,7 +66,7 @@ systemToEchelonWithEEO =
    label "System to Echelon Form (EEO)" $
    simplifyFirst <*>
    repeatS (  dropEquation
-          <|> check (all (not . null) . fromResults . evalCM2 remaining)
+          <|> check hasRemaining
           <*> label "Exchange equations"        (try ruleExchangeEquations)
           <*> label "Scale equation to one"     (option ruleScaleEquation)
           <*> label "Eliminate variable"        (repeatS ruleEliminateVar)
@@ -106,7 +106,7 @@ simplifyFirst = simplifySystem idRule
 
 conv1 :: Rule (Context Expr)
 conv1 = describe "Convert linear system to matrix" $
-   makeEnvRule "linearalgebra.linsystem.tomatrix" $ withCM2 $ \expr -> do
+   makeEnvRule "linearalgebra.linsystem.tomatrix" $ withCM $ \expr -> do
       ls <- fromExpr expr
       let (m, vs) = systemToMatrix ls
       writeVar varVars (map Var vs)
@@ -114,9 +114,13 @@ conv1 = describe "Convert linear system to matrix" $
 
 conv2 :: Rule (Context Expr)
 conv2 = describe "Convert matrix to linear system" $
-   makeEnvRule "linearalgebra.linsystem.frommatrix" $ withCM2 $ \expr -> do
+   makeEnvRule "linearalgebra.linsystem.frommatrix" $ withCM $ \expr -> do
       evs <- readVar varVars
       m   <- fromExpr expr
       let linsys = matrixToSystemWith vs (m :: Matrix Expr)
           vs = [ v | Var v <- evs ]
       return $ simplify $ toExpr linsys
+      
+hasRemaining :: Context (LinearSystem a) -> Bool
+hasRemaining c = all (not . null . fst) $ 
+   runResults (getEnvironment c) $ evalCM remaining c

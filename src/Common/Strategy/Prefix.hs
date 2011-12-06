@@ -70,7 +70,7 @@ prefixToSteps (P t) = reverse (trace t)
 
 -- | Retrieves the rules from a list of steps
 stepsToRules :: [Step l a] -> [Rule a]
-stepsToRules xs = [ r | RuleStep r <- xs ]
+stepsToRules xs = [ r | RuleStep _ r <- xs ]
 
 -- | Returns the last rule of a prefix (if such a rule exists)
 lastStepInPrefix :: Prefix a -> Maybe (Step LabelInfo a)

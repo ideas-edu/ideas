@@ -23,6 +23,7 @@ module Common.Strategy.Abstract
    , removed, collapsed, hidden, IsLabeled(..), noInterleaving
    ) where
 
+import Common.Binding
 import Common.Classes
 import Common.DerivationTree
 import Common.Id
@@ -184,10 +185,10 @@ fullDerivationTree = make . processLabelInfo id . toCore . toStrategy
    make core = fmap value . parseDerivationTree . makeState core
 
 -- | Returns the derivation tree for a strategy and a term with only major rules
-derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
+derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a, Environment) a
 derivationTree s = mergeMaybeSteps . mapFirst f . fullDerivationTree s
  where
-   f (RuleStep r) | isMajorRule r = Just r
+   f (RuleStep env r) | isMajorRule r = Just (r, env)
    f _ = Nothing
 
 -- | Returns a list of all major rules that are part of a labeled strategy

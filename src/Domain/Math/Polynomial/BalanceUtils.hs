@@ -152,7 +152,7 @@ buggyBalanceRule n f = useEquality eq $ buggyRule $
 
 buggyBalanceRuleArgs :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr, Environment)) -> Rule (Equation Expr)
 buggyBalanceRuleArgs n f = useEquality eq $ buggyRule $ 
-   makeRule (bugbal n) $ makeEnvTrans g
+   makeRule (bugbal n) $ makeTransG g
  where
    eq = viewEquivalent (traverseView (polyViewWith rationalView))
    g a = case f a of

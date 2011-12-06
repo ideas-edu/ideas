@@ -229,7 +229,7 @@ trivialRelation =
 
 turnIntoEquation :: Rule (Context (Relation Expr))
 turnIntoEquation = describe "Turn into equation" $
-   makeEnvRule (ineq, "to-equation") $ withCM $ \r -> do
+   makeSimpleRuleList (ineq, "to-equation") $ withCM $ \r -> do
    guard (relationType r `elem` ineqTypes)
    addToClipboard "ineq" (toExpr r)
    return (leftHandSide r .==. rightHandSide r)
@@ -240,7 +240,7 @@ turnIntoEquation = describe "Turn into equation" $
 -- Todo: cleanup this function
 solutionInequation :: Rule (Context (Logic (Relation Expr)))
 solutionInequation = describe "Determine solution for inequality" $
-   makeEnvRule (ineq, "give-solution") $ withCM $ \r -> do
+   makeSimpleRuleList (ineq, "give-solution") $ withCM $ \r -> do
    inEquation <- lookupClipboard "ineq" >>= fromExpr
    let rt = relationType inEquation
    removeClipboard "ineq"

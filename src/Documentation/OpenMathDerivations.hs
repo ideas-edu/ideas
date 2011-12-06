@@ -33,7 +33,7 @@ derivationsXML ex = makeXML "derivations" $ do
    forM_ (zip [1::Int ..] (examples ex)) $ \(i, (_, a)) ->
       element "derivation" $ do
          "title" .=. show i
-         let der = derivationPrevious (derivationDiffEnv (defaultDerivation ex a))
+         let der = derivationDiffEnv (defaultDerivation ex a)
          derivationM f g der
  where
    f ((r, _), _) = element "step" $ text (showId r)

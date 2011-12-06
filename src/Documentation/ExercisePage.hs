@@ -146,7 +146,7 @@ derivationHTML ex a = divClass "derivation" $ do
       divClass "error" $ text "<<not ready>>"
  where
    upn = length (qualifiers ex)
-   der = derivationPrevious (derivationDiffEnv (defaultDerivation ex a))
+   der = derivationDiffEnv (defaultDerivation ex a)
    ok  = maybe False (isReady ex) . fromContext . lastTerm
 
 idboxHTML :: String -> Id -> HTMLBuilder
@@ -193,8 +193,8 @@ diagnosisPage ef ex = do
          (_, Left msg) -> "parse error (after): "  ++ msg
          (Right a, Right b) -> show (diagnose (emptyState ex a) b)
 
-forStep :: Int -> ((Rule (Context a), Environment), Context a) -> HTMLBuilder
-forStep n ((r, env), old) = do
+forStep :: Int -> ((Rule (Context a), Environment), Environment) -> HTMLBuilder
+forStep n ((r, local), global) = do
       spaces 3
       text "=>"
       space
@@ -202,15 +202,14 @@ forStep n ((r, env), old) = do
           make | null (description r) = link target
                | otherwise = titleA (description r) . link target
       make (text (unqualified r))
-      let oldEnv = expectedEnvironment r old
-      unless (noBindings oldEnv) $ do
+      unless (noBindings local) $ do
          br
          spaces 6
-         text (show oldEnv)
-      unless (noBindings env) $ do
+         text (show local)
+      unless (noBindings global) $ do
          br
          spaces 6
-         text (show env)
+         text (show global)
       br
 
 forTerm :: Exercise a -> Context a -> HTMLBuilder

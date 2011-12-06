@@ -17,7 +17,7 @@ module Common.Rule
    ( -- * Rules
      Rule, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
    , finalRule, isFinalRule, ruleSiblings, rule, ruleList
-   , makeRule, makeSimpleRule, makeSimpleRuleList, makeEnvRule
+   , makeRule, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doAfter
    , siblingOf, useEquality, ruleEquality, transformation, ruleRecognizer
      -- * QuickCheck
@@ -32,7 +32,6 @@ import Common.Rewriting
 import Common.Transformation
 import Common.View
 import Control.Monad
-import Data.Foldable (Foldable)
 import Data.Function
 import Data.Maybe
 import Test.QuickCheck
@@ -121,11 +120,8 @@ makeSimpleRule = makeSimpleRuleList
 
 -- | Turn a function (which returns a list of results) into a rule: the first 
 -- argument is the rule's name
-makeSimpleRuleList :: (IsId n, Foldable f) => n -> (a -> f a) -> Rule a
+makeSimpleRuleList :: (IsId n, ToResults f) => n -> (a -> f a) -> Rule a
 makeSimpleRuleList n = makeRule n . makeTransG
-
-makeEnvRule :: IsId n => n -> (a -> Results a) -> Rule a
-makeEnvRule n = makeRule n . makeEnvTrans
 
 -- | A special (minor) rule that always returns the identity
 idRule :: Rule a

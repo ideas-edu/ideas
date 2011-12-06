@@ -19,13 +19,13 @@
 module Common.Transformation
    ( -- * Transformations
      Transformation, HasTransformation(..)
-   , makeTrans, makeEnvTrans, makeTransG
+   , makeTrans, makeTransG
      -- * Bindables
    , supply1, supply2, supply3
      -- * Recognizers
    , transRecognizer
      -- * Extract information
-   , expectedEnvironment, getRewriteRules
+   , getRewriteRules
      -- * QuickCheck generator
    , smartGen
      -- * Recognizer
@@ -42,7 +42,6 @@ import Common.Rewriting
 import Common.Utils
 import Common.View
 import Control.Monad
-import Data.Foldable (Foldable)
 import Data.Maybe
 import Test.QuickCheck
 
@@ -84,11 +83,8 @@ instance LiftView Transformation where
 makeTrans :: (a -> Maybe a) -> Transformation a
 makeTrans = makeTransG
 
-makeEnvTrans :: (a -> Results a) -> Transformation a
-makeEnvTrans = Function
-
 -- | Turn a function (which returns a list of results) into a transformation
-makeTransG :: Foldable f => (a -> f a) -> Transformation a
+makeTransG :: ToResults f => (a -> f a) -> Transformation a
 makeTransG f = Function (toResults . f)
 
 -----------------------------------------------------------
@@ -111,7 +107,7 @@ instance HasTransformation RewriteRule where
 supply1 :: Bindable x
                   => String -> (a -> Results x)
                   -> (x -> Transformation a) -> Transformation a
-supply1 s f g = Function $ \a -> do
+supply1 s f g = makeTransG $ \a -> do
    x <- f a
    localBinding (setValue x $ makeBinding s)
    applyResults (g x) a
@@ -120,23 +116,22 @@ supply1 s f g = Function $ \a -> do
 supply2 :: (Bindable x, Bindable y)
                    => (String, String) -> (a -> Results (x, y))
                    -> (x -> y -> Transformation a) -> Transformation a
-supply2 (s1, s2) f t =
-   supply1 s1 (fmap fst . f) $ \x ->
-   supply1 s2 (fmap snd . f) $ t x
+supply2 (s1, s2) f g = makeTransG $ \a -> do
+   (x, y) <- f a
+   localBinding (setValue x $ makeBinding s1)
+   localBinding (setValue y $ makeBinding s2)
+   applyResults (g x y) a
 
 -- | Parameterization with three Bindables using the provided labels
 supply3 :: (Bindable x, Bindable y, Bindable z)
                   => (String, String, String) -> (a -> Results (x, y, z))
                   -> (x -> y -> z -> Transformation a) -> Transformation a
-supply3 (s1, s2, s3) f t =
-   supply1 s1 (fmap fst3 . f) $ \x -> 
-   supply1 s2 (fmap snd3 . f) $ \y -> 
-   supply1 s3 (fmap thd3 . f) $ t x y
-
--- temporary solution
-expectedEnvironment :: HasTransformation f => f a -> a -> Environment
-expectedEnvironment f a = fromMaybe mempty $ listToMaybe $ fromResults $
-   applyResults (transformation f) a >> getLocals
+supply3 (s1, s2, s3) f g = makeTransG $ \a -> do
+   (x, y, z) <- f a
+   localBinding (setValue x $ makeBinding s1)
+   localBinding (setValue y $ makeBinding s2)
+   localBinding (setValue z $ makeBinding s3)
+   applyResults (g x y z) a
 
 -----------------------------------------------------------
 --- Rules

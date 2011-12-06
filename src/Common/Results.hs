@@ -12,9 +12,9 @@
 -----------------------------------------------------------------------------
 module Common.Results 
    ( -- * Type and type class
-     ApplyResults(..), Results
+     ApplyResults(..), ToResults(..), Results
      -- * Conversion
-   , toResults, runResults, fromResults
+   , runResults, fromResults
      -- * Global environment
    , globalBinding, getGlobals, addGlobalEnvironment, setGlobals
      -- * Local environment
@@ -25,7 +25,7 @@ import Common.Binding
 import Common.Classes
 import Control.Monad
 import Control.Monad.State
-import Data.Foldable (Foldable, toList)
+import Data.Maybe
 import Data.Typeable
 import Data.Monoid
 
@@ -34,6 +34,18 @@ import Data.Monoid
 
 class Apply f => ApplyResults f where
    applyResults :: f a -> a -> Results a
+
+class ToResults f where
+   toResults :: f a -> Results a 
+
+instance ToResults Results where
+   toResults = id
+
+instance ToResults [] where
+   toResults = msum . map return
+
+instance ToResults Maybe where
+   toResults = toResults . maybeToList
 
 newtype Results a = R (StateT St [] a)
    deriving (Functor, Monad, MonadPlus)
@@ -49,8 +61,8 @@ changeGlobal f = R $ modify $ \st -> st {global = f (global st)}
 setGlobals :: Environment -> Results ()
 setGlobals = changeGlobal . const
 
-runResults :: Environment -> Results a -> [(a, Environment)]
-runResults env (R m) = map (mapSecond global) $ runStateT m (St mempty env)
+runResults :: Environment -> Results a -> [a]
+runResults env (R m) = evalStateT m (St mempty env)
 
 globalBinding :: Typeable a => Binding a -> Results ()
 globalBinding = changeGlobal . insertBinding
@@ -58,11 +70,8 @@ globalBinding = changeGlobal . insertBinding
 addGlobalEnvironment :: Environment -> Results ()
 addGlobalEnvironment = changeGlobal . mappend
 
-toResults :: Foldable f => f a -> Results a
-toResults = msum . map return . toList
-
 fromResults :: Results a -> [a]
-fromResults = map fst . runResults mempty
+fromResults = runResults mempty
 
 changeLocal :: (Environment -> Environment) -> Results ()
 changeLocal f = R $ modify $ \st -> st {local = f (local st)}
@@ -75,3 +84,14 @@ addLocalEnvironment = changeLocal . mappend
 
 getLocals :: Results Environment
 getLocals = R $ gets local
+
+{-
+class Monad m => X m where
+   readBinding  :: Binding a -> m a
+   writeBinding :: Binding a -> a -> m ()
+
+instance X Results where
+   readBinding = 
+
+modifyBinding :: X m => Binding a -> (a -> a) -> m ()
+modifyBinding a f = readBinding a >>= writeBinding a . f -}

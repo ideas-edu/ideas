@@ -138,8 +138,8 @@ s1 === s2 = rec 100 [(start s1, start s2)]
       merge   as = (fst (head as), map snd as)
       results as = [ (a, b) | (Result a, b) <- as ]
 
-      cmpFst (x, _) (y, _) = x `compare` y
-      eqFst  (x, _) (y, _) = x == y
+      cmpFst = comparing (show . fst)
+      eqFst  = (==) `on` fst
 
 myFirsts :: State l a -> [(Result (Step l a), State l a)]
 myFirsts = concatMap f . firsts

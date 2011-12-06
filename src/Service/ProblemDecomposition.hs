@@ -15,7 +15,6 @@ module Service.ProblemDecomposition
 
 import Common.Library
 import Data.Maybe
-import Data.Monoid
 import Service.State
 import Service.Types
 
@@ -43,7 +42,7 @@ problemDecomposition msloc state answer
                expState = makeState ex (Just pref) expected
                isEquiv  = maybe False (equivalence ex expected) maybeAnswer
                (loc, arguments) = fromMaybe (topId, mempty) $
-                                     firstMajorInPrefix pr pref requestedTerm
+                                     firstMajorInPrefix pr pref
  where
    ex    = exercise state
    topId = getId (strategy ex)
@@ -68,25 +67,17 @@ runPrefixLocation loc p0 =
     where
       rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
 
-firstMajorInPrefix :: Prefix a -> Prefix a -> a -> Maybe (Id, Environment)
-firstMajorInPrefix p0 p a = do
-   let newSteps = drop (length $ prefixToSteps p0) (prefixToSteps p)
-   is <- firstLocation newSteps
-   return (is, argumentsForSteps a newSteps)
+firstMajorInPrefix :: Prefix a -> Prefix a -> Maybe (Id, Environment)
+firstMajorInPrefix p0 = rec . drop len . prefixToSteps
  where
-   firstLocation :: HasId l => [Step l a] -> Maybe Id
-   firstLocation [] = Nothing
-   firstLocation (Enter info:RuleStep r:_) | isMajorRule r = Just (getId info)
-   firstLocation (_:rest) = firstLocation rest
-
-argumentsForSteps :: a -> [Step l a] -> Environment
-argumentsForSteps a0 = flip rec a0 . stepsToRules
- where
-   rec [] _ = mempty
-   rec (r:rs) a
-      | isMinorRule r  = mconcat (map (rec rs) (applyAll r a))
-      | applicable r a = expectedEnvironment r a
-      | otherwise      = mempty
+   len = length (prefixToSteps p0)
+   rec xs = 
+      case xs of
+         Enter info:RuleStep env r:_ | isMajorRule r -> 
+            Just (getId info, env)
+         _:rest -> rec rest
+         []     -> Nothing
+         
 
 nextMajorForPrefix :: Prefix a -> a -> Maybe Id
 nextMajorForPrefix p0 a = do
@@ -104,7 +95,7 @@ runPrefixMajor p0 =
    map f . derivations . cutOnStep (stop . lastStepInPrefix) . prefixTree p0
  where
    f d = (lastTerm d, fromMaybe p0 (lastStep d))
-   stop (Just (RuleStep r)) = isMajorRule r
+   stop (Just (RuleStep _ r)) = isMajorRule r
    stop _ = False
 
 ------------------------------------------------------------------------

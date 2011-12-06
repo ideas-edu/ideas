@@ -106,7 +106,7 @@ simplifyFirst = simplifySystem idRule
 
 conv1 :: Rule (Context Expr)
 conv1 = describe "Convert linear system to matrix" $
-   makeEnvRule "linearalgebra.linsystem.tomatrix" $ withCM $ \expr -> do
+   makeSimpleRuleList "linearalgebra.linsystem.tomatrix" $ withCM $ \expr -> do
       ls <- fromExpr expr
       let (m, vs) = systemToMatrix ls
       writeVar varVars (map Var vs)
@@ -114,7 +114,7 @@ conv1 = describe "Convert linear system to matrix" $
 
 conv2 :: Rule (Context Expr)
 conv2 = describe "Convert matrix to linear system" $
-   makeEnvRule "linearalgebra.linsystem.frommatrix" $ withCM $ \expr -> do
+   makeSimpleRuleList "linearalgebra.linsystem.frommatrix" $ withCM $ \expr -> do
       evs <- readVar varVars
       m   <- fromExpr expr
       let linsys = matrixToSystemWith vs (m :: Matrix Expr)
@@ -122,5 +122,5 @@ conv2 = describe "Convert matrix to linear system" $
       return $ simplify $ toExpr linsys
       
 hasRemaining :: Context (LinearSystem a) -> Bool
-hasRemaining c = all (not . null . fst) $ 
+hasRemaining c = all (not . null) $ 
    runResults (getEnvironment c) $ evalCM remaining c

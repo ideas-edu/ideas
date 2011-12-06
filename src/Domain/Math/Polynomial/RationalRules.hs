@@ -40,7 +40,7 @@ ratId = newId "algebra.equations.rational"
 
 -- a/b = 0  iff  a=0 (and b/=0)
 divisionIsZero :: Rule (Context (Equation Expr))
-divisionIsZero = makeEnvRule (ratId, "division-zero") $ withCM $ \(lhs :==: rhs) -> do
+divisionIsZero = makeSimpleRuleList (ratId, "division-zero") $ withCM $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (a, b) <- matchM divView lhs
    conditionNotZero b
@@ -48,7 +48,7 @@ divisionIsZero = makeEnvRule (ratId, "division-zero") $ withCM $ \(lhs :==: rhs)
 
 -- a/b = 1  iff  a=b (and b/=0)
 divisionIsOne :: Rule (Context (Equation Expr))
-divisionIsOne = makeEnvRule (ratId, "division-one") $ withCM $ \(lhs :==: rhs) -> do
+divisionIsOne = makeSimpleRuleList (ratId, "division-one") $ withCM $ \(lhs :==: rhs) -> do
    guard (rhs == 1)
    (a, b) <- matchM divView lhs
    conditionNotZero b
@@ -56,7 +56,7 @@ divisionIsOne = makeEnvRule (ratId, "division-one") $ withCM $ \(lhs :==: rhs) -
 
 -- a/c = b/c  iff  a=b (and c/=0)
 sameDivisor :: Rule (Context (Equation Expr))
-sameDivisor = makeEnvRule (ratId, "same-divisor") $ withCM $ \(lhs :==: rhs) -> do
+sameDivisor = makeSimpleRuleList (ratId, "same-divisor") $ withCM $ \(lhs :==: rhs) -> do
    (a, c1) <- matchM divView lhs
    (b, c2) <- matchM divView rhs
    guard (c1==c2)
@@ -65,7 +65,7 @@ sameDivisor = makeEnvRule (ratId, "same-divisor") $ withCM $ \(lhs :==: rhs) -> 
 
 -- a/b = a/c  iff  a=0 or b=c (and b/=0 and c/=0)
 sameDividend :: Rule (Context (OrList (Equation Expr)))
-sameDividend = makeEnvRule (ratId, "same-dividend") $ withCM $ oneDisjunct $ \(lhs :==: rhs) -> do
+sameDividend = makeSimpleRuleList (ratId, "same-dividend") $ withCM $ oneDisjunct $ \(lhs :==: rhs) -> do
    (a1, b) <- matchM divView lhs
    (a2, c) <- matchM divView rhs
    guard (a1==a2)
@@ -75,7 +75,7 @@ sameDividend = makeEnvRule (ratId, "same-dividend") $ withCM $ oneDisjunct $ \(l
 
 -- a/b = c/d  iff  a*d = b*c   (and b/=0 and d/=0)
 crossMultiply :: Rule (Context (Equation Expr))
-crossMultiply = makeEnvRule (ratId, "cross-multiply") $ withCM $ \(lhs :==: rhs) -> do
+crossMultiply = makeSimpleRuleList (ratId, "cross-multiply") $ withCM $ \(lhs :==: rhs) -> do
    (a, b) <- matchM divView lhs
    (c, d) <- matchM divView rhs
    conditionNotZero b
@@ -84,7 +84,7 @@ crossMultiply = makeEnvRule (ratId, "cross-multiply") $ withCM $ \(lhs :==: rhs)
 
 -- a/b = c  iff  a = b*c  (and b/=0)
 multiplyOneDiv :: Rule (Context (Equation Expr))
-multiplyOneDiv = makeEnvRule (ratId, "multiply-one-div") $ withCM $ \(lhs :==: rhs) ->
+multiplyOneDiv = makeSimpleRuleList (ratId, "multiply-one-div") $ withCM $ \(lhs :==: rhs) ->
    f (:==:) lhs rhs `mplus` f (flip (:==:)) rhs lhs
  where
    f eq ab c = do
@@ -105,7 +105,7 @@ fractionPlus = makeSimpleRule (ratId, "rational-plus") $ \expr -> do
 -- ab/ac  =>  b/c  (if a/=0)
 -- Note that the common term can be squared (in one of the parts)
 cancelTermsDiv :: Rule (Context Expr)
-cancelTermsDiv = makeEnvRule (ratId, "cancel-div") $ withCM $ \expr -> do
+cancelTermsDiv = makeSimpleRuleList (ratId, "cancel-div") $ withCM $ \expr -> do
    ((b, xs), (c, ys)) <- matchM myView expr
    let (ps, qs, rs) = rec (map f xs) (map f ys)
    guard (not (null rs))
@@ -156,7 +156,7 @@ turnIntoFraction = liftView plusView $
 
 -- A simple implementation that considers the condition stored in the context
 checkSolution :: Rule (Context (OrList (Equation Expr)))
-checkSolution = makeEnvRule (ratId, "check-solution") $
+checkSolution = makeSimpleRuleList (ratId, "check-solution") $
    withCM $ oneDisjunct $ \(x :==: a) -> do
       c  <- lookupClipboardG "condition"
       xs <- matchM andView c

@@ -19,7 +19,7 @@ import Domain.LinearAlgebra.Matrix
 import Domain.Math.Simplification
 
 ruleFindColumnJ :: Num a => Rule (Context (Matrix a))
-ruleFindColumnJ = minorRule $ makeEnvRule "linearalgebra.gaussianelim.FindColumnJ" $ withCM $ \m -> do
+ruleFindColumnJ = minorRule $ makeSimpleRuleList "linearalgebra.gaussianelim.FindColumnJ" $ withCM $ \m -> do
    cols <- liftM columns (subMatrix m)
    i    <- findIndexM nonZero cols
    writeVar columnJ i
@@ -111,7 +111,7 @@ rowAdd i j k = matrixTrans $ \m -> do
    return (addRow i j k m)
 
 changeCover :: (Int -> Int) -> Transformation (Context (Matrix a))
-changeCover f = makeEnvTrans $ withCM $ \m -> do
+changeCover f = makeTransG $ withCM $ \m -> do
    new <- liftM f (readVar covered)
    guard (new >= 0 && new <= fst (dimensions m))
    writeVar covered new

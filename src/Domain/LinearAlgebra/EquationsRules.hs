@@ -64,14 +64,14 @@ ruleEliminateVar = describe "Eliminate a variable (using addition)" $
 
 ruleDropEquation :: Rule (Context (LinearSystem Expr))
 ruleDropEquation = describe "Drop trivial equations (such as 0=0)" $
-   simplifySystem $ makeEnvRule "linearalgebra.linsystem.trivial" $ withCM $ \ls -> do
+   simplifySystem $ makeSimpleRuleList "linearalgebra.linsystem.trivial" $ withCM $ \ls -> do
       i   <- findIndexM (fromMaybe False . testConstants (==)) ls
       modifyVar covered (\n -> if i < n then n-1 else n)
       return (deleteIndex i ls)
 
 ruleInconsistentSystem :: Rule (Context (LinearSystem Expr))
 ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
-   simplifySystem $ makeEnvRule "linearalgebra.linsystem.inconsistent" $ withCM $ \ls -> do
+   simplifySystem $ makeSimpleRuleList "linearalgebra.linsystem.inconsistent" $ withCM $ \ls -> do
       let stop = [0 :==: 1]
       guard (invalidSystem ls && ls /= stop)
       writeVar covered 1
@@ -109,7 +109,7 @@ ruleBackSubstitution = describe "Back substitution" $
 
 ruleIdentifyFreeVariables :: IsLinear a => Rule (Context (LinearSystem a))
 ruleIdentifyFreeVariables = describe "Identify free variables" $
-   minorRule $ makeEnvRule "linearalgebra.linsystem.freevars" $ withCM $ \ls ->
+   minorRule $ makeSimpleRuleList "linearalgebra.linsystem.freevars" $ withCM $ \ls ->
    let vs = [ head ys | ys <- map (vars . leftHandSide) ls, not (null ys) ]
        f eq =
           let (e1, e2) = splitLinearExpr (`notElem` vs) (leftHandSide eq) -- constant ends up in e1
@@ -126,7 +126,7 @@ ruleUncoverEquation = describe "Uncover one equation" $
 
 ruleCoverAllEquations :: Rule (Context (LinearSystem a))
 ruleCoverAllEquations = describe "Cove all equations" $
-   minorRule $ makeEnvRule "linearalgebra.linsystem.coverall" $ withCM $ \ls -> do
+   minorRule $ makeSimpleRuleList "linearalgebra.linsystem.coverall" $ withCM $ \ls -> do
       writeVar covered (length ls)
       return ls
 
@@ -171,7 +171,7 @@ addEquations i j a = makeTrans $ \xs -> do
    return $ begin++[combineWith (+) this (fmap (a*) exprj)]++end
 
 changeCover :: (Int -> Int) -> Transformation (Context (LinearSystem a))
-changeCover f = makeEnvTrans $ withCM $ \ls -> do
+changeCover f = makeTransG $ withCM $ \ls -> do
    new <- liftM f (readVar covered)
    guard (new >= 0 && new <= length ls)
    writeVar covered new

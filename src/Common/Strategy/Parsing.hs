@@ -18,27 +18,34 @@ module Common.Strategy.Parsing
    , firsts, Result(..), isReady
    ) where
 
+import Common.Binding
 import Common.Classes
 import Common.DerivationTree
 import Common.Strategy.Core
+import Common.Results
 import Common.Rule
 import Common.Utils.Uniplate
 import Control.Arrow
 import Control.Monad
+import Data.Monoid
 
 ----------------------------------------------------------------------
 -- Step data type
 
-data Step l a = Enter l | Exit l | RuleStep (Rule a)
-   deriving (Show, Eq, Ord)
+data Step l a = Enter l | Exit l | RuleStep Environment (Rule a) 
+   deriving (Show, Eq)
 
 -- A core expression where the symbols are steps instead of "only" rules
 type StepCore l a = GCore l (Step l a)
 
 instance Apply (Step l) where
-   applyAll (RuleStep r) = applyAll r
-   applyAll _            = return
+   applyAll (RuleStep _ r) = applyAll r
+   applyAll _              = return
 
+instance ApplyResults (Step l) where
+   applyResults (RuleStep _ r) = applyResults r
+   applyResults _              = return
+   
 ----------------------------------------------------------------------
 -- State data type
 
@@ -57,7 +64,7 @@ data Stack l a = Stack
    } deriving Show
 
 makeState :: Core l a -> a -> State l a
-makeState = newState . fmap RuleStep
+makeState = newState . fmap (RuleStep mempty)
 
 newState :: StepCore l a -> a -> State l a
 newState core a = push core (S emptyStack [] [] 0 a)
@@ -97,7 +104,7 @@ firsts st =
          Succeed   -> firsts state
     where
       chooseFor b  = flip firstsStep (makeChoice b state)
-      hasStep step = [ (Result step, s) | s <- useRule step (traceStep step state) ]
+      hasStep step = [ (Result (head (trace s)), s) | s <- useRule step state ]
 
 -- helper datatype
 data Result a = Result a | Ready deriving  Show
@@ -221,8 +228,13 @@ checkNot :: StepCore l a -> State l a -> Bool
 checkNot core = null . runState . newState core . value
 
 useRule :: Step l a -> State l a -> [State l a]
-useRule step state =
-   [ resetTimer state {value = b} | b <- applyAll step (value state) ]
+useRule step state = map resetTimer $
+   case step of
+      RuleStep _ r -> fromResults $ do
+         a   <- applyResults r (value state)
+         env <- getLocals
+         return $ traceStep (RuleStep env r) state {value = a}
+      _ -> [traceStep step state]
 
 traceStep :: Step l a -> State l a -> State l a
 traceStep step s = interleave step s {trace = step : trace s}
@@ -239,8 +251,8 @@ resetTimer :: State l a -> State l a
 resetTimer s = s {timeout = 0}
 
 interleaveAfter :: Step l a -> Bool
-interleaveAfter (RuleStep _) = True
-interleaveAfter _            = False
+interleaveAfter (RuleStep _ _) = True
+interleaveAfter _              = False
 
 interleave :: Step l a -> State l a -> State l a
 interleave step = if interleaveAfter step then useAtomic else id

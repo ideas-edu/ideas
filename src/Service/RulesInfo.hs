@@ -75,7 +75,7 @@ collectExamples ex = foldr (add . snd) M.empty (examples ex)
    add a m = let tree = derivationTree (strategy ex) (inContext ex a)
                  f Nothing = m
                  f (Just d) = foldr g m (triples d)
-                 g (x, r, y) = M.insertWith (++) (getId r) (liftM2 (,) (fromContext x) (fromContext y))
+                 g (x, (r, _), y) = M.insertWith (++) (getId r) (liftM2 (,) (fromContext x) (fromContext y))
              in f (derivation tree)
 
 rulesInfoType :: Type a ()

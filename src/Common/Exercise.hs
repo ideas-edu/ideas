@@ -34,7 +34,7 @@ module Common.Exercise
    , prettyPrinterContext, restrictGenerator
    , showDerivation, printDerivation
    , ExerciseDerivation, defaultDerivation
-   , derivationDiffEnv, derivationPrevious
+   , derivationDiffEnv
    , checkExercise, checkParserPretty
    , checkExamples, exerciseTestSuite
    ) where
@@ -327,27 +327,26 @@ getRule ex a =
 showDerivation :: Exercise a -> a -> String
 showDerivation ex a = show (present der) ++ extra
  where
-   der   = derivationPrevious (derivationDiffEnv (defaultDerivation ex a))
+   der   = derivationDiffEnv (defaultDerivation ex a)
    extra =
       case fromContext (lastTerm der) of
          Nothing               -> "<<invalid term>>"
          Just b | isReady ex b -> ""
                 | otherwise    -> "<<not ready>>"
    present = biMap (ShowString . f) (ShowString . prettyPrinterContext ex)
-   f ((b, env), old) = showId b ++ part1 ++ part2
+   f ((r, local), global) = showId r ++ part1 ++ part2
     where
-      newl   = "\n      "
-      expenv = expectedEnvironment b old
-      part1  = newl ++ show expenv
-      part2  | noBindings env = ""
-             | otherwise      = newl ++ show env
+      newl  = "\n      "
+      part1 = newl ++ show local
+      part2 | noBindings global = ""
+            | otherwise         = newl ++ show global
 
-type ExerciseDerivation a = Derivation (Rule (Context a)) (Context a)
+type ExerciseDerivation a = Derivation (Rule (Context a), Environment) (Context a)
 
 defaultDerivation :: Exercise a -> a -> ExerciseDerivation a
 defaultDerivation ex a =
    let ca     = inContext ex a
-       tree   = sortTree (ruleOrdering ex) (derivationTree (strategy ex) ca)
+       tree   = sortTree (ruleOrdering ex `on` fst) (derivationTree (strategy ex) ca)
        single = emptyDerivation ca
    in fromMaybe single (derivation tree)
 
@@ -356,10 +355,6 @@ derivationDiffEnv = updateSteps $ \old a new ->
    let keep x = not (getId x `sameId` "location" || x `elem` list)
        list = bindings $ getEnvironment old
    in (a, makeEnvironment $ filter keep $ bindings $ getEnvironment new)
-
--- helper, needed for showing arguments
-derivationPrevious :: Derivation s a -> Derivation (s, a) a
-derivationPrevious = updateSteps $ \a s _ -> (s, a)
 
 printDerivation :: Exercise a -> a -> IO ()
 printDerivation ex = putStrLn . showDerivation ex
@@ -446,7 +441,7 @@ checksForTerm leftMost ex a = do
       Just d  -> checksForDerivation ex d
       Nothing -> return ()
 
-checksForDerivation :: Exercise a -> Derivation (Rule (Context a)) (Context a) -> TestSuite
+checksForDerivation :: Exercise a -> Derivation (Rule (Context a), Environment) (Context a) -> TestSuite
 checksForDerivation ex d = do
    -- Conditions on starting term
    let start = firstTerm d
@@ -488,7 +483,7 @@ checksForDerivation ex d = do
       ++ "  with  " ++ prettyPrinterContext ex y
 
    -- Similarity of terms
-   let p3 (x, r, y) = not (isFinalRule r) && similarity ex x y
+   let p3 (x, (r, _), y) = not (isFinalRule r) && similarity ex x y
    assertNull  "similars" $ take 1 $ flip map (filter p3 (triples d)) $ \(x, r, y) ->
       "similar subsequent terms: " ++ prettyPrinterContext ex x
       ++ "  with  " ++ prettyPrinterContext ex y

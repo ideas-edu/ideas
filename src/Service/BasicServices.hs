@@ -69,17 +69,16 @@ allfirsts state =
                 ruleOrdering (exercise state) r1 r2
          in Right $ noDuplicates $ sortBy f $ mapMaybe make $ derivations tree
  where
-   stop (Just (RuleStep r)) = isMajorRule r
+   stop (Just (RuleStep _ r)) = isMajorRule r
    stop _ = False
 
    make d = do
       prefixEnd <- lastStep d
-      let ca = lastTerm (withoutLast d)
       case lastStepInPrefix prefixEnd of
-         Just (RuleStep r) | isMajorRule r -> return
+         Just (RuleStep env r) | isMajorRule r -> return
             ( r
             , location (lastTerm d)
-            , expectedEnvironment r ca
+            , env
             , makeState (exercise state) (Just prefixEnd) (lastTerm d)
             )
          _ -> Nothing

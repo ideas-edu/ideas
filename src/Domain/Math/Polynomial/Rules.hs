@@ -381,7 +381,7 @@ sameConFactor =
 
 abcFormula :: Rule (Context (OrList (Equation Expr)))
 abcFormula = describe "quadratic formula (abc formule)" $
-   makeEnvRule (quadreq, "abc") $ withCM $ oneDisjunct $ \(lhs :==: rhs) -> do
+   makeSimpleRuleList (quadreq, "abc") $ withCM $ oneDisjunct $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (x, (a, b, c)) <- matchM quadraticNF lhs
    addListToClipboard ["a", "b", "c"] (map fromRational [a, b, c])
@@ -399,7 +399,7 @@ abcFormula = describe "quadratic formula (abc formule)" $
 
 higherSubst :: Rule (Context (Equation Expr))
 higherSubst = describe "Substitute variable" $
-   makeEnvRule (polyeq, "subst") $ withCM $ \(lhs :==: rhs) -> do
+   makeSimpleRuleList (polyeq, "subst") $ withCM $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    let myView = polyView >>> second trinomialPolyView
    (x, ((a, n1), (b, n2), (c, n3))) <- matchM myView lhs
@@ -410,7 +410,7 @@ higherSubst = describe "Substitute variable" $
 
 substBackVar :: Rule (Context Expr)
 substBackVar = describe "Substitute back a variable" $
-   makeEnvRule (polyeq, "back-subst") $ withCM $ \a -> do
+   makeSimpleRuleList (polyeq, "back-subst") $ withCM $ \a -> do
    expr <- lookupClipboard "subst"
    case fromExpr expr of
       Just (Var p :==: rhs) -> do

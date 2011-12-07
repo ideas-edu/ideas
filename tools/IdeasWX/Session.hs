@@ -18,10 +18,9 @@ module Session
    , stepText, nextStep, currentState, getDerivation, currentExerciseId
    ) where
 
-import Common.Library hiding (ready)
+import Common.Library hiding (ready, setValue, getValue)
 import Common.Utils
 import Control.Monad
-import Data.List
 import Data.Maybe
 import Observable hiding (Id)
 import Service.BasicServices
@@ -186,13 +185,12 @@ hintOrStep verbose ref = do
          return ("Error: " ++ msg)
       Right [] -> 
          return "Sorry, no hint available"
-      Right ((r, _, _, s):_) ->
+      Right ((r, _, env, s):_) ->
          return $ unlines $
             [ "Use " ++ showRule r
             ] ++
-            [ "   with arguments " ++ intercalate ", " (map f args)
-            | let args = expectedArguments r (currentContext d), not $ null args
-            , let f (ArgValue descr a) = showArgument descr a
+            [ "   with arguments " ++ show env
+            | not (noBindings env)
             ] ++ if verbose then
             [ "   to rewrite the term into:"
             , prettyPrinter (getExercise ss) (stateTerm s)

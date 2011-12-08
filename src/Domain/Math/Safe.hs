@@ -16,6 +16,7 @@ module Domain.Math.Safe
      SafePower(..)
    ) where
 
+import Control.Monad
 import Data.Ratio
 
 -------------------------------------------------------------------
@@ -55,13 +56,21 @@ class Num a => SafePower a where
    safeSqrt = (`safeRoot` 2)
 
 instance SafePower Integer where
-   safeRoot _ _ = Nothing
+   safeRoot x y = 
+      case fmap round (safeRoot (fromInteger x :: Double) (fromInteger y)) of
+         Just a | safePower a y == Just x -> Just a
+         _ -> Nothing
    safePower x y
       | y >= 0    = Just (x ^ y)
       | otherwise = Nothing
 
 instance Integral a => SafePower (Ratio a) where
-   safeRoot _ _ = Nothing
+   safeRoot x y = do
+      let n = toInteger (numerator y)
+      guard (denominator y == 1)
+      a <- safeRoot (toInteger (numerator x)) n
+      b <- safeRoot (toInteger (denominator x)) n
+      safeDiv (fromInteger a) (fromInteger b)
    safePower x y
       | denominator y /= 1 = Nothing
       | numerator y >= 0   = Just a

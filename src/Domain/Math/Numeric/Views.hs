@@ -71,8 +71,10 @@ matchInteger :: (Expr -> Maybe Integer) -> Expr -> Maybe Integer
 matchInteger f expr =
    case expr of
       a :/: b -> join (liftM2 safeDiv (f a) (f b))
+      Sqrt a  -> f a >>= safeSqrt
       Sym s [a, b]
          | isPowerSymbol s -> join (liftM2 safePower (f a) (f b))
+         | isRootSymbol  s -> join (liftM2 safeRoot  (f a) (f b))
       _ -> matchNum f expr
 
 matchNum :: Num a => (Expr -> Maybe a) -> Expr -> Maybe a
@@ -122,8 +124,10 @@ matchRational f expr =
    case expr of
       Number d -> return $ fromRational $ toRational $ DF.fromDouble d
       a :/: b  -> join (liftM2 safeDiv (f a) (f b))
+      Sqrt a   -> f a >>= safeSqrt
       Sym s [a, b]
          | isPowerSymbol s -> join (liftM2 safePower (f a) (f b))
+         | isRootSymbol  s -> join (liftM2 safeRoot  (f a) (f b))
       Sym s [a, b, c]
          | isMixedFractionSymbol s -> f (a+b/c)
       _ -> matchNum f expr

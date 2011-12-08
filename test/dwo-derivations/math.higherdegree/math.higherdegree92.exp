@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.polynomial.power-factors">
       <expr>
@@ -15,16 +15,11 @@
     </elem>
     <elem ruleid="algebra.equations.coverup.power">
       <expr>
-        x == 0 or x == sqrt (1/64) or x == -sqrt (1/64)
+        x == 0 or x == 1/8 or x == -1/8
       </expr>
       <context>
         <item name="location" value="[2]"/>
       </context>
-    </elem>
-    <elem ruleid="algebra.equations.quadratic.simpler-sqrt">
-      <expr>
-        x == 0 or x == 1/8 or x == -1/8
-      </expr>
     </elem>
   </list>
 </reply>

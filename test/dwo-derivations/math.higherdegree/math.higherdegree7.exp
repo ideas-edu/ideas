@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="1.0.3 (0)">
   <list>
     <elem ruleid="algebra.equations.coverup.onevar.minus-right">
       <expr>
@@ -11,11 +11,6 @@
       </expr>
     </elem>
     <elem ruleid="algebra.equations.coverup.power">
-      <expr>
-        x == sqrt (9/4) or x == -sqrt (9/4)
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.quadratic.simpler-sqrt">
       <expr>
         x == 3/2 or x == -3/2
       </expr>

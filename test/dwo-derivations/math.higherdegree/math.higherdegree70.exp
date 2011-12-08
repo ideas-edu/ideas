@@ -31,7 +31,7 @@
     </elem>
     <elem ruleid="algebra.equations.coverup.power">
       <expr>
-        x == sqrt (25/4) or x == -sqrt (25/4) or x^2 == 9/4
+        x == 5/2 or x == -5/2 or x^2 == 9/4
       </expr>
       <context>
         <item name="clipboard" value="[D == 4096, a == 16, b == -136, c == 225, subst == (p == x^2)]"/>
@@ -40,7 +40,7 @@
     </elem>
     <elem ruleid="algebra.equations.coverup.power">
       <expr>
-        x == sqrt (25/4) or x == -sqrt (25/4) or x == sqrt (9/4) or x == -sqrt (9/4)
+        x == 5/2 or x == -5/2 or x == 3/2 or x == -3/2
       </expr>
       <context>
         <item name="clipboard" value="[D == 4096, a == 16, b == -136, c == 225, subst == (p == x^2)]"/>

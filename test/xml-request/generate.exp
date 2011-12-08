@@ -6,40 +6,21 @@
     <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
       <OMA>
         <OMS cd="relation1" name="eq"/>
-        <OMA>
-          <OMS cd="arith1" name="unary_minus"/>
-          <OMA>
-            <OMS cd="arith1" name="times"/>
-            <OMI>
-              5
-            </OMI>
-            <OMA>
-              <OMS cd="arith1" name="plus"/>
-              <OMV name="x"/>
-              <OMI>
-                1
-              </OMI>
-            </OMA>
-          </OMA>
-        </OMA>
+        <OMI>
+          17
+        </OMI>
         <OMA>
           <OMS cd="arith1" name="minus"/>
+          <OMI>
+            4
+          </OMI>
           <OMA>
             <OMS cd="arith1" name="times"/>
             <OMI>
-              9
+              10
             </OMI>
-            <OMA>
-              <OMS cd="arith1" name="plus"/>
-              <OMV name="x"/>
-              <OMI>
-                4
-              </OMI>
-            </OMA>
+            <OMV name="x"/>
           </OMA>
-          <OMI>
-            5
-          </OMI>
         </OMA>
       </OMA>
     </OMOBJ>

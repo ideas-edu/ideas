@@ -108,7 +108,7 @@ generateS :: Service
 generateS = makeService "generate"
    "Given an exercise code and a difficulty level (optional), this service \
    \returns an initial state with a freshly generated expression." $
-   generate ::: StdGen :-> Exercise :-> optionType Medium difficultyType :-> stateType
+   generate ::: Exercise :-> maybeType difficultyType :-> IO stateType
 
 examplesS :: Service
 examplesS = makeService "examples"

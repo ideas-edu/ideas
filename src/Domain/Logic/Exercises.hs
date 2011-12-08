@@ -54,9 +54,9 @@ dnfUnicodeExercise = dnfExercise
    , prettyPrinter = ppLogicUnicodePars
    }
 
-logicExercise :: Difficulty -> Gen SLogic
-logicExercise dif =
-   let (gen, (minStep, maxStep)) = generateLevel dif
+logicExercise :: Maybe Difficulty -> Gen SLogic
+logicExercise mdif =
+   let (gen, (minStep, maxStep)) = generateLevel (fromMaybe Medium mdif)
        ok p = let i = fromMaybe maxBound (stepsRemaining maxStep p)
               in countEquivalences p <= 2 && i >= minStep && i <= maxStep
    in restrictGenerator ok gen

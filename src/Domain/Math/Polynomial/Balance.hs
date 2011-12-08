@@ -255,10 +255,10 @@ distribute :: Rule (Equation Expr)
 distribute = makeSimpleRule (linbal, "distribute") $ checkForChange $
    Just . fmap (fixpoint f)
  where
-   f (a :*: (b :+: c))  = f (a*b+a*c)
-   f (a :*: (b :-: c))  = f (a*b-a*c)
-   f ((a :+: b) :*: c)  = f (a*c+b*c)
-   f ((a :-: b) :*: c)  = f (a*c-b*c)
+   f (a :*: (b :+: c))  = f (a*b + a*c)
+   f (a :*: (b :-: c))  = f (a*b - a*c)
+   f ((a :+: b) :*: c)  = f (a*c + b*c)
+   f ((a :-: b) :*: c)  = f (a*c - b*c)
    f (Negate (a :+: b)) = f (-a-b)
    f (Negate (a :-: b)) = f (-a+b)
    f (Negate (Negate a)) = f a

@@ -20,12 +20,11 @@ import Common.Utils (fst3)
 import Data.List
 import Data.Maybe
 import Service.State
-import System.Random (StdGen)
+import Control.Monad
 import qualified Common.Classes as Apply
 
-generate :: StdGen -> Exercise a -> Difficulty -> State a
-generate rng ex dif =
-   emptyState ex (randomTermWith rng dif ex)
+generate :: Exercise a -> Maybe Difficulty -> IO (State a)
+generate ex = liftM (emptyState ex) . randomTerm ex
 
 -- TODO: add a location to each step
 derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))

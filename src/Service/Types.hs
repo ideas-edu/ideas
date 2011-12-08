@@ -69,7 +69,6 @@ equal type1 type2 =
       (Context,     Context    ) -> Just id
       (BindingTp,   BindingTp  ) -> Just id
       (Text,        Text       ) -> Just id
-      (StdGen,      StdGen     ) -> Just id
       (IO a,        IO b       ) -> fmap liftM (equal a b)
       (Exception,   Exception  ) -> Just id
       (Bool,        Bool       ) -> Just id
@@ -152,7 +151,6 @@ data Type a t where
    Pair         :: Type a t1 -> Type a t2 -> Type a (t1, t2)
    (:|:)        :: Type a t1 -> Type a t2 -> Type a (Either t1 t2)
    Unit         :: Type a ()
-   StdGen       :: Type a StdGen
    IO           :: Type a t -> Type a (IO t)
    Exception    :: Type a String
    -- Exercise-specific types
@@ -208,6 +206,5 @@ showGroundType tp =
       StrategyCfg  -> Just "StrategyConfiguration"
       BindingTp    -> Just "Binding"
       Text         -> Just "TextMessage"
-      StdGen       -> Just "StdGen"
       Exception    -> Just "Exception"
       _            -> Nothing

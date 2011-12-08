@@ -20,6 +20,7 @@ import Common.Utils (ShowString(..))
 import Common.Utils.Uniplate
 import Control.Monad
 import Data.Char
+import Data.Function
 import Data.List
 import Domain.Logic.Formula
 import Test.QuickCheck
@@ -29,7 +30,7 @@ import Test.QuickCheck
 
 -- | Equality modulo associativity of operators
 equalLogicA :: Eq a => Logic a -> Logic a -> Bool
-equalLogicA p q = rec p == rec q
+equalLogicA = (==) `on` rec
  where
    rec a = case a of
               _ :&&: _ -> ands (map rec (conjunctions a))

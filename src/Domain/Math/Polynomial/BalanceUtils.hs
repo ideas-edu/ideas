@@ -90,8 +90,9 @@ cleanerExpr = transform f -- no fixpoint is needed
       in simplifyWith (adjacent g) simpleSumView
 
    cleanProduct =
-      let g x y = canonical rationalView (x :*: y)
-      in simplifyWith (mapSecond (adjacent g)) simpleProductView
+      let g x y   = canonical rationalView (x :*: y)
+          reorder = uncurry (++) . partition (`belongsTo` rationalView)
+      in simplifyWith (mapSecond (adjacent g . reorder)) simpleProductView
 
 adjacent :: (a -> a -> Maybe a) -> [a] -> [a]
 adjacent f = rec
@@ -117,6 +118,16 @@ nonsense = any p . universe
  where
    p (_ :/: a) = maybe False (==0) (match rationalView a)
    p _         = False
+
+{-
+updateFirst :: (a -> Maybe a) -> [a] -> Maybe [a]
+updateFirst f = rec
+ where
+   rec []     = Nothing
+   rec (x:xs) = fmap (:xs) (f x) `mplus` fmap (x:) (rec xs)
+   
+updateLast :: (a -> Maybe a) -> [a] -> Maybe [a]
+updateLast f = fmap reverse . updateFirst f . reverse -}
 
 ------------------------------------------------------------
 -- Arguments

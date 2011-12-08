@@ -90,7 +90,7 @@ data Exercise a = Exercise
    , ruleOrdering   :: Rule (Context a) -> Rule (Context a) -> Ordering -- Ordering on rules (for onefirst)
      -- testing and exercise generation
    , testGenerator  :: Maybe (Gen a)
-   , randomExercise :: Maybe (StdGen -> Difficulty -> a)
+   , randomExercise :: Maybe (StdGen -> Maybe Difficulty -> a)
    , examples       :: [(Difficulty, a)]
    }
 
@@ -186,10 +186,10 @@ ruleset ex = nub (sortBy compareId list)
  where
    list = extraRules ex ++ rulesInStrategy (strategy ex)
 
-simpleGenerator :: Gen a -> Maybe (StdGen -> Difficulty -> a)
+simpleGenerator :: Gen a -> Maybe (StdGen -> Maybe Difficulty -> a)
 simpleGenerator = useGenerator (const True) . const
 
-useGenerator :: (a -> Bool) -> (Difficulty -> Gen a) -> Maybe (StdGen -> Difficulty -> a)
+useGenerator :: (a -> Bool) -> (Maybe Difficulty -> Gen a) -> Maybe (StdGen -> Maybe Difficulty -> a)
 useGenerator p makeGen = Just (\rng -> rec rng . makeGen)
  where
    rec rng gen@(MkGen f)
@@ -205,20 +205,22 @@ restrictGenerator p g = do
    if p a then return a
           else restrictGenerator p g
 
-randomTerm :: Difficulty -> Exercise a -> IO a
-randomTerm dif ex = do
+randomTerm :: Exercise a -> Maybe Difficulty -> IO a
+randomTerm ex mdif = do
    rng <- newStdGen
-   return (randomTermWith rng dif ex)
+   maybe (fail "no random term") return $ randomTermWith rng ex mdif
 
-randomTermWith :: StdGen -> Difficulty -> Exercise a -> a
-randomTermWith rng dif ex =
+randomTermWith :: StdGen -> Exercise a -> Maybe Difficulty -> Maybe a
+randomTermWith rng ex mdif =
    case randomExercise ex of
-      Just f  -> f rng dif
+      Just f  -> return (f rng mdif)
       Nothing
-         | null xs   -> error "randomTermWith: no generator"
-         | otherwise ->
-              snd (xs !! fst (randomR (0, length xs - 1) rng))
-       where xs = examples ex
+         | null xs   -> Nothing
+         | otherwise -> Just $
+              snd $ xs !! fst (randomR (0, length xs - 1) rng)
+       where 
+         xs = filter p (examples ex)
+         p (d, _) = maybe True (==d) mdif
 
 difference :: Exercise a -> a -> a -> Maybe (a, a)
 difference ex a b = do
@@ -369,7 +371,7 @@ exerciseTestSuite :: Exercise a -> TestSuite
 exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseId ex)) $ do
    -- get some exercises
    xs <- if isJust (randomExercise ex)
-         then liftIO $ replicateM 10 (randomTerm Medium ex)
+         then liftIO $ replicateM 10 (randomTerm ex Nothing)
          else return (map snd (examples ex))
    -- do tests
    assertTrue "Exercise terms defined" (not (null xs))

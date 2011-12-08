@@ -16,7 +16,6 @@ import Common.Library
 import Control.Monad
 import Service.DomainReasoner
 import Service.Types
-import System.Random
 
 evalService :: Evaluator inp out a -> Service -> inp -> DomainReasoner out
 evalService f = eval f . serviceFunction
@@ -65,9 +64,6 @@ decodeDefault dec tp s =
          decodeType dec t1 s
       Exercise ->
          return (decoderExercise dec, s)
-      StdGen -> do
-         stdgen <- liftIO newStdGen
-         return (stdgen, s)
       Script -> do
          script <- defaultScript (getId (decoderExercise dec))
          return (script, s)
@@ -97,10 +93,13 @@ encodeDefault enc tp tv =
       Id            -> encodeAsString enc tv
       Int           -> encodeAsString enc tv
       Exercise      -> return (encodeTuple enc [])
-      IO t          -> do a <- liftIO tv
-                          encodeType enc t a
+      IO t          -> do a <- liftIO (runIO tv)
+                          encodeType enc (Exception :|: t) a
       Exception     -> fail tv
       _             -> fail ("No support for result type: " ++ show tp)
 
 encodeAsString :: Show b => Encoder s a -> b -> DomainReasoner s
 encodeAsString enc a = encodeType enc String (show a)
+
+runIO :: IO a -> IO (Either String a)
+runIO m = liftM Right m `catch` (return . Left . show)

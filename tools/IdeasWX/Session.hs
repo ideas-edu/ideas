@@ -100,7 +100,7 @@ suggestTerm ref = do
 
 suggestTermFor :: Difficulty -> Some Exercise -> IO String
 suggestTermFor dif (Some ex) = do
-   a  <- randomTerm dif ex
+   a  <- randomTerm ex (Just dif)
    return $ prettyPrinter ex a
        
 undo :: Session -> IO ()
@@ -224,7 +224,7 @@ nextStep ref = do
 
 startNewDerivation :: Difficulty -> Exercise a -> IO (Derivation () (State a))
 startNewDerivation dif ex = do
-   a <- randomTerm dif ex
+   a <- randomTerm ex (Just dif)
    return $ emptyDerivation (emptyState ex a)
 
 extendDerivation :: a -> Derivation () a -> Derivation () a

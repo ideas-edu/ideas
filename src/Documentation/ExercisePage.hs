@@ -19,7 +19,6 @@ import Documentation.DefaultPage
 import Documentation.ExampleFile
 import Documentation.OpenMathDerivations
 import Documentation.RulePresenter
-import Service.BasicServices
 import Service.Diagnose
 import Service.DomainReasoner
 import Service.State
@@ -101,8 +100,9 @@ exercisePage exampleFileExists ex = do
    -- preText $ show $ treesToInfo ex trees
 
    h2 "3. Example"
-   let state = generate (mkStdGen 0) ex Medium
-   derivationHTML ex (stateTerm state)
+   case randomTermWith (mkStdGen 0) ex Nothing of
+      Just a  -> derivationHTML ex a
+      Nothing -> return ()
    para $ unless (null (examples ex)) $
       link (up len ++ exerciseDerivationsFile exid) (text "More examples")
  where

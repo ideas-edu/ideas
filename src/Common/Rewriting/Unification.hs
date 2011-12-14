@@ -15,12 +15,12 @@ module Common.Rewriting.Unification
    , unificationTests
    ) where
 
-import Common.Rewriting.AC (pairingsA)
+import Common.Rewriting.AC (pairingsMatchA)
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
 import Common.Utils.TestSuite
-import Control.Arrow
 import Control.Monad
+import Data.Maybe
 import qualified Data.Map as M
 
 -----------------------------------------------------------
@@ -127,21 +127,31 @@ defaultMatch f x y = do
    matchList f as bs
 
 matchList :: Match Term -> Match [Term]
-matchList f = rec 
+matchList f as bs = 
+   case safeZipWith f as bs of
+      Just ms -> products ms
+      Nothing -> fail "matchList: lengths differ"
+
+safeZipWith :: (a -> b -> c) -> [a] -> [b] -> Maybe [c]
+safeZipWith f = rec
  where
-   rec [] [] = return emptySubst
-   rec (x:xs) (y:ys) = do
-      s1 <- f x y
-      s2 <- rec (map (s1 |->) xs) (map (s1 |->) ys)
-      return (s2 @@ s1)
-   rec _ _ = fail "matchList: lengths differ"
+   rec []     []     = Just []
+   rec (a:as) (b:bs) = liftM (f a b:) (rec as bs)
+   rec _      _      = Nothing
+
+products :: [[Substitution]] -> [Substitution]
+products = foldr op [emptySubst]
+ where  
+   op xs ys = catMaybes [ x @+@ y | x <- xs, y <- ys ]
 
 associativeMatch :: Symbol -> SymbolMatch
 associativeMatch s f as b =
-   concatMap (uncurry (matchList f) . unzip . map make) result
+   pairingsMatchA make (collects as []) (collect b []) >>= products
  where
-   result = pairingsA True (collects as []) (collect b [])
-   make   = construct *** construct
+   make :: Term -> [Term] -> [Substitution]
+   make (TMeta i) xs = [singletonSubst i (construct xs)]
+   make x [y]        = f x y
+   make _ _          = []
 
    collects     = foldr ((.) . collect) id
    collect term = maybe (term:) collects (isFunction s term)

@@ -13,13 +13,14 @@
 -----------------------------------------------------------------------------
 module Common.Rewriting.Substitution
    ( Substitution, emptySubst, singletonSubst, dom, lookupVar
-   , (@@), (|->), listToSubst, composable
+   , (@@), (|->), listToSubst, composable, (@+@)
    , tests
    ) where
 
 import Common.Rewriting.Term
 import Common.Utils.TestSuite
 import Common.Utils.Uniplate
+import Control.Monad
 import Data.List
 import Data.Maybe
 import Data.Monoid
@@ -86,6 +87,18 @@ s |-> term =
    case term of
       TMeta i -> fromMaybe term (lookupVar i s)
       _       -> descend (s |->) term
+
+infix 6 @+@
+
+(@+@) :: Substitution -> Substitution -> Maybe Substitution
+s1 @+@ s2 = liftM S $ foldM op (unS s1) $ IM.toList $ unS s2
+ where
+   op m (i, a) =
+      case IM.lookup i m of 
+         Just b 
+            | a == b    -> Just m
+            | otherwise -> Nothing
+         Nothing        -> Just (IM.insert i a m)
 
 -----------------------------------------------------------
 --- * Test substitution properties

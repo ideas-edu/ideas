@@ -14,9 +14,12 @@ module Common.Rewriting.AC
      Pairings, PairingsList, PairingsPair
 --   , pairings, pairingsMatch
      -- * Primitive pairings functions
-   , pairingsNone, pairingsA
+   , pairingsNone, pairingsA, pairingsMatchA
    , pairingsC, pairingsAC
    ) where
+   
+import Common.Classes
+import Data.List
 
 type Pairings     a   = a -> a -> [[(a, a)]]
 type PairingsList a b = [a] -> [b] -> [[([a], [b])]]
@@ -52,20 +55,34 @@ pairingsC (a1, a2) (b1, b2) =
 
 -- associative pairings
 pairingsA :: Bool -> PairingsList a b
-pairingsA matchMode = rec
+pairingsA matchMode
+   | matchMode = pairingsMatchA (\a bs -> ([a], bs))
+   | otherwise = rec
  where
    rec [] [] = [[]]
    rec as bs =
-      [ (a1, b1):ps
-      | i <- if matchMode && not (null as) then [1] else [1 .. length as]
+      [ (as1, bs1):ps
+      | i <- [1 .. length as]
       , j <- [1 .. length bs]
       , i==1 || j==1
       , let (as1, as2) = splitAt i as
       , let (bs1, bs2) = splitAt j bs
-      , let a1 = as1
-      , let b1 = bs1
       , ps <- rec as2 bs2
       ]
+
+pairingsMatchA :: (a -> [b] -> c) -> [a] -> [b] -> [[c]]
+pairingsMatchA f = rec
+ where
+   rec [] [] = [[]]
+   rec [] _  = []
+   rec (a:as) bs =
+      [ p:ps
+      | (xs, ys) <- take (length bs - length as) $ tail $ splits bs
+      , let p = f a xs
+      , ps <- rec as ys
+      ]
+
+-- go _ = length $ pairingsMatchA [1::Int ..10] [1::Int ..20] -- 92378
 
 -- associative/commutative pairings
 pairingsAC :: Bool -> PairingsList a b
@@ -75,9 +92,9 @@ pairingsAC matchMode = rec
    rec [] _  = []
    rec (a:as) bs =
       [ (as1, bs1):ps
-      | (asr, as2) <- if matchMode then [([], as)] else splits as
+      | (asr, as2) <- if matchMode then [([], as)] else divide as
       , let as1 = a:asr
-      , (bs1, bs2) <- splits bs
+      , (bs1, bs2) <- divide bs
       , not (null bs1)
       , length as1==1 || length bs1==1
       , ps <- rec as2 bs2
@@ -96,13 +113,13 @@ operatorPairings op g = curry $
        h = build (magmaListView op)
    in map (map (onBoth h)) . uncurry g . onBoth f
 -}
-splits :: [a] -> [([a], [a])]
-splits = foldr insert [([], [])]
+divide :: [a] -> [([a], [a])]
+divide = foldr op [([], [])]
  where
-   insert a ps =
-      let toLeft  (xs, ys) = (a:xs,   ys)
-          toRight (xs, ys) = (  xs, a:ys)
-      in map toLeft ps ++ map toRight ps
+   op a ps = map (mapFirst (a:)) ps ++ map (mapSecond (a:)) ps
+
+splits :: [a] -> [([a], [a])]
+splits xs = zip (inits xs) (tails xs)
 
 {-
 onBoth :: (a -> b) -> (a, a) -> (b, b)

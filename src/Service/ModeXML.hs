@@ -84,8 +84,10 @@ xmlReply request xml = do
    Some conv <-
       case encoding request of
          Just StringEncoding -> return (stringFormatConverter ex)
-         _ | fromDWO request -> return (dwoConverter ex)
-           | otherwise       -> return (openMathConverter ex)
+         -- always use special mixed fraction symbol
+         _ -> return (dwoConverter ex)
+         -- _ | fromDWO request -> return (dwoConverter ex)
+         --   | otherwise       -> return (openMathConverter ex)
    res <- evalService conv srv xml
    return (resultOk res)
 

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.6 (0)">
+<reply result="ok" version="1.0.4 (0)">
   <list>
     <elem>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1058,19 +1058,16 @@
               <OMV name="x"/>
             </OMA>
             <OMA>
-              <OMS cd="arith1" name="plus"/>
+              <OMS cd="extra" name="mixedfraction"/>
               <OMI>
                 2
               </OMI>
-              <OMA>
-                <OMS cd="arith1" name="divide"/>
-                <OMI>
-                  1
-                </OMI>
-                <OMI>
-                  2
-                </OMI>
-              </OMA>
+              <OMI>
+                1
+              </OMI>
+              <OMI>
+                2
+              </OMI>
             </OMA>
           </OMA>
         </OMA>
@@ -1255,19 +1252,16 @@
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="arith1" name="plus"/>
+              <OMS cd="extra" name="mixedfraction"/>
               <OMI>
                 1
               </OMI>
-              <OMA>
-                <OMS cd="arith1" name="divide"/>
-                <OMI>
-                  1
-                </OMI>
-                <OMI>
-                  2
-                </OMI>
-              </OMA>
+              <OMI>
+                1
+              </OMI>
+              <OMI>
+                2
+              </OMI>
             </OMA>
           </OMA>
           <OMA>
@@ -1522,37 +1516,31 @@
               <OMA>
                 <OMS cd="arith1" name="unary_minus"/>
                 <OMA>
-                  <OMS cd="arith1" name="plus"/>
+                  <OMS cd="extra" name="mixedfraction"/>
                   <OMI>
                     1
                   </OMI>
-                  <OMA>
-                    <OMS cd="arith1" name="divide"/>
-                    <OMI>
-                      2
-                    </OMI>
-                    <OMI>
-                      5
-                    </OMI>
-                  </OMA>
+                  <OMI>
+                    2
+                  </OMI>
+                  <OMI>
+                    5
+                  </OMI>
                 </OMA>
               </OMA>
               <OMV name="x"/>
             </OMA>
             <OMA>
-              <OMS cd="arith1" name="plus"/>
+              <OMS cd="extra" name="mixedfraction"/>
               <OMI>
                 3
               </OMI>
-              <OMA>
-                <OMS cd="arith1" name="divide"/>
-                <OMI>
-                  1
-                </OMI>
-                <OMI>
-                  2
-                </OMI>
-              </OMA>
+              <OMI>
+                1
+              </OMI>
+              <OMI>
+                2
+              </OMI>
             </OMA>
           </OMA>
           <OMA>
@@ -1666,19 +1654,16 @@
                 <OMV name="x"/>
               </OMA>
               <OMA>
-                <OMS cd="arith1" name="plus"/>
+                <OMS cd="extra" name="mixedfraction"/>
                 <OMI>
                   1
                 </OMI>
-                <OMA>
-                  <OMS cd="arith1" name="divide"/>
-                  <OMI>
-                    1
-                  </OMI>
-                  <OMI>
-                    2
-                  </OMI>
-                </OMA>
+                <OMI>
+                  1
+                </OMI>
+                <OMI>
+                  2
+                </OMI>
               </OMA>
             </OMA>
           </OMA>
@@ -1777,19 +1762,16 @@
             <OMA>
               <OMS cd="arith1" name="times"/>
               <OMA>
-                <OMS cd="arith1" name="plus"/>
+                <OMS cd="extra" name="mixedfraction"/>
                 <OMI>
                   2
                 </OMI>
-                <OMA>
-                  <OMS cd="arith1" name="divide"/>
-                  <OMI>
-                    1
-                  </OMI>
-                  <OMI>
-                    2
-                  </OMI>
-                </OMA>
+                <OMI>
+                  1
+                </OMI>
+                <OMI>
+                  2
+                </OMI>
               </OMA>
               <OMA>
                 <OMS cd="arith1" name="minus"/>
@@ -1851,19 +1833,16 @@
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="arith1" name="plus"/>
+              <OMS cd="extra" name="mixedfraction"/>
               <OMI>
                 4
               </OMI>
-              <OMA>
-                <OMS cd="arith1" name="divide"/>
-                <OMI>
-                  1
-                </OMI>
-                <OMI>
-                  2
-                </OMI>
-              </OMA>
+              <OMI>
+                1
+              </OMI>
+              <OMI>
+                2
+              </OMI>
             </OMA>
           </OMA>
         </OMA>

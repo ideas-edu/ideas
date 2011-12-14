@@ -1,0 +1,13 @@
+<reply result="ok" version="1.0.5 (0)">
+  <correct ready="true">
+    <state>
+      <prefix>
+        []
+      </prefix>
+      <expr>
+        x == 2.6
+      </expr>
+    </state>
+  </correct>
+</reply>
+

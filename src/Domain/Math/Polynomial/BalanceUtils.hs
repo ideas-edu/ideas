@@ -43,7 +43,7 @@ eqView :: View (WithBool (Equation Expr)) (WithBool (String, Rational))
 eqView = makeView (either (Just . fromBool) f . fromWithBool) (fmap g)
  where
    f (lhs :==: rhs) = do
-      (s, p) <- match (polyViewWith rationalView) (lhs-rhs)
+      (s, p) <- match (polyViewWith rationalApproxView) (lhs-rhs)
       case degree p of
          0 -> Just $ fromBool $ coefficient 0 p == 0
          1 -> Just $ singleton (s, - coefficient 0 p / coefficient 1 p)

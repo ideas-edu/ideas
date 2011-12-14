@@ -59,7 +59,7 @@ polyViewWithNew = makeView matchPoly buildPoly
          a :/: b  -> do
             guard (withoutVar pv b)
             p <- f a
-            d <- match rationalView b
+            d <- match rationalApproxView b
             guard (d /= 0)
             return (fmap (/fromRational d) p)
          Sym s [a, n] | isPowerSymbol s ->
@@ -222,7 +222,7 @@ linearEquationViewWith v = makeView f g
    g (x, r) = Var x :==: build v r
 
 linearEquationView :: View (Equation Expr) (String, Rational)
-linearEquationView = linearEquationViewWith rationalView
+linearEquationView = linearEquationViewWith rationalApproxView
 
 quadraticEquationsView:: View (OrList (Equation Expr)) (OrList (String, SQ.SquareRoot Rational))
 quadraticEquationsView = makeView f (fmap g)
@@ -230,13 +230,13 @@ quadraticEquationsView = makeView f (fmap g)
    f = liftM (simplify orSetView . foldMap id)
           . Data.Traversable.mapM (match quadraticEquationView)
 
-   g (x, a) = Var x :==: build (squareRootViewWith rationalView) a
+   g (x, a) = Var x :==: build (squareRootViewWith rationalApproxView) a
 
 quadraticEquationView :: View (Equation Expr) (OrList (String, SQ.SquareRoot Rational))
 quadraticEquationView = makeView f g
  where
    f (lhs :==: rhs) = do
-      (s, p) <- match (polyViewWith (squareRootViewWith rationalView)) (lhs - rhs)
+      (s, p) <- match (polyViewWith (squareRootViewWith rationalApproxView)) (lhs - rhs)
       guard (degree p <= 2)
       liftM (fmap ((,) s)) $
          case polynomialList p of
@@ -255,7 +255,7 @@ quadraticEquationView = makeView f g
    g xs | isTrue xs = 0 :==: 0
         | otherwise = build productView (False, map make (toList xs)) :==: 0
     where
-      make (x, a) = Var x .-. build (squareRootViewWith rationalView) a
+      make (x, a) = Var x .-. build (squareRootViewWith rationalApproxView) a
 
 higherDegreeEquationsView :: View (OrList (Equation Expr)) (OrList Expr)
 higherDegreeEquationsView = f <-> fmap (:==: 0)
@@ -273,11 +273,11 @@ higherDegreeEquationsView = f <-> fmap (:==: 0)
 
 hasNegSqrt :: Expr -> Bool
 hasNegSqrt (Sqrt a) =
-   case match rationalView a of
+   case match rationalApproxView a of
       Just r | r < 0 -> True
       _ -> hasNegSqrt a
 hasNegSqrt (Sym s [a, b]) | isRootSymbol s =
-   case (match rationalView a, match integerView b) of
+   case (match rationalApproxView a, match integerView b) of
       (Just r, Just n) | r < 0 && even n -> True
       _ -> hasNegSqrt a || hasNegSqrt b
 hasNegSqrt a =
@@ -285,11 +285,11 @@ hasNegSqrt a =
 
 normHDE :: Expr -> [Expr]
 normHDE e =
-   case match (polyViewWith rationalView) e of
+   case match (polyViewWith rationalApproxView) e of
       Just (x, p)  -> normPolynomial x p
       Nothing -> fromMaybe [e] $ do
-         (x, a) <- match (linearEquationViewWith (squareRootViewWith rationalView)) (e :==: 0)
-         return [ Var x .+. build (squareRootViewWith rationalView) (-a) ]
+         (x, a) <- match (linearEquationViewWith (squareRootViewWith rationalApproxView)) (e :==: 0)
+         return [ Var x .+. build (squareRootViewWith rationalApproxView) (-a) ]
 
 normPolynomial :: String -> Polynomial Rational -> [Expr]
 normPolynomial x p
@@ -304,7 +304,7 @@ normPolynomial x p
             discr   = b*b - 4*a*c
             sdiscr  = SQ.sqrtRational discr
         in if discr < 0 then [] else
-           map ((Var x .+.) . build (squareRootViewWith rationalView))
+           map ((Var x .+.) . build (squareRootViewWith rationalApproxView))
            [ SQ.scale (1/(2*a)) (SQ.con b + sdiscr)
            , SQ.scale (1/(2*a)) (SQ.con b - sdiscr)
            ]
@@ -327,7 +327,7 @@ normPolynomial x p
            _ ->
               case factorize p of
                  ps | length ps > 1 -> concatMap (normPolynomial x) ps
-                 _ -> [build (polyViewWith rationalView) (x, p)]
+                 _ -> [build (polyViewWith rationalApproxView) (x, p)]
 
 substitute :: (String, Expr) -> Expr -> Expr
 substitute (s, a) (Var b) | s==b = a

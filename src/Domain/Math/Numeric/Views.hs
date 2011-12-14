@@ -18,7 +18,7 @@ module Domain.Math.Numeric.Views
    , decimalFractionView
      -- * Rational numbers
    , rationalView, rationalNF
-   , rationalRelaxedForm, fractionForm
+   , rationalRelaxedForm, fractionForm, rationalApproxView
      -- * Mixed fractions
    , mixedFractionView, mixedFractionNF
      -- * Double
@@ -27,6 +27,7 @@ module Domain.Math.Numeric.Views
 
 import Common.Id
 import Common.Rewriting (function)
+import Common.Utils.Uniplate (descend)
 import Common.View
 import Control.Monad
 import Data.Ratio
@@ -136,6 +137,13 @@ matchExact :: Expr -> Maybe (Either Double Rational)
 matchExact expr =
    fmap Left (match doubleNF expr) `mplus`
    fmap Right (fix matchRational expr)
+
+-- first convert (approximate!) all numbers to their decimal representation
+rationalApproxView :: View Expr Rational
+rationalApproxView = makeView (match rationalView . f) fromRational
+ where
+   f (Number d) = fromRational $ toRational $ DF.fromDouble d
+   f expr       = descend f expr
 
 -- 5, -(2/5), (-2)/5, but not 2/(-5), 6/8, or -((-2)/5)
 rationalNF :: View Expr Rational

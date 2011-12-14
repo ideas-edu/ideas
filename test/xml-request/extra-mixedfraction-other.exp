@@ -1,4 +1,4 @@
-<reply result="ok" version="1.0 (0)">
+<reply result="ok" version="1.0.4 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.flip" location="[]">
       <state>
@@ -10,19 +10,16 @@
             <OMS cd="relation1" name="eq"/>
             <OMV name="x"/>
             <OMA>
-              <OMS cd="arith1" name="plus"/>
+              <OMS cd="extra" name="mixedfraction"/>
               <OMI>
                 2
               </OMI>
-              <OMA>
-                <OMS cd="arith1" name="divide"/>
-                <OMI>
-                  1
-                </OMI>
-                <OMI>
-                  3
-                </OMI>
-              </OMA>
+              <OMI>
+                1
+              </OMI>
+              <OMI>
+                3
+              </OMI>
             </OMA>
           </OMA>
         </OMOBJ>

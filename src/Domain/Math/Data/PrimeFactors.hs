@@ -11,13 +11,12 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Data.PrimeFactors
    ( PrimeFactors
-   , factors, multiplicity, coprime
-   , square, power, splitPower
-   , primes, greatestPower, allPowers
+   , splitPower, greatestPower, allPowers
    ) where
 
 import Data.Maybe
 import qualified Data.IntMap as IM
+import Domain.Math.Data.Primes
 
 -------------------------------------------------------------
 -- Representation
@@ -37,34 +36,17 @@ type Factors = IM.IntMap Int
 
 toFactors :: Integer -> Factors
 toFactors a
-   | a > 0     = rec primes a
-   | a < 0     = rec primes (-a)
-   | otherwise = IM.singleton 0 1
+   | a == 0    = IM.singleton 0 1
+   | otherwise = rec $ primeFactors $ fromInteger $ abs a
  where
-   rec [] n       = IM.singleton (fromIntegral n) 1
-   rec (p:ps) n
-      | n <= 1    = IM.empty
-      | otherwise = f 0 n
-    where
-      p2 = fromIntegral p
-      f i m
-         | r == 0    = f (i+1) q
-         | i >  0    = IM.insert p i (rec ps m)
-         | otherwise = rec ps m
-       where
-         (q, r) = quotRem m p2
+   rec []     = IM.empty
+   rec (x:xs) = IM.insert x (length ys + 1) (rec zs)
+    where 
+      (ys, zs) = break (/= x) xs
 
 fromFactors :: Factors -> Integer
 fromFactors = product . map f . IM.toList
  where f (a, i) = toInteger a ^ toInteger i
-
--- For practical reasons, the list of prime numbers is cut-off after
--- 1000 elements (last primes gives 7919).
-primes :: [Int]
-primes = take 1000 $ rec [2..]
- where
-   rec (x:xs) = x : rec (filter (\y -> y `mod` x /= 0) xs)
-   rec []     = error "PrimeFactors: empty list"
 
 -------------------------------------------------------------
 -- Type class instances
@@ -104,22 +86,6 @@ instance Integral PrimeFactors where
 
 -------------------------------------------------------------
 -- Utility functions
-
-factors :: PrimeFactors -> [(Int, Int)]
-factors (PF _ m) = IM.toList m
-
-multiplicity :: Int -> PrimeFactors -> Int
-multiplicity i (PF _ m) = IM.findWithDefault 0 i m
-
--- no prime in common
-coprime :: PrimeFactors -> PrimeFactors -> Bool
-coprime (PF _ m1) (PF _ m2) = IM.null (IM.intersection m1 m2)
-
-square :: PrimeFactors -> PrimeFactors
-square = (`power` 2)
-
-power :: PrimeFactors -> Int -> PrimeFactors
-power (PF a m) i = PF (a^i) (IM.map (*i) m)
 
 -- brute force, ugly
 greatestPower :: Integer -> Maybe (Integer, Integer)

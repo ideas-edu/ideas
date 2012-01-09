@@ -118,11 +118,11 @@ simplifyWith f view a = fromMaybe a (canonicalWith f view a)
 -- Views
 
 data View a b where
-   Prim    :: Matcher a b -> (b -> a) -> View a b
-   (:@)    :: Id -> View a b -> View a b
-   (:>>>:) :: View a b -> View b c -> View a c
-   (:***:) :: View a c -> View b d -> View (a, b) (c, d)
-   (:+++:) :: View a c -> View b d -> View (Either a b) (Either c d)
+   Prim     :: Matcher a b -> (b -> a) -> View a b
+   (:@)     :: Id -> View a b -> View a b
+   (:>>>:)  :: View a b -> View b c -> View a c
+   (:***:)  :: View a c -> View b d -> View (a, b) (c, d)
+   (:+++:)  :: View a c -> View b d -> View (Either a b) (Either c d)
    Traverse :: T.Traversable f => View a b -> View (f a) (f b)
 
 instance C.Category View where

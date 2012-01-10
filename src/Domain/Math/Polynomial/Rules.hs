@@ -328,7 +328,7 @@ allPowerFactors = describe "all power factors" $
       let n | p1 == 0   = lowestDegree p2
             | p2 == 0   = lowestDegree p1
             | otherwise = lowestDegree p1 `min` lowestDegree p2
-          ts  = terms p1 ++ terms p2
+          ts  = filter (/= 0) (fromPolynomial p1 ++ fromPolynomial p2)
           f p = build myView (s1, raise (-n) p)
       guard ((s1==s2 || p1==0 || p2==0) && n > 0 && length ts > 1)
       return $ toOrList [Var s1 :==: 0, f p1 :==: f p2]
@@ -339,7 +339,7 @@ factorVariablePower = describe "factor variable power" $
    let myView = polyNormalForm rationalView
    (s, p) <- match (polyNormalForm rationalView) expr
    let n = lowestDegree p
-   guard (n > 0 && length (terms p) > 1)
+   guard (n > 0 && length (filter (/=0) (fromPolynomial p)) > 1)
    new <- p `safeDiv` (var Prelude.^ n)
    return $ Var s .^. fromIntegral n * build myView (s, new)
 

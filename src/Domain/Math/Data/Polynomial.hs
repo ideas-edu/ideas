@@ -10,24 +10,25 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Data.Polynomial
-   ( Polynomial, var, con, raise
-   , degree, lowestDegree, coefficient, terms
-   , isMonic, toMonic, isRoot, positiveRoots, negativeRoots
-   , derivative, eval, longDivision, polynomialGCD
-   , factorize
+   ( Polynomial, toPolynomial, fromPolynomial, var, con, raise
+   , degree, lowestDegree, coefficient--, terms
+   , isRoot, positiveRoots, negativeRoots
+   , derivative, eval, polynomialGCD, factorize
+   , testPolynomials
    ) where
 
 import Common.Classes
 import Control.Applicative (Applicative, (<$>), liftA)
+import Common.Utils.TestSuite
 import Control.Monad
 import Data.Char
 import Data.Foldable (Foldable, foldMap)
-import Data.List (nub)
-import Data.Ratio (approxRational)
+import Data.List (sort, nub)
+import Data.Ratio
 import Data.Traversable (Traversable, sequenceA)
-import Domain.Math.Approximation (newton, within)
 import Domain.Math.Safe
-import Test.QuickCheck hiding (within)
+import Domain.Math.Data.Primes
+import Test.QuickCheck
 import qualified Data.IntMap as IM
 import qualified Data.IntSet as IS
 
@@ -47,6 +48,13 @@ makeP = P . invariant
 
 unP :: Num a => Polynomial a -> IM.IntMap a
 unP = invariant . unsafeP
+
+toPolynomial :: Num a => [a] -> Polynomial a
+toPolynomial = makeP . IM.fromAscList . zip [0..] . reverse
+
+fromPolynomial :: Num a => Polynomial a -> [a]
+fromPolynomial p = map (`coefficient` p) [d, d-1 .. 0]
+ where d = degree p 
 
 -------------------------------------------------------------------
 -- Instances
@@ -79,7 +87,7 @@ instance Fractional a => SafeDiv (Polynomial a) where
       | b==0      = return a
       | otherwise = Nothing
     where
-      (a, b) = longDivision p1 p2
+      (a, b) = divModPoly p1 p2
 
 -- the Functor instance does not maintain the invariant
 instance Functor Polynomial where
@@ -93,10 +101,12 @@ instance Traversable Polynomial where
 
 instance Num a => Num (Polynomial a) where
    p1 + p2 = makeP $ IM.unionWith (+) (unP p1) (unP p2)
-   p1 * p2 = makeP $ foldr (uncurry op) IM.empty list
+   p1 * p2 = sum [ raise i (fmap (*a) p1) | (i, a) <- IM.toList (unP p2) ]
+   
+   {- makeP $ foldr (uncurry op) IM.empty list
     where
       op   = IM.insertWith (+)
-      list = [ (i+j, a*b) | (a, i) <- terms p1, (b, j) <- terms p2 ]
+      list = [ (i+j, a*b) | (a, i) <- terms p1, (b, j) <- terms p2 ] -}
    negate      = fmap negate
    fromInteger = makeP . IM.singleton 0 . fromInteger
    -- not defined for polynomials
@@ -140,16 +150,6 @@ lowestDegree p
 coefficient :: Num a => Int -> Polynomial a -> a
 coefficient n = IM.findWithDefault 0 n . unP
 
-terms :: Num a => Polynomial a -> [(a, Int)]
-terms p = [ (a, n) | (n, a) <- IM.toList (unP p) ]
-
-isMonic :: Num a => Polynomial a -> Bool
-isMonic p = coefficient (degree p) p == 1
-
-toMonic :: Fractional a => Polynomial a -> Polynomial a
-toMonic p = con (recip a) * p
- where a = coefficient (degree p) p
-
 isRoot :: Num a => Polynomial a -> a -> Bool
 isRoot p a = eval p a == 0
 
@@ -182,29 +182,9 @@ eval :: Num a => Polynomial a -> a -> a
 eval p x = sum [ a * x^n | (n, a) <- IM.toList (unP p) ]
 
 -- polynomial long division
-longDivision :: Fractional a => Polynomial a -> Polynomial a -> (Polynomial a, Polynomial a)
-longDivision p1 p2 = monicLongDivision (f p1) (f p2)
- where
-   f p = con (recip a) * p
-   a   = coefficient (degree p2) p2
-
--- polynomial long division, where p2 is monic
-monicLongDivision :: Num a => Polynomial a -> Polynomial a -> (Polynomial a, Polynomial a)
-monicLongDivision p1 p2
-   | d1 >= d2 && isMonic p2 = (toP quotient, toP remainder)
-   | otherwise = error $ "invalid monic division" ++ show (p1, p2)
- where
-   d1 = degree p1
-   d2 = degree p2
-   xs = map (`coefficient` p1) [d1, d1-1 .. 0]
-   ys = drop 1 $ map (negate . (`coefficient` p2)) [d2, d2-1 .. 0]
-
-   (quotient, remainder) = rec [] xs
-   toP = makeP . IM.fromAscList . zip [0..]
-
-   rec acc (a:as) | length as >= length ys =
-      rec (a:acc) (zipWith (+) (map (*a) ys ++ repeat 0) as)
-   rec acc as = (acc, reverse as)
+divModPoly :: Fractional a => Polynomial a -> Polynomial a -> (Polynomial a, Polynomial a)
+divModPoly p1 p2 = mapBoth toPolynomial $ 
+   longDivision (fromPolynomial p2) (fromPolynomial p1)
 
 -- use polynomial long division to compute the greatest common factor
 -- of the polynomials
@@ -215,34 +195,43 @@ polynomialGCD x y
  where
    rec a b
       | b == 0    = a
-      | otherwise = rec b (snd (longDivision a b))
+      | otherwise = rec b (snd (divModPoly a b))
 
 ------------------------
 
 factorize :: Polynomial Rational -> [Polynomial Rational]
-factorize p
-   | degree p <= 1 = [p]
-   | l > 0         = var ^ l : factorize (raise (-l) p)
-   | otherwise     =
-        case pairs of
-           (p1,p2):_ -> factorize p1 ++ factorize p2
-           []        -> [p]
+factorize = map toPolynomial . make . fromPolynomial
  where
-   l     = snd (head (terms p))
-   pairs = [ (p1, p2)
-           | a <- candidateRoots p
-           , isRoot p a
-           , let p1 = var - con a
-           , Just p2 <- [safeDiv p p1]
-           ]
+   make ps 
+      | null ps      = [[]]
+      | head ps == 0 = make (tail ps)
+      | last ps == 0 = [1, 0] : make (init ps)
+      | otherwise    = rec ps $ possibleRoots (last is) (head is)
+    where
+      is = toInts ps
+        
+   rec ps [] = [ ps | ps /= [1] ]
+   rec ps list@(r:rs) 
+      | b == 0     = [1, -r] : rec qs list
+      | otherwise  = rec ps rs
+    where
+      (qs, b) = syntheticDivision r ps
 
-candidateRoots :: Polynomial Rational -> [Rational]
-candidateRoots p = nub (map (`approxRational` 0.0001) xs)
+toInts :: [Rational] -> [Int]
+toInts ps = map (`div` a) is
  where
-    f  = eval (fmap fromRational p)
-    df = eval (fmap fromRational (derivative p))
-    xs = nub (map (within 0.0001 . take 10 . newton f df) startList)
-    startList = [0, 3, -3, 10, -10, 100, -100]
+   is  = map f ps
+   d   = foldr1 lcm (map denominator ps)
+   f x = fromIntegral $ (numerator x * d) `div` denominator x
+   a   = foldr1 gcd is
+      
+possibleRoots :: Int -> Int -> [Rational]
+possibleRoots a b = sort $ nub [ make f x y | x <- xs, y <- ys, f <- signs ]
+ where
+   xs = factors (abs a)
+   ys = factors (abs b)
+   signs = [id, negate]
+   make f x y = f (toRational x / toRational y)
 
 -- TODO: replace me by sequenceA
 -- This definition is for backwards compatibility. In older versions of IntMap,
@@ -251,3 +240,59 @@ sequenceIntMap :: Applicative m => IM.IntMap (m a) -> m (IM.IntMap a)
 sequenceIntMap m = IM.fromDistinctAscList <$> zip ks <$> sequenceA as
  where
    (ks, as) = unzip (IM.toList m)
+
+---------------------------------------------------------------
+-- Algorithms for synthetic and long division
+
+{- syntheticDivision a p: divide polynomial p by (x-a)
+   Example:
+   
+      -3|  1   7    11  -3
+              -3   -12   3
+      -------------------- +
+           1   4    -1   0   (last number is remainder)
+   -}
+syntheticDivision :: Num a => a -> [a] -> ([a], a)
+syntheticDivision a xs = (init zs, last zs)
+ where
+   ys = 0 : map (*a) zs
+   zs = zipWith (+) xs ys
+
+{- longDivision p q: divide polynomial q by p
+   Example:
+   
+      x+3|   1   10   24
+             1    3          (1x)
+             ----------- - 
+                  7   24     (7x)
+                  7   21 
+                  ------ -
+                       3    (remainder)
+   -}
+longDivision :: Fractional a => [a] -> [a] -> ([a], [a])
+longDivision []     = error "longDivision by zero"
+longDivision (0:xs) = longDivision xs
+longDivision (x:xs) = recN
+ where
+   recN ys = rec (length ys - length xs) ys
+   
+   rec n (y:ys) | n > 0 =
+      let d  = y/x
+          zs = zipWith (-) ys (map (*d) xs ++ repeat 0)
+      in mapFirst (d:) (rec (n-1) zs)
+   rec _ ys = ([], ys)
+
+---------------------------------------------------------------
+-- Properties
+
+testPolynomials :: TestSuite
+testPolynomials = suite "polynomial" $ 
+   addProperty "factorization" $ do
+      i  <- choose (0, 5)
+      as <- replicateM i $ choose (-20, 20)
+      b  <- choose (1, 30) 
+      c  <- choose (-10*b, 10*b)
+      let qs = [ var - con (fromInteger a) | a <- as ]
+          p  = con (fromInteger c/fromInteger b) * product qs
+          ps = factorize p
+      return (all ((<= 1) . degree) ps && product ps == p)

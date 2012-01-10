@@ -11,8 +11,8 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Views
    ( polyView, polyViewWith
-   , quadraticView, quadraticViewWith --, quadraticViewFor quadraticViewForWith
-   , linearView, linearViewWith -- linearViewFor linearViewForWith
+   , quadraticView, quadraticViewWith
+   , linearView, linearViewWith 
    , constantPolyView, linearPolyView, quadraticPolyView, cubicPolyView
    , monomialPolyView, binomialPolyView, trinomialPolyView
    , polyNormalForm, polyRelaxedForm
@@ -118,22 +118,22 @@ linearViewWith v = polyViewWith v >>> second linearPolyView >>> (f <-> g)
 -- Views on polynomials (degree)
 
 constantPolyView :: Num a => View (Polynomial a) a
-constantPolyView = makeView (isList1 . polynomialList) (buildList . list1)
+constantPolyView = makeView (isList1 . fromPolynomial) (buildList . list1)
 
 linearPolyView :: Num a => View (Polynomial a) (a, a)
-linearPolyView = makeView (isList2 . polynomialList) (buildList . list2)
+linearPolyView = makeView (isList2 . fromPolynomial) (buildList . list2)
 
 quadraticPolyView :: Num a => View (Polynomial a) (a, a, a)
-quadraticPolyView = makeView (isList3 . polynomialList) (buildList . list3)
+quadraticPolyView = makeView (isList3 . fromPolynomial) (buildList . list3)
 
 cubicPolyView :: Num a => View (Polynomial a) (a, a, a, a)
-cubicPolyView = makeView (isList4 . polynomialList) (buildList . list4)
+cubicPolyView = makeView (isList4 . fromPolynomial) (buildList . list4)
 
 -------------------------------------------------------------------
 -- Views on polynomials (number of terms)
 
 monomialPolyView :: Num a => View (Polynomial a) (a, Int)
-monomialPolyView = makeView (isList1. terms) (buildPairs . list1)
+monomialPolyView = makeView (isList1 . terms) (buildPairs . list1)
 
 binomialPolyView :: Num a => View (Polynomial a) ((a, Int), (a, Int))
 binomialPolyView = makeView (isList2 . terms) (buildPairs . list2)
@@ -151,10 +151,6 @@ buildPairs as
    | otherwise = sum (map f as)
  where
    f (a, n) = con a * var Prelude.^ n
-
-polynomialList :: Num a => Polynomial a -> [a]
-polynomialList p = map (`coefficient` p) [d, d-1 .. 0]
- where d = degree p
 
 list1 :: a -> [a]
 list1 a = [a]
@@ -183,6 +179,9 @@ isList3 _         = Nothing
 isList4 :: [a] -> Maybe (a, a, a, a)
 isList4 [a, b, c, d] = Just (a, b, c, d)
 isList4 _            = Nothing
+
+terms :: Num a => Polynomial a -> [(a, Int)]
+terms = filter ((/=0) . fst) . flip zip [0..] . reverse . fromPolynomial
 
 -------------------------------------------------------------------
 -- Normal form, and list of power factors
@@ -239,7 +238,7 @@ quadraticEquationView = makeView f g
       (s, p) <- match (polyViewWith (squareRootViewWith rationalApproxView)) (lhs - rhs)
       guard (degree p <= 2)
       liftM (fmap ((,) s)) $
-         case polynomialList p of
+         case fromPolynomial p of
             [a, b, c] -> do
                discr <- SQ.fromSquareRoot (b*b - SQ.scale 4 (a*c))
                let sdiscr = SQ.sqrtRational discr

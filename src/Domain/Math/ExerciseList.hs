@@ -19,6 +19,8 @@ import Common.Library
 import Common.Utils (Some(..))
 import Common.Utils.TestSuite
 import Domain.Math.Data.Interval
+import Domain.Math.Data.Polynomial
+import Domain.Math.Data.Primes
 import Domain.Math.Derivative.Exercises
 import Domain.Math.Equation.CoverUpExercise
 import Domain.Math.Expr
@@ -95,4 +97,7 @@ scriptList =
    ]
 
 testSuiteList :: [TestSuite]
-testSuiteList = [MathNum.main, MathPoly.tests, MathSqrt.tests, testMe, testLCM]
+testSuiteList = 
+   [ MathNum.main, MathPoly.tests, MathSqrt.tests, testMe, testLCM
+   , testPrimes, testPolynomials
+   ]

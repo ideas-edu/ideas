@@ -98,4 +98,4 @@ hasTermViewM  :: Monad m => Exercise a -> m (View Term a)
 hasTermViewM = maybe (fail "No support for terms") return . hasTermView
 
 mfSymbol :: OM.Symbol
-mfSymbol = OM.makeSymbol "extra" "mixed_fraction"
+mfSymbol = OM.makeSymbol "extra" "mixedfraction"

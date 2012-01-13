@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -23,6 +24,7 @@ import Common.Utils.Uniplate
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Data.Typeable
 import Domain.Math.CleanUp (smart)
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
@@ -70,10 +72,13 @@ instance Simplify Expr where
 instance Simplify a => Simplify (Rule a) where
    simplifyWith cfg = doAfter (simplifyWith cfg) -- by default, simplify afterwards
 
-data Simplified a = S a deriving (Eq, Ord)
+data Simplified a = S a deriving (Eq, Ord, Typeable)
 
 instance Show a => Show (Simplified a) where
    show (S x) = show x
+
+instance (Read a, Simplify a) => Read (Simplified a) where
+   readsPrec n = map (mapFirst simplified) . readsPrec n
 
 instance (Num a, Simplify a) => Num (Simplified a) where
    (+)         = liftS2 (+)
@@ -112,6 +117,9 @@ instance (Floating a, Simplify a) => Floating (Simplified a) where
 instance (Simplify a, IsTerm a) => IsTerm (Simplified a) where
    toTerm (S x) = toTerm x
    fromTerm     = liftM simplified . fromTerm
+
+instance (Bindable a, Simplify a, IsTerm a, Show a, Read a) => Bindable (Simplified a) where
+   makeBinding n = makeBindingWith (simplified (getValue (makeBinding n))) n
 
 simplified :: Simplify a => a -> Simplified a
 simplified = S . simplify

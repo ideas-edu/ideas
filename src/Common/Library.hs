@@ -24,6 +24,7 @@ import Common.DerivationTree as Export
 import Common.Exercise as Export
 import Common.Id as Export
 import Common.Navigator as Export hiding (left, right)
+import Common.Parameterized as Export
 import Common.Predicate as Export
 import Common.Rewriting as Export
 import Common.Strategy as Export hiding (fail, not, repeat, replicate, sequence, until)

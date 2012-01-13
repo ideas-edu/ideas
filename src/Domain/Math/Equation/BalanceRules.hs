@@ -10,26 +10,31 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Equation.BalanceRules
-   ( plusT, minusT, timesT, divisionT
+   ( plusRule, minusRule, timesRule, divisionRule
    ) where
 
-import Common.Transformation
-import Common.View
+import Common.Library
 import Control.Monad
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 
-plusT, minusT :: Functor f => Expr -> Transformation (f Expr)
-plusT  e = makeTrans $ Just . fmap (:+: e)
-minusT e = makeTrans $ Just . fmap (:-: e)
+plusRule :: Functor f => Parameterized Expr (Transformation (f Expr))
+plusRule = parameter1 (makeBinding "term") $ \a -> 
+   makeTrans $ Just . fmap (:+: a)
 
-timesT :: Functor f => Expr -> Transformation (f Expr)
-timesT e = makeTrans $ unlessZero e . fmap (e :*:)
+minusRule :: Functor f => Parameterized Expr (Transformation (f Expr))
+minusRule = parameter1 (makeBinding "term") $ \a -> 
+   makeTrans $ Just . fmap (:-: a)
+   
+timesRule :: Functor f => Parameterized Expr (Transformation (f Expr))
+timesRule = parameter1 (makeBinding "factor") $ \a -> 
+   makeTrans $ unlessZero a . fmap (a :*:)
 
-divisionT :: Expr -> Transformation (Equation Expr)
-divisionT e = makeTrans $ unlessZero e . fmap (:/: e)
-
+divisionRule :: Parameterized Expr (Transformation (Equation Expr))
+divisionRule = parameter1 (makeBinding "factor") $ \a ->
+   makeTrans $ unlessZero a . fmap (:/: a)
+   
 unlessZero :: Expr -> a -> Maybe a
 unlessZero e a = do
    r <- matchM rationalView e

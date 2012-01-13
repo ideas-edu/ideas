@@ -184,3 +184,50 @@ smartGenRule r gen = frequency [(2, gen), (1, smart)]
  where
    smart = gen >>= \a ->
       oneof (gen : maybeToList (smartGen r a))
+      
+-- experimental
+{-
+data Parameterized a where
+   Unit :: Environment -> a -> Parameterized a
+   Abs  :: Typeable p => Binding p -> (p -> Parameterized a) -> Parameterized (p -> a)
+
+parameter1 :: Bindable p => Binding p -> (p -> a) -> Parameterized (p -> a)
+parameter1 b f = param (getId b) $ unit . f
+
+parameter2 :: (Bindable p, Bindable q) => Binding p -> Binding q -> (p -> q -> a) -> Parameterized (p -> q -> a)
+parameter2 b c f = param (getId b) $ parameter1 c . f
+
+parameter3 :: (Bindable p, Bindable q, Bindable r) => Binding p -> Binding q -> Binding r -> (p -> q -> r -> a) -> Parameterized (p -> q -> r -> a)
+parameter3 b c d f = param (getId b) $ parameter2 c d . f
+
+param :: (IsId n, Bindable p) => n -> (p -> Parameterized a) -> Parameterized (p -> a)
+param n f = Abs (makeBinding n) f
+
+unit :: a -> Parameterized a
+unit = Unit mempty
+
+supply :: Parameterized (p -> a) -> p -> Parameterized a
+supply (Abs b f) p = insert (setValue p b) (f p)
+
+insert :: Typeable b => Binding b -> Parameterized a -> Parameterized a
+insert b (Unit env a) = Unit (insertBinding b env) a
+insert b (Abs a f)    = Abs a (insert b . f)
+
+fromParameterized :: Environment -> Parameterized a -> Maybe (a, Environment)
+fromParameterized env p =
+   case p of 
+      Unit extra a -> Just (a, extra)
+      Abs b f      -> do
+         c <- lookupValue (getId b) env
+         (a, e) <- fromParameterized env (f c)
+         return (const a, e)
+
+supplyParameters :: (Typeable p, IsId n) => n -> Parameterized (p -> Transformation a) -> (a -> Results p) -> Rule a
+supplyParameters n r f = makeRule n $ makeTransG $ \a -> do
+   p   <- f a
+   env <- getLocals
+   case fromParameterized env (supply r p) of
+      Just (trans, extra) -> do
+         addLocalEnvironment extra
+         applyResults trans a
+      Nothing -> mzero -}

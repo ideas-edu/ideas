@@ -21,7 +21,7 @@ varI, varJ :: Binding Int
 varI = "considered" .<-. 0
 varJ = "j" .<-. 0
 
-rulesGramSchmidt :: Floating a => [Rule (Context (VectorSpace a))]
+rulesGramSchmidt :: (Floating a, Bindable a) => [Rule (Context (VectorSpace a))]
 rulesGramSchmidt = [ruleNormalize, ruleOrthogonal, ruleNext]
 
 -- Make the current vector of length 1
@@ -34,10 +34,10 @@ ruleNormalize = makeSimpleRuleList "Turn into unit Vector" $ withCM $ \vs -> do
 
 -- Make the current vector orthogonal with some other vector
 -- that has already been considered
-ruleOrthogonal :: Floating a => Rule (Context (VectorSpace a))
-ruleOrthogonal = makeRule "Make orthogonal" $ supply2 descr (evalCM args) transOrthogonal
+ruleOrthogonal :: (Floating a, Bindable a) => Rule (Context (VectorSpace a))
+ruleOrthogonal = makeRule "Make orthogonal" $ 
+   supplyParameters transOrthogonal (evalCM args)
  where
-   descr = ("vector 1", "vector 2")
    args _ = do
       i <- liftM pred (readVar varI)
       j <- liftM pred (readVar varJ)
@@ -79,8 +79,8 @@ setCurrent v vs = do
 
 -- Two indices, change the second vector and make it orthogonal
 -- to the first
-transOrthogonal :: Floating a => Int -> Int -> Transformation (Context (VectorSpace a))
-transOrthogonal i j = contextTrans $ \xs ->
+transOrthogonal :: (Bindable a, Floating a) => Parameterized (Int, Int) (Transformation (Context (VectorSpace a)))
+transOrthogonal = parameter2 (makeBinding "vector 1") (makeBinding "vector 2") $ \i j -> contextTrans $ \xs ->
    do guard (i /= j && i >=0 && j >= 0)
       u <- listToMaybe $ drop i (vectors xs)
       guard (isUnit u)

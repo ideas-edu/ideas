@@ -76,37 +76,31 @@ ruleUncoverRow = minorRule $ makeRule "linearalgebra.gaussianelim.UncoverRow" $ 
 
 ruleScaleRow :: (Bindable a, Fractional a) => (Matrix a -> Results (Int, a)) -> Rule (Context (Matrix a))
 ruleScaleRow f = makeRule "linearalgebra.gaussianelim.scale" $ 
-   supply2 descr (evalCM f) rowScale
- where 
-   descr  = ("row", "scale factor")
+   supplyParameters rowScale (evalCM f)
 
 ruleExchangeRows :: Num a => (Matrix a -> Results (Int, Int)) -> Rule (Context (Matrix a))
 ruleExchangeRows f = makeRule "linearalgebra.gaussianelim.exchange" $
-   supply2 descr (evalCM f) rowExchange
- where 
-   descr = ("row 1", "row 2")
+   supplyParameters rowExchange (evalCM f) 
 
 ruleAddMultiple :: (Bindable a, Fractional a) => (Matrix a -> Results (Int, Int, a)) -> Rule (Context (Matrix a))
 ruleAddMultiple f = makeRule "linearalgebra.gaussianelim.add" $
-   supply3 descr (evalCM f)  rowAdd
- where 
-   descr  = ("row 1", "row2", "scale factor") 
+   supplyParameters rowAdd (evalCM f)
 
 ---------------------------------------------------------------------------------
 -- Parameterized transformations
 
-rowExchange :: Int -> Int -> Transformation (Context (Matrix a))
-rowExchange i j = matrixTrans $ \m -> do
+rowExchange :: Parameterized (Int, Int) (Transformation (Context (Matrix a)))
+rowExchange = parameter2 (makeBinding "row1") (makeBinding "row2") $ \i j -> matrixTrans $ \m -> do
    guard (i /= j && validRow i m && validRow j m)
    return (switchRows i j m)
 
-rowScale :: Num a => Int -> a -> Transformation (Context (Matrix a))
-rowScale i k = matrixTrans $ \m -> do
+rowScale :: (Bindable a, Num a) => Parameterized (Int, a) (Transformation (Context (Matrix a)))
+rowScale = parameter2 (makeBinding "row") (makeBinding "scale factor") $ \i k -> matrixTrans $ \m -> do
    guard (k `notElem` [0, 1] && validRow i m)
    return (scaleRow i k m)
 
-rowAdd :: Num a => Int -> Int -> a -> Transformation (Context (Matrix a))
-rowAdd i j k = matrixTrans $ \m -> do
+rowAdd :: (Bindable a, Num a) => Parameterized (Int, Int, a) (Transformation (Context (Matrix a)))
+rowAdd = parameter3 (makeBinding "row1") (makeBinding "row2") (makeBinding "scale factor") $ \i j k -> matrixTrans $ \m -> do
    guard (k /= 0 && i /= j && validRow i m && validRow j m)
    return (addRow i j k m)
 

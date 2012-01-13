@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Data.Polynomial
    ( Polynomial, toPolynomial, fromPolynomial, var, con, raise
-   , degree, lowestDegree, coefficient--, terms
+   , degree, lowestDegree, coefficient
    , isRoot, positiveRoots, negativeRoots
    , derivative, eval, polynomialGCD, factorize
    , testPolynomials
@@ -23,7 +23,6 @@ import Common.Utils.TestSuite
 import Control.Monad
 import Data.Char
 import Data.Foldable (Foldable, foldMap)
-import Data.List (sort, nub)
 import Data.Ratio
 import Data.Traversable (Traversable, sequenceA)
 import Domain.Math.Safe
@@ -226,12 +225,10 @@ toInts ps = map (`div` a) is
    a   = foldr1 gcd is
       
 possibleRoots :: Int -> Int -> [Rational]
-possibleRoots a b = sort $ nub [ make f x y | x <- xs, y <- ys, f <- signs ]
+possibleRoots a b = reverse (map negate xs) ++ xs
  where
-   xs = factors (abs a)
-   ys = factors (abs b)
-   signs = [id, negate]
-   make f x y = f (toRational x / toRational y)
+   xs  = map f (factors (abs a)) -- or: factors (abs (a*b))
+   f x = toRational x / toRational b
 
 -- TODO: replace me by sequenceA
 -- This definition is for backwards compatibility. In older versions of IntMap,

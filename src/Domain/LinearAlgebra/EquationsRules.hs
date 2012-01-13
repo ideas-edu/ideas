@@ -36,9 +36,8 @@ equationsRules =
 ruleExchangeEquations :: Rule (Context (LinearSystem Expr))
 ruleExchangeEquations = describe "Exchange two equations" $
    simplifySystem $ makeRule "linearalgebra.linsystem.exchange" $
-   supply2 descr (evalCM args) (\x y -> liftToContext $ exchange x y)
+   supplyParameters (fmap liftToContext exchangeEquations) (evalCM args)
  where
-   descr = ("equation 1", "equation 2")
    args ls = do
       mv  <- minvar ls
       eqs <- remaining ls
@@ -49,9 +48,8 @@ ruleExchangeEquations = describe "Exchange two equations" $
 ruleEliminateVar :: Rule (Context (LinearSystem Expr))
 ruleEliminateVar = describe "Eliminate a variable (using addition)" $
    simplifySystem $ makeRule "linearalgebra.linsystem.eliminate" $
-   supply3 descr (evalCM args) (\x y z -> liftToContext $ addEquations x y z)
+   supplyParameters (fmap liftToContext addEquations) (evalCM args)
  where
-   descr = ("equation 1", "equation 2", "scale factor")
    args ls = do
       mv <- minvar ls
       hd:rest <- remaining ls
@@ -80,9 +78,8 @@ ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
 ruleScaleEquation :: Rule (Context (LinearSystem Expr))
 ruleScaleEquation = describe "Scale equation to one" $
    simplifySystem $ makeRule "linearalgebra.linsystem.scale" $
-   supply2 descr (evalCM args) (\x y -> liftToContext $ scaleEquation x y)
+   supplyParameters (fmap liftToContext scaleEquation)  (evalCM args) 
  where
-   descr = ("equation", "scale factor")
    args ls = do
       cov <- readVar covered
       eq  <- headResult $ drop cov ls
@@ -95,9 +92,8 @@ ruleScaleEquation = describe "Scale equation to one" $
 ruleBackSubstitution :: Rule (Context (LinearSystem Expr))
 ruleBackSubstitution = describe "Back substitution" $
    simplifySystem $ makeRule "linearalgebra.linsystem.subst" $
-   supply3 descr (evalCM args) (\x y z -> liftToContext $ addEquations x y z)
+   supplyParameters (fmap liftToContext addEquations) (evalCM args)
  where
-   descr = ("equation 1", "equation 2", "scale factor")
    args ls = do
       cov <- readVar covered
       eq  <- headResult (drop cov ls)
@@ -148,23 +144,25 @@ simplifySystem = doAfter $ change (map (fmap f))
 ---------------------------------------------------------------------------------
 -- Parameterized transformations
 
-exchange :: Int -> Int -> Transformation [a]
-exchange i j
-   | i >  j    = exchange j i
-   | otherwise = makeTrans $ \xs -> do
-        guard (i/=j && validEquation i xs && validEquation j xs)
-        let (begin, x:rest) = splitAt i xs
-            (middle, y:end) = splitAt (j-i-1) rest
-        return $ begin++[y]++middle++[x]++end
+exchangeEquations :: Parameterized (Int, Int) (Transformation (LinearSystem a))
+exchangeEquations = parameter2 (makeBinding "equation 1") (makeBinding "equation 2") $ exchange
+ where
+   exchange i j 
+      | i > j     = exchange j i
+      | otherwise = makeTrans $ \xs -> do
+           guard (i/=j && validEquation i xs && validEquation j xs)
+           let (begin, x:rest) = splitAt i xs
+               (middle, y:end) = splitAt (j-i-1) rest
+           return $ begin++[y]++middle++[x]++end
 
-scaleEquation :: IsLinear a => Int -> a -> Transformation (LinearSystem a)
-scaleEquation i a = makeTrans $ \xs -> do
+scaleEquation :: (Bindable a, IsLinear a) => Parameterized (Int, a) (Transformation (LinearSystem a))
+scaleEquation = parameter2 (makeBinding "equation") (makeBinding "scale factor") $ \i a -> makeTrans $ \xs -> do
    guard (a `notElem` [0,1] && validEquation i xs)
    let (begin, this:end) = splitAt i xs
    return (begin ++ [fmap (a*) this] ++ end)
 
-addEquations :: IsLinear a => Int -> Int -> a -> Transformation (LinearSystem a)
-addEquations i j a = makeTrans $ \xs -> do
+addEquations :: (Bindable a, IsLinear a) => Parameterized (Int, Int, a) (Transformation (LinearSystem a))
+addEquations = parameter3 (makeBinding "equation 1") (makeBinding "equation 2") (makeBinding "scale factor") $ \i j a -> makeTrans $ \xs -> do
    guard (i/=j && validEquation i xs && validEquation j xs)
    let (begin, this:end) = splitAt i xs
        exprj = xs!!j

@@ -18,7 +18,7 @@ module Common.Results
      -- * Global environment
    , globalBinding, getGlobals, addGlobalEnvironment, setGlobals
      -- * Local environment
-   , localBinding, getLocals, addLocalEnvironment
+   , localBinding, getLocals, addLocalEnvironment, getLocalBinding
    ) where
 
 import Common.Binding
@@ -84,6 +84,9 @@ addLocalEnvironment = changeLocal . mappend
 
 getLocals :: Results Environment
 getLocals = R $ gets local
+
+getLocalBinding :: Typeable a => Binding a -> Results a
+getLocalBinding b = liftM (fromMaybe (getValue b) . lookupValue b) getLocals
 
 {-
 class Monad m => X m where

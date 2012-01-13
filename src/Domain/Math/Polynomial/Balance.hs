@@ -116,8 +116,9 @@ calculate = makeSimpleRule (linbal, "calculate") $ checkForChange $
 removeDivision :: Rule (Equation Expr)
 removeDivision = doAfter (fmap distributeTimes) $
    describe "remove division" $
-   makeRule (linbal, "remove-div") $ supply1
-      "factor" (toResults . removeDivisionArg) timesT
+   makeRule (linbal, "remove-div") $
+   supplyParameters timesRule
+      (toResults . removeDivisionArg)
  where
    removeDivisionArg (lhs :==: rhs) = do
       xs <- match simpleSumView lhs
@@ -162,8 +163,8 @@ divisionToFraction =
 divideCommonFactor :: Rule (Equation Expr)
 divideCommonFactor = doAfter (fmap distributeDiv) $
    describe "divide by common factor" $
-   makeRule (linbal, "smart-div") $ supply1
-      "factor" getArg divisionT
+   makeRule (linbal, "smart-div") $ 
+   supplyParameters divisionRule getArg
  where
    getArg (lhs :==: rhs)
       | all (/=0) ns && n > 1 = return (fromInteger n)
@@ -193,8 +194,9 @@ varLeftPlus  = varLeft False (linbal, "var-left-plus")
 
 varLeft :: IsId a => Bool -> a -> Rule (Equation Expr)
 varLeft useMinus rid = doAfter (fmap collectLocal) $
-   makeRule rid $ supply1
-      "term" (toResults . varLeftArg) (if useMinus then minusT else plusT)
+   makeRule rid $
+   supplyParameters (if useMinus then minusRule else plusRule) 
+      (toResults . varLeftArg) 
  where
     varLeftArg :: Equation Expr -> Maybe Expr
     varLeftArg (lhs :==: rhs) = do
@@ -209,8 +211,9 @@ conRightPlus  = conRight False (linbal, "con-right-plus")
 
 conRight :: IsId a => Bool -> a -> Rule (Equation Expr)
 conRight useMinus rid = doAfter (fmap collectLocal) $
-   makeRule rid $ supply1
-      "term" (toResults . conRightArg) (if useMinus then minusT else plusT)
+   makeRule rid $
+   supplyParameters (if useMinus then minusRule else plusRule)
+      (toResults . conRightArg)
  where
     conRightArg :: Equation Expr -> Maybe Expr
     conRightArg (lhs :==: _) = do
@@ -234,8 +237,9 @@ flipped rid = liftView flipView . changeId (const (newId rid))
 
 scaleToOne :: Rule (Equation Expr)
 scaleToOne = doAfter (fmap distributeDiv) $
-   makeRule (linbal, "scale-to-one") $ supply1
-      "factor" (toResults . scaleToOneArg) divisionT
+   makeRule (linbal, "scale-to-one") $
+   supplyParameters divisionRule
+      (toResults . scaleToOneArg)
  where
    scaleToOneArg :: Equation Expr -> Maybe Expr
    scaleToOneArg (lhs :==: rhs) = f lhs rhs `mplus` f rhs lhs

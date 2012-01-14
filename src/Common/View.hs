@@ -26,7 +26,7 @@ module Common.View
      -- * Views
    , View, identity, makeView, matcherView
      -- * Isomorphisms
-   , Isomorphism, from, to
+   , Isomorphism, from, to, inverse
      -- * Lifting with views
    , LiftView(..)
      -- * Some combinators
@@ -226,6 +226,9 @@ instance HasId (Isomorphism a b) where
 
 instance Identify (Isomorphism a b) where
    (@>) = changeId . const . newId
+
+inverse :: Isomorphism a b -> Isomorphism b a
+inverse f = to f <-> from f
 
 ----------------------------------------------------------------------------------
 -- Type class for lifting with Views

@@ -145,7 +145,7 @@ simplifySystem = doAfter $ change (map (fmap f))
 -- Parameterized transformations
 
 exchangeEquations :: Parameterized (Int, Int) (Transformation (LinearSystem a))
-exchangeEquations = parameter2 (makeBinding "equation 1") (makeBinding "equation 2") $ exchange
+exchangeEquations = parameter2 "equation 1" "equation 2" $ exchange
  where
    exchange i j 
       | i > j     = exchange j i
@@ -156,13 +156,13 @@ exchangeEquations = parameter2 (makeBinding "equation 1") (makeBinding "equation
            return $ begin++[y]++middle++[x]++end
 
 scaleEquation :: (Bindable a, IsLinear a) => Parameterized (Int, a) (Transformation (LinearSystem a))
-scaleEquation = parameter2 (makeBinding "equation") (makeBinding "scale factor") $ \i a -> makeTrans $ \xs -> do
+scaleEquation = parameter2 "equation" "scale factor" $ \i a -> makeTrans $ \xs -> do
    guard (a `notElem` [0,1] && validEquation i xs)
    let (begin, this:end) = splitAt i xs
    return (begin ++ [fmap (a*) this] ++ end)
 
 addEquations :: (Bindable a, IsLinear a) => Parameterized (Int, Int, a) (Transformation (LinearSystem a))
-addEquations = parameter3 (makeBinding "equation 1") (makeBinding "equation 2") (makeBinding "scale factor") $ \i j a -> makeTrans $ \xs -> do
+addEquations = parameter3 "equation 1" "equation 2" "scale factor" $ \i j a -> makeTrans $ \xs -> do
    guard (i/=j && validEquation i xs && validEquation j xs)
    let (begin, this:end) = splitAt i xs
        exprj = xs!!j

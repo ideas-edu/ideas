@@ -20,19 +20,19 @@ import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 
 plusRule :: Functor f => Parameterized Expr (Transformation (f Expr))
-plusRule = parameter1 (makeBinding "term") $ \a -> 
+plusRule = parameter1 "term" $ \a -> 
    makeTrans $ Just . fmap (:+: a)
 
 minusRule :: Functor f => Parameterized Expr (Transformation (f Expr))
-minusRule = parameter1 (makeBinding "term") $ \a -> 
+minusRule = parameter1 "term" $ \a -> 
    makeTrans $ Just . fmap (:-: a)
    
 timesRule :: Functor f => Parameterized Expr (Transformation (f Expr))
-timesRule = parameter1 (makeBinding "factor") $ \a -> 
+timesRule = parameter1 "factor" $ \a -> 
    makeTrans $ unlessZero a . fmap (a :*:)
 
 divisionRule :: Parameterized Expr (Transformation (Equation Expr))
-divisionRule = parameter1 (makeBinding "factor") $ \a ->
+divisionRule = parameter1 "factor" $ \a ->
    makeTrans $ unlessZero a . fmap (:/: a)
    
 unlessZero :: Expr -> a -> Maybe a

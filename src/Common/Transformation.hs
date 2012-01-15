@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE ExistentialQuantification, TypeOperators #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -104,13 +104,14 @@ instance HasTransformation RewriteRule where
 -----------------------------------------------------------
 --- Bindables
 
-type ParamTrans p a = Parameterized p (Transformation a)
+type ParamTrans b a = b :>-> Transformation a
 
-supplyParameters :: Parameterized p (Transformation a) -> (a -> Results p) -> Transformation a
-supplyParameters r f = makeTransG $ \a -> do
-   p <- f a
-   let (trans, extra) = unParam r p
-   addLocalEnvironment extra
+supplyParameters :: (b :>-> Transformation a) -> (a -> Results b) -> Transformation a
+supplyParameters f g = makeTransG $ \a -> do
+   b   <- g a
+   env <- getLocals
+   let (trans, new) = annotatedFunction (replaceValues env f) b
+   addLocalEnvironment new
    applyResults trans a
 
 -----------------------------------------------------------

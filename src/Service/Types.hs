@@ -27,7 +27,6 @@ import Control.Monad
 import Data.List
 import Data.Maybe
 import Service.FeedbackScript.Syntax
-import System.Random
 
 -----------------------------------------------------------------------------
 -- Services

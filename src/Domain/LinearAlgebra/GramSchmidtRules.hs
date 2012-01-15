@@ -79,7 +79,7 @@ setCurrent v vs = do
 
 -- Two indices, change the second vector and make it orthogonal
 -- to the first
-transOrthogonal :: (Bindable a, Floating a) => Parameterized (Int, Int) (Transformation (Context (VectorSpace a)))
+transOrthogonal :: (Bindable a, Floating a) => ParamTrans (Int, Int) (Context (VectorSpace a))
 transOrthogonal = parameter2 "vector 1" "vector 2" $ \i j -> contextTrans $ \xs ->
    do guard (i /= j && i >=0 && j >= 0)
       u <- listToMaybe $ drop i (vectors xs)

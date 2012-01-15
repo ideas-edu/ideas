@@ -89,17 +89,17 @@ ruleAddMultiple f = makeRule "linearalgebra.gaussianelim.add" $
 ---------------------------------------------------------------------------------
 -- Parameterized transformations
 
-rowExchange :: Parameterized (Int, Int) (Transformation (Context (Matrix a)))
+rowExchange :: ParamTrans (Int, Int) (Context (Matrix a))
 rowExchange = parameter2 "row1" "row2" $ \i j -> matrixTrans $ \m -> do
    guard (i /= j && validRow i m && validRow j m)
    return (switchRows i j m)
 
-rowScale :: (Bindable a, Num a) => Parameterized (Int, a) (Transformation (Context (Matrix a)))
+rowScale :: (Bindable a, Num a) => ParamTrans (Int, a) (Context (Matrix a))
 rowScale = parameter2 "row" "scale factor" $ \i k -> matrixTrans $ \m -> do
    guard (k `notElem` [0, 1] && validRow i m)
    return (scaleRow i k m)
 
-rowAdd :: (Bindable a, Num a) => Parameterized (Int, Int, a) (Transformation (Context (Matrix a)))
+rowAdd :: (Bindable a, Num a) => ParamTrans (Int, Int, a) (Context (Matrix a))
 rowAdd = parameter3 "row1" "row2" "scale factor" $ \i j k -> matrixTrans $ \m -> do
    guard (k /= 0 && i /= j && validRow i m && validRow j m)
    return (addRow i j k m)

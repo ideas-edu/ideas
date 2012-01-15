@@ -21,7 +21,7 @@ module Common.Transformation
      Transformation, HasTransformation(..)
    , makeTrans, makeTransG
      -- * Bindables
-   , supplyParameters
+   , ParamTrans, supplyParameters
      -- * Recognizers
    , transRecognizer
      -- * Extract information
@@ -103,6 +103,8 @@ instance HasTransformation RewriteRule where
 
 -----------------------------------------------------------
 --- Bindables
+
+type ParamTrans p a = Parameterized p (Transformation a)
 
 supplyParameters :: Parameterized p (Transformation a) -> (a -> Results p) -> Transformation a
 supplyParameters r f = makeTransG $ \a -> do

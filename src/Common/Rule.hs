@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module Common.Rule
    ( -- * Rules
-     Rule, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
+     Rule, applyRule, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
    , finalRule, isFinalRule, ruleSiblings, rule, ruleList
    , makeRule, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doAfter
@@ -25,13 +25,14 @@ module Common.Rule
    ) where
 
 import qualified Common.Algebra.Field as Field
+import Common.Binding
 import Common.Classes
 import Common.Id
-import Common.Results
 import Common.Rewriting
 import Common.Transformation
 import Common.View
 import Control.Monad
+import Data.Foldable
 import Data.Function
 import Data.Maybe
 import Test.QuickCheck
@@ -61,10 +62,10 @@ instance Ord (Rule a) where
    compare = compareId
 
 instance Apply Rule where
-   applyAll r = fromResults . applyResults r
+   applyAll r = map fst . applyRule r
 
-instance ApplyResults Rule where
-   applyResults r = liftM (afterwards r) . applyResults (transformation r)
+applyRule :: Rule a -> a -> [(a, Environment)]
+applyRule r = map (mapFirst (afterwards r)) . applyTransformation (transformation r)
 
 instance HasId (Rule a) where
    getId        = ruleId
@@ -120,7 +121,7 @@ makeSimpleRule = makeSimpleRuleList
 
 -- | Turn a function (which returns a list of results) into a rule: the first 
 -- argument is the rule's name
-makeSimpleRuleList :: (IsId n, ToResults f) => n -> (a -> f a) -> Rule a
+makeSimpleRuleList :: (IsId n, Foldable f) => n -> (a -> f a) -> Rule a
 makeSimpleRuleList n = makeRule n . makeTransG
 
 -- | A special (minor) rule that always returns the identity
@@ -184,50 +185,3 @@ smartGenRule r gen = frequency [(2, gen), (1, smart)]
  where
    smart = gen >>= \a ->
       oneof (gen : maybeToList (smartGen r a))
-      
--- experimental
-{-
-data Parameterized a where
-   Unit :: Environment -> a -> Parameterized a
-   Abs  :: Typeable p => Binding p -> (p -> Parameterized a) -> Parameterized (p -> a)
-
-parameter1 :: Bindable p => Binding p -> (p -> a) -> Parameterized (p -> a)
-parameter1 b f = param (getId b) $ unit . f
-
-parameter2 :: (Bindable p, Bindable q) => Binding p -> Binding q -> (p -> q -> a) -> Parameterized (p -> q -> a)
-parameter2 b c f = param (getId b) $ parameter1 c . f
-
-parameter3 :: (Bindable p, Bindable q, Bindable r) => Binding p -> Binding q -> Binding r -> (p -> q -> r -> a) -> Parameterized (p -> q -> r -> a)
-parameter3 b c d f = param (getId b) $ parameter2 c d . f
-
-param :: (IsId n, Bindable p) => n -> (p -> Parameterized a) -> Parameterized (p -> a)
-param n f = Abs (makeBinding n) f
-
-unit :: a -> Parameterized a
-unit = Unit mempty
-
-supply :: Parameterized (p -> a) -> p -> Parameterized a
-supply (Abs b f) p = insert (setValue p b) (f p)
-
-insert :: Typeable b => Binding b -> Parameterized a -> Parameterized a
-insert b (Unit env a) = Unit (insertBinding b env) a
-insert b (Abs a f)    = Abs a (insert b . f)
-
-fromParameterized :: Environment -> Parameterized a -> Maybe (a, Environment)
-fromParameterized env p =
-   case p of 
-      Unit extra a -> Just (a, extra)
-      Abs b f      -> do
-         c <- lookupValue (getId b) env
-         (a, e) <- fromParameterized env (f c)
-         return (const a, e)
-
-supplyParameters :: (Typeable p, IsId n) => n -> Parameterized (p -> Transformation a) -> (a -> Results p) -> Rule a
-supplyParameters n r f = makeRule n $ makeTransG $ \a -> do
-   p   <- f a
-   env <- getLocals
-   case fromParameterized env (supply r p) of
-      Just (trans, extra) -> do
-         addLocalEnvironment extra
-         applyResults trans a
-      Nothing -> mzero -}

@@ -14,18 +14,16 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Clipboard
-   ( Clipboard 
-   , addToClipboard, addListToClipboard
-   , lookupClipboard, lookupListClipboard, removeClipboard
-     -- generalized interface
-   , addToClipboardG, addListToClipboardG
-   , lookupClipboardG, lookupListClipboardG
-   , lookupClipboardIn
-   , maybeOnClipboardG
+   ( -- * Data type
+     Clipboard 
+     -- * Interface
+   , addToClipboard, removeClipboard, lookupClipboard
+   , addToClipboardG, lookupClipboardG
+     -- * Generalized interface
+   , maybeOnClipboardG, lookupClipboardIn
    ) where
 
 import Common.Library
-import Common.Results
 import Control.Monad
 import Data.Typeable
 import Domain.Math.Data.Relation
@@ -62,34 +60,24 @@ clipboard = makeBindingWith (C M.empty) "clipboard"
 ---------------------------------------------------------------------
 -- Interface to work with clipboard
 
-addToClipboard :: String -> Expr -> Results ()
+addToClipboard :: String -> Expr -> Context a -> Context a
 addToClipboard = addToClipboardG
 
-addListToClipboard :: [String] -> [Expr] -> Results ()
-addListToClipboard = addListToClipboardG
-
-lookupClipboard :: String -> Results Expr
+lookupClipboard :: String -> Context b -> Maybe Expr
 lookupClipboard = lookupClipboardG
 
-lookupListClipboard :: [String] -> Results [Expr]
-lookupListClipboard = lookupListClipboardG
-
-removeClipboard :: String -> Results ()
+removeClipboard :: String -> Context a -> Context a
 removeClipboard s = modifyVar clipboard (C . M.delete s . unC)
 
 ---------------------------------------------------------------------
 -- Generalized interface to work with clipboard
 
-addToClipboardG :: IsTerm a => String -> a -> Results ()
+addToClipboardG :: IsTerm a => String -> a -> Context b -> Context b
 addToClipboardG s a = modifyVar clipboard (C . M.insert s (toExpr a) . unC)
 
-addListToClipboardG :: IsTerm a => [String] -> [a] -> Results ()
-addListToClipboardG = zipWithM_ addToClipboardG
-
-lookupClipboardG :: IsTerm a => String -> Results a
-lookupClipboardG s = do
-   m    <- readVar clipboard
-   expr <- toResults (M.lookup s (unC m))
+lookupClipboardG :: IsTerm a => String -> Context b -> Maybe a
+lookupClipboardG s c = do
+   expr <- M.lookup s (unC (readVar clipboard c))
    fromExpr expr
 
 lookupClipboardIn :: IsTerm a => String -> Environment -> Maybe a
@@ -98,10 +86,7 @@ lookupClipboardIn s env = do
    expr <- M.lookup s (unC clip)
    fromExpr expr
 
-maybeOnClipboardG :: IsTerm a => String -> Results (Maybe a)
-maybeOnClipboardG s = do
-   m <- readVar clipboard
-   return (M.lookup s (unC m) >>= fromExpr)
-
-lookupListClipboardG :: IsTerm a => [String] -> Results [a]
-lookupListClipboardG = mapM lookupClipboardG
+maybeOnClipboardG :: IsTerm a => String -> Context b -> Maybe a
+maybeOnClipboardG s c =
+   let m = readVar clipboard c
+   in M.lookup s (unC m) >>= fromExpr

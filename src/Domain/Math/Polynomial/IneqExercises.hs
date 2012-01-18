@@ -229,10 +229,11 @@ trivialRelation =
 
 turnIntoEquation :: Rule (Context (Relation Expr))
 turnIntoEquation = describe "Turn into equation" $
-   makeSimpleRuleList (ineq, "to-equation") $ withCM $ \r -> do
+   makeSimpleRule (ineq, "to-equation") $ \cr -> do
+   r <- current cr
    guard (relationType r `elem` ineqTypes)
-   addToClipboard "ineq" (toExpr r)
-   return (leftHandSide r .==. rightHandSide r)
+   return $ addToClipboard "ineq" (toExpr r)
+          $ replace (leftHandSide r .==. rightHandSide r) cr
  where
    ineqTypes =
       [LessThan, GreaterThan, LessThanOrEqualTo, GreaterThanOrEqualTo]
@@ -240,12 +241,12 @@ turnIntoEquation = describe "Turn into equation" $
 -- Todo: cleanup this function
 solutionInequation :: Rule (Context (Logic (Relation Expr)))
 solutionInequation = describe "Determine solution for inequality" $
-   makeSimpleRuleList (ineq, "give-solution") $ withCM $ \r -> do
-   inEquation <- lookupClipboard "ineq" >>= fromExpr
+   makeSimpleRuleList (ineq, "give-solution") $ \clr -> do
+   r <- current clr
+   inEquation <- lookupClipboardG "ineq" clr
    let rt = relationType inEquation
-   removeClipboard "ineq"
    orv  <- matchM orListView r
-   case toList orv of
+   new <- case toList orv of
       _ | isTrue orv ->
          return $ fromBool $
             rt `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
@@ -263,6 +264,8 @@ solutionInequation = describe "Determine solution for inequality" $
              including = rt `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
          return $ fmap (fmap fromDExpr) $ intervalRelations (A 0 (Var v)) $
             ors [ this | (d, isP, this) <- rs, isP || evalIneq inEquation v d ]
+   return $ removeClipboard "ineq"
+          $ replace new clr
  where
    makeRanges :: Bool -> [DExpr] -> [(Double, Bool, Interval DExpr)]
    makeRanges b xs =

@@ -12,7 +12,6 @@
 module Domain.Math.Polynomial.Balance (balanceExercise) where
 
 import Common.Library
-import Common.Results
 import Common.Utils (fixpoint)
 import Common.Utils.Uniplate
 import Control.Monad
@@ -117,8 +116,7 @@ removeDivision :: Rule (Equation Expr)
 removeDivision = doAfter (fmap distributeTimes) $
    describe "remove division" $
    makeRule (linbal, "remove-div") $
-   supplyParameters timesRule
-      (toResults . removeDivisionArg)
+   supplyParameters timesRule removeDivisionArg
  where
    removeDivisionArg (lhs :==: rhs) = do
       xs <- match simpleSumView lhs
@@ -195,8 +193,7 @@ varLeftPlus  = varLeft False (linbal, "var-left-plus")
 varLeft :: IsId a => Bool -> a -> Rule (Equation Expr)
 varLeft useMinus rid = doAfter (fmap collectLocal) $
    makeRule rid $
-   supplyParameters (if useMinus then minusRule else plusRule) 
-      (toResults . varLeftArg) 
+   supplyParameters (if useMinus then minusRule else plusRule) varLeftArg
  where
     varLeftArg :: Equation Expr -> Maybe Expr
     varLeftArg (lhs :==: rhs) = do
@@ -212,8 +209,7 @@ conRightPlus  = conRight False (linbal, "con-right-plus")
 conRight :: IsId a => Bool -> a -> Rule (Equation Expr)
 conRight useMinus rid = doAfter (fmap collectLocal) $
    makeRule rid $
-   supplyParameters (if useMinus then minusRule else plusRule)
-      (toResults . conRightArg)
+   supplyParameters (if useMinus then minusRule else plusRule) conRightArg
  where
     conRightArg :: Equation Expr -> Maybe Expr
     conRightArg (lhs :==: _) = do
@@ -238,8 +234,7 @@ flipped rid = liftView flipView . changeId (const (newId rid))
 scaleToOne :: Rule (Equation Expr)
 scaleToOne = doAfter (fmap distributeDiv) $
    makeRule (linbal, "scale-to-one") $
-   supplyParameters divisionRule
-      (toResults . scaleToOneArg)
+   supplyParameters divisionRule scaleToOneArg
  where
    scaleToOneArg :: Equation Expr -> Maybe Expr
    scaleToOneArg (lhs :==: rhs) = f lhs rhs `mplus` f rhs lhs

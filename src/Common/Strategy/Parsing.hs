@@ -22,7 +22,6 @@ import Common.Binding
 import Common.Classes
 import Common.DerivationTree
 import Common.Strategy.Core
-import Common.Results
 import Common.Rule
 import Common.Utils.Uniplate
 import Control.Arrow
@@ -41,10 +40,6 @@ type StepCore l a = GCore l (Step l a)
 instance Apply (Step l) where
    applyAll (RuleStep _ r) = applyAll r
    applyAll _              = return
-
-instance ApplyResults (Step l) where
-   applyResults (RuleStep _ r) = applyResults r
-   applyResults _              = return
    
 ----------------------------------------------------------------------
 -- State data type
@@ -230,9 +225,8 @@ checkNot core = null . runState . newState core . value
 useRule :: Step l a -> State l a -> [State l a]
 useRule step state = map resetTimer $
    case step of
-      RuleStep _ r -> fromResults $ do
-         a   <- applyResults r (value state)
-         env <- getLocals
+      RuleStep _ r -> do
+         (a, env) <- applyRule r (value state)
          return $ traceStep (RuleStep env r) state {value = a}
       _ -> [traceStep step state]
 

@@ -24,7 +24,6 @@ module Domain.Math.Polynomial.BalanceUtils
    ) where
 
 import Common.Library
-import Common.Results (addLocalEnvironment)
 import Common.Utils (fixpoint)
 import Common.Utils.Uniplate
 import Control.Monad
@@ -119,16 +118,6 @@ nonsense = any p . universe
    p (_ :/: a) = maybe False (==0) (match rationalView a)
    p _         = False
 
-{-
-updateFirst :: (a -> Maybe a) -> [a] -> Maybe [a]
-updateFirst f = rec
- where
-   rec []     = Nothing
-   rec (x:xs) = fmap (:xs) (f x) `mplus` fmap (x:) (rec xs)
-   
-updateLast :: (a -> Maybe a) -> [a] -> Maybe [a]
-updateLast f = fmap reverse . updateFirst f . reverse -}
-
 ------------------------------------------------------------
 -- Arguments
 
@@ -163,12 +152,9 @@ buggyBalanceRule n f = useEquality eq $ buggyRule $
 
 buggyBalanceRuleArgs :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr, Environment)) -> Rule (Equation Expr)
 buggyBalanceRuleArgs n f = useEquality eq $ buggyRule $ 
-   makeRule (bugbal n) $ makeTransG g
+   makeRule (bugbal n) $ supplyEnvironment f
  where
    eq = viewEquivalent (traverseView (polyViewWith rationalView))
-   g a = case f a of
-            Just (b, env) -> addLocalEnvironment env >> return b
-            Nothing -> mzero
 
 buggyBalanceExprRule :: IsId n => n -> (Expr -> Maybe Expr) -> Rule Expr
 buggyBalanceExprRule n f = 

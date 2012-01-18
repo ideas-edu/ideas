@@ -381,41 +381,48 @@ sameConFactor =
 
 abcFormula :: Rule (Context (OrList (Equation Expr)))
 abcFormula = describe "quadratic formula (abc formule)" $
-   makeSimpleRuleList (quadreq, "abc") $ withCM $ oneDisjunct $ \(lhs :==: rhs) -> do
+   makeSimpleRuleList (quadreq, "abc") $ \cor -> do
+   oreq <- current cor
+   lhs :==: rhs  <- getSingleton oreq
    guard (rhs == 0)
    (x, (a, b, c)) <- matchM quadraticNF lhs
-   addListToClipboard ["a", "b", "c"] (map fromRational [a, b, c])
    let discr = b*b - 4 * a * c
        sqD   = sqrt (fromRational discr)
-   addToClipboard "D" (fromRational discr)
-   case compare discr 0 of
-      LT -> return false
-      EQ -> return $ singleton $
-         Var x :==: (-fromRational b) / (2 * fromRational a)
-      GT -> return $ toOrList
-         [ Var x :==: (-fromRational b + sqD) / (2 * fromRational a)
-         , Var x :==: (-fromRational b - sqD) / (2 * fromRational a)
-         ]
+       eqs   = case compare discr 0 of
+                  LT -> false
+                  EQ -> singleton $
+                     Var x :==: (-fromRational b) / (2 * fromRational a)
+                  GT -> toOrList
+                     [ Var x :==: (-fromRational b + sqD) / (2 * fromRational a)
+                     , Var x :==: (-fromRational b - sqD) / (2 * fromRational a)
+                     ]
+   return $ addToClipboard "a" (fromRational a)
+          $ addToClipboard "b" (fromRational b)
+          $ addToClipboard "c" (fromRational c)
+          $ addToClipboard "D" (fromRational discr) 
+          $ replace eqs cor
 
 higherSubst :: Rule (Context (Equation Expr))
 higherSubst = describe "Substitute variable" $
-   makeSimpleRuleList (polyeq, "subst") $ withCM $ \(lhs :==: rhs) -> do
+   makeSimpleRule (polyeq, "subst") $ \ceq -> do
+   lhs :==: rhs <- fromContext ceq
    guard (rhs == 0)
    let myView = polyView >>> second trinomialPolyView
    (x, ((a, n1), (b, n2), (c, n3))) <- matchM myView lhs
    guard (n1 == 0 && n2 > 1 && n3 `mod` n2 == 0 && x /= "p")
    let new = build myView ("p", ((a, 0), (b, 1), (c, n3 `div` n2)))
-   addToClipboard "subst" (toExpr (Var "p" :==: Var x .^. fromIntegral n2))
-   return (new :==: 0)
+   return $ addToClipboard "subst" (toExpr (Var "p" :==: Var x .^. fromIntegral n2))
+          $ replace (new :==: 0) ceq
 
 substBackVar :: Rule (Context Expr)
 substBackVar = describe "Substitute back a variable" $
-   makeSimpleRuleList (polyeq, "back-subst") $ withCM $ \a -> do
-   expr <- lookupClipboard "subst"
+   makeSimpleRuleList (polyeq, "back-subst") $ \ca -> do
+   a    <- fromContext ca
+   expr <- lookupClipboard "subst" ca
    case fromExpr expr of
       Just (Var p :==: rhs) -> do
          guard (hasVar p a)
-         return (subst p rhs a)
+         return (replace (subst p rhs a) ca)
       _ -> fail "no subst in clipboard"
  where
    subst a b (Var c) | a==c = b

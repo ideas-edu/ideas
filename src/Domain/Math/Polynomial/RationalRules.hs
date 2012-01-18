@@ -16,7 +16,6 @@ module Domain.Math.Polynomial.RationalRules
    ) where
 
 import Common.Library
-import Common.Results
 import Control.Monad
 import Data.Maybe
 import Domain.Logic.Formula hiding (Var)
@@ -40,58 +39,66 @@ ratId = newId "algebra.equations.rational"
 
 -- a/b = 0  iff  a=0 (and b/=0)
 divisionIsZero :: Rule (Context (Equation Expr))
-divisionIsZero = makeSimpleRuleList (ratId, "division-zero") $ withCM $ \(lhs :==: rhs) -> do
+divisionIsZero = makeSimpleRule (ratId, "division-zero") $ \ceq -> do
+   lhs :==: rhs <- current ceq
    guard (rhs == 0)
    (a, b) <- matchM divView lhs
-   conditionNotZero b
-   return (a :==: 0)
+   return $ conditionNotZero b
+          $ replace (a :==: 0) ceq
 
 -- a/b = 1  iff  a=b (and b/=0)
 divisionIsOne :: Rule (Context (Equation Expr))
-divisionIsOne = makeSimpleRuleList (ratId, "division-one") $ withCM $ \(lhs :==: rhs) -> do
+divisionIsOne = makeSimpleRule (ratId, "division-one") $ \ceq -> do
+   lhs :==: rhs <- current ceq
    guard (rhs == 1)
    (a, b) <- matchM divView lhs
-   conditionNotZero b
-   return (a :==: b)
+   return $ conditionNotZero b
+          $ replace (a :==: b) ceq
 
 -- a/c = b/c  iff  a=b (and c/=0)
 sameDivisor :: Rule (Context (Equation Expr))
-sameDivisor = makeSimpleRuleList (ratId, "same-divisor") $ withCM $ \(lhs :==: rhs) -> do
+sameDivisor = makeSimpleRule (ratId, "same-divisor") $ \ceq -> do
+   lhs :==: rhs <- current ceq
    (a, c1) <- matchM divView lhs
    (b, c2) <- matchM divView rhs
    guard (c1==c2)
-   conditionNotZero c1
-   return (a :==: b)
+   return $ conditionNotZero c1
+          $ replace (a :==: b) ceq
 
 -- a/b = a/c  iff  a=0 or b=c (and b/=0 and c/=0)
 sameDividend :: Rule (Context (OrList (Equation Expr)))
-sameDividend = makeSimpleRuleList (ratId, "same-dividend") $ withCM $ oneDisjunct $ \(lhs :==: rhs) -> do
+sameDividend = makeSimpleRuleList (ratId, "same-dividend") $ \cor -> do
+   oreq <- current cor
+   lhs :==: rhs <- getSingleton oreq
    (a1, b) <- matchM divView lhs
    (a2, c) <- matchM divView rhs
    guard (a1==a2)
-   conditionNotZero b
-   conditionNotZero c
-   return $ singleton (a1 :==: 0) <> singleton (b :==: c)
+   let new = singleton (a1 :==: 0) <> singleton (b :==: c)
+   return $ conditionNotZero c  
+          $ conditionNotZero b
+          $ replace new cor
 
 -- a/b = c/d  iff  a*d = b*c   (and b/=0 and d/=0)
 crossMultiply :: Rule (Context (Equation Expr))
-crossMultiply = makeSimpleRuleList (ratId, "cross-multiply") $ withCM $ \(lhs :==: rhs) -> do
+crossMultiply = makeSimpleRule (ratId, "cross-multiply") $ \ceq -> do
+   lhs :==: rhs <- current ceq
    (a, b) <- matchM divView lhs
    (c, d) <- matchM divView rhs
-   conditionNotZero b
-   conditionNotZero d
-   return (a*d :==: b*c)
+   return $ conditionNotZero d
+          $ conditionNotZero b
+          $ replace (a*d :==: b*c) ceq
 
 -- a/b = c  iff  a = b*c  (and b/=0)
 multiplyOneDiv :: Rule (Context (Equation Expr))
-multiplyOneDiv = makeSimpleRuleList (ratId, "multiply-one-div") $ withCM $ \(lhs :==: rhs) ->
-   f (:==:) lhs rhs `mplus` f (flip (:==:)) rhs lhs
+multiplyOneDiv = makeSimpleRule (ratId, "multiply-one-div") $ \ceq -> do
+   lhs :==: rhs <- current ceq
+   f (:==:) lhs rhs ceq `mplus` f (flip (:==:)) rhs lhs ceq
  where
-   f eq ab c = do
+   f eq ab c ceq = do
       guard (not (c `belongsTo` divView))
       (a, b) <- matchM divView ab
-      conditionNotZero b
-      return (a `eq` (b*c))
+      return $ conditionNotZero b
+             $ replace (a `eq` (b*c)) ceq
 
 -- a/c + b/c = a+b/c   (also see Numeric.Rules)
 fractionPlus :: Rule Expr -- also minus
@@ -105,12 +112,14 @@ fractionPlus = makeSimpleRule (ratId, "rational-plus") $ \expr -> do
 -- ab/ac  =>  b/c  (if a/=0)
 -- Note that the common term can be squared (in one of the parts)
 cancelTermsDiv :: Rule (Context Expr)
-cancelTermsDiv = makeSimpleRuleList (ratId, "cancel-div") $ withCM $ \expr -> do
+cancelTermsDiv = makeSimpleRule (ratId, "cancel-div") $ \ce -> do
+   expr <- current ce
    ((b, xs), (c, ys)) <- matchM myView expr
    let (ps, qs, rs) = rec (map f xs) (map f ys)
+       new = build myView ((b, map g ps), (c, map g qs))
    guard (not (null rs))
-   conditionNotZero (build productView (False, map g rs))
-   return $ build myView ((b, map g ps), (c, map g qs))
+   return $ conditionNotZero (build productView (False, map g rs))
+          $ replace new ce
  where
    myView = divView >>> toView (productView *** productView)
    powInt = powerView >>> second integerView
@@ -156,23 +165,26 @@ turnIntoFraction = liftView plusView $
 
 -- A simple implementation that considers the condition stored in the context
 checkSolution :: Rule (Context (OrList (Equation Expr)))
-checkSolution = makeSimpleRuleList (ratId, "check-solution") $
-   withCM $ oneDisjunct $ \(x :==: a) -> do
-      c  <- lookupClipboardG "condition"
-      xs <- matchM andView c
-      guard ((x ./=. a) `elem` xs)
-      return false
+checkSolution = makeSimpleRuleList (ratId, "check-solution") $ \cor -> do
+   oreq <- current cor
+   x :==: a <- getSingleton oreq
+   c  <- lookupClipboardG "condition" cor
+   xs <- match andView c
+   guard ((x ./=. a) `elem` xs)
+   return $ replace false cor
 
 ---------------------------------------------------------------
 -- Helper-code
 
-condition :: Logic (Relation Expr) -> Results ()
-condition c = do
-   mp <- maybeOnClipboardG "condition"
-   let a = maybe id (.&&.) mp c
-   unless (a==T) (addToClipboardG "condition" a)
+condition :: Logic (Relation Expr) -> Context a -> Context a
+condition p c
+   | new == T  = {- removeClipboardC "condition" -} c
+   | otherwise = addToClipboardG "condition" new c
+ where
+   mp  = maybeOnClipboardG "condition" c
+   new = maybe id (.&&.) mp p
 
-conditionNotZero :: Expr -> Results ()
+conditionNotZero :: Expr -> Context a -> Context a
 conditionNotZero expr = condition (f xs)
  where
    f  = pushNotWith (Logic.Var . notRelation) . Not

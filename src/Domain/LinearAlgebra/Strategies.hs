@@ -16,7 +16,6 @@ module Domain.LinearAlgebra.Strategies
    ) where
 
 import Common.Library hiding (simplify)
-import Common.Results
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.LinearSystem
@@ -106,21 +105,21 @@ simplifyFirst = simplifySystem idRule
 
 conv1 :: Rule (Context Expr)
 conv1 = describe "Convert linear system to matrix" $
-   makeSimpleRuleList "linearalgebra.linsystem.tomatrix" $ withCM $ \expr -> do
-      ls <- fromExpr expr
+   makeSimpleRule "linearalgebra.linsystem.tomatrix" $ \ce -> do
+      expr <- fromContext ce
+      ls   <- fromExpr expr
       let (m, vs) = systemToMatrix ls
-      writeVar varVars (map Var vs)
-      return (toExpr (simplify (m :: Matrix Expr)))
+          new     = toExpr (simplify (m :: Matrix Expr))
+      return (writeVar varVars (map Var vs) $ replace new ce)
 
 conv2 :: Rule (Context Expr)
 conv2 = describe "Convert matrix to linear system" $
-   makeSimpleRuleList "linearalgebra.linsystem.frommatrix" $ withCM $ \expr -> do
-      evs <- readVar varVars
-      m   <- fromExpr expr
+   makeSimpleRule "linearalgebra.linsystem.frommatrix" $ \ce -> do
+      let evs  = readVar varVars ce
+      m <- fromContext ce >>= fromExpr
       let linsys = matrixToSystemWith vs (m :: Matrix Expr)
           vs = [ v | Var v <- evs ]
-      return $ simplify $ toExpr linsys
+      return $ replace (simplify $ toExpr linsys) ce
       
 hasRemaining :: Context (LinearSystem a) -> Bool
-hasRemaining c = all (not . null) $ 
-   runResults (getEnvironment c) $ evalCM remaining c
+hasRemaining = maybe False (not . null) . remaining

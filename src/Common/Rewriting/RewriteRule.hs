@@ -27,7 +27,6 @@ module Common.Rewriting.RewriteRule
 import Common.Binding
 import Common.Classes
 import Common.Id
-import Common.Results
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
 import Common.Rewriting.Unification
@@ -35,6 +34,7 @@ import Common.Utils.Uniplate (descend)
 import Common.View hiding (match)
 import Control.Monad
 import Data.Maybe
+import Data.Monoid
 import Test.QuickCheck
 import qualified Data.IntSet as IS
 import qualified Data.Map as M
@@ -138,16 +138,17 @@ symbolBuilder s f r = r {ruleBuilders = M.insert s f (ruleBuilders r)}
 -- Using a rewrite rule
 
 instance Apply RewriteRule where
-   applyAll r = fromResults . applyResults r
+   applyAll r = map fst . applyRewriteRule r
 
-instance ApplyResults RewriteRule where
-   applyResults r a = do
-      let builder = buildSpec (ruleMatchers r) (ruleBuilders r) (ruleSpecTerm r)
-          term    = toTermRR r a
-      (out, xs) <- toResults (builder term)
-      let make t = localBinding . setValue t . termBinding . show
-      zipWithM_ make xs [1::Int ..]
-      fromTermRR r out
+applyRewriteRule :: RewriteRule a -> a -> [(a, Environment)]
+applyRewriteRule r a = do
+   let builder = buildSpec (ruleMatchers r) (ruleBuilders r) (ruleSpecTerm r)
+       term    = toTermRR r a
+   (out, xs) <- builder term
+   let env    = mconcat (zipWith make xs [1::Int ..])
+       make t = singleBinding . setValue t . termBinding . show
+   b <- fromTermRR r out
+   return (b, env)
 
 -----------------------------------------------------------
 -- Pretty-print a rewriteRule

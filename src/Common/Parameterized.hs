@@ -16,7 +16,8 @@ module Common.Parameterized
    ( -- * Data type for annotated functions
      (:>->), module Control.Arrow
      -- * Special operations
-   , bindValue, replaceValues, toFunction, annotatedFunction
+   , bindValue, replaceValues
+   , toFunction, annotatedFunction, annotations
    , -- * Utility functions
      parameter1, parameter2, parameter3
    ) where
@@ -92,10 +93,19 @@ annotatedFunction fun a =
       Star f g -> let (b, ef) = annotatedFunction f (fst a)
                       (c, eg) = annotatedFunction g (snd a)
                   in ((b, c), ef `mappend` eg)
-      App      -> annotatedFunction (fst a) (snd a)
+      App      -> uncurry annotatedFunction a
       Loop f   -> let ((b, c), env) = annotatedFunction f (a, c)
                   in (b, env)
       Bind n   -> (a, singleBinding (setValue a (makeBinding n)))
+
+annotations :: (a :>-> b) -> [Id]
+annotations fun =
+   case fun of
+      Comp f g -> annotations f ++ annotations g
+      Star f g -> annotations f ++ annotations g
+      Loop f   -> annotations f
+      Bind n   -> [n]
+      _        -> []
 
 --------------------------------------------------------------------
 -- * Utility functions

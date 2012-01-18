@@ -9,60 +9,63 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.MatrixRules where
+module Domain.LinearAlgebra.MatrixRules 
+   ( ruleFindColumnJ, ruleExchangeNonZero, ruleScaleToOne
+   , ruleZerosFP, ruleCoverRow, ruleUncoverRow, ruleZerosBP
+   , covered
+   ) where
 
 import Common.Library hiding (simplify, isEmpty)
-import Common.Results
 import Control.Monad
 import Data.List
 import Domain.LinearAlgebra.Matrix
 import Domain.Math.Simplification
 
 ruleFindColumnJ :: Num a => Rule (Context (Matrix a))
-ruleFindColumnJ = minorRule $ makeSimpleRuleList "linearalgebra.gaussianelim.FindColumnJ" $ withCM $ \m -> do
-   cols <- liftM columns (subMatrix m)
+ruleFindColumnJ = minorRule $ makeSimpleRuleList "linearalgebra.gaussianelim.FindColumnJ" $ \cm -> do
+   cols <- liftM columns (subMatrix cm)
    i    <- findIndexM nonZero cols
-   writeVar columnJ i
-   return m
+   return (writeVar columnJ i cm)
 
 ruleExchangeNonZero :: (Simplify a, Num a) => Rule (Context (Matrix a))
-ruleExchangeNonZero = simplify $ ruleExchangeRows $ \m -> do
-   nonEmpty m
-   j   <- readVar columnJ
-   col <- liftM (column j) (subMatrix m)
+ruleExchangeNonZero = simplify $ ruleExchangeRows $ \cm -> do
+   guard (nonEmpty cm)
+   let j = readVar columnJ cm
+   col <- liftM (column j) (subMatrix cm)
    i   <- findIndexM (/= 0) col
-   cov <- readVar covered
+   let cov = readVar covered cm
    return (cov, i + cov)
 
 ruleScaleToOne :: (Bindable a, Simplify a, Fractional a) => Rule (Context (Matrix a))
-ruleScaleToOne = simplify $ ruleScaleRow $ \m -> do
-   nonEmpty m
-   j   <- readVar columnJ
-   pv  <- liftM (entry (0, j)) (subMatrix m)
+ruleScaleToOne = simplify $ ruleScaleRow $ \cm -> do
+   guard (nonEmpty cm)
+   let j = readVar columnJ cm
+   pv  <- liftM (entry (0, j)) (subMatrix cm)
    guard (pv /= 0)
-   cov <- readVar covered
+   let cov = readVar covered cm
    return (cov, 1 / pv)
 
 ruleZerosFP :: (Bindable a, Simplify a, Fractional a) => Rule (Context (Matrix a))
-ruleZerosFP = simplify $ ruleAddMultiple $ \m -> do
-   nonEmpty m
-   j   <- readVar columnJ
-   col <- liftM (drop 1 . column j) (subMatrix m)
+ruleZerosFP = simplify $ ruleAddMultiple $ \cm -> do
+   guard (nonEmpty cm)
+   let j = readVar columnJ cm
+   col <- liftM (drop 1 . column j) (subMatrix cm)
    i   <- findIndexM (/= 0) col
-   cov <- readVar covered
-   let v = negate (col!!i)
+   let cov = readVar covered cm
+       v = negate (col!!i)
    return (i + cov + 1, cov, v)
 
 ruleZerosBP :: (Bindable a, Simplify a, Fractional a) => Rule (Context (Matrix a))
-ruleZerosBP = simplify $ ruleAddMultiple $ \m -> do
-   nonEmpty m
-   ri <- liftM (row 0) (subMatrix m)
+ruleZerosBP = simplify $ ruleAddMultiple $ \cm -> do
+   m <- fromContext cm
+   guard (nonEmpty cm)
+   ri <- liftM (row 0) (subMatrix cm)
    let j   = length $ takeWhile (==0) ri
        col = column j m
    guard (any (/= 0) ri)
    k <- findIndexM (/= 0) col
    let v = negate (col!!k)
-   cov <- readVar covered
+       cov = readVar covered cm
    return (k, cov, v)
 
 ruleCoverRow :: Rule (Context (Matrix a))
@@ -74,17 +77,17 @@ ruleUncoverRow = minorRule $ makeRule "linearalgebra.gaussianelim.UncoverRow" $ 
 ---------------------------------------------------------------------------------
 -- Parameterized rules
 
-ruleScaleRow :: (Bindable a, Fractional a) => (Matrix a -> Results (Int, a)) -> Rule (Context (Matrix a))
-ruleScaleRow f = makeRule "linearalgebra.gaussianelim.scale" $ 
-   supplyParameters rowScale (evalCM f)
+ruleScaleRow :: (Bindable a, Fractional a) => (Context (Matrix a) -> Maybe (Int, a)) -> Rule (Context (Matrix a))
+ruleScaleRow = makeRule "linearalgebra.gaussianelim.scale" .
+   supplyParameters rowScale
 
-ruleExchangeRows :: Num a => (Matrix a -> Results (Int, Int)) -> Rule (Context (Matrix a))
-ruleExchangeRows f = makeRule "linearalgebra.gaussianelim.exchange" $
-   supplyParameters rowExchange (evalCM f) 
+ruleExchangeRows :: Num a => (Context (Matrix a) -> Maybe (Int, Int)) -> Rule (Context (Matrix a))
+ruleExchangeRows = makeRule "linearalgebra.gaussianelim.exchange" .
+   supplyParameters rowExchange
 
-ruleAddMultiple :: (Bindable a, Fractional a) => (Matrix a -> Results (Int, Int, a)) -> Rule (Context (Matrix a))
-ruleAddMultiple f = makeRule "linearalgebra.gaussianelim.add" $
-   supplyParameters rowAdd (evalCM f)
+ruleAddMultiple :: (Bindable a, Fractional a) => (Context (Matrix a) -> Maybe (Int, Int, a)) -> Rule (Context (Matrix a))
+ruleAddMultiple = makeRule "linearalgebra.gaussianelim.add" .
+   supplyParameters rowAdd
 
 ---------------------------------------------------------------------------------
 -- Parameterized transformations
@@ -105,11 +108,11 @@ rowAdd = parameter3 "row1" "row2" "scale factor" $ \i j k -> matrixTrans $ \m ->
    return (addRow i j k m)
 
 changeCover :: (Int -> Int) -> Transformation (Context (Matrix a))
-changeCover f = makeTransG $ withCM $ \m -> do
-   new <- liftM f (readVar covered)
+changeCover f = makeTrans $ \cm -> do
+   m   <- fromContext cm
+   let new = f (readVar covered cm)
    guard (new >= 0 && new <= fst (dimensions m))
-   writeVar covered new
-   return m
+   return (writeVar covered new cm)
 
 matrixTrans ::  (Matrix a -> Maybe (Matrix a)) -> Transformation (Context (Matrix a))
 matrixTrans f = makeTrans $ \c -> do
@@ -121,16 +124,17 @@ matrixTrans f = makeTrans $ \c -> do
 validRow :: Int -> Matrix a -> Bool
 validRow i m = i >= 0 && i < fst (dimensions m)
 
-nonEmpty :: Matrix a -> Results ()
-nonEmpty m = subMatrix m >>= guard . not . isEmpty
+nonEmpty :: Context (Matrix a) -> Bool
+nonEmpty = maybe False (not . isEmpty) . subMatrix
 
 covered, columnJ :: Binding Int
 covered = "covered" .<-. 0
 columnJ = "columnj" .<-. 0
 
-subMatrix :: Matrix a -> Results (Matrix a)
-subMatrix m = do
-   cov <- readVar covered
+subMatrix :: Context (Matrix a) -> Maybe (Matrix a)
+subMatrix cm = do
+   m <- fromContext cm
+   let cov = readVar covered cm
    return $ makeMatrix $ drop cov $ rows m
 
 findIndexM :: MonadPlus m => (a -> Bool) -> [a] -> m Int

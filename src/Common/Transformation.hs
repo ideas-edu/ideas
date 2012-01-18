@@ -19,9 +19,9 @@
 module Common.Transformation
    ( -- * Transformations
      Transformation, HasTransformation(..)
-   , makeTrans, makeTransG
+   , makeTrans, makeTransG, applyTransformation
      -- * Bindables
-   , ParamTrans, supplyParameters
+   , ParamTrans, supplyEnvironment, supplyParameters
      -- * Recognizers
    , transRecognizer
      -- * Extract information
@@ -38,12 +38,13 @@ import Common.Binding
 import Common.Classes
 import Common.Id
 import Common.Parameterized
-import Common.Results
 import Common.Rewriting
 import Common.Utils
 import Common.View
 import Control.Monad
+import Data.Foldable
 import Data.Maybe
+import Data.Monoid
 import Test.QuickCheck
 
 -----------------------------------------------------------
@@ -51,8 +52,8 @@ import Test.QuickCheck
 
 -- | Abstract data type for representing transformations
 data Transformation a
-   = Function (a -> Results a)
-   | RewriteRule (RewriteRule a) (a -> Results a)
+   = Function (a -> [(a, Environment)])
+   | RewriteRule (RewriteRule a) (a -> [a])
    | forall b c . LiftView (View a (b, c)) (Transformation b)
    | Transformation a :*: Transformation a
    | Transformation a :|: Transformation a
@@ -64,18 +65,21 @@ instance SemiRing (Transformation a) where
    (<*>) = (:*:)
 
 instance Apply Transformation where
-   applyAll t = fromResults . applyResults t
+   applyAll t = map fst . applyTransformation t
 
-instance ApplyResults Transformation where
-   applyResults trans a =
-      case trans of
-         Function f      -> f a
-         RewriteRule _ f -> f a
-         LiftView v t    -> do (b0, c) <- matchM v a
-                               b <- applyResults t b0
-                               return (build v (b, c))
-         t1 :|: t2       -> applyResults t1 a `mplus` applyResults t2 a
-         t1 :*: t2       -> applyResults t1 a >>= applyResults t2
+applyTransformation :: Transformation a -> a -> [(a, Environment)]
+applyTransformation trans a =
+   case trans of
+      Function f      -> f a
+      RewriteRule _ f -> [ (b, mempty) | b <- f a ]
+      LiftView v t    -> do (b0, c) <- matchM v a
+                            (b, env) <- applyTransformation t b0
+                            return (build v (b, c), env)
+      t1 :|: t2       -> applyTransformation t1 a ++ applyTransformation t2 a
+      t1 :*: t2       -> do 
+         (b, env1) <- applyTransformation t1 a
+         (c, env2) <- applyTransformation t2 b
+         return (c, env2 `mappend` env1)
 
 instance LiftView Transformation where
    liftViewIn = LiftView
@@ -85,8 +89,8 @@ makeTrans :: (a -> Maybe a) -> Transformation a
 makeTrans = makeTransG
 
 -- | Turn a function (which returns a list of results) into a transformation
-makeTransG :: ToResults f => (a -> f a) -> Transformation a
-makeTransG f = Function (toResults . f)
+makeTransG ::  Foldable f => (a -> f a) -> Transformation a
+makeTransG f = Function $ \a -> [ (b, mempty) | b <- toList (f a) ]
 
 -----------------------------------------------------------
 --- HasTransformation type class
@@ -99,20 +103,22 @@ instance HasTransformation Transformation where
 
 instance HasTransformation RewriteRule where
    -- no matching information is used
-   transformation r = RewriteRule r (toResults . applyAll r)
+   transformation r = RewriteRule r (applyAll r)
 
 -----------------------------------------------------------
 --- Bindables
 
 type ParamTrans b a = b :>-> Transformation a
 
-supplyParameters :: (b :>-> Transformation a) -> (a -> Results b) -> Transformation a
-supplyParameters f g = makeTransG $ \a -> do
-   b   <- g a
-   env <- getLocals
-   let (trans, new) = annotatedFunction (replaceValues env f) b
-   addLocalEnvironment new
-   applyResults trans a
+supplyParameters :: ParamTrans b a -> (a -> Maybe b) -> Transformation a
+supplyParameters f g = Function $ \a -> do
+   b <- maybeToList (g a)
+   let (trans, env1) = annotatedFunction f b
+   (c, env2) <- applyTransformation trans a
+   return (c, env2 `mappend` env1)
+
+supplyEnvironment :: (a -> Maybe (a, Environment)) -> Transformation a
+supplyEnvironment f = Function (toList . f)
 
 -----------------------------------------------------------
 --- Rules
@@ -131,11 +137,10 @@ getRewriteRules = rec . transformation
 
 transRecognizer :: (IsId n, HasTransformation f)
                 => (a -> a -> Bool) -> n -> f a -> Recognizer a
-transRecognizer eq n f = makeListRecognizer n $ \a b -> 
-   fromResults $ do
-      x <- applyResults (transformation f) a
-      guard (x `eq` b)
-      getLocals
+transRecognizer eq n f = makeListRecognizer n $ \a b -> do
+   (x, env) <- applyTransformation (transformation f) a
+   guard (x `eq` b)
+   return env
 
 -----------------------------------------------------------
 --- QuickCheck

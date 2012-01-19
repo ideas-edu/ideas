@@ -57,6 +57,12 @@ instance Ord Symbol where
 
 instance Show Symbol where
    show = showId
+   
+instance Read Symbol where
+   readsPrec n = map f . readsPrec n
+    where
+      f :: (Id, String) -> (Symbol, String)
+      f (a, s) = (newSymbol a, s)
 
 instance HasId Symbol where
    getId = symbolId
@@ -78,7 +84,7 @@ data Term = TVar   String
           | TNum   Integer
           | TFloat Double
           | TMeta  Int
- deriving (Show, Eq, Ord, Typeable)
+ deriving (Show, Read, Eq, Ord, Typeable)
 
 instance Uniplate Term where
    uniplate (TApp f a) = plate TApp |* f |* a
@@ -122,6 +128,11 @@ instance IsTerm Integer where
 instance IsTerm Double where
    toTerm = TFloat
    fromTerm (TFloat a) = return a
+   fromTerm _          = fail "fromTerm"
+
+instance IsTerm Char where
+   toTerm c = TVar [c]
+   fromTerm (TVar [c]) = return c
    fromTerm _          = fail "fromTerm"
 
 instance IsTerm a => IsTerm [a] where

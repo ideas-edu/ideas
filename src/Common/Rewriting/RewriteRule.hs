@@ -146,7 +146,7 @@ applyRewriteRule r a = do
        term    = toTermRR r a
    (out, xs) <- builder term
    let env    = mconcat (zipWith make xs [1::Int ..])
-       make t = singleBinding . setValue t . termBinding . show
+       make t = flip singleBinding t . makeRef . show
    b <- fromTermRR r out
    return (b, env)
 

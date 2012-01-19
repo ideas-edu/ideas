@@ -54,14 +54,16 @@ instance IsTerm Clipboard where
       let f (x :==: a) = liftM (\k -> (k, a)) (getVariable x)
       in liftM (C . M.fromList) . mapM f . fromTerm
 
-clipboard :: Binding Clipboard
-clipboard = makeBindingWith (C M.empty) "clipboard"
+instance Reference Clipboard
+
+clipboard :: Ref Clipboard
+clipboard = makeRef "clipboard"
 
 getClipboard :: Context a -> Clipboard
 getClipboard = fromMaybe (C M.empty) . (clipboard ?)
 
 changeClipboard :: (Clipboard -> Clipboard) -> Context a -> Context a
-changeClipboard f c = writeVar clipboard (f (getClipboard c)) c
+changeClipboard f c = insertRef clipboard (f (getClipboard c)) c
 
 ---------------------------------------------------------------------
 -- Interface to work with clipboard

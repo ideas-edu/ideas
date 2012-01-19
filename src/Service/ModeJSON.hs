@@ -117,9 +117,8 @@ jsonEncoder ex = Encoder
                       encodeState (encodeTerm enc) (conv a)
 
               Tp.List t     -> liftM Array (mapM (encode enc t) a)
-              Tp.BindingTp  -> case a of
-                                  Typed descr -> return $
-                                     Object [(showId descr, String (showValue descr))]
+              Tp.BindingTp  -> return $
+                                  Object [(showId a, String (showValue a))]
               Tp.Text       -> return (toJSON (show a))
               Tp.Tag s t    -> liftM (\b -> Object [(s, b)]) (encode enc t a)
               Tp.Int        -> return (toJSON a)
@@ -196,7 +195,7 @@ encodeState f st = do
 encodeContext :: Context a -> JSON
 encodeContext = Object . map f . bindings
  where
-   f (Typed descr) = (showId descr, String $ showValue descr)
+   f a = (showId a, String $ showValue a)
 
 decodeState :: Monad m => Exercise a -> (JSON -> m a) -> JSON -> m (State a)
 decodeState ex f (Array [a]) = decodeState ex f a
@@ -212,7 +211,7 @@ decodeContext (String "") = decodeContext (Object []) -- Being backwards compati
 decodeContext (Object xs) = foldM (flip add) mempty xs
  where
    add :: Monad m => (String, JSON) -> Environment -> m Environment
-   add (k, String s) = return . insertBinding (setValue s $ stringBinding k)
+   add (k, String s) = return . insertRef (makeRef k) s
    add _             = fail "invalid item in context"
 decodeContext json = fail $ "invalid context: " ++ show json
 

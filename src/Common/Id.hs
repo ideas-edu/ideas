@@ -40,6 +40,10 @@ data Id = Id
 instance Show Id where
    show = intercalate "." . idList
 
+instance Read Id where
+   readsPrec _ =
+      return . mapFirst stringId . break (not . isIdChar) . dropWhile isSpace
+
 instance Eq Id where
    a == b = idRef a == idRef b
 
@@ -128,8 +132,10 @@ stringId txt = Id (make s) "" (stringRef s)
  where
    s    = norm txt
    make = filter (not . null) . splitsWithElem '.'
-   norm = filter ok . map toLower
-   ok c = isAlphaNum c || c `elem` ".-_"
+   norm = filter isIdChar . map toLower
+
+isIdChar :: Char -> Bool
+isIdChar c = isAlphaNum c || c `elem` ".-_"
 
 emptyId :: Id
 emptyId = Id [] "" (stringRef "")

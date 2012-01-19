@@ -199,5 +199,4 @@ instance Read Expr where
          Left _  -> []
          Right a -> [(a, "")]
 
-instance Bindable Expr where
-   makeBinding = makeBindingWith 0
+instance Reference Expr

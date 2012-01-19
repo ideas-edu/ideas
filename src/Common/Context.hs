@@ -19,8 +19,6 @@ module Common.Context
      -- * Lifting
    , liftToContext
    , use, useC, termNavigator, applyTop
-     -- * Context Monad
-   , writeVar
    ) where
 
 import Common.Binding
@@ -30,7 +28,6 @@ import Common.Rewriting
 import Common.View
 import Control.Monad
 import Data.Maybe
-import Data.Typeable
 
 ----------------------------------------------------------
 -- Abstract data type
@@ -74,7 +71,9 @@ instance TypedNavigator Context where
    castT v   (C env a) = liftM (C env) (castT v a)
 
 instance HasEnvironment (Context a) where
-   environment = getEnvironment
+   environment     = getEnvironment
+   insertRef r a c = c {getEnvironment = insertRef r a (environment c)}
+   deleteRef r c   = c {getEnvironment = deleteRef r (environment c)}
 
 -- | Construct a context
 newContext :: Environment -> Navigator a -> Context a
@@ -121,9 +120,3 @@ use = useC . liftToContext
 
 useC :: (LiftView f, IsTerm a, IsTerm b) => f (Context a) -> f (Context b)
 useC = liftView (makeView (castT termView) (fromJust . castT termView))
-
-----------------------------------------------------------
--- Legacy code
-
-writeVar :: Typeable a => Binding a -> a -> Context b -> Context b
-writeVar var a c = c {getEnvironment = insertBinding (setValue a var) (getEnvironment c)}

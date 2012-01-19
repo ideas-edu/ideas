@@ -27,6 +27,7 @@ import Common.Id
 import qualified Control.Category as C
 import Control.Arrow
 import Data.Monoid
+import Data.Typeable
 
 --------------------------------------------------------------------
 -- * Data type for annotated functions
@@ -37,7 +38,7 @@ data a :>-> b where
    Star :: (a :>-> c) -> (b :>-> d) -> ((a, b) :>-> (c, d))
    App  :: (a :>-> b, a) :>-> b
    Loop :: ((a, c) :>-> (b, c)) -> (a :>-> b)
-   Bind :: Bindable a => Id -> (a :>-> a)
+   Bind :: Typeable a => Ref a -> (a :>-> a)
 
 instance Functor ((:>->) a) where
    fmap = (^<<)
@@ -64,8 +65,8 @@ instance ArrowLoop (:>->) where
 --------------------------------------------------------------------
 -- * Special operations
 
-bindValue :: (IsId n, Bindable a) => n -> (a :>-> a)
-bindValue = Bind . newId
+bindValue :: (IsId n, Reference a) => n -> (a :>-> a)
+bindValue = Bind . makeRef
 
 replaceValues :: Environment -> (a :>-> b) -> (a :>-> b)
 replaceValues env = rec
@@ -78,7 +79,7 @@ replaceValues env = rec
          Star f g -> Star (rec f) (rec g) 
          App      -> App
          Loop f   -> Loop (rec f)
-         Bind n   -> maybe fun (arr . const) (lookupValue n env)
+         Bind ref -> maybe fun (arr . const) (ref ? env)
 
 toFunction :: (a :>-> b) -> a -> b
 toFunction f = fst . annotatedFunction f
@@ -96,7 +97,7 @@ annotatedFunction fun a =
       App      -> uncurry annotatedFunction a
       Loop f   -> let ((b, c), env) = annotatedFunction f (a, c)
                   in (b, env)
-      Bind n   -> (a, singleBinding (setValue a (makeBinding n)))
+      Bind ref -> (a, singleBinding ref a)
 
 annotations :: (a :>-> b) -> [Id]
 annotations fun =
@@ -104,20 +105,20 @@ annotations fun =
       Comp f g -> annotations f ++ annotations g
       Star f g -> annotations f ++ annotations g
       Loop f   -> annotations f
-      Bind n   -> [n]
+      Bind ref -> [getId ref]
       _        -> []
 
 --------------------------------------------------------------------
 -- * Utility functions
 
-parameter1 :: (IsId n1, Bindable a) => n1 -> (a -> b) -> (a :>-> b)
+parameter1 :: (IsId n1, Reference a) => n1 -> (a -> b) -> (a :>-> b)
 parameter1 n1 f = bindValue n1 >>> arr f
 
-parameter2 :: (IsId n1, IsId n2, Bindable a, Bindable b) 
+parameter2 :: (IsId n1, IsId n2, Reference a, Reference b) 
            => n1 -> n2 -> (a -> b -> c) -> ((a, b) :>-> c)
 parameter2 n1 n2 f = bindValue n1 *** bindValue n2 >>> arr (uncurry f)
 
-parameter3 :: (IsId n1, IsId n2, IsId n3, Bindable a, Bindable b, Bindable c)
+parameter3 :: (IsId n1, IsId n2, IsId n3, Reference a, Reference b, Reference c)
            => n1 -> n2 -> n3 -> (a -> b -> c -> d) -> ((a, b, c) :>-> d)
 parameter3 n1 n2 n3 f = 
    (\(a, b, c) -> (a, (b, c))) ^>> 

@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ExistentialQuantification, MultiParamTypeClasses, GADTs #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -9,125 +9,114 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Bindings
+-- References, bindings, and heterogenous environments
 --
 -----------------------------------------------------------------------------
 module Common.Binding
-   ( -- * Binding data type 
-     Binding
-     -- * Constructor and type class
-   , Bindable(..), makeBindingWith, (.<-.)
-   , stringBinding, termBinding
-     -- * Utility functions
-   , getValue, setValue, showValue, getTermValue 
-   , readBinding, readTermBinding  
+   ( -- * Reference 
+     Ref, Reference(..)
+     -- * Binding
+   , Binding, makeBinding
+   , fromBinding, showValue, getTermValue
      -- * Heterogeneous environment
    , Environment, makeEnvironment, singleBinding
-   , bindings, noBindings
-   , insertBinding, insertTypedBinding, deleteBinding
-   , lookupValue
-   , Typed(..), HasEnvironment(..), (?)
+   , HasEnvironment(..)
+   , (?), bindings, noBindings
    ) where
 
-import Control.Monad
 import Common.Id
 import Common.Rewriting.Term
 import Common.Utils
 import Common.View
+import Control.Monad
 import Data.Function
 import Data.List
 import Data.Monoid
-import qualified Data.Map as M
 import Data.Typeable
+import qualified Data.Map as M
+import Control.Monad.State
 
 -----------------------------------------------------------
--- Binding data type 
+-- Reference
 
--- | A data type for bindings (identifier and value)
-data Binding a = Binding
-   { identifier  :: Id                -- ^ Identifier
-   , value       :: a                 -- ^ Current value
-   , printer     :: a -> String       -- ^ A pretty-printer
-   , parser      :: String -> Maybe a -- ^ A parser
-   , bindingView :: View Term a       -- ^ Conversion to/from term
+-- | A data type for references (without a value)
+data Ref a = Ref
+   { identifier :: Id                -- ^ Identifier
+   , printer    :: a -> String       -- ^ A pretty-printer
+   , _parser    :: String -> Maybe a -- ^ A parser
+   , refView    :: View Term a       -- ^ Conversion to/from term
    }
 
-instance Show (Binding a) where
-   show a = showId a ++ "=" ++ showValue a
+instance Show (Ref a) where
+   show = showId
 
-instance Eq (Binding a) where
-   (==) = let f a = (getId a, getTermValue a)
-          in (==) `on` f
+instance Eq (Ref a) where
+   (==) = (==) `on` getId
 
-instance HasId (Binding a) where
+instance HasId (Ref a) where
    getId = identifier
    changeId f d = d {identifier = f (identifier d)}
 
-instance Show (Typed Binding) where
-   show (Typed a) = show a
+-- | A type class for types as references
+class (IsTerm a, Typeable a, Show a, Read a) => Reference a where
+   makeRef     :: IsId n => n -> Ref a
+   makeRefList :: IsId n => n -> Ref [a]
+   -- default implementation
+   makeRef n     = Ref (newId n) show readM termView
+   makeRefList n = Ref (newId n) show readM termView
 
-instance Eq (Typed Binding) where
-   Typed a == Typed b = maybe False (==b) (gcast a)
+instance Reference Int
+instance Reference Term
 
-instance HasId (Typed Binding) where
-   getId (Typed a) = getId a
-   changeId f (Typed a) = Typed (changeId f a)
+instance Reference Char where
+   makeRefList n = Ref (newId n) id Just variableView
 
------------------------------------------------------------
--- Constructor and type class
-
--- | A type class for types with bindings
-class Typeable a => Bindable a where
-   makeBinding :: IsId n => n -> Binding a
-
-instance Bindable Int where
-   makeBinding = makeBindingWith 0
-
--- | Construct a new binding
-makeBindingWith :: (Show a, Read a, IsTerm a, IsId n) => a -> n -> Binding a
-makeBindingWith = flip (.<-.)
-
-(.<-.) :: (Show a, Read a, IsTerm a, IsId n) => n -> a -> Binding a
-n .<-. a = Binding (newId n) a show readM termView
-
-stringBinding :: IsId n => n -> Binding String
-stringBinding n = Binding (newId n) "" id Just variableView
-
-termBinding :: IsId n => n -> Binding Term
-termBinding n = Binding (newId n) (TNum 0) show (const Nothing) termView
+instance Reference a => Reference [a] where
+   makeRef = makeRefList
 
 -----------------------------------------------------------
--- Utility functions
+-- Binding
 
-showValue :: Binding a -> String
-showValue a = printer a (value a)
+data Binding = forall a . Typeable a => Binding (Ref a) a
 
-getValue :: Binding a -> a
-getValue = value
+instance Show Binding where 
+   show a = showId a ++ "=" ++ showValue a
+   
+instance Eq Binding where
+   (==) = let f (Binding ref a) = (getId ref, build (refView ref) a)
+          in (==) `on` f
+          
+instance HasId Binding where
+   getId (Binding ref _ ) = getId ref
+   changeId f (Binding ref a) = Binding (changeId f ref) a
 
-setValue :: a -> Binding a -> Binding a
-setValue a b = b {value = a}
+makeBinding :: Typeable a => Ref a -> a -> Binding
+makeBinding = Binding
 
-getTermValue :: Binding a -> Term
-getTermValue a = build (bindingView a) (value a)
+getTypedValue :: Typeable a => Binding -> Maybe a
+getTypedValue (Binding _ a) =
+   -- typed value
+   cast a {- 
+ `mplus` do
+   -- value as string
+   join $ liftM2 parser (gcast ref) (cast a) 
+ `mplus` do
+   -- value as term
+   join $ liftM2 (match . refView) (gcast ref) (cast a) -}
 
-readBinding :: Binding a -> String -> Maybe a
-readBinding = parser
+fromBinding :: Typeable a => Binding -> Maybe (Ref a, a)
+fromBinding (Binding ref a) = liftM2 (,) (gcast ref) (cast a)
 
-readTermBinding :: Binding a -> Term -> Maybe a
-readTermBinding = match . bindingView
+showValue :: Binding -> String
+showValue (Binding ref a) = printer ref a
 
-getTypedValue :: Typeable a => Typed Binding -> Maybe a
-getTypedValue (Typed b) = msum
-   [ cast (getValue b) -- typed value
-   , join $ liftM2 readBinding     (gcast b) (cast (getValue b)) -- value as string
-   , join $ liftM2 readTermBinding (gcast b) (cast (getValue b)) -- value as term
-   ]
+getTermValue :: Binding -> Term
+getTermValue (Binding ref a) = build (refView ref) a
 
 -----------------------------------------------------------
 -- Heterogeneous environment
 
-newtype Environment = Env { envMap :: M.Map Id (Typed Binding) }
+newtype Environment = Env { envMap :: M.Map Id Binding }
    deriving Eq
 
 instance Show Environment where
@@ -137,38 +126,71 @@ instance Monoid Environment where
    mempty = Env mempty
    mappend a b = Env (envMap a `mappend` envMap b) -- left has presedence
 
+makeEnvironment :: [Binding] -> Environment
+makeEnvironment xs = Env $ M.fromList [ (getId a, a) | a <- xs ]
+
+singleBinding :: Typeable a => Ref a -> a -> Environment
+singleBinding ref = makeEnvironment . return . Binding ref
+
 class HasEnvironment env where 
    environment :: env -> Environment 
+   deleteRef   :: Ref a -> env -> env
+   insertRef   :: Typeable a => Ref a -> a -> env -> env
+   changeRef   :: Typeable a => Ref a -> (a -> a) -> env -> env
+   -- default definition
+   changeRef ref f env  =
+      maybe id (insertRef ref . f) (ref ? env) env
 
 instance HasEnvironment Environment where
-   environment = id
+   environment    = id
+   deleteRef a   = Env . M.delete (getId a) . envMap
+   insertRef ref =
+      let f a = Env . M.insert (getId a) a . envMap
+      in f . Binding ref
+   
+(?) :: (HasEnvironment env, Typeable a) => Ref a -> env -> Maybe a
+ref ? env =
+   M.lookup (getId ref) (envMap (environment env)) >>= getTypedValue
 
-(?) :: (HasEnvironment env, HasId n, Typeable a) => n -> env -> Maybe a
-(?) n = lookupValue n . environment
-
-bindings :: HasEnvironment env => env -> [Typed Binding]
+bindings :: HasEnvironment env => env -> [Binding]
 bindings = sortBy compareId . M.elems . envMap . environment
 
 noBindings :: HasEnvironment env => env -> Bool
 noBindings = M.null . envMap . environment
 
-makeEnvironment :: [Typed Binding] -> Environment
-makeEnvironment xs = Env $ M.fromList [ (getId a, a) | a <- xs ]
+{-
+data M m a where 
+   M    :: StateT Environment m a -> M m a
+   (:=) :: Typeable a => Ref a -> a -> M m ()
+   (:~) :: Typeable a => Ref a -> (a -> a) -> M m ()
 
-singleBinding :: Typeable a => Binding a -> Environment
-singleBinding = makeEnvironment . return . Typed
+unM :: Monad m => M m a -> StateT Environment m a
+unM (M s)      = s
+unM (ref := a) = modify (insertRef ref a)
+unM (ref :~ f) = modify (changeRef ref f)
 
-insertTypedBinding :: Typed Binding -> Environment -> Environment
-insertTypedBinding a = Env . M.insert (getId a) a . envMap
+instance Monad m => Monad (M m) where
+   return a = M $ return a
+   m >>= f  = M $ unM m >>= unM . f
+   fail s   = M $ fail s
 
-insertBinding :: Typeable a => Binding a -> Environment -> Environment
-insertBinding = insertTypedBinding . Typed
+instance Monad m => MonadState Environment (M m) where
+   get = M get
+   put = M . put
 
-deleteBinding :: HasId a => a -> Environment -> Environment
-deleteBinding a = Env . M.delete (getId a) . envMap
+getRef :: (Monad m, Typeable a) => Ref a -> M m a
+getRef ref = M $ do
+   env <- get
+   maybe (fail "getRef") return (ref ? env)
 
-lookupTypedBinding :: HasId a => a -> Environment -> Maybe (Typed Binding)
-lookupTypedBinding a = M.lookup (getId a) . envMap
+runM :: Monad m => M m a -> Environment -> m (a, Environment)
+runM = runStateT . unM
 
-lookupValue :: (Typeable a, HasId b) => b -> Environment -> Maybe a
-lookupValue a env = lookupTypedBinding a env >>= getTypedValue
+execM :: Monad m => M m a -> Environment -> m Environment
+execM = execStateT . unM
+
+evalM :: Monad m => M m a -> Environment -> m a
+evalM = evalStateT . unM
+
+s :: [M Maybe a] -> Environment -> Environment
+s xs env = fromMaybe env (execM (sequence_ xs) env) -}

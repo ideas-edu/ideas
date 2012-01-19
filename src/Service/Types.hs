@@ -162,7 +162,7 @@ data Type a t where
    Location     :: Type a Location
    Id           :: Type a Id
    StrategyCfg  :: Type a StrategyConfiguration
-   BindingTp    :: Type a (Typed Binding)
+   BindingTp    :: Type a Binding
    Text         :: Type a Text
    -- Basic types
    Bool         :: Type a Bool

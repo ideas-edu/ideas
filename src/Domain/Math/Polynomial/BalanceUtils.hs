@@ -29,6 +29,7 @@ import Common.Utils.Uniplate
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Data.Monoid
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
 import Domain.Math.Data.WithBool
@@ -122,15 +123,16 @@ nonsense = any p . universe
 -- Arguments
 
 termArg :: Expr -> Environment
-termArg expr = singleBinding ("term" .<-. expr)
+termArg = singleBinding (makeRef "term")
+
 
 factorArg :: Expr -> Environment
-factorArg expr = singleBinding ("factor" .<-. expr)
+factorArg = singleBinding (makeRef "factor")
 
 factorArgs :: [Expr] -> Environment
 factorArgs =
-   let f a b = Typed $ ("factor" ++ show a) .<-. b
-   in makeEnvironment . zipWith f [1::Int ..]
+   let f = singleBinding . makeRef . ("factor" ++) . show
+   in mconcat . zipWith f [1::Int ..]
 
 ------------------------------------------------------------
 -- Rules

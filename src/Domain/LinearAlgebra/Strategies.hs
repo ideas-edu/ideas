@@ -98,8 +98,8 @@ gramSchmidtStrategy =
    <*> label "Make vector orthogonal" (repeatS (ruleNextOrthogonal <*> try ruleOrthogonal))
    <*> label "Normalize"              (try ruleNormalize)
 
-varVars :: Binding [Expr]
-varVars = "variables" .<-. []
+varVars :: Ref [Expr]
+varVars = makeRef "variables"
 
 getVars :: Context a -> [Expr]
 getVars = fromMaybe [] . (varVars ?)
@@ -114,7 +114,7 @@ conv1 = describe "Convert linear system to matrix" $
       ls   <- fromExpr expr
       let (m, vs) = systemToMatrix ls
           new     = toExpr (simplify (m :: Matrix Expr))
-      return (writeVar varVars (map Var vs) $ replace new ce)
+      return (insertRef varVars (map Var vs) $ replace new ce)
 
 conv2 :: Rule (Context Expr)
 conv2 = describe "Convert matrix to linear system" $

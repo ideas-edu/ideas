@@ -118,8 +118,7 @@ instance (Simplify a, IsTerm a) => IsTerm (Simplified a) where
    toTerm (S x) = toTerm x
    fromTerm     = liftM simplified . fromTerm
 
-instance (Bindable a, Simplify a, IsTerm a, Show a, Read a) => Bindable (Simplified a) where
-   makeBinding n = makeBindingWith (simplified (getValue (makeBinding n))) n
+instance (Reference a, Simplify a) => Reference (Simplified a)
 
 simplified :: Simplify a => a -> Simplified a
 simplified = S . simplify

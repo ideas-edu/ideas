@@ -286,11 +286,11 @@ decodeEnvironment b xml =
             case xml2omobj this >>= fromOMOBJ of
                Left err -> fail err
                Right term ->
-                  return $ insertBinding (setValue term $ termBinding n) env
+                  return $ insertRef (makeRef n) (term :: Term) env
          -- Simple value in attribute
          _ -> do
             value <- findAttribute "value" item
-            return $ insertBinding (setValue value $ stringBinding n) env
+            return $ insertRef (makeRef n) value env
 
 decodeConfiguration :: MonadPlus m => XML -> m StrategyConfiguration
 decodeConfiguration xml =
@@ -311,35 +311,32 @@ encodeEnvironment :: Bool -> Context a -> XMLBuilder
 encodeEnvironment b ctx
    | null values = return ()
    | otherwise = element "context" $
-        forM_ values $ \(Typed descr) ->
+        forM_ values $ \tb ->
            element "item" $ do
-              "name"  .=. showId descr
-              case getTermValue descr of
+              "name"  .=. showId tb
+              case getTermValue tb of
                  term | b -> 
                     builder (omobj2xml (toOMOBJ term))
-                 _ -> "value" .=. showValue descr
+                 _ -> "value" .=. showValue tb
  where
    loc    = location ctx
-   values = bindings $ withLoc $ environment ctx
+   values = bindings (withLoc ctx)
    withLoc
       | null loc  = id
-      | otherwise = insertBinding $ setValue loc locDescr
-
-locDescr :: Binding Location
-locDescr = "location" .<-. []
+      | otherwise = insertRef (makeRef "location") loc 
 
 encodeContext :: Monad m => Bool -> (Context a -> m XMLBuilder) -> Context a -> m XMLBuilder
 encodeContext b f ctx = do
    xml <- f ctx
    return (xml >> encodeEnvironment b ctx)
 
-encodeTypedBinding :: Bool -> Typed Binding -> XMLBuilder
-encodeTypedBinding b (Typed descr) = element "argument" $ do
-   "description" .=. showId descr
-   case getTermValue descr of
+encodeTypedBinding :: Bool -> Binding -> XMLBuilder
+encodeTypedBinding b tb = element "argument" $ do
+   "description" .=. showId tb
+   case getTermValue tb of
       term | b -> builder $ 
          omobj2xml $ toOMOBJ term
-      _ -> text (showValue descr)
+      _ -> text (showValue tb)
 
 encodeText :: Encoder s a -> Exercise a -> Text -> DomainReasoner s
 encodeText enc ex = liftM (encodeTuple enc) . mapM f . textItems

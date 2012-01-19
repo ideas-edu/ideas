@@ -65,7 +65,7 @@ ruleDropEquation = describe "Drop trivial equations (such as 0=0)" $
       ls <- fromContext cls
       i  <- findIndexM (fromMaybe False . testConstants (==)) ls
       let f n = if i < n then n-1 else n
-      return $ writeVar covered (f (getCovered cls))
+      return $ insertRef covered (f (getCovered cls))
              $ change (deleteIndex i) cls
 
 ruleInconsistentSystem :: Rule (Context (LinearSystem Expr))
@@ -74,7 +74,7 @@ ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
       let stop = [0 :==: 1]
       ls <- fromContext cls
       guard (invalidSystem ls && ls /= stop)
-      return (writeVar covered 1 (replace stop cls))
+      return (insertRef covered 1 (replace stop cls))
 
 ruleScaleEquation :: Rule (Context (LinearSystem Expr))
 ruleScaleEquation = describe "Scale equation to one" $
@@ -128,7 +128,7 @@ ruleCoverAllEquations :: Rule (Context (LinearSystem a))
 ruleCoverAllEquations = describe "Cove all equations" $
    minorRule $ makeSimpleRule "linearalgebra.linsystem.coverall" $ \cls -> do
       ls <- fromContext cls
-      return (writeVar covered (length ls) cls)
+      return (insertRef covered (length ls) cls)
 
 -- local helper functions
 deleteIndex :: Int -> [a] -> [a]
@@ -159,13 +159,13 @@ exchangeEquations = parameter2 "equation 1" "equation 2" $ exchange
                (middle, y:end) = splitAt (j-i-1) rest
            return $ begin++[y]++middle++[x]++end
 
-scaleEquation :: (Bindable a, IsLinear a) => ParamTrans (Int, a) (LinearSystem a)
+scaleEquation :: (Reference a, IsLinear a) => ParamTrans (Int, a) (LinearSystem a)
 scaleEquation = parameter2 "equation" "scale factor" $ \i a -> makeTrans $ \xs -> do
    guard (a `notElem` [0,1] && validEquation i xs)
    let (begin, this:end) = splitAt i xs
    return (begin ++ [fmap (a*) this] ++ end)
 
-addEquations :: (Bindable a, IsLinear a) => ParamTrans (Int, Int, a) (LinearSystem a)
+addEquations :: (Reference a, IsLinear a) => ParamTrans (Int, Int, a) (LinearSystem a)
 addEquations = parameter3 "equation 1" "equation 2" "scale factor" $ \i j a -> makeTrans $ \xs -> do
    guard (i/=j && validEquation i xs && validEquation j xs)
    let (begin, this:end) = splitAt i xs
@@ -177,7 +177,7 @@ changeCover f = makeTrans $ \cls -> do
    ls  <- fromContext cls
    let new = f (getCovered cls)
    guard (new >= 0 && new <= length ls)
-   return (writeVar covered new cls)
+   return (insertRef covered new cls)
 
 -- local helper function
 combineWith :: (a -> a -> a) -> Equation a -> Equation a -> Equation a

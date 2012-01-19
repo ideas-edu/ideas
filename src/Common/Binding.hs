@@ -25,8 +25,8 @@ module Common.Binding
    , Environment, makeEnvironment, singleBinding
    , bindings, noBindings
    , insertBinding, insertTypedBinding, deleteBinding
-   , lookupTypedBinding, lookupBinding, lookupValue
-   , Typed(..)
+   , lookupValue
+   , Typed(..), HasEnvironment(..), (?)
    ) where
 
 import Control.Monad
@@ -117,6 +117,13 @@ readBinding = parser
 readTermBinding :: Binding a -> Term -> Maybe a
 readTermBinding = match . bindingView
 
+getTypedValue :: Typeable a => Typed Binding -> Maybe a
+getTypedValue (Typed b) = msum
+   [ cast (getValue b) -- typed value
+   , join $ liftM2 readBinding     (gcast b) (cast (getValue b)) -- value as string
+   , join $ liftM2 readTermBinding (gcast b) (cast (getValue b)) -- value as term
+   ]
+
 -----------------------------------------------------------
 -- Heterogeneous environment
 
@@ -130,17 +137,26 @@ instance Monoid Environment where
    mempty = Env mempty
    mappend a b = Env (envMap a `mappend` envMap b) -- left has presedence
 
-bindings :: Environment -> [Typed Binding]
-bindings = sortBy compareId . M.elems . envMap
+class HasEnvironment env where 
+   environment :: env -> Environment 
+
+instance HasEnvironment Environment where
+   environment = id
+
+(?) :: (HasEnvironment env, HasId n, Typeable a) => n -> env -> Maybe a
+(?) n = lookupValue n . environment
+
+bindings :: HasEnvironment env => env -> [Typed Binding]
+bindings = sortBy compareId . M.elems . envMap . environment
+
+noBindings :: HasEnvironment env => env -> Bool
+noBindings = M.null . envMap . environment
 
 makeEnvironment :: [Typed Binding] -> Environment
 makeEnvironment xs = Env $ M.fromList [ (getId a, a) | a <- xs ]
 
 singleBinding :: Typeable a => Binding a -> Environment
 singleBinding = makeEnvironment . return . Typed
-
-noBindings :: Environment -> Bool
-noBindings = M.null . envMap
 
 insertTypedBinding :: Typed Binding -> Environment -> Environment
 insertTypedBinding a = Env . M.insert (getId a) a . envMap
@@ -154,10 +170,5 @@ deleteBinding a = Env . M.delete (getId a) . envMap
 lookupTypedBinding :: HasId a => a -> Environment -> Maybe (Typed Binding)
 lookupTypedBinding a = M.lookup (getId a) . envMap
 
-lookupBinding :: (Typeable a, HasId b) => b -> Environment -> Maybe (Binding a)
-lookupBinding a env = do
-   Typed b <- lookupTypedBinding a env
-   gcast b
-         
 lookupValue :: (Typeable a, HasId b) => b -> Environment -> Maybe a
-lookupValue a = liftM getValue . lookupBinding a
+lookupValue a env = lookupTypedBinding a env >>= getTypedValue

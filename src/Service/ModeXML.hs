@@ -320,7 +320,7 @@ encodeEnvironment b ctx
                  _ -> "value" .=. showValue descr
  where
    loc    = location ctx
-   values = bindings $ withLoc $ getEnvironment ctx
+   values = bindings $ withLoc $ environment ctx
    withLoc
       | null loc  = id
       | otherwise = insertBinding $ setValue loc locDescr

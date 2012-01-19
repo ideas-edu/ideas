@@ -355,8 +355,8 @@ defaultDerivation ex a =
 derivationDiffEnv :: Derivation s (Context a) -> Derivation (s, Environment) (Context a)
 derivationDiffEnv = updateSteps $ \old a new ->
    let keep x = not (getId x `sameId` "location" || x `elem` list)
-       list = bindings $ getEnvironment old
-   in (a, makeEnvironment $ filter keep $ bindings $ getEnvironment new)
+       list = bindings old
+   in (a, makeEnvironment $ filter keep $ bindings new)
 
 printDerivation :: Exercise a -> a -> IO ()
 printDerivation ex = putStrLn . showDerivation ex
@@ -419,7 +419,7 @@ checkParserPretty eq p pretty a =
 checkParserPrettyEx :: Exercise a -> Context a -> Bool
 checkParserPrettyEx ex ca =
    let f    = mapSecond make . parser ex
-       make = newContext (getEnvironment ca) . navigation ex
+       make = newContext (environment ca) . navigation ex
    in checkParserPretty (similarity ex) f (prettyPrinterContext ex) ca
 
 checkExamples :: Exercise a -> TestSuite

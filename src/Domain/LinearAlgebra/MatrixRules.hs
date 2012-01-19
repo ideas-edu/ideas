@@ -12,12 +12,13 @@
 module Domain.LinearAlgebra.MatrixRules 
    ( ruleFindColumnJ, ruleExchangeNonZero, ruleScaleToOne
    , ruleZerosFP, ruleCoverRow, ruleUncoverRow, ruleZerosBP
-   , covered
+   , covered, getCovered
    ) where
 
 import Common.Library hiding (simplify, isEmpty)
 import Control.Monad
 import Data.List
+import Data.Maybe
 import Domain.LinearAlgebra.Matrix
 import Domain.Math.Simplification
 
@@ -30,28 +31,28 @@ ruleFindColumnJ = minorRule $ makeSimpleRuleList "linearalgebra.gaussianelim.Fin
 ruleExchangeNonZero :: (Simplify a, Num a) => Rule (Context (Matrix a))
 ruleExchangeNonZero = simplify $ ruleExchangeRows $ \cm -> do
    guard (nonEmpty cm)
-   let j = readVar columnJ cm
+   let j = getColumnJ cm
    col <- liftM (column j) (subMatrix cm)
    i   <- findIndexM (/= 0) col
-   let cov = readVar covered cm
+   let cov = getCovered cm
    return (cov, i + cov)
 
 ruleScaleToOne :: (Bindable a, Simplify a, Fractional a) => Rule (Context (Matrix a))
 ruleScaleToOne = simplify $ ruleScaleRow $ \cm -> do
    guard (nonEmpty cm)
-   let j = readVar columnJ cm
+   let j = getColumnJ cm
    pv  <- liftM (entry (0, j)) (subMatrix cm)
    guard (pv /= 0)
-   let cov = readVar covered cm
+   let cov = getCovered cm
    return (cov, 1 / pv)
 
 ruleZerosFP :: (Bindable a, Simplify a, Fractional a) => Rule (Context (Matrix a))
 ruleZerosFP = simplify $ ruleAddMultiple $ \cm -> do
    guard (nonEmpty cm)
-   let j = readVar columnJ cm
+   let j = getColumnJ cm
    col <- liftM (drop 1 . column j) (subMatrix cm)
    i   <- findIndexM (/= 0) col
-   let cov = readVar covered cm
+   let cov = getCovered cm
        v = negate (col!!i)
    return (i + cov + 1, cov, v)
 
@@ -65,7 +66,7 @@ ruleZerosBP = simplify $ ruleAddMultiple $ \cm -> do
    guard (any (/= 0) ri)
    k <- findIndexM (/= 0) col
    let v = negate (col!!k)
-       cov = readVar covered cm
+       cov = getCovered cm
    return (k, cov, v)
 
 ruleCoverRow :: Rule (Context (Matrix a))
@@ -110,7 +111,7 @@ rowAdd = parameter3 "row1" "row2" "scale factor" $ \i j k -> matrixTrans $ \m ->
 changeCover :: (Int -> Int) -> Transformation (Context (Matrix a))
 changeCover f = makeTrans $ \cm -> do
    m   <- fromContext cm
-   let new = f (readVar covered cm)
+   let new = f (getCovered cm)
    guard (new >= 0 && new <= fst (dimensions m))
    return (writeVar covered new cm)
 
@@ -131,10 +132,14 @@ covered, columnJ :: Binding Int
 covered = "covered" .<-. 0
 columnJ = "columnj" .<-. 0
 
+getCovered, getColumnJ :: Context a -> Int
+getCovered = fromMaybe 0 . (covered ?)
+getColumnJ = fromMaybe 0 . (columnJ ?)
+
 subMatrix :: Context (Matrix a) -> Maybe (Matrix a)
 subMatrix cm = do
    m <- fromContext cm
-   let cov = readVar covered cm
+   let cov = getCovered cm
    return $ makeMatrix $ drop cov $ rows m
 
 findIndexM :: MonadPlus m => (a -> Bool) -> [a] -> m Int

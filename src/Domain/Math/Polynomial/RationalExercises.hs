@@ -229,7 +229,7 @@ eqSimplifyRational a b = fromMaybe False $ do
    return (p1==p2)
 
 conditionOnClipboard :: Context a -> Maybe (Logic (Relation Expr))
-conditionOnClipboard = lookupClipboardIn "condition" . getEnvironment
+conditionOnClipboard = lookupClipboardG "condition"
 
 -- write expression as a/b, under certain conditions
 rationalExpr :: Expr -> (Expr, Expr, Logic (Relation Expr))

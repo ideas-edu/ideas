@@ -96,7 +96,7 @@ simIneqContext a b =
    sameClipboard a b &&
    withoutContext (simLogic (fmap cleanUpExpr . flipGT)) a b
  where
-   sameClipboard = eqExpr `on` (lookupClipboardIn "ineq" . getEnvironment)
+   sameClipboard = eqExpr `on` lookupClipboardG "ineq"
    eqExpr = (==) :: Maybe Expr -> Maybe Expr -> Bool
 
 --inEquation <- lookupClipboard "ineq" >>= fromExpr

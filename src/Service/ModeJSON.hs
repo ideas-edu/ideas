@@ -194,7 +194,7 @@ encodeState f st = do
       ]
 
 encodeContext :: Context a -> JSON
-encodeContext ctx = Object (map f (bindings (getEnvironment ctx)))
+encodeContext = Object . map f . bindings
  where
    f (Typed descr) = (showId descr, String $ showValue descr)
 

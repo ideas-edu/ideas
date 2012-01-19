@@ -17,7 +17,7 @@ import Data.List
 import Data.Maybe
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.LinearView
-import Domain.LinearAlgebra.MatrixRules (covered) -- for context
+import Domain.LinearAlgebra.MatrixRules (covered, getCovered) -- for context
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Simplification (simplify)
@@ -41,7 +41,7 @@ ruleExchangeEquations = describe "Exchange two equations" $
       mv  <- minvar cls
       eqs <- remaining cls
       i   <- findIndexM (elem mv . getVarsSystem . return) eqs
-      let cov = readVar covered cls
+      let cov = getCovered cls
       return (cov, cov + i)
 
 ruleEliminateVar :: Rule (Context (LinearSystem Expr))
@@ -56,7 +56,7 @@ ruleEliminateVar = describe "Eliminate a variable (using addition)" $
       (i, coef) <- listToMaybe [ (i, c) | (i, eq) <- zip [0..] rest, let c = getCoef eq, c /= 0 ]
       guard (getCoef hd /= 0)
       let v = negate coef / getCoef hd
-      let cov = readVar covered cls
+      let cov = getCovered cls
       return (i + cov + 1, cov, v)
 
 ruleDropEquation :: Rule (Context (LinearSystem Expr))
@@ -65,7 +65,8 @@ ruleDropEquation = describe "Drop trivial equations (such as 0=0)" $
       ls <- fromContext cls
       i  <- findIndexM (fromMaybe False . testConstants (==)) ls
       let f n = if i < n then n-1 else n
-      return (modifyVar covered f (change (deleteIndex i) cls))
+      return $ writeVar covered (f (getCovered cls))
+             $ change (deleteIndex i) cls
 
 ruleInconsistentSystem :: Rule (Context (LinearSystem Expr))
 ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
@@ -82,7 +83,7 @@ ruleScaleEquation = describe "Scale equation to one" $
  where
    args cls = do
       ls  <- fromContext cls 
-      let cov = readVar covered cls
+      let cov = getCovered cls
       eq  <- listToMaybe $ drop cov ls
       let expr = leftHandSide eq
       mv <- minvar cls
@@ -97,7 +98,7 @@ ruleBackSubstitution = describe "Back substitution" $
  where
    args cls = do
       ls  <- fromContext cls
-      let cov = readVar covered cls
+      let cov = getCovered cls
       eq  <- listToMaybe (drop cov ls)
       let expr = leftHandSide eq
       mv <- listToMaybe (vars expr)
@@ -174,7 +175,7 @@ addEquations = parameter3 "equation 1" "equation 2" "scale factor" $ \i j a -> m
 changeCover :: (Int -> Int) -> Transformation (Context (LinearSystem a))
 changeCover f = makeTrans $ \cls -> do
    ls  <- fromContext cls
-   let new = f (readVar covered cls)
+   let new = f (getCovered cls)
    guard (new >= 0 && new <= length ls)
    return (writeVar covered new cls)
 
@@ -191,7 +192,7 @@ validEquation n xs = n >= 0 && n < length xs
 -- | The equations that remain to be solved
 remaining :: Context (LinearSystem a) -> Maybe (Equations a)
 remaining cls = do
-   let cov = readVar covered cls
+   let cov = getCovered cls
    liftM (drop cov) (fromContext cls)
 
 -- | The minimal variable in the remaining equations

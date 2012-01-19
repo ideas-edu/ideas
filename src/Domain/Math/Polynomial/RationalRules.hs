@@ -181,7 +181,7 @@ condition p c
    | new == T  = {- removeClipboardC "condition" -} c
    | otherwise = addToClipboardG "condition" new c
  where
-   mp  = maybeOnClipboardG "condition" c
+   mp  = lookupClipboardG "condition" c
    new = maybe id (.&&.) mp p
 
 conditionNotZero :: Expr -> Context a -> Context a

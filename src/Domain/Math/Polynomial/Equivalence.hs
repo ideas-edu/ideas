@@ -137,7 +137,7 @@ eqContextWith eq a b = isJust $ do
    toEq r = leftHandSide r .==. rightHandSide r
 
 ineqOnClipboard :: Context a -> Maybe (Logic (Relation Expr))
-ineqOnClipboard = lookupClipboardIn "ineq" . getEnvironment
+ineqOnClipboard = lookupClipboardG "ineq"
 
 polyEq :: (Relation Expr -> Maybe (String, Interval Q)) -> Logic (Relation Expr) -> Logic (Relation Expr) -> Bool
 polyEq f p q = fromMaybe False $ do
@@ -269,7 +269,7 @@ substitute pair expr = descend (substitute pair) expr
 
 substOnClipboard :: Context a -> Maybe (String, Expr)
 substOnClipboard c = do
-   eq <- lookupClipboardIn "subst" (getEnvironment c)
+   eq <- lookupClipboardG "subst" c
    case eq of
       Var s :==: a -> return (s, a)
       _            -> fail "not a substitution"

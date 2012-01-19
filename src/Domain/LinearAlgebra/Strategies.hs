@@ -24,6 +24,7 @@ import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.Vector
 import Domain.Math.Expr
 import Domain.Math.Simplification
+import Data.Maybe
 
 gaussianElimStrategy :: LabeledStrategy (Context (Matrix Expr))
 gaussianElimStrategy = label "Gaussian elimination" $
@@ -100,6 +101,9 @@ gramSchmidtStrategy =
 varVars :: Binding [Expr]
 varVars = "variables" .<-. []
 
+getVars :: Context a -> [Expr]
+getVars = fromMaybe [] . (varVars ?)
+
 simplifyFirst :: Rule (Context (LinearSystem Expr))
 simplifyFirst = simplifySystem idRule
 
@@ -115,7 +119,7 @@ conv1 = describe "Convert linear system to matrix" $
 conv2 :: Rule (Context Expr)
 conv2 = describe "Convert matrix to linear system" $
    makeSimpleRule "linearalgebra.linsystem.frommatrix" $ \ce -> do
-      let evs  = readVar varVars ce
+      let evs  = getVars ce
       m <- fromContext ce >>= fromExpr
       let linsys = matrixToSystemWith vs (m :: Matrix Expr)
           vs = [ v | Var v <- evs ]

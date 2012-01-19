@@ -14,13 +14,13 @@
 -----------------------------------------------------------------------------
 module Common.Context
    ( -- * Abstract data type
-     Context, fromContext, fromContextWith, fromContextWith2
-   , newContext, getEnvironment
+     Context, newContext
+   , fromContext, fromContextWith, fromContextWith2
      -- * Lifting
    , liftToContext
    , use, useC, termNavigator, applyTop
      -- * Context Monad
-   , readVar, writeVar, modifyVar
+   , writeVar
    ) where
 
 import Common.Binding
@@ -73,6 +73,9 @@ instance TypedNavigator Context where
    leaveT    (C _   a) = leaveT a
    castT v   (C env a) = liftM (C env) (castT v a)
 
+instance HasEnvironment (Context a) where
+   environment = getEnvironment
+
 -- | Construct a context
 newContext :: Environment -> Navigator a -> Context a
 newContext = C
@@ -122,19 +125,5 @@ useC = liftView (makeView (castT termView) (fromJust . castT termView))
 ----------------------------------------------------------
 -- Legacy code
 
-readVar :: Typeable a => Binding a -> Context b -> a
-readVar var = readEnv var . getEnvironment
-
 writeVar :: Typeable a => Binding a -> a -> Context b -> Context b
 writeVar var a c = c {getEnvironment = insertBinding (setValue a var) (getEnvironment c)}
-
-modifyVar :: Typeable a => Binding a -> (a -> a) -> Context b -> Context b
-modifyVar var f c = writeVar var (f (readVar var c)) c
-
-readEnv :: Typeable a => Binding a -> Environment -> a
-readEnv var env = fromMaybe (getValue var) $ 
-      lookupValue var env -- typed value
-    `mplus`
-      (lookupValue var env >>= readBinding var) -- value as string
-    `mplus`
-      (lookupValue var env >>= readTermBinding var) -- value as term

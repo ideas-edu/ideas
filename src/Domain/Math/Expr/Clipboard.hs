@@ -18,13 +18,13 @@ module Domain.Math.Expr.Clipboard
      Clipboard 
      -- * Interface
    , addToClipboard, removeClipboard, lookupClipboard
-   , addToClipboardG, lookupClipboardG
      -- * Generalized interface
-   , maybeOnClipboardG, lookupClipboardIn
+   , addToClipboardG, lookupClipboardG
    ) where
 
 import Common.Library
 import Control.Monad
+import Data.Maybe
 import Data.Typeable
 import Domain.Math.Data.Relation
 import Domain.Math.Expr.Data
@@ -57,6 +57,12 @@ instance IsTerm Clipboard where
 clipboard :: Binding Clipboard
 clipboard = makeBindingWith (C M.empty) "clipboard"
 
+getClipboard :: Context a -> Clipboard
+getClipboard = fromMaybe (C M.empty) . (clipboard ?)
+
+changeClipboard :: (Clipboard -> Clipboard) -> Context a -> Context a
+changeClipboard f c = writeVar clipboard (f (getClipboard c)) c
+
 ---------------------------------------------------------------------
 -- Interface to work with clipboard
 
@@ -67,26 +73,13 @@ lookupClipboard :: String -> Context b -> Maybe Expr
 lookupClipboard = lookupClipboardG
 
 removeClipboard :: String -> Context a -> Context a
-removeClipboard s = modifyVar clipboard (C . M.delete s . unC)
+removeClipboard s = changeClipboard (C . M.delete s . unC)
 
 ---------------------------------------------------------------------
 -- Generalized interface to work with clipboard
 
 addToClipboardG :: IsTerm a => String -> a -> Context b -> Context b
-addToClipboardG s a = modifyVar clipboard (C . M.insert s (toExpr a) . unC)
+addToClipboardG s a = changeClipboard (C . M.insert s (toExpr a) . unC)
 
 lookupClipboardG :: IsTerm a => String -> Context b -> Maybe a
-lookupClipboardG s c = do
-   expr <- M.lookup s (unC (readVar clipboard c))
-   fromExpr expr
-
-lookupClipboardIn :: IsTerm a => String -> Environment -> Maybe a
-lookupClipboardIn s env = do 
-   clip <- lookupValue (getId clipboard) env
-   expr <- M.lookup s (unC clip)
-   fromExpr expr
-
-maybeOnClipboardG :: IsTerm a => String -> Context b -> Maybe a
-maybeOnClipboardG s c =
-   let m = readVar clipboard c
-   in M.lookup s (unC m) >>= fromExpr
+lookupClipboardG s c = clipboard ? c >>= M.lookup s . unC >>= fromExpr

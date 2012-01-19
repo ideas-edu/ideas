@@ -20,6 +20,10 @@ varI, varJ :: Binding Int
 varI = "considered" .<-. 0
 varJ = "j" .<-. 0
 
+getVarI, getVarJ :: Context a -> Int
+getVarI = fromMaybe 0 . (varI ?)
+getVarJ = fromMaybe 0 . (varJ ?)
+
 rulesGramSchmidt :: (Floating a, Bindable a) => [Rule (Context (VectorSpace a))]
 rulesGramSchmidt = [ruleNormalize, ruleOrthogonal, ruleNext]
 
@@ -39,16 +43,16 @@ ruleOrthogonal = makeRule "Make orthogonal" $
    supplyParameters transOrthogonal args
  where
    args cvs = do
-      let i = pred (readVar varI cvs)
-          j = pred (readVar varJ cvs)
+      let i = pred (getVarI cvs)
+          j = pred (getVarJ cvs)
       guard (i>j)
       return (j, i)
 
 -- Variable "j" is for administrating which vectors are already orthogonal
 ruleNextOrthogonal :: Rule (Context (VectorSpace a))
 ruleNextOrthogonal = minorRule $ makeSimpleRule "Orthogonal to next" $ \cvs -> do
-   let i = readVar varI cvs
-       j = succ (readVar varJ cvs)
+   let i = getVarI cvs
+       j = succ (getVarJ cvs)
    guard (j < i)
    return (writeVar varJ j cvs)
 
@@ -57,19 +61,19 @@ ruleNextOrthogonal = minorRule $ makeSimpleRule "Orthogonal to next" $ \cvs -> d
 ruleNext :: Rule (Context (VectorSpace a))
 ruleNext = minorRule $ makeSimpleRule "Consider next vector" $ \cvs -> do
    vs <- fromContext cvs
-   let i = readVar varI cvs
+   let i = getVarI cvs
    guard (i < length (vectors vs))
    return (writeVar varI (i+1) $ writeVar varJ 0 cvs)
 
 current :: Context (VectorSpace a) -> Maybe (Vector a)
 current cvs = do
-   let i = readVar varI cvs
+   let i = getVarI cvs
    vs <- fromContext cvs
    listToMaybe (drop (i-1) (vectors vs))
 
 setCurrent :: Vector a -> Context (VectorSpace a) -> Maybe (VectorSpace a)
 setCurrent v cvs = do
-   let i = readVar varI cvs
+   let i = getVarI cvs
    vs <- fromContext cvs
    case splitAt (i-1) (vectors vs) of
       (xs, _:ys) -> return $ makeVectorSpace (xs ++ v:ys)

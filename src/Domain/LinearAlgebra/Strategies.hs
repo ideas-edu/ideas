@@ -24,7 +24,6 @@ import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.Vector
 import Domain.Math.Expr
 import Domain.Math.Simplification
-import Data.Maybe
 
 gaussianElimStrategy :: LabeledStrategy (Context (Matrix Expr))
 gaussianElimStrategy = label "Gaussian elimination" $
@@ -101,29 +100,28 @@ gramSchmidtStrategy =
 varVars :: Ref [Expr]
 varVars = makeRef "variables"
 
-getVars :: Context a -> [Expr]
-getVars = fromMaybe [] . (varVars ?)
-
 simplifyFirst :: Rule (Context (LinearSystem Expr))
 simplifyFirst = simplifySystem idRule
 
 conv1 :: Rule (Context Expr)
 conv1 = describe "Convert linear system to matrix" $
-   makeSimpleRule "linearalgebra.linsystem.tomatrix" $ \ce -> do
-      expr <- fromContext ce
+   makeRule (linId, "tomatrix") $ makeTransEnv $ \expr -> do
       ls   <- fromExpr expr
       let (m, vs) = systemToMatrix ls
-          new     = toExpr (simplify (m :: Matrix Expr))
-      return (insertRef varVars (map Var vs) $ replace new ce)
+      varVars := map Var vs
+      return (toExpr (simplify (m :: Matrix Expr)))
 
 conv2 :: Rule (Context Expr)
 conv2 = describe "Convert matrix to linear system" $
-   makeSimpleRule "linearalgebra.linsystem.frommatrix" $ \ce -> do
-      let evs  = getVars ce
-      m <- fromContext ce >>= fromExpr
-      let linsys = matrixToSystemWith vs (m :: Matrix Expr)
-          vs = [ v | Var v <- evs ]
-      return $ replace (simplify $ toExpr linsys) ce
+   makeRule (linId, "frommatrix") $ makeTransEnv $ \expr -> do
+      evs <- varVars :? []
+      m   <- fromExpr expr
+      let vs     = [ v | Var v <- evs ]
+          linsys = matrixToSystemWith vs (m :: Matrix Expr)  
+      return $ simplify $ toExpr linsys
       
 hasRemaining :: Context (LinearSystem a) -> Bool
-hasRemaining = maybe False (not . null) . remaining
+hasRemaining = maybe False (not . null) . useEnv remaining
+
+useEnv :: (a -> EnvMonad b) -> Context a -> Maybe b
+useEnv f c = current c >>= \a -> evalEnvMonad (f a) (environment c)

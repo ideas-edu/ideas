@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra (module Export) where
 
-import Domain.LinearAlgebra.EquationsRules as Export hiding (changeCover, findIndexM)
+import Domain.LinearAlgebra.EquationsRules as Export
 import Domain.LinearAlgebra.Exercises as Export
 import Domain.LinearAlgebra.LinearSystem as Export
 import Domain.LinearAlgebra.Matrix as Export

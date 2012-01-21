@@ -19,7 +19,7 @@
 module Common.Transformation
    ( -- * Transformations
      Transformation, HasTransformation(..)
-   , makeTrans, makeTransG, applyTransformation
+   , makeTrans, makeTransG, makeTransEnv, applyTransformation
      -- * Bindables
    , ParamTrans, supplyEnvironment, supplyParameters
      -- * Recognizers
@@ -37,6 +37,7 @@ import Common.Algebra.Field
 import Common.Binding
 import Common.Classes
 import Common.Id
+import Common.Navigator
 import Common.Parameterized
 import Common.Rewriting
 import Common.Utils
@@ -91,6 +92,13 @@ makeTrans = makeTransG
 -- | Turn a function (which returns a list of results) into a transformation
 makeTransG ::  Foldable f => (a -> f a) -> Transformation a
 makeTransG f = Function $ \a -> [ (b, mempty) | b <- toList (f a) ]
+
+makeTransEnv :: (IsNavigator f, HasEnvironment (f a)) 
+                 => (a -> EnvMonad a) -> Transformation (f a)
+makeTransEnv f = makeTrans $ \ca -> do
+   a <- current ca
+   (b, env) <- runEnvMonad (f a) (environment ca)
+   return (setEnvironment env (replace b ca))
 
 -----------------------------------------------------------
 --- HasTransformation type class

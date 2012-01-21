@@ -9,7 +9,13 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.EquationsRules where
+module Domain.LinearAlgebra.EquationsRules 
+   ( ruleCoverAllEquations, ruleUncoverEquation, ruleScaleEquation
+   , ruleBackSubstitution, ruleIdentifyFreeVariables, ruleExchangeEquations
+   , ruleEliminateVar, ruleCoverUpEquation, ruleInconsistentSystem
+   , ruleDropEquation, equationsRules
+   , simplifySystem, remaining, linId
+   ) where
 
 import Common.Library hiding (simplify)
 import Control.Monad
@@ -22,7 +28,9 @@ import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Simplification (simplify)
 import Prelude
-import Test.QuickCheck
+
+linId :: Id
+linId = newId "linearalgebra.linsystem"
 
 equationsRules :: [Rule (Context (LinearSystem Expr))]
 equationsRules =
@@ -34,99 +42,88 @@ equationsRules =
 
 ruleExchangeEquations :: Rule (Context (LinearSystem Expr))
 ruleExchangeEquations = describe "Exchange two equations" $
-   simplifySystem $ makeRule "linearalgebra.linsystem.exchange" $
-   supplyParameters (fmap liftToContext exchangeEquations) args
- where
-   args cls = do
-      mv  <- minvar cls
-      eqs <- remaining cls
+   simplifySystem $ makeRule (linId, "exchange") $
+   supplyParameters (fmap liftToContext exchangeEquations) $ useEnv $ \ls -> do
+      mv  <- minvar ls
+      eqs <- remaining ls
       i   <- findIndexM (elem mv . getVarsSystem . return) eqs
-      let cov = getCovered cls
+      cov <- getCovered
       return (cov, cov + i)
 
 ruleEliminateVar :: Rule (Context (LinearSystem Expr))
 ruleEliminateVar = describe "Eliminate a variable (using addition)" $
-   simplifySystem $ makeRule "linearalgebra.linsystem.eliminate" $
-   supplyParameters (fmap liftToContext addEquations) args
- where
-   args cls = do
-      mv <- minvar cls
-      hd:rest <- remaining cls
+   simplifySystem $ makeRule (linId, "eliminate") $
+   supplyParameters (fmap liftToContext addEquations) $ useEnv $ \ls -> do
+      mv <- minvar ls
+      hd:rest <- remaining ls
       let getCoef = coefficientOf mv . leftHandSide
-      (i, coef) <- listToMaybe [ (i, c) | (i, eq) <- zip [0..] rest, let c = getCoef eq, c /= 0 ]
+      (i, coef) <- msum [ return (i, c) | (i, eq) <- zip [0..] rest, let c = getCoef eq, c /= 0 ]
       guard (getCoef hd /= 0)
       let v = negate coef / getCoef hd
-      let cov = getCovered cls
+      cov <- getCovered
       return (i + cov + 1, cov, v)
 
 ruleDropEquation :: Rule (Context (LinearSystem Expr))
 ruleDropEquation = describe "Drop trivial equations (such as 0=0)" $
-   simplifySystem $ makeSimpleRule "linearalgebra.linsystem.trivial" $ \cls -> do
-      ls <- fromContext cls
-      i  <- findIndexM (fromMaybe False . testConstants (==)) ls
+   simplifySystem $ makeRule (linId, "trivial") $ makeTransEnv $ \ls -> do
+      i   <- findIndexM (fromMaybe False . testConstants (==)) ls
+      cov <- getCovered
       let f n = if i < n then n-1 else n
-      return $ insertRef covered (f (getCovered cls))
-             $ change (deleteIndex i) cls
+      covered := f cov
+      return (deleteIndex i ls)
 
 ruleInconsistentSystem :: Rule (Context (LinearSystem Expr))
 ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
-   simplifySystem $ makeSimpleRule "linearalgebra.linsystem.inconsistent" $ \cls -> do
+   simplifySystem $ makeRule (linId, "inconsistent") $ makeTransEnv $ \ls -> do
       let stop = [0 :==: 1]
-      ls <- fromContext cls
       guard (invalidSystem ls && ls /= stop)
-      return (insertRef covered 1 (replace stop cls))
+      covered := 1 
+      return stop
 
 ruleScaleEquation :: Rule (Context (LinearSystem Expr))
 ruleScaleEquation = describe "Scale equation to one" $
-   simplifySystem $ makeRule "linearalgebra.linsystem.scale" $
-   supplyParameters (fmap liftToContext scaleEquation) args
- where
-   args cls = do
-      ls  <- fromContext cls 
-      let cov = getCovered cls
-      eq  <- listToMaybe $ drop cov ls
+   simplifySystem $ makeRule (linId, "scale") $
+   supplyParameters (fmap liftToContext scaleEquation) $ useEnv $ \ls -> do
+      cov <- getCovered
+      eq  <- elementAt cov ls
       let expr = leftHandSide eq
-      mv <- minvar cls
+      mv <- minvar ls
       guard (coefficientOf mv expr /= 0)
       let coef = 1 / coefficientOf mv expr
       return (cov, coef)
 
 ruleBackSubstitution :: Rule (Context (LinearSystem Expr))
 ruleBackSubstitution = describe "Back substitution" $
-   simplifySystem $ makeRule "linearalgebra.linsystem.subst" $
-   supplyParameters (fmap liftToContext addEquations) args
- where
-   args cls = do
-      ls  <- fromContext cls
-      let cov = getCovered cls
-      eq  <- listToMaybe (drop cov ls)
+   simplifySystem $ makeRule (linId, "subst") $
+   supplyParameters (fmap liftToContext addEquations) $ useEnv $ \ls -> do
+      cov <- getCovered
+      eq  <- elementAt cov ls
       let expr = leftHandSide eq
-      mv <- listToMaybe (vars expr)
+      mv <- headM (vars expr)
       i  <- findIndexM ((/= 0) . coefficientOf mv . leftHandSide) (take cov ls)
       let coef = negate $ coefficientOf mv (leftHandSide (ls !! i))
       return (i, cov, coef)
 
 ruleIdentifyFreeVariables :: IsLinear a => Rule (Context (LinearSystem a))
 ruleIdentifyFreeVariables = describe "Identify free variables" $
-   minorRule $ makeSimpleRule "linearalgebra.linsystem.freevars" $ \cls -> do
-      ls <- fromContext cls
+   minorRule $ liftToContext $ makeSimpleRule (linId, "freevars") $ \ls ->
       let vs = [ head ys | ys <- map (vars . leftHandSide) ls, not (null ys) ]
           f eq =
              let (e1, e2) = splitLinearExpr (`notElem` vs) (leftHandSide eq) -- constant ends up in e1
              in e2 :==: rightHandSide eq - e1
-      return (change (map f) cls)
+      in Just (map f ls)
 
 ruleCoverUpEquation :: Rule (Context (LinearSystem a))
 ruleCoverUpEquation = describe "Cover up first equation" $
-   minorRule $ makeRule "linearalgebra.linsystem.coverup" $ changeCover succ
+   minorRule $ makeRule (linId, "coverup") $ changeCover succ
 
 ruleUncoverEquation :: Rule (Context (LinearSystem a))
 ruleUncoverEquation = describe "Uncover one equation" $
-   minorRule $ makeRule "linearalgebra.linsystem.uncover" $ changeCover pred
+   minorRule $ makeRule (linId, "uncover") $ changeCover pred
 
 ruleCoverAllEquations :: Rule (Context (LinearSystem a))
 ruleCoverAllEquations = describe "Cove all equations" $
-   minorRule $ makeSimpleRule "linearalgebra.linsystem.coverall" $ \cls -> do
+   minorRule $ makeSimpleRule (linId, "coverall") $ \cls -> do
       ls <- fromContext cls
       return (insertRef covered (length ls) cls)
 
@@ -161,28 +158,23 @@ exchangeEquations = parameter2 "equation 1" "equation 2" $ exchange
 
 scaleEquation :: (Reference a, IsLinear a) => ParamTrans (Int, a) (LinearSystem a)
 scaleEquation = parameter2 "equation" "scale factor" $ \i a -> makeTrans $ \xs -> do
-   guard (a `notElem` [0,1] && validEquation i xs)
-   let (begin, this:end) = splitAt i xs
-   return (begin ++ [fmap (a*) this] ++ end)
+   guard (a `notElem` [0,1])
+   changeAt i (fmap (a*)) xs
 
 addEquations :: (Reference a, IsLinear a) => ParamTrans (Int, Int, a) (LinearSystem a)
 addEquations = parameter3 "equation 1" "equation 2" "scale factor" $ \i j a -> makeTrans $ \xs -> do
-   guard (i/=j && validEquation i xs && validEquation j xs)
-   let (begin, this:end) = splitAt i xs
-       exprj = xs!!j
-   return $ begin++[combineWith (+) this (fmap (a*) exprj)]++end
+   guard (i/=j)
+   j1 :==: j2 <- liftM (fmap (a*)) (elementAt j xs)
+   let f (i1 :==: i2) = i1+j1 :==: i2+j2
+   changeAt i f xs
 
 changeCover :: (Int -> Int) -> Transformation (Context (LinearSystem a))
-changeCover f = makeTrans $ \cls -> do
-   ls  <- fromContext cls
-   let new = f (getCovered cls)
+changeCover f = makeTransEnv $ same $ \ls -> do
+   new <- liftM f getCovered
    guard (new >= 0 && new <= length ls)
-   return (insertRef covered new cls)
+   covered := new
 
 -- local helper function
-combineWith :: (a -> a -> a) -> Equation a -> Equation a -> Equation a
-combineWith f (x1 :==: x2) (y1 :==: y2) = f x1 y1 :==: f x2 y2
-
 validEquation :: Int -> [a] -> Bool
 validEquation n xs = n >= 0 && n < length xs
 
@@ -190,28 +182,36 @@ validEquation n xs = n >= 0 && n < length xs
 -- TEMP
 
 -- | The equations that remain to be solved
-remaining :: Context (LinearSystem a) -> Maybe (Equations a)
-remaining cls = do
-   let cov = getCovered cls
-   liftM (drop cov) (fromContext cls)
+remaining :: LinearSystem a -> EnvMonad (Equations a)
+remaining ls = do
+   cov <- getCovered
+   return (drop cov ls)
 
 -- | The minimal variable in the remaining equations
-minvar :: IsLinear a => Context (LinearSystem a) -> Maybe String
-minvar cls = do
-   list <- liftM getVarsSystem (remaining cls)
+minvar :: IsLinear a => LinearSystem a -> EnvMonad String
+minvar ls = do
+   list <- liftM getVarsSystem (remaining ls)
    guard (not $ null list)
    return (minimum list)
 
-systemInNF :: (Arbitrary a, IsLinear a) => Gen (LinearSystem a)
-systemInNF = do
-   n <- arbitrary
-   replicateM n $ liftM2 (:==:) arbitrary arbitrary
-
-toIntegerSystem :: RealFrac a => LinearSystem a -> LinearSystem Integer
-toIntegerSystem = map (fmap round)
-
-fromIntegerSystem :: RealFrac a => LinearSystem Integer -> LinearSystem a
-fromIntegerSystem = map (fmap fromInteger)
-
 findIndexM :: MonadPlus m => (a -> Bool) -> [a] -> m Int
 findIndexM p = maybe mzero return . findIndex p
+
+useEnv :: (a -> EnvMonad b) -> Context a -> Maybe b
+useEnv f c = current c >>= \a -> evalEnvMonad (f a) (environment c)
+
+elementAt :: Monad m => Int -> [a] -> m a
+elementAt i = headM . drop i
+      
+headM :: Monad m => [a] -> m a
+headM (a:_) = return a
+headM _     = fail "headM"
+
+changeAt :: Monad m => Int -> (a -> a) -> [a] -> m [a]
+changeAt i f as =
+   case splitAt i as of
+      (xs, y:ys) -> return (xs ++ f y : ys)
+      _          -> fail "changeAt"
+      
+same :: (a -> EnvMonad b) -> a -> EnvMonad a
+same f a = f a >> return a

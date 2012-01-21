@@ -71,9 +71,8 @@ instance TypedNavigator Context where
    castT v   (C env a) = liftM (C env) (castT v a)
 
 instance HasEnvironment (Context a) where
-   environment     = getEnvironment
-   insertRef r a c = c {getEnvironment = insertRef r a (environment c)}
-   deleteRef r c   = c {getEnvironment = deleteRef r (environment c)}
+   environment = getEnvironment
+   setEnvironment e c = c {getEnvironment = e}
 
 -- | Construct a context
 newContext :: Environment -> Navigator a -> Context a

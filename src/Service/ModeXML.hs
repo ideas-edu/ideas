@@ -17,7 +17,7 @@ module Service.ModeXML
    , resultOk, resultError, addVersion
    ) where
 
-import Common.Library hiding (exerciseId)
+import Common.Library hiding (exerciseId, (:=))
 import Common.Utils (Some(..), readM)
 import Common.Utils.Uniplate (transform)
 import Control.Monad

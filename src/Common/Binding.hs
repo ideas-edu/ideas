@@ -21,7 +21,11 @@ module Common.Binding
      -- * Heterogeneous environment
    , Environment, makeEnvironment, singleBinding
    , HasEnvironment(..)
-   , (?), bindings, noBindings
+   , bindings, noBindings, (?)
+     -- * Environment Monad
+   , EnvMonad, EnvsMonad, EnvMonadT((:=), (:~), (:?))
+   , getRef, updateRefs
+   , runEnvMonad, execEnvMonad, evalEnvMonad
    ) where
 
 import Common.Id
@@ -31,6 +35,7 @@ import Common.View
 import Control.Monad
 import Data.Function
 import Data.List
+import Data.Maybe
 import Data.Monoid
 import Data.Typeable
 import qualified Data.Map as M
@@ -43,7 +48,7 @@ import Control.Monad.State
 data Ref a = Ref
    { identifier :: Id                -- ^ Identifier
    , printer    :: a -> String       -- ^ A pretty-printer
-   , _parser    :: String -> Maybe a -- ^ A parser
+   , parser     :: String -> Maybe a -- ^ A parser
    , refView    :: View Term a       -- ^ Conversion to/from term
    }
 
@@ -93,17 +98,6 @@ instance HasId Binding where
 makeBinding :: Typeable a => Ref a -> a -> Binding
 makeBinding = Binding
 
-getTypedValue :: Typeable a => Binding -> Maybe a
-getTypedValue (Binding _ a) =
-   -- typed value
-   cast a {- 
- `mplus` do
-   -- value as string
-   join $ liftM2 parser (gcast ref) (cast a) 
- `mplus` do
-   -- value as term
-   join $ liftM2 (match . refView) (gcast ref) (cast a) -}
-
 fromBinding :: Typeable a => Binding -> Maybe (Ref a, a)
 fromBinding (Binding ref a) = liftM2 (,) (gcast ref) (cast a)
 
@@ -133,64 +127,88 @@ singleBinding :: Typeable a => Ref a -> a -> Environment
 singleBinding ref = makeEnvironment . return . Binding ref
 
 class HasEnvironment env where 
-   environment :: env -> Environment 
-   deleteRef   :: Ref a -> env -> env
-   insertRef   :: Typeable a => Ref a -> a -> env -> env
-   changeRef   :: Typeable a => Ref a -> (a -> a) -> env -> env
-   -- default definition
+   environment    :: env -> Environment 
+   setEnvironment :: Environment -> env -> env
+   deleteRef      :: Ref a -> env -> env
+   insertRef      :: Typeable a => Ref a -> a -> env -> env
+   changeRef      :: Typeable a => Ref a -> (a -> a) -> env -> env
+   -- default definitions
+   deleteRef a = changeEnv (Env . M.delete (getId a) . envMap)
+   insertRef ref =
+      let f b = Env . M.insert (getId b) b . envMap
+      in changeEnv . f . Binding ref
    changeRef ref f env  =
       maybe id (insertRef ref . f) (ref ? env) env
 
+-- local helper
+changeEnv :: HasEnvironment env => (Environment -> Environment) -> env -> env
+changeEnv f env = setEnvironment (f (environment env)) env
+
 instance HasEnvironment Environment where
    environment    = id
-   deleteRef a   = Env . M.delete (getId a) . envMap
-   insertRef ref =
-      let f a = Env . M.insert (getId a) a . envMap
-      in f . Binding ref
-   
-(?) :: (HasEnvironment env, Typeable a) => Ref a -> env -> Maybe a
-ref ? env =
-   M.lookup (getId ref) (envMap (environment env)) >>= getTypedValue
-
+   setEnvironment = const
+      
 bindings :: HasEnvironment env => env -> [Binding]
 bindings = sortBy compareId . M.elems . envMap . environment
 
 noBindings :: HasEnvironment env => env -> Bool
 noBindings = M.null . envMap . environment
 
-{-
-data M m a where 
-   M    :: StateT Environment m a -> M m a
-   (:=) :: Typeable a => Ref a -> a -> M m ()
-   (:~) :: Typeable a => Ref a -> (a -> a) -> M m ()
+(?) :: (HasEnvironment env, Typeable a) => Ref a -> env -> Maybe a
+ref ? env = do
+   let m = envMap (environment env)
+   Binding _ a <- M.lookup (getId ref) m
+   msum [ cast a                         -- typed value
+        , cast a >>= parser ref          -- value as string
+        , cast a >>= match (refView ref) -- value as term
+        ]
 
-unM :: Monad m => M m a -> StateT Environment m a
+-----------------------------------------------------------
+-- Environment Monad
+
+type EnvMonad  = EnvMonadT Maybe
+type EnvsMonad = EnvMonadT []
+
+infix 2 :=, :~, :?
+
+data EnvMonadT m a where 
+   M    :: StateT Environment m a -> EnvMonadT m a
+   (:=) :: Typeable a => Ref a -> a -> EnvMonadT m ()
+   (:~) :: Typeable a => Ref a -> (a -> a) -> EnvMonadT m ()
+   (:?) :: Typeable a => Ref a -> a -> EnvMonadT m a
+
+unM :: Monad m => EnvMonadT m a -> StateT Environment m a
 unM (M s)      = s
 unM (ref := a) = modify (insertRef ref a)
 unM (ref :~ f) = modify (changeRef ref f)
+unM (ref :? a) = gets (fromMaybe a . (ref ?))
 
-instance Monad m => Monad (M m) where
+instance Monad m => Monad (EnvMonadT m) where
    return a = M $ return a
    m >>= f  = M $ unM m >>= unM . f
    fail s   = M $ fail s
 
-instance Monad m => MonadState Environment (M m) where
+instance MonadPlus m => MonadPlus (EnvMonadT m) where
+   mzero       = M mzero
+   a `mplus` b = M $ unM a `mplus` unM b
+
+instance Monad m => MonadState Environment (EnvMonadT m) where
    get = M get
    put = M . put
 
-getRef :: (Monad m, Typeable a) => Ref a -> M m a
+getRef :: (Monad m, Typeable a) => Ref a -> EnvMonadT m a
 getRef ref = M $ do
    env <- get
    maybe (fail "getRef") return (ref ? env)
 
-runM :: Monad m => M m a -> Environment -> m (a, Environment)
-runM = runStateT . unM
+updateRefs :: [EnvMonad a] -> Environment -> Environment
+updateRefs xs env = fromMaybe env (execEnvMonad (sequence_ xs) env)
 
-execM :: Monad m => M m a -> Environment -> m Environment
-execM = execStateT . unM
+runEnvMonad :: Monad m => EnvMonadT m a -> Environment -> m (a, Environment)
+runEnvMonad = runStateT . unM
 
-evalM :: Monad m => M m a -> Environment -> m a
-evalM = evalStateT . unM
+execEnvMonad :: Monad m => EnvMonadT m a -> Environment -> m Environment
+execEnvMonad = execStateT . unM
 
-s :: [M Maybe a] -> Environment -> Environment
-s xs env = fromMaybe env (execM (sequence_ xs) env) -}
+evalEnvMonad :: Monad m => EnvMonadT m a -> Environment -> m a
+evalEnvMonad = evalStateT . unM

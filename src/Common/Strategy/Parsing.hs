@@ -18,7 +18,7 @@ module Common.Strategy.Parsing
    , firsts, Result(..), isReady
    ) where
 
-import Common.Binding
+import Common.Environment
 import Common.Classes
 import Common.DerivationTree
 import Common.Strategy.Core

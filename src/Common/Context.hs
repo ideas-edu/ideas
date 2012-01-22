@@ -21,7 +21,7 @@ module Common.Context
    , use, useC, termNavigator, applyTop
    ) where
 
-import Common.Binding
+import Common.Environment
 import Common.Id
 import Common.Navigator
 import Common.Rewriting

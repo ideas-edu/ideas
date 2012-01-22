@@ -17,20 +17,20 @@ module Domain.LinearAlgebra.MatrixRules
 
 import Common.Library hiding (simplify, isEmpty)
 import Control.Monad
-import Data.List
 import Domain.LinearAlgebra.Matrix
+import Common.Utils
 import Domain.Math.Simplification
 
 ruleFindColumnJ :: Num a => Rule (Context (Matrix a))
 ruleFindColumnJ = minorRule $ makeRule (gaussId, "FindColumnJ") $ 
-   makeTransEnv $ same $ \m -> do
+   makeTransEnv_ $ \m -> do
       cols <- liftM columns (subMatrix m)
-      i    <- findIndexM nonZero cols   -- !! LIST
+      i    <- findIndexM nonZero cols
       columnJ := i
 
 ruleExchangeNonZero :: (Simplify a, Num a) => Rule (Context (Matrix a))
 ruleExchangeNonZero = simplify $ makeRule (gaussId, "exchange") $
-   supplyParameters (fmap liftToContext rowExchange) $ useEnv $ \m -> do
+   supplyContextParameters rowExchange $ \m -> do
       nonEmpty m
       j   <- getColumnJ
       col <- liftM (column j) (subMatrix m)
@@ -40,7 +40,7 @@ ruleExchangeNonZero = simplify $ makeRule (gaussId, "exchange") $
 
 ruleScaleToOne :: (Reference a, Simplify a, Fractional a) => Rule (Context (Matrix a))
 ruleScaleToOne = simplify $ makeRule (gaussId, "scale") $
-   supplyParameters (fmap liftToContext rowScale) $ useEnv $ \m -> do
+   supplyContextParameters rowScale $ \m -> do
       nonEmpty m
       j   <- getColumnJ
       cov <- getCovered
@@ -50,7 +50,7 @@ ruleScaleToOne = simplify $ makeRule (gaussId, "scale") $
 
 ruleZerosFP :: (Reference a, Simplify a, Fractional a) => Rule (Context (Matrix a))
 ruleZerosFP = simplify $ makeRule (gaussId, "add") $
-   supplyParameters (fmap liftToContext rowAdd) $ useEnv $ \m -> do
+   supplyContextParameters rowAdd $ \m -> do
       nonEmpty m
       j   <- getColumnJ
       col <- liftM (drop 1 . column j) (subMatrix m)
@@ -61,7 +61,7 @@ ruleZerosFP = simplify $ makeRule (gaussId, "add") $
 
 ruleZerosBP :: (Reference a, Simplify a, Fractional a) => Rule (Context (Matrix a))
 ruleZerosBP = simplify $ makeRule (gaussId, "add") $
-   supplyParameters (fmap liftToContext rowAdd) $ useEnv $ \m -> do
+   supplyContextParameters rowAdd $ \m -> do
       nonEmpty m
       ri <- liftM (row 0) (subMatrix m)
       let j   = length $ takeWhile (==0) ri
@@ -100,18 +100,12 @@ rowAdd = parameter3 "row1" "row2" "scale factor" $ \i j k ->
       return (addRow i j k m)
 
 changeCover :: (Int -> Int) -> Transformation (Context (Matrix a))
-changeCover f = makeTransEnv $ same $ \m -> do
+changeCover f = makeTransEnv_ $ \m -> do
    new <- liftM f getCovered
    guard (new >= 0 && new <= fst (dimensions m))
    covered := new
 
--- local helper function
-same :: (a -> EnvMonad b) -> a -> EnvMonad a
-same f a = f a >> return a
-
-useEnv :: (a -> EnvMonad b) -> Context a -> Maybe b
-useEnv f c = current c >>= \a -> evalEnvMonad (f a) (environment c)
-
+-- local helper functions
 validRow :: Int -> Matrix a -> Bool
 validRow i m = i >= 0 && i < fst (dimensions m)
 
@@ -130,9 +124,6 @@ subMatrix :: Matrix a -> EnvMonad (Matrix a)
 subMatrix m = do
     cov <- getCovered
     return $ makeMatrix $ drop cov $ rows m
-
-findIndexM :: MonadPlus m => (a -> Bool) -> [a] -> m Int
-findIndexM p = maybe mzero return . findIndex p
 
 gaussId :: Id
 gaussId = newId "linearalgebra.gaussianelim"

@@ -24,7 +24,7 @@ module Common.Rewriting.RewriteRule
    , symbolMatcher, symbolBuilder
    ) where
 
-import Common.Binding
+import Common.Environment
 import Common.Classes
 import Common.Id
 import Common.Rewriting.Substitution

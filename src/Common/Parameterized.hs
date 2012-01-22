@@ -22,7 +22,7 @@ module Common.Parameterized
      parameter1, parameter2, parameter3
    ) where
 
-import Common.Binding
+import Common.Environment
 import Common.Id
 import qualified Control.Category as C
 import Control.Arrow

@@ -12,7 +12,7 @@
 -- References, bindings, and heterogenous environments
 --
 -----------------------------------------------------------------------------
-module Common.Binding
+module Common.Environment
    ( -- * Reference 
      Ref, Reference(..)
      -- * Binding
@@ -23,7 +23,7 @@ module Common.Binding
    , HasEnvironment(..)
    , bindings, noBindings, (?)
      -- * Environment Monad
-   , EnvMonad, EnvsMonad, EnvMonadT((:=), (:~), (:?))
+   , EnvMonad, EnvMonadT((:=), (:~), (:?))
    , getRef, updateRefs
    , runEnvMonad, execEnvMonad, evalEnvMonad
    ) where
@@ -166,8 +166,7 @@ ref ? env = do
 -----------------------------------------------------------
 -- Environment Monad
 
-type EnvMonad  = EnvMonadT Maybe
-type EnvsMonad = EnvMonadT []
+type EnvMonad = EnvMonadT Maybe
 
 infix 2 :=, :~, :?
 

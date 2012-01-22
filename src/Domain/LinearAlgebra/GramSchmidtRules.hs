@@ -17,8 +17,8 @@ module Domain.LinearAlgebra.GramSchmidtRules
 
 import Common.Library hiding (current)
 import Control.Monad
+import Common.Utils
 import Domain.LinearAlgebra.Vector
-import qualified Common.Navigator as N
 
 varI, varJ :: Ref Int
 varI = makeRef "considered"
@@ -43,7 +43,7 @@ ruleNormalize = makeRule "Turn into unit Vector" $ makeTransEnv $ \vs -> do
 -- that has already been considered
 ruleOrthogonal :: (Floating a, Reference a) => Rule (Context (VectorSpace a))
 ruleOrthogonal = makeRule "Make orthogonal" $ 
-   supplyParameters transOrthogonal $ useEnv $ \_ -> do
+   supplyContextParameters transOrthogonal $ \_ -> do
       i <- getVarI
       j <- getVarJ
       guard (i>j)
@@ -52,7 +52,7 @@ ruleOrthogonal = makeRule "Make orthogonal" $
 -- Variable "j" is for administrating which vectors are already orthogonal
 ruleNextOrthogonal :: Rule (Context (VectorSpace a))
 ruleNextOrthogonal = minorRule $ makeRule "Orthogonal to next" $ 
-   makeTransEnv $ same $ \_ -> do
+   makeTransEnv_ $ const $ do
       i <- getVarI
       j <- liftM succ getVarJ
       guard (j < i)
@@ -62,7 +62,7 @@ ruleNextOrthogonal = minorRule $ makeRule "Orthogonal to next" $
 -- This rule should fail if there are no vectors left
 ruleNext :: Rule (Context (VectorSpace a))
 ruleNext = minorRule $ makeRule "Consider next vector" $ 
-   makeTransEnv $ same $ \vs -> do
+   makeTransEnv_ $ \vs -> do
       i <- getVarI
       guard (i < length (vectors vs))
       varI := i+1
@@ -70,9 +70,9 @@ ruleNext = minorRule $ makeRule "Consider next vector" $
 
 -- Two indices, change the second vector and make it orthogonal
 -- to the first
-transOrthogonal :: (Reference a, Floating a) => ParamTrans (Int, Int) (Context (VectorSpace a))
+transOrthogonal :: (Reference a, Floating a) => ParamTrans (Int, Int) (VectorSpace a)
 transOrthogonal = parameter2 "vector 1" "vector 2" $ \i j -> 
-   liftToContext $ makeTrans $ \a -> do
+   makeTrans $ \a -> do
       guard (i /= j && i >=0 && j >= 0)
       let vs = vectors a
       u <- elementAt i vs
@@ -88,24 +88,3 @@ setCurrent :: Vector a -> VectorSpace a -> EnvMonad (VectorSpace a)
 setCurrent v vs = do
    i <- getVarI
    liftM makeVectorSpace $ replaceAt (i-1) v $ vectors vs
-   
-useEnv :: (a -> EnvMonad b) -> Context a -> Maybe b
-useEnv f c = N.current c >>= \a -> evalEnvMonad (f a) (environment c)
-
-same :: (a -> EnvMonad b) -> a -> EnvMonad a
-same f a = f a >> return a
-
-elementAt :: Monad m => Int -> [a] -> m a
-elementAt i as =
-   case drop i as of
-      hd:_ -> return hd
-      _    -> fail "elementAt"
-
-changeAt :: Monad m => Int -> (a -> a) -> [a] -> m [a]
-changeAt i f as =
-   case splitAt i as of
-      (xs, y:ys) -> return (xs ++ f y : ys)
-      _          -> fail "changeAt"
-
-replaceAt :: Monad m => Int -> a -> [a] -> m [a]
-replaceAt i = changeAt i . const

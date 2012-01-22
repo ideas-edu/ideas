@@ -25,7 +25,7 @@ module Common.Rule
    ) where
 
 import qualified Common.Algebra.Field as Field
-import Common.Binding
+import Common.Environment
 import Common.Classes
 import Common.Id
 import Common.Rewriting

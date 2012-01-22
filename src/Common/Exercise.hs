@@ -39,7 +39,7 @@ module Common.Exercise
    , checkExamples, exerciseTestSuite
    ) where
 
-import Common.Binding
+import Common.Environment
 import Common.Classes
 import Common.Context
 import Common.Derivation

@@ -24,6 +24,7 @@ import Data.Maybe
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.LinearView
 import Domain.LinearAlgebra.MatrixRules (covered, getCovered) -- for context
+import Common.Utils
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Simplification (simplify)
@@ -43,7 +44,7 @@ equationsRules =
 ruleExchangeEquations :: Rule (Context (LinearSystem Expr))
 ruleExchangeEquations = describe "Exchange two equations" $
    simplifySystem $ makeRule (linId, "exchange") $
-   supplyParameters (fmap liftToContext exchangeEquations) $ useEnv $ \ls -> do
+   supplyContextParameters exchangeEquations $ \ls -> do
       mv  <- minvar ls
       eqs <- remaining ls
       i   <- findIndexM (elem mv . getVarsSystem . return) eqs
@@ -53,7 +54,7 @@ ruleExchangeEquations = describe "Exchange two equations" $
 ruleEliminateVar :: Rule (Context (LinearSystem Expr))
 ruleEliminateVar = describe "Eliminate a variable (using addition)" $
    simplifySystem $ makeRule (linId, "eliminate") $
-   supplyParameters (fmap liftToContext addEquations) $ useEnv $ \ls -> do
+   supplyContextParameters addEquations $ \ls -> do
       mv <- minvar ls
       hd:rest <- remaining ls
       let getCoef = coefficientOf mv . leftHandSide
@@ -83,7 +84,7 @@ ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
 ruleScaleEquation :: Rule (Context (LinearSystem Expr))
 ruleScaleEquation = describe "Scale equation to one" $
    simplifySystem $ makeRule (linId, "scale") $
-   supplyParameters (fmap liftToContext scaleEquation) $ useEnv $ \ls -> do
+   supplyContextParameters scaleEquation $ \ls -> do
       cov <- getCovered
       eq  <- elementAt cov ls
       let expr = leftHandSide eq
@@ -95,7 +96,7 @@ ruleScaleEquation = describe "Scale equation to one" $
 ruleBackSubstitution :: Rule (Context (LinearSystem Expr))
 ruleBackSubstitution = describe "Back substitution" $
    simplifySystem $ makeRule (linId, "subst") $
-   supplyParameters (fmap liftToContext addEquations) $ useEnv $ \ls -> do
+   supplyContextParameters addEquations $ \ls -> do
       cov <- getCovered
       eq  <- elementAt cov ls
       let expr = leftHandSide eq
@@ -146,7 +147,7 @@ simplifySystem = doAfter $ change (map (fmap f))
 -- Parameterized transformations
 
 exchangeEquations :: ParamTrans (Int, Int) (LinearSystem a)
-exchangeEquations = parameter2 "equation 1" "equation 2" $ exchange
+exchangeEquations = parameter2 "equation 1" "equation 2" exchange
  where
    exchange i j 
       | i > j     = exchange j i
@@ -169,7 +170,7 @@ addEquations = parameter3 "equation 1" "equation 2" "scale factor" $ \i j a -> m
    changeAt i f xs
 
 changeCover :: (Int -> Int) -> Transformation (Context (LinearSystem a))
-changeCover f = makeTransEnv $ same $ \ls -> do
+changeCover f = makeTransEnv_ $ \ls -> do
    new <- liftM f getCovered
    guard (new >= 0 && new <= length ls)
    covered := new
@@ -177,9 +178,6 @@ changeCover f = makeTransEnv $ same $ \ls -> do
 -- local helper function
 validEquation :: Int -> [a] -> Bool
 validEquation n xs = n >= 0 && n < length xs
-
---------------------
--- TEMP
 
 -- | The equations that remain to be solved
 remaining :: LinearSystem a -> EnvMonad (Equations a)
@@ -193,25 +191,3 @@ minvar ls = do
    list <- liftM getVarsSystem (remaining ls)
    guard (not $ null list)
    return (minimum list)
-
-findIndexM :: MonadPlus m => (a -> Bool) -> [a] -> m Int
-findIndexM p = maybe mzero return . findIndex p
-
-useEnv :: (a -> EnvMonad b) -> Context a -> Maybe b
-useEnv f c = current c >>= \a -> evalEnvMonad (f a) (environment c)
-
-elementAt :: Monad m => Int -> [a] -> m a
-elementAt i = headM . drop i
-      
-headM :: Monad m => [a] -> m a
-headM (a:_) = return a
-headM _     = fail "headM"
-
-changeAt :: Monad m => Int -> (a -> a) -> [a] -> m [a]
-changeAt i f as =
-   case splitAt i as of
-      (xs, y:ys) -> return (xs ++ f y : ys)
-      _          -> fail "changeAt"
-      
-same :: (a -> EnvMonad b) -> a -> EnvMonad a
-same f a = f a >> return a

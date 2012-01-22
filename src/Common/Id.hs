@@ -42,7 +42,7 @@ instance Show Id where
 
 instance Read Id where
    readsPrec _ =
-      return . mapFirst stringId . break (not . isIdChar) . dropWhile isSpace
+      return . mapFirst stringId . span isIdChar . dropWhile isSpace
 
 instance Eq Id where
    a == b = idRef a == idRef b

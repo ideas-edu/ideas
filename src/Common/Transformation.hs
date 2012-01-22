@@ -19,9 +19,10 @@
 module Common.Transformation
    ( -- * Transformations
      Transformation, HasTransformation(..)
-   , makeTrans, makeTransG, makeTransEnv, applyTransformation
+   , makeTrans, makeTransG, makeTransEnv, makeTransEnv_
+   , applyTransformation
      -- * Bindables
-   , ParamTrans, supplyEnvironment, supplyParameters
+   , ParamTrans, supplyEnvironment, supplyParameters, supplyContextParameters
      -- * Recognizers
    , transRecognizer
      -- * Extract information
@@ -34,8 +35,9 @@ module Common.Transformation
    ) where
 
 import Common.Algebra.Field
-import Common.Binding
+import Common.Environment
 import Common.Classes
+import Common.Context
 import Common.Id
 import Common.Navigator
 import Common.Parameterized
@@ -93,12 +95,14 @@ makeTrans = makeTransG
 makeTransG ::  Foldable f => (a -> f a) -> Transformation a
 makeTransG f = Function $ \a -> [ (b, mempty) | b <- toList (f a) ]
 
-makeTransEnv :: (IsNavigator f, HasEnvironment (f a)) 
-                 => (a -> EnvMonad a) -> Transformation (f a)
+makeTransEnv :: (a -> EnvMonad a) -> Transformation (Context a)
 makeTransEnv f = makeTrans $ \ca -> do
    a <- current ca
    (b, env) <- runEnvMonad (f a) (environment ca)
    return (setEnvironment env (replace b ca))
+
+makeTransEnv_ :: (a -> EnvMonad ()) -> Transformation (Context a)
+makeTransEnv_ f = makeTransEnv (\a -> f a >> return a)
 
 -----------------------------------------------------------
 --- HasTransformation type class
@@ -125,11 +129,17 @@ supplyParameters f g = Function $ \a -> do
    (c, env2) <- applyTransformation trans a
    return (c, env2 `mappend` env1)
 
+supplyContextParameters :: ParamTrans b a -> (a -> EnvMonad b) -> Transformation (Context a)
+supplyContextParameters f g = supplyParameters newf newg 
+ where
+   newf   = fmap liftToContext f
+   newg c = current c >>= \a -> evalEnvMonad (g a) (environment c)
+
 supplyEnvironment :: (a -> Maybe (a, Environment)) -> Transformation a
 supplyEnvironment f = Function (toList . f)
 
 -----------------------------------------------------------
---- Rules
+--- Ruless
 
 getRewriteRules :: HasTransformation f => f a -> [Some RewriteRule]
 getRewriteRules = rec . transformation 

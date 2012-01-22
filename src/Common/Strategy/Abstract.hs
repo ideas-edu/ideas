@@ -23,7 +23,7 @@ module Common.Strategy.Abstract
    , removed, collapsed, hidden, IsLabeled(..), noInterleaving
    ) where
 
-import Common.Binding
+import Common.Environment
 import Common.Classes
 import Common.DerivationTree
 import Common.Id

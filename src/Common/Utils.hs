@@ -16,14 +16,15 @@ module Common.Utils
    ( Some(..), ShowString(..), readInt, readM
    , subsets, isSubsetOf
    , cartesian, distinct, allsame
-   , safeHead, fixpoint
+   , fixpoint
    , splitAtElem, splitsWithElem
-   , useFixedStdGen, fst3, snd3, thd3, commaList
+   , useFixedStdGen, fst3, snd3, thd3
+   , headM, findIndexM
+   , elementAt, changeAt, replaceAt
    ) where
 
 import Data.Char
 import Data.List
-import Data.Maybe
 import System.Random
 
 data Some f = forall a . Some (f a)
@@ -63,10 +64,6 @@ allsame :: Eq a => [a] -> Bool
 allsame []     = True
 allsame (x:xs) = all (==x) xs
 
-{-# DEPRECATED safeHead "Use Data.Maybe.listToMaybe instead" #-}
-safeHead :: [a] -> Maybe a
-safeHead = listToMaybe
-
 fixpoint :: Eq a => (a -> a) -> a -> a
 fixpoint f = stop . iterate f
  where
@@ -101,6 +98,22 @@ snd3 (_, x, _) = x
 thd3 :: (a, b, c) -> c
 thd3 (_, _, x) = x
 
-{-# DEPRECATED commaList "Use Data.List.intercalate \", \" instead" #-}
-commaList :: [String] -> String
-commaList = intercalate ", "
+-- generalized list functions (results in monad)
+headM :: Monad m => [a] -> m a
+headM (a:_) = return a
+headM _     = fail "headM"
+
+findIndexM :: Monad m => (a -> Bool) -> [a] -> m Int
+findIndexM p = maybe (fail "findIndexM") return . findIndex p
+
+elementAt :: Monad m => Int -> [a] -> m a
+elementAt i = headM . drop i
+
+changeAt :: Monad m => Int -> (a -> a) -> [a] -> m [a]
+changeAt i f as =
+   case splitAt i as of
+      (xs, y:ys) -> return (xs ++ f y : ys)
+      _          -> fail "changeAt"
+
+replaceAt :: Monad m => Int -> a -> [a] -> m [a]
+replaceAt i = changeAt i . const

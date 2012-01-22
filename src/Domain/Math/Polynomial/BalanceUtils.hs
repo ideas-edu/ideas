@@ -14,9 +14,10 @@ module Domain.Math.Polynomial.BalanceUtils
    , matchLin, matchPlusCon
    , cleaner, cleanerExpr
    , linbal, checkForChange
-   , termArg, factorArg, factorArgs
-   , buggyBalanceRule, buggyBalanceRuleArgs
-   , buggyBalanceExprRule, buggyBalanceRecognizer
+   , termRef, factorRef, factor1Ref, factor2Ref
+   , buggyBalanceRule, buggyBalanceRuleArg
+   , buggyBalanceExprRule
+   , buggyBalanceRecognizer
    , collectLocal, collectGlobal
    , distributeDiv, distributeTimes
    , isPlusT, diffPlus
@@ -29,7 +30,6 @@ import Common.Utils.Uniplate
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Data.Monoid
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
 import Domain.Math.Data.WithBool
@@ -56,17 +56,17 @@ minusView = makeView isMinus (uncurry (:-:))
 negView :: View Expr Expr
 negView = makeView isNegate Negate
 
-matchLin :: Expr -> Maybe (Expr, Rational, Rational)
+matchLin :: MonadPlus m => Expr -> m (Expr, Rational, Rational)
 matchLin expr = do
-   (s, p) <- match (polyNormalForm rationalView) expr
+   (s, p) <- matchM (polyNormalForm rationalView) expr
    guard (degree p == 1)
    return (Var s, coefficient 1 p, coefficient 0 p)
 
-matchPlusCon :: Expr -> Maybe (Expr, Rational)
+matchPlusCon :: MonadPlus m => Expr -> m (Expr, Rational)
 matchPlusCon expr =
-   match (plusView >>> second rationalView) expr
+   matchM (plusView >>> second rationalView) expr
  `mplus`
-   match (plusView >>> toView swapView >>> second rationalView) expr
+   matchM (plusView >>> toView swapView >>> second rationalView) expr
 
 ------------------------------------------------------------
 -- Strategy
@@ -120,19 +120,13 @@ nonsense = any p . universe
    p _         = False
 
 ------------------------------------------------------------
--- Arguments
+-- References
 
-termArg :: Expr -> Environment
-termArg = singleBinding (makeRef "term")
-
-
-factorArg :: Expr -> Environment
-factorArg = singleBinding (makeRef "factor")
-
-factorArgs :: [Expr] -> Environment
-factorArgs =
-   let f = singleBinding . makeRef . ("factor" ++) . show
-   in mconcat . zipWith f [1::Int ..]
+termRef, factorRef, factor1Ref, factor2Ref :: Ref Expr
+termRef    = makeRef "term"
+factorRef  = makeRef "factor"
+factor1Ref = makeRef "factor1"
+factor2Ref = makeRef "factor2"
 
 ------------------------------------------------------------
 -- Rules
@@ -152,9 +146,9 @@ buggyBalanceRule n f = useEquality eq $ buggyRule $
  where
    eq = viewEquivalent (traverseView (polyViewWith rationalView))
 
-buggyBalanceRuleArgs :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr, Environment)) -> Rule (Equation Expr)
-buggyBalanceRuleArgs n f = useEquality eq $ buggyRule $ 
-   makeRule (bugbal n) $ supplyEnvironment f
+buggyBalanceRuleArg :: IsId n => n -> (Equation Expr -> EnvMonad (Equation Expr)) -> Rule (Equation Expr)
+buggyBalanceRuleArg n = useEquality eq . buggyRule .
+   makeRule (bugbal n) . supplyLocals
  where
    eq = viewEquivalent (traverseView (polyViewWith rationalView))
 
@@ -162,9 +156,10 @@ buggyBalanceExprRule :: IsId n => n -> (Expr -> Maybe Expr) -> Rule Expr
 buggyBalanceExprRule n f = 
    buggyRule $ makeSimpleRule (bugbal n) f
 
-buggyBalanceRecognizer :: IsId n => n -> (a -> a -> Maybe Environment) -> Recognizer a
+buggyBalanceRecognizer :: IsId n => n -> (a -> a -> EnvMonad ()) -> Recognizer a
 buggyBalanceRecognizer n p = 
-   buggyRecognizer $ makeRecognizer (bugbal n) p
+   let eq a b = execEnvMonad (p a b) mempty
+   in buggyRecognizer $ makeRecognizer (bugbal n) eq
 
 ------------------------------------------------------------
 -- Helpers
@@ -236,12 +231,12 @@ diffTimesEq (a1 :==: a2) (b1 :==: b2) = do
    guard (d1 == d2)
    return d1
 
-diffTimes :: Expr -> Expr -> Maybe Expr
+diffTimes :: MonadPlus m => Expr -> Expr -> m Expr
 diffTimes a b = do
    let myView = polyViewWith rationalView
    (x, pa) <- matchM myView a
    (y, pb) <- matchM myView b
    guard (x==y)
    if pa==0 && pb==0 then return 1 else do
-   d <- pb `safeDiv` pa
+   d <- maybe (fail "diffTimes") return (pb `safeDiv` pa)
    return $ build myView (x, d)

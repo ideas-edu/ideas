@@ -22,7 +22,8 @@ module Common.Transformation
    , makeTrans, makeTransG, makeTransEnv, makeTransEnv_
    , applyTransformation
      -- * Bindables
-   , ParamTrans, supplyEnvironment, supplyParameters, supplyContextParameters
+   , ParamTrans, supplyLocals
+   , supplyParameters, supplyContextParameters
      -- * Recognizers
    , transRecognizer
      -- * Extract information
@@ -135,8 +136,8 @@ supplyContextParameters f g = supplyParameters newf newg
    newf   = fmap liftToContext f
    newg c = current c >>= \a -> evalEnvMonad (g a) (environment c)
 
-supplyEnvironment :: (a -> Maybe (a, Environment)) -> Transformation a
-supplyEnvironment f = Function (toList . f)
+supplyLocals :: (a -> EnvMonad a) -> Transformation a
+supplyLocals f = Function $ toList . flip runEnvMonad mempty . f
 
 -----------------------------------------------------------
 --- Ruless

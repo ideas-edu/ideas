@@ -19,7 +19,7 @@ module Common.Rewriting.RewriteRule
      -- * Compiling rewrite rules
    , rewriteRule, RuleBuilder(..)
      -- * Using rewrite rules
-   , showRewriteRule, smartGenerator
+   , showRewriteRule
    , metaInRewriteRule, renumberRewriteRule
    , symbolMatcher, symbolBuilder
    ) where
@@ -35,7 +35,6 @@ import Common.View hiding (match)
 import Control.Monad
 import Data.Maybe
 import Data.Monoid
-import Test.QuickCheck
 import qualified Data.IntSet as IS
 import qualified Data.Map as M
 
@@ -56,7 +55,6 @@ data RewriteRule a = R
    , ruleTermView   :: View Term a
    , ruleMatchers   :: M.Map Symbol SymbolMatch
    , ruleBuilders   :: M.Map Symbol ([Term] -> Term)
-   , smartGenerator :: Gen a
    }
 
 instance Show (RewriteRule a) where
@@ -80,15 +78,12 @@ instance Different Char where
 
 class (IsTerm a, Show a) => RuleBuilder t a | t -> a where
    buildRuleSpec  :: Int -> t -> RuleSpec Term
-   buildGenerator :: t -> Gen a
 
 instance (IsTerm a, Show a) => RuleBuilder (RuleSpec a) a where
    buildRuleSpec  = const $ fmap toTerm
-   buildGenerator (a :~> _) = return a
 
-instance (Arbitrary a, Different a, RuleBuilder t b) => RuleBuilder (a -> t) b where
+instance (Different a, RuleBuilder t b) => RuleBuilder (a -> t) b where
    buildRuleSpec i f = buildFunction i (buildRuleSpec (i+1) . f)
-   buildGenerator f  = liftM f arbitrary >>= buildGenerator
 
 buildFunction :: Different a => Int -> (a -> RuleSpec Term) -> RuleSpec Term
 buildFunction n f = fzip (fill n) ((f *** f) different)
@@ -126,7 +121,7 @@ buildSpec sm sb (lhs :~> rhs) a = do
 
 rewriteRule :: (IsId n, RuleBuilder f a) => n -> f -> RewriteRule a
 rewriteRule s f = 
-   R (newId s) (buildRuleSpec 0 f) show termView M.empty M.empty (buildGenerator f)
+   R (newId s) (buildRuleSpec 0 f) show termView M.empty M.empty
 
 symbolMatcher :: Symbol -> SymbolMatch -> RewriteRule a -> RewriteRule a
 symbolMatcher s f r = r {ruleMatchers = M.insert s f (ruleMatchers r)}

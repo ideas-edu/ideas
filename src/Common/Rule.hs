@@ -19,22 +19,21 @@ module Common.Rule
    , finalRule, isFinalRule, ruleSiblings, rule, ruleList
    , makeRule, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doAfter
-   , siblingOf, useEquality, ruleEquality, transformation, ruleRecognizer
-     -- * QuickCheck
-   , propRule, propRuleSmart
+   , siblingOf, useEquality, ruleEquality, ruleRecognizer, getRewriteRules
    ) where
 
-import qualified Common.Algebra.Field as Field
 import Common.Environment
 import Common.Classes
 import Common.Id
 import Common.Rewriting
 import Common.Transformation
+import Common.Utils
 import Common.View
 import Control.Monad
 import Data.Foldable
 import Data.Function
 import Data.Maybe
+import Data.Monoid
 import Test.QuickCheck
 
 -----------------------------------------------------------
@@ -44,7 +43,6 @@ import Test.QuickCheck
 data Rule a = Rule
    { ruleId       :: Id  -- ^ Unique identifier of the rule
    , ruleTrans    :: Transformation a
-   , afterwards   :: a -> a
    , isBuggyRule  :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
    , isMinorRule  :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
    , isFinalRule  :: Bool -- ^ Final (clean-up) step in derivation
@@ -65,7 +63,7 @@ instance Apply Rule where
    applyAll r = map fst . applyRule r
 
 applyRule :: Rule a -> a -> [(a, Environment)]
-applyRule r = map (mapFirst (afterwards r)) . applyTransformation (transformation r)
+applyRule = applyTransformation . ruleTrans
 
 instance HasId (Rule a) where
    getId        = ruleId
@@ -73,16 +71,12 @@ instance HasId (Rule a) where
 
 instance LiftView Rule where
    liftViewIn v r = r
-      { ruleTrans    = liftViewIn v (ruleTrans r)
-      , afterwards   = simplifyWith (mapFirst (afterwards r)) v
+      { ruleTrans    = liftViewInTrans v (ruleTrans r)
       , ruleEquality = fmap liftEq (ruleEquality r)
       }
     where
        liftEq eq x y = fromMaybe False $ 
           liftM2 (on eq fst) (match v x) (match v y)
-
-instance HasTransformation Rule where
-   transformation = ruleTrans
 
 instance (Arbitrary a, CoArbitrary a) => Arbitrary (Rule a) where
    arbitrary = liftM3 make arbitrary arbitrary arbitrary
@@ -97,22 +91,22 @@ isMajorRule :: Rule a -> Bool
 isMajorRule = not . isMinorRule
 
 isRewriteRule :: Rule a -> Bool
-isRewriteRule = not . null . getRewriteRules
+isRewriteRule = not . null . transRewriteRules . ruleTrans
 
 siblingOf :: HasId b => b -> Rule a -> Rule a
 siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
 
 ruleList :: (IsId n, RuleBuilder f a) => n -> [f] -> Rule a
-ruleList n = makeRule a . Field.sum . map (transformation . rewriteRule a)
+ruleList n = makeRule a . mconcat . map (makeRewriteTrans . rewriteRule a)
  where a = newId n
 
 rule :: (IsId n, RuleBuilder f a) => n -> f -> Rule a
-rule n = makeRule a . transformation . rewriteRule a
+rule n = makeRule a . makeRewriteTrans . rewriteRule a
  where a = newId n
 
 -- | Turn a transformation into a rule: the first argument is the rule's name
 makeRule :: IsId n => n -> Transformation a -> Rule a
-makeRule n t = Rule (newId n) t id False False False [] Nothing
+makeRule n t = Rule (newId n) t False False False [] Nothing
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: 
 -- the first argument is the rule's name
@@ -153,7 +147,7 @@ finalRule r = r {isFinalRule = True}
 
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a
-doAfter f r = r {afterwards = f . afterwards r}
+doAfter f r = r {ruleTrans = sequenceTrans (ruleTrans r) (makeTrans (Just . f)) }
 
 useEquality :: (a -> a -> Bool) -> Rule a -> Rule a
 useEquality eq r = r {ruleEquality = Just eq}
@@ -161,27 +155,7 @@ useEquality eq r = r {ruleEquality = Just eq}
 ruleRecognizer :: (a -> a -> Bool) -> Rule a -> Recognizer a
 ruleRecognizer eq0 r = 
    let eq = fromMaybe eq0 (ruleEquality r)
-   in transRecognizer eq (getId r) (transformation r)
-
------------------------------------------------------------
---- QuickCheck
-
-propRule :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
-propRule eq r gen =
-   forAll gen $ \a ->
-   let xs = applyAll r a in 
-   not (null xs) ==> 
-   forAll (elements xs) $ \b -> 
-   a `eq` b
-
--- | Check the soundness of a rule and use a "smart generator" for this. The smart generator
--- behaves differently on transformations constructed with a (|-), and for these transformations,
--- the left-hand side patterns are used (meta variables are instantiated with random terms)
-propRuleSmart :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
-propRuleSmart eq r = propRule eq r . smartGenRule r
-
-smartGenRule :: Rule a -> Gen a -> Gen a
-smartGenRule r gen = frequency [(2, gen), (1, smart)]
- where
-   smart = gen >>= \a ->
-      oneof (gen : maybeToList (smartGen r a))
+   in transRecognizer eq (getId r) (ruleTrans r)
+   
+getRewriteRules :: Rule a -> [Some RewriteRule]
+getRewriteRules = transRewriteRules . ruleTrans

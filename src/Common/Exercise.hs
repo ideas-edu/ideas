@@ -389,6 +389,7 @@ exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseId ex)) $ do
          addProperty "parser/pretty printer" $ forAll showAsGen $
             checkParserPrettyEx ex . inContext ex . fromS
 
+         {-
          suite "Soundness non-buggy rules" $
             forM_ (filter (not . isBuggyRule) $ ruleset ex) $ \r ->
                let eq a b = equivalence ex (fromS a) (fromS b)
@@ -396,7 +397,7 @@ exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseId ex)) $ do
                    myView = makeView (return . fromS) (S (prettyPrinterContext ex))
                    args   = stdArgs {maxSize = 10, maxSuccess = 10, maxDiscard = 100}
                in addPropertyWith (showId r) args $
-                     propRuleSmart eq (liftView myView r) myGen
+                     propRuleSmart eq (liftView myView r) myGen -}
 
          addProperty "soundness strategy/generator" $
             forAll showAsGen $
@@ -421,6 +422,15 @@ checkParserPrettyEx ex ca =
    let f    = mapSecond make . parser ex
        make = newContext (environment ca) . navigation ex
    in checkParserPretty (similarity ex) f (prettyPrinterContext ex) ca
+
+{-
+propRule :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
+propRule eq r gen =
+   forAll gen $ \a ->
+   let xs = applyAll r a in 
+   not (null xs) ==> 
+   forAll (elements xs) $ \b -> 
+   a `eq` b -}
 
 checkExamples :: Exercise a -> TestSuite
 checkExamples ex = do

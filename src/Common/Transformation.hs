@@ -18,8 +18,8 @@
 -----------------------------------------------------------------------------
 module Common.Transformation
    ( -- * Transformations
-     Transformation, HasTransformation(..)
-   , makeTrans, makeTransG, makeTransEnv, makeTransEnv_
+     Transformation, liftViewInTrans, sequenceTrans
+   , makeTrans, makeTransG, makeTransEnv, makeRewriteTrans, makeTransEnv_
    , applyTransformation
      -- * Bindables
    , ParamTrans, supplyLocals
@@ -27,15 +27,12 @@ module Common.Transformation
      -- * Recognizers
    , transRecognizer
      -- * Extract information
-   , getRewriteRules
-     -- * QuickCheck generator
-   , smartGen
+   , transRewriteRules
      -- * Recognizer
    , Recognizer, makeRecognizer, makeListRecognizer, simpleRecognizer
    , recognize, recognizeList, buggyRecognizer, isBuggyRecognizer
    ) where
 
-import Common.Algebra.Field
 import Common.Environment
 import Common.Classes
 import Common.Context
@@ -49,7 +46,6 @@ import Control.Monad
 import Data.Foldable
 import Data.Maybe
 import Data.Monoid
-import Test.QuickCheck
 
 -----------------------------------------------------------
 --- Transformations
@@ -62,14 +58,9 @@ data Transformation a
    | Transformation a :*: Transformation a
    | Transformation a :|: Transformation a
 
-instance SemiRing (Transformation a) where
-   zero  = makeTrans (const Nothing)
-   (<+>) = (:|:)
-   one   = makeTrans Just
-   (<*>) = (:*:)
-
-instance Apply Transformation where
-   applyAll t = map fst . applyTransformation t
+instance Monoid (Transformation a) where
+   mempty  = makeTrans (const Nothing)
+   mappend = (:|:)
 
 applyTransformation :: Transformation a -> a -> [(a, Environment)]
 applyTransformation trans a =
@@ -85,12 +76,18 @@ applyTransformation trans a =
          (c, env2) <- applyTransformation t2 b
          return (c, env2 `mappend` env1)
 
-instance LiftView Transformation where
-   liftViewIn = LiftView
+liftViewInTrans :: View a (b, c) -> Transformation b -> Transformation a
+liftViewInTrans = LiftView
+
+sequenceTrans :: Transformation a -> Transformation a -> Transformation a
+sequenceTrans = (:*:)
 
 -- | Turn a function (which returns its result in the Maybe monad) into a transformation
 makeTrans :: (a -> Maybe a) -> Transformation a
 makeTrans = makeTransG
+
+makeRewriteTrans :: RewriteRule a -> Transformation a
+makeRewriteTrans r = RewriteRule r (applyAll r)
 
 -- | Turn a function (which returns a list of results) into a transformation
 makeTransG ::  Foldable f => (a -> f a) -> Transformation a
@@ -104,19 +101,6 @@ makeTransEnv f = makeTrans $ \ca -> do
 
 makeTransEnv_ :: (a -> EnvMonad ()) -> Transformation (Context a)
 makeTransEnv_ f = makeTransEnv (\a -> f a >> return a)
-
------------------------------------------------------------
---- HasTransformation type class
-
-class HasTransformation f where
-   transformation :: f a -> Transformation a
-
-instance HasTransformation Transformation where
-   transformation = id
-
-instance HasTransformation RewriteRule where
-   -- no matching information is used
-   transformation r = RewriteRule r (applyAll r)
 
 -----------------------------------------------------------
 --- Bindables
@@ -133,56 +117,29 @@ supplyParameters f g = Function $ \a -> do
 supplyContextParameters :: ParamTrans b a -> (a -> EnvMonad b) -> Transformation (Context a)
 supplyContextParameters f g = supplyParameters newf newg 
  where
-   newf   = fmap liftToContext f
+   newf   = fmap (LiftView contextView) f
    newg c = current c >>= \a -> evalEnvMonad (g a) (environment c)
 
 supplyLocals :: (a -> EnvMonad a) -> Transformation a
 supplyLocals f = Function $ toList . flip runEnvMonad mempty . f
 
 -----------------------------------------------------------
---- Ruless
+--- Rules
 
-getRewriteRules :: HasTransformation f => f a -> [Some RewriteRule]
-getRewriteRules = rec . transformation 
- where
-   rec :: Transformation a -> [Some RewriteRule]
-   rec trans =
-      case trans of
-         Function _        -> []
-         RewriteRule rr _  -> [Some rr]
-         LiftView _ t      -> rec t
-         t1 :|: t2         -> rec t1 ++ rec t2
-         t1 :*: t2         -> rec t1 ++ rec t2
+transRewriteRules :: Transformation a -> [Some RewriteRule]
+transRewriteRules trans =
+   case trans of
+      Function _        -> []
+      RewriteRule rr _  -> [Some rr]
+      LiftView _ t      -> transRewriteRules t
+      t1 :|: t2         -> transRewriteRules t1 ++ transRewriteRules t2
+      t1 :*: t2         -> transRewriteRules t1 ++ transRewriteRules t2
 
-transRecognizer :: (IsId n, HasTransformation f)
-                => (a -> a -> Bool) -> n -> f a -> Recognizer a
+transRecognizer :: IsId n => (a -> a -> Bool) -> n -> Transformation a -> Recognizer a
 transRecognizer eq n f = makeListRecognizer n $ \a b -> do
-   (x, env) <- applyTransformation (transformation f) a
+   (x, env) <- applyTransformation f a
    guard (x `eq` b)
    return env
-
------------------------------------------------------------
---- QuickCheck
-
-smartGen :: HasTransformation f => f a -> a -> Maybe (Gen a)
-smartGen = flip rec . transformation
- where
-   rec :: a -> Transformation a -> Maybe (Gen a)
-   rec a trans = 
-      case trans of
-         RewriteRule r _ -> return (smartGenerator r)
-         LiftView v t -> do
-            (b, c) <- matchM v a
-            gen    <- rec b t
-            return $ liftM (\n -> build v (n, c)) gen
-         t1 :|: t2 -> recs [t1, t2]
-         t1 :*: t2 -> recs [t1, t2]
-         _ -> Nothing
-    where
-      recs ts =
-         case mapMaybe (rec a) ts of
-            [] -> Nothing
-            xs -> return (oneof xs)
             
 -----------------------------------------------------------
 --- Recognizer

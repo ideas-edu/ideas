@@ -17,7 +17,7 @@ module Common.Context
      Context, newContext
    , fromContext, fromContextWith, fromContextWith2
      -- * Lifting
-   , liftToContext
+   , liftToContext, contextView
    , use, useC, termNavigator, applyTop
    ) where
 
@@ -81,13 +81,15 @@ newContext = C
 ----------------------------------------------------------
 -- Lifting rules
 
--- | Lift a rule to operate on a term in a context
-liftToContext :: LiftView f => f a -> f (Context a)
-liftToContext = liftViewIn cv
+contextView :: View (Context a) (a, Context a)
+contextView = "views.contextView" @> makeView f g
  where
-   cv    = "views.contextView" @> makeView f g
    f ctx = current ctx >>= \a -> Just (a, ctx)
    g     = uncurry replace
+
+-- | Lift a rule to operate on a term in a context
+liftToContext :: LiftView f => f a -> f (Context a)
+liftToContext = liftViewIn contextView
    
 -- | Apply a function at top-level. Afterwards, try to return the focus
 -- to the old position

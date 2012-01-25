@@ -60,8 +60,6 @@ rewriteLaw (Law s l) = rewriteRule s l
 instance (Arbitrary a, IsTerm a, Show a, Different a) => RuleBuilder (LawSpec a) a where
    buildRuleSpec i (a :==: b) = buildRuleSpec i (a :~> b)
    buildRuleSpec i (Abs f)    = buildRuleSpec i f
-   buildGenerator (a :==: b)  = buildGenerator (a :~> b)
-   buildGenerator (Abs f)     = buildGenerator f
 
 getLawSpec :: Law a -> LawSpec a
 getLawSpec (Law _ l) = l

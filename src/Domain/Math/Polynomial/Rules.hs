@@ -43,7 +43,7 @@ import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.OldViews (powerFactorView)
 import Domain.Math.Safe
-import Domain.Math.Simplification hiding (simplifyWith)
+import Domain.Math.Simplification hiding (simplifyWith, distribution)
 import Domain.Math.SquareRoot.Views
 import Prelude hiding ( (^) )
 import qualified Prelude
@@ -467,14 +467,12 @@ distributeAll expr =
 -- This rule should consider the associativity of multiplication
 -- Combine bottom-up, for example:  5*(x-5)*(x+5)
 -- However, in  -2x(2x+10)   (-2x) should be seen as "one term"
-distributionT :: Transformation Expr
-distributionT = makeTransG f
+distribution :: Expr -> [Expr]
+distribution expr = do
+   (b, xs) <- matchM simpleProductView expr
+   ys      <- rec (combine xs)
+   return $ build simpleProductView (b, ys)
  where
-   f expr = do
-      (b, xs) <- matchM simpleProductView expr
-      ys      <- rec (combine xs)
-      return $ build simpleProductView (b, ys)
-
    combine :: [Expr] -> [Expr]
    combine (x:y:rest) | p x && p y = combine ((x*y):rest)
     where p = maybe False ((==1) . length) . match sumView
@@ -527,15 +525,15 @@ removeDivision = doAfter (fmap (collectLikeTerms . distributeAll)) $
 distributeTimes :: Rule Expr
 distributeTimes = describe "distribution multiplication" $
    makeSimpleRuleList (lineq, "distr-times") $
-      liftM collectLikeTerms . applyAll distributionT
+      liftM collectLikeTerms . distribution
 
 distributeDivisionMulti :: IsTerm a => Rule (Context a)
 distributeDivisionMulti = describe "distribution division" $
    makeSimpleRule (quadreq, "distr-div") $ apply $ repeat1 $
-      somewhere (use (makeRule () distributeDivisionT))
+      somewhere (use (makeSimpleRule () distributeDivisionT))
 
-distributeDivisionT :: Transformation Expr
-distributeDivisionT = makeTrans $ \expr -> do
+distributeDivisionT :: Expr -> Maybe Expr
+distributeDivisionT expr = do
    (xs, r) <- match (divView >>> (toView sumView *** rationalView)) expr
    guard (length xs > 1)
    let ys = map (/fromRational r) xs

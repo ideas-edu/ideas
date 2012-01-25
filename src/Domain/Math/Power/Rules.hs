@@ -105,7 +105,7 @@ addExponents :: Rule Expr
 addExponents = makeSimpleRuleList (power, "add-exponents") $ \ expr -> do
   (sign, fs)     <- matchM (powerFactorView isPow) expr
   ((x, y), fill) <- twoNonAdjacentHoles fs
-  prod           <- applyM addExponentsT $ x * y
+  prod           <- applyM simpleAddExponents $ x * y
   return $ build productView (sign, fill prod)
 
 isPow :: Expr -> Expr -> Bool
@@ -113,17 +113,14 @@ isPow x y = x `belongsTo` myIntegerView &&
              (y `belongsTo` variableView || y `belongsTo` powerView)
 
 -- | a*x^y * b*x^q = a*b * x^(y+q)
-addExponentsT :: Transformation Expr
-addExponentsT = makeTrans $ \ expr -> do
+simpleAddExponents :: Rule Expr
+simpleAddExponents = makeSimpleRule (power, "simple-add-exponents") $ \expr -> do
   (e1, e2)     <- match timesView expr
   (a, (x,  y)) <- match unitPowerView e1
   (b, (x', q)) <- match unitPowerView e2
   guard $ x == x'
   return $ build unitPowerView (a .*. b, (x, y .+. q))
-
-simpleAddExponents :: Rule Expr
-simpleAddExponents = makeRule (power, "simple-add-exponents") addExponentsT
-
+  
 -- | a*x^y / b*x^q = a/b * x^(y-q)
 subExponents :: Rule Expr
 subExponents = makeSimpleRule (power, "sub-exponents") $ \ expr -> do
@@ -201,14 +198,8 @@ reciprocalPower = makeSimpleRule (power, "reciprocal-power") $ \ expr -> do
 
 -- | Use with care, will match any fraction!
 reciprocal :: Rule Expr
-reciprocal = makeSimpleRule (power, "reciprocal") $
-  apply (reciprocalForT identity)
-
--- | a/b = a*b^(-1)
-reciprocalForT :: View Expr a -> Transformation Expr
-reciprocalForT v = makeTrans $ \ expr -> do
+reciprocal = makeSimpleRule (power, "reciprocal") $ \expr -> do
   (a, b) <- match divView expr
-  guard $ b `belongsTo` v
   return $ a .*. build powerView (b, -1)
 
 -- | a^x = 1/a^(-x)

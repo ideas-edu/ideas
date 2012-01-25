@@ -209,7 +209,7 @@ buggyMultiplyOneSide = describe "Multiplication on one side of the equation only
  where
    recognizeEq eq1@(a1 :==: a2) eq2@(b1 :==: b2) =
       let p r  = r `notElem` [-1, 0, 1] &&
-                 any (myEq eq2) (applyAll (multiplyOneSide (fromRational r)) eq1)
+                 any (myEq eq2) (multiplyOneSide (fromRational r) eq1)
       in maybe False p (recognizeMultiplication a1 b1)
       || maybe False p (recognizeMultiplication a2 b2)
 
@@ -221,12 +221,12 @@ recognizeMultiplication a b = do
    guard (d /= 0)
    return (coefficient (degree pb) pb / d)
 
-multiplyOneSide :: Expr -> Transformation (Equation Expr)
-multiplyOneSide r = makeTransG $ \(lhs :==: rhs) -> do
-      xs <- matchM sumView lhs
-      ys <- matchM sumView rhs
-      let f = map (*r)
-      [build sumView (f xs) :==: rhs, lhs :==: build sumView (f ys)]
+multiplyOneSide :: Expr -> Equation Expr -> [Equation Expr]
+multiplyOneSide r (lhs :==: rhs) = do
+   xs <- matchM sumView lhs
+   ys <- matchM sumView rhs
+   let f = map (*r)
+   [build sumView (f xs) :==: rhs, lhs :==: build sumView (f ys)]
 
 buggyMultiplyForgetOne :: Recognizer (Equation Expr)
 buggyMultiplyForgetOne = describe "Multiply the terms on both sides of the \
@@ -235,12 +235,12 @@ buggyMultiplyForgetOne = describe "Multiply the terms on both sides of the \
  where
    recognizeEq eq1@(a1 :==: a2) eq2@(b1 :==: b2) =
       let p r  = r `notElem` [-1, 0, 1] &&
-                 any (myEq eq2) (applyAll (multiplyForgetOne (fromRational r)) eq1)
+                 any (myEq eq2) (multiplyForgetOne (fromRational r) eq1)
       in maybe False p (recognizeMultiplication a1 b1)
       || maybe False p (recognizeMultiplication a2 b2)
 
-multiplyForgetOne :: Expr -> Transformation (Equation Expr)
-multiplyForgetOne r = makeTransG $ \(lhs :==: rhs) -> do
+multiplyForgetOne :: Expr -> Equation Expr -> [Equation Expr]
+multiplyForgetOne r (lhs :==: rhs) = do
    xs <- matchM sumView lhs
    ys <- matchM sumView rhs
    let makeL i = f (zipWith (mul . (/=i)) [0..] xs) (map (mul True) ys)
@@ -427,9 +427,9 @@ minusB :: Rule (OrList (Equation Expr))
 minusB = buggyRule $ makeRule "abc.minus-b" $
    abcMisconception $ \x a b c -> do
       let discr = sqrt (fromRational (b*b - 4 * a * c))
-          f (?) buggy =
+          f op buggy =
              let minus = if buggy then id else negate
-             in Var x :==: (minus (fromRational b) ? discr) / (2 * fromRational a)
+             in Var x :==: (minus (fromRational b) `op` discr) / (2 * fromRational a)
       [ toOrList [ f (+) True,  f (-) True  ],
         toOrList [ f (+) False, f (-) True  ],
         toOrList [ f (+) True,  f (-) False ]]
@@ -438,9 +438,9 @@ twoA :: Rule (OrList (Equation Expr))
 twoA = buggyRule $ makeRule "abc.two-a" $
    abcMisconception $ \x a b c -> do
       let discr = sqrt (fromRational (b*b - 4 * a * c))
-          f (?) buggy =
+          f op buggy =
              let twice = if buggy then id else (2*)
-             in Var x :==: (-fromRational b ? discr) / twice (fromRational a)
+             in Var x :==: (-fromRational b `op` discr) / twice (fromRational a)
       [ toOrList [ f (+) True,  f (-) True  ],
         toOrList [ f (+) False, f (-) True  ],
         toOrList [ f (+) True,  f (-) False ]]
@@ -448,10 +448,10 @@ twoA = buggyRule $ makeRule "abc.two-a" $
 minus4AC :: Rule (OrList (Equation Expr))
 minus4AC = buggyRule $ makeRule "abc.minus-4ac" $
    abcMisconception $ \x a b c -> do
-      let discr (?) = sqrt (fromRational ((b*b) ? (4 * a * c)))
-          f (?) buggy =
-             let op = if buggy then (+) else (-)
-             in Var x :==: (-fromRational b ? discr op) / (2 * fromRational a)
+      let discr op = sqrt (fromRational ((b*b) `op` (4 * a * c)))
+          f op buggy =
+             let sign = if buggy then (+) else (-)
+             in Var x :==: (-fromRational b `op` discr sign) / (2 * fromRational a)
       [ toOrList [ f (+) True,  f (-) True  ],
         toOrList [ f (+) False, f (-) True  ],
         toOrList [ f (+) True,  f (-) False ]]
@@ -460,5 +460,5 @@ oneSolution :: Rule (OrList (Equation Expr))
 oneSolution = buggyRule $ makeRule "abc.one-solution" $
    abcMisconception $ \x a b c ->
       let discr = sqrt (fromRational (b*b - 4 * a * c))
-          f (?) = Var x :==: (-fromRational b ? discr) / (2 * fromRational a)
+          f op = Var x :==: (-fromRational b `op` discr) / (2 * fromRational a)
       in [ singleton $ f (+), singleton $ f (-) ]

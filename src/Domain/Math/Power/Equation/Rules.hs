@@ -19,6 +19,7 @@ module Domain.Math.Power.Equation.Rules
 
 import Common.Library hiding (simplify)
 import Control.Monad
+import Data.Maybe
 --import Data.List (partition)
 import Domain.Math.Approximation (precision)
 import Domain.Math.Data.Relation
@@ -117,8 +118,8 @@ coverUpRoot = coverUpRootWith configCoverUp
 myCoverUpTimesWith :: ConfigCoverUp -> Rule (Equation Expr)
 myCoverUpTimesWith = doAfter f . coverUpTimesWith
  where
-   f (lhs :==: rhs) =
-      lhs :==: applyD distributeDivisionT (applyD distributeTimes rhs)
+   f (lhs :==: rhs) = lhs :==: g (applyD distributeTimes rhs)
+   g a              = fromMaybe a (distributeDivisionT a)
 
 condXisRight :: Rule (Equation Expr)
 condXisRight = describe "flip condition" $ checkRule $ \(lhs :==: rhs) ->

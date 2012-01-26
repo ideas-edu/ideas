@@ -417,7 +417,7 @@ abcBuggyRules = map (siblingOf abcFormula) [ minusB, twoA, minus4AC, oneSolution
 
 abcMisconception :: (String -> Rational -> Rational -> Rational -> [OrList (Equation Expr)])
                  -> Transformation (OrList (Equation Expr))
-abcMisconception f = makeTransG $
+abcMisconception f = makeTrans $
    oneDisjunct $ \(lhs :==: rhs) -> do
       guard (rhs == 0)
       (x, (a, b, c)) <- matchM (polyNormalForm rationalView >>> second quadraticPolyView) lhs

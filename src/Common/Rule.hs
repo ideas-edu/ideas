@@ -9,7 +9,9 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Rewriting (module Export) where
+module Common.Rule (module Export) where
 
-import Common.Rewriting.RewriteRule as Export
-import Common.Rewriting.Term as Export
+import Common.Rule.Abstract as Export
+import Common.Rule.EnvironmentMonad as Export
+import Common.Rule.Recognizer as Export
+import Common.Rule.Transformation as Export

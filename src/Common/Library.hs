@@ -27,10 +27,7 @@ import Common.Navigator as Export hiding (left, right)
 import Common.Predicate as Export
 import Common.Rewriting as Export
 import Common.Strategy as Export hiding (fail, not, repeat, replicate, sequence, until)
-import Common.Rule.Recognizer as Export
-import Common.Rule.Rule as Export
-import Common.Rule.Transformation as Export
-import Common.Rule.EnvironmentMonad as Export
+import Common.Rule as Export
 import Common.View as Export
 
 import qualified Common.Strategy as S

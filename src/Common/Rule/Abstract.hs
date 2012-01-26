@@ -13,7 +13,7 @@
 -- can be lifted with a view using the LiftView type class. 
 --
 -----------------------------------------------------------------------------
-module Common.Rule.Rule
+module Common.Rule.Abstract
    ( -- * Rules
      Rule, applyRule, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
    , finalRule, isFinalRule, ruleSiblings, rule, ruleList
@@ -32,7 +32,6 @@ import Common.Utils
 import Common.View
 import Control.Arrow
 import Control.Monad
-import Data.Foldable
 import Data.Function
 import Data.Maybe
 import Data.Monoid
@@ -65,7 +64,7 @@ instance Apply Rule where
    applyAll r = map fst . applyRule r
 
 applyRule :: Rule a -> a -> [(a, Environment)]
-applyRule = applyTransformation . ruleTrans
+applyRule = applyTrans . ruleTrans
 
 instance HasId (Rule a) where
    getId        = ruleId
@@ -99,11 +98,11 @@ siblingOf :: HasId b => b -> Rule a -> Rule a
 siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
 
 ruleList :: (IsId n, RuleBuilder f a) => n -> [f] -> Rule a
-ruleList n = makeRule a . mconcat . map (makeRewriteTrans . rewriteRule a)
+ruleList n = makeRule a . mconcat . map (transRewrite . rewriteRule a)
  where a = newId n
 
 rule :: (IsId n, RuleBuilder f a) => n -> f -> Rule a
-rule n = makeRule a . makeRewriteTrans . rewriteRule a
+rule n = makeRule a . transRewrite . rewriteRule a
  where a = newId n
 
 -- | Turn a transformation into a rule: the first argument is the rule's name
@@ -117,8 +116,8 @@ makeSimpleRule = makeSimpleRuleList
 
 -- | Turn a function (which returns a list of results) into a rule: the first 
 -- argument is the rule's name
-makeSimpleRuleList :: (IsId n, Foldable f) => n -> (a -> f a) -> Rule a
-makeSimpleRuleList n = makeRule n . makeTransG
+makeSimpleRuleList :: (IsId n, MakeTrans f) => n -> (a -> f a) -> Rule a
+makeSimpleRuleList n = makeRule n . makeTrans
 
 -- | A special (minor) rule that always returns the identity
 idRule :: Rule a
@@ -162,5 +161,5 @@ ruleRecognizer eq0 r =
 getRewriteRules :: Rule a -> [Some RewriteRule]
 getRewriteRules = transRewriteRules . ruleTrans
 
-getUsedRefs :: Rule a -> IO [Some Ref]
+getUsedRefs :: Rule a -> [Some Ref]
 getUsedRefs = transRefs . ruleTrans

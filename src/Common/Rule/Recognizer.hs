@@ -62,6 +62,6 @@ buggyRecognizer r = r {isBuggyRecognizer = True}
 
 transRecognizer :: IsId n => (a -> a -> Bool) -> n -> Transformation a -> Recognizer a
 transRecognizer eq n f = makeListRecognizer n $ \a b -> do
-   (x, env) <- applyTransformation f a
+   (x, env) <- applyTrans f a
    guard (x `eq` b)
    return env

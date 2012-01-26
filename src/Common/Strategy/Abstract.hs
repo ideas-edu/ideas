@@ -30,8 +30,7 @@ import Common.Id
 import Common.Rewriting (RewriteRule)
 import Common.Strategy.Core
 import Common.Strategy.Parsing
-import Common.Rule.Transformation
-import Common.Rule.Rule
+import Common.Rule
 import Common.Utils.Uniplate hiding (rewriteM)
 import Common.View
 import Control.Monad
@@ -102,7 +101,7 @@ instance IsStrategy Rule where
 
 instance IsStrategy RewriteRule where
    toStrategy r =
-      toStrategy (makeRule (getId r) (makeRewriteTrans r))
+      toStrategy (makeRule (getId r) (transRewrite r))
 
 -----------------------------------------------------------
 --- Labeled Strategy data-type
@@ -142,7 +141,7 @@ instance IsLabeled Rule where
    toLabeled r = LS (makeInfo (getId r)) (S (Rule r))
 
 instance IsLabeled RewriteRule where
-   toLabeled r = toLabeled (makeRule (getId r) (makeRewriteTrans r))
+   toLabeled r = toLabeled (makeRule (getId r) (transRewrite r))
 
 -- | Labels a strategy with a string
 label :: (IsId l, IsStrategy f) => l -> f a -> LabeledStrategy a

@@ -151,19 +151,19 @@ exchangeEquations = parameter2 "equation 1" "equation 2" exchange
  where
    exchange i j 
       | i > j     = exchange j i
-      | otherwise = makeTrans $ \xs -> do
+      | otherwise = transMaybe $ \xs -> do
            guard (i/=j && validEquation i xs && validEquation j xs)
            let (begin, x:rest) = splitAt i xs
                (middle, y:end) = splitAt (j-i-1) rest
            return $ begin++[y]++middle++[x]++end
 
 scaleEquation :: (Reference a, IsLinear a) => ParamTrans (Int, a) (LinearSystem a)
-scaleEquation = parameter2 "equation" "scale factor" $ \i a -> makeTrans $ \xs -> do
+scaleEquation = parameter2 "equation" "scale factor" $ \i a -> transMaybe $ \xs -> do
    guard (a `notElem` [0,1])
    changeAt i (fmap (a*)) xs
 
 addEquations :: (Reference a, IsLinear a) => ParamTrans (Int, Int, a) (LinearSystem a)
-addEquations = parameter3 "equation 1" "equation 2" "scale factor" $ \i j a -> makeTrans $ \xs -> do
+addEquations = parameter3 "equation 1" "equation 2" "scale factor" $ \i j a -> transMaybe $ \xs -> do
    guard (i/=j)
    j1 :==: j2 <- liftM (fmap (a*)) (elementAt j xs)
    let f (i1 :==: i2) = i1+j1 :==: i2+j2

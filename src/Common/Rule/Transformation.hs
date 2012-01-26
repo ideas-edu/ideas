@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, Rank2Types, TypeSynonymInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -17,10 +17,15 @@
 --
 -----------------------------------------------------------------------------
 module Common.Rule.Transformation
-   ( -- * Transformations
-     Transformation, transMaybe
-   , makeTrans, makeTransG, makeTransEnv, makeRewriteTrans, makeTransEnv_
-   , applyTransformation
+   ( -- * Trans data type
+     Transformation, Trans
+     -- * Constructor functions
+   , MakeTrans(..)
+   , transPure, transMaybe, transList, transEnv, transRewrite
+   
+   
+   , makeTransEnv, makeTransEnv_
+   , applyTrans
      -- * Bindables
    , ParamTrans, supplyLocals
    , supplyParameters, supplyContextParameters
@@ -40,15 +45,17 @@ import Common.Rule.EnvironmentMonad
 import Common.View
 import Control.Monad
 import Control.Arrow
-import Data.Foldable
 import Data.Maybe
 import Data.Monoid
 import Data.Typeable
 import qualified Control.Category as C
 
+-----------------------------------------------------------
+--- Trans data type and instances
+
 data Trans a b where
    List     :: (a -> [b]) -> Trans a b
-   Rewrite  :: RewriteRule a -> (a -> [a]) -> Trans a a
+   Rewrite  :: RewriteRule a -> Trans a a
    TransEnv :: (a -> EnvMonad b) -> Trans a b
    Bind     :: Typeable a => Ref a -> Trans a a
    BoxedEnv :: Trans a b -> Trans (a, Environment) (b, Environment)
@@ -80,6 +87,25 @@ instance Monoid (Trans a b) where
    mempty  = transList (const [])
    mappend = Append
 
+type Transformation a = Trans a a
+
+-----------------------------------------------------------
+--- Constructor functions
+
+-- | A type class for constructing a transformation. If possible, @makeTrans@
+-- should be used. Use specialized constructor functions for disambiguation.
+class MakeTrans f where
+   makeTrans :: (a -> f b) -> Trans a b
+
+instance MakeTrans Maybe where
+   makeTrans = transMaybe
+   
+instance MakeTrans [] where
+   makeTrans = transList
+   
+instance MakeTrans EnvMonad where
+   makeTrans = transEnv
+
 transPure :: (a -> b) -> Trans a b
 transPure f = transList (return . f)
 
@@ -89,58 +115,42 @@ transMaybe f = transList (maybeToList . f)
 transList :: (a -> [b]) -> Trans a b
 transList = List
 
-transRewrite :: RewriteRule a -> Trans a a
-transRewrite r = Rewrite r (applyAll r)
-
 transEnv :: (a -> EnvMonad b) -> Trans a b
 transEnv = TransEnv
 
-bindValue :: (IsId n, Reference a) => n -> Trans a a
-bindValue = Bind . makeRef
+transRewrite :: RewriteRule a -> Trans a a
+transRewrite = Rewrite
 
 -----------------------------------------------------------
 --- Transformations
 
-type Transformation a = Trans a a
+applyTrans :: Trans a b -> a -> [(b, Environment)]
+applyTrans = applyTransWith mempty
 
-applyTransformation :: Trans a b -> a -> [(b, Environment)]
-applyTransformation = applyTransformationWith mempty
-
-applyTransformationWith :: Environment -> Trans a b -> a -> [(b, Environment)]
-applyTransformationWith = rec 
+applyTransWith :: Environment -> Trans a b -> a -> [(b, Environment)]
+applyTransWith = rec 
  where 
    rec :: Environment -> Trans a b -> a -> [(b, Environment)]
    rec env trans a = 
       case trans of
-         List f      -> [ (b, env) | b <- f a ]
-         Rewrite _ f -> [ (b, env) | b <- f a ]
-         TransEnv f  -> runEnvMonad (f a) env
-         Bind ref    -> [(a, insertRef ref a env)]
-         BoxedEnv f  -> do (b, envb) <- rec (snd a) f (fst a) 
-                           return ((b, envb), env)
-         f :>>: g    -> do (b, env1) <- rec env  f a
-                           (c, env2) <- rec env1 g b
-                           return (c, env2)
-         f :**: g    -> do (b, env1) <- rec env f (fst a)
-                           (c, env2) <- rec env g (snd a)
-                           return ((b, c), env2 `mappend` env1)
-         f :++: g    -> either (make env Left f) (make env Right g) a
-         Apply       -> uncurry (rec env) a
-         Append f g  -> rec env f a ++ rec env g a
+         List f     -> [ (b, env) | b <- f a ]
+         Rewrite r  -> [ (b, env) | b <- applyAll r a ]
+         TransEnv f -> runEnvMonad (f a) env
+         Bind ref   -> [(a, insertRef ref a env)]
+         BoxedEnv f -> do (b, envb) <- rec (snd a) f (fst a) 
+                          return ((b, envb), env)
+         f :>>: g   -> do (b, env1) <- rec env  f a
+                          (c, env2) <- rec env1 g b
+                          return (c, env2)
+         f :**: g   -> do (b, env1) <- rec env f (fst a)
+                          (c, env2) <- rec env g (snd a)
+                          return ((b, c), env2 `mappend` env1)
+         f :++: g   -> either (make env Left f) (make env Right g) a
+         Apply      -> uncurry (rec env) a
+         Append f g -> rec env f a ++ rec env g a
 
    make :: Environment -> (b -> c) -> Trans a b -> a -> [(c, Environment)]
    make env f g = map (mapFirst f) . rec env g
-
--- | Turn a function (which returns its result in the Maybe monad) into a transformation
-makeTrans :: (a -> Maybe a) -> Transformation a
-makeTrans = makeTransG
-
-makeRewriteTrans :: RewriteRule a -> Transformation a
-makeRewriteTrans = transRewrite
-
--- | Turn a function (which returns a list of results) into a transformation
-makeTransG ::  Foldable f => (a -> f a) -> Transformation a
-makeTransG f = transList (toList . f)
 
 makeTransEnv :: (a -> EnvMonad a) -> Transformation (Context a)
 makeTransEnv f = ((split >>> BoxedEnv (transEnv f)) &&& C.id) >>> assemble
@@ -184,30 +194,32 @@ parameter3 n1 n2 n3 f = first ((\(a, b, c) -> (a, (b, c))) ^>>
    (\(a, (b, c)) -> f a b c)) 
            >>> app
 
+bindValue :: (IsId n, Reference a) => n -> Trans a a
+bindValue = Bind . makeRef
+
 -----------------------------------------------------------
 --- Rules
 
 transRewriteRules :: Trans a b -> [Some RewriteRule]
 transRewriteRules trans =
    case trans of
-      Rewrite r _ -> [Some r]
-      BoxedEnv f  -> transRewriteRules f
-      f :>>: g    -> transRewriteRules f ++ transRewriteRules g
-      f :**: g    -> transRewriteRules f ++ transRewriteRules g
-      f :++: g    -> transRewriteRules f ++ transRewriteRules g
-      Append f g  -> transRewriteRules f ++ transRewriteRules g
-      _           -> []
+      Rewrite r -> [Some r]
+      _         -> descendTrans transRewriteRules trans
       
-transRefs :: Trans a b -> IO [Some Ref]
+transRefs :: Trans a b -> [Some Ref]
 transRefs trans = 
    case trans of
-      Bind r      -> return [Some r]
-      BoxedEnv f  -> transRefs f
-      TransEnv f  -> envMonadFunctionRefs f
-      f :>>: g    -> transRefs f ++++ transRefs g
-      f :**: g    -> transRefs f ++++ transRefs g
-      f :++: g    -> transRefs f ++++ transRefs g
-      Append f g  -> transRefs f ++++ transRefs g
-      _           -> return []
- where
-   (++++) = liftM2 (++)
+      Bind r     -> [Some r]
+      TransEnv f -> envMonadFunctionRefs f
+      _          -> descendTrans transRefs trans
+
+-- General recursion function (existentially quantified)
+descendTrans :: Monoid m => (forall x y . Trans x y -> m) -> Trans a b -> m
+descendTrans make trans = 
+   case trans of
+      BoxedEnv f  -> make f
+      f :>>: g    -> make f `mappend` make g
+      f :**: g    -> make f `mappend` make g
+      f :++: g    -> make f `mappend` make g
+      Append f g  -> make f `mappend` make g
+      _           -> mempty

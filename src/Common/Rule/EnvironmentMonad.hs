@@ -16,7 +16,9 @@ module Common.Rule.EnvironmentMonad
    ( -- * Environment Monad
      EnvMonad((:=), (:~), (:?))
    , getRef, updateRefs
+     -- * Running the monad
    , runEnvMonad, execEnvMonad, evalEnvMonad
+     -- * Extracting used references
    , envMonadRefs, envMonadFunctionRefs
    ) where
 
@@ -25,6 +27,7 @@ import Common.Utils
 import Data.Maybe
 import Data.Typeable
 import Control.Monad.State
+import System.IO.Unsafe
 import qualified Control.Exception as C
 
 -----------------------------------------------------------
@@ -62,6 +65,9 @@ getRef = GetRef
 updateRefs :: MonadPlus m => [EnvMonad a] -> Environment -> m Environment
 updateRefs xs = msum . map return . execEnvMonad (sequence_ xs)
 
+-----------------------------------------------------------
+-- Environment Monad
+
 runEnvMonad :: EnvMonad a -> Environment -> [(a, Environment)]
 runEnvMonad = runStateT . rec
  where
@@ -85,12 +91,21 @@ execEnvMonad m = liftM snd . runEnvMonad m
 evalEnvMonad :: EnvMonad a -> Environment -> [a]
 evalEnvMonad m = liftM fst . runEnvMonad m
 
-envMonadRefs :: EnvMonad a -> IO [Some Ref]
-envMonadRefs monad =
+-----------------------------------------------------------
+-- Extracting used references
+
+envMonadRefs :: EnvMonad a -> [Some Ref]
+envMonadRefs = unsafePerformIO . safeIO . envMonadRefsIO
+
+envMonadFunctionRefs :: (a -> EnvMonad b) -> [Some Ref]
+envMonadFunctionRefs = unsafePerformIO . safeIO . envMonadFunctionRefsIO
+   
+envMonadRefsIO :: EnvMonad a -> IO [Some Ref]
+envMonadRefsIO monad =
    case monad of
-      Bind m f -> envMonadRefs m ++++ envMonadFunctionRefs f
-      Then a b -> envMonadRefs a ++++ envMonadRefs b
-      Plus a b -> envMonadRefs a ++++ envMonadRefs b
+      Bind m f -> envMonadRefsIO m ++++ envMonadFunctionRefsIO f
+      Then a b -> envMonadRefsIO a ++++ envMonadRefsIO b
+      Plus a b -> envMonadRefsIO a ++++ envMonadRefsIO b
       r := _   -> return [Some r]
       r :~ _   -> return [Some r]
       r :? _   -> return [Some r]
@@ -98,6 +113,8 @@ envMonadRefs monad =
  where
    (++++) = liftM2 (++)
 
-envMonadFunctionRefs :: (a -> EnvMonad b) -> IO [Some Ref]
-envMonadFunctionRefs f = envMonadRefs (f (error "catch me")) 
-   `C.catch` \(C.ErrorCall _) -> return []
+envMonadFunctionRefsIO :: (a -> EnvMonad b) -> IO [Some Ref]
+envMonadFunctionRefsIO = safeIO . envMonadRefsIO . ($ error "catch me")
+   
+safeIO :: IO [a] -> IO [a]
+safeIO m = m `C.catch` \(C.SomeException _) -> return []

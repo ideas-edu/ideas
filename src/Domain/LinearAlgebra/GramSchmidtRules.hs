@@ -72,7 +72,7 @@ ruleNext = minorRule $ makeRule "Consider next vector" $
 -- to the first
 transOrthogonal :: (Reference a, Floating a) => ParamTrans (Int, Int) (VectorSpace a)
 transOrthogonal = parameter2 "vector 1" "vector 2" $ \i j -> 
-   makeTrans $ \a -> do
+   transMaybe $ \a -> do
       guard (i /= j && i >=0 && j >= 0)
       let vs = vectors a
       u <- elementAt i vs

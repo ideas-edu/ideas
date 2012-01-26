@@ -83,19 +83,19 @@ ruleUncoverRow = minorRule $ makeRule (gaussId, "UncoverRow") $ changeCover pred
 
 rowExchange :: ParamTrans (Int, Int) (Matrix a)
 rowExchange = parameter2 "row1" "row2" $ \i j -> 
-   makeTrans $ \m -> do
+   transMaybe $ \m -> do
       guard (i /= j && validRow i m && validRow j m)
       return (switchRows i j m)
 
 rowScale :: (Reference a, Num a) => ParamTrans (Int, a) (Matrix a)
 rowScale = parameter2 "row" "scale factor" $ \i k -> 
-   makeTrans $ \m -> do
+   transMaybe $ \m -> do
       guard (k `notElem` [0, 1] && validRow i m)
       return (scaleRow i k m)
 
 rowAdd :: (Reference a, Num a) => ParamTrans (Int, Int, a) (Matrix a)
 rowAdd = parameter3 "row1" "row2" "scale factor" $ \i j k -> 
-   makeTrans $ \m -> do
+   transMaybe $ \m -> do
       guard (k /= 0 && i /= j && validRow i m && validRow j m)
       return (addRow i j k m)
 

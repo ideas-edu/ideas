@@ -11,12 +11,10 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Rules where
 
-import Common.Id
-import Common.Rewriting
-import Common.Rule (Rule, buggyRule)
+import Common.Library hiding (ruleList, rule)
 import Domain.RelationAlgebra.Formula
 import Domain.RelationAlgebra.Generator()
-import qualified Common.Rule as Rule
+import qualified Common.Library as C
 
 invRules :: [Rule RelAlg]
 invRules = [ ruleInvOverUnion, ruleInvOverIntersec, ruleInvOverComp
@@ -45,10 +43,10 @@ relalg :: IsId a => a -> Id
 relalg = ( # ) "relationalgebra"
 
 rule :: RuleBuilder f a => String -> f -> Rule a
-rule = Rule.rule . relalg
+rule = C.rule . relalg
 
 ruleList :: RuleBuilder f a => String -> [f] -> Rule a
-ruleList = Rule.ruleList . relalg
+ruleList = C.ruleList . relalg
 
 -- | 1. Alle ~ operatoren naar binnen verplaatsen
 
@@ -213,7 +211,7 @@ ruleRemRedunExprs = ruleList "RemRedunExprs"
 
 buggyGroup :: RuleBuilder f a => String -> [f] -> Rule a
 buggyGroup s =
-   buggyRule . Rule.ruleList ("relationalgebra.buggy." ++ s)
+   buggyRule . C.ruleList ("relationalgebra.buggy." ++ s)
 
 buggyRuleIdemComp :: Rule RelAlg
 buggyRuleIdemComp = buggyGroup "IdemComp"

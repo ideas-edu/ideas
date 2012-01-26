@@ -49,8 +49,8 @@ import Common.Navigator
 import Common.Predicate
 import Common.Rewriting
 import Common.Strategy hiding (not, fail, repeat, replicate)
-import Common.Rule
-import Common.Transformation
+import Common.Rule.Recognizer
+import Common.Rule.Rule
 import Common.Utils (ShowString(..))
 import Common.Utils.TestSuite
 import Common.View

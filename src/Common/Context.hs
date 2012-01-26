@@ -25,6 +25,7 @@ import Common.Environment
 import Common.Id
 import Common.Navigator
 import Common.Rewriting
+import Common.Utils (replaceAt)
 import Common.View
 import Control.Monad
 import Data.Maybe
@@ -110,11 +111,7 @@ termNavigator a = fromMaybe (noNavigator a) (make a)
       | otherwise = (x, flip makeTerm xs) : zipWith f [0..] xs
     where
       (x, xs)    = getSpine term
-      f i y      = (y, makeTerm x . changeAt i)
-      changeAt i b =
-         case splitAt i xs of
-            (ys, _:zs) -> ys ++ b:zs
-            _          -> xs
+      f i y      = (y, makeTerm x . fromJust . flip (replaceAt i) xs)
 
 use :: (LiftView f, IsTerm a, IsTerm b) => f a -> f (Context b)
 use = useC . liftToContext

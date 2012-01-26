@@ -13,7 +13,7 @@
 -- can be lifted with a view using the LiftView type class. 
 --
 -----------------------------------------------------------------------------
-module Common.Rule
+module Common.Rule.Rule
    ( -- * Rules
      Rule, applyRule, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
    , finalRule, isFinalRule, ruleSiblings, rule, ruleList
@@ -26,7 +26,8 @@ import Common.Environment
 import Common.Classes
 import Common.Id
 import Common.Rewriting
-import Common.Transformation
+import Common.Rule.Recognizer
+import Common.Rule.Transformation
 import Common.Utils
 import Common.View
 import Control.Arrow

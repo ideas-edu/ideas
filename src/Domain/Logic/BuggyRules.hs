@@ -13,12 +13,10 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.BuggyRules (buggyRules) where
 
-import Common.Id
-import Common.Rewriting
-import Common.Rule (Rule, buggyRule)
+import Common.Library hiding (rule, ruleList)
+import qualified Common.Library as C
 import Domain.Logic.Formula
 import Domain.Logic.Generator()
-import qualified Common.Rule as Rule
 
 -- Collection of all known buggy rules
 buggyRules :: [Rule SLogic]
@@ -33,10 +31,10 @@ buggyRules =
    ]
 
 rule :: RuleBuilder f a => String -> f -> Rule a
-rule = Rule.rule . ( "logic.propositional.buggy" # )
+rule = C.rule . ( "logic.propositional.buggy" # )
 
 ruleList :: RuleBuilder f a => String -> [f] -> Rule a
-ruleList = Rule.ruleList . ( "logic.propositional.buggy" # )
+ruleList = C.ruleList . ( "logic.propositional.buggy" # )
 
 -----------------------------------------------------------------------------
 -- Buggy rules

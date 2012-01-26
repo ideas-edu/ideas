@@ -30,8 +30,8 @@ import Common.Id
 import Common.Rewriting (RewriteRule)
 import Common.Strategy.Core
 import Common.Strategy.Parsing
-import Common.Transformation
-import Common.Rule
+import Common.Rule.Transformation
+import Common.Rule.Rule
 import Common.Utils.Uniplate hiding (rewriteM)
 import Common.View
 import Control.Monad

@@ -21,13 +21,11 @@ module Domain.Logic.Rules
    , ruleTrueInImpl, ruleTrueZeroAnd, ruleTrueZeroOr
    ) where
 
-import Common.Id
-import Common.Rewriting
-import Common.Rule (Rule, minorRule)
+import Common.Library hiding (rule, ruleList)
+import qualified Common.Library as C
 import Domain.Logic.Formula
 import Domain.Logic.GeneralizedRules
 import Domain.Logic.Generator()
-import qualified Common.Rule as Rule
 
 extraLogicRules :: [Rule SLogic]
 extraLogicRules =
@@ -43,10 +41,10 @@ logic :: IsId a => a -> Id
 logic = ( # ) "logic.propositional"
 
 rule :: RuleBuilder f a => String -> f -> Rule a
-rule = Rule.rule . logic
+rule = C.rule . logic
 
 ruleList :: RuleBuilder f a => String -> [f] -> Rule a
-ruleList = Rule.ruleList . logic
+ruleList = C.ruleList . logic
 
 -----------------------------------------------------------------------------
 -- Commutativity

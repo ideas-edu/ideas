@@ -11,18 +11,16 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Strategies (toCNF) where
 
-import Common.Context
-import Common.Strategy
-import Common.Rule
+import Common.Library
 import Domain.RelationAlgebra.Formula
 import Domain.RelationAlgebra.Rules
-import Prelude hiding (repeat)
+import Prelude
 
 toCNF :: LabeledStrategy (Context RelAlg)
 toCNF = label "To CNF" $
-   repeat $  label "step1" step1
-          |> label "step2" step2
-          |> label "step3" step3
+   repeatS $  label "step1" step1
+           |> label "step2" step2
+           |> label "step3" step3
  where
    step1 = topDown $ useRules $
       [ ruleRemCompl, ruleRemRedunExprs, ruleDoubleNegation

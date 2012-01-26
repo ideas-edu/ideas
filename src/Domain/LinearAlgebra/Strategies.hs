@@ -121,5 +121,5 @@ conv2 = describe "Convert matrix to linear system" $
       return $ simplify $ toExpr linsys
       
 hasRemaining :: Context (LinearSystem a) -> Bool
-hasRemaining c = maybe False (not . null) $ 
+hasRemaining c = any (not . null) $ 
    evalEnvMonad (current c >>= remaining) (environment c)

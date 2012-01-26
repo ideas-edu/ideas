@@ -26,17 +26,17 @@ import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Views
 import Prelude hiding ((^))
-import qualified Common.Rule as Rule
+import qualified Common.Library as C
 
 makeRule :: IsId n => n -> Transformation a -> Rule a
 makeSimpleRule :: IsId n => n -> (a -> Maybe a) -> Rule a
 makeSimpleRuleList :: IsId n => n -> (a -> [a]) -> Rule a
 ruleList :: (RuleBuilder f a, IsId n) => n -> [f] -> Rule a
 
-makeRule           = buggyName Rule.makeRule
-makeSimpleRule     = buggyName Rule.makeSimpleRule
-makeSimpleRuleList = buggyName Rule.makeSimpleRuleList
-ruleList           = buggyName Rule.ruleList
+makeRule           = buggyName C.makeRule
+makeSimpleRule     = buggyName C.makeSimpleRule
+makeSimpleRuleList = buggyName C.makeSimpleRuleList
+ruleList           = buggyName C.ruleList
 
 buggyName :: IsId n => (Id -> a) -> n -> a
 buggyName f s = f ("algebra.equations.buggy" # s)

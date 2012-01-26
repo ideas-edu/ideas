@@ -20,14 +20,13 @@ module Domain.Logic.GeneralizedRules
 
 -- Note: the generalized rules do not take AC-unification into account,
 -- and perhaps they should.
-import Common.Algebra.Boolean
-import Common.Rule (Rule)
+import Common.Library hiding (makeSimpleRule)
+import qualified Common.Library as C
 import Control.Monad
 import Domain.Logic.Formula
-import qualified Common.Rule as Rule
 
 makeSimpleRule :: String -> (a -> Maybe a) -> Rule a
-makeSimpleRule s = Rule.makeSimpleRule ("logic.propositional." ++ s)
+makeSimpleRule s = C.makeSimpleRule ("logic.propositional." ++ s)
 
 -----------------------------------------------------------------------------
 -- Inverse rules

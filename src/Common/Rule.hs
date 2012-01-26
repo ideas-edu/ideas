@@ -19,7 +19,7 @@ module Common.Rule
    , finalRule, isFinalRule, ruleSiblings, rule, ruleList
    , makeRule, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doAfter
-   , siblingOf, useEquality, ruleEquality, ruleRecognizer, getRewriteRules
+   , siblingOf, useEquality, ruleEquality, ruleRecognizer, getRewriteRules, getUsedRefs
    ) where
 
 import Common.Environment
@@ -29,6 +29,7 @@ import Common.Rewriting
 import Common.Transformation
 import Common.Utils
 import Common.View
+import Control.Arrow
 import Control.Monad
 import Data.Foldable
 import Data.Function
@@ -71,7 +72,7 @@ instance HasId (Rule a) where
 
 instance LiftView Rule where
    liftViewIn v r = r
-      { ruleTrans    = liftViewInTrans v (ruleTrans r)
+      { ruleTrans    = transMaybe (match v) >>> first (ruleTrans r) >>> arr (build v)
       , ruleEquality = fmap liftEq (ruleEquality r)
       }
     where
@@ -147,7 +148,7 @@ finalRule r = r {isFinalRule = True}
 
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a
-doAfter f r = r {ruleTrans = sequenceTrans (ruleTrans r) (makeTrans (Just . f)) }
+doAfter f r = r {ruleTrans = ruleTrans r >>^ f }
 
 useEquality :: (a -> a -> Bool) -> Rule a -> Rule a
 useEquality eq r = r {ruleEquality = Just eq}
@@ -159,3 +160,6 @@ ruleRecognizer eq0 r =
    
 getRewriteRules :: Rule a -> [Some RewriteRule]
 getRewriteRules = transRewriteRules . ruleTrans
+
+getUsedRefs :: Rule a -> IO [Some Ref]
+getUsedRefs = transRefs . ruleTrans

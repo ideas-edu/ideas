@@ -34,7 +34,7 @@ rulesGramSchmidt = [ruleNormalize, ruleOrthogonal, ruleNext]
 -- Make the current vector of length 1
 -- (only applicable if this is not already the case)
 ruleNormalize :: Floating a => Rule (Context (VectorSpace a))
-ruleNormalize = makeRule "Turn into unit Vector" $ makeTransEnv $ \vs -> do
+ruleNormalize = makeRule "Turn into unit Vector" $ makeTransLiftContext $ \vs -> do
    v  <- current vs
    guard (norm v `notElem` [0, 1])
    setCurrent (toUnit v) vs
@@ -52,7 +52,7 @@ ruleOrthogonal = makeRule "Make orthogonal" $
 -- Variable "j" is for administrating which vectors are already orthogonal
 ruleNextOrthogonal :: Rule (Context (VectorSpace a))
 ruleNextOrthogonal = minorRule $ makeRule "Orthogonal to next" $ 
-   makeTransEnv_ $ const $ do
+   makeTransLiftContext_ $ const $ do
       i <- getVarI
       j <- liftM succ getVarJ
       guard (j < i)
@@ -62,7 +62,7 @@ ruleNextOrthogonal = minorRule $ makeRule "Orthogonal to next" $
 -- This rule should fail if there are no vectors left
 ruleNext :: Rule (Context (VectorSpace a))
 ruleNext = minorRule $ makeRule "Consider next vector" $ 
-   makeTransEnv_ $ \vs -> do
+   makeTransLiftContext_ $ \vs -> do
       i <- getVarI
       guard (i < length (vectors vs))
       varI := i+1

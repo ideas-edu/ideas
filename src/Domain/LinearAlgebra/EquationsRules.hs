@@ -66,7 +66,7 @@ ruleEliminateVar = describe "Eliminate a variable (using addition)" $
 
 ruleDropEquation :: Rule (Context (LinearSystem Expr))
 ruleDropEquation = describe "Drop trivial equations (such as 0=0)" $
-   simplifySystem $ makeRule (linId, "trivial") $ makeTransEnv $ \ls -> do
+   simplifySystem $ makeRule (linId, "trivial") $ makeTransLiftContext $ \ls -> do
       i   <- findIndexM (fromMaybe False . testConstants (==)) ls
       cov <- getCovered
       let f n = if i < n then n-1 else n
@@ -75,7 +75,7 @@ ruleDropEquation = describe "Drop trivial equations (such as 0=0)" $
 
 ruleInconsistentSystem :: Rule (Context (LinearSystem Expr))
 ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
-   simplifySystem $ makeRule (linId, "inconsistent") $ makeTransEnv $ \ls -> do
+   simplifySystem $ makeRule (linId, "inconsistent") $ makeTransLiftContext $ \ls -> do
       let stop = [0 :==: 1]
       guard (invalidSystem ls && ls /= stop)
       covered := 1 
@@ -170,7 +170,7 @@ addEquations = parameter3 "equation 1" "equation 2" "scale factor" $ \i j a -> t
    changeAt i f xs
 
 changeCover :: (Int -> Int) -> Transformation (Context (LinearSystem a))
-changeCover f = makeTransEnv_ $ \ls -> do
+changeCover f = makeTransLiftContext_ $ \ls -> do
    new <- liftM f getCovered
    guard (new >= 0 && new <= length ls)
    covered := new

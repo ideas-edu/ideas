@@ -64,7 +64,7 @@ instance Apply Rule where
    applyAll r = map fst . applyRule r
 
 applyRule :: Rule a -> a -> [(a, Environment)]
-applyRule = applyTrans . ruleTrans
+applyRule = transApply . ruleTrans
 
 instance HasId (Rule a) where
    getId        = ruleId
@@ -72,7 +72,7 @@ instance HasId (Rule a) where
 
 instance LiftView Rule where
    liftViewIn v r = r
-      { ruleTrans    = transMaybe (match v) >>> first (ruleTrans r) >>> arr (build v)
+      { ruleTrans    = transLiftViewIn v (ruleTrans r)
       , ruleEquality = fmap liftEq (ruleEquality r)
       }
     where

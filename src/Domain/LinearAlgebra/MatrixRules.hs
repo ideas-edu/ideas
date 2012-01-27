@@ -23,7 +23,7 @@ import Domain.Math.Simplification
 
 ruleFindColumnJ :: Num a => Rule (Context (Matrix a))
 ruleFindColumnJ = minorRule $ makeRule (gaussId, "FindColumnJ") $ 
-   makeTransEnv_ $ \m -> do
+   makeTransLiftContext_ $ \m -> do
       cols <- liftM columns (subMatrix m)
       i    <- findIndexM nonZero cols
       columnJ := i
@@ -100,7 +100,7 @@ rowAdd = parameter3 "row1" "row2" "scale factor" $ \i j k ->
       return (addRow i j k m)
 
 changeCover :: (Int -> Int) -> Transformation (Context (Matrix a))
-changeCover f = makeTransEnv_ $ \m -> do
+changeCover f = makeTransLiftContext_ $ \m -> do
    new <- liftM f getCovered
    guard (new >= 0 && new <= fst (dimensions m))
    covered := new

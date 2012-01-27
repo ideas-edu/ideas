@@ -18,7 +18,7 @@ module Common.Exercise
    , exerciseId, status, parser, prettyPrinter
    , equivalence, similarity, ready, suitable, isReady, isSuitable
    , hasTermView
-   , strategy, navigation, canBeRestarted, extraRules, recognizers, ruleOrdering
+   , strategy, navigation, canBeRestarted, extraRules, ruleOrdering
    , difference, differenceEqual
    , testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
@@ -85,7 +85,6 @@ data Exercise a = Exercise
    , navigation     :: a -> Navigator a
    , canBeRestarted :: Bool                -- By default, assumed to be the case
    , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
-   , recognizers    :: [Recognizer (Context a)]
    , ruleOrdering   :: Rule (Context a) -> Rule (Context a) -> Ordering -- Ordering on rules (for onefirst)
      -- testing and exercise generation
    , testGenerator  :: Maybe (Gen a)
@@ -133,7 +132,6 @@ emptyExercise = Exercise
    , navigation     = noNavigator
    , canBeRestarted = True
    , extraRules     = []
-   , recognizers    = []
    , ruleOrdering   = compareId
      -- testing and exercise generation
    , testGenerator  = Nothing
@@ -235,11 +233,13 @@ differenceEqual ex a b = do
 recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [(Location, Environment)]
 recognizeRule ex r ca cb = rec (fromMaybe ca (top ca))
  where
-   rec x =
-      let here = case recognize (ruleRecognizer (similarity ex) r) x cb of
-                    Just as -> [(location x, as)]
-                    Nothing -> []
-      in here ++ concatMap rec (allDowns x)
+   final = addTransRecognizer (similarity ex) r
+   rec x = do
+      -- here
+      as <- recognizeAll final x cb
+      return (location x, as)
+    `mplus` -- or there
+      concatMap rec (allDowns x)
 
 ruleOrderingWith :: [Rule a] -> Rule a -> Rule a -> Ordering
 ruleOrderingWith = ruleOrderingWithId . map getId

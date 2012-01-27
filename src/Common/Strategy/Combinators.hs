@@ -98,7 +98,7 @@ option s = s <|> succeed
 -- | Checks whether a predicate holds for the current term. The
 --   check is considered to be a minor step.
 check :: (a -> Bool) -> Strategy a
-check p = toStrategy (checkRule p)
+check = toStrategy . checkRule "check"
 
 -- | Check whether or not the argument strategy cannot be applied: the result
 --   strategy only succeeds if this is not the case (otherwise it fails).

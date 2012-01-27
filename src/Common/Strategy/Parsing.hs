@@ -226,7 +226,7 @@ useRule :: Step l a -> State l a -> [State l a]
 useRule step state = map resetTimer $
    case step of
       RuleStep _ r -> do
-         (a, env) <- applyRule r (value state)
+         (a, env) <- transApply (transformation r) (value state)
          return $ traceStep (RuleStep env r) state {value = a}
       _ -> [traceStep step state]
 

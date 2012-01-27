@@ -101,7 +101,7 @@ varVars :: Ref [Expr]
 varVars = makeRef "variables"
 
 simplifyFirst :: Rule (Context (LinearSystem Expr))
-simplifyFirst = simplifySystem idRule
+simplifyFirst = simplifySystem (idRule "simplify")
 
 conv1 :: Rule (Context Expr)
 conv1 = describe "Convert linear system to matrix" $

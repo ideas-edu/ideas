@@ -19,8 +19,6 @@ module Common.Rule.Parameter
    ( ParamTrans
    , supplyParameters, supplyContextParameters
    , parameter1, parameter2, parameter3
-     -- * Extract information
-   , transRewriteRules, transRefs
    ) where
 
 import Common.Environment

@@ -44,7 +44,7 @@ rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
       forM_ (ruleSiblings r) $ \s ->
          element "sibling" $ text $ showId s
       -- FMPs and CMPs
-      forM_ (getRewriteRules r) $ \(Some rr) -> do
+      forM_ (getRewriteRules (transformation r)) $ \(Some rr) -> do
          let ok  = not $ isBuggyRule r
              fmp = rewriteRuleToFMP ok rr
          case showRewriteRule ok rr of

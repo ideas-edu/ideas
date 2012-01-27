@@ -20,7 +20,7 @@ import Text.HTML
 
 ruleToHTML :: Some Exercise -> Rule a -> HTMLBuilder
 ruleToHTML ex r =
-   forM_ (getRewriteRules r) $ \(Some rr) ->
+   forM_ (getRewriteRules (transformation r)) $ \(Some rr) ->
       rewriteRuleToHTML (not $ isBuggyRule r) ex rr
 
 rewriteRuleToHTML :: Bool -> Some Exercise -> RewriteRule a -> HTMLBuilder

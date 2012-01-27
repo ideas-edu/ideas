@@ -26,7 +26,7 @@ module Common.Rule.Transformation
    , transLiftContext, transLiftContextIn
    , makeTransLiftContext, makeTransLiftContext_
      -- * Using transformations
-   , transApply, transRewriteRules, transRefs
+   , transApply, getRewriteRules, getReferences
    ) where
 
 import Common.Environment
@@ -180,18 +180,18 @@ transApply = rec mempty
    make :: Environment -> (b -> c) -> Trans a b -> a -> [(c, Environment)]
    make env f g = map (mapFirst f) . rec env g
 
-transRewriteRules :: Trans a b -> [Some RewriteRule]
-transRewriteRules trans =
+getRewriteRules :: Trans a b -> [Some RewriteRule]
+getRewriteRules trans =
    case trans of
       Rewrite r -> [Some r]
-      _         -> descendTrans transRewriteRules trans
+      _         -> descendTrans getRewriteRules trans
       
-transRefs :: Trans a b -> [Some Ref]
-transRefs trans = 
+getReferences :: Trans a b -> [Some Ref]
+getReferences trans = 
    case trans of
       Ref r      -> [Some r]
       EnvMonad f -> envMonadFunctionRefs f
-      _          -> descendTrans transRefs trans
+      _          -> descendTrans getReferences trans
 
 -- General recursion function (existentially quantified)
 descendTrans :: Monoid m => (forall x y . Trans x y -> m) -> Trans a b -> m

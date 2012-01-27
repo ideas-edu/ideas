@@ -267,10 +267,8 @@ flipEquation = describe "flip equation" $
    rule (lineq, "flip") $ \a b ->
       (a :==: b) :~> (b :==: a)
 
-conditionVarsRHS :: Rule (Equation Expr)
-conditionVarsRHS = describe "All variables are in the right-hand side" $
-   checkRule $ \(lhs :==: rhs) ->
-      hasSomeVar rhs && hasNoVar lhs
+conditionVarsRHS :: Equation Expr -> Bool
+conditionVarsRHS (lhs :==: rhs) = hasSomeVar rhs && hasNoVar lhs
 
 -- Afterwards, merge and sort
 moveToLeft :: Rule (Equation Expr)

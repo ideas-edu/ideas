@@ -10,58 +10,52 @@
 --
 -----------------------------------------------------------------------------
 module Common.Rule.Recognizer
-   ( -- * Recognizer
-     Recognizer, makeRecognizer, makeListRecognizer, simpleRecognizer
-   , recognize, recognizeList, buggyRecognizer, isBuggyRecognizer
-   , transRecognizer
+   ( -- * data type and type class
+     Recognizable(..), Recognizer
+     -- * Constructor functions
+   , makeRecognizer, makeRecognizerBool, makeRecognizerList
    ) where
 
 import Common.Environment
 import Common.Id
-import Common.Rule.Transformation
 import Common.View
-import Control.Monad
 import Data.Maybe
-            
+import Data.Monoid
+               
 -----------------------------------------------------------
---- Recognizer
+--- Data type and type class
 
-data Recognizer a = Recognizer 
-   { recognizerId      :: Id
-   , recognizeList     :: a -> a -> [Environment]
-   , isBuggyRecognizer :: Bool
-   }
+class Recognizable f where
+   recognizer   :: f a -> Recognizer a
+   recognizeAll :: f a -> a -> a -> [Environment]
+   recognize    :: f a -> a -> a -> Maybe Environment
+   -- default definitions
+   recognizeAll    = unR . recognizer
+   recognize r a b = listToMaybe $ recognizeAll r a b
 
-instance HasId (Recognizer a) where
-   getId = recognizerId 
-   changeId f r = r {recognizerId = f (recognizerId r)}
+newtype Recognizer a = R { unR :: a -> a -> [Environment] }
 
 instance LiftView Recognizer where
-   liftViewIn v r = r {recognizeList = make}
-    where
-      make a b = do
-         (x, _) <- matchM v a
-         (y, _) <- matchM v b
-         recognizeList r x y
+   liftViewIn v r = R $ \a b -> do
+      (x, _) <- matchM v a
+      (y, _) <- matchM v b
+      recognizeAll r x y
 
-makeRecognizer :: IsId n => n -> (a -> a -> Maybe Environment) -> Recognizer a
-makeRecognizer n f = makeListRecognizer n (\a b -> maybeToList $ f a b)
+instance Monoid (Recognizer a) where
+   mempty      = R $ \_ _ -> []
+   mappend f g = R $ \x y -> recognizeAll f x y ++ recognizeAll g x y
 
-makeListRecognizer :: IsId n => n -> (a -> a -> [Environment]) -> Recognizer a
-makeListRecognizer n f = Recognizer (newId n) f False
+instance Recognizable Recognizer where
+   recognizer = id
 
-simpleRecognizer :: IsId n => n -> (a -> a -> Bool) -> Recognizer a
-simpleRecognizer n eq = makeRecognizer n $ \a b ->
-   guard (eq a b) >> return mempty
+-----------------------------------------------------------
+--- Constructor functions
 
-recognize :: Recognizer a -> a -> a -> Maybe Environment
-recognize r a b = listToMaybe $ recognizeList r a b 
+makeRecognizer :: (a -> a -> Maybe Environment) -> Recognizer a
+makeRecognizer f = makeRecognizerList (\a b -> maybeToList $ f a b)
 
-buggyRecognizer :: Recognizer a -> Recognizer a
-buggyRecognizer r = r {isBuggyRecognizer = True}
+makeRecognizerBool :: (a -> a -> Bool) -> Recognizer a
+makeRecognizerBool eq = makeRecognizerList $ \a b -> [ mempty | eq a b ]
 
-transRecognizer :: IsId n => (a -> a -> Bool) -> n -> Transformation a -> Recognizer a
-transRecognizer eq n f = makeListRecognizer n $ \a b -> do
-   (x, env) <- transApply f a
-   guard (x `eq` b)
-   return env
+makeRecognizerList :: (a -> a -> [Environment]) -> Recognizer a
+makeRecognizerList = R

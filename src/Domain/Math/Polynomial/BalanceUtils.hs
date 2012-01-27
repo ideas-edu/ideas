@@ -141,13 +141,13 @@ checkForChange :: (MonadPlus m, Eq a) => (a -> m a) -> a -> m a
 checkForChange f a = f a >>= \b -> guard (a /= b) >> return b
 
 buggyBalanceRule :: IsId n => n -> (Equation Expr -> Maybe (Equation Expr)) -> Rule (Equation Expr)
-buggyBalanceRule n f = useEquality eq $ buggyRule $ 
+buggyBalanceRule n f = addTransRecognizer eq $ buggyRule $ 
    makeRule (bugbal n) $ makeTrans f
  where
    eq = viewEquivalent (traverseView (polyViewWith rationalView))
 
 buggyBalanceRuleArg :: IsId n => n -> (Equation Expr -> EnvMonad (Equation Expr)) -> Rule (Equation Expr)
-buggyBalanceRuleArg n = useEquality eq . buggyRule .
+buggyBalanceRuleArg n = addTransRecognizer eq . buggyRule .
    makeRule (bugbal n) . makeTrans
  where
    eq = viewEquivalent (traverseView (polyViewWith rationalView))
@@ -156,10 +156,10 @@ buggyBalanceExprRule :: IsId n => n -> (Expr -> Maybe Expr) -> Rule Expr
 buggyBalanceExprRule n f = 
    buggyRule $ makeSimpleRule (bugbal n) f
 
-buggyBalanceRecognizer :: IsId n => n -> (a -> a -> EnvMonad ()) -> Recognizer a
+buggyBalanceRecognizer :: IsId n => n -> (a -> a -> EnvMonad ()) -> Rule a
 buggyBalanceRecognizer n p = 
    let eq a b = execEnvMonad (p a b) mempty
-   in buggyRecognizer $ makeListRecognizer (bugbal n) eq
+   in addRecognizerList eq $ buggyRule $ emptyRule (bugbal n)
 
 ------------------------------------------------------------
 -- Helpers

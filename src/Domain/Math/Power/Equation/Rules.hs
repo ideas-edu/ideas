@@ -121,9 +121,9 @@ myCoverUpTimesWith = doAfter f . coverUpTimesWith
    f (lhs :==: rhs) = lhs :==: g (applyD distributeTimes rhs)
    g a              = fromMaybe a (distributeDivisionT a)
 
-condXisRight :: Rule (Equation Expr)
-condXisRight = describe "flip condition" $ checkRule $ \(lhs :==: rhs) ->
-   hasVar "x" rhs && withoutVar "x" lhs
+-- flip condition
+condXisRight :: Equation Expr -> Bool 
+condXisRight (lhs :==: rhs) = hasVar "x" rhs && withoutVar "x" lhs
 
 --xToLeft = makeRule (powereq, "x -to-left") $  toLeftRightT $ elem "x" . vars
 

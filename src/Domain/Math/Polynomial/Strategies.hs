@@ -176,7 +176,7 @@ isTimesC :: Context a -> Bool
 isTimesC = maybe False (isJust . isTimes :: Term -> Bool) . currentT
 
 flipEquationS :: IsTerm a => Strategy (Context a)
-flipEquationS = use conditionVarsRHS <*> use flipEquation
+flipEquationS = use (check conditionVarsRHS) <*> use flipEquation
 
 -----------------------------------------------------------
 -- Expanding factors of an expression

@@ -18,7 +18,6 @@ module Service.Diagnose
    ) where
 
 import Common.Library hiding (ready)
-import Data.Function
 import Data.List (sortBy)
 import Data.Maybe
 import Service.BasicServices hiding (apply)
@@ -108,17 +107,11 @@ diagnose state new
       listToMaybe (filter p xs)
 
    discovered searchForBuggy = listToMaybe $
-      sortBy (ruleOrdering ex `on` fst) $ -- quick fix
       [ (r, env)
       | r <- sortBy (ruleOrdering ex) (ruleset ex)
       , isBuggyRule r == searchForBuggy, not (isFinalRule r)
       , (_, env) <- recognizeRule ex r sub1 sub2
-      ] ++
-      [ (makeSimpleRule (getId r) (const Nothing), env)
-      | r   <- recognizers ex -- unsorted!
-      , isBuggyRecognizer r == searchForBuggy
-      , env <- maybeToList (recognize r sub1 sub2)
-      ] 
+      ]
     where
       diff = if searchForBuggy then difference else differenceEqual
       (sub1, sub2) =

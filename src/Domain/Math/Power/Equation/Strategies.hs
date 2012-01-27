@@ -76,7 +76,7 @@ expEqStrategy = cleanUpStrategy cleanup strat
 logEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 logEqStrategy = label "Logarithmic equation"
               $  try (use logarithm)
-             <*> try (use conditionVarsRHS <*> use flipEquation)
+             <*> try (use (check conditionVarsRHS) <*> use flipEquation)
              <*> repeatS (somewhere $  use nthRoot
                                    <|> use calcPower
                                     <|> use calcPowerPlus
@@ -94,7 +94,7 @@ rootEqStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 rootEqStrategy =  cleanUpStrategy cleanup strat
   where
     strat =  label "Cover up"
-          $ try ( use condXisRight <*> use flipEquation )
+          $ try ( use (check condXisRight) <*> use flipEquation )
          <*> exhaustiveSomewhere myCoverUpRulesOr
     cleanup = applyTop $ fmap $ fmap cleanUpExpr
 

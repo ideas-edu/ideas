@@ -130,7 +130,7 @@ liftS2 :: Simplify a => (a -> a -> a) -> Simplified a -> Simplified a -> Simplif
 liftS2 f (S x) (S y) = simplified (f x y)
 
 simplifyRule :: Simplify a => Rule a
-simplifyRule = simplify idRule
+simplifyRule = simplify (idRule "simplify")
 
 -------------------------------------------------------------
 -- Distribution of constants

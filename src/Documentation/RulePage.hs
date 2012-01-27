@@ -81,7 +81,7 @@ rulePage ex exMap usedIn r = do
          forTerm ex (inContext ex b)
 
    -- FMPS
-   let xs = getRewriteRules r
+   let xs = getRewriteRules (transformation r)
    unless (null xs) $ do
       h3 "Formal Mathematical Properties"
       forM_ xs $ \(Some rr) -> para $ do

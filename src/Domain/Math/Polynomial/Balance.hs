@@ -49,7 +49,6 @@ balanceExercise = makeExercise
                      <||> predicateView (traverseView (equationSolvedWith doubleNF))
    , strategy      = balanceStrategy
    , extraRules    = map use buggyBalanceRules ++ map use buggyBalanceExprRules
-   , recognizers   = map use buggyRecognizers
    , ruleOrdering  = ruleOrderingWithId (balanceOrder ++ buggyPriority)
    , navigation    = termNavigator
    , testGenerator = Just $ liftM2 (\a b -> singleton (a :==: b)) (sized linearGen) (sized linearGen)
@@ -91,7 +90,7 @@ balanceStrategy = cleanUpStrategyAfter (applyTop cleaner) $
        <*> try (use scaleToOne)
        <*> try (use calculate))
        -- flip sides of an equation (at most once)
-   <%> try (atomic (use conditionVarsRHS <*> use flipEquation))
+   <%> try (atomic (use (check conditionVarsRHS) <*> use flipEquation))
        -- divide by a common factor (but not as final "scale-to-one" step)
    <%> many (notS (use scaleToOne) <*> use divideCommonFactor)
  where

@@ -48,7 +48,7 @@ logarithmic = "algebra.manipulation.logarithmic"
 
 -- | n  =>  a^e  (with e /= 1)
 factorAsPower :: Rule Expr
-factorAsPower = makeSimpleRuleList (power, "factor-as-power") $ \ expr -> do
+factorAsPower = ruleList (power, "factor-as-power") $ \ expr -> do
   n      <- matchM myIntegerView expr
   (a, x) <- PF.allPowers $ toInteger n
   if n > 0
@@ -59,13 +59,13 @@ factorAsPower = makeSimpleRuleList (power, "factor-as-power") $ \ expr -> do
 
 -- | Calculate power, e.g., 2^2 => 4
 calcPower :: Rule Expr
-calcPower = makeSimpleRule "arithmetic.operation.rational.power" $ \ expr -> do
+calcPower = makeRule "arithmetic.operation.rational.power" $ \ expr -> do
   (a, x) <- match (powerViewWith rationalView plainNatView) expr
   return $ fromRational $ a Prelude.^ x
 
 -- | a^(x/y) => (a^x)^(1/y)
 calcPowerRatio :: Rule Expr
-calcPowerRatio = makeSimpleRule (power, "power-ratio") $ \ expr -> do
+calcPowerRatio = makeRule (power, "power-ratio") $ \ expr -> do
   let v = powerView >>> second (rationalView >>> plainRationalView)
   (a, (x, y)) <- match v expr
   guard $ x /= 1 && y /= 1
@@ -73,7 +73,7 @@ calcPowerRatio = makeSimpleRule (power, "power-ratio") $ \ expr -> do
 
 -- | root n x
 calcPlainRoot :: Rule Expr
-calcPlainRoot = makeSimpleRule (power, "root") $ \expr -> do
+calcPlainRoot = makeRule (power, "root") $ \expr -> do
    (n, x) <- matchM (rootView >>> (integerView *** integerView)) expr
    fmap fromInteger (takeRoot n x)
 
@@ -81,7 +81,7 @@ calcPlainRoot = makeSimpleRule (power, "root") $ \expr -> do
 -- BHR: not used. Better to turn this into OrList (Relation Expr)
 {-
 calcRoot :: Rule (OrList Expr)
-calcRoot = makeSimpleRule (power, "root") $
+calcRoot = makeRule (power, "root") $
    oneDisjunct $ \expr -> do
       (n, x) <- match (rootView >>> (integerView *** integerView)) expr
       y      <- liftM fromInteger $ lookup n $ map swap $ PF.allPowers (abs x)
@@ -102,7 +102,7 @@ calcPowerMinus =
    makeCommutative sumView (.+.) $ calcBinPowerRule "minus" (.-.) isMinus
 
 addExponents :: Rule Expr
-addExponents = makeSimpleRuleList (power, "add-exponents") $ \ expr -> do
+addExponents = ruleList (power, "add-exponents") $ \ expr -> do
   (sign, fs)     <- matchM (powerFactorView isPow) expr
   ((x, y), fill) <- twoNonAdjacentHoles fs
   prod           <- applyM simpleAddExponents $ x * y
@@ -114,7 +114,7 @@ isPow x y = x `belongsTo` myIntegerView &&
 
 -- | a*x^y * b*x^q = a*b * x^(y+q)
 simpleAddExponents :: Rule Expr
-simpleAddExponents = makeSimpleRule (power, "simple-add-exponents") $ \expr -> do
+simpleAddExponents = makeRule (power, "simple-add-exponents") $ \expr -> do
   (e1, e2)     <- match timesView expr
   (a, (x,  y)) <- match unitPowerView e1
   (b, (x', q)) <- match unitPowerView e2
@@ -123,7 +123,7 @@ simpleAddExponents = makeSimpleRule (power, "simple-add-exponents") $ \expr -> d
   
 -- | a*x^y / b*x^q = a/b * x^(y-q)
 subExponents :: Rule Expr
-subExponents = makeSimpleRule (power, "sub-exponents") $ \ expr -> do
+subExponents = makeRule (power, "sub-exponents") $ \ expr -> do
   (e1, e2)     <- match divView expr
   (a, (x,  y)) <- match unitPowerView e1
   (b, (x', q)) <- match unitPowerView e2
@@ -132,13 +132,13 @@ subExponents = makeSimpleRule (power, "sub-exponents") $ \ expr -> do
 
 -- | (a^x)^y = a^(x*y)
 mulExponents :: Rule Expr
-mulExponents = makeSimpleRule (power, "mul-exponents") $ \ expr -> do
+mulExponents = makeRule (power, "mul-exponents") $ \ expr -> do
   ((a, x), y) <- match (strictPowerView >>> first powerView) expr
   return $ build powerView (a, x .*. y)
 
 -- | (a0 * a1 ... * an)^x = a0^x * a1^x ... * an^x
 distributePower :: Rule Expr
-distributePower = makeSimpleRule (power, "distr-power") $ \ expr -> do
+distributePower = makeRule (power, "distr-power") $ \ expr -> do
   ((sign, as), x) <- match (powerViewWith (toView productView) identity) expr
   guard $ length as > 1
   let y = build productView (False, map (\a -> build powerView (a, x)) as)
@@ -147,71 +147,71 @@ distributePower = makeSimpleRule (power, "distr-power") $ \ expr -> do
 
 -- | (a/b)^y = (a^y / b^y)
 distributePowerDiv :: Rule Expr
-distributePowerDiv = makeSimpleRule (power, "distr-power-div") $ \ expr -> do
+distributePowerDiv = makeRule (power, "distr-power-div") $ \ expr -> do
   ((a, b), y) <- match (powerViewWith divView identity) expr
   return $ build divView (build powerView (a, y), build powerView (b, y))
 
 -- | a^0 = 1
 zeroPower :: Rule Expr
-zeroPower = makeSimpleRule (power, "power-zero") $ \ expr -> do
+zeroPower = makeRule (power, "power-zero") $ \ expr -> do
   (_, x) <- match powerView expr
   guard $ x == 0
   return 1
 
 -- a ^ 1 = a
 onePower :: Rule Expr
-onePower = makeSimpleRule (power, "power-one") $ \ expr -> do
+onePower = makeRule (power, "power-one") $ \ expr -> do
   (a, x) <- match powerView expr
   guard $ x == 1
   return a
 
 -- 1 ^ x = 1
 powerOne :: Rule Expr
-powerOne = makeSimpleRule (power, "one-power") $ \ expr -> do
+powerOne = makeRule (power, "one-power") $ \ expr -> do
   (a, _) <- match powerView expr
   guard $ a == 1
   return a
 
 -- 0 ^ x = 0 with x > 0
 powerZero :: Rule Expr
-powerZero = makeSimpleRule (power, "one-power") $ \ expr -> do
+powerZero = makeRule (power, "one-power") $ \ expr -> do
   (a, x) <- match (powerViewWith identity integerView) expr
   guard $ x > 0 && a == 0
   return 0
 
 -- | all of the above simplification rules
 simplifyPower :: Rule Expr
-simplifyPower = makeSimpleRuleList (power, "simplify") $ \ expr ->
+simplifyPower = ruleList (power, "simplify") $ \ expr ->
   mapMaybe (`apply` expr) [zeroPower, onePower, powerOne, powerZero]
 
 -- | e/a = e*a^(-1)  where a is an variable
 reciprocalVar :: Rule Expr
-reciprocalVar = makeSimpleRule (power, "reciprocal-var") $ \ expr -> do
+reciprocalVar = makeRule (power, "reciprocal-var") $ \ expr -> do
   (e, (c, (a, x))) <- match (divView >>> second unitPowerViewVar) expr
   return $ (e .*. build unitPowerViewVar (1, (a, neg x))) ./. c
 
 -- | c/a^x = c*a^x^(-1)
 reciprocalPower :: Rule Expr
-reciprocalPower = makeSimpleRule (power, "reciprocal-power") $ \ expr -> do
+reciprocalPower = makeRule (power, "reciprocal-power") $ \ expr -> do
   (e, (c, (a, x))) <- match (divView >>> second consPowerView) expr
   return $ (e .*. build consPowerView (1, (a, neg x))) ./. c
 
 -- | Use with care, will match any fraction!
 reciprocal :: Rule Expr
-reciprocal = makeSimpleRule (power, "reciprocal") $ \expr -> do
+reciprocal = makeRule (power, "reciprocal") $ \expr -> do
   (a, b) <- match divView expr
   return $ a .*. build powerView (b, -1)
 
 -- | a^x = 1/a^(-x)
 reciprocalInv ::  Rule Expr
-reciprocalInv = makeSimpleRule (power, "reciprocal-inverse") $ \ expr -> do
+reciprocalInv = makeRule (power, "reciprocal-inverse") $ \ expr -> do
   guard $ hasNegExp expr
   (a, x) <- match strictPowerView expr
   return $ 1 ./. build strictPowerView (a, neg x)
 
 -- | c / d*a^(-x)*b^(-y)...p^r... = c*a^x*b^y.../d*p^r...
 reciprocalFrac :: Rule Expr
-reciprocalFrac = makeSimpleRule (power, "reciprocal-frac") $ \ expr -> do
+reciprocalFrac = makeRule (power, "reciprocal-frac") $ \ expr -> do
   (e1, e2) <- match divView expr
   (s, xs)  <- match productView e2
   let (ys, zs) = partition hasNegExp xs
@@ -225,7 +225,7 @@ reciprocalFrac = makeSimpleRule (power, "reciprocal-frac") $ \ expr -> do
 -- | a^x / b^x = (a/b)^x
 divBase :: Rule Expr
 divBase = describe "divide base of root" $
-  makeSimpleRule (power, "divide-base") $ \ expr -> do
+  makeRule (power, "divide-base") $ \ expr -> do
   (e1, e2)      <- match divView expr
   (c1, (a, x))  <- match consPowerView e1
   (c2, (b, x')) <- match consPowerView e2
@@ -234,7 +234,7 @@ divBase = describe "divide base of root" $
 
 -- | (-a)^x = -(a^x)
 pushNegOut :: Rule Expr
-pushNegOut = makeSimpleRule (power, "push-negation-out") $ \ expr -> do
+pushNegOut = makeRule (power, "push-negation-out") $ \ expr -> do
   (a, x) <- match (powerViewWith identity integerView) expr
   a'     <- isNegate a
   return $ (if odd x then neg else id) $ build powerView (a', fromInteger x)
@@ -243,21 +243,21 @@ pushNegOut = makeSimpleRule (power, "push-negation-out") $ \ expr -> do
 
 -- | a^(p/q) = root (a^p) q
 power2root :: Rule Expr
-power2root = makeSimpleRule (power, "write-as-root") $ \ expr -> do
+power2root = makeRule (power, "write-as-root") $ \ expr -> do
   (a, (p, q)) <- match (strictPowerView >>> second divView) expr
   guard $ q /= 1
   return $ root (a .^. p) q
 
 -- | root a q = a^(1/q)
 root2power :: Rule Expr
-root2power = makeSimpleRule (power, "write-as-power") $ \ expr -> do
+root2power = makeRule (power, "write-as-power") $ \ expr -> do
   (a, q) <- match strictRootView expr
   return $ a .^. (1 ./. q)
 
 -- | Logarithmic relation rules -----------------------------------------------
 
 logarithm :: Rule (Equation Expr)
-logarithm = makeSimpleRule (logarithmic, "logarithm") $ \(lhs :==: rhs) -> do
+logarithm = makeRule (logarithmic, "logarithm") $ \(lhs :==: rhs) -> do
     (b, x) <- match logView lhs
     return $ x :==: build powerView (b, rhs)
 
@@ -265,7 +265,7 @@ logarithm = makeSimpleRule (logarithmic, "logarithm") $ \(lhs :==: rhs) -> do
 
 -- | a/b * c/d = a*c / b*d  (b or d may be one)
 myFractionTimes :: Rule Expr
-myFractionTimes = smartRule $ makeSimpleRule (power, "fraction-times") $ \ expr -> do
+myFractionTimes = smartRule $ makeRule (power, "fraction-times") $ \ expr -> do
   (e1, e2) <- match timesView expr
   guard $ e1 `belongsTo` divView || e2 `belongsTo` divView
   let f e    = fromMaybe (e, 1) (match divView e)
@@ -277,7 +277,7 @@ myFractionTimes = smartRule $ makeSimpleRule (power, "fraction-times") $ \ expr 
 
 calcBinPowerRule :: String -> (Expr -> Expr -> Expr) -> (Expr -> Maybe (Expr, Expr)) -> Rule Expr
 calcBinPowerRule opName op m =
-  makeSimpleRule (power, "calc-power", opName) $ \e -> do
+  makeRule (power, "calc-power", opName) $ \e -> do
     (e1, e2)     <- m e
     (c1, (a, x)) <- match unitPowerViewVar e1
     (c2, (b, y)) <- match unitPowerViewVar e2
@@ -287,7 +287,7 @@ calcBinPowerRule opName op m =
 -- use twoNonAdHoles instead of split ???
 makeCommutative :: IsView f => f Expr [Expr] -> (Expr -> Expr -> Expr) -> Rule Expr -> Rule Expr
 makeCommutative view op r =
-  makeSimpleRuleList (getId r) $ \ expr ->
+  ruleList (getId r) $ \ expr ->
     case match view expr of
       Just factors -> do
         (e, es) <- split op factors

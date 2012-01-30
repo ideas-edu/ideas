@@ -10,31 +10,31 @@
 --
 -- A rule is just a transformation with some meta-information, such as a name 
 -- (which should be unique) and properties such as "buggy" or "minor". Rules
--- can be lifted with a view using the LiftView type class. 
+-- can be lifted with a view using the LiftView type class.
 --
 -----------------------------------------------------------------------------
 module Common.Rule.Abstract
    ( -- * Rule data type and accessors
      Rule, transformation, recognizer
      -- * Constructor functions
-   , makeRule, makeSimpleRule, makeSimpleRuleList  
-   , rule, ruleList
+   , makeRule, ruleMaybe, ruleList, ruleTrans, ruleRewrite
+   , buggyRule, minorRule, rewriteRule, rewriteRules
      -- * Special minor rules
    , idRule, checkRule, emptyRule 
      -- * Rule properties
-   , minorRule, isMinorRule, isMajorRule
-   , buggyRule, isBuggyRule
    , finalRule, isFinalRule
    , ruleSiblings, siblingOf
-   , isRewriteRule, doAfter
+   , isRewriteRule, isRecognizer, doAfter
      -- * Recognizer
-   , addRecognizer, addRecognizerBool, addRecognizerList, addTransRecognizer
+   , addRecognizer, addRecognizerBool
+   , addRecognizerList, addTransRecognizer
    ) where
 
 import Common.Environment
 import Common.Classes
 import Common.Id
 import Common.Rewriting
+import Common.Rewriting.RewriteRule
 import Common.Rule.Transformation
 import Common.Rule.Recognizer
 import Common.View
@@ -48,13 +48,13 @@ import Test.QuickCheck
 
 -- | Abstract data type for representing rules
 data Rule a = Rule
-   { ruleId         :: Id  -- ^ Unique identifier of the rule
-   , ruleTrans      :: Transformation a
-   , ruleRecognizer :: Recognizer a
-   , isBuggyRule    :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
-   , isMinorRule    :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
-   , isFinalRule    :: Bool -- ^ Final (clean-up) step in derivation
-   , ruleSiblings   :: [Id]
+   { ruleId        :: Id  -- ^ Unique identifier of the rule
+   , getTrans      :: Transformation a
+   , getRecognizer :: Recognizer a
+   , isBuggyRule   :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
+   , isMinorRule   :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
+   , isFinalRule   :: Bool -- ^ Final (clean-up) step in derivation
+   , ruleSiblings  :: [Id]
    }
 
 instance Show (Rule a) where
@@ -75,92 +75,89 @@ instance HasId (Rule a) where
 
 instance LiftView Rule where
    liftViewIn v r = r
-      { ruleTrans      = transLiftViewIn v (ruleTrans r)
-      , ruleRecognizer = liftViewIn v (ruleRecognizer r)
+      { getTrans      = transLiftViewIn v (getTrans r)
+      , getRecognizer = liftViewIn v (getRecognizer r)
       }
 
 instance Recognizable Rule where
-   recognizer = ruleRecognizer
+   recognizer = getRecognizer
+
+instance Buggy (Rule a) where
+   setBuggy b r = r {isBuggyRule = b}
+   isBuggy = isBuggyRule
+
+instance Minor (Rule a) where
+   setMinor b r = r {isMinorRule = b}
+   isMinor = isMinorRule
 
 instance (Arbitrary a, CoArbitrary a) => Arbitrary (Rule a) where
    arbitrary = liftM3 make arbitrary arbitrary arbitrary
     where
       make :: Bool -> Id -> (a -> Maybe a) -> Rule a
-      make minor n f
-         | minor     = minorRule $ makeSimpleRule n f
-         | otherwise = makeSimpleRule n f
+      make b n f = setMinor b $ makeRule n f
 
 transformation :: Rule a -> Transformation a
-transformation = ruleTrans
+transformation = getTrans
 
 -----------------------------------------------------------
 --- Constructor functions
 
--- | Turn a transformation into a rule: the first argument is the rule's name
-makeRule :: IsId n => n -> Transformation a -> Rule a
-makeRule n t = Rule (newId n) t mempty False False False []
+makeRule :: (IsId n, MakeTrans f) => n -> (a -> f a) -> Rule a
+makeRule n = ruleTrans n . makeTrans
 
--- | Turn a function (which returns its result in the Maybe monad) into a rule: 
--- the first argument is the rule's name
-makeSimpleRule :: IsId n => n -> (a -> Maybe a) -> Rule a
-makeSimpleRule = makeSimpleRuleList
+ruleMaybe :: IsId n => n -> (a -> Maybe a) -> Rule a
+ruleMaybe = makeRule
 
--- | Turn a function (which returns a list of results) into a rule: the first 
--- argument is the rule's name
-makeSimpleRuleList :: (IsId n, MakeTrans f) => n -> (a -> f a) -> Rule a
-makeSimpleRuleList n = makeRule n . makeTrans
+ruleList :: IsId n => n -> (a -> [a]) -> Rule a
+ruleList = makeRule
 
-rule :: (IsId n, RuleBuilder f a) => n -> f -> Rule a
-rule n = makeRule a . transRewrite . rewriteRule a
- where a = newId n
+ruleTrans :: IsId n => n -> Transformation a -> Rule a
+ruleTrans n f = Rule (newId n) f mempty False False False []
 
-ruleList :: (IsId n, RuleBuilder f a) => n -> [f] -> Rule a
-ruleList n = makeRule a . mconcat . map (transRewrite . rewriteRule a)
- where a = newId n
+ruleRewrite :: RewriteRule a -> Rule a
+ruleRewrite r = ruleTrans (getId r) (transRewrite r)
+
+rewriteRule :: (IsId n, RuleBuilder f a) => n -> f -> Rule a
+rewriteRule n = rewriteRules n . return
+
+rewriteRules :: (IsId n, RuleBuilder f a) => n -> [f] -> Rule a
+rewriteRules n = 
+   let a = newId n
+   in ruleTrans a . mconcat . map (transRewrite . makeRewriteRule a)
+   
+buggyRule :: (IsId n, MakeTrans f) => n -> (a -> f a) -> Rule a
+buggyRule n = buggy . makeRule n
+
+minorRule :: (IsId n, MakeTrans f) => n -> (a -> f a) -> Rule a
+minorRule n = minor . makeRule n
 
 -----------------------------------------------------------
 --- Special minor rules
 
 -- | A special (minor) rule that is never applicable (i.e., this rule always fails)
 emptyRule :: IsId n => n -> Rule a
-emptyRule n = minorRule $ makeRule n zeroArrow
+emptyRule n = minor $ ruleTrans n zeroArrow
 
 -- | A special (minor) rule that always returns the identity
 idRule :: IsId n => n -> Rule a
-idRule n = minorRule $ makeRule n identity
+idRule n = minor $ ruleTrans n identity
 
 -- | A special (minor) rule that checks a predicate (and returns the identity
 -- if the predicate holds)
 checkRule :: IsId n => n -> (a -> Bool) -> Rule a
-checkRule n p = minorRule $ makeSimpleRuleList n $ \a -> [ a | p a ]
+checkRule n p = minorRule n $ \a -> [ a | p a ]
 
 -----------------------------------------------------------
 --- Rule properties
 
--- | Returns whether or not the rule is major (i.e., not minor)
-isMajorRule :: Rule a -> Bool
-isMajorRule = not . isMinorRule
-
 isRewriteRule :: Rule a -> Bool
 isRewriteRule = not . null . getRewriteRules . transformation
 
+isRecognizer :: Rule a -> Bool
+isRecognizer = isZeroTrans . transformation
+
 siblingOf :: HasId b => b -> Rule a -> Rule a
 siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
-
-
-
-
-
-
-
-
--- | Mark the rule as minor (by default, rules are not minor)
-minorRule :: Rule a -> Rule a
-minorRule r = r {isMinorRule = True}
-
--- | Mark the rule as buggy (by default, rules are supposed to be sound)
-buggyRule :: Rule a -> Rule a
-buggyRule r = r {isBuggyRule = True}
 
 -- | Mark the rule as final (by default, false). Final rules are used as a
 -- final step in the derivation, to get the term in the expected form
@@ -169,13 +166,13 @@ finalRule r = r {isFinalRule = True}
 
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a
-doAfter f r = r {ruleTrans = ruleTrans r >>^ f }
+doAfter f r = r {getTrans = getTrans r >>^ f }
 
 -----------------------------------------------------------
 --- Recognizer
    
 addRecognizer :: Recognizer a -> Rule a -> Rule a 
-addRecognizer a r = r {ruleRecognizer = a `mappend` ruleRecognizer r}
+addRecognizer a r = r {getRecognizer = a `mappend` getRecognizer r}
 
 addRecognizerBool :: (a -> a -> Bool) -> Rule a -> Rule a
 addRecognizerBool eq = addRecognizer (makeRecognizerBool eq)

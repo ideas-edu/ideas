@@ -96,12 +96,11 @@ instance IsStrategy (LabeledStrategy) where
 
 instance IsStrategy Rule where
    toStrategy r
-      | isMajorRule r = toStrategy (toLabeled r)
-      | otherwise     = S (Rule r)
+      | isMajor r = toStrategy (toLabeled r)
+      | otherwise = S (Rule r)
 
 instance IsStrategy RewriteRule where
-   toStrategy r =
-      toStrategy (makeRule (getId r) (transRewrite r))
+   toStrategy = toStrategy . ruleRewrite
 
 -----------------------------------------------------------
 --- Labeled Strategy data-type
@@ -141,7 +140,7 @@ instance IsLabeled Rule where
    toLabeled r = LS (makeInfo (getId r)) (S (Rule r))
 
 instance IsLabeled RewriteRule where
-   toLabeled r = toLabeled (makeRule (getId r) (transRewrite r))
+   toLabeled = toLabeled . ruleRewrite
 
 -- | Labels a strategy with a string
 label :: (IsId l, IsStrategy f) => l -> f a -> LabeledStrategy a
@@ -168,10 +167,10 @@ processLabelInfo getInfo = rec []
       | collapsed info = Label l (Rule asRule) -- !!
       | otherwise      = new
     where
-      new | hidden info = fmap minorRule (Label l c)
+      new | hidden info = fmap minor (Label l c)
           | otherwise   = Label l c
       info   = getInfo l
-      asRule = makeSimpleRuleList (getId info) (runCore (subst new))
+      asRule = makeRule (getId info) (runCore (subst new))
       subst  = flip (foldl (flip (uncurry substCoreVar))) env
 
 -----------------------------------------------------------
@@ -188,12 +187,12 @@ fullDerivationTree = make . processLabelInfo id . toCore . toStrategy
 derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a, Environment) a
 derivationTree s = mergeMaybeSteps . mapFirst f . fullDerivationTree s
  where
-   f (RuleStep env r) | isMajorRule r = Just (r, env)
+   f (RuleStep env r) | isMajor r = Just (r, env)
    f _ = Nothing
 
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]
-rulesInStrategy f = [ r | Rule r <- universe (toCore (toStrategy f)), isMajorRule r ]
+rulesInStrategy f = [ r | Rule r <- universe (toCore (toStrategy f)), isMajor r ]
 
 instance LiftView LabeledStrategy where
    liftViewIn = mapRules . liftViewIn
@@ -221,7 +220,7 @@ cleanUpStrategy f (LS n s) = cleanUpStrategyAfter f (LS n (make s))
 -- | Use a function as do-after hook for all rules in a labeled strategy
 cleanUpStrategyAfter :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
 cleanUpStrategyAfter f = mapRules $ \r ->
-   if isMajorRule r then doAfter f r else r
+   if isMajor r then doAfter f r else r
 
 noInterleaving :: IsStrategy f => f a -> Strategy a
 noInterleaving = liftCore $ transform f

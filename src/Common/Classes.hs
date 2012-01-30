@@ -20,6 +20,8 @@ module Common.Classes
    , BiArrow(..)
      -- * Type class BiFunctor
    , BiFunctor, biMap, mapFirst, mapSecond, mapBoth
+     -- * Buggy and Minor properties
+   , Buggy(..), Minor(..)
    ) where
 
 import Control.Arrow
@@ -105,3 +107,22 @@ instance BiFunctor (,) where
 
 mapBoth :: BiFunctor f => (a -> b) -> f a a -> f b b
 mapBoth f = biMap f f
+
+-----------------------------------------------------------
+-- Buggy and Minor properties
+
+class Buggy a where
+   buggy    :: a -> a
+   setBuggy :: Bool -> a -> a
+   isBuggy  :: a -> Bool
+   -- default definition
+   buggy = setBuggy True
+   
+class Minor a where
+   minor    :: a -> a
+   setMinor :: Bool -> a -> a
+   isMinor  :: a -> Bool 
+   isMajor  :: a -> Bool
+   -- default definition
+   minor   = setMinor True
+   isMajor = not . isMinor

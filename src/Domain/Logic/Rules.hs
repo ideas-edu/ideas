@@ -21,7 +21,7 @@ module Domain.Logic.Rules
    , ruleTrueInImpl, ruleTrueZeroAnd, ruleTrueZeroOr
    ) where
 
-import Common.Library hiding (rule, ruleList)
+import Common.Library hiding (ruleList)
 import qualified Common.Library as C
 import Domain.Logic.Formula
 import Domain.Logic.GeneralizedRules
@@ -41,10 +41,10 @@ logic :: IsId a => a -> Id
 logic = ( # ) "logic.propositional"
 
 rule :: RuleBuilder f a => String -> f -> Rule a
-rule = C.rule . logic
+rule = C.rewriteRule . logic
 
 ruleList :: RuleBuilder f a => String -> [f] -> Rule a
-ruleList = C.ruleList . logic
+ruleList = C.rewriteRules . logic
 
 -----------------------------------------------------------------------------
 -- Commutativity
@@ -61,11 +61,11 @@ ruleCommAnd = rule "CommAnd" $
 -- Associativity (implicit)
 
 ruleAssocOr :: Rule SLogic
-ruleAssocOr = minorRule $ rule "AssocOr" $
+ruleAssocOr = minor $ rule "AssocOr" $
    \x y z -> (x :||: y) :||: z  :~>  x :||: (y :||: z)
 
 ruleAssocAnd :: Rule SLogic
-ruleAssocAnd = minorRule $ rule "AssocAnd" $
+ruleAssocAnd = minor $ rule "AssocAnd" $
    \x y z -> (x :&&: y) :&&: z  :~>  x :&&: (y :&&: z)
 
 -----------------------------------------------------------------------------

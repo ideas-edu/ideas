@@ -61,9 +61,9 @@ runPrefixLocation loc p0 =
    stop _ = False
 
    checkPair result@(a, p)
-      | null rules            = [result]
-      | all isMinorRule rules = runPrefixLocation loc p a
-      | otherwise             = [result]
+      | null rules        = [result]
+      | all isMinor rules = runPrefixLocation loc p a
+      | otherwise         = [result]
     where
       rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
 
@@ -73,7 +73,7 @@ firstMajorInPrefix p0 = rec . drop len . prefixToSteps
    len = length (prefixToSteps p0)
    rec xs = 
       case xs of
-         Enter info:RuleStep env r:_ | isMajorRule r -> 
+         Enter info:RuleStep env r:_ | isMajor r -> 
             Just (getId info, env)
          _:rest -> rec rest
          []     -> Nothing
@@ -95,8 +95,7 @@ runPrefixMajor p0 =
    map f . derivations . cutOnStep (stop . lastStepInPrefix) . prefixTree p0
  where
    f d = (lastTerm d, fromMaybe p0 (lastStep d))
-   stop (Just (RuleStep _ r)) = isMajorRule r
-   stop _ = False
+   stop = maybe False isMajor
 
 ------------------------------------------------------------------------
 -- Data types for replies

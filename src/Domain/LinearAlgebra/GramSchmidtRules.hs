@@ -34,7 +34,7 @@ rulesGramSchmidt = [ruleNormalize, ruleOrthogonal, ruleNext]
 -- Make the current vector of length 1
 -- (only applicable if this is not already the case)
 ruleNormalize :: Floating a => Rule (Context (VectorSpace a))
-ruleNormalize = makeRule "Turn into unit Vector" $ makeTransLiftContext $ \vs -> do
+ruleNormalize = ruleTrans "Turn into unit Vector" $ makeTransLiftContext $ \vs -> do
    v  <- current vs
    guard (norm v `notElem` [0, 1])
    setCurrent (toUnit v) vs
@@ -42,7 +42,7 @@ ruleNormalize = makeRule "Turn into unit Vector" $ makeTransLiftContext $ \vs ->
 -- Make the current vector orthogonal with some other vector
 -- that has already been considered
 ruleOrthogonal :: (Floating a, Reference a) => Rule (Context (VectorSpace a))
-ruleOrthogonal = makeRule "Make orthogonal" $ 
+ruleOrthogonal = ruleTrans "Make orthogonal" $ 
    supplyContextParameters transOrthogonal $ \_ -> do
       i <- getVarI
       j <- getVarJ
@@ -51,7 +51,7 @@ ruleOrthogonal = makeRule "Make orthogonal" $
 
 -- Variable "j" is for administrating which vectors are already orthogonal
 ruleNextOrthogonal :: Rule (Context (VectorSpace a))
-ruleNextOrthogonal = minorRule $ makeRule "Orthogonal to next" $ 
+ruleNextOrthogonal = minor $ ruleTrans "Orthogonal to next" $ 
    makeTransLiftContext_ $ const $ do
       i <- getVarI
       j <- liftM succ getVarJ
@@ -61,7 +61,7 @@ ruleNextOrthogonal = minorRule $ makeRule "Orthogonal to next" $
 -- Consider the next vector
 -- This rule should fail if there are no vectors left
 ruleNext :: Rule (Context (VectorSpace a))
-ruleNext = minorRule $ makeRule "Consider next vector" $ 
+ruleNext = minor $ ruleTrans "Consider next vector" $ 
    makeTransLiftContext_ $ \vs -> do
       i <- getVarI
       guard (i < length (vectors vs))

@@ -16,8 +16,7 @@ module Domain.Math.Polynomial.BuggyRules
    , abcBuggyRules, buggyQuadratic, buggySquareMultiplication
    ) where
 
-import Common.Library hiding (makeRule, makeSimpleRule, makeSimpleRuleList,
-                              ruleList, root)
+import Common.Library hiding (makeRule, root, ruleList)
 import Control.Monad
 import Domain.Math.CleanUp
 import Domain.Math.Data.OrList
@@ -36,10 +35,10 @@ makeSimpleRule :: IsId n => n -> (a -> Maybe a) -> Rule a
 makeSimpleRuleList :: IsId n => n -> (a -> [a]) -> Rule a
 ruleList :: (RuleBuilder f a, IsId n) => n -> [f] -> Rule a
 
-makeRule           = buggyName C.makeRule
-makeSimpleRule     = buggyName C.makeSimpleRule
-makeSimpleRuleList = buggyName C.makeSimpleRuleList
-ruleList           = buggyName C.ruleList
+makeRule           = buggyName C.ruleTrans
+makeSimpleRule     = buggyName C.makeRule
+makeSimpleRuleList = buggyName C.makeRule
+ruleList           = buggyName C.rewriteRules
 
 buggyName :: IsId n => (Id -> a) -> n -> a
 buggyName f s = f ("algebra.equations.buggy" # s)
@@ -65,7 +64,7 @@ buggyPlus :: Rule (Equation Expr)
 buggyPlus = describe "Moving a term from the left-hand side to the \
    \right-hand side (or the other way around), but forgetting to change \
    \the sign." $
-   buggyRule $ makeSimpleRuleList "plus" $ \(lhs :==: rhs) -> do
+   buggy $ makeSimpleRuleList "plus" $ \(lhs :==: rhs) -> do
       (a, b) <- matchM plusView lhs
       [ a :==: rhs + b, b :==: rhs + a ]
     `mplus` do
@@ -74,18 +73,18 @@ buggyPlus = describe "Moving a term from the left-hand side to the \
 
 buggyNegateOneSide :: Rule (Equation Expr)
 buggyNegateOneSide = describe "Negate terms on one side only." $
-   buggyRule $ makeSimpleRuleList "negate-one-side" $ \(lhs :==: rhs) ->
+   buggy $ makeSimpleRuleList "negate-one-side" $ \(lhs :==: rhs) ->
       [ -lhs :==: rhs, lhs :==: -rhs  ]
 
 buggyFlipNegateOneSide :: Rule (Equation Expr)
 buggyFlipNegateOneSide = describe "Negate terms on one side only." $
-   buggyRule $ makeSimpleRuleList "flip-negate-one-side" $ \(lhs :==: rhs) ->
+   buggy $ makeSimpleRuleList "flip-negate-one-side" $ \(lhs :==: rhs) ->
       [ -rhs :==: lhs, rhs :==: -lhs  ]
 
 buggyNegateAll :: Rule (Equation Expr)
 buggyNegateAll = describe "Negating all terms (on both sides of the equation, \
    \but forgetting one term." $
-   buggyRule $ makeSimpleRuleList "negate-all" $ \(lhs :==: rhs) -> do
+   buggy $ makeSimpleRuleList "negate-all" $ \(lhs :==: rhs) -> do
       xs <- matchM sumView lhs
       ys <- matchM sumView rhs
       let makeL i = makeEq (zipWith (f i) [0..] xs) (map negate ys)
@@ -97,7 +96,7 @@ buggyNegateAll = describe "Negating all terms (on both sides of the equation, \
 
 buggyDivNegate :: Rule (Equation Expr)
 buggyDivNegate = describe "Dividing, but wrong sign." $
-   buggyRule $ makeSimpleRuleList "divide-negate" $ \(lhs :==: rhs) -> do
+   buggy $ makeSimpleRuleList "divide-negate" $ \(lhs :==: rhs) -> do
       (a, b) <- matchM timesView lhs
       [ b :==: rhs/(-a) | hasNoVar a ] ++ [ a :==: rhs/(-b) | hasNoVar b ]
     `mplus` do
@@ -107,7 +106,7 @@ buggyDivNegate = describe "Dividing, but wrong sign." $
 buggyDivNumDenom :: Rule (Equation Expr)
 buggyDivNumDenom = describe "Dividing both sides, but swapping \
    \numerator/denominator." $
-   buggyRule $ makeSimpleRuleList "divide-numdenom" $ \(lhs :==: rhs) -> do
+   buggy $ makeSimpleRuleList "divide-numdenom" $ \(lhs :==: rhs) -> do
       (a, b) <- matchM timesView lhs
       [ b :==: a/rhs | hasNoVar rhs ] ++ [ a :==: b/rhs | hasNoVar rhs ]
     `mplus` do
@@ -117,7 +116,7 @@ buggyDivNumDenom = describe "Dividing both sides, but swapping \
 buggyDistrTimes :: Rule Expr
 buggyDistrTimes = describe "Incorrect distribution of times over plus: one \
    \term is not multiplied." $
-   buggyRule $ makeSimpleRuleList "distr-times-plus" $ \expr -> do
+   buggy $ makeSimpleRuleList "distr-times-plus" $ \expr -> do
       (a, (b, c)) <- matchM (timesView >>> second plusView) expr
       [ a*b+c, b+a*c ]
     `mplus` do
@@ -127,7 +126,7 @@ buggyDistrTimes = describe "Incorrect distribution of times over plus: one \
 buggyDistrTimesForget :: Rule Expr
 buggyDistrTimesForget = describe "Incorrect distribution of times over plus: \
    \one term is forgotten." $
-   buggyRule $ makeSimpleRuleList "distr-times-plus-forget" $ \expr -> do
+   buggy $ makeSimpleRuleList "distr-times-plus-forget" $ \expr -> do
       (a, (b, c)) <- matchM (timesView >>> second plusView) expr
       [ a*bn+a*c | bn <- forget b ] ++ [ a*b+a*cn | cn <- forget c ]
     `mplus` do
@@ -147,7 +146,7 @@ buggyDistrTimesForget = describe "Incorrect distribution of times over plus: \
 buggyDistrTimesSign :: Rule Expr
 buggyDistrTimesSign = describe "Incorrect distribution of times over plus: \
    \changing sign of addition." $
-   buggyRule $ makeSimpleRuleList "distr-times-plus-sign" $ \expr -> do
+   buggy $ makeSimpleRuleList "distr-times-plus-sign" $ \expr -> do
       (a, (b, c)) <- matchM (timesView >>> second plusView) expr
       [ a.*.b .-. a.*.c ]
     `mplus` do
@@ -157,7 +156,7 @@ buggyDistrTimesSign = describe "Incorrect distribution of times over plus: \
 buggyDistrTimesTooMany :: Rule Expr
 buggyDistrTimesTooMany = describe "Strange distribution of times over plus: \
    \a*(b+c)+d, where 'a' is also multiplied to d." $
-   buggyRule $ makeSimpleRuleList "distr-times-too-many" $ \expr -> do
+   buggy $ makeSimpleRuleList "distr-times-too-many" $ \expr -> do
       ((a, (b, c)), d) <- matchM (plusView >>> first (timesView >>> second plusView)) expr
       [cleanUpExpr $ a*b+a*c+a*d]
 
@@ -165,7 +164,7 @@ buggyDistrTimesDenom :: Rule Expr
 buggyDistrTimesDenom = describe "Incorrect distribution of times over plus: \
    \one of the terms is a fraction, and the outer expression is multiplied by \
    \the fraction's denominator." $
-   buggyRule $ makeSimpleRuleList "distr-times-denom" $ \expr -> do
+   buggy $ makeSimpleRuleList "distr-times-denom" $ \expr -> do
       (a, (b, c)) <- matchM (timesView >>> second plusView) expr
       [(1/a)*b + a*c, a*b + (1/a)*c]
     `mplus` do
@@ -175,7 +174,7 @@ buggyDistrTimesDenom = describe "Incorrect distribution of times over plus: \
 buggyMinusMinus :: Rule Expr
 buggyMinusMinus = describe "Incorrect rewriting of a-(b-c): forgetting to \
    \change sign." $
-   buggyRule $ makeSimpleRule "minus-minus" $ \expr ->
+   buggy $ makeSimpleRule "minus-minus" $ \expr ->
       case expr of
          a :-: (b :-: c)  -> Just (a-b-c)
          Negate (a :-: b) -> Just (a-b)
@@ -184,7 +183,7 @@ buggyMinusMinus = describe "Incorrect rewriting of a-(b-c): forgetting to \
 buggyCancelMinus :: Rule (Equation Expr)
 buggyCancelMinus = describe "Cancel terms on both sides, but terms have \
    \different signs." $
-   buggyRule $ makeSimpleRuleList "cancel-minus" $ \(lhs :==: rhs) -> do
+   buggy $ makeSimpleRuleList "cancel-minus" $ \(lhs :==: rhs) -> do
       xs <- matchM sumView lhs
       ys <- matchM sumView rhs
       [ eq | (i, x) <- zip [0..] xs, (j, y) <- zip [0..] ys
@@ -196,7 +195,7 @@ buggyCancelMinus = describe "Cancel terms on both sides, but terms have \
 buggyPriorityTimes :: Rule Expr
 buggyPriorityTimes = describe "Prioity of operators is changed, possibly by \
    \ignoring some parentheses." $
-   buggyRule $ makeSimpleRuleList "priority-times" $ \expr -> do
+   buggy $ makeSimpleRuleList "priority-times" $ \expr -> do
       (a, (b, c)) <- matchM (plusView >>> second timesView) expr
       [(a+b)*c]
     `mplus` do
@@ -205,7 +204,7 @@ buggyPriorityTimes = describe "Prioity of operators is changed, possibly by \
 
 buggyMultiplyOneSide :: Rule (Equation Expr)
 buggyMultiplyOneSide = describe "Multiplication on one side of the equation only" $
-   addRecognizerBool recognizeEq $ buggyRule $ buggyName emptyRule "multiply-one-side"
+   addRecognizerBool recognizeEq $ buggy $ buggyName emptyRule "multiply-one-side"
  where
    recognizeEq eq1@(a1 :==: a2) eq2@(b1 :==: b2) =
       let p r  = r `notElem` [-1, 0, 1] &&
@@ -231,7 +230,7 @@ multiplyOneSide r (lhs :==: rhs) = do
 buggyMultiplyForgetOne :: Rule (Equation Expr)
 buggyMultiplyForgetOne = describe "Multiply the terms on both sides of the \
    \equation, but forget one." $
-   addRecognizerBool recognizeEq $ buggyRule $ buggyName emptyRule "multiply-forget-one"
+   addRecognizerBool recognizeEq $ buggy $ buggyName emptyRule "multiply-forget-one"
  where
    recognizeEq eq1@(a1 :==: a2) eq2@(b1 :==: b2) =
       let p r  = r `notElem` [-1, 0, 1] &&
@@ -278,7 +277,7 @@ buggyQuadratic =
 
 buggyCoverUpEvenPower :: Rule (Equation Expr)
 buggyCoverUpEvenPower = describe "Covering up an even power, but forgetting \
-   \the negative root" $ buggyRule $ siblingOf coverUpPower $
+   \the negative root" $ buggy $ siblingOf coverUpPower $
    makeSimpleRuleList "coverup.even-power" $ \(lhs :==: rhs) ->
       make (:==:) lhs rhs ++ make (flip (:==:)) rhs lhs
  where
@@ -291,7 +290,7 @@ buggyCoverUpEvenPower = describe "Covering up an even power, but forgetting \
 buggyCoverUpEvenPowerTooEarly :: Rule (OrList (Equation Expr))
 buggyCoverUpEvenPowerTooEarly = describe "Trying to cover up an even power, \
    \but there is some other operation to be done first. Example: x^2+1=9" $
-   buggyRule $ siblingOf coverUpPower $
+   buggy $ siblingOf coverUpPower $
    makeSimpleRuleList "coverup.even-power-too-early" $
       oneDisjunct $ helperBuggyCUPower True
 
@@ -299,7 +298,7 @@ buggyCoverUpEvenPowerForget :: Rule (OrList (Equation Expr))
 buggyCoverUpEvenPowerForget = describe "Trying to cover up an even power, \
    \but there is some other operation to be done first. Example: 9*x^2=81, \
    \ and rewriting this into x=9 or x=-9." $
-   buggyRule $ siblingOf coverUpPower $
+   buggy $ siblingOf coverUpPower $
    makeSimpleRuleList "coverup.even-power-forget" $
       oneDisjunct $ helperBuggyCUPower False
 
@@ -321,7 +320,7 @@ helperBuggyCUPower mode (lhs :==: rhs) =
 buggyCoverUpTimesMul :: Rule (Equation Expr)
 buggyCoverUpTimesMul = describe "Covering-up a multiplication, but instead of \
    \dividing the right-hand side, multiplication is used." $
-   buggyRule $ siblingOf coverUpTimes $
+   buggy $ siblingOf coverUpTimes $
    makeSimpleRuleList "coverup.times-mul" $ \(lhs :==: rhs) -> do
       guard (rhs /= 0)
       (a, b) <- isTimes lhs
@@ -334,7 +333,7 @@ buggyCoverUpTimesMul = describe "Covering-up a multiplication, but instead of \
 buggyDistributionSquare :: Rule Expr
 buggyDistributionSquare = describe "Incorrect removal of parentheses in a squared \
    \addition: forgetting the 2ab term" $
-   buggyRule $ siblingOf distributionSquare $
+   buggy $ siblingOf distributionSquare $
    ruleList "distr-square"
       [ \a b -> (a+b)^2 :~> a^2+b^2
       , \a b -> (a-b)^2 :~> a^2-b^2
@@ -344,7 +343,7 @@ buggyDistributionSquare = describe "Incorrect removal of parentheses in a square
 buggyDistributionSquareForget :: Rule Expr
 buggyDistributionSquareForget = describe "Incorrect removal of parentheses in a squared \
    \addition: squaring only one term" $
-   buggyRule $ siblingOf distributionSquare $
+   buggy $ siblingOf distributionSquare $
    ruleList "distr-square-forget"
       [ \a b -> (a+b)^2 :~> a^2+b
       , \a b -> (a+b)^2 :~> a+b^2
@@ -354,7 +353,7 @@ buggyDistributionSquareForget = describe "Incorrect removal of parentheses in a 
 
 buggySquareMultiplication :: Rule Expr
 buggySquareMultiplication = describe "Incorrect square of a term that involves \
-   \a multiplication." $ buggyRule $
+   \a multiplication." $ buggy $
    ruleList "square-multiplication"
       [ \a b -> (a*b)^2 :~> a*b^2
       , \a b -> (a*b)^2 :~> a^2*b
@@ -365,7 +364,7 @@ buggySquareMultiplication = describe "Incorrect square of a term that involves \
 buggyCoverUpSquareMinus :: Rule (OrList (Equation Expr))
 buggyCoverUpSquareMinus = describe "A squared term is equal to a negative term \
    \on the right-hand side, resulting in an error in the signs" $
-   buggyRule $ makeSimpleRule "coverup.square-minus" $ oneDisjunct $ \eq ->
+   buggy $ makeSimpleRule "coverup.square-minus" $ oneDisjunct $ \eq ->
       case eq of
          Sym s [a, 2] :==: b | isPowerSymbol s ->
             Just $ toOrList [a :==: sqrt b, a :==: sqrt (-b)]
@@ -374,7 +373,7 @@ buggyCoverUpSquareMinus = describe "A squared term is equal to a negative term \
 buggyCoverUpTimesWithPlus :: Rule (Equation Expr)
 buggyCoverUpTimesWithPlus = describe "Covering-up a multiplication, with an \
    \addition on the other side. Only one of the terms is divided." $
-   buggyRule $ makeSimpleRuleList "coverup.times-with-plus" $
+   buggy $ makeSimpleRuleList "coverup.times-with-plus" $
    \(lhs :==: rhs) -> make (:==:) lhs rhs ++ make (flip (:==:)) rhs lhs
  where
    make equals ab cd = do
@@ -386,7 +385,7 @@ buggyCoverUpTimesWithPlus = describe "Covering-up a multiplication, with an \
 buggyDivisionByVarBoth :: Rule (Equation Expr)
 buggyDivisionByVarBoth = describe "Divide both sides by variable, without \
    \introducing the x=0 alternative." $
-   buggyRule $ makeSimpleRule "division-by-var-both" $
+   buggy $ makeSimpleRule "division-by-var-both" $
    \(lhs :==: rhs) -> do
       (s1, p1) <- match polyView lhs
       (s2, p2) <- match polyView rhs
@@ -398,7 +397,7 @@ buggyDivisionByVarBoth = describe "Divide both sides by variable, without \
 buggyDivisionByVarZero :: Rule (Equation Expr)
 buggyDivisionByVarZero = describe "Divide both sides by variable, without \
    \introducing the x=0 alternative." $
-   buggyRule $ makeSimpleRuleList "division-by-var-zero" $
+   buggy $ makeSimpleRuleList "division-by-var-zero" $
    \(lhs :==: rhs) -> do
       guard (rhs == 0)
       (s, p) <- matchM polyView lhs
@@ -424,40 +423,40 @@ abcMisconception f = makeTrans $
       f x a b c
 
 minusB :: Rule (OrList (Equation Expr))
-minusB = buggyRule $ makeRule "abc.minus-b" $
+minusB = buggy $ makeRule "abc.minus-b" $
    abcMisconception $ \x a b c -> do
       let discr = sqrt (fromRational (b*b - 4 * a * c))
-          f op buggy =
-             let minus = if buggy then id else negate
+          f op bug =
+             let minus = if bug then id else negate
              in Var x :==: (minus (fromRational b) `op` discr) / (2 * fromRational a)
       [ toOrList [ f (+) True,  f (-) True  ],
         toOrList [ f (+) False, f (-) True  ],
         toOrList [ f (+) True,  f (-) False ]]
 
 twoA :: Rule (OrList (Equation Expr))
-twoA = buggyRule $ makeRule "abc.two-a" $
+twoA = buggy $ makeRule "abc.two-a" $
    abcMisconception $ \x a b c -> do
       let discr = sqrt (fromRational (b*b - 4 * a * c))
-          f op buggy =
-             let twice = if buggy then id else (2*)
+          f op bug =
+             let twice = if bug then id else (2*)
              in Var x :==: (-fromRational b `op` discr) / twice (fromRational a)
       [ toOrList [ f (+) True,  f (-) True  ],
         toOrList [ f (+) False, f (-) True  ],
         toOrList [ f (+) True,  f (-) False ]]
 
 minus4AC :: Rule (OrList (Equation Expr))
-minus4AC = buggyRule $ makeRule "abc.minus-4ac" $
+minus4AC = buggy $ makeRule "abc.minus-4ac" $
    abcMisconception $ \x a b c -> do
       let discr op = sqrt (fromRational ((b*b) `op` (4 * a * c)))
-          f op buggy =
-             let sign = if buggy then (+) else (-)
+          f op bug =
+             let sign = if bug then (+) else (-)
              in Var x :==: (-fromRational b `op` discr sign) / (2 * fromRational a)
       [ toOrList [ f (+) True,  f (-) True  ],
         toOrList [ f (+) False, f (-) True  ],
         toOrList [ f (+) True,  f (-) False ]]
 
 oneSolution :: Rule (OrList (Equation Expr))
-oneSolution = buggyRule $ makeRule "abc.one-solution" $
+oneSolution = buggy $ makeRule "abc.one-solution" $
    abcMisconception $ \x a b c ->
       let discr = sqrt (fromRational (b*b - 4 * a * c))
           f op = Var x :==: (-fromRational b `op` discr) / (2 * fromRational a)

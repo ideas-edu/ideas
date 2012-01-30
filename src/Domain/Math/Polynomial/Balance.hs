@@ -107,14 +107,14 @@ balanceStrategy = cleanUpStrategyAfter (applyTop cleaner) $
 -- Rules
 
 calculate :: Rule (WithBool (Equation Expr))
-calculate = makeSimpleRule (linbal, "calculate") $ checkForChange $
+calculate = makeRule (linbal, "calculate") $ checkForChange $
    Just . cleaner
 
 -- factor is always positive due to lcm function
 removeDivision :: Rule (Equation Expr)
 removeDivision = doAfter (fmap distributeTimes) $
    describe "remove division" $
-   makeRule (linbal, "remove-div") $
+   ruleTrans (linbal, "remove-div") $
    supplyParameters timesRule removeDivisionArg
  where
    removeDivisionArg (lhs :==: rhs) = do
@@ -152,7 +152,7 @@ removeDivision = doAfter (fmap distributeTimes) $
 divisionToFraction :: Rule Expr
 divisionToFraction =
    describe "turn a division into a multiplication with a fraction" $
-   makeSimpleRule (linbal, "div-to-fraction") $ \expr -> do
+   makeRule (linbal, "div-to-fraction") $ \expr -> do
       (a, r) <- match (divView >>> second rationalView) expr
       guard (hasSomeVar a && r /= 0)
       return (fromRational (1/r)*a)
@@ -160,7 +160,7 @@ divisionToFraction =
 divideCommonFactor :: Rule (Equation Expr)
 divideCommonFactor = doAfter (fmap distributeDiv) $
    describe "divide by common factor" $
-   makeRule (linbal, "smart-div") $ 
+   ruleTrans (linbal, "smart-div") $ 
    supplyParameters divisionRule getArg
  where
    getArg (lhs :==: rhs)
@@ -182,7 +182,7 @@ divideCommonFactor = doAfter (fmap distributeDiv) $
 
 negateBothSides :: Rule (Equation Expr)
 negateBothSides = describe "Remove negation on both sides of an equation" $ 
-   rule (linbal, "negate") $ \a b -> 
+   rewriteRule (linbal, "negate") $ \a b -> 
       (-a :==: -b) :~> (a :==: b)
 
 varLeftMinus, varLeftPlus :: Rule (Equation Expr)
@@ -191,7 +191,7 @@ varLeftPlus  = varLeft False (linbal, "var-left-plus")
 
 varLeft :: IsId a => Bool -> a -> Rule (Equation Expr)
 varLeft useMinus rid = doAfter (fmap collectLocal) $
-   makeRule rid $
+   ruleTrans rid $
    supplyParameters (if useMinus then minusRule else plusRule) varLeftArg
  where
     varLeftArg :: Equation Expr -> Maybe Expr
@@ -207,7 +207,7 @@ conRightPlus  = conRight False (linbal, "con-right-plus")
 
 conRight :: IsId a => Bool -> a -> Rule (Equation Expr)
 conRight useMinus rid = doAfter (fmap collectLocal) $
-   makeRule rid $
+   ruleTrans rid $
    supplyParameters (if useMinus then minusRule else plusRule) conRightArg
  where
     conRightArg :: Equation Expr -> Maybe Expr
@@ -232,7 +232,7 @@ flipped rid = liftView flipView . changeId (const (newId rid))
 
 scaleToOne :: Rule (Equation Expr)
 scaleToOne = doAfter (fmap distributeDiv) $
-   makeRule (linbal, "scale-to-one") $
+   ruleTrans (linbal, "scale-to-one") $
    supplyParameters divisionRule scaleToOneArg
  where
    scaleToOneArg :: Equation Expr -> Maybe Expr
@@ -245,12 +245,12 @@ scaleToOne = doAfter (fmap distributeDiv) $
       return (fromRational a1)
 
 collect :: Rule (Equation Expr)
-collect = makeSimpleRule (linbal, "collect") $
+collect = makeRule (linbal, "collect") $
    -- don't use this rule just for cleaning up
    checkForChange (Just . fmap collectGlobal) . fmap cleanerExpr
 
 distribute :: Rule (Equation Expr)
-distribute = makeSimpleRule (linbal, "distribute") $ checkForChange $
+distribute = makeRule (linbal, "distribute") $ checkForChange $
    Just . fmap (fixpoint f)
  where
    f (a :*: (b :+: c))  = f (a*b + a*c)

@@ -150,9 +150,9 @@ fix f = fromCore (coreFix (toCore . f . fromCore))
 onceWith :: IsStrategy f => String -> (Context a -> [Int]) -> f (Context a) -> Strategy (Context a)
 onceWith n f s = ruleMoveDown <*> s <*> ruleMoveUp
  where
-   ruleMoveDown = minorRule $ makeSimpleRuleList ("navigation.down." ++ n) $ \a ->
+   ruleMoveDown = minorRule ("navigation.down." ++ n) $ \a ->
       concatMap (`down` a) (f a)
-   ruleMoveUp = minorRule $ makeSimpleRule "navigation.up" $ \a ->
+   ruleMoveUp = minorRule "navigation.up" $ \a ->
       Just (fromMaybe a (up a))
 
 -- | Apply a strategy somewhere in the term. The function selects which

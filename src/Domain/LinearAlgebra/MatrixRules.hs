@@ -22,14 +22,14 @@ import Common.Utils
 import Domain.Math.Simplification
 
 ruleFindColumnJ :: Num a => Rule (Context (Matrix a))
-ruleFindColumnJ = minorRule $ makeRule (gaussId, "FindColumnJ") $ 
+ruleFindColumnJ = minor $ ruleTrans (gaussId, "FindColumnJ") $ 
    makeTransLiftContext_ $ \m -> do
       cols <- liftM columns (subMatrix m)
       i    <- findIndexM nonZero cols
       columnJ := i
 
 ruleExchangeNonZero :: (Simplify a, Num a) => Rule (Context (Matrix a))
-ruleExchangeNonZero = simplify $ makeRule (gaussId, "exchange") $
+ruleExchangeNonZero = simplify $ ruleTrans (gaussId, "exchange") $
    supplyContextParameters rowExchange $ \m -> do
       nonEmpty m
       j   <- getColumnJ
@@ -39,7 +39,7 @@ ruleExchangeNonZero = simplify $ makeRule (gaussId, "exchange") $
       return (cov, i + cov)
 
 ruleScaleToOne :: (Reference a, Simplify a, Fractional a) => Rule (Context (Matrix a))
-ruleScaleToOne = simplify $ makeRule (gaussId, "scale") $
+ruleScaleToOne = simplify $ ruleTrans (gaussId, "scale") $
    supplyContextParameters rowScale $ \m -> do
       nonEmpty m
       j   <- getColumnJ
@@ -49,7 +49,7 @@ ruleScaleToOne = simplify $ makeRule (gaussId, "scale") $
       return (cov, 1 / pv)
 
 ruleZerosFP :: (Reference a, Simplify a, Fractional a) => Rule (Context (Matrix a))
-ruleZerosFP = simplify $ makeRule (gaussId, "add") $
+ruleZerosFP = simplify $ ruleTrans (gaussId, "add") $
    supplyContextParameters rowAdd $ \m -> do
       nonEmpty m
       j   <- getColumnJ
@@ -60,7 +60,7 @@ ruleZerosFP = simplify $ makeRule (gaussId, "add") $
       return (i + cov + 1, cov, v)
 
 ruleZerosBP :: (Reference a, Simplify a, Fractional a) => Rule (Context (Matrix a))
-ruleZerosBP = simplify $ makeRule (gaussId, "add") $
+ruleZerosBP = simplify $ ruleTrans (gaussId, "add") $
    supplyContextParameters rowAdd $ \m -> do
       nonEmpty m
       ri <- liftM (row 0) (subMatrix m)
@@ -73,10 +73,10 @@ ruleZerosBP = simplify $ makeRule (gaussId, "add") $
       return (k, cov, v)
 
 ruleCoverRow :: Rule (Context (Matrix a))
-ruleCoverRow = minorRule $ makeRule (gaussId, "CoverRow") $ changeCover succ
+ruleCoverRow = minor $ ruleTrans (gaussId, "CoverRow") $ changeCover succ
 
 ruleUncoverRow :: Rule (Context (Matrix a))
-ruleUncoverRow = minorRule $ makeRule (gaussId, "UncoverRow") $ changeCover pred
+ruleUncoverRow = minor $ ruleTrans (gaussId, "UncoverRow") $ changeCover pred
 
 ---------------------------------------------------------------------------------
 -- Parameterized transformations

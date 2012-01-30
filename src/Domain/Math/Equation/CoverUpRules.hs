@@ -59,7 +59,7 @@ coverUpBinaryOrRule :: Relational r
                    -> ConfigCoverUp -> Rule (OrList (r Expr))
 coverUpBinaryOrRule opName fm fb cfg =
    let name = coverUpRuleName opName (configName cfg)
-   in makeSimpleRuleList name $ oneDisjunct $ coverUpFunction fm fb cfg
+   in makeRule name $ oneDisjunct $ coverUpFunction fm fb cfg
 
 coverUpBinaryRule :: Relational r => String
                   -> (Expr -> [(Expr, Expr)]) -> (Expr -> Expr -> Expr)
@@ -67,7 +67,7 @@ coverUpBinaryRule :: Relational r => String
 coverUpBinaryRule opName fm fb cfg =
    let name = coverUpRuleName opName (configName cfg)
        fb2 a b = [[fb a b]]
-   in makeSimpleRuleList name $ map head . coverUpFunction fm fb2 cfg
+   in makeRule name $ map head . coverUpFunction fm fb2 cfg
 
 coverUpUnaryRule :: Relational r => String -> (Expr -> [Expr]) -> (Expr -> Expr)
                -> ConfigCoverUp -> Rule (r Expr)

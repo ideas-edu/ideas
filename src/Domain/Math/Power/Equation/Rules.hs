@@ -42,7 +42,7 @@ powereq = "algebra.manipulation.exponents.equation"
 
 -- | a^x = b^y  =>  a^(x/c) = b^(y/c)  where c = gcd x y
 commonPower :: Rule (Equation Expr)
-commonPower = makeSimpleRule (powereq, "common-power") $ \expr -> do
+commonPower = makeRule (powereq, "common-power") $ \expr -> do
   let v = eqView (powerView >>> second integerView)
   ((a, x), (b, y)) <- match v expr
   let c = gcd x y
@@ -51,7 +51,7 @@ commonPower = makeSimpleRule (powereq, "common-power") $ \expr -> do
 
 -- | a^x = n  =>  a^x = b^e
 greatestPower :: Rule (Equation Expr)
-greatestPower = makeSimpleRule (powereq, "greatest-power") $ \(lhs :==: rhs) -> do
+greatestPower = makeRule (powereq, "greatest-power") $ \(lhs :==: rhs) -> do
   n      <- match integerView rhs
   (_, x) <- match (powerView >>> second integerView) lhs
   (b, e) <- PF.greatestPower n
@@ -60,7 +60,7 @@ greatestPower = makeSimpleRule (powereq, "greatest-power") $ \(lhs :==: rhs) -> 
 
 -- a^x = c*b^y  =>  a = c*b^(y/x)
 nthRoot :: Rule (Equation Expr)
-nthRoot = makeSimpleRule (powereq, "nth-root") $ \(lhs :==: rhs) -> do
+nthRoot = makeRule (powereq, "nth-root") $ \(lhs :==: rhs) -> do
   guard $ hasSomeVar lhs
   (a, x)      <- match powerView lhs
   (c, (b, y)) <- match unitPowerView rhs
@@ -68,7 +68,7 @@ nthRoot = makeSimpleRule (powereq, "nth-root") $ \(lhs :==: rhs) -> do
 
 -- x = a^x  =>  x ~= d
 approxPower :: Rule (Relation Expr)
-approxPower = makeRule (powereq, "approx-power") $ approxPowerT 2
+approxPower = ruleTrans (powereq, "approx-power") $ approxPowerT 2
 
 -- x = a^x  =>  x ~= d
 approxPowerT :: Int -> Transformation (Relation Expr)
@@ -83,14 +83,14 @@ approxPowerT n = makeTrans $ \ expr ->
 
 -- a^x = a^y  =>  x = y
 sameBase :: Rule (Equation Expr)
-sameBase = makeSimpleRule (powereq, "same-base") $ \ expr -> do
+sameBase = makeRule (powereq, "same-base") $ \ expr -> do
   ((a, x), (b, y)) <- match (eqView powerView) expr
   guard $ a == b
   return $ x :==: y
 
 -- | c*a^x = d*(1/a)^y  => c*a^x = d*a^-y
 reciprocalFor :: Rule (Equation Expr)
-reciprocalFor = makeSimpleRule (powereq, "reciprocal-for-base") $
+reciprocalFor = makeRule (powereq, "reciprocal-for-base") $
   \ (lhs :==: rhs) -> do
     (_, (a,  _)) <- match unitPowerView lhs
     (one, _)     <- match divView rhs
@@ -100,7 +100,7 @@ reciprocalFor = makeSimpleRule (powereq, "reciprocal-for-base") $
 
 -- | a^x = 1  =>  x = 0
 equalsOne :: Rule (Equation Expr)
-equalsOne = makeSimpleRule (powereq, "equals-one") $ \ (lhs :==: rhs) -> do
+equalsOne = makeRule (powereq, "equals-one") $ \ (lhs :==: rhs) -> do
   guard $ rhs == 1
   (_, x) <- match powerView lhs
   return $ x :==: 0

@@ -14,6 +14,7 @@ module Service.RulesInfo
    ) where
 
 import Common.Library
+import Common.Rewriting.RewriteRule
 import Common.Utils (Some(..))
 import Control.Monad
 import Data.Char
@@ -33,7 +34,7 @@ rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
 
    return $ element "rule" $ do
       "name"        .=. showId r
-      "buggy"       .=. f (isBuggyRule r)
+      "buggy"       .=. f (isBuggy r)
       "rewriterule" .=. f (isRewriteRule r)
       -- More information
       let descr = description r
@@ -45,7 +46,7 @@ rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
          element "sibling" $ text $ showId s
       -- FMPs and CMPs
       forM_ (getRewriteRules (transformation r)) $ \(Some rr) -> do
-         let ok  = not $ isBuggyRule r
+         let ok  = not $ isBuggy r
              fmp = rewriteRuleToFMP ok rr
          case showRewriteRule ok rr of
             Nothing -> return ()

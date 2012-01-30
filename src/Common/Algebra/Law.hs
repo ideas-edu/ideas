@@ -16,6 +16,7 @@ module Common.Algebra.Law
    ) where
 
 import Common.Rewriting
+import Common.Rewriting.RewriteRule
 import Test.QuickCheck
 
 infix 1 :==:
@@ -55,7 +56,7 @@ propertyLaw eq = rec . getLawSpec
    rec (a :==: b) = property (eq a b)
 
 rewriteLaw :: (Different a, IsTerm a, Arbitrary a, Show a) => Law a -> RewriteRule a
-rewriteLaw (Law s l) = rewriteRule s l
+rewriteLaw (Law s l) = makeRewriteRule s l
 
 instance (Arbitrary a, IsTerm a, Show a, Different a) => RuleBuilder (LawSpec a) a where
    buildRuleSpec i (a :==: b) = buildRuleSpec i (a :~> b)

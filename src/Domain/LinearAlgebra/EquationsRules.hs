@@ -43,7 +43,7 @@ equationsRules =
 
 ruleExchangeEquations :: Rule (Context (LinearSystem Expr))
 ruleExchangeEquations = describe "Exchange two equations" $
-   simplifySystem $ makeRule (linId, "exchange") $
+   simplifySystem $ ruleTrans (linId, "exchange") $
    supplyContextParameters exchangeEquations $ \ls -> do
       mv  <- minvar ls
       eqs <- remaining ls
@@ -53,7 +53,7 @@ ruleExchangeEquations = describe "Exchange two equations" $
 
 ruleEliminateVar :: Rule (Context (LinearSystem Expr))
 ruleEliminateVar = describe "Eliminate a variable (using addition)" $
-   simplifySystem $ makeRule (linId, "eliminate") $
+   simplifySystem $ ruleTrans (linId, "eliminate") $
    supplyContextParameters addEquations $ \ls -> do
       mv <- minvar ls
       hd:rest <- remaining ls
@@ -66,7 +66,7 @@ ruleEliminateVar = describe "Eliminate a variable (using addition)" $
 
 ruleDropEquation :: Rule (Context (LinearSystem Expr))
 ruleDropEquation = describe "Drop trivial equations (such as 0=0)" $
-   simplifySystem $ makeRule (linId, "trivial") $ makeTransLiftContext $ \ls -> do
+   simplifySystem $ ruleTrans (linId, "trivial") $ makeTransLiftContext $ \ls -> do
       i   <- findIndexM (fromMaybe False . testConstants (==)) ls
       cov <- getCovered
       let f n = if i < n then n-1 else n
@@ -75,7 +75,7 @@ ruleDropEquation = describe "Drop trivial equations (such as 0=0)" $
 
 ruleInconsistentSystem :: Rule (Context (LinearSystem Expr))
 ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
-   simplifySystem $ makeRule (linId, "inconsistent") $ makeTransLiftContext $ \ls -> do
+   simplifySystem $ ruleTrans (linId, "inconsistent") $ makeTransLiftContext $ \ls -> do
       let stop = [0 :==: 1]
       guard (invalidSystem ls && ls /= stop)
       covered := 1 
@@ -83,7 +83,7 @@ ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
 
 ruleScaleEquation :: Rule (Context (LinearSystem Expr))
 ruleScaleEquation = describe "Scale equation to one" $
-   simplifySystem $ makeRule (linId, "scale") $
+   simplifySystem $ ruleTrans (linId, "scale") $
    supplyContextParameters scaleEquation $ \ls -> do
       cov <- getCovered
       eq  <- elementAt cov ls
@@ -95,7 +95,7 @@ ruleScaleEquation = describe "Scale equation to one" $
 
 ruleBackSubstitution :: Rule (Context (LinearSystem Expr))
 ruleBackSubstitution = describe "Back substitution" $
-   simplifySystem $ makeRule (linId, "subst") $
+   simplifySystem $ ruleTrans (linId, "subst") $
    supplyContextParameters addEquations $ \ls -> do
       cov <- getCovered
       eq  <- elementAt cov ls
@@ -107,7 +107,7 @@ ruleBackSubstitution = describe "Back substitution" $
 
 ruleIdentifyFreeVariables :: IsLinear a => Rule (Context (LinearSystem a))
 ruleIdentifyFreeVariables = describe "Identify free variables" $
-   minorRule $ liftToContext $ makeSimpleRule (linId, "freevars") $ \ls ->
+   liftToContext $ minorRule (linId, "freevars") $ \ls ->
       let vs = [ head ys | ys <- map (vars . leftHandSide) ls, not (null ys) ]
           f eq =
              let (e1, e2) = splitLinearExpr (`notElem` vs) (leftHandSide eq) -- constant ends up in e1
@@ -116,17 +116,17 @@ ruleIdentifyFreeVariables = describe "Identify free variables" $
 
 ruleCoverUpEquation :: Rule (Context (LinearSystem a))
 ruleCoverUpEquation = describe "Cover up first equation" $
-   minorRule $ makeRule (linId, "coverup") $ changeCover succ
+   minor $ ruleTrans (linId, "coverup") $ changeCover succ
 
 ruleUncoverEquation :: Rule (Context (LinearSystem a))
 ruleUncoverEquation = describe "Uncover one equation" $
-   minorRule $ makeRule (linId, "uncover") $ changeCover pred
+   minor $ ruleTrans (linId, "uncover") $ changeCover pred
 
 ruleCoverAllEquations :: Rule (Context (LinearSystem a))
 ruleCoverAllEquations = describe "Cove all equations" $
-   minorRule $ makeSimpleRule (linId, "coverall") $ \cls -> do
+   minorRule (linId, "coverall") $ \cls -> do
       ls <- fromContext cls
-      return (insertRef covered (length ls) cls)
+      Just (insertRef covered (length ls) cls)
 
 -- local helper functions
 deleteIndex :: Int -> [a] -> [a]

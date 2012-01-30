@@ -41,6 +41,13 @@ instance Apply (Step l) where
    applyAll (RuleStep _ r) = applyAll r
    applyAll _              = return
    
+instance Minor (Step l a) where
+   setMinor b (RuleStep env r) = RuleStep env (setMinor b r)
+   setMinor _ step = step
+   
+   isMinor (RuleStep _ r) = isMinor r
+   isMinor _ = True 
+   
 ----------------------------------------------------------------------
 -- State data type
 

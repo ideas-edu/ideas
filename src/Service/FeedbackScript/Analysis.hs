@@ -51,7 +51,7 @@ generateScript ex = makeScript $
    [ textForIdDecl r (makeText (description r)) | r <- nrs ] ++
    [ textForIdDecl r (makeText (description r)) | r <- brs ]
  where
-   (brs, nrs) = partition isBuggyRule (ruleset ex)
+   (brs, nrs) = partition isBuggy (ruleset ex)
 
 data Message = UnknownExercise   Id
              | UnknownFeedback   Id

@@ -59,7 +59,7 @@ rulePage ex exMap usedIn r = do
    idboxHTML "rule" (getId r)
    let idList = text . intercalate ", " . map showId
    para $ table False
-      [ [bold $ text "Buggy", text $ showBool (isBuggyRule r)]
+      [ [bold $ text "Buggy", text $ showBool (isBuggy r)]
       , [bold $ text "Rewrite rule", text $ showBool (isRewriteRule r)]
       , [bold $ text "Siblings", idList $ ruleSiblings r]
       ]
@@ -85,7 +85,7 @@ rulePage ex exMap usedIn r = do
    unless (null xs) $ do
       h3 "Formal Mathematical Properties"
       forM_ xs $ \(Some rr) -> para $ do
-         let fmp = rewriteRuleToFMP (not $ isBuggyRule r) rr
+         let fmp = rewriteRuleToFMP (not $ isBuggy r) rr
          highlightXML False $ XML.makeXML "FMP" $
             XML.builder (omobj2xml (toObject fmp))
 

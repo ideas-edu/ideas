@@ -105,7 +105,7 @@ simplifyFirst = simplifySystem (idRule "simplify")
 
 conv1 :: Rule (Context Expr)
 conv1 = describe "Convert linear system to matrix" $
-   makeRule (linId, "tomatrix") $ makeTransLiftContext $ \expr -> do
+   ruleTrans (linId, "tomatrix") $ makeTransLiftContext $ \expr -> do
       ls   <- fromExpr expr
       let (m, vs) = systemToMatrix ls
       varVars := map Var vs
@@ -113,7 +113,7 @@ conv1 = describe "Convert linear system to matrix" $
 
 conv2 :: Rule (Context Expr)
 conv2 = describe "Convert matrix to linear system" $
-   makeRule (linId, "frommatrix") $ makeTransLiftContext $ \expr -> do
+   ruleTrans (linId, "frommatrix") $ makeTransLiftContext $ \expr -> do
       evs <- varVars :? []
       m   <- fromExpr expr
       let vs     = [ v | Var v <- evs ]

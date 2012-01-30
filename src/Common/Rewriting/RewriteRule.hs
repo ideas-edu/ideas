@@ -17,7 +17,7 @@ module Common.Rewriting.RewriteRule
      -- * Rewrite rules and specs
    , RewriteRule, ruleSpecTerm, RuleSpec(..)
      -- * Compiling rewrite rules
-   , rewriteRule, RuleBuilder(..)
+   , makeRewriteRule, RuleBuilder(..)
      -- * Using rewrite rules
    , showRewriteRule
    , metaInRewriteRule, renumberRewriteRule
@@ -119,8 +119,8 @@ buildSpec sm sb (lhs :~> rhs) a = do
              make = fromMaybe (makeTerm b) (getSymbol b >>= (`M.lookup` sb))
          in make bs
 
-rewriteRule :: (IsId n, RuleBuilder f a) => n -> f -> RewriteRule a
-rewriteRule s f = 
+makeRewriteRule :: (IsId n, RuleBuilder f a) => n -> f -> RewriteRule a
+makeRewriteRule s f = 
    R (newId s) (buildRuleSpec 0 f) show termView M.empty M.empty
 
 symbolMatcher :: Symbol -> SymbolMatch -> RewriteRule a -> RewriteRule a

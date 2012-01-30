@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.BuggyRules (buggyRules) where
 
-import Common.Library hiding (rule, ruleList)
+import Common.Library hiding (ruleList)
 import qualified Common.Library as C
 import Domain.Logic.Formula
 import Domain.Logic.Generator()
@@ -21,84 +21,84 @@ import Domain.Logic.Generator()
 -- Collection of all known buggy rules
 buggyRules :: [Rule SLogic]
 buggyRules =
-   [ buggyRuleCommImp, buggyRuleAssImp, buggyRuleIdemImp, buggyRuleIdemEqui
-   , buggyRuleEquivElim1, buggyRuleImplElim2, buggyRuleEquivElim2, buggyRuleEquivElim3
-   , buggyRuleImplElim, buggyRuleImplElim1, buggyRuleDeMorgan1, buggyRuleDeMorgan2, buggyRuleDeMorgan3
-   , buggyRuleDeMorgan4, buggyRuleDeMorgan5, buggyRuleNotOverImpl, buggyRuleParenth1, buggyRuleParenth2
-   , buggyRuleParenth3, buggyRuleAssoc, buggyRuleAbsor
-   , buggyRuleAndSame, buggyRuleAndCompl, buggyRuleOrSame, buggyRuleOrCompl
-   , buggyRuleTrueProp, buggyRuleFalseProp, buggyRuleDistr, buggyRuleDistrNot
+   [ buggyCommImp, buggyAssImp, buggyIdemImp, buggyIdemEqui
+   , buggyEquivElim1, buggyImplElim2, buggyEquivElim2, buggyEquivElim3
+   , buggyImplElim, buggyImplElim1, buggyDeMorgan1, buggyDeMorgan2, buggyDeMorgan3
+   , buggyDeMorgan4, buggyDeMorgan5, buggyNotOverImpl, buggyParenth1, buggyParenth2
+   , buggyParenth3, buggyAssoc, buggyAbsor
+   , buggyAndSame, buggyAndCompl, buggyOrSame, buggyOrCompl
+   , buggyTrueProp, buggyFalseProp, buggyDistr, buggyDistrNot
    ]
 
 rule :: RuleBuilder f a => String -> f -> Rule a
-rule = C.rule . ( "logic.propositional.buggy" # )
+rule = C.rewriteRule . ( "logic.propositional.buggy" # )
 
 ruleList :: RuleBuilder f a => String -> [f] -> Rule a
-ruleList = C.ruleList . ( "logic.propositional.buggy" # )
+ruleList = C.rewriteRules . ( "logic.propositional.buggy" # )
 
 -----------------------------------------------------------------------------
 -- Buggy rules
 
-buggyRuleAndSame :: Rule SLogic
-buggyRuleAndSame = buggyRule $ rule "AndSame" $
+buggyAndSame :: Rule SLogic
+buggyAndSame = buggy $ rule "AndSame" $
    \x -> x :&&: x  :~>  T
 
-buggyRuleAndCompl :: Rule SLogic
-buggyRuleAndCompl = buggyRule $ ruleList "AndCompl"
+buggyAndCompl :: Rule SLogic
+buggyAndCompl = buggy $ ruleList "AndCompl"
    [ \x -> x :&&: Not x  :~>  T
    , \x -> Not x :&&: x  :~>  T
    , \x -> x :&&: Not x  :~>  x
    , \x -> Not x :&&: x  :~>  x
    ]
 
-buggyRuleOrSame :: Rule SLogic
-buggyRuleOrSame = buggyRule $ rule "OrSame" $
+buggyOrSame :: Rule SLogic
+buggyOrSame = buggy $ rule "OrSame" $
    \x -> x :||: x  :~>  T
 
-buggyRuleOrCompl :: Rule SLogic
-buggyRuleOrCompl = buggyRule $ ruleList "OrCompl"
+buggyOrCompl :: Rule SLogic
+buggyOrCompl = buggy $ ruleList "OrCompl"
    [ \x -> x :||: Not x  :~>  F
    , \x -> Not x :||:  x :~>  F
    , \x -> x :||: Not x  :~>  x
    , \x -> Not x :||:  x :~>  x
    ]
 
-buggyRuleTrueProp :: Rule SLogic
-buggyRuleTrueProp = buggyRule $ ruleList "TrueProp"
+buggyTrueProp :: Rule SLogic
+buggyTrueProp = buggy $ ruleList "TrueProp"
    [ \x -> x :||: T  :~>  x
    , \x -> T :||: x  :~>  x
    , \x -> x :&&: T  :~>  T
    , \x -> T :&&: x  :~>  T
    ]
 
-buggyRuleFalseProp :: Rule SLogic
-buggyRuleFalseProp = buggyRule $ ruleList "FalseProp"
+buggyFalseProp :: Rule SLogic
+buggyFalseProp = buggy $ ruleList "FalseProp"
    [ \x -> x :||: F  :~>  F
    , \x -> F :||: x  :~>  F
    , \x -> x :&&: F  :~>  x
    , \x -> F :&&: x  :~>  x
    ]
 
-buggyRuleCommImp :: Rule SLogic
-buggyRuleCommImp = buggyRule $ rule "CommImp" $
+buggyCommImp :: Rule SLogic
+buggyCommImp = buggy $ rule "CommImp" $
    \x y -> x :->: y  :~>  y :->: x --this does not hold: T->T => T->x
 
-buggyRuleAssImp :: Rule SLogic
-buggyRuleAssImp = buggyRule $ ruleList "AssImp"
+buggyAssImp :: Rule SLogic
+buggyAssImp = buggy $ ruleList "AssImp"
    [ \x y z -> x :->: (y :->: z)  :~>  (x :->: y) :->: z
    , \x y z -> (x :->: y) :->: z  :~>  x :->: (y :->: z)
    ]
 
-buggyRuleIdemImp :: Rule SLogic
-buggyRuleIdemImp = buggyRule $ rule "IdemImp" $
+buggyIdemImp :: Rule SLogic
+buggyIdemImp = buggy $ rule "IdemImp" $
    \x -> x :->: x  :~>  x
 
-buggyRuleIdemEqui :: Rule SLogic
-buggyRuleIdemEqui = buggyRule $ rule "IdemEqui" $
+buggyIdemEqui :: Rule SLogic
+buggyIdemEqui = buggy $ rule "IdemEqui" $
    \x -> x :<->: x  :~>  x
 
-buggyRuleEquivElim1 :: Rule SLogic
-buggyRuleEquivElim1 = buggyRule $ ruleList "EquivElim1"
+buggyEquivElim1 :: Rule SLogic
+buggyEquivElim1 = buggy $ ruleList "EquivElim1"
     [ \x y -> x :<->: y :~> (x :&&: y) :||: Not (x :&&: y)
     , \x y -> x :<->: y :~> (x :&&: y) :||: (Not x :&&:  y)
     , \x y -> x :<->: y :~> (x :&&: y) :||: ( x :&&: Not y)
@@ -106,34 +106,34 @@ buggyRuleEquivElim1 = buggyRule $ ruleList "EquivElim1"
     , \x y -> x :<->: y :~> (x :&&: y) :||: Not (x :||: Not y)
     ]
 
-buggyRuleEquivElim2 :: Rule SLogic
-buggyRuleEquivElim2 = buggyRule $ ruleList "EquivElim2"
+buggyEquivElim2 :: Rule SLogic
+buggyEquivElim2 = buggy $ ruleList "EquivElim2"
     [ \x y -> x :<->: y :~> (x :||: y) :&&: (Not x :||: Not y)
     , \x y -> x :<->: y :~> (x :&&: y) :&&: (Not x :&&: Not y)
     , \x y -> x :<->: y :~> (x :&&: y) :||: (Not x :||: Not y)
     ]
 
-buggyRuleEquivElim3 :: Rule SLogic
-buggyRuleEquivElim3 = buggyRule $ rule "EquivElim3"  $
+buggyEquivElim3 :: Rule SLogic
+buggyEquivElim3 = buggy $ rule "EquivElim3"  $
      \x y -> x :<->: y :~> Not x :||: y
 
-buggyRuleImplElim :: Rule SLogic
-buggyRuleImplElim = buggyRule $ ruleList "ImplElim"
+buggyImplElim :: Rule SLogic
+buggyImplElim = buggy $ ruleList "ImplElim"
    [\x y -> x :->: y :~> Not (x :||: y)
    ,\x y -> x :->: y :~> (x :||: y)
    ,\x y -> x :->: y :~> Not (x :&&: y)
    ]
 
-buggyRuleImplElim1 :: Rule SLogic
-buggyRuleImplElim1 = buggyRule $ rule "ImplElim1"  $
+buggyImplElim1 :: Rule SLogic
+buggyImplElim1 = buggy $ rule "ImplElim1"  $
      \x y -> x :->: y :~> Not x :&&: y
 
-buggyRuleImplElim2 :: Rule SLogic
-buggyRuleImplElim2 = buggyRule $ rule "ImplElim2" $
+buggyImplElim2 :: Rule SLogic
+buggyImplElim2 = buggy $ rule "ImplElim2" $
      \x y -> x :->: y :~>  (x :&&: y) :||: (Not x :&&: Not y)
 
-buggyRuleDeMorgan1 :: Rule SLogic
-buggyRuleDeMorgan1 = buggyRule $ ruleList "DeMorgan1"
+buggyDeMorgan1 :: Rule SLogic
+buggyDeMorgan1 = buggy $ ruleList "DeMorgan1"
     [ \x y -> Not (x :&&: y) :~>  Not x :||: y
     , \x y -> Not (x :&&: y) :~>  x :||: Not y
     , \x y -> Not (x :&&: y) :~>  x :||: y
@@ -142,67 +142,67 @@ buggyRuleDeMorgan1 = buggyRule $ ruleList "DeMorgan1"
     , \x y -> Not (x :||: y) :~>  x :&&: y
     ]
 
-buggyRuleDeMorgan2 :: Rule SLogic
-buggyRuleDeMorgan2 = buggyRule $ ruleList "DeMorgan2"
+buggyDeMorgan2 :: Rule SLogic
+buggyDeMorgan2 = buggy $ ruleList "DeMorgan2"
     [ \x y -> Not (x :&&: y) :~>  Not (Not x :||: Not y)
     , \x y -> Not (x :||: y) :~>  Not (Not x :&&: Not y) --note the firstNot in both formulas!
     ]
-buggyRuleDeMorgan3 :: Rule SLogic
-buggyRuleDeMorgan3 = buggyRule $  rule "DeMorgan3" $
+buggyDeMorgan3 :: Rule SLogic
+buggyDeMorgan3 = buggy $  rule "DeMorgan3" $
     \x y -> Not (x :&&: y) :~>  Not x :&&: Not y
 
-buggyRuleDeMorgan4 :: Rule SLogic
-buggyRuleDeMorgan4 = buggyRule $  rule "DeMorgan4" $
+buggyDeMorgan4 :: Rule SLogic
+buggyDeMorgan4 = buggy $  rule "DeMorgan4" $
      \x y -> Not (x :||: y) :~>  Not x :||: Not y
 
-buggyRuleDeMorgan5 :: Rule SLogic
-buggyRuleDeMorgan5 = buggyRule $ ruleList "DeMorgan5"
+buggyDeMorgan5 :: Rule SLogic
+buggyDeMorgan5 = buggy $ ruleList "DeMorgan5"
     [ \x y z -> Not (Not (x :&&: y) :||: z) :~>  Not (Not x :||: Not y):||: z
     , \x y z -> Not (Not (x :&&: y) :&&: z) :~>  Not (Not x :||: Not y):&&: z
     , \x y z -> Not (Not (x :||: y) :||: z) :~>  Not (Not x :&&: Not y):||: z
     , \x y z -> Not (Not (x :||: y) :&&: z) :~>  Not (Not x :&&: Not y):&&: z
     ]
 
-buggyRuleNotOverImpl :: Rule SLogic
-buggyRuleNotOverImpl = buggyRule $ rule "NotOverImpl" $
+buggyNotOverImpl :: Rule SLogic
+buggyNotOverImpl = buggy $ rule "NotOverImpl" $
     \x y -> Not (x :->: y) :~> Not x :->: Not y
 
-buggyRuleParenth1 :: Rule SLogic
-buggyRuleParenth1 = buggyRule $ ruleList "Parenth1"
+buggyParenth1 :: Rule SLogic
+buggyParenth1 = buggy $ ruleList "Parenth1"
     [ \x y -> Not (x :&&: y)     :~> Not x :&&: y
     , \x y -> Not (x :||: y)     :~> Not x :||: y
     ]
 
-buggyRuleParenth2 :: Rule SLogic
-buggyRuleParenth2 = buggyRule $ rule "Parenth2" $
+buggyParenth2 :: Rule SLogic
+buggyParenth2 = buggy $ rule "Parenth2" $
     \x y -> Not (x :<->: y) :~> Not(x :&&: y) :||: (Not x :&&: Not y)
 
-buggyRuleParenth3 :: Rule SLogic
-buggyRuleParenth3 = buggyRule $ ruleList "Parenth3"
+buggyParenth3 :: Rule SLogic
+buggyParenth3 = buggy $ ruleList "Parenth3"
     [ \x y -> Not (Not x :&&: y)  :~> x :&&: y
     , \x y -> Not (Not x :||: y)  :~> x :||: y
     , \x y -> Not (Not x :->: y)  :~> x :->: y
     , \x y -> Not (Not x :<->: y) :~> x :<->: y
     ]
 
-buggyRuleAssoc :: Rule SLogic
-buggyRuleAssoc = buggyRule $ ruleList "Assoc"
+buggyAssoc :: Rule SLogic
+buggyAssoc = buggy $ ruleList "Assoc"
     [ \x y z -> x :||: (y :&&: z) :~> (x :||: y) :&&: z
     , \x y z -> (x :||: y) :&&: z :~> x :||: (y :&&: z)
     , \x y z -> (x :&&: y) :||: z :~> x :&&: (y :||: z)
     , \x y z -> x :&&: (y :||: z) :~> (x :&&: y) :||: z
     ]
 
-buggyRuleAbsor :: Rule SLogic
-buggyRuleAbsor = buggyRule $ ruleList "Absor"
+buggyAbsor :: Rule SLogic
+buggyAbsor = buggy $ ruleList "Absor"
     [ \x y z -> (x :||: y) :||: ((x :&&: y) :&&: z) :~> (x :||: y)
     , \x y z -> (x :&&: y) :||: ((x :||: y) :&&: z) :~> (x :&&: y)
     , \x y z -> (x :||: y) :&&: ((x :&&: y) :||: z) :~> (x :||: y)
     , \x y z -> (x :&&: y) :&&: ((x :||: y) :||: z) :~> (x :&&: y)
     ]
 
-buggyRuleDistr :: Rule SLogic
-buggyRuleDistr = buggyRule $ ruleList "Distr"
+buggyDistr :: Rule SLogic
+buggyDistr = buggy $ ruleList "Distr"
    [ \x y z -> x :&&: (y :||: z)  :~>  (x :&&: y) :&&: (x :&&: z)
    , \x y z -> (x :||: y) :&&: z  :~>  (x :&&: z) :&&: (y :&&: z)
    , \x y z -> x :&&: (y :||: z)  :~>  (x :||: y) :&&: (x :||: z)
@@ -213,8 +213,8 @@ buggyRuleDistr = buggyRule $ ruleList "Distr"
    , \x y z -> (x :&&: y) :||: z  :~>  (x :&&: z) :||: (y :&&: z)
    ]
 
-buggyRuleDistrNot :: Rule SLogic
-buggyRuleDistrNot = buggyRule $ ruleList "DistrNot"
+buggyDistrNot :: Rule SLogic
+buggyDistrNot = buggy $ ruleList "DistrNot"
    [ \x y z -> Not x :&&: (y :||: z)  :~>  (Not x :&&: y) :||: (x :&&: z)
    , \x y z -> Not x :&&: (y :||: z)  :~>  (x :&&: y) :||: (Not x :&&: z)
    , \x y z -> (x :||: y) :&&: Not z  :~>  (x :&&: Not z) :||: (y :&&: z)

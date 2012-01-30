@@ -51,5 +51,5 @@ cnfExerciseSimple = cnfExercise
    } -}
 
 myReady :: Exercise a -> a -> Bool
-myReady ex = null . applyAll (alternatives $ filter (not . isBuggyRule) (ruleset ex))
+myReady ex = null . applyAll (alternatives $ filter (not . isBuggy) (ruleset ex))
          . inContext ex

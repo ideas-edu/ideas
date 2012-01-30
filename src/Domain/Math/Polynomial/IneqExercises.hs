@@ -184,7 +184,7 @@ coverUpTimesPositive = coverUpBinaryRule "times-positive" (commOp . m) (/) confi
 
 flipSign :: Rule (Relation Expr)
 flipSign = describe "Flip sign of inequality" $
-   makeSimpleRule (ineq, "flip-sign") $ \r -> do
+   ruleMaybe (ineq, "flip-sign") $ \r -> do
    let lhs = leftHandSide r
        rhs = rightHandSide r
    guard (isNegative lhs)
@@ -222,14 +222,14 @@ cleanUpLogicRelation =
 
 trivialRelation :: Rule (OrList (Relation Expr))
 trivialRelation =
-   makeSimpleRule (ineq, "trivial") $ oneDisjunct $ \a -> do
+   ruleMaybe (ineq, "trivial") $ oneDisjunct $ \a -> do
       let new = cleanUpRelation a
       guard (isTrue new || isFalse new)
       return new
 
 turnIntoEquation :: Rule (Context (Relation Expr))
 turnIntoEquation = describe "Turn into equation" $
-   makeSimpleRule (ineq, "to-equation") $ \cr -> do
+   ruleMaybe (ineq, "to-equation") $ \cr -> do
    r <- current cr
    guard (relationType r `elem` ineqTypes)
    return $ addToClipboard "ineq" (toExpr r)
@@ -241,7 +241,7 @@ turnIntoEquation = describe "Turn into equation" $
 -- Todo: cleanup this function
 solutionInequation :: Rule (Context (Logic (Relation Expr)))
 solutionInequation = describe "Determine solution for inequality" $
-   makeSimpleRuleList (ineq, "give-solution") $ \clr -> do
+   makeRule (ineq, "give-solution") $ \clr -> do
    r <- current clr
    inEquation <- lookupClipboardG "ineq" clr
    let rt = relationType inEquation

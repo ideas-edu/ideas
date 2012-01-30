@@ -26,7 +26,7 @@ module Common.Rule.Transformation
    , transLiftContext, transLiftContextIn
    , makeTransLiftContext, makeTransLiftContext_
      -- * Using transformations
-   , transApply, getRewriteRules, getReferences
+   , transApply, getRewriteRules, getReferences, isZeroTrans
    ) where
 
 import Common.Environment
@@ -47,6 +47,7 @@ import qualified Control.Category as C
 --- Trans data type and instances
 
 data Trans a b where
+   Zero     :: Trans a b
    List     :: (a -> [b]) -> Trans a b
    Rewrite  :: RewriteRule a -> Trans a a
    EnvMonad :: (a -> EnvMonad b) -> Trans a b
@@ -69,7 +70,7 @@ instance Arrow Trans where
    second f = identity :**: f
    
 instance ArrowZero Trans where
-   zeroArrow = transList (const [])
+   zeroArrow = Zero
    
 instance ArrowPlus Trans where
    (<+>) = Append
@@ -161,6 +162,7 @@ transApply = rec mempty
    rec :: Environment -> Trans a b -> a -> [(b, Environment)]
    rec env trans a = 
       case trans of
+         Zero       -> []
          List f     -> [ (b, env) | b <- f a ]
          Rewrite r  -> [ (b, env) | b <- applyAll r a ]
          EnvMonad f -> runEnvMonad (f a) env
@@ -192,6 +194,16 @@ getReferences trans =
       Ref r      -> [Some r]
       EnvMonad f -> envMonadFunctionRefs f
       _          -> descendTrans getReferences trans
+
+isZeroTrans :: Trans a b -> Bool
+isZeroTrans = or . rec
+ where
+   rec :: Trans a b -> [Bool]
+   rec trans = 
+      case trans of
+         Zero       -> [True]
+         Append f g -> [isZeroTrans f && isZeroTrans g]
+         _          -> descendTrans rec trans
 
 -- General recursion function (existentially quantified)
 descendTrans :: Monoid m => (forall x y . Trans x y -> m) -> Trans a b -> m

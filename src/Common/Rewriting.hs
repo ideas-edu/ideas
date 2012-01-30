@@ -11,5 +11,5 @@
 -----------------------------------------------------------------------------
 module Common.Rewriting (module Export) where
 
-import Common.Rewriting.RewriteRule as Export
+import Common.Rewriting.RewriteRule as Export (RewriteRule, RuleSpec(..), RuleBuilder, Different(..))
 import Common.Rewriting.Term as Export

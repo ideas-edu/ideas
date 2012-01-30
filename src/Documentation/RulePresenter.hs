@@ -12,6 +12,7 @@
 module Documentation.RulePresenter (ruleToHTML) where
 
 import Common.Library
+import Common.Rewriting.RewriteRule
 import Common.Utils (Some(..))
 import Control.Monad
 import Data.List
@@ -21,7 +22,7 @@ import Text.HTML
 ruleToHTML :: Some Exercise -> Rule a -> HTMLBuilder
 ruleToHTML ex r =
    forM_ (getRewriteRules (transformation r)) $ \(Some rr) ->
-      rewriteRuleToHTML (not $ isBuggyRule r) ex rr
+      rewriteRuleToHTML (not $ isBuggy r) ex rr
 
 rewriteRuleToHTML :: Bool -> Some Exercise -> RewriteRule a -> HTMLBuilder
 rewriteRuleToHTML sound ex r = do

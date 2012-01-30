@@ -68,13 +68,12 @@ allfirsts state =
                 ruleOrdering (exercise state) r1 r2
          in Right $ noDuplicates $ sortBy f $ mapMaybe make $ derivations tree
  where
-   stop (Just (RuleStep _ r)) = isMajorRule r
-   stop _ = False
+   stop = maybe False isMajor
 
    make d = do
       prefixEnd <- lastStep d
       case lastStepInPrefix prefixEnd of
-         Just (RuleStep env r) | isMajorRule r -> return
+         Just (RuleStep env r) | isMajor r -> return
             ( r
             , location (lastTerm d)
             , env
@@ -98,7 +97,7 @@ onefirst state =
 
 applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =
-   let p r = not (isBuggyRule r) && Apply.applicable r (setLocation loc (stateContext state))
+   let p r = not (isBuggy r) && Apply.applicable r (setLocation loc (stateContext state))
    in filter p (ruleset (exercise state))
 
 allapplications :: State a -> [(Rule (Context a), Location, State a)]
@@ -149,7 +148,7 @@ stepsremaining = mapSecond derivationLength . derivation Nothing
 findbuggyrules :: State a -> a -> [(Rule (Context a), Location, Environment)]
 findbuggyrules state a =
    [ (r, loc, as)
-   | r         <- filter isBuggyRule (ruleset ex)
+   | r         <- filter isBuggy (ruleset ex)
    , (loc, as) <- recognizeRule ex r (stateContext state) (inContext ex a)
    ]
  where

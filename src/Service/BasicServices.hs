@@ -127,17 +127,17 @@ setLocation loc c0 = fromMaybe c0 (navigateTo loc c0)
 -- Two possible scenarios: either I have a prefix and I can return a new one (i.e., still following the
 -- strategy), or I return a new term without a prefix. A final scenario is that the rule cannot be applied
 -- to the current term at the given location, in which case the request is invalid.
-apply :: Rule (Context a) -> Location -> State a -> Either String (State a)
-apply r loc state = maybe applyOff applyOn (statePrefix state)
+apply :: Rule (Context a) -> Location -> Environment -> State a -> Either String (State a)
+apply r loc env state = maybe applyOff applyOn (statePrefix state)
  where
    applyOn _ = -- scenario 1: on-strategy
       maybe applyOff Right $ listToMaybe
-      [ s1 | Right xs <- [allfirsts state], (r1, loc1, _, s1) <- xs, r==r1, loc==loc1 ]
+      [ s1 | Right xs <- [allfirsts state], (r1, loc1, env1, s1) <- xs, r==r1, loc==loc1, noBindings env || env==env1 ]
 
    applyOff  = -- scenario 2: off-strategy
-      case Apply.apply r (setLocation loc (stateContext state)) of
-         Just new -> Right (makeState (exercise state) Nothing new)
-         Nothing  -> Left ("Cannot apply " ++ show r)
+      case transApply (updateParameters env (transformation r)) (setLocation loc (stateContext state)) of
+         (new, _):_ -> Right (makeState (exercise state) Nothing new)
+         []         -> Left ("Cannot apply " ++ show r)
 
 ready :: State a -> Bool
 ready state = isReady (exercise state) (stateTerm state)

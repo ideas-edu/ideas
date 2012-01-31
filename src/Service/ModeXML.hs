@@ -85,14 +85,14 @@ xmlReply request xml = do
       case encoding request of
          Just StringEncoding -> return (stringFormatConverter ex)
          -- always use special mixed fraction symbol
-         _ -> return (dwoConverter ex)
+         _ -> return (openMathConverter ex)
          -- _ | fromDWO request -> return (dwoConverter ex)
          --   | otherwise       -> return (openMathConverter ex)
    res <- evalService conv srv xml
    return (resultOk res)
 
-fromDWO :: Request -> Bool
-fromDWO = (== Just "dwo") . fmap (map toLower) . source
+--fromDWO :: Request -> Bool
+--fromDWO = (== Just "dwo") . fmap (map toLower) . source
 
 extractExerciseId :: Monad m => XML -> m Id
 extractExerciseId = liftM newId . findAttribute "exerciseid"
@@ -124,9 +124,11 @@ stringFormatConverterTp ex =
       let input = getData xml
       either (fail . show) return (parser ex input)
 
-openMathConverter, dwoConverter :: Some Exercise -> Some (Evaluator XML XMLBuilder)
-openMathConverter (Some ex) = Some (openMathConverterTp False ex)
-dwoConverter      (Some ex) = Some (openMathConverterTp True  ex)
+openMathConverter :: Some Exercise -> Some (Evaluator XML XMLBuilder)
+openMathConverter (Some ex) = Some (openMathConverterTp True ex)
+
+--dwoConverter :: Some Exercise -> Some (Evaluator XML XMLBuilder)
+--dwoConverter (Some ex) = Some (openMathConverterTp True ex)
 
 openMathConverterTp :: Bool -> Exercise a -> Evaluator XML XMLBuilder a
 openMathConverterTp withMF ex =
@@ -228,6 +230,10 @@ xmlDecodeType b dec serviceType =
               mp <- decodePrefix (decoderExercise dec) xml
               s  <- maybe (fail "no prefix") (return . show) mp
               return (f s, xml) -}
+         | s == "args" -> keep $ \xml -> do
+              g   <- equalM envType t
+              env <- decodeArgEnvironment b xml
+              return (g env)
          | otherwise -> keep $ \xml ->
               findChild s xml >>= liftM fst . xmlDecodeType b dec t
 
@@ -338,6 +344,27 @@ encodeTypedBinding b tb = element "argument" $ do
          omobj2xml $ toOMOBJ term
       _ -> text (showValue tb)
 
+decodeArgEnvironment :: MonadPlus m => Bool -> XML -> m Environment
+decodeArgEnvironment b = 
+   liftM makeEnvironment . mapM make . filter isArg . children
+ where
+   isArg = (== "argument") . name
+ 
+   make :: MonadPlus m => XML -> m Binding
+   make xml = do
+      a <- findAttribute "description" xml
+      case findChild "OMOBJ" xml of
+         -- OpenMath object found inside tag
+         Just this | b -> 
+            case xml2omobj this >>= fromOMOBJ of
+               Left err   -> fail err
+               Right term -> return (termBinding a term)
+         -- Simple value
+         _ -> return (makeBinding (makeRef a) (getData xml))
+         
+   termBinding :: String -> Term -> Binding
+   termBinding = makeBinding . makeRef
+   
 encodeText :: Encoder s a -> Exercise a -> Text -> DomainReasoner s
 encodeText enc ex = liftM (encodeTuple enc) . mapM f . textItems
  where

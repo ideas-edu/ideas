@@ -102,7 +102,7 @@ applyS = makeService "apply"
    "Apply a rule at a certain location to the current expression. If this rule \
    \was not expected by the strategy, we deviate from it. If the rule cannot \
    \be applied, this service call results in an error." $
-   apply ::: Rule :-> Location :-> stateType :-> errorType stateType
+   apply ::: Rule :-> Location :-> Tag "args" envType :-> stateType :-> errorType stateType
 
 generateS :: Service
 generateS = makeService "generate"

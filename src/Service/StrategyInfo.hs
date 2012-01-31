@@ -51,15 +51,16 @@ coreBuilder f = rec
          _ :|>: _  -> asList  "orelse"     isOrElse
          _ :%: _   -> asList  "interleave" isInterleave
          a :!%: b  -> element "interleft"  (rec a >> rec b)
-         Many a    -> element "many"     (rec a)
-         Repeat a  -> element "repeat"   (rec a)
-         Label l (Rule r) | getId l == getId r -> element "rule"     (f l)
-         Label l a -> element "label"    (f l >> rec a)
-         Atomic a  -> element "atomic"   (rec a)
-         Rec n a   -> element "rec"      (("var" .=. show n) >> rec a)
-         Not a     -> element "not"      (recNot a)
-         Rule r    -> element "rule"     ("name" .=. show r)
-         Var n     -> element "var"      ("var" .=. show n)
+         Many a    -> element "many"       (rec a)
+         Repeat a  -> element "repeat"     (rec a)
+         Label l (Rule r) | getId l == getId r 
+                   -> element "rule"       (f l)
+         Label l a -> element "label"      (f l >> rec a)
+         Atomic a  -> element "atomic"     (rec a)
+         Rec n a   -> element "rec"        (("var" .=. show n) >> rec a)
+         Not a     -> element "not"        (recNot a)
+         Rule r    -> element "rule"       ("name" .=. show r)
+         Var n     -> element "var"        ("var" .=. show n)
          Succeed   -> tag     "succeed"
          Fail      -> tag     "fail"
     where

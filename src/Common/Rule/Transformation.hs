@@ -26,7 +26,8 @@ module Common.Rule.Transformation
    , transLiftContext, transLiftContextIn
    , makeTransLiftContext, makeTransLiftContext_
      -- * Using transformations
-   , transApply, getRewriteRules, getReferences, isZeroTrans
+   , transApply, updateParameters
+   , getRewriteRules, getReferences, isZeroTrans
    ) where
 
 import Common.Environment
@@ -181,6 +182,20 @@ transApply = rec mempty
 
    make :: Environment -> (b -> c) -> Trans a b -> a -> [(c, Environment)]
    make env f g = map (mapFirst f) . rec env g
+
+updateParameters :: Environment -> Trans a b -> Trans a b
+updateParameters env = rec 
+ where
+   rec :: Trans a b -> Trans a b
+   rec trans =
+      case trans of
+         UseEnv f   -> UseEnv (rec f)
+         f :>>: g   -> rec f :>>: rec g
+         f :**: g   -> rec f :**: rec g
+         f :++: g   -> rec f :++: rec g
+         Append f g -> Append (rec f) (rec g)
+         Ref ref    -> maybe trans (transPure . const) (ref ? env)
+         _          -> trans
 
 getRewriteRules :: Trans a b -> [Some RewriteRule]
 getRewriteRules trans =

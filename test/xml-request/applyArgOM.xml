@@ -1,0 +1,14 @@
+<request service="apply" exerciseid="algebra.equations.linear.balance" encoding="openmath">
+<ruleid>algebra.equations.linear.balance.smart-div</ruleid>
+<location>[]</location>
+<argument description="factor">
+<OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+<OMI>4</OMI>
+</OMOBJ>
+</argument>
+<state>
+<OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+<OMA><OMS cd="relation1" name="eq"/><OMA><OMS cd="arith1" name="minus"/><OMA><OMS cd="arith1" name="times"/><OMI>2</OMI><OMA><OMS cd="arith1" name="minus"/><OMV name="x"/><OMI>1</OMI></OMA></OMA><OMI>4</OMI></OMA><OMI>12</OMI></OMA>
+</OMOBJ>
+</state>
+</request>

@@ -33,6 +33,7 @@ extractExerciseId json =
    case json of
       String s -> return (newId s)
       Array [String _, String _, a@(Array _)] -> extractExerciseId a
+      Array [String _, String _, _, a@(Array _)] -> extractExerciseId a
       Array (String s:tl) | any p s -> extractExerciseId (Array tl)
       Array (hd:_) -> extractExerciseId hd
       _ -> fail "no code"
@@ -162,9 +163,13 @@ jsonDecoder ex = Decoder
          Tp.String   -> useFirst $ \json -> case json of
                                                String s -> return s
                                                _        -> fail "not a string"
-         Tp.Tag s _ | s == "state" -> do
-            f <- equalM stateType serviceType
-            useFirst (liftM f . decodeState (decoderExercise dec) (decodeTerm dec))
+         Tp.Tag s t
+            | s == "state" -> do
+                 f <- equalM stateType serviceType
+                 useFirst (liftM f . decodeState (decoderExercise dec) (decodeTerm dec))
+            | s == "args" -> do
+                 f <- equalM envType t
+                 useFirst $ liftM f . decodeContext
          _ -> decodeDefault dec serviceType
 
    useFirst :: Monad m => (JSON -> m a) -> JSON -> m (a, JSON)

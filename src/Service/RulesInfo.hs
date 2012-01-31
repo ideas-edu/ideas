@@ -14,7 +14,6 @@ module Service.RulesInfo
    ) where
 
 import Common.Library
-import Common.Rewriting.RewriteRule
 import Common.Utils (Some(..))
 import Control.Monad
 import Data.Char

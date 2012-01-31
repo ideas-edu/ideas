@@ -34,7 +34,6 @@ import Common.Environment
 import Common.Classes
 import Common.Id
 import Common.Rewriting
-import Common.Rewriting.RewriteRule
 import Common.Rule.Transformation
 import Common.Rule.Recognizer
 import Common.View

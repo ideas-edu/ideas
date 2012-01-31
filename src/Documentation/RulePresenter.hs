@@ -12,7 +12,6 @@
 module Documentation.RulePresenter (ruleToHTML) where
 
 import Common.Library
-import Common.Rewriting.RewriteRule
 import Common.Utils (Some(..))
 import Control.Monad
 import Data.List

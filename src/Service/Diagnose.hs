@@ -109,7 +109,7 @@ diagnose state new
    discovered searchForBuggy = listToMaybe $
       [ (r, env)
       | r <- sortBy (ruleOrdering ex) (ruleset ex)
-      , isBuggy r == searchForBuggy, not (isFinalRule r)
+      , isBuggy r == searchForBuggy
       , (_, env) <- recognizeRule ex r sub1 sub2
       ]
     where

@@ -45,11 +45,11 @@ parameter1 :: (IsId n1, Reference a) => n1 -> (a -> Transformation b) -> ParamTr
 parameter1 n1 f = first (bindValue n1 >>> arr f) >>> app
 
 parameter2 :: (IsId n1, IsId n2, Reference a, Reference b) 
-           => n1 -> n2 -> (a -> b -> Transformation c) -> (ParamTrans (a, b) c)
+           => n1 -> n2 -> (a -> b -> Transformation c) -> ParamTrans (a, b) c
 parameter2 n1 n2 f = first (bindValue n1 *** bindValue n2 >>> arr (uncurry f)) >>> app
 
 parameter3 :: (IsId n1, IsId n2, IsId n3, Reference a, Reference b, Reference c)
-           => n1 -> n2 -> n3 -> (a -> b -> c -> Transformation d) -> (ParamTrans (a, b, c) d)
+           => n1 -> n2 -> n3 -> (a -> b -> c -> Transformation d) -> ParamTrans (a, b, c) d
 parameter3 n1 n2 n3 f = first ((\(a, b, c) -> (a, (b, c))) ^>> 
    bindValue n1 *** (bindValue n2 *** bindValue n3) >>^
    (\(a, (b, c)) -> f a b c)) 

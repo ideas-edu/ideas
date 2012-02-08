@@ -26,7 +26,7 @@ module Common.Rule.Transformation
    , transLiftContext, transLiftContextIn
    , makeTransLiftContext, makeTransLiftContext_
      -- * Using transformations
-   , transApply, updateParameters
+   , transApply, transApplyWith
    , getRewriteRules, getReferences, isZeroTrans
    ) where
 
@@ -158,44 +158,32 @@ makeTransLiftContext_ f = transLiftContext (identity &&& makeTrans f >>> arr fst
 --- Using transformations
 
 transApply :: Trans a b -> a -> [(b, Environment)]
-transApply = rec mempty
- where 
-   rec :: Environment -> Trans a b -> a -> [(b, Environment)]
-   rec env trans a = 
-      case trans of
-         Zero       -> []
-         List f     -> [ (b, env) | b <- f a ]
-         Rewrite r  -> [ (b, env) | b <- applyAll r a ]
-         EnvMonad f -> runEnvMonad (f a) env
-         Ref ref    -> [(a, insertRef ref a env)]
-         UseEnv f   -> do (b, envb) <- rec (snd a) f (fst a) 
-                          return ((b, envb), env)
-         f :>>: g   -> do (b, env1) <- rec env  f a
-                          (c, env2) <- rec env1 g b
-                          return (c, env2)
-         f :**: g   -> do (b, env1) <- rec env f (fst a)
-                          (c, env2) <- rec env g (snd a)
-                          return ((b, c), env2 `mappend` env1)
-         f :++: g   -> either (make env Left f) (make env Right g) a
-         Apply      -> uncurry (rec env) a
-         Append f g -> rec env f a ++ rec env g a
+transApply = transApplyWith mempty
 
-   make :: Environment -> (b -> c) -> Trans a b -> a -> [(c, Environment)]
-   make env f g = map (mapFirst f) . rec env g
-
-updateParameters :: Environment -> Trans a b -> Trans a b
-updateParameters env = rec 
+transApplyWith :: Environment -> Trans a b -> a -> [(b, Environment)]
+transApplyWith env trans a = 
+   case trans of
+      Zero       -> []
+      List f     -> [ (b, env) | b <- f a ]
+      Rewrite r  -> [ (b, env) | b <- applyAll r a ]
+      EnvMonad f -> runEnvMonad (f a) env
+      Ref ref    -> case ref ? env of
+                       Just b  -> [(b, env)]
+                       Nothing -> [(a, insertRef ref a env)]
+      UseEnv f   -> do (b, envb) <- transApplyWith (snd a) f (fst a) 
+                       return ((b, envb), env)
+      f :>>: g   -> do (b, env1) <- transApplyWith env  f a
+                       (c, env2) <- transApplyWith env1 g b
+                       return (c, env2)
+      f :**: g   -> do (b, env1) <- transApplyWith env f (fst a)
+                       (c, env2) <- transApplyWith env g (snd a)
+                       return ((b, c), env2 `mappend` env1)
+      f :++: g   -> either (make Left f) (make Right g) a
+      Apply      -> uncurry (transApplyWith env) a
+      Append f g -> transApplyWith env f a ++ transApplyWith env g a
  where
-   rec :: Trans a b -> Trans a b
-   rec trans =
-      case trans of
-         UseEnv f   -> UseEnv (rec f)
-         f :>>: g   -> rec f :>>: rec g
-         f :**: g   -> rec f :**: rec g
-         f :++: g   -> rec f :++: rec g
-         Append f g -> Append (rec f) (rec g)
-         Ref ref    -> maybe trans (transPure . const) (ref ? env)
-         _          -> trans
+   make :: (b -> c) -> Trans a b -> a -> [(c, Environment)]
+   make f g = map (mapFirst f) . transApplyWith env g
 
 getRewriteRules :: Trans a b -> [Some RewriteRule]
 getRewriteRules trans =

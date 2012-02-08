@@ -22,7 +22,6 @@ module Common.Rule.Abstract
      -- * Special minor rules
    , idRule, checkRule, emptyRule 
      -- * Rule properties
-   , finalRule, isFinalRule
    , ruleSiblings, siblingOf
    , isRewriteRule, isRecognizer, doAfter
      -- * Recognizer
@@ -52,7 +51,6 @@ data Rule a = Rule
    , getRecognizer :: Recognizer a
    , isBuggyRule   :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
    , isMinorRule   :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
-   , isFinalRule   :: Bool -- ^ Final (clean-up) step in derivation
    , ruleSiblings  :: [Id]
    }
 
@@ -111,7 +109,7 @@ ruleList :: IsId n => n -> (a -> [a]) -> Rule a
 ruleList = makeRule
 
 ruleTrans :: IsId n => n -> Transformation a -> Rule a
-ruleTrans n f = Rule (newId n) f mempty False False False []
+ruleTrans n f = Rule (newId n) f mempty False False []
 
 ruleRewrite :: RewriteRule a -> Rule a
 ruleRewrite r = ruleTrans (getId r) (transRewrite r)
@@ -157,11 +155,6 @@ isRecognizer = isZeroTrans . transformation
 
 siblingOf :: HasId b => b -> Rule a -> Rule a
 siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
-
--- | Mark the rule as final (by default, false). Final rules are used as a
--- final step in the derivation, to get the term in the expected form
-finalRule :: Rule a -> Rule a
-finalRule r = r {isFinalRule = True}
 
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a

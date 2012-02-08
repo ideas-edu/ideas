@@ -196,7 +196,7 @@ oneVar = configCoverUp
 
 simplerSquareRootMulti :: IsTerm a => Rule (Context a)
 simplerSquareRootMulti = describe "simpler square root" $
-   finalRule $ makeRule (quadreq, "simpler-sqrt") $ applyAll $
+   makeRule (quadreq, "simpler-sqrt") $ applyAll $
    repeat1 (somewhere (use (makeRule () simplerSqrt)))
  where
    -- Do not simplify (5+sqrt 53)/2

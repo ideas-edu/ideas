@@ -119,7 +119,7 @@ quadraticStrategyG =
         <|> somewhere (use distributionSquare)
         <|> multi (showId distributeTimes) (somewhere
                (useC parentNotNegCheck <*> use distributeTimes))
-        <|> finalRule distributeDivisionMulti
+        <|> distributeDivisionMulti
         <|> somewhere flipEquationS
          )
       |> somewhere (use moveToLeft <|> remove (use prepareSplitSquare))

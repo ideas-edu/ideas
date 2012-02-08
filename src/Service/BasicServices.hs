@@ -134,8 +134,9 @@ apply r loc env state = maybe applyOff applyOn (statePrefix state)
       maybe applyOff Right $ listToMaybe
       [ s1 | Right xs <- [allfirsts state], (r1, loc1, env1, s1) <- xs, r==r1, loc==loc1, noBindings env || env==env1 ]
 
+   ca = setLocation loc (stateContext state)
    applyOff  = -- scenario 2: off-strategy
-      case transApply (updateParameters env (transformation r)) (setLocation loc (stateContext state)) of
+      case transApplyWith env (transformation r) ca of
          (new, _):_ -> Right (makeState (exercise state) Nothing new)
          []         -> Left ("Cannot apply " ++ show r)
 

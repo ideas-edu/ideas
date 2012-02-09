@@ -173,7 +173,7 @@ somewhereTimes = somewhereWith "SomewhereTimes" $ \c ->
    if isTimesC c then [0 .. arity c-1] else []
 
 isTimesC :: Context a -> Bool
-isTimesC = maybe False (isJust . isTimes :: Term -> Bool) . currentT
+isTimesC = maybe False (isJust . isTimes) . currentTerm
 
 flipEquationS :: IsTerm a => Strategy (Context a)
 flipEquationS = use (check conditionVarsRHS) <*> use flipEquation
@@ -182,7 +182,7 @@ flipEquationS = use (check conditionVarsRHS) <*> use flipEquation
 -- Expanding factors of an expression
 
 expandStrategy :: LabeledStrategy (Context Expr)
-expandStrategy = cleanUpStrategyAfter (applyTop f . change g) $
+expandStrategy = cleanUpStrategyAfter (applyTop f . changeInContext g) $
    label "expand factors" $ repeatS (somewhere $
       use distributionSquare <|> use merge <|> use distributeTimes <|>
       use defPowerNat <|> use noDivisionConstant <|> use fractionProduct)

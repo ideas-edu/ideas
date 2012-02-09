@@ -35,7 +35,7 @@ derivativeStrategy = cleanUpStrategyAfter (applyTop cleanUpExpr) $
       <|> derivativePolyStepStrategy
       <|> check isDiffC <*> once (once (liftToContext ruleDefRoot))
  where
-   isDiffC = maybe False isDiff . current
+   isDiffC = maybe False isDiff . currentInContext
 
 derivativePolyStrategy :: LabeledStrategy (Context Expr)
 derivativePolyStrategy = cleanUpStrategyAfter (applyTop cleanUpExpr) $
@@ -92,13 +92,13 @@ derivativePolyStepStrategy :: LabeledStrategy (Context Expr)
 derivativePolyStepStrategy = label "derivative-poly-step" $
    check polyDiff <*> liftToContext ruleDerivPolynomial
  where
-   polyDiff = maybe False nfPoly . (>>= getDiffExpr) . current
+   polyDiff = maybe False nfPoly . (>>= getDiffExpr) . currentInContext
    nfPoly   = (`belongsTo` polyNormalForm rationalView)
 
 exceptLowerDiv :: IsStrategy f => f (Context Expr) -> Strategy (Context Expr)
 exceptLowerDiv = somewhereWith "except-lower-div" $ \a ->
    if isDivC a then [0] else [0 .. arity a-1]
  where
-   isDivC = maybe False isDiv . current
+   isDivC = maybe False isDiv . currentInContext
    isDiv (_ :/: _) = True
    isDiv _         = False

@@ -16,6 +16,7 @@ module Service.BasicServices
    ) where
 
 import Common.Library hiding (derivation, applicable, apply, ready)
+import Common.Navigator (allDowns, navigateTo)
 import Common.Utils (fst3)
 import Data.List
 import Data.Maybe
@@ -106,7 +107,7 @@ allapplications state = sortBy cmp (xs ++ ys)
    ex = exercise state
    xs = either (const []) (map (\(r, l, _, s) -> (r, l, s))) (allfirsts state)
    ps = [ (r, loc) | (r, loc, _) <- xs ]
-   ys = maybe [] f (top (stateContext state))
+   ys = f (top (stateContext state))
 
    f c = g c ++ concatMap f (allDowns c)
    g c = [ (r, location new, makeState ex Nothing new)

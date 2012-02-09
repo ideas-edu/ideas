@@ -40,35 +40,35 @@ ratId = newId "algebra.equations.rational"
 -- a/b = 0  iff  a=0 (and b/=0)
 divisionIsZero :: Rule (Context (Equation Expr))
 divisionIsZero = makeRule (ratId, "division-zero") $ \ceq -> do
-   lhs :==: rhs <- current ceq
+   lhs :==: rhs <- currentInContext ceq
    guard (rhs == 0)
    (a, b) <- match divView lhs
    return $ conditionNotZero b
-          $ replace (a :==: 0) ceq
+          $ replaceInContext (a :==: 0) ceq
 
 -- a/b = 1  iff  a=b (and b/=0)
 divisionIsOne :: Rule (Context (Equation Expr))
 divisionIsOne = makeRule (ratId, "division-one") $ \ceq -> do
-   lhs :==: rhs <- current ceq
+   lhs :==: rhs <- currentInContext ceq
    guard (rhs == 1)
    (a, b) <- match divView lhs
    return $ conditionNotZero b
-          $ replace (a :==: b) ceq
+          $ replaceInContext (a :==: b) ceq
 
 -- a/c = b/c  iff  a=b (and c/=0)
 sameDivisor :: Rule (Context (Equation Expr))
 sameDivisor = makeRule (ratId, "same-divisor") $ \ceq -> do
-   lhs :==: rhs <- current ceq
+   lhs :==: rhs <- currentInContext ceq
    (a, c1) <- match divView lhs
    (b, c2) <- match divView rhs
    guard (c1==c2)
    return $ conditionNotZero c1
-          $ replace (a :==: b) ceq
+          $ replaceInContext (a :==: b) ceq
 
 -- a/b = a/c  iff  a=0 or b=c (and b/=0 and c/=0)
 sameDividend :: Rule (Context (OrList (Equation Expr)))
 sameDividend = makeRule (ratId, "same-dividend") $ \cor -> do
-   oreq <- current cor
+   oreq <- currentInContext cor
    lhs :==: rhs <- getSingleton oreq
    (a1, b) <- matchM divView lhs
    (a2, c) <- matchM divView rhs
@@ -76,29 +76,29 @@ sameDividend = makeRule (ratId, "same-dividend") $ \cor -> do
    let new = singleton (a1 :==: 0) <> singleton (b :==: c)
    return $ conditionNotZero c  
           $ conditionNotZero b
-          $ replace new cor
+          $ replaceInContext new cor
 
 -- a/b = c/d  iff  a*d = b*c   (and b/=0 and d/=0)
 crossMultiply :: Rule (Context (Equation Expr))
 crossMultiply = makeRule (ratId, "cross-multiply") $ \ceq -> do
-   lhs :==: rhs <- current ceq
+   lhs :==: rhs <- currentInContext ceq
    (a, b) <- match divView lhs
    (c, d) <- match divView rhs
    return $ conditionNotZero d
           $ conditionNotZero b
-          $ replace (a*d :==: b*c) ceq
+          $ replaceInContext (a*d :==: b*c) ceq
 
 -- a/b = c  iff  a = b*c  (and b/=0)
 multiplyOneDiv :: Rule (Context (Equation Expr))
 multiplyOneDiv = ruleList (ratId, "multiply-one-div") $ \ceq -> do
-   lhs :==: rhs <- current ceq
+   lhs :==: rhs <- maybeToList (currentInContext ceq)
    f (:==:) lhs rhs ceq `mplus` f (flip (:==:)) rhs lhs ceq
  where
    f eq ab c ceq = do
       guard (not (c `belongsTo` divView))
       (a, b) <- matchM divView ab
       return $ conditionNotZero b
-             $ replace (a `eq` (b*c)) ceq
+             $ replaceInContext (a `eq` (b*c)) ceq
 
 -- a/c + b/c = a+b/c   (also see Numeric.Rules)
 fractionPlus :: Rule Expr -- also minus
@@ -113,13 +113,13 @@ fractionPlus = makeRule (ratId, "rational-plus") $ \expr -> do
 -- Note that the common term can be squared (in one of the parts)
 cancelTermsDiv :: Rule (Context Expr)
 cancelTermsDiv = makeRule (ratId, "cancel-div") $ \ce -> do
-   expr <- current ce
+   expr <- currentInContext ce
    ((b, xs), (c, ys)) <- match myView expr
    let (ps, qs, rs) = rec (map f xs) (map f ys)
        new = build myView ((b, map g ps), (c, map g qs))
    guard (not (null rs))
    return $ conditionNotZero (build productView (False, map g rs))
-          $ replace new ce
+          $ replaceInContext new ce
  where
    myView = divView >>> toView (productView *** productView)
    powInt = powerView >>> second integerView
@@ -166,12 +166,12 @@ turnIntoFraction = liftView plusView $
 -- A simple implementation that considers the condition stored in the context
 checkSolution :: Rule (Context (OrList (Equation Expr)))
 checkSolution = makeRule (ratId, "check-solution") $ \cor -> do
-   oreq <- current cor
+   oreq <- currentInContext cor
    x :==: a <- getSingleton oreq
    c  <- lookupClipboardG "condition" cor
    xs <- match andView c
    guard ((x ./=. a) `elem` xs)
-   return $ replace false cor
+   return $ replaceInContext false cor
 
 ---------------------------------------------------------------
 -- Helper-code

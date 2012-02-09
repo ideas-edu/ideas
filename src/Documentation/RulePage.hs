@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Documentation.RulePage (makeRulePages) where
 
-import Common.Library hiding (up)
+import Common.Library
 import Common.Utils (Some(..))
 import Control.Monad
 import Data.List

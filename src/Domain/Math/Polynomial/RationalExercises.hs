@@ -129,7 +129,7 @@ simplifyRationalStrategy = cleanUpStrategy (applyTop cleaner) $
           )
 
 isDivC :: Context a -> Bool
-isDivC = maybe False (isJust . isDivide :: Term -> Bool) . currentT
+isDivC = maybe False (isJust . isDivide) . currentTerm
 
 -- First check that the whole strategy can be executed. Cleaning up is not
 -- propagated correctly to predicate in check combinator, hence the use of
@@ -137,7 +137,7 @@ isDivC = maybe False (isJust . isDivide :: Term -> Bool) . currentT
 commitS :: IsStrategy f => f (Context Expr) -> Strategy (Context Expr)
 commitS s =
    let cs  = cleanUpStrategy (applyTop cleanUpExpr) (label "" s)
-       f a = fromMaybe a (do b <- top a; c <- current a; return (change (const c) b))
+       f a = fromMaybe a (do c <- currentInContext a; return (changeInContext (const c) (top a)))
    in check (applicable cs . f) <*> s
 
 exceptLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)

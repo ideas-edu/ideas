@@ -31,7 +31,7 @@ simplifyPowerStrategy :: LabeledStrategy (Context Expr)
 simplifyPowerStrategy = cleanUpStrategyRules "Simplify" powerRules
 
 nonNegBrokenExpStrategy :: LabeledStrategy (Context Expr)
-nonNegBrokenExpStrategy = cleanUpStrategy (change cleanup . applyTop cleanup) $
+nonNegBrokenExpStrategy = cleanUpStrategy (changeInContext cleanup . applyTop cleanup) $
    label "Write with non-negative exponent" $ exhaustiveStrategy rs
   where
     rs = [ addExponents, subExponents, mulExponents, reciprocalInv
@@ -64,7 +64,7 @@ powerRules =
 
 cleanUpStrategyRules :: IsId n => n -> [Rule Expr] -> LabeledStrategy (Context Expr)
 cleanUpStrategyRules l =
-  cleanUpStrategy (change cleanUp. applyTop cleanUp) . label l . exhaustiveStrategy
+  cleanUpStrategy (changeInContext cleanUp. applyTop cleanUp) . label l . exhaustiveStrategy
 
 cleanUp :: Expr -> Expr
 cleanUp = mergeConstants

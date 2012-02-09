@@ -16,9 +16,11 @@ module Common.Context
    ( -- * Abstract data type
      Context, newContext
    , fromContext, fromContextWith, fromContextWith2
+   , Location, location
      -- * Lifting
    , liftToContext, contextView
    , use, useC, termNavigator, applyTop
+   , currentTerm, replaceInContext, currentInContext, changeInContext
    ) where
 
 import Common.Environment
@@ -37,11 +39,11 @@ import Data.Maybe
 -- (key-value pairs) and a value
 data Context a = C
    { getEnvironment :: Environment -- ^ Returns the environment
-   , getNavigator   :: Navigator a -- ^ Retrieve a value from its context
+   , getNavigator   :: Navigator (Maybe a) -- ^ Value with focus
    }
 
 fromContext :: Monad m => Context a -> m a
-fromContext = leave . getNavigator
+fromContext c = maybe (fail "fromContext") return $ leave (getNavigator c)
 
 fromContextWith :: Monad m => (a -> b) -> Context a -> m b
 fromContextWith f = liftM f . fromContext
@@ -58,25 +60,17 @@ instance Show a => Show (Context a) where
                | otherwise      = "  {" ++ show env ++ "}"
       in show a ++ rest
 
-instance IsNavigator Context where
+instance IsNavigator (Context a) where
    up        (C env a) = liftM (C env) (up a)
    allDowns  (C env a) = map (C env) (allDowns a)
-   current   (C _   a) = current a
    location  (C _   a) = location a
-   changeM f (C env a) = liftM (C env) (changeM f a)
-
-instance TypedNavigator Context where
-   changeT f (C env a) = liftM (C env) (changeT f a)
-   currentT  (C _   a) = currentT a
-   leaveT    (C _   a) = leaveT a
-   castT v   (C env a) = liftM (C env) (castT v a)
 
 instance HasEnvironment (Context a) where
    environment = getEnvironment
    setEnvironment e c = c {getEnvironment = e}
 
 -- | Construct a context
-newContext :: Environment -> Navigator a -> Context a
+newContext :: Environment -> Navigator (Maybe a) -> Context a
 newContext = C
 
 ----------------------------------------------------------
@@ -85,8 +79,8 @@ newContext = C
 contextView :: View (Context a) (a, Context a)
 contextView = "views.contextView" @> makeView f g
  where
-   f ctx = current ctx >>= \a -> Just (a, ctx)
-   g     = uncurry replace
+   f ctx = currentInContext ctx >>= \a -> Just (a, ctx)
+   g     = uncurry replaceInContext
 
 -- | Lift a rule to operate on a term in a context
 liftToContext :: LiftView f => f a -> f (Context a)
@@ -96,14 +90,14 @@ liftToContext = liftViewIn contextView
 -- to the old position
 applyTop :: (a -> a) -> Context a -> Context a
 applyTop f c =
-   case top c of
-      Just ok -> navigateTowards (location c) (change f ok)
-      Nothing -> c
+   navigateTowards (location c) (changeInContext f (top c))
 
-termNavigator :: IsTerm a => a -> Navigator a
-termNavigator a = fromMaybe (noNavigator a) (make a)
+termNavigator :: IsTerm a => a -> Navigator (Maybe a)
+termNavigator a = castT termView (viewNavigatorWith spineHoles (toTerm a))
+
+--fromMaybe (noNavigator a) (make a)
  where
-   make = castT termView . viewNavigatorWith spineHoles . toTerm
+--   make = castT termView . viewNavigatorWith spineHoles . toTerm
 
    spineHoles :: Term -> [(Term, Term -> Term)]
    spineHoles term
@@ -117,4 +111,23 @@ use :: (LiftView f, IsTerm a, IsTerm b) => f a -> f (Context b)
 use = useC . liftToContext
 
 useC :: (LiftView f, IsTerm a, IsTerm b) => f (Context a) -> f (Context b)
-useC = liftView (makeView (castT termView) (fromJust . castT termView))
+useC = liftView (makeView (Just . f) f) {-castTerm (fromJust . castTerm))
+ where
+  castTerm :: IsTerm b => Context a -> Maybe (Context b)
+  castTerm (C env a) =  -- liftM (C env) (castT termView a)
+ -}
+ where
+   f :: IsTerm b => Context a -> Context b
+   f (C env a) = C env (castT termView a)
+   
+currentTerm :: Context a -> Maybe Term
+currentTerm = currentT . getNavigator
+
+currentInContext :: Context a -> Maybe a
+currentInContext (C _   a) = current a
+
+changeInContext :: (a -> a) -> Context a -> Context a
+changeInContext f (C env a) = C env (change (fmap f) a)
+
+replaceInContext :: a -> Context a -> Context a
+replaceInContext = changeInContext . const

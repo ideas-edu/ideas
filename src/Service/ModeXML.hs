@@ -19,7 +19,6 @@ module Service.ModeXML
 
 import Common.Library hiding (exerciseId, (:=))
 import Common.Utils (Some(..), readM)
-import Common.Utils.Uniplate (transform)
 import Control.Monad
 import Data.Char
 import Data.List
@@ -34,7 +33,6 @@ import Service.State
 import Service.StrategyInfo
 import Service.Types
 import Text.OpenMath.Object
-import Text.OpenMath.Symbol
 import Text.XML
 import qualified Service.Types as Tp
 
@@ -135,21 +133,22 @@ openMathConverterTp withMF ex =
    Evaluator (xmlEncoder True f ex) (xmlDecoder True g ex)
  where
    f ctx = liftM (builder . toXML) $
-      case changeT (return . markFocus) ctx >>= leaveT of
+      {- case changeT (return . markFocus) ctx >>= leaveT of
          Just term | useFocus ->
             return (toOMOBJ (term :: Term))
-         _ ->
+         _ -> -}
             fromContext ctx >>= (handleMixedFractions . toOpenMath ex)
    g xml = do
       xob   <- findChild "OMOBJ" xml
       omobj <- liftEither (xml2omobj xob)
-      case fromOpenMath ex (if useFocus then transform noFocus omobj else omobj) of
+      case fromOpenMath ex omobj of
          Just a  -> return a
          Nothing -> fail "Invalid OpenMath object for this exercise"
    
    -- Remove special mixed-fraction symbol (depending on boolean argument)
    handleMixedFractions = if withMF then id else liftM noMixedFractions
 
+{-
    markFocus :: Term -> Term
    markFocus = unary (newSymbol focusSymbol)
 
@@ -158,7 +157,7 @@ openMathConverterTp withMF ex =
    noFocus a = a
 
    focusSymbol = makeSymbol "ideas" "focus"
-   useFocus = False
+   useFocus = False -}
 
 xmlEncoder :: Bool -> (Context a -> DomainReasoner XMLBuilder) -> Exercise a -> Encoder XMLBuilder a
 xmlEncoder isOM f ex = Encoder

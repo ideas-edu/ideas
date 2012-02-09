@@ -23,7 +23,7 @@ import Common.Derivation as Export
 import Common.DerivationTree as Export
 import Common.Exercise as Export
 import Common.Id as Export
-import Common.Navigator as Export hiding (left, right)
+import Common.Navigator as Export (navigator, arity, top)
 import Common.Predicate as Export
 import Common.Rewriting as Export
 import Common.Strategy as Export hiding (fail, not, repeat, replicate, sequence, until)

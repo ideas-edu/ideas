@@ -21,7 +21,7 @@ module Common.View
    , IsMatcher(..), matchM, belongsTo, viewEquivalent, viewEquivalentWith
    , Matcher, makeMatcher
      -- * @IsView@ type class
-   , IsView(..), simplify, simplifyWith
+   , IsView(..), simplify, simplifyWith, simplifyWithM
    , canonical, canonicalWith, canonicalWithM, isCanonical, isCanonicalWith
      -- * Views
    , View, identity, makeView, matcherView
@@ -112,7 +112,10 @@ simplify :: IsView f => f a b -> a -> a
 simplify = simplifyWith id
 
 simplifyWith :: IsView f => (b -> b) -> f a b -> a -> a
-simplifyWith f view a = fromMaybe a (canonicalWith f view a)
+simplifyWith f = simplifyWithM (Just . f)
+
+simplifyWithM :: IsView f => (b -> Maybe b) -> f a b -> a -> a
+simplifyWithM f view a = fromMaybe a (canonicalWithM f view a)
 
 ----------------------------------------------------------------------------------
 -- Views

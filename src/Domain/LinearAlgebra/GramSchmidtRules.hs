@@ -15,7 +15,7 @@ module Domain.LinearAlgebra.GramSchmidtRules
    , rulesGramSchmidt
    ) where
 
-import Common.Library hiding (current)
+import Common.Library
 import Control.Monad
 import Common.Utils
 import Domain.LinearAlgebra.Vector

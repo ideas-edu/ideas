@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -14,14 +14,14 @@
 -----------------------------------------------------------------------------
 module Common.Navigator
    ( -- * Type classes for navigating expressions
-     IsNavigator(..), TypedNavigator(..)
+     IsNavigator(..), CurrentNavigator(..)
      -- * Types and constructors
    , Navigator, Location
    , navigator, noNavigator, viewNavigator, viewNavigatorWith
+   , currentT, castT
      -- * Derived navigations
-   , leave, replace, arity, isTop, isLeaf, ups, downs, navigateTo
-   , navigateTowards, top, downFirst, downLast, left, right
-   , replaceT
+   , isTop, isLeaf, hasLeft, hasRight, hasPrevious, hasNext
+   , downTo, navigateTo, navigateTowards, top
    ) where
 
 import Common.Utils.Uniplate
@@ -39,69 +39,82 @@ type Location = [Int]
 -- allDowns. All other functions need an implementation as well, except for
 -- change. Note that a constructor (a -> f a) is not included in the type class
 -- to allow additional type class constraints on type a.
-class IsNavigator f where
+class IsNavigator a where
    -- navigation
-   up       :: Monad m => f a -> m (f a)
-   down     :: Monad m => Int -> f a -> m (f a)
-   allDowns :: f a -> [f a]
+   up       :: a -> Maybe a
+   down     :: a -> Maybe a
+   downLast :: a -> Maybe a
+   left     :: a -> Maybe a
+   right    :: a -> Maybe a
+   previous :: a -> Maybe a
+   next     :: a -> Maybe a
+   -- extra navigation
+   allDowns :: a -> [a]
    -- inspection
-   current  :: Monad m => f a -> m a
-   location :: f a -> Location
-   -- adaption
-   change   :: (a -> a) -> f a -> f a
-   changeM  :: Monad m => (a -> m a) -> f a -> m (f a)
+   location :: a -> Location
+   arity    :: a -> Int
    -- default definitions
-   down n a =
-      case drop n (allDowns a) of
-         []   -> fail ("down " ++ show n)
-         hd:_ -> return hd
-   allDowns a =
-      [ fa | i <- [0 .. arity a-1], fa <- down i a ]
-   change f a =
-      fromMaybe a (changeM (Just . f) a)
+   down       = downTo 0
+   downLast a = downTo (arity a - 1) a
+   arity      = length . allDowns
+   left a     = join $ liftM2 downTo (liftM pred (lastLoc a)) (up a)
+   right a    = join $ liftM2 downTo (liftM succ (lastLoc a)) (up a)
+   previous a = liftM rec (left a) `mplus` up a
+    where rec b = maybe b rec (downLast b)
+   next a     = down a `mplus` rec a 
+    where rec b = right b `mplus` (up b >>= rec)
 
-class IsNavigator f => TypedNavigator f where
-   changeT  :: (Monad m, Typeable b) => (b -> m b) -> f a -> m (f a)
-   currentT :: (Monad m, Typeable b) => f a -> m b
-   leaveT   :: (Monad m, Typeable b) => f a -> m b
-   castT    :: (Monad m, Typeable e) => View e b -> f a -> m (f b)
-   -- By default, fail
-   changeT _ _ = fail "changeT: not defined"
-   currentT _  = fail "currentT: not defined"
-   leaveT _    = fail "leaveT: not defined"
-   castT _ _   = fail "castT: not defined"
+class CurrentNavigator f where
+   current :: f a -> a
+   change  :: (a -> a) -> f a -> f a
+   replace :: a -> f a -> f a
+   leave   :: IsNavigator (f a) => f a -> a
+   -- default definitions
+   replace = change . const
+   leave   = current . top
 
 ---------------------------------------------------------------
 -- Derived navigations
 
-leave  :: (IsNavigator f, Monad m) => f a -> m a
-leave a = maybe (current a) leave (up a)
-
-replace :: IsNavigator f => a -> f a -> f a
-replace = change . const
-
-arity :: IsNavigator f => f a -> Int
-arity  = length . allDowns
-
-isTop :: IsNavigator f => f a -> Bool
+isTop :: IsNavigator a => a -> Bool
 isTop  = isNothing . up
 
-isLeaf :: IsNavigator f => f a -> Bool
-isLeaf = null . allDowns
+isLeaf :: IsNavigator a => a -> Bool
+isLeaf = isNothing . down
 
-ups :: (IsNavigator f, Monad m) => Int -> f a -> m (f a)
+hasLeft :: IsNavigator a => a -> Bool
+hasLeft = isJust . left
+
+hasRight :: IsNavigator a => a -> Bool
+hasRight = isJust . right
+
+hasPrevious :: IsNavigator a => a -> Bool
+hasPrevious = isJust . previous
+
+hasNext :: IsNavigator a => a -> Bool
+hasNext = isJust . next
+
+ups :: IsNavigator a => Int -> a -> Maybe a
 ups n a = foldM (const . up) a [1..n]
 
-downs :: (IsNavigator f, Monad m) => [Int] -> f a -> m (f a)
-downs is a = foldM (flip down) a is
+downs :: IsNavigator a => [Int] -> a -> Maybe a
+downs is a = foldM (flip downTo) a is
 
-navigateTo :: (IsNavigator f, Monad m) => Location -> f a -> m (f a)
+lastLoc :: IsNavigator a => a -> Maybe Int
+lastLoc = listToMaybe . reverse . location
+
+downTo :: IsNavigator a => Int -> a -> Maybe a
+downTo n
+   | n < 0 = const Nothing
+   | True  = listToMaybe . drop n . allDowns
+   
+navigateTo :: IsNavigator a => Location -> a -> Maybe a
 navigateTo is a = ups (length js - n) a >>= downs (drop n is)
  where
    js = location a
    n  = length (takeWhile id (zipWith (==) is js))
 
-navigateTowards :: IsNavigator f => Location -> f a -> f a
+navigateTowards :: IsNavigator a => Location -> a -> a
 navigateTowards is a =
    case ups (length js - n) a of
       Just b  -> safeDowns (drop n is) b
@@ -111,38 +124,65 @@ navigateTowards is a =
    n  = length (takeWhile id (zipWith (==) is js))
 
    safeDowns []     b = b
-   safeDowns (m:ms) b = maybe b (safeDowns ms) (down m b)
+   safeDowns (m:ms) b = maybe b (safeDowns ms) (downTo m b)
 
-top :: (IsNavigator f, Monad m) => f a -> m (f a)
-top = navigateTo []
+top :: IsNavigator a => a -> a
+top a = maybe a top (up a)
 
-downFirst :: (IsNavigator f, Monad m) => f a -> m (f a)
-downFirst = down 0
 
-downLast :: (IsNavigator f, Monad m) => f a -> m (f a)
-downLast a = down (arity a - 1) a
+{-
+   -- extra navigation
+   allDowns :: a -> [a]
+   -- inspection
+   location :: a -> Location
+-}
+data List a = Top [a]
+            | Elem [a] a [a]
 
-left :: (IsNavigator f, Monad m) => f a -> m (f a)
-left a0 = rec a0
- where
-   rec a
-      | isTop a   = downFirst a0
-      | i == 0    = up a >>= rec
-      | otherwise = up a >>= down (i-1)
-    where
-      i = last (location a)
+instance IsNavigator (List a) where
+   up (Top _)        = Nothing
+   up (Elem xs a ys) = Just $ Top $ reverse xs ++ a : ys
+   down (Top (x:xs)) = Just $ Elem [] x xs 
+   down _ = Nothing
+   downLast (Top xs) | not (null xs) = 
+      case reverse xs of
+         y:ys -> Just $ Elem ys y []
+         _    -> Nothing
+   downLast _ = Nothing
+   left (Elem (x:xs) a ys) = Just $ Elem xs x (a:ys)
+   left _ = Nothing
+   right (Elem xs a (y:ys)) = Just $ Elem (a:xs) y ys
+   right _ = Nothing
+   allDowns (Top xs) = 
+      let rec _ [] = []
+          rec acc (y:ys) = Elem acc y ys : rec (y:acc) ys
+      in rec [] xs
+   allDowns _ = []
+   location (Top _) = []
+   location (Elem xs _ _) = [length xs]
 
-right :: (IsNavigator f, Monad m) => f a -> m (f a)
-right a0 = rec a0
- where
-   rec a
-      | isTop a   = downLast a0
-      | otherwise = do
-           p <- up a
-           let n = arity p
-           if i >= n-1 then rec p else down (i+1) p
-    where
-      i = last (location a)
+data T a = T a [T a] deriving Show
+
+root :: T a -> a
+root (T a _) = a
+
+instance Uniplate (T a) where
+   uniplate (T a xs) = plate (T a) ||* xs
+
+my :: T Int
+my = T 0 [T 1 [T 2 [], T 3 [T 4 [], T 5 [], T 6 []]], T 7 [], T 8 [T 9 [], T 10 []]]
+
+st :: UniplateNav (T Int)
+st = makeUN holes my
+
+nexts :: IsNavigator a => a -> [a]
+nexts a = a : maybe [] nexts (next a)
+
+prevs :: IsNavigator a => a -> [a]
+prevs a = a : maybe [] prevs (previous a)
+
+prop = map (root . current) $ nexts st
+back = take 50 $ map (root . current) $ prevs $ last (nexts st)
 
 ---------------------------------------------------------------
 -- Instance based on Uniplate
@@ -160,9 +200,9 @@ makeUN f = UN f []
 instance Show a => Show (UniplateNav a) where
    show = showNav
 
-instance IsNavigator UniplateNav where
-   up (UN _ [] _)            = fail "up"
-   up (UN uni ((_, f):xs) a) = return (UN uni xs (f a))
+instance IsNavigator (UniplateNav a) where
+   up (UN _ [] _)            = Nothing
+   up (UN uni ((_, f):xs) a) = Just (UN uni xs (f a))
 
    allDowns (UN uni xs a) =
       let make i (b, f) = UN uni ((i, f):xs) b
@@ -170,60 +210,23 @@ instance IsNavigator UniplateNav where
 
    location (UN _ xs _) = reverse (map fst xs)
 
-   changeM f (UN uni xs a) = liftM (UN uni xs) (f a)
-   current   (UN _ _    a) = return a
+instance CurrentNavigator UniplateNav where
+   change f (UN uni xs a) = UN uni xs (f a)
+   current  (UN _ _    a) = a
 
-showNav :: (IsNavigator f, Show a) => f a -> String
-showNav a = maybe "???" show (leave a) ++ "   { "
-            ++ maybe "???" show (current a)
+showNav :: (IsNavigator (f a), CurrentNavigator f, Show a) => f a -> String
+showNav a = show (leave a) ++ "   { "
+            ++ show (current a)
             ++ " @ " ++ show (location a) ++ " }"
 
 ---------------------------------------------------------------
 -- Instance based on a View
 
-data ViewNav a b = VN (View a b) (UniplateNav a)
-
-instance Show a => Show (ViewNav a b) where
-   show (VN _ a) = show a
-
-instance IsNavigator (ViewNav a) where
-   up        (VN v a) = liftM (VN v) (up a)
-   allDowns  (VN v a) = liftM (VN v) (allDowns a)
-   location  (VN _ a) = location a
-   current   (VN v a) = current a >>= matchM v
-   changeM f (VN v a) =
-      let g b = matchM v b >>= (liftM (build v) . f)
-      in liftM (VN v) (changeM g a)
-
-instance Typeable a => TypedNavigator (ViewNav a) where
-   changeT f (VN v a) = do
-      new <- current a >>= castM >>= f >>= castM
-      return (VN v (replace new a))
-   currentT (VN _ a) =
-      current a >>= castM
-   leaveT (VN _ a) =
-      leave a >>= castM
-   castT v (VN v0 a)
-      | tp1 == tp2 = return (VN (castView v) a)
-      | otherwise  = fail $ "castT: " ++ show tp1 ++ " and " ++ show tp2
-    where
-      tp1 = typeOf (getTp v)
-      tp2 = typeOf (getTp v0)
-
-      getTp :: View a b -> a
-      getTp = error "castT: getTp"
-
-replaceT :: (Monad m, TypedNavigator f, Typeable b) =>  b -> f a -> m (f a)
-replaceT = changeT . const . return
-
-castM :: (Monad m, Typeable a, Typeable b) => a -> m b
-castM = maybe (fail "castM") return . cast
-
 castView :: (Typeable c, Typeable a) => View a b -> View c b
 castView v = makeView f g
  where
-   f e = castM e >>= matchM v
-   g   = fromMaybe (error "castT: build") . castM . build v
+   f e = cast e >>= matchM v
+   g   = fromMaybe (error "castT: build") . cast . build v
 
 ---------------------------------------------------------------
 -- Uniform navigator type
@@ -231,42 +234,56 @@ castView v = makeView f g
 instance Show a => Show (Navigator a) where
    show = showNav
 
-data Navigator a = forall f . TypedNavigator f => N (f a)
-data Simple    a = forall f . IsNavigator f    => S (f a)
-
-instance IsNavigator Navigator where
-   up        (N a) = liftM N (up a)
-   allDowns  (N a) = map N (allDowns a)
-   current   (N a) = current a
-   location  (N a) = location a
-   changeM f (N a) = liftM N (changeM f a)
-
-instance TypedNavigator Navigator where
-   changeT f (N a) = liftM N (changeT f a)
-   currentT  (N a) = currentT a
-   leaveT    (N a) = leaveT a
-   castT v   (N a) = liftM N (castT v a)
-
-instance IsNavigator Simple where
-   up        (S a) = liftM S (up a)
-   allDowns  (S a) = map S (allDowns a)
-   current   (S a) = current a
-   location  (S a) = location a
-   changeM f (S a) = liftM S (changeM f a)
-
-instance TypedNavigator Simple
-
 ---------------------------------------------------------------
 -- Constructors
 
-navigator :: Uniplate a => a -> Navigator a
-navigator = N . S . makeUN holes
+navigator :: Uniplate a => a -> Navigator (Maybe a)
+navigator = Simple . makeUN holes
 
-noNavigator :: a -> Navigator a
-noNavigator = N . S . UN (const []) []
+noNavigator :: a -> Navigator (Maybe a)
+noNavigator = NoNav . Just
 
-viewNavigator :: (Uniplate a, Typeable a) => a -> Navigator a
+viewNavigator :: (Uniplate a, Typeable a) => a -> Navigator (Maybe a)
 viewNavigator = viewNavigatorWith holes
 
-viewNavigatorWith :: Typeable a => HolesType a -> a -> Navigator a
-viewNavigatorWith f = N . VN identity . makeUN f
+viewNavigatorWith :: Typeable a => HolesType a -> a -> Navigator (Maybe a)
+viewNavigatorWith f = ViewNav identity . makeUN f
+
+data Navigator a where
+   ViewNav :: Typeable b => View b a -> UniplateNav b -> Navigator (Maybe a)
+   Simple  :: (IsNavigator (f a), CurrentNavigator f) => f a -> Navigator (Maybe a)
+   NoNav   :: a -> Navigator a
+   
+instance IsNavigator (Navigator a) where
+   up (ViewNav v a) = liftM (ViewNav v) (up a)
+   up (Simple a)    = liftM Simple (up a)
+   up (NoNav _)     = Nothing
+   
+   allDowns (ViewNav v a) = liftM (ViewNav v) (allDowns a)
+   allDowns (Simple a)    = map Simple (allDowns a)
+   allDowns (NoNav _)     = []
+   
+   location (ViewNav _ a) = location a
+   location (Simple a)    = location a
+   location (NoNav _)     = []
+   
+instance CurrentNavigator Navigator where
+   current (ViewNav v a) = matchM v (current a)
+   current (Simple a)    = Just (current a)
+   current (NoNav a)     = a
+   
+   change f (ViewNav v a) = 
+      let g = simplifyWithM (f . Just) v
+      in ViewNav v (change g a)
+   change f (Simple a) = Simple (change (\x -> fromMaybe x (f (Just x))) a)
+   change f (NoNav a)  = NoNav (f a)
+
+currentT :: Typeable b => Navigator a -> Maybe b
+currentT (Simple _)    = Nothing
+currentT (NoNav _)     = Nothing
+currentT (ViewNav _ a) = cast (current a)
+   
+castT :: Typeable e => View e b -> Navigator (Maybe a) -> Navigator (Maybe b)
+castT v (ViewNav _ a) = ViewNav (castView v) a
+castT _ (Simple _)    = NoNav Nothing
+castT _ (NoNav _)     = NoNav Nothing

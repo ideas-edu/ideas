@@ -151,7 +151,7 @@ onceWith :: IsStrategy f => String -> (Context a -> [Int]) -> f (Context a) -> S
 onceWith n f s = ruleMoveDown <*> s <*> ruleMoveUp
  where
    ruleMoveDown = minorRule ("navigation.down." ++ n) $ \a ->
-      concatMap (`down` a) (f a)
+      mapMaybe (`downTo` a) (f a)
    ruleMoveUp = minorRule "navigation.up" $ \a ->
       Just (fromMaybe a (up a))
 

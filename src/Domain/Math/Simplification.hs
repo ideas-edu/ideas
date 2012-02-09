@@ -49,7 +49,7 @@ simplifyConfig :: SimplifyConfig
 simplifyConfig = SimplifyConfig True True True True True
 
 instance Simplify a => Simplify (Context a) where
-   simplifyWith cfg = change $ simplifyWith cfg
+   simplifyWith cfg = changeInContext $ simplifyWith cfg
 
 instance Simplify a => Simplify (Equation a) where
    simplifyWith cfg = fmap $ simplifyWith cfg

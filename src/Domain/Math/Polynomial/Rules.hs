@@ -24,6 +24,7 @@ module Domain.Math.Polynomial.Rules
    ) where
 
 import Common.Library hiding (terms, simplify)
+import Common.Navigator (up)
 import Common.Utils (thd3)
 import Common.Utils.Uniplate (universe, descend)
 import Control.Monad
@@ -380,7 +381,7 @@ sameConFactor =
 abcFormula :: Rule (Context (OrList (Equation Expr)))
 abcFormula = describe "quadratic formula (abc formule)" $
    makeRule (quadreq, "abc") $ \cor -> do
-   oreq <- current cor
+   oreq <- currentInContext cor
    lhs :==: rhs  <- getSingleton oreq
    guard (rhs == 0)
    (x, (a, b, c)) <- matchM quadraticNF lhs
@@ -398,7 +399,7 @@ abcFormula = describe "quadratic formula (abc formule)" $
           $ addToClipboard "b" (fromRational b)
           $ addToClipboard "c" (fromRational c)
           $ addToClipboard "D" (fromRational discr) 
-          $ replace eqs cor
+          $ replaceInContext eqs cor
 
 higherSubst :: Rule (Context (Equation Expr))
 higherSubst = describe "Substitute variable" $
@@ -410,7 +411,7 @@ higherSubst = describe "Substitute variable" $
       guard (n1 == 0 && n2 > 1 && n3 `mod` n2 == 0 && x /= "p")
       let new = build myView ("p", ((a, 0), (b, 1), (c, n3 `div` n2)))
       return $ addToClipboard "subst" (toExpr (Var "p" :==: Var x .^. fromIntegral n2))
-             $ replace (new :==: 0) ceq
+             $ replaceInContext (new :==: 0) ceq
 
 substBackVar :: Rule (Context Expr)
 substBackVar = describe "Substitute back a variable" $
@@ -420,7 +421,7 @@ substBackVar = describe "Substitute back a variable" $
    case fromExpr expr of
       Just (Var p :==: rhs) -> do
          guard (hasVar p a)
-         return (replace (subst p rhs a) ca)
+         return (replaceInContext (subst p rhs a) ca)
       _ -> fail "no subst in clipboard"
  where
    subst a b (Var c) | a==c = b
@@ -589,7 +590,7 @@ findFactor rs
 
 parentNotNegCheck :: Rule (Context Expr)
 parentNotNegCheck = minorRule "parent not negate check" $ \c ->
-   case up c >>= current of
+   case up c >>= currentInContext of
       Just (Negate _) -> Nothing
       _               -> Just c
 

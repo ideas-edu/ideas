@@ -230,10 +230,10 @@ trivialRelation =
 turnIntoEquation :: Rule (Context (Relation Expr))
 turnIntoEquation = describe "Turn into equation" $
    ruleMaybe (ineq, "to-equation") $ \cr -> do
-   r <- current cr
+   r <- currentInContext cr
    guard (relationType r `elem` ineqTypes)
    return $ addToClipboard "ineq" (toExpr r)
-          $ replace (leftHandSide r .==. rightHandSide r) cr
+          $ replaceInContext (leftHandSide r .==. rightHandSide r) cr
  where
    ineqTypes =
       [LessThan, GreaterThan, LessThanOrEqualTo, GreaterThanOrEqualTo]
@@ -242,7 +242,7 @@ turnIntoEquation = describe "Turn into equation" $
 solutionInequation :: Rule (Context (Logic (Relation Expr)))
 solutionInequation = describe "Determine solution for inequality" $
    makeRule (ineq, "give-solution") $ \clr -> do
-   r <- current clr
+   r <- currentInContext clr
    inEquation <- lookupClipboardG "ineq" clr
    let rt = relationType inEquation
    orv  <- matchM orListView r
@@ -265,7 +265,7 @@ solutionInequation = describe "Determine solution for inequality" $
          return $ fmap (fmap fromDExpr) $ intervalRelations (A 0 (Var v)) $
             ors [ this | (d, isP, this) <- rs, isP || evalIneq inEquation v d ]
    return $ removeClipboard "ineq"
-          $ replace new clr
+          $ replaceInContext new clr
  where
    makeRanges :: Bool -> [DExpr] -> [(Double, Bool, Interval DExpr)]
    makeRanges b xs =

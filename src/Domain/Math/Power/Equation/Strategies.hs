@@ -112,7 +112,7 @@ somewhereNotInExp :: IsStrategy f => f (Context a) -> Strategy (Context a)
 somewhereNotInExp = somewhereWith "somewhere but not in exponent" f
   where
     f a = if isPowC a then [1] else [0 .. arity a-1]
-    isPowC = maybe False (isJust . isPower :: Term -> Bool) . currentT
+    isPowC = maybe False (isJust . isPower) . currentTerm
 
 myConfigCoverUp :: ConfigCoverUp
 myConfigCoverUp = configCoverUp

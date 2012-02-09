@@ -45,7 +45,7 @@ import Common.Context
 import Common.Derivation
 import Common.DerivationTree
 import Common.Id
-import Common.Navigator
+import Common.Navigator hiding (next)
 import Common.Predicate
 import Common.Rewriting
 import Common.Strategy hiding (not, fail, repeat, replicate)
@@ -82,7 +82,7 @@ data Exercise a = Exercise
    , hasTypeable    :: Maybe (IsTypeable a)
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
-   , navigation     :: a -> Navigator a
+   , navigation     :: a -> Navigator (Maybe a)
    , canBeRestarted :: Bool                -- By default, assumed to be the case
    , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
    , ruleOrdering   :: Rule (Context a) -> Rule (Context a) -> Ordering -- Ordering on rules (for onefirst)
@@ -99,7 +99,7 @@ instance Ord (Exercise a) where
    compare = comparing getId
 
 instance Apply Exercise where
-   applyAll ex = concatMap fromContext . applyAll (strategy ex) . inContext ex
+   applyAll ex = mapMaybe fromContext . applyAll (strategy ex) . inContext ex
 
 instance HasId (Exercise a) where
    getId = exerciseId
@@ -231,7 +231,7 @@ differenceEqual ex a b = do
 
 -- Recognize a rule at (possibly multiple) locations
 recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [(Location, Environment)]
-recognizeRule ex r ca cb = rec (fromMaybe ca (top ca))
+recognizeRule ex r ca cb = rec (top ca)
  where
    final = addTransRecognizer (similarity ex) r
    rec x = do

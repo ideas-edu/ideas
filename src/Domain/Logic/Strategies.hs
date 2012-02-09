@@ -54,7 +54,7 @@ dnfStrategyDWA =  label "Bring to dnf (DWA)" $
 -- the strategy only at (top-level) disjuncts
 somewhereOr :: IsStrategy g => g (Context SLogic) -> Strategy (Context SLogic)
 somewhereOr s =
-   let isOr a = case current a of
+   let isOr a = case currentInContext a of
                    Just (_ :||: _) -> True
                    _               -> False
    in fix $ \this -> check (Prelude.not . isOr) <*> s

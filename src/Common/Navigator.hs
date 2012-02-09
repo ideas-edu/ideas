@@ -27,8 +27,11 @@ module Common.Navigator
 import Common.Utils.Uniplate
 import Common.View hiding (left, right)
 import Control.Monad
+import Data.Function
 import Data.Maybe
 import Data.Typeable
+import Common.Utils.TestSuite
+import Test.QuickCheck
 
 ---------------------------------------------------------------
 -- Type class for navigating expressions
@@ -94,6 +97,28 @@ hasPrevious = isJust . previous
 hasNext :: IsNavigator a => a -> Bool
 hasNext = isJust . next
 
+hasDown a = not (isLeaf a)
+hasUp a = not (isTop a)
+
+
+leftMost :: IsNavigator a => a -> a
+leftMost = fixp left
+
+rightMost :: IsNavigator a => a -> a
+rightMost = fixp right
+
+leftMostLeaf :: IsNavigator a => a -> a
+leftMostLeaf = fixp down
+
+rightMostLeaf :: IsNavigator a => a -> a
+rightMostLeaf = fixp downLast
+
+fixp :: (a -> Maybe a) -> a -> a
+fixp f = last . fixpl f
+
+fixpl :: (a -> Maybe a) -> a -> [a]
+fixpl f a = a : maybe [] (fixpl f) (f a)
+
 ups :: IsNavigator a => Int -> a -> Maybe a
 ups n a = foldM (const . up) a [1..n]
 
@@ -130,14 +155,9 @@ top :: IsNavigator a => a -> a
 top a = maybe a top (up a)
 
 
-{-
-   -- extra navigation
-   allDowns :: a -> [a]
-   -- inspection
-   location :: a -> Location
--}
 data List a = Top [a]
             | Elem [a] a [a]
+ deriving (Show, Eq)
 
 instance IsNavigator (List a) where
    up (Top _)        = Nothing
@@ -161,7 +181,7 @@ instance IsNavigator (List a) where
    location (Top _) = []
    location (Elem xs _ _) = [length xs]
 
-data T a = T a [T a] deriving Show
+data T a = T a [T a] deriving (Show, Eq)
 
 root :: T a -> a
 root (T a _) = a
@@ -181,8 +201,79 @@ nexts a = a : maybe [] nexts (next a)
 prevs :: IsNavigator a => a -> [a]
 prevs a = a : maybe [] prevs (previous a)
 
-prop = map (root . current) $ nexts st
+--prop = map (root . current) $ nexts st
 back = take 50 $ map (root . current) $ prevs $ last (nexts st)
+
+instance (Arbitrary a, Uniplate a) => Arbitrary (UniplateNav a) where
+   arbitrary = liftM (makeUN holes) arbitrary >>= genNav
+
+genNav :: IsNavigator a => a -> Gen a
+genNav a = case map genNav (allDowns a) of
+              [] -> return a
+              xs -> frequency [(1, return a), (4, oneof xs)]
+
+instance Arbitrary a => Arbitrary (T a) where
+   arbitrary = sized genT
+
+instance Arbitrary a => Arbitrary (List a) where
+   arbitrary = liftM Top arbitrary >>= genNav
+
+genT :: Arbitrary a => Int -> Gen (T a)
+genT n = do
+   a  <- arbitrary
+   i  <- if n==0 then return 0 else choose (0, 5)
+   xs <- vectorOf i (genT (n `div` 2))
+   return (T a xs)
+
+infixr 0 ===, ==!
+
+(===) :: Eq b => (a -> b) -> (a -> b) -> a -> Bool
+(f === g) a = f a == g a
+
+(==!) :: Eq b => (a -> Maybe b) -> (a -> b) -> a -> Bool
+f ==! g = f === Just . g
+
+infixr 0 ==>>
+
+(==>>) :: Testable prop => (a -> Bool) -> (a -> prop) -> a -> Property
+(p ==>> f) a = p a ==> f a
+
+prop :: (Testable prop, Show a) => Gen a -> String -> (a -> prop) -> TestSuite
+prop gen s = addProperty s . forAll gen
+
+tests :: (Show a, Eq a, IsNavigator a) => Gen a -> TestSuite
+tests gen = suite "navigation" $ do       
+   -- up/down
+   prop gen "down ; up"     $  hasDown ==>>      down >=> up ==! id
+   prop gen "up ; down"     $  hasUp   ==>>      up >=> down ==! leftMost
+   prop gen "up ; downLast" $  hasUp   ==>>  up >=> downLast ==! rightMost
+
+   -- left/right
+   prop gen "right ; left" $  hasRight ==>>  right >=> left ==! id
+   prop gen "left ; right" $  hasLeft  ==>>  left >=> right ==! id
+   
+   -- up/left+right
+   prop gen "left ; up"  $  hasLeft  ==>>   left >=> up === up
+   prop gen "right ; up" $  hasRight ==>>  right >=> up === up
+   
+   -- down/downLast
+   prop gen "down ; right*"         $  liftM rightMost . down === downLast
+   prop gen "downLast ; left*"      $  liftM leftMost . downLast === down
+   prop gen "down is leftMost"      $  isNothing . (down >=> left)
+   prop gen "downLast is rightMost" $  isNothing . (downLast >=> right)
+   
+   -- special elements
+   prop gen "top"           $  isTop  . top
+   prop gen "leftMostLeaf"  $  isLeaf . leftMostLeaf
+   prop gen "rightMostLeaf" $  isLeaf . rightMostLeaf
+   
+   -- remaining
+   prop gen "location" $  (\a -> navigateTo (location a) (top a)) ==! id
+   prop gen "arity"    $     arity === length . allDowns
+   prop gen "allDowns" $  allDowns === maybe [] (fixpl right) . down
+   
+go  = runTestSuite $ tests (arbitrary :: Gen (UniplateNav (T Int)))
+go2 = runTestSuite $ tests (arbitrary :: Gen (List Int))
 
 ---------------------------------------------------------------
 -- Instance based on Uniplate
@@ -191,6 +282,10 @@ back = take 50 $ map (root . current) $ prevs $ last (nexts st)
 -- Uniplate type class constraints in the member functions of the
 -- Navigator type class.
 data UniplateNav a = UN (HolesType a) [(Int, a -> a)] a
+
+instance Eq a => Eq (UniplateNav a) where
+   (==) = let f a = (current a, location a, leave a)
+          in (==) `on` f
 
 type HolesType a = a -> [(a, a -> a)]
 

@@ -45,7 +45,8 @@ import Common.Context
 import Common.Derivation
 import Common.DerivationTree
 import Common.Id
-import Common.Navigator hiding (next)
+import Common.Focus 
+import Common.Navigator (top, downs)
 import Common.Predicate
 import Common.Rewriting
 import Common.Strategy hiding (not, fail, repeat, replicate)
@@ -82,7 +83,7 @@ data Exercise a = Exercise
    , hasTypeable    :: Maybe (IsTypeable a)
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
-   , navigation     :: a -> Navigator (Maybe a)
+   , navigation     :: a -> MyNavigator (Maybe a)
    , canBeRestarted :: Bool                -- By default, assumed to be the case
    , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
    , ruleOrdering   :: Rule (Context a) -> Rule (Context a) -> Ordering -- Ordering on rules (for onefirst)
@@ -239,7 +240,7 @@ recognizeRule ex r ca cb = rec (top ca)
       as <- recognizeAll final x cb
       return (location x, as)
     `mplus` -- or there
-      concatMap rec (allDowns x)
+      concatMap rec (downs x)
 
 ruleOrderingWith :: [Rule a] -> Rule a -> Rule a -> Ordering
 ruleOrderingWith = ruleOrderingWithId . map getId

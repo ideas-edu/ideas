@@ -25,9 +25,9 @@ module Common.Context
 
 import Common.Environment
 import Common.Id
+import Common.Focus
 import Common.Navigator
 import Common.Rewriting
-import Common.Utils (replaceAt)
 import Common.View
 import Control.Monad
 import Data.Maybe
@@ -39,7 +39,7 @@ import Data.Maybe
 -- (key-value pairs) and a value
 data Context a = C
    { getEnvironment :: Environment -- ^ Returns the environment
-   , getNavigator   :: Navigator (Maybe a) -- ^ Value with focus
+   , getNavigator   :: MyNavigator (Maybe a) -- ^ Value with focus
    }
 
 fromContext :: Monad m => Context a -> m a
@@ -60,17 +60,17 @@ instance Show a => Show (Context a) where
                | otherwise      = "  {" ++ show env ++ "}"
       in show a ++ rest
 
-instance IsNavigator (Context a) where
-   up        (C env a) = liftM (C env) (up a)
-   allDowns  (C env a) = map (C env) (allDowns a)
-   location  (C _   a) = location a
+instance Navigator (Context a) where
+   up       (C env a) = liftM (C env) (up a)
+   downs    (C env a) = map (C env) (downs a)
+   location (C _   a) = location a
 
 instance HasEnvironment (Context a) where
    environment = getEnvironment
    setEnvironment e c = c {getEnvironment = e}
 
 -- | Construct a context
-newContext :: Environment -> Navigator (Maybe a) -> Context a
+newContext :: Environment -> MyNavigator (Maybe a) -> Context a
 newContext = C
 
 ----------------------------------------------------------
@@ -92,33 +92,17 @@ applyTop :: (a -> a) -> Context a -> Context a
 applyTop f c =
    navigateTowards (location c) (changeInContext f (top c))
 
-termNavigator :: IsTerm a => a -> Navigator (Maybe a)
-termNavigator a = castT termView (viewNavigatorWith spineHoles (toTerm a))
-
---fromMaybe (noNavigator a) (make a)
- where
---   make = castT termView . viewNavigatorWith spineHoles . toTerm
-
-   spineHoles :: Term -> [(Term, Term -> Term)]
-   spineHoles term
-      | null xs   = []
-      | otherwise = (x, flip makeTerm xs) : zipWith f [0..] xs
-    where
-      (x, xs)    = getSpine term
-      f i y      = (y, makeTerm x . fromJust . flip (replaceAt i) xs)
+termNavigator :: IsTerm a => a -> MyNavigator (Maybe a)
+termNavigator = viewNavigator
 
 use :: (LiftView f, IsTerm a, IsTerm b) => f a -> f (Context b)
 use = useC . liftToContext
 
 useC :: (LiftView f, IsTerm a, IsTerm b) => f (Context a) -> f (Context b)
-useC = liftView (makeView (Just . f) f) {-castTerm (fromJust . castTerm))
- where
-  castTerm :: IsTerm b => Context a -> Maybe (Context b)
-  castTerm (C env a) =  -- liftM (C env) (castT termView a)
- -}
+useC = liftView (makeView (Just . f) f)
  where
    f :: IsTerm b => Context a -> Context b
-   f (C env a) = C env (castT termView a)
+   f (C env a) = C env (castT a)
    
 currentTerm :: Context a -> Maybe Term
 currentTerm = currentT . getNavigator

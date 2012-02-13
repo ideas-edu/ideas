@@ -16,7 +16,7 @@ module Service.BasicServices
    ) where
 
 import Common.Library hiding (derivation, applicable, apply, ready)
-import Common.Navigator (allDowns, navigateTo)
+import Common.Navigator (downs, navigateTo)
 import Common.Utils (fst3)
 import Data.List
 import Data.Maybe
@@ -109,7 +109,7 @@ allapplications state = sortBy cmp (xs ++ ys)
    ps = [ (r, loc) | (r, loc, _) <- xs ]
    ys = f (top (stateContext state))
 
-   f c = g c ++ concatMap f (allDowns c)
+   f c = g c ++ concatMap f (downs c)
    g c = [ (r, location new, makeState ex Nothing new)
          | r   <- ruleset ex
          , (r, location c) `notElem` ps

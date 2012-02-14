@@ -66,11 +66,9 @@ class Navigator a where
    location :: a -> Location
    arity    :: a -> Int
    -- default definitions
-   down       = downTo 0
-   downLast a = downTo (arity a - 1) a
-   arity      = length . downs
-   left a     = join $ liftM2 downTo (liftM pred (lastLoc a)) (up a)
-   right a    = join $ liftM2 downTo (liftM succ (lastLoc a)) (up a)
+   downLast = liftM (fixp right) . down
+   downs    = maybe [] (fixpl right) . down
+   arity    = length . downs
 
 isTop, isLeaf :: Navigator a => a -> Bool
 isTop  = not . hasUp
@@ -124,6 +122,3 @@ fixp f = last . fixpl f
 
 fixpl :: (a -> Maybe a) -> a -> [a]
 fixpl f a = a : maybe [] (fixpl f) (f a)
-
-lastLoc :: Navigator a => a -> Maybe Int
-lastLoc = listToMaybe . reverse . location

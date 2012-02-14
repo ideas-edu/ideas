@@ -45,7 +45,6 @@ import Common.Context
 import Common.Derivation
 import Common.DerivationTree
 import Common.Id
-import Common.Focus 
 import Common.Navigator (top, downs)
 import Common.Predicate
 import Common.Rewriting
@@ -83,7 +82,7 @@ data Exercise a = Exercise
    , hasTypeable    :: Maybe (IsTypeable a)
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
-   , navigation     :: a -> MyNavigator (Maybe a)
+   , navigation     :: a -> ContextNavigator a
    , canBeRestarted :: Bool                -- By default, assumed to be the case
    , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
    , ruleOrdering   :: Rule (Context a) -> Rule (Context a) -> Ordering -- Ordering on rules (for onefirst)

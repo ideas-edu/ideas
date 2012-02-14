@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs, RankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -17,9 +18,11 @@ module Common.Context
      Context, newContext
    , fromContext, fromContextWith, fromContextWith2
    , Location, location
+     -- * Context navigator
+   , ContextNavigator, noNavigator, navigator, termNavigator
      -- * Lifting
    , liftToContext, contextView
-   , use, useC, termNavigator, applyTop
+   , use, useC, applyTop
    , currentTerm, replaceInContext, currentInContext, changeInContext
    ) where
 
@@ -28,7 +31,8 @@ import Common.Id
 import Common.Focus
 import Common.Navigator
 import Common.Rewriting
-import Common.View
+import Common.Utils.Uniplate
+import Common.View hiding (left, right)
 import Control.Monad
 import Data.Maybe
 
@@ -38,12 +42,13 @@ import Data.Maybe
 -- | Abstract data type for a context: a context stores an envrionent
 -- (key-value pairs) and a value
 data Context a = C
-   { getEnvironment :: Environment -- ^ Returns the environment
-   , getNavigator   :: MyNavigator (Maybe a) -- ^ Value with focus
+   { getEnvironment :: Environment        -- ^ Returns the environment
+   , getNavigator   :: ContextNavigator a -- ^ Value with focus
    }
 
 fromContext :: Monad m => Context a -> m a
-fromContext c = maybe (fail "fromContext") return $ leave (getNavigator c)
+fromContext = maybe (fail "fromContext") return .
+   currentNavigator . getNavigator . top
 
 fromContextWith :: Monad m => (a -> b) -> Context a -> m b
 fromContextWith f = liftM f . fromContext
@@ -55,23 +60,85 @@ instance Eq a => Eq (Context a) where
    x == y = fromMaybe False $ liftM2 (==) (fromContext x) (fromContext y)
 
 instance Show a => Show (Context a) where
-   show (C env a) =
+   show c@(C env a) =
       let rest | noBindings env = ""
                | otherwise      = "  {" ++ show env ++ "}"
-      in show a ++ rest
+      in maybe "??" show (currentNavigator a) ++ 
+         " @ " ++ show (location c) ++ rest
 
 instance Navigator (Context a) where
-   up       (C env a) = liftM (C env) (up a)
-   downs    (C env a) = map (C env) (downs a)
-   location (C _   a) = location a
+   up       = liftCN up
+   down     = liftCN down
+   downLast = liftCN downLast
+   left     = liftCN left
+   right    = liftCN right
+   location = navLocation . getNavigator
 
 instance HasEnvironment (Context a) where
    environment = getEnvironment
    setEnvironment e c = c {getEnvironment = e}
 
 -- | Construct a context
-newContext :: Environment -> MyNavigator (Maybe a) -> Context a
+newContext :: Environment -> ContextNavigator a -> Context a
 newContext = C
+
+----------------------------------------------------------
+-- Context navigator
+
+noNavigator :: a -> ContextNavigator a
+noNavigator = NoNav
+
+navigator :: Uniplate a => a -> ContextNavigator a
+navigator = Simple . uniplateNavigator
+
+termNavigator :: IsTerm a => a -> ContextNavigator a
+termNavigator = TermNav . focus . Spine . toTerm
+
+data ContextNavigator a where
+   TermNav :: IsTerm a   => UniplateNavigator SpineTerm -> ContextNavigator a
+   Simple  :: Uniplate a => UniplateNavigator a -> ContextNavigator a
+   NoNav   :: a -> ContextNavigator a
+   
+liftCN :: Monad m => (forall b . Navigator b => b -> m b) 
+                  -> Context a -> m (Context a)
+liftCN f (C env (TermNav a)) = liftM (C env . TermNav) (f a)
+liftCN f (C env (Simple a))  = liftM (C env . Simple)  (f a)
+liftCN _ (C _   (NoNav _))   = fail "noNavigator"
+
+navLocation :: ContextNavigator a -> Location
+navLocation (TermNav a) = location a
+navLocation (Simple a)  = location a
+navLocation (NoNav _)   = []
+
+currentNavigator :: ContextNavigator a -> Maybe a
+currentNavigator (TermNav a) = matchM termView (fromSpine (current a))
+currentNavigator (Simple a)  = Just (current a)
+currentNavigator (NoNav a)   = Just a
+
+changeNavigator :: (a -> a) -> ContextNavigator a -> ContextNavigator a
+changeNavigator f (TermNav a) = 
+   let g = Spine . simplifyWith f termView . fromSpine
+   in TermNav (change g a)
+changeNavigator f (Simple a) = Simple (change f a)
+changeNavigator f (NoNav a)  = NoNav (f a)
+
+currentT :: ContextNavigator a -> Maybe Term
+currentT (TermNav a) = Just (fromSpine (current a))
+currentT _           = Nothing
+   
+castT :: IsTerm b => ContextNavigator a -> Maybe (ContextNavigator b)
+castT (TermNav a) = Just (TermNav a)
+castT _           = Nothing
+
+newtype SpineTerm = Spine {fromSpine :: Term}
+
+instance Uniplate SpineTerm where
+   uniplate a
+      | null xs   = plate a
+      | otherwise = plate spineTerm |* Spine x ||* map Spine xs
+    where
+      (x, xs) = getSpine (fromSpine a)
+      spineTerm b = Spine . makeTerm (fromSpine b) . map fromSpine
 
 ----------------------------------------------------------
 -- Lifting rules
@@ -92,26 +159,23 @@ applyTop :: (a -> a) -> Context a -> Context a
 applyTop f c =
    navigateTowards (location c) (changeInContext f (top c))
 
-termNavigator :: IsTerm a => a -> MyNavigator (Maybe a)
-termNavigator = viewNavigator
-
 use :: (LiftView f, IsTerm a, IsTerm b) => f a -> f (Context b)
 use = useC . liftToContext
 
 useC :: (LiftView f, IsTerm a, IsTerm b) => f (Context a) -> f (Context b)
-useC = liftView (makeView (Just . f) f)
+useC = liftViewIn (makeView f g)
  where
-   f :: IsTerm b => Context a -> Context b
-   f (C env a) = C env (castT a)
+   f old@(C env a) = castT a >>= \b -> return (C env b, old)
+   g (C env a, old) = fromMaybe old (liftM (C env) (castT a))
    
 currentTerm :: Context a -> Maybe Term
 currentTerm = currentT . getNavigator
 
 currentInContext :: Context a -> Maybe a
-currentInContext (C _   a) = current a
+currentInContext (C _   a) = currentNavigator a
 
 changeInContext :: (a -> a) -> Context a -> Context a
-changeInContext f (C env a) = C env (change (fmap f) a)
+changeInContext f (C env a) = C env (changeNavigator f a)
 
 replaceInContext :: a -> Context a -> Context a
 replaceInContext = changeInContext . const

@@ -16,7 +16,7 @@ module Common.Strategy.Combinators where
 
 import Common.Context
 import Common.Id
-import Common.Navigator
+import Common.Traversal.Navigator
 import Common.Strategy.Abstract
 import Common.Strategy.Configuration
 import Common.Strategy.Core

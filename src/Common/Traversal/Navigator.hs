@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -8,41 +9,24 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- This module defines type classes for iteration and navigation
---
 -----------------------------------------------------------------------------
-module Common.Navigator
-   ( -- * Iterator type class
-     Iterator(..), hasNext, hasPrevious
-     -- * Navigator type class
-   , Navigator(..), Location
+module Common.Traversal.Navigator
+   ( -- * Navigator type class
+     Navigator(..), Location
    , isTop, isLeaf
    , hasLeft, hasRight, hasUp, hasDown
    , top, leftMost, rightMost, leftMostLeaf, rightMostLeaf
-     -- navigation
    , downTo, navigateTo, navigateTowards
+     -- * Uniplate navigator
+   , UniplateNavigator
    ) where
 
+import Common.Traversal.Utils
+import Common.Traversal.Iterator
+import Common.Utils.Uniplate
 import Control.Monad
+import Data.Generics.Str
 import Data.Maybe
-
----------------------------------------------------------------
--- Iterator type class
-
-class Iterator a where
-   next     :: a -> Maybe a
-   previous :: a -> Maybe a
-   first    :: a -> a
-   final    :: a -> a
-   -- default implementations
-   first = fixp previous
-   final = fixp next
-   
-hasNext :: Iterator a => a -> Bool
-hasNext = isJust . next
-
-hasPrevious :: Iterator a => a -> Bool
-hasPrevious = isJust . previous
 
 ---------------------------------------------------------------
 -- Navigator type class
@@ -112,13 +96,39 @@ navigation old new = replicate upnr up ++ map downTo ds
    ds   = drop same new
 
 ---------------------------------------------------------------
--- helpers
+-- Uniplate navigator
 
-safe :: (a -> Maybe a) -> a -> a 
-safe f a = fromMaybe a (f a)
+data UniplateNavigator a = U [StrIterator a -> StrIterator a] (StrIterator a)
 
-fixp :: (a -> Maybe a) -> a -> a
-fixp f = last . fixpl f
+instance (Show a, Uniplate a ) => Show (UniplateNavigator a) where
+   show a = show (current a) ++ " @ " ++ show (location a)
 
-fixpl :: (a -> Maybe a) -> a -> [a]
-fixpl f a = a : maybe [] (fixpl f) (f a)
+instance Uniplate a => Navigator (UniplateNavigator a) where
+   up (U [] _)     = Nothing
+   up (U (f:fs) a) = Just (U fs (f a))
+  
+   down     = downWith focusM
+   downLast = downWith lastStrIterator
+      
+   left  (U fs a) = liftM (U fs) (previous a)
+   right (U fs a) = liftM (U fs) (next a)
+      
+   location (U fs a) = reverse (rec a fs)
+    where
+      rec _ [] = []
+      rec b (g:gs) = position b : rec (g b) gs
+
+instance Update UniplateNavigator where
+   update (U xs a) = (current a, U xs . flip replace a)
+
+instance Uniplate a => Focus (UniplateNavigator a) where
+   type Unfocus (UniplateNavigator a) = a
+   focus   = U [] . focus . One
+   unfocus = current . top
+
+downWith :: Uniplate a => (Str a -> Maybe (StrIterator a)) 
+                       -> UniplateNavigator a -> Maybe (UniplateNavigator a)
+downWith make (U fs a) = liftM (U (f:fs)) (make cs)
+ where
+   (cs, g) = uniplate (current a)
+   f = (`replace` a) . g . unfocus

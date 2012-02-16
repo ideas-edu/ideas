@@ -45,7 +45,7 @@ import Common.Context
 import Common.Derivation
 import Common.DerivationTree
 import Common.Id
-import Common.Navigator (top, downs)
+import Common.Traversal.Navigator (top, downs)
 import Common.Predicate
 import Common.Rewriting
 import Common.Strategy hiding (not, fail, repeat, replicate)

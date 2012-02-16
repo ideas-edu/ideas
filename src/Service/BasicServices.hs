@@ -16,7 +16,7 @@ module Service.BasicServices
    ) where
 
 import Common.Library hiding (derivation, applicable, apply, ready)
-import Common.Navigator (downs, navigateTo)
+import Common.Traversal.Navigator (downs, navigateTo)
 import Common.Utils (fst3)
 import Data.List
 import Data.Maybe

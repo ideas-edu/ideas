@@ -87,9 +87,12 @@ data Term = TVar   String
  deriving (Show, Read, Eq, Ord, Typeable)
 
 instance Uniplate Term where
-   uniplate (TApp f a) = plate TApp |* f |* a
    uniplate (TList xs) = plate TList ||* xs
-   uniplate term       = plate term
+   uniplate a
+      | null xs   = plate a
+      | otherwise = plate makeTerm |* x ||* xs
+    where
+      (x, xs) = getSpine a
 
 -----------------------------------------------------------
 -- * Type class for conversion to/from terms

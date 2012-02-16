@@ -24,7 +24,7 @@ module Domain.Math.Polynomial.Rules
    ) where
 
 import Common.Library hiding (terms, simplify)
-import Common.Navigator (up)
+import Common.Traversal.Navigator (up)
 import Common.Utils (thd3)
 import Common.Utils.Uniplate (universe, descend)
 import Control.Monad

@@ -28,8 +28,8 @@ module Common.Context
 
 import Common.Environment
 import Common.Id
-import Common.Focus
-import Common.Navigator
+import Common.Traversal.Utils
+import Common.Traversal.Navigator
 import Common.Rewriting
 import Common.Utils.Uniplate
 import Common.View hiding (left, right)
@@ -89,13 +89,13 @@ noNavigator :: a -> ContextNavigator a
 noNavigator = NoNav
 
 navigator :: Uniplate a => a -> ContextNavigator a
-navigator = Simple . uniplateNavigator
+navigator = Simple . focus
 
 termNavigator :: IsTerm a => a -> ContextNavigator a
-termNavigator = TermNav . focus . Spine . toTerm
+termNavigator = TermNav . focus . toTerm
 
 data ContextNavigator a where
-   TermNav :: IsTerm a   => UniplateNavigator SpineTerm -> ContextNavigator a
+   TermNav :: IsTerm a   => UniplateNavigator Term -> ContextNavigator a
    Simple  :: Uniplate a => UniplateNavigator a -> ContextNavigator a
    NoNav   :: a -> ContextNavigator a
    
@@ -111,34 +111,22 @@ navLocation (Simple a)  = location a
 navLocation (NoNav _)   = []
 
 currentNavigator :: ContextNavigator a -> Maybe a
-currentNavigator (TermNav a) = matchM termView (fromSpine (current a))
+currentNavigator (TermNav a) = matchM termView (current a)
 currentNavigator (Simple a)  = Just (current a)
 currentNavigator (NoNav a)   = Just a
 
 changeNavigator :: (a -> a) -> ContextNavigator a -> ContextNavigator a
-changeNavigator f (TermNav a) = 
-   let g = Spine . simplifyWith f termView . fromSpine
-   in TermNav (change g a)
-changeNavigator f (Simple a) = Simple (change f a)
-changeNavigator f (NoNav a)  = NoNav (f a)
+changeNavigator f (TermNav a) = TermNav (change (simplifyWith f termView) a)
+changeNavigator f (Simple a)  = Simple (change f a)
+changeNavigator f (NoNav a)   = NoNav (f a)
 
 currentT :: ContextNavigator a -> Maybe Term
-currentT (TermNav a) = Just (fromSpine (current a))
+currentT (TermNav a) = Just (current a)
 currentT _           = Nothing
    
 castT :: IsTerm b => ContextNavigator a -> Maybe (ContextNavigator b)
 castT (TermNav a) = Just (TermNav a)
 castT _           = Nothing
-
-newtype SpineTerm = Spine {fromSpine :: Term}
-
-instance Uniplate SpineTerm where
-   uniplate a
-      | null xs   = plate a
-      | otherwise = plate spineTerm |* Spine x ||* map Spine xs
-    where
-      (x, xs) = getSpine (fromSpine a)
-      spineTerm b = Spine . makeTerm (fromSpine b) . map fromSpine
 
 ----------------------------------------------------------
 -- Lifting rules

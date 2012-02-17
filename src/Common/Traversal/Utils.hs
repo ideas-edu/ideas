@@ -17,6 +17,8 @@ module Common.Traversal.Utils
    , Focus(..), liftFocus, unliftFocus
      -- * Wrapper type class
    , Wrapper(..), liftWrapper, unliftWrapper, mapWrapper
+     -- * Mirror
+   , Mirror, makeMirror
      -- * Utility functions
    , (>|<), safe, fixp, fixpl, mplus, (>=>)
    ) where
@@ -64,14 +66,27 @@ class Wrapper f where
    wrap   :: a -> f a
    unwrap :: f a -> a
 
-liftWrapper :: Wrapper f => (a -> Maybe a) -> f a -> Maybe (f a)
-liftWrapper f = fmap wrap . f . unwrap
+liftWrapper :: (Monad m, Wrapper f) => (a -> m a) -> f a -> m (f a)
+liftWrapper f = liftM wrap . f . unwrap
 
-unliftWrapper :: Wrapper f => (f a -> Maybe (f a)) -> a -> Maybe a
-unliftWrapper f = fmap unwrap . f . wrap
+unliftWrapper :: (Monad m, Wrapper f) => (f a -> m (f a)) -> a -> m a
+unliftWrapper f = liftM unwrap . f . wrap
 
 mapWrapper :: Wrapper f => (a -> a) -> f a -> f a
 mapWrapper f = wrap . f . unwrap
+
+---------------------------------------------------------------
+-- Mirror
+
+newtype Mirror a = Mirror { fromMirror :: a }
+   deriving (Show, Eq)
+   
+instance Wrapper Mirror where
+   wrap   = Mirror
+   unwrap = fromMirror
+
+makeMirror :: a -> Mirror a
+makeMirror = wrap
 
 ---------------------------------------------------------------
 -- Utility functions

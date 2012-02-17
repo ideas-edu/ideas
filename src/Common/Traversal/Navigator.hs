@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies, GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -16,9 +16,13 @@ module Common.Traversal.Navigator
    , isTop, isLeaf
    , hasLeft, hasRight, hasUp, hasDown
    , top, leftMost, rightMost, leftMostLeaf, rightMostLeaf
+   , depth, level, levelNext, levelPrevious, leftMostAt, rightMostAt
    , downTo, navigateTo, navigateTowards
      -- * Tree walks
    , PreOrder, makePreOrder
+   , PostOrder, makePostOrder
+   , LevelOrder, makeLevelOrder
+   , Horizontal, makeHorizontal
    , Leafs, makeLeafs
      -- * Uniplate navigator
    , UniplateNavigator
@@ -28,6 +32,7 @@ import Common.Traversal.Utils
 import Common.Traversal.Iterator
 import Common.Utils.Uniplate
 import Control.Monad
+import Data.Function
 import Data.Generics.Str
 import Data.Maybe
 
@@ -55,7 +60,17 @@ class Navigator a where
    -- default definitions
    downLast = liftM (fixp right) . down
    downs    = maybe [] (fixpl right) . down
+   location = defaultLocation
    arity    = length . downs
+
+instance Navigator a => Navigator (Mirror a) where
+   up       = liftWrapper up
+   down     = liftWrapper downLast
+   downLast = liftWrapper down
+   left     = liftWrapper right
+   right    = liftWrapper left
+   downs    = liftWrapper (reverse . downs)
+   arity    = arity . unwrap
 
 isTop, isLeaf :: Navigator a => a -> Bool
 isTop  = not . hasUp
@@ -80,6 +95,41 @@ downTo :: Navigator a => Int -> a -> Maybe a
 downTo n
    | n < 0 = const Nothing
    | True  = listToMaybe . drop n . downs
+
+depth :: Navigator a => a -> Int
+depth a | null xs   = 0
+        | otherwise = maximum (map depth xs) + 1
+ where 
+   xs = downs a
+
+level :: Navigator a => a -> Int 
+level = pred . length . fixpl up
+
+levelNext :: Navigator a => a -> Maybe a
+levelNext = right >|< f 1
+ where
+   f n = up >=> (g n >|< f (n+1))
+   g n = right >=> (leftMostAt n >|< g n)
+      
+levelPrevious :: Navigator a => a -> Maybe a
+levelPrevious = fmap unwrap . levelNext . makeMirror
+
+leftMostAt :: Navigator a => Int -> a -> Maybe a
+leftMostAt n
+   | n == 0    = Just
+   | n <  0    = const Nothing
+   | otherwise = (down >=> leftMostAt (n-1)) >|< (right >=> leftMostAt n)
+
+rightMostAt :: Navigator a => Int -> a -> Maybe a
+rightMostAt n = fmap unwrap . leftMostAt n . makeMirror
+
+defaultLocation :: Navigator a => a -> [Int]
+defaultLocation = rec []
+ where
+   rec acc a =
+      case up a of 
+         Nothing -> acc
+         Just b  -> rec ((length (fixpl left a)-1) : acc) b
    
 navigateTo :: Navigator a => Location -> a -> Maybe a
 navigateTo is a = go (navigation (location a) is) a 
@@ -102,6 +152,7 @@ navigation old new = replicate upnr up ++ map downTo ds
 -- Tree walks
 
 newtype PreOrder a = Pre { fromPre :: a }
+   deriving (Show, Eq)
 
 makePreOrder :: a -> PreOrder a
 makePreOrder = wrap
@@ -120,10 +171,65 @@ instance Navigator a => Iterator (PreOrder a) where
    first    = mapWrapper top
    final    = mapWrapper (rightMostLeaf . top)
 
-newtype Leafs a = Leafs { fromLeafs :: a } 
+newtype PostOrder a = Post { fromPost :: Mirror (PreOrder (Mirror a))} 
+   deriving (Show, Eq, Iterator)
 
-makeLeafs :: a -> Leafs a
-makeLeafs = wrap
+instance Wrapper PostOrder where
+   wrap   = Post . wrap . wrap . wrap
+   unwrap = unwrap . unwrap . unwrap . fromPost
+
+instance Update PostOrder where
+   update a = (unwrap a, wrap)
+
+makePostOrder :: a -> PostOrder a
+makePostOrder = wrap
+
+newtype LevelOrder a = Level { fromLevel :: a } -- breadth-first
+   deriving (Show, Eq)
+   
+instance Wrapper LevelOrder where
+   wrap   = Level
+   unwrap = fromLevel
+   
+instance Update LevelOrder where
+   update a = (unwrap a, wrap)
+   
+instance Navigator a => Iterator (LevelOrder a) where
+   previous = let f a = rightMostAt (level a-1) (top a)
+              in liftWrapper (levelPrevious >|< f)
+   next     = let f a = leftMostAt (level a+1) (top a)
+              in liftWrapper (levelNext >|< f)
+   first    = mapWrapper top
+   final    = mapWrapper $ \a -> safe (rightMostAt (depth (top a))) (top a)
+   
+makeLevelOrder :: a -> LevelOrder a
+makeLevelOrder = wrap
+
+newtype Horizontal a = Hor { fromHor :: a }
+   deriving (Show, Eq)
+
+instance Wrapper Horizontal where
+   wrap   = Hor
+   unwrap = fromHor
+   
+instance Update Horizontal where
+   update a = (unwrap a, wrap)
+
+instance Navigator a => Iterator (Horizontal a) where
+   previous = liftWrapper left
+   next     = liftWrapper right
+   first    = mapWrapper leftMost
+   final    = mapWrapper rightMost
+   position = fromMaybe 0 . listToMaybe . reverse . location . unwrap
+
+makeHorizontal :: a -> Horizontal a
+makeHorizontal = wrap
+
+newtype Leafs a = Leafs { fromLeafs :: a } 
+   deriving (Show, Eq)
+
+makeLeafs :: Navigator a => a -> Leafs a
+makeLeafs = first . wrap
 
 instance Wrapper Leafs where
    wrap   = Leafs
@@ -223,8 +329,11 @@ ok = isOne . currentStr . unwrap
 
 data UniplateNavigator a = U [StrIterator a -> StrIterator a] (StrIterator a)
 
-instance (Show a, Uniplate a ) => Show (UniplateNavigator a) where
+instance (Show a, Uniplate a) => Show (UniplateNavigator a) where
    show a = show (current a) ++ " @ " ++ show (location a)
+
+instance (Eq a, Uniplate a) => Eq (UniplateNavigator a) where
+   (==) = on (==) $ \a -> (current a, unfocus a, location a)
 
 instance Uniplate a => Navigator (UniplateNavigator a) where
    up (U [] _)     = Nothing

@@ -19,8 +19,10 @@ module Common.Traversal.Iterator
    ) where
 
 import Common.Traversal.Utils
+import Control.Monad
 import Data.List
 import Data.Maybe
+import Test.QuickCheck
 
 ---------------------------------------------------------------
 -- Iterator type class
@@ -35,6 +37,12 @@ class Iterator a where
    first    = fixp previous
    final    = fixp next
    position = pred . length . fixpl previous
+
+instance Iterator a => Iterator (Mirror a) where
+   next     = liftWrapper previous
+   previous = liftWrapper next
+   first    = mapWrapper  final
+   final    = mapWrapper  first
 
 isFirst :: Iterator a => a -> Bool
 isFirst = not . hasPrevious
@@ -69,7 +77,8 @@ searchWith f p = rec
 ---------------------------------------------------------------
 -- List iterator
 
-data ListIterator a = LI [a] a [a]
+data ListIterator a = LI [a] a [a] 
+   deriving Eq
    
 instance Show a => Show (ListIterator a) where
    show (LI xs y ys) = 
@@ -97,3 +106,6 @@ instance Focus (ListIterator a) where
 
 instance Update ListIterator where
    update (LI xs a ys) = (a, \b -> LI xs b ys)
+   
+instance Arbitrary a => Arbitrary (ListIterator a) where
+   arbitrary = liftM3 LI arbitrary arbitrary arbitrary

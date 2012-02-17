@@ -9,7 +9,9 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Traversal.Tests where
+module Common.Traversal.Tests 
+   ( testIterator, testNavigator, testMe
+   ) where
 
 import Control.Monad
 import Data.Maybe
@@ -45,37 +47,62 @@ testIterator s gen = suite (s ++ " Iterator") $ do
       prop gen "pos final" $
          position . final === position . fixp next
       
-testNavigator :: (Show a, Eq a, Navigator a) => Gen a -> TestSuite
-testNavigator gen = suite "navigation" $ do       
-   -- up/down
-   prop gen "down ; up"     $  hasDown ==>>      down >=> up ==! id
-   prop gen "up ; down"     $  hasUp   ==>>      up >=> down ==! leftMost
-   prop gen "up ; downLast" $  hasUp   ==>>  up >=> downLast ==! rightMost
+testNavigator :: (Show a, Eq a, Navigator a) => String -> Gen a -> TestSuite
+testNavigator s gen = suite (s ++ " Navigator") $ do       
+   
+   suite "up/down" $ do
+      prop gen "down; up"     $  hasDown ==>>      down >=> up ==! id
+      prop gen "up; down"     $  hasUp   ==>>      up >=> down ==! leftMost
+      prop gen "up; downLast" $  hasUp   ==>>  up >=> downLast ==! rightMost
 
-   -- left/right
-   prop gen "right ; left" $  hasRight ==>>  right >=> left ==! id
-   prop gen "left ; right" $  hasLeft  ==>>  left >=> right ==! id
+   suite "left/right" $ do
+      prop gen "right; left" $  hasRight ==>>  right >=> left ==! id
+      prop gen "left; right" $  hasLeft  ==>>  left >=> right ==! id
    
-   -- up/left+right
-   prop gen "left ; up"  $  hasLeft  ==>>   left >=> up === up
-   prop gen "right ; up" $  hasRight ==>>  right >=> up === up
+   suite "up/left+right" $ do
+      prop gen "left; up"  $  hasLeft  ==>>   left >=> up === up
+      prop gen "right; up" $  hasRight ==>>  right >=> up === up
    
-   -- down/downLast
-   prop gen "down ; right*"         $  liftM rightMost . down === downLast
-   prop gen "downLast ; left*"      $  liftM leftMost . downLast === down
-   prop gen "down is leftMost"      $  isNothing . (down >=> left)
-   prop gen "downLast is rightMost" $  isNothing . (downLast >=> right)
+   suite "down/downLast" $ do
+      prop gen "down; rightMost"       $  liftM rightMost . down === downLast
+      prop gen "downLast; leftMost"    $  liftM leftMost . downLast === down
+      prop gen "down is leftMost"      $  isNothing . (down >=> left)
+      prop gen "downLast is rightMost" $  isNothing . (downLast >=> right)
    
-   -- special elements
-   prop gen "top"           $  isTop  . top
-   prop gen "leftMostLeaf"  $  isLeaf . leftMostLeaf
-   prop gen "rightMostLeaf" $  isLeaf . rightMostLeaf
-   
-   -- remaining
-   prop gen "location" $  (\a -> navigateTo (location a) (top a)) ==! id
-   prop gen "arity"    $     arity === length . downs
-   prop gen "allDowns" $  downs === maybe [] (fixpl right) . down
-   
+   suite "location" $ do
+      prop gen "loc up" $ hasUp    ==>> 
+         fmap location . up ==! init . location
+      prop gen "loc down" $ hasDown  ==>> 
+         fmap location . down ==! (++[0]) . location
+      prop gen "loc downLast" $ hasDown  ==>> 
+         fmap location . downLast ==! (\a -> location a ++ [arity a-1])  
+      prop gen "loc left" $ hasLeft  ==>> 
+         fmap location . left ==! changeLast pred . location
+      prop gen "loc right" $ hasRight ==>> 
+         fmap location . right ==! changeLast succ . location
+
+-------------------------------------------------------------------------
+-- tests
+
+testMe :: TestSuite
+testMe = do 
+
+   suite "Iterators" $ do
+      testIterator "List" listGen
+      testIterator "Mirror"     $ liftM makeMirror     listGen
+      testIterator "Leafs"      $ liftM makeLeafs      uniGen
+      testIterator "PreOrder"   $ liftM makePreOrder   uniGen
+      testIterator "PostOrder"  $ liftM makePostOrder  uniGen
+      testIterator "Horizontal" $ liftM makeHorizontal uniGen
+      testIterator "LevelOrder" $ liftM makeLevelOrder uniGen
+      
+   suite "Navigators" $ do
+      testNavigator "Uniplate" uniGen
+      testNavigator "Mirror" $ liftM makeMirror uniGen
+
+_go :: IO ()
+_go = runTestSuiteResult testMe >>= print
+
 -------------------------------------------------------------------------
 -- test utils
    
@@ -94,6 +121,11 @@ infixr 0 ==>>
 
 prop :: (Testable prop, Show a) => Gen a -> String -> (a -> prop) -> TestSuite
 prop gen s = addProperty s . forAll gen
+
+changeLast :: (a -> a) -> [a] -> [a]
+changeLast _ []     = []
+changeLast f [x]    = [f x]
+changeLast f (x:xs) = x:changeLast f xs
 
 data T a = T a [T a] deriving (Show, Eq)
 
@@ -122,17 +154,3 @@ listGen = arbitrary
 
 uniGen :: Gen (UniplateNavigator (T Int))
 uniGen = arbitrary
-
-go, go1, go2, go3, go4, go5, go6, goX, goY :: IO ()
-go  = runTestSuite $ testIterator "List" listGen
-go1 = runTestSuite $ testIterator "Leafs"      $ liftM makeLeafs uniGen
-go2 = runTestSuite $ testIterator "PreOrder"   $ liftM makePreOrder uniGen
-go3 = runTestSuite $ testIterator "Mirror"     $ liftM makeMirror listGen
-go4 = runTestSuite $ testIterator "PostOrder"  $ liftM makePostOrder uniGen
-go5 = runTestSuite $ testIterator "Horizontal" $ liftM makeHorizontal uniGen
-go6 = runTestSuite $ testIterator "LevelOrder" $ liftM makeLevelOrder uniGen
-
-
-
-goX = runTestSuite $ testNavigator uniGen
-goY = runTestSuite $ testNavigator $ liftM makeMirror uniGen

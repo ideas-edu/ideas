@@ -17,7 +17,7 @@ module Common.Traversal.Navigator
    , hasLeft, hasRight, hasUp, hasDown
    , top, leftMost, rightMost, leftMostLeaf, rightMostLeaf
    , depth, level, levelNext, levelPrevious, leftMostAt, rightMostAt
-   , downTo, navigateTo, navigateTowards
+   , downs, downTo, arity, navigateTo, navigateTowards
      -- * Tree walks
    , PreOrder, makePreOrder
    , PostOrder, makePostOrder
@@ -46,22 +46,15 @@ type Location = [Int]
 -- change. Note that a constructor (a -> f a) is not included in the type class
 -- to allow additional type class constraints on type a.
 class Navigator a where
-   -- navigation
    up       :: a -> Maybe a
    down     :: a -> Maybe a
    downLast :: a -> Maybe a
    left     :: a -> Maybe a
    right    :: a -> Maybe a
-   -- extra navigation
-   downs    :: a -> [a]
-   -- inspection
    location :: a -> Location
-   arity    :: a -> Int
    -- default definitions
    downLast = liftM (fixp right) . down
-   downs    = maybe [] (fixpl right) . down
    location = defaultLocation
-   arity    = length . downs
 
 instance Navigator a => Navigator (Mirror a) where
    up       = liftWrapper up
@@ -69,8 +62,6 @@ instance Navigator a => Navigator (Mirror a) where
    downLast = liftWrapper down
    left     = liftWrapper right
    right    = liftWrapper left
-   downs    = liftWrapper (reverse . downs)
-   arity    = arity . unwrap
 
 isTop, isLeaf :: Navigator a => a -> Bool
 isTop  = not . hasUp
@@ -91,10 +82,16 @@ leftMostLeaf, rightMostLeaf :: Navigator a => a -> a
 leftMostLeaf  = fixp down
 rightMostLeaf = fixp downLast
 
+downs :: Navigator a => a -> [a]
+downs = maybe [] (fixpl right) . down
+
 downTo :: Navigator a => Int -> a -> Maybe a
 downTo n
    | n < 0 = const Nothing
    | True  = listToMaybe . drop n . downs
+
+arity :: Navigator a => a -> Int
+arity = length . downs
 
 depth :: Navigator a => a -> Int
 depth a | null xs   = 0

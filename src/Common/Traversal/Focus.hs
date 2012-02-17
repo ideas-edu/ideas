@@ -10,12 +10,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Traversal.Focus
-   ( Update(..), Focus(..)
-   , current, change, replace
-   , UniplateNavigator, uniplateNavigator
-   , ListIterator, StrIterator
-   ) where
+module Common.Traversal.Focus where
 
 import Common.Traversal.Utils
 import Common.Traversal.Iterator
@@ -49,39 +44,21 @@ instance Navigator a => Navigator (Mirror a) where
    downs    (Mirror a) = liftM Mirror (reverse (downs a))
    location (Mirror a) = location a
 
-newtype PreOrder a = PreOrder a
-
-instance Navigator a => Iterator (PreOrder a) where
-   previous = liftWrapper (liftM rightMostLeaf . left >|< up)
-   next = liftWrapper (down >|< rec)
-    where rec = right >|< (up >=> rec)
-
 newtype Comp f g a = Comp { unComp :: f (g a) }
 
 instance Iterator (f (g a)) => Iterator (Comp f g a) where
    previous (Comp a) = liftM Comp (previous a)
    next     (Comp a) = liftM Comp (next a)
 
-class Wrapper f where
-   wrap   :: a -> f a
-   unwrap :: f a -> a
-
-liftWrapper :: Wrapper f => (a -> Maybe a) -> f a -> Maybe (f a)
-liftWrapper f = fmap wrap . f . unwrap
-
-unliftWrapper :: Wrapper f => (f a -> Maybe (f a)) -> a -> Maybe a
-unliftWrapper f = fmap unwrap . f . wrap
-
-mapWrapper :: Wrapper f => (a -> a) -> f a -> f a
-mapWrapper f = wrap . f . unwrap
+instance (Update f, Update g) => Update (Comp f g) where
+   update (Comp a) =
+      let (b, f) = update a 
+          (c, g) = update b
+      in (c, Comp . f . g)
 
 instance (Wrapper f, Wrapper g) => Wrapper (Comp f g) where
    wrap   = Comp . wrap . wrap
    unwrap = unwrap . unwrap . unComp
-
-instance Wrapper PreOrder where
-   wrap = PreOrder
-   unwrap (PreOrder a) = a
 
 instance Wrapper Mirror where
    wrap = Mirror
@@ -140,12 +117,12 @@ rootf f (T a xs) = liftM (\b -> T b xs) (f a)
 
 ex = T 0 [T 1 [], T 2 [T 3 [], T 4 [T 5 []], T 6 []], T 7 [T 8 [T 9 []]]]
 
-pre  = map (root . current . unwrap) (fixpl next (PreOrder (uniplateNavigator ex)))
-post = map (root . current . unwrap) (fixpl next (makePostOrder (leftMostLeaf $ uniplateNavigator ex)))
-po = map (root . current . unwrap) (fixpl next (makePostOrder (leftMostLeaf $ uniplateNavigator ex)))
+pre   = map (root . current . unwrap) (fixpl next (makePreOrder (uniplateNavigator ex)))
+post  = map (root . current . unwrap) (fixpl next (makePostOrder (leftMostLeaf $ uniplateNavigator ex)))
+po    = map (root . current . unwrap) (fixpl next (makePostOrder (leftMostLeaf $ uniplateNavigator ex)))
 post2 = map (root . current . unwrap) (fixpl previous (makePostOrder (uniplateNavigator ex)))
-bf  = map (root . current . unwrap) (fixpl next (BreadthFirstOrder (uniplateNavigator ex)))
-bf2  = map (root . current . unwrap) (fixpl previous (final $ BreadthFirstOrder (uniplateNavigator ex)))
+bf    = map (root . current . unwrap) (fixpl next (BreadthFirstOrder (uniplateNavigator ex)))
+bf2   = map (root . current . unwrap) (fixpl previous (final $ BreadthFirstOrder (uniplateNavigator ex)))
 
 test = bf == reverse bf2
 

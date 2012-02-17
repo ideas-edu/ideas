@@ -15,8 +15,10 @@ module Common.Traversal.Utils
      Update(..), current, change, replace
      -- * Focus type class
    , Focus(..), liftFocus, unliftFocus
+     -- * Wrapper type class
+   , Wrapper(..), liftWrapper, unliftWrapper, mapWrapper
      -- * Utility functions
-   , (>|<), safe, fixp, fixpl
+   , (>|<), safe, fixp, fixpl, mplus, (>=>)
    ) where
 
 import Control.Monad
@@ -54,6 +56,22 @@ liftFocus f = liftM focus . f . unfocus
 
 unliftFocus :: Focus a => (a -> Maybe a) -> Unfocus a -> Maybe (Unfocus a)
 unliftFocus f = liftM unfocus . f . focus
+
+---------------------------------------------------------------
+-- Wrapper type class
+
+class Wrapper f where
+   wrap   :: a -> f a
+   unwrap :: f a -> a
+
+liftWrapper :: Wrapper f => (a -> Maybe a) -> f a -> Maybe (f a)
+liftWrapper f = fmap wrap . f . unwrap
+
+unliftWrapper :: Wrapper f => (f a -> Maybe (f a)) -> a -> Maybe a
+unliftWrapper f = fmap unwrap . f . wrap
+
+mapWrapper :: Wrapper f => (a -> a) -> f a -> f a
+mapWrapper f = wrap . f . unwrap
 
 ---------------------------------------------------------------
 -- Utility functions

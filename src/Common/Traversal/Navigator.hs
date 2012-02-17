@@ -17,6 +17,9 @@ module Common.Traversal.Navigator
    , hasLeft, hasRight, hasUp, hasDown
    , top, leftMost, rightMost, leftMostLeaf, rightMostLeaf
    , downTo, navigateTo, navigateTowards
+     -- * Tree walks
+   , PreOrder, makePreOrder
+   , Leafs, makeLeafs
      -- * Uniplate navigator
    , UniplateNavigator
    ) where
@@ -94,6 +97,126 @@ navigation old new = replicate upnr up ++ map downTo ds
    same = length (takeWhile id (zipWith (==) old new))
    upnr = length old - same
    ds   = drop same new
+
+----------------------------------------------------------------
+-- Tree walks
+
+newtype PreOrder a = Pre { fromPre :: a }
+
+makePreOrder :: a -> PreOrder a
+makePreOrder = wrap
+
+instance Wrapper PreOrder where
+   wrap   = Pre
+   unwrap = fromPre
+
+instance Update PreOrder where
+   update a = (unwrap a, wrap)
+
+instance Navigator a => Iterator (PreOrder a) where
+   previous = liftWrapper (liftM rightMostLeaf . left >|< up)
+   next     = let rec = right >|< (up >=> rec)
+              in liftWrapper (down >|< rec)
+   first    = mapWrapper top
+   final    = mapWrapper (rightMostLeaf . top)
+
+newtype Leafs a = Leafs { fromLeafs :: a } 
+
+makeLeafs :: a -> Leafs a
+makeLeafs = wrap
+
+instance Wrapper Leafs where
+   wrap   = Leafs
+   unwrap = fromLeafs
+   
+instance Update Leafs where
+   update a = (unwrap a, wrap)
+
+instance Navigator a => Iterator (Leafs a) where
+   previous = liftWrapper $ 
+      let rec = left >|< (up >=> rec)
+      in liftM rightMostLeaf . rec
+   next = liftWrapper $ 
+      let rec = right >|< (up >=> rec)
+      in liftM leftMostLeaf . rec
+   first = mapWrapper (leftMostLeaf . top)
+   final = mapWrapper (rightMostLeaf . top)
+
+---------------------------------------------------------------
+-- Str navigator (private)
+
+data StrNavigator a = SN 
+   { currentStr :: Str a
+   , strContext :: [Either (Str a) (Str a)] 
+   }
+
+instance Navigator (StrNavigator a) where
+   up (SN a (x:xs)) = Just (SN (either (flip Two) Two x a) xs)
+   up _ = Nothing
+   down (SN (Two a b) xs) = Just (SN a (Left b:xs))
+   down _ = Nothing
+   downLast (SN (Two a b) xs) = Just (SN b (Right a:xs))
+   downLast _ = Nothing
+   left (SN a (Right b:xs)) = Just (SN b (Left a:xs))
+   left _ = Nothing
+   right (SN a (Left b:xs)) = Just (SN b (Right a:xs))
+   right _ = Nothing
+   location = reverse . map (either (const 0) (const 1)) . strContext
+
+instance Focus (StrNavigator a) where
+   type Unfocus (StrNavigator a) = Str a
+   focus   = flip SN []
+   unfocus = currentStr . top
+
+sizeStrNavigator :: StrNavigator a -> Int
+sizeStrNavigator (SN a xs) = 
+   sum (countStr a : map (either countStr countStr) xs)
+
+countStr :: Str a -> Int
+countStr Zero      = 0
+countStr (One _)   = 1
+countStr (Two a b) = countStr a + countStr b
+
+---------------------------------------------------------------
+-- Str iterator (private)
+
+data StrIterator a = SI 
+   { posSI  :: !Int
+   , fromSI :: Leafs (StrNavigator a)
+   }
+
+instance Iterator (StrIterator a) where
+   next     (SI n a) = liftM (SI (n+1)) $ searchNext ok a
+   previous (SI n a) = liftM (SI (n-1)) $ searchPrevious ok a
+   first    (SI _ a) = SI 0 $ safe (searchForward ok) (first a)
+   final    (SI _ a) = finalSI $ safe (searchBackward ok) (final a)
+   position          = posSI
+
+instance Focus (StrIterator a) where
+   type Unfocus (StrIterator a) = Str a
+   focusM  = firstStrIterator
+   unfocus = unfocus . unwrap . fromSI
+
+instance Update StrIterator where
+   update (SI n (Leafs a)) =
+      case currentStr a of
+         One b -> (b, \c -> SI n $ wrap $ a {currentStr = One c})
+         _     -> error "unsafe update"
+
+firstStrIterator :: Str a -> Maybe (StrIterator a)
+firstStrIterator = fmap (SI 0) . searchForward ok . first . wrap . focus
+
+lastStrIterator :: Str a -> Maybe (StrIterator a)
+lastStrIterator = fmap finalSI . searchBackward ok . final . wrap . focus
+
+finalSI :: Leafs (StrNavigator a) -> StrIterator a
+finalSI a = SI (sizeStrNavigator (unwrap a) - 1) a
+
+ok :: Wrapper f => f (StrNavigator a) -> Bool
+ok = isOne . currentStr . unwrap
+ where
+   isOne (One _) = True
+   isOne _       = False
 
 ---------------------------------------------------------------
 -- Uniplate navigator

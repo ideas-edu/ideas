@@ -13,15 +13,12 @@
 module Common.Traversal.Iterator
    ( -- * Iterator type class
      Iterator(..), isFirst, isFinal, hasNext, hasPrevious
+   , searchForward, searchBackward, searchNext, searchPrevious, searchWith
      -- * List iterator
    , ListIterator
-     -- * Str iterator
-   , StrIterator, lastStrIterator
    ) where
 
 import Common.Traversal.Utils
-import Control.Monad
-import Data.Generics.Str
 import Data.List
 import Data.Maybe
 
@@ -35,8 +32,9 @@ class Iterator a where
    final    :: a -> a
    position :: a -> Int
    -- default implementations
-   first = fixp previous
-   final = fixp next
+   first    = fixp previous
+   final    = fixp next
+   position = pred . length . fixpl previous
 
 isFirst :: Iterator a => a -> Bool
 isFirst = not . hasPrevious
@@ -49,6 +47,24 @@ hasNext = isJust . next
 
 hasPrevious :: Iterator a => a -> Bool
 hasPrevious = isJust . previous
+
+searchForward :: Iterator a => (a -> Bool) -> a -> Maybe a
+searchForward = searchWith next
+
+searchBackward :: Iterator a => (a -> Bool) -> a -> Maybe a
+searchBackward = searchWith previous
+
+searchNext :: Iterator a => (a -> Bool) -> a -> Maybe a
+searchNext p = next >=> searchForward p
+
+searchPrevious :: Iterator a => (a -> Bool) -> a -> Maybe a
+searchPrevious p = previous >=> searchBackward p
+
+searchWith :: (a -> Maybe a) -> (a -> Bool) -> a -> Maybe a
+searchWith f p = rec
+ where
+   rec a | p a       = Just a
+         | otherwise = f a >>= rec
 
 ---------------------------------------------------------------
 -- List iterator
@@ -81,73 +97,3 @@ instance Focus (ListIterator a) where
 
 instance Update ListIterator where
    update (LI xs a ys) = (a, \b -> LI xs b ys)
-
----------------------------------------------------------------
--- Str iterator
-
-data StrIterator a = SI a !Int [Either (Str a) (Str a)]
-
-instance Show a => Show (StrIterator a) where
-   show a = show (current a) ++ " @ " ++ show (position a)
-
-instance Update StrIterator where
-   update (SI a n xs) = (a, \b -> SI b n xs)
-
--- to do: add first and final
-instance Iterator (StrIterator a) where
-   previous (SI a n xs) = rec xs (One a)
-    where
-      rec []     _ = Nothing
-      rec (y:ys) s = 
-         let make b = case lastStrIterator b of
-                         Just (SI c _ zs) -> Just (SI c (n-1) (zs++Left s:ys))
-                         Nothing -> rec ys (b `Two` s)
-         in either (rec ys . (s `Two`)) make y 
-
-   next (SI a n xs) = rec xs (One a)
-    where
-      rec [] _ = Nothing
-      rec (y:ys) s = 
-         let make b = case firstStrIterator b of
-                         Just (SI c _ zs) -> Just (SI c (n+1) (zs++Right s:ys))
-                         Nothing -> rec ys (s `Two` b)
-         in either make (rec ys . (`Two` s)) y
-
-   position (SI _ n _) = n
-
-instance Focus (StrIterator a) where
-   type Unfocus (StrIterator a) = Str a
-   focusM  = firstStrIterator
-   unfocus = fromStrIterator
-
-fromStrIterator :: StrIterator a -> Str a
-fromStrIterator (SI a _ xs) = rec xs (One a)
- where
-   rec []     s = s
-   rec (y:ys) s = rec ys (either (s `Two`) (`Two` s) y)
-
-firstStrIterator :: Str a -> Maybe (StrIterator a)
-firstStrIterator = rec []
- where
-   rec acc str =
-      case str of
-         Zero    -> Nothing
-         One a   -> Just (SI a 0 acc)
-         Two a b -> rec (Left b:acc) a `mplus` rec (Right a:acc) b
-
-lastStrIterator :: Str a -> Maybe (StrIterator a)
-lastStrIterator = rec 0 []
- where
-   rec n acc str = 
-      case str of
-         Zero    -> Nothing
-         One a   -> Just (SI a n acc)
-         Two a b -> 
-            rec (n+countStr a) (Right a:acc) b 
-          `mplus` 
-            rec n (Left b:acc) a
-
-countStr :: Str a -> Int
-countStr Zero      = 0
-countStr (One _)   = 1
-countStr (Two a b) = countStr a + countStr b

@@ -1,11 +1,11 @@
-<reply result="ok" version="1.0.3 (0)">
+<reply result="ok" version="1.0.5 (0)">
   <list>
     <elem ruleid="algebra.equations.polynomial.factor-varpower">
       <expr>
         (a^2-9)/(a*(a^2-4*a+3))
       </expr>
       <context>
-        <item name="location" value="[2]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
@@ -13,7 +13,7 @@
         (a^2-9)/(a*(a-1)*(a-3))
       </expr>
       <context>
-        <item name="location" value="[2,2]"/>
+        <item name="location" value="[1,1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
@@ -21,7 +21,7 @@
         (a+3)*(a-3)/(a*(a-1)*(a-3))
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.rational.cancel-div">

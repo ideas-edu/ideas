@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.5 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.scale">
       <expr>
@@ -25,7 +25,7 @@
         x == -1+sqrt (3/2) or x+1 == -sqrt (3/2)
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.onevar.plus">
@@ -33,7 +33,7 @@
         x == -1+sqrt (3/2) or x == -1-sqrt (3/2)
       </expr>
       <context>
-        <item name="location" value="[2]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.simpler-sqrt">

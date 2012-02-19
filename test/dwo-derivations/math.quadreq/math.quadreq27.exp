@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.9 (0)">
+<reply result="ok" version="1.0.5 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
@@ -20,7 +20,7 @@
         x == 0 or 2*x == 3
       </expr>
       <context>
-        <item name="location" value="[2]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.times">
@@ -28,7 +28,7 @@
         x == 0 or x == 3/2
       </expr>
       <context>
-        <item name="location" value="[2]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
   </list>

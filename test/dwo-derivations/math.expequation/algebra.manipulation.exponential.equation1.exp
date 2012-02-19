@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.7 (3710)">
+<reply result="ok" version="1.0.5 (0)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.factor-as-power">
       <expr>
         2^x == 2^4*sqrt 2
       </expr>
       <context>
-        <item name="location" value="[2,1]"/>
+        <item name="location" value="[1,0]"/>
       </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.write-as-power">
@@ -13,7 +13,7 @@
         2^x == 2^4*2^(1/2)
       </expr>
       <context>
-        <item name="location" value="[2,2]"/>
+        <item name="location" value="[1,1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.add-exponents">
@@ -21,7 +21,7 @@
         2^x == 2^(9/2)
       </expr>
       <context>
-        <item name="location" value="[2]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.equation.same-base">

@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.7 (3710)">
+<reply result="ok" version="1.0.5 (0)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.factor-as-power">
       <expr>
         (2^2)^(2*x-3) == 2*sqrt 2
       </expr>
       <context>
-        <item name="location" value="[1,1]"/>
+        <item name="location" value="[0,0]"/>
       </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.write-as-power">
@@ -13,7 +13,7 @@
         (2^2)^(2*x-3) == 2*2^(1/2)
       </expr>
       <context>
-        <item name="location" value="[2,2]"/>
+        <item name="location" value="[1,1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.mul-exponents">
@@ -21,7 +21,7 @@
         2^(2*(2*x-3)) == 2*2^(1/2)
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.simple-add-exponents">
@@ -29,7 +29,7 @@
         2^(2*(2*x-3)) == 2^(3/2)
       </expr>
       <context>
-        <item name="location" value="[2]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.equation.same-base">

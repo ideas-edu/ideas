@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.5 (0)">
   <list>
     <elem ruleid="algebra.equations.polynomial.power-factors">
       <expr>
@@ -10,7 +10,7 @@
         x == 0 or x^2-4*x-12 == 0
       </expr>
       <context>
-        <item name="location" value="[2]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
@@ -18,7 +18,7 @@
         x == 0 or (x+2)*(x-6) == 0
       </expr>
       <context>
-        <item name="location" value="[2]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.product-zero">
@@ -26,7 +26,7 @@
         x == 0 or x == -2 or x == 6
       </expr>
       <context>
-        <item name="location" value="[2]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
   </list>

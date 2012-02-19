@@ -142,13 +142,13 @@ commitS s =
 
 exceptLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
 exceptLowerDiv = somewhereWith "except-lower-div" $ \a ->
-   if isDivC a then [1] else [0 .. arity a-1]
+   if isDivC a then [0] else [0 .. arity a-1]
 
 onlyUpperDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
-onlyUpperDiv = onceWith "only-upper-div" $ \a -> [ 1 | isDivC a ]
+onlyUpperDiv = onceWith "only-upper-div" $ \a -> [ 0 | isDivC a ]
 
 onlyLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
-onlyLowerDiv = onceWith "only-lower-div" $ \a -> [ 2 | isDivC a ]
+onlyLowerDiv = onceWith "only-lower-div" $ \a -> [ 1 | isDivC a ]
 
 simplifiedRational :: Expr -> Bool
 simplifiedRational expr =

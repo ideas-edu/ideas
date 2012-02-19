@@ -1,4 +1,4 @@
-<reply result="ok" version="1.0.3 (0)">
+<reply result="ok" version="1.0.5 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
@@ -35,7 +35,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[D == 1089, a == 8, b == 31, c == -4, subst == (p == x^3)]"/>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.power">
@@ -44,7 +44,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[D == 1089, a == 8, b == 31, c == -4, subst == (p == x^3)]"/>
-        <item name="location" value="[2]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
   </list>

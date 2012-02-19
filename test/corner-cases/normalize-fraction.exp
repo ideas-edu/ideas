@@ -1,5 +1,5 @@
-<reply result="ok" version="0.7.4 (0)">
-  <elem ruleid="algebra.equations.linear.norm-rational" location="[2]">
+<reply result="ok" version="1.0.5 (0)">
+  <elem ruleid="algebra.equations.linear.norm-rational" location="[1]">
     <state>
       <prefix>
         [8,0,0,1,0]
@@ -8,7 +8,7 @@
         x == 2/3
       </expr>
       <context>
-        <item name="location" value="[2]"/>
+        <item name="location" value="[1]"/>
       </context>
     </state>
   </elem>

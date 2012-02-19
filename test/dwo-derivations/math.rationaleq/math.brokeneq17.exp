@@ -1,4 +1,4 @@
-<reply result="ok" version="1.0.3 (0)">
+<reply result="ok" version="1.0.5 (0)">
   <list>
     <elem ruleid="algebra.equations.rational.same-dividend">
       <expr>
@@ -14,7 +14,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[condition == logic1.and (x /= -1) (x /= -8)]"/>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.power">
@@ -23,7 +23,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[condition == logic1.and (x /= -1) (x /= -8)]"/>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.move-left">
@@ -32,7 +32,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[condition == logic1.and (x /= -1) (x /= -8)]"/>
-        <item name="location" value="[2,2]"/>
+        <item name="location" value="[1,1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.onevar.minus-left">
@@ -41,7 +41,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[condition == logic1.and (x /= -1) (x /= -8)]"/>
-        <item name="location" value="[2,2]"/>
+        <item name="location" value="[1,1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.rational.check-solution">

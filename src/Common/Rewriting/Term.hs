@@ -90,7 +90,7 @@ instance Uniplate Term where
    uniplate (TList xs) = plate TList ||* xs
    uniplate a
       | null xs   = plate a
-      | otherwise = plate makeTerm |* x ||* xs
+      | otherwise = plate (makeTerm x) ||* xs
     where
       (x, xs) = getSpine a
 

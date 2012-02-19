@@ -1,4 +1,4 @@
-<reply result="ok" version="1.0.3 (0)">
+<reply result="ok" version="1.0.5 (0)">
   <list>
     <elem ruleid="algebra.equations.polynomial.subst">
       <expr>
@@ -30,7 +30,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[D == 25, a == 2, b == -15, c == 25, subst == (p == x^2)]"/>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.power">
@@ -39,7 +39,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[D == 25, a == 2, b == -15, c == 25, subst == (p == x^2)]"/>
-        <item name="location" value="[2,2]"/>
+        <item name="location" value="[1,1]"/>
       </context>
     </elem>
   </list>

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.6 (0)">
+<reply result="ok" version="1.0.5 (0)">
   <list>
     <elem ruleid="algebra.equations.rational.rational-scale">
       <expr>
@@ -20,7 +20,7 @@
         (-3*x^2-14*x)/((x+5)*(x+6))
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
   </list>

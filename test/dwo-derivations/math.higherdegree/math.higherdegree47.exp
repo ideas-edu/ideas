@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="1.0.5 (0)">
   <list>
     <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
@@ -20,7 +20,7 @@
         x == root 21 6-5 or x+5 == -root 21 6
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.coverup.onevar.plus">
@@ -28,7 +28,7 @@
         x == root 21 6-5 or x == -root 21 6-5
       </expr>
       <context>
-        <item name="location" value="[2]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
   </list>

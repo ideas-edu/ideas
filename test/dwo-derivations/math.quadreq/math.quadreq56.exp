@@ -1,11 +1,11 @@
-<reply result="ok" version="1.0.3 (0)">
+<reply result="ok" version="1.0.5 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.distr-square">
       <expr>
         x^2-7*x+49/4 == 2*(x+4)
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.linear.distr-times">

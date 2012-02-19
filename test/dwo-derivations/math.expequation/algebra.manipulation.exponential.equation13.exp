@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.7 (3710)">
+<reply result="ok" version="1.0.5 (0)">
   <list>
     <elem ruleid="algebra.equations.coverup.minus-left">
       <expr>
@@ -10,7 +10,7 @@
         2^x == 2^4
       </expr>
       <context>
-        <item name="location" value="[2]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.equation.same-base">

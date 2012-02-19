@@ -1,4 +1,4 @@
-<reply result="ok" version="1.0.3 (0)">
+<reply result="ok" version="1.0.5 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.balance.remove-div" location="[]">
       <argument description="factor">
@@ -65,7 +65,7 @@
         </OMOBJ>
       </state>
     </elem>
-    <elem ruleid="algebra.equations.linear.balance.div-to-fraction" location="[2]">
+    <elem ruleid="algebra.equations.linear.balance.div-to-fraction" location="[1]">
       <state>
         <prefix>
           [5,0,1,1,1,1,0,1,0,0]
@@ -107,7 +107,7 @@
               <OMA>
                 <OMS cd="list1" name="list"/>
                 <OMI>
-                  2
+                  1
                 </OMI>
               </OMA>
             </OMOBJ>

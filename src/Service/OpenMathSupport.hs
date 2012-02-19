@@ -47,13 +47,13 @@ toOMOBJ = rec . toTerm
    rec term =
       case term of
          TVar s    -> OMV s
-         TCon s    -> OMS (idToSymbol (getId s))
+         TCon s xs 
+            | null xs   -> OMS (idToSymbol (getId s))
+            | otherwise -> make (OMS (idToSymbol (getId s)):map rec xs)
          TMeta i   -> OMV ('$' : show i)
          TNum n    -> OMI n
          TFloat d  -> OMF d
          TList xs  -> rec (function (newSymbol OM.listSymbol) xs)
-         TApp _ _  -> let (f, xs) = getSpine term
-                      in make (map rec (f:xs))
 
    make [OMS s, OMV x, body] | s == lambdaSymbol =
       OMBIND (OMS s) [x] body
@@ -64,18 +64,18 @@ fromOMOBJ = (>>= fromTerm) . rec
  where
    rec omobj =
       case omobj of
-         OMV x -> case isMeta x of
-                     Just n  -> return (TMeta n)
-                     Nothing -> return (TVar x)
-         OMS s -> return (symbol (newSymbol (OM.dictionary s # OM.symbolName s)))
-         OMI n -> return (TNum n)
-         OMF a -> return (TFloat a)
-         OMA (x:xs) -> case x of
-                          OMS s | s == OM.listSymbol -> liftM TList (mapM rec xs)
-                          _ -> liftM2 makeTerm (rec x) (mapM rec xs)
+         OMV x  -> case isMeta x of
+                      Just n  -> return (TMeta n)
+                      Nothing -> return (TVar x)
+         OMS s  -> return (symbol (newSymbol (OM.dictionary s, OM.symbolName s)))
+         OMI n  -> return (TNum n)
+         OMF a  -> return (TFloat a)
+         OMA xs -> case xs of
+                      OMS s:ys | s == OM.listSymbol -> liftM TList (mapM rec ys)
+                               | otherwise -> liftM (function (newSymbol s)) (mapM rec ys)
+                      _ -> fail "Invalid OpenMath object"
          OMBIND binder xs body ->
             rec (OMA (binder:map OMV xs++[body]))
-         _ -> fail "Invalid OpenMath object"
 
    isMeta ('$':xs) = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
    isMeta _        = Nothing

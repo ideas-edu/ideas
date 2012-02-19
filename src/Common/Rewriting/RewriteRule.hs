@@ -93,7 +93,10 @@ buildFunction n f = fzip (fill n) ((f *** f) different)
 fill :: Int -> Term -> Term -> Term
 fill i = rec
  where
-   rec (TApp f a) (TApp g b) = TApp (rec f g) (rec a b)
+   rec (TCon s xs) (TCon t ys) | s == t && length xs == length ys = 
+      TCon s (zipWith rec xs ys)
+   rec (TList xs) (TList ys) | length xs == length ys =
+      TList (zipWith rec xs ys)
    rec a b
       | a == b    = a
       | otherwise = TMeta i
@@ -114,10 +117,9 @@ buildSpec sm sb (lhs :~> rhs) a = do
       | M.null sb = id
       | otherwise = rec
     where
-      rec term = 
-         let (b, bs) = mapSecond (map rec) (getSpine term)
-             make = fromMaybe (makeTerm b) (getSymbol b >>= (`M.lookup` sb))
-         in make bs
+      rec (TCon s xs) = 
+         fromMaybe (TCon s) (M.lookup s sb) (map rec xs)
+      rec term = term
 
 makeRewriteRule :: (IsId n, RuleBuilder f a) => n -> f -> RewriteRule a
 makeRewriteRule s f = 

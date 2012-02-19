@@ -19,7 +19,6 @@ module Common.Rewriting.Term
      -- * Terms
    , Term(..), IsTerm(..), termView
    , fromTermM, fromTermWith
-   , getSpine, makeTerm
      -- * Functions and symbols
    , WithFunctions(..), isSymbol, isFunction
    , unary, binary, isUnary, isBinary
@@ -78,8 +77,7 @@ makeAssociative (S _ a) = S True a
 -- * Data type for terms
 
 data Term = TVar   String
-          | TCon   Symbol
-          | TApp   Term Term
+          | TCon   Symbol [Term]
           | TList  [Term]
           | TNum   Integer
           | TFloat Double
@@ -87,12 +85,9 @@ data Term = TVar   String
  deriving (Show, Read, Eq, Ord, Typeable)
 
 instance Uniplate Term where
-   uniplate (TList xs) = plate TList ||* xs
-   uniplate a
-      | null xs   = plate a
-      | otherwise = plate (makeTerm x) ||* xs
-    where
-      (x, xs) = getSpine a
+   uniplate (TCon x xs) = plate (function x) ||* xs
+   uniplate (TList xs)  = plate TList ||* xs
+   uniplate term        = plate term
 
 -----------------------------------------------------------
 -- * Type class for conversion to/from terms
@@ -170,11 +165,9 @@ class WithFunctions a where
          _            -> fail "Common.Term.getSymbol"
 
 instance WithFunctions Term where
-   function = makeTerm . TCon
-   getFunction a =
-      case getSpine a of
-         (TCon s, xs) -> return (s, xs)
-         _            -> fail "Common.Rewriting.getFunction"
+   function = TCon
+   getFunction (TCon s xs) = return (s, xs)
+   getFunction _           = fail "Common.Rewriting.getFunction"
 
 isSymbol :: WithFunctions a => Symbol -> a -> Bool
 isSymbol s = maybe False (==s) . getSymbol
@@ -271,25 +264,13 @@ nextMetaVar a
    is = metaVars a
 
 -----------------------------------------------------------
--- * Utility functions
-
-getSpine :: Term -> (Term, [Term])
-getSpine = rec []
- where
-   rec xs (TApp f a) = rec (a:xs) f
-   rec xs a          = (a, xs)
-
-makeTerm :: Term -> [Term] -> Term
-makeTerm = foldl TApp
-
------------------------------------------------------------
 -- * Arbitrary term generator
 
 instance Arbitrary Term where
    arbitrary = generators
       [ constGens $ map TVar ["x", "y", "z"]
       , arbGen TNum, arbGen TFloat, arbGen TMeta
-      , constGens $ map (TCon . newSymbol) ["a", "b"]
+      , constGens $ map (symbol . newSymbol) ["a", "b"]
       , unaryGens $ map (unary . newSymbol) ["h", "k"]
       , binaryGens $ map (binary . newSymbol) ["f", "g"]
       ]

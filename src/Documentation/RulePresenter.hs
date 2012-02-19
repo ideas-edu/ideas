@@ -41,22 +41,20 @@ showTerm (Some ex) = text . rec
  where
    rec term =
       case term of
-         TVar s   -> s
-         TNum i   -> show i
-         TFloat a -> show a
-         TMeta n  -> showMeta ex n
-         _ -> concatMap (either id recp) $
-            case getSpine term of
-               (TCon s, xs) ->
-                  let txt = spaced (Left (show s) : map Right xs)
-                  in fromMaybe txt (specialSymbol s xs)
-               (x, xs) -> spaced (map Right (x:xs))
+         TVar s    -> s
+         TNum i    -> show i
+         TFloat a  -> show a
+         TMeta n   -> showMeta ex n
+         TCon s xs -> concatMap (either id recp) $
+                      let txt = spaced (Left (show s) : map Right xs)
+                      in fromMaybe txt (specialSymbol s xs)
+         TList xs  -> "[" ++ intercalate ", " (map rec xs) ++ "]"
 
-   recp term = parIf (isApp term) (rec term)
+   recp term = parIf (isCon term) (rec term)
    spaced    = intersperse (Left " ")
 
-   isApp (TApp _ _) = True
-   isApp _          = False
+   isCon (TCon _ xs) = not (null xs)
+   isCon _           = False
 
    parIf b s = if b then "(" ++ s ++ ")" else s
 
@@ -96,7 +94,8 @@ specialSymbol s [a, b]
    | sameSymbol s "relalg.add"        = bin " \x2020 " -- relative addition/dagger
  where
    bin x = return [Right a, Left x, Right b]
-specialSymbol s1 [TApp (TApp (TCon s2) x) a]
+
+specialSymbol s1 [TCon s2 [x, a]]
    | sameSymbol s1 "calculus1.diff" && sameSymbol s2 "fns1.lambda" =
         return [Left "D(", Right x, Left ") ", Right a]
 specialSymbol _ _ = Nothing

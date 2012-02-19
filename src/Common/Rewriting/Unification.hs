@@ -35,8 +35,8 @@ unify term1 term2 =
          return (singletonSubst i term2)
       (_, TMeta j) | not (j `hasMetaVar` term1) ->
          return (singletonSubst j term1)
-      (TApp f a, TApp g b) -> 
-         rec [f, a] [g, b]
+      (TCon s xs, TCon t ys) | s == t -> 
+         rec xs ys
       (TList xs, TList ys) -> 
          rec xs ys
       _ | term1 == term2 ->
@@ -59,8 +59,8 @@ match term1 term2 =
          return (singletonSubst i term2)
       (_, TMeta _) ->
          fail "match: no unifier"
-      (TApp f a, TApp g b) ->
-         rec [f, a] [g, b]
+      (TCon s xs, TCon t ys) | s == t ->
+         rec xs ys
       (TList xs, TList ys) ->
          rec xs ys
       _ | term1 == term2 ->
@@ -94,8 +94,8 @@ matchExtended sm x y =
    mvLeft     = nextMetaVar x
    mvRight    = mvLeft + 1
    extensions = 
-      case getSpine x of
-         (TCon s, [_, _]) | isAssociative s -> 
+      case x of
+         TCon s [_, _] | isAssociative s -> 
             let extLeft  = binary s (TMeta mvLeft)
                 extRight = flip (binary s) (TMeta mvRight)
             in [ f . g | f <- [id, extLeft], g <- [id, extRight] ]
@@ -120,11 +120,16 @@ matchA sm = rec
          _ -> defaultMatch rec x y
 
 defaultMatch :: Match Term -> Match Term
-defaultMatch f x y = do
-   let (a, as) = getSpine x
-       (b, bs) = getSpine y
-   guard (a == b)
-   matchList f as bs
+defaultMatch f x y = 
+   case (x, y) of
+      (TCon s xs, TCon t ys) -> do
+         guard (s == t)
+         matchList f xs ys
+      (TList xs, TList ys) ->
+         matchList f xs ys
+      _ -> do
+         guard (x == y)
+         return emptySubst
 
 matchList :: Match Term -> Match [Term]
 matchList f as bs = 

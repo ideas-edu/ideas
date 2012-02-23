@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Common.Traversal.Tests 
-   ( testIterator, testNavigator, testMe
+   ( testIterator, testNavigator, tests
    ) where
 
 import Control.Monad
@@ -84,8 +84,8 @@ testNavigator s gen = suite (s ++ " Navigator") $ do
 -------------------------------------------------------------------------
 -- tests
 
-testMe :: TestSuite
-testMe = do 
+tests :: TestSuite
+tests = do 
 
    suite "Iterators" $ do
       testIterator "List" listGen
@@ -101,7 +101,7 @@ testMe = do
       testNavigator "Mirror" $ liftM makeMirror uniGen
 
 _go :: IO ()
-_go = runTestSuiteResult testMe >>= print
+_go = runTestSuiteResult tests >>= print
 
 -------------------------------------------------------------------------
 -- test utils

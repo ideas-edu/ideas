@@ -143,10 +143,19 @@ instance Fractional a => Fractional (SquareRoot a) where
    fromRational  = con . fromRational
 
 instance Fractional a => Arbitrary (SquareRoot a) where
-   arbitrary = do
-      n <- choose (0, 10)
-      let f (a, b) = fromRational a * sqrtRational (fromRational (abs b))
-      liftM (sum . map f) (vector n)
+   arbitrary = sized $ \n -> do
+      let make r1 r2 = fromRational r1 * sqrtRational r2
+      i <- choose (0, 10)
+      xs <- vectorOf i (liftM2 make (rationalGen n) (rationalGen n))
+      return (sum xs)
+
+rationalGen :: Int -> Gen Rational
+rationalGen n = do -- a+(b/c)
+   c <- choose (0, n)
+   b <- choose (0, c)
+   a <- choose (0, n)
+   return $ fromIntegral a + if c==0 then 0 
+                                     else fromIntegral b / fromIntegral c
 
 -------------------------------------------------------------
 -- Utility functions

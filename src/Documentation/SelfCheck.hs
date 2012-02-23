@@ -25,6 +25,7 @@ import qualified Common.Algebra.Boolean as Algebra
 import qualified Common.Algebra.Field as Algebra
 import qualified Common.Rewriting.Substitution as Substitution
 import qualified Common.Rewriting.Unification as Unification
+import qualified Common.Traversal.Tests as Traversal
 import qualified Common.Strategy.Tests as Strategy
 import qualified Text.JSON as JSON
 import qualified Text.OpenMath.Tests as OpenMath
@@ -44,6 +45,7 @@ selfCheck dir = do
             addProperty "OpenMath encoding" OpenMath.propEncoding
          Substitution.tests
          Unification.unificationTests
+         Traversal.tests
          Strategy.tests
          suite "Field properties" $
             mapM_ (addProperty "field") Algebra.propsField

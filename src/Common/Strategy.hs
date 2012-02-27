@@ -23,14 +23,14 @@ module Common.Strategy
      -- * Strategy combinators
      -- ** Basic combinators
    , (<*>), (<|>), (<%>), succeed, fail, atomic, label
-   , sequence, alternatives, interleave, permute
+   , sequence, alternatives, interleave, permute, fix
      -- ** EBNF combinators
    , many, many1, replicate, option
      -- ** Negation and greedy combinators
    , check, not, repeat, repeat1, try, (|>), exhaustive
    , while, until, multi
      -- ** Traversal combinators
-   , fix, once, somewhere, topDown, bottomUp
+   , once, somewhere, topDown, bottomUp
    , onceWith, somewhereWith
      -- * Configuration combinators
    , module Common.Strategy.Configuration
@@ -51,4 +51,5 @@ import Common.Strategy.Configuration
 import Common.Strategy.Location
 import Common.Strategy.Parsing
 import Common.Strategy.Prefix
+import Common.Strategy.Traversal
 import Prelude ()

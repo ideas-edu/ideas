@@ -47,7 +47,7 @@ linearStrategyG =
    label "Linear Equation" $
        label "Phase 1" (repeatS (
                use removeDivision
-          <|>  multi (showId distributeTimes) (somewhere (useC parentNotNegCheck <*> use distributeTimes))
+          <|>  multi (showId distributeTimes) (topDown (use distributeTimes))
           <|>  multi (showId merge) (once (use merge))))
    <*> label "Phase 2" (repeatS (
               (flipEquationS |> use varToLeft)
@@ -117,8 +117,8 @@ quadraticStrategyG =
       |> (  somewhere (use sameConFactor)
         <|> multi (showId merge) (somewhere (use merge))
         <|> somewhere (use distributionSquare)
-        <|> multi (showId distributeTimes) (somewhere
-               (useC parentNotNegCheck <*> use distributeTimes))
+        <|> multi (showId distributeTimes) (topDown
+               (use distributeTimes))
         <|> distributeDivisionMulti
         <|> somewhere flipEquationS
          )

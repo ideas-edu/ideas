@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.4 (0)">
+<reply result="ok" version="1.0.5 (0)">
   <label name="linearequation">
     <sequence>
       <label name="phase1">
@@ -7,46 +7,84 @@
             <rule name="algebra.equations.linear.remove-div"/>
             <label name="algebra.equations.linear.distr-times" collapsed="true">
               <sequence>
-                <rec var="0">
-                  <choice>
+                <rec var="1">
+                  <orelse>
+                    <rule name="algebra.equations.linear.distr-times"/>
                     <sequence>
-                      <rule name="parentnotnegatecheck"/>
-                      <rule name="algebra.equations.linear.distr-times"/>
+                      <rule name="navigator.down"/>
+                      <rec var="2">
+                        <choice>
+                          <var var="1"/>
+                          <sequence>
+                            <rule name="navigator.right"/>
+                            <var var="2"/>
+                          </sequence>
+                        </choice>
+                      </rec>
+                      <orelse>
+                        <rule name="navigator.up"/>
+                        <succeed/>
+                      </orelse>
                     </sequence>
-                    <sequence>
-                      <rule name="navigation.down.all"/>
-                      <var var="0"/>
-                      <rule name="navigation.up"/>
-                    </sequence>
-                  </choice>
+                  </orelse>
                 </rec>
                 <repeat>
-                  <rec var="0">
-                    <choice>
+                  <rec var="1">
+                    <orelse>
+                      <rule name="algebra.equations.linear.distr-times"/>
                       <sequence>
-                        <rule name="parentnotnegatecheck"/>
-                        <rule name="algebra.equations.linear.distr-times"/>
+                        <rule name="navigator.down"/>
+                        <rec var="2">
+                          <choice>
+                            <var var="1"/>
+                            <sequence>
+                              <rule name="navigator.right"/>
+                              <var var="2"/>
+                            </sequence>
+                          </choice>
+                        </rec>
+                        <orelse>
+                          <rule name="navigator.up"/>
+                          <succeed/>
+                        </orelse>
                       </sequence>
-                      <sequence>
-                        <rule name="navigation.down.all"/>
-                        <var var="0"/>
-                        <rule name="navigation.up"/>
-                      </sequence>
-                    </choice>
+                    </orelse>
                   </rec>
                 </repeat>
               </sequence>
             </label>
             <label name="algebra.equations.linear.merge" collapsed="true">
               <sequence>
-                <rule name="navigation.down.all"/>
-                <rule name="algebra.equations.linear.merge"/>
-                <rule name="navigation.up"/>
+                <rule name="navigator.down"/>
+                <rec var="0">
+                  <choice>
+                    <rule name="algebra.equations.linear.merge"/>
+                    <sequence>
+                      <rule name="navigator.right"/>
+                      <var var="0"/>
+                    </sequence>
+                  </choice>
+                </rec>
+                <orelse>
+                  <rule name="navigator.up"/>
+                  <succeed/>
+                </orelse>
                 <repeat>
                   <sequence>
-                    <rule name="navigation.down.all"/>
-                    <rule name="algebra.equations.linear.merge"/>
-                    <rule name="navigation.up"/>
+                    <rule name="navigator.down"/>
+                    <rec var="0">
+                      <choice>
+                        <rule name="algebra.equations.linear.merge"/>
+                        <sequence>
+                          <rule name="navigator.right"/>
+                          <var var="0"/>
+                        </sequence>
+                      </choice>
+                    </rec>
+                    <orelse>
+                      <rule name="navigator.up"/>
+                      <succeed/>
+                    </orelse>
                   </sequence>
                 </repeat>
               </sequence>
@@ -74,12 +112,21 @@
       </label>
       <repeat>
         <sequence>
-          <rule name="navigation.down.all"/>
-          <choice>
-            <rule name="algebra.equations.linear.norm-rational"/>
-            <rule name="algebra.equations.linear.norm-mixed" removed="true"/>
-          </choice>
-          <rule name="navigation.up"/>
+          <rule name="navigator.down"/>
+          <rec var="0">
+            <choice>
+              <rule name="algebra.equations.linear.norm-rational"/>
+              <rule name="algebra.equations.linear.norm-mixed" removed="true"/>
+              <sequence>
+                <rule name="navigator.right"/>
+                <var var="0"/>
+              </sequence>
+            </choice>
+          </rec>
+          <orelse>
+            <rule name="navigator.up"/>
+            <succeed/>
+          </orelse>
         </sequence>
       </repeat>
     </sequence>

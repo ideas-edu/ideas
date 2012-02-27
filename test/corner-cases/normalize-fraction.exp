@@ -2,7 +2,7 @@
   <elem ruleid="algebra.equations.linear.norm-rational" location="[1]">
     <state>
       <prefix>
-        [8,0,0,1,0]
+        [9,0,0,1,1,0,0]
       </prefix>
       <expr>
         x == 2/3

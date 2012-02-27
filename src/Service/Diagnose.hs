@@ -75,17 +75,13 @@ diagnose state new
            Just (r, as) -> Buggy as r -- report the buggy rule
            Nothing      -> NotEquivalent -- compareParts state new
 
-   -- Is the submitted term (very) similar to the previous one?
-   | similar && not (isReady ex new) =
-        -- If yes, report this
-        Similar (ready state) state
-
    -- Was the submitted term expected by the strategy?
    | isJust expected =
         -- If yes, return new state and rule
         let (r, _, _, ns) = fromJust expected
         in Expected (ready ns) ns r
 
+   -- Is the submitted term (very) similar to the previous one?
    | similar = Similar (ready state) state
 
    -- Is the rule used discoverable by trying all known rules?
@@ -103,7 +99,7 @@ diagnose state new
 
    expected = do
       let xs = either (const []) id $ allfirsts (restartIfNeeded state)
-          p (_, _, _, ns) = similarity ex newc (stateContext ns)
+          p (_, _, _, ns) = similarity ex newc (stateContext ns) -- use rule recognizer?
       listToMaybe (filter p xs)
 
    discovered searchForBuggy = listToMaybe $

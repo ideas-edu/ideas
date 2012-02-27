@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Common.Traversal.Tests 
    ( testIterator, testNavigator, tests
+   , uniGen, listGen
    ) where
 
 import Control.Monad

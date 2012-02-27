@@ -16,7 +16,7 @@ module Domain.Math.Polynomial.Rules
    , distributeTimes, distributionSquare, exposeSameFactor, factorLeftAsSquare
    , factorVariablePower, flipEquation, higherSubst, merge, moveToLeft, mulZero
    , niceFactors, niceFactorsNew, noDivisionConstant, noLinFormula, oneVar
-   , parentNotNegCheck, prepareSplitSquare, quadraticRuleOrder, removeDivision
+   , prepareSplitSquare, quadraticRuleOrder, removeDivision
    , ruleApproximate, ruleNormalizeMixedFraction, ruleNormalizeRational
    , ruleNormalizePolynomial
    , sameFactor, simplerLinearFactor, simplerPolynomial, simplerSquareRootMulti
@@ -24,7 +24,6 @@ module Domain.Math.Polynomial.Rules
    ) where
 
 import Common.Library hiding (terms, simplify)
-import Common.Traversal.Navigator (up)
 import Common.Utils (thd3)
 import Common.Utils.Uniplate (universe, descend)
 import Control.Monad
@@ -587,12 +586,6 @@ findFactor rs
         return $ Prelude.recip $ fromIntegral $ foldr1 gcd $ map numerator rs
    | otherwise =
         return $ fromIntegral $ foldr1 lcm $ map denominator rs
-
-parentNotNegCheck :: Rule (Context Expr)
-parentNotNegCheck = minorRule "parent not negate check" $ \c ->
-   case up c >>= currentInContext of
-      Just (Negate _) -> Nothing
-      _               -> Just c
 
 noDivisionConstant :: Rule Expr
 noDivisionConstant = makeRule (lineq, "no-div-con") f

@@ -150,7 +150,7 @@ ineqLinearG = label "Linear inequation" $
    label "Phase 1" (repeatS
        (  use removeDivision
       <|> multi (showId distributeTimes)
-             (somewhere (useC parentNotNegCheck <*> use distributeTimes))
+             (topDown (use distributeTimes))
       <|> multi (showId merge) (once (use merge))
        ))
    <*>

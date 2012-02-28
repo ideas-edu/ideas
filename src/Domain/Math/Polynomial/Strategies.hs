@@ -47,8 +47,8 @@ linearStrategyG =
    label "Linear Equation" $
        label "Phase 1" (repeatS (
                use removeDivision
-          <|>  multi (showId distributeTimes) (topDown (use distributeTimes))
-          <|>  multi (showId merge) (once (use merge))))
+          <|>  multi (showId distributeTimes) (oncetd (use distributeTimes))
+          <|>  multi (showId merge) (layer [] (use merge))))
    <*> label "Phase 2" (repeatS (
               (flipEquationS |> use varToLeft)
           <|> use (coverUpPlusWith oneVar)
@@ -57,7 +57,7 @@ linearStrategyG =
           <|> use coverUpTimes
           <|> use coverUpNegate
            ))
-   <*> repeatS (once
+   <*> repeatS (layer []
           (  use ruleNormalizeRational
          <|> remove (use ruleNormalizeMixedFraction)
           ))
@@ -117,7 +117,7 @@ quadraticStrategyG =
       |> (  somewhere (use sameConFactor)
         <|> multi (showId merge) (somewhere (use merge))
         <|> somewhere (use distributionSquare)
-        <|> multi (showId distributeTimes) (topDown
+        <|> multi (showId distributeTimes) (oncetd
                (use distributeTimes))
         <|> distributeDivisionMulti
         <|> somewhere flipEquationS
@@ -169,8 +169,8 @@ findFactorsStrategyG = label "find factor step" $
       <|> use factorVariablePower <|> use simplerLinearFactor
 
 somewhereTimes :: IsStrategy f => f (Context a) -> Strategy (Context a)
-somewhereTimes = somewhereWith "SomewhereTimes" $ \c ->
-   if isTimesC c then [0 .. arity c-1] else []
+somewhereTimes = traverse [ parentFilter p]
+ where p c = if isTimesC c then [0 .. arity c-1] else []
 
 isTimesC :: Context a -> Bool
 isTimesC = maybe False (isJust . isTimes) . currentTerm

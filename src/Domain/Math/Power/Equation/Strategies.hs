@@ -109,7 +109,7 @@ coverUpStrategy' = cleanUpStrategy (applyTop $ fmap $ fmap cleanUpExpr) $
    repeatS $ somewhere $ alternatives $ use coverUpRoot : coverUpRulesOr
 
 somewhereNotInExp :: IsStrategy f => f (Context a) -> Strategy (Context a)
-somewhereNotInExp = somewhereWith "somewhere but not in exponent" f
+somewhereNotInExp = traverse [parentFilter f]
   where
     f a = if isPowC a then [0] else [0 .. arity a-1]
     isPowC = maybe False (isJust . isPower) . currentTerm

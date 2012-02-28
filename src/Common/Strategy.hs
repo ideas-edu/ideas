@@ -30,8 +30,7 @@ module Common.Strategy
    , check, not, repeat, repeat1, try, (|>), exhaustive
    , while, until, multi
      -- ** Traversal combinators
-   , once, somewhere, topDown, bottomUp
-   , onceWith, somewhereWith
+   , module Common.Strategy.Traversal
      -- * Configuration combinators
    , module Common.Strategy.Configuration
      -- * Strategy locations

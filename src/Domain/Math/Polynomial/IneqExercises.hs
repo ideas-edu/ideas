@@ -150,8 +150,8 @@ ineqLinearG = label "Linear inequation" $
    label "Phase 1" (repeatS
        (  use removeDivision
       <|> multi (showId distributeTimes)
-             (topDown (use distributeTimes))
-      <|> multi (showId merge) (once (use merge))
+             (oncetd (use distributeTimes))
+      <|> multi (showId merge) (layer [] (use merge))
        ))
    <*>
    label "Phase 2"

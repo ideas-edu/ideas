@@ -141,14 +141,14 @@ commitS s =
    in check (applicable cs . f) <*> s
 
 exceptLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
-exceptLowerDiv = somewhereWith "except-lower-div" $ \a ->
-   if isDivC a then [0] else [0 .. arity a-1]
+exceptLowerDiv = traverse [parentFilter p]
+ where p a = if isDivC a then [0] else [0 .. arity a-1]
 
 onlyUpperDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
-onlyUpperDiv = onceWith "only-upper-div" $ \a -> [ 0 | isDivC a ]
+onlyUpperDiv = layer [ parentFilter $ \a -> [ 0 | isDivC a ] ]
 
 onlyLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
-onlyLowerDiv = onceWith "only-lower-div" $ \a -> [ 1 | isDivC a ]
+onlyLowerDiv = layer [ parentFilter $ \a -> [ 1 | isDivC a ] ]
 
 simplifiedRational :: Expr -> Bool
 simplifiedRational expr =

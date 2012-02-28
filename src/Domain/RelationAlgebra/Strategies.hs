@@ -22,11 +22,11 @@ toCNF = label "To CNF" $
            |> label "step2" step2
            |> label "step3" step3
  where
-   step1 = topDown $ useRules $
+   step1 = oncetd $ useRules $
       [ ruleRemCompl, ruleRemRedunExprs, ruleDoubleNegation
       , ruleIdempOr, ruleIdempAnd, ruleAbsorp, ruleAbsorpCompl
       ] ++ invRules
-   step2 = topDown $ useRules
+   step2 = oncetd $ useRules
       [ ruleCompOverUnion, ruleAddOverIntersec, ruleDeMorganOr, ruleDeMorganAnd
       , ruleNotOverComp, ruleNotOverAdd
       ]

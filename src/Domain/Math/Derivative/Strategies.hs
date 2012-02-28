@@ -33,7 +33,7 @@ derivativeStrategy = cleanUpStrategyAfter (applyTop cleanUpExpr) $
    label "Derivative" $ repeatS $ somewhere $
       alternatives (map liftToContext derivativeRules)
       <|> derivativePolyStepStrategy
-      <|> check isDiffC <*> once (once (liftToContext ruleDefRoot))
+      <|> check isDiffC <*> layer [] (layer [] (liftToContext ruleDefRoot))
  where
    isDiffC = maybe False isDiff . currentInContext
 
@@ -96,9 +96,9 @@ derivativePolyStepStrategy = label "derivative-poly-step" $
    nfPoly   = (`belongsTo` polyNormalForm rationalView)
 
 exceptLowerDiv :: IsStrategy f => f (Context Expr) -> Strategy (Context Expr)
-exceptLowerDiv = somewhereWith "except-lower-div" $ \a ->
-   if isDivC a then [0] else [0 .. arity a-1]
+exceptLowerDiv = traverse [parentFilter p] 
  where
+   p a = if isDivC a then [0] else [0 .. arity a-1]
    isDivC = maybe False isDiv . currentInContext
    isDiv (_ :/: _) = True
    isDiv _         = False

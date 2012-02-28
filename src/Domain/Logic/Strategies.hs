@@ -58,7 +58,7 @@ somewhereOr s =
                    Just (_ :||: _) -> True
                    _               -> False
    in fix $ \this -> check (Prelude.not . isOr) <*> s
-                 <|> check isOr <*> once this
+                 <|> check isOr <*> layer [] this
 
 --check1, check2 :: (a -> Bool) -> Rule a
 --check1 p = minorRule $ makeSimpleRule "check1" $ \a -> if p a then Just a else Nothing
@@ -74,15 +74,15 @@ dnfStrategy =  label "Bring to dnf"
      <*> label "Eliminate nots"                      eliminateNots
      <*> label "Move ors to top"                     orToTop
  where
-   eliminateConstants = repeatS $ topDown $ useRules
+   eliminateConstants = repeatS $ oncetd $ useRules
       [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
       , ruleFalseZeroAnd, ruleNotTrue, ruleNotFalse, ruleFalseInEquiv
       , ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
       ]
-   eliminateImplEquiv = repeatS $ bottomUp $ useRules
+   eliminateImplEquiv = repeatS $ oncebu $ useRules
       [ ruleDefImpl, ruleDefEquiv
       ]
-   eliminateNots = repeatS $ topDown $
+   eliminateNots = repeatS $ oncetd $
       useRules
          [ generalRuleDeMorganAnd, generalRuleDeMorganOr ]
       |> useRules

@@ -10,10 +10,9 @@
 --
 -----------------------------------------------------------------------------
 module Common.Strategy.Traversal
-   ( -- * Iterations
-     visitAll, visitOne, visitSome, visitMany
-     -- * One-layer combinators
-   , downAll, downOne, downSome
+   ( -- * One-layer combinators
+     Visit(..), visit
+   , visitAll, visitFirst, visitOne, visitSome, visitMany
      -- * One-pass traversals
    , fulltd, spinetd, stoptd, oncetd, oncebu, somewhere
    , once, onceWith, somewhereWith, topDown, bottomUp
@@ -21,80 +20,86 @@ module Common.Strategy.Traversal
    , innermost, outermost
    ) where
 
-import Common.Traversal.Navigator
+import Common.Traversal.Navigator hiding (Horizontal)
 import Common.Strategy.Abstract
-import Common.Strategy.Combinators hiding (not)
+import Common.Strategy.Combinators hiding (multi)
 import Common.Rule
-import Prelude hiding (repeat)
-
-ruleUp :: Navigator a => Rule a  
-ruleUp = minorRule "navigator.up" up
-
-ruleDown :: Navigator a => Rule a  
-ruleDown = minorRule "navigator.down" down
-
-ruleRight :: Navigator a => Rule a  
-ruleRight = minorRule "navigator.right" right
-
-----------------------------------------------------------------------
--- Iterations
-
--- visit all elements
-visitAll :: (IsStrategy f, Navigator a) => f a -> Strategy a
-visitAll s = fix $ \a -> s <*> ((ruleRight <*> a) <|> check (not . hasRight))
-
--- visit exactly one element
-visitOne :: (IsStrategy f, Navigator a) => f a -> Strategy a
-visitOne s = fix $ \a -> s <|> (ruleRight <*> a)
-
--- visit at least one element
-visitSome :: (IsStrategy f, Navigator a) => f a -> Strategy a
-visitSome s = fix $ \a -> (s <*> try (ruleRight <*> visitMany s)) <|> (ruleRight <*> a)
-
--- visit the possible elements 
-visitMany :: (IsStrategy f, Navigator a) => f a -> Strategy a
-visitMany s = fix $ \a -> try s <*> ((ruleRight <*> a) <|> check (not . hasRight))
-
--- visit exactly one element
-visitOneWith :: (IsStrategy f, Navigator a) => (a -> [Int]) -> f a -> Strategy a
-visitOneWith p s = fix $ \a -> (check ok <*> s) <|> (ruleRight <*> a)
- where ok a = last (location a) `elem` maybe [] p (up a)
+import Prelude hiding (repeat, not)
 
 ----------------------------------------------------------------------
 -- One-layer combinators
 
-downAll :: (IsStrategy f, Navigator a) => f a -> Strategy a
-downAll = downWith visitAll
+-- visit only first possible element
+visitFirst :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+visitFirst next s = fix $ \a -> s |> (next <*> a)
 
-downOne :: (IsStrategy f, Navigator a) => f a -> Strategy a
-downOne = downWith visitOne
+-- visit exactly one element
+visitOne :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+visitOne next s = fix $ \a -> s <|> (next <*> a)
 
-downSome :: (IsStrategy f, Navigator a) => f a -> Strategy a
-downSome = downWith visitSome
+-- visit all elements
+visitAll :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+visitAll next s = fix $ \a -> s <*> (not next |> (next <*> a))
 
-downWith :: (IsStrategy f, Navigator b) => (a -> f b) -> a -> Strategy b
-downWith s = descend . s
+-- visit at least one element
+visitSome :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+visitSome next s = fix $ \a -> 
+   (s <*> try (next <*> visitMany next s)) <|> (next <*> a)
+
+-- visit the possible elements 
+visitMany :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+visitMany next s = fix $ \a -> try s <*> (not next |> (next <*> a))
+
+data Visit = VisitFirst | VisitOne | VisitSome | VisitAll | VisitMany
+
+visit :: (IsStrategy f, IsStrategy g) => Visit -> f a -> g a -> Strategy a
+visit a =
+   case a of
+      VisitFirst -> visitFirst
+      VisitOne   -> visitOne
+      VisitSome  -> visitSome
+      VisitAll   -> visitAll
+      VisitMany  -> visitMany
+
+----------------------------------------------------------------------
+-- One-layer traversal
+
+data OneLayer a = OneLayer Visit Bool [a -> Bool]
+
+layer :: (IsStrategy f, Navigator a) => OneLayer a -> f a -> Strategy a
+layer (OneLayer v rev ps) s = 
+   goDown <*> visit v (next <*> findOk) (findOk <*> s) <*> try ruleUp
+ where
+   (next, goDown)
+      | rev       = (ruleLeft, ruleDownLast)
+      | otherwise = (ruleRight, ruleDown)
+ 
+   findOk 
+      | null ps   = succeed
+      | otherwise = fix $ \a -> check (\x -> all ($ x) ps) |> (next <*> a)
 
 ----------------------------------------------------------------------
 -- One-pass traversals
 
 fulltd :: (IsStrategy f, Navigator a) => f a -> Strategy a
-fulltd s = fix $ \a -> s <*> (downAll a <|> check isLeaf)
+fulltd s = undefined -- fix $ \a -> s <*> (downAll a <|> check isLeaf)
 
 spinetd :: (IsStrategy f, Navigator a) => f a -> Strategy a
-spinetd s = fix $ \a -> s <*> (downOne a <|> check isLeaf)
+spinetd s = undefined -- fix $ \a -> s <*> (downOne a <|> check isLeaf)
 
 stoptd :: (IsStrategy f, Navigator a) => f a -> Strategy a
-stoptd s = fix $ \a -> s |> downAll a
+stoptd s = undefined -- fix $ \a -> s |> downAll a
 
 oncetd :: (IsStrategy f, Navigator a) => f a -> Strategy a
-oncetd s = fix $ \a -> s |> downOne a
+oncetd = traversal defaultTraversal {combinator = OrElse True}
+-- s = fix $ \a -> s |> downOne a
 
 oncebu :: (IsStrategy f, Navigator a) => f a -> Strategy a
-oncebu s = fix $ \a -> downOne a |> s
+oncebu = traversal defaultTraversal {combinator = OrElse False}
+-- s = fix $ \a -> downOne a |> s
 
 somewhere :: (IsStrategy f, Navigator a) => f a -> Strategy a
-somewhere s = fix $ \a -> s <|> downOne a
+somewhere = traversal defaultTraversal -- fix $ \a -> s <|> downOne a
 
 ----------------------------------------------------------------------
 -- fixpoint traversals
@@ -108,20 +113,71 @@ outermost = repeat . oncetd
 ----------------------------------------------------------------------
 -- Utility functions
 
-descend :: (IsStrategy f, Navigator a) => f a -> Strategy a
-descend s = ruleDown <*> s <*> try ruleUp
+
 
 somewhereWith :: (IsStrategy f, Navigator a) => String -> (a -> [Int]) -> f a -> Strategy a
-somewhereWith _ p s = fix $ \a -> s <|> downWith (visitOneWith p) a
+somewhereWith _ p = traversal $ parentFilter p defaultTraversal
 
 once :: (IsStrategy f, Navigator a) => f a -> Strategy a
-once = downOne
+once = traversal defaultTraversal {combinator = Layer}
 
 onceWith :: (IsStrategy f, Navigator a) => String -> (a -> [Int]) -> f a -> Strategy a
-onceWith _ = downWith . visitOneWith
+onceWith _ p = traversal $ parentFilter p defaultTraversal {combinator = Layer}
 
 topDown :: (IsStrategy f, Navigator a) => f a -> Strategy a
 topDown = oncetd
 
 bottomUp :: (IsStrategy f, Navigator a) => f a -> Strategy a
 bottomUp = oncebu
+
+parentFilter :: Navigator a => (a -> [Int]) -> Traversal a -> Traversal a
+parentFilter p t = t {oneLayer = f (oneLayer t)}
+ where
+   f (OneLayer v b ps) = OneLayer v b (ok:ps)
+   ok a = last (location a) `elem` maybe [] p (up a)
+
+-----------------------------------------------------------------------
+
+data Traversal a = T
+   { oneLayer   :: OneLayer a
+   , combinator :: Combinator
+   , multi      :: Bool
+   }
+
+data Combinator = Sequence Bool | OrElse Bool | Choice | Layer
+
+defaultTraversal :: Traversal a
+defaultTraversal = T (OneLayer VisitOne False []) Choice False
+
+traversal :: (IsStrategy f, Navigator a) => Traversal a -> f a -> Strategy a
+traversal tr s =
+   (if multi tr then repeat else id) $
+   case combinator tr of
+      Sequence td 
+         | td        -> fix $ \a -> s <*> (descend a <|> check isLeaf)
+         | otherwise -> fix $ \a -> (descend a <|> check isLeaf) <*> s
+      OrElse td 
+         | td        -> fix $ \a -> s |> descend a
+         | otherwise -> fix $ \a -> descend a |> s
+      Choice         -> fix $ \a -> s <|> descend a
+      Layer          -> descend s
+ where
+   descend a = layer (oneLayer tr) a
+
+----------------------------------------------------------------------
+-- Navigator rules
+
+ruleUp :: Navigator a => Rule a  
+ruleUp = minorRule "navigator.up" up
+
+ruleDown :: Navigator a => Rule a  
+ruleDown = minorRule "navigator.down" down
+
+ruleDownLast :: Navigator a => Rule a  
+ruleDownLast = minorRule "navigator.downlast" downLast
+
+ruleLeft :: Navigator a => Rule a  
+ruleLeft = minorRule "navigator.left" left
+
+ruleRight :: Navigator a => Rule a  
+ruleRight = minorRule "navigator.right" right

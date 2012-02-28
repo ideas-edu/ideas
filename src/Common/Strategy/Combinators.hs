@@ -14,14 +14,11 @@
 -----------------------------------------------------------------------------
 module Common.Strategy.Combinators where
 
-import Common.Context
 import Common.Id
-import Common.Traversal.Navigator
 import Common.Strategy.Abstract
 import Common.Strategy.Configuration
 import Common.Strategy.Core
 import Common.Rule
-import Data.Maybe
 import Prelude hiding (not, repeat, fail, sequence)
 import qualified Prelude
 

@@ -51,10 +51,12 @@ class Navigator a where
    downLast :: a -> Maybe a
    left     :: a -> Maybe a
    right    :: a -> Maybe a
+   childnr  :: a -> Int
    location :: a -> Location
    -- default definitions
    downLast = liftM (fixp right) . down
-   location = defaultLocation
+   childnr  = pred . length . fixpl left
+   location = map childnr . drop 1 . reverse . fixpl up
 
 instance Navigator a => Navigator (Mirror a) where
    up       = liftWrapper up
@@ -119,14 +121,6 @@ leftMostAt n
 
 rightMostAt :: Navigator a => Int -> a -> Maybe a
 rightMostAt n = fmap unwrap . leftMostAt n . makeMirror
-
-defaultLocation :: Navigator a => a -> [Int]
-defaultLocation = rec []
- where
-   rec acc a =
-      case up a of 
-         Nothing -> acc
-         Just b  -> rec ((length (fixpl left a)-1) : acc) b
    
 navigateTo :: Navigator a => Location -> a -> Maybe a
 navigateTo is a = go (navigation (location a) is) a 
@@ -217,7 +211,7 @@ instance Navigator a => Iterator (Horizontal a) where
    next     = liftWrapper right
    first    = mapWrapper leftMost
    final    = mapWrapper rightMost
-   position = fromMaybe 0 . listToMaybe . reverse . location . unwrap
+   position = childnr . unwrap
 
 makeHorizontal :: a -> Horizontal a
 makeHorizontal = wrap
@@ -264,7 +258,7 @@ instance Navigator (StrNavigator a) where
    left _ = Nothing
    right (SN a (Left b:xs)) = Just (SN b (Right a:xs))
    right _ = Nothing
-   location = reverse . map (either (const 0) (const 1)) . strContext
+   childnr  = maybe 0 (either (const 0) (const 1)) . listToMaybe . strContext
 
 instance Focus (StrNavigator a) where
    type Unfocus (StrNavigator a) = Str a
@@ -342,10 +336,7 @@ instance Uniplate a => Navigator (UniplateNavigator a) where
    left  (U fs a) = liftM (U fs) (previous a)
    right (U fs a) = liftM (U fs) (next a)
       
-   location (U fs a) = reverse (rec a fs)
-    where
-      rec _ [] = []
-      rec b (g:gs) = position b : rec (g b) gs
+   childnr (U _ a) = position a
 
 instance Update UniplateNavigator where
    update (U xs a) = (current a, U xs . flip replace a)

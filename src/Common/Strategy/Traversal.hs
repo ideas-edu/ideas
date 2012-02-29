@@ -121,7 +121,7 @@ setCombinator c = O $ \t -> t {getCombinator = c}
 parentFilter :: Navigator a => (a -> [Int]) -> Option a
 parentFilter p = O $ \t -> t {getFilters = ok:getFilters t}
  where
-   ok a = last (location a) `elem` maybe [] p (up a)
+   ok a = maybe True (\x -> childnr a `elem` p x) (up a)
 
 ----------------------------------------------------------------------
 -- One-pass traverses

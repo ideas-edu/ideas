@@ -81,6 +81,8 @@ testNavigator s gen = suite (s ++ " Navigator") $ do
          fmap location . left ==! changeLast pred . location
       prop gen "loc right" $ hasRight ==>> 
          fmap location . right ==! changeLast succ . location
+      prop gen "childnr" $ 
+         childnr === fromMaybe 0 . listToMaybe . reverse . location
 
 -------------------------------------------------------------------------
 -- tests

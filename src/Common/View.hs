@@ -199,7 +199,7 @@ data Isomorphism a b = EP { pid :: Id, from :: a -> b, to :: b -> a }
 
 instance C.Category Isomorphism where
    id    = id <-> id
-   f . g = from f . from g <-> to g . to f
+   f . g = (from f . from g) <-> (to g . to f)
 
 instance Arrow Isomorphism where
    arr     = (!->)

@@ -156,7 +156,7 @@ instance Update PreOrder where
    update a = (unwrap a, wrap)
 
 instance Navigator a => Iterator (PreOrder a) where
-   previous = liftWrapper (liftM rightMostLeaf . left >|< up)
+   previous = liftWrapper ((liftM rightMostLeaf . left) >|< up)
    next     = let rec = right >|< (up >=> rec)
               in liftWrapper (down >|< rec)
    first    = mapWrapper top

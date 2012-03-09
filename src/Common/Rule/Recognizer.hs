@@ -12,13 +12,18 @@
 module Common.Rule.Recognizer
    ( -- * data type and type class
      Recognizable(..), Recognizer
+   , recognizerReferences
      -- * Constructor functions
-   , makeRecognizer, makeRecognizerBool, makeRecognizerList
+   , makeRecognizer, makeRecognizerEnvMonad, makeRecognizerTrans
    ) where
 
 import Common.Environment
+import Common.Rule.EnvironmentMonad
+import Common.Rule.Transformation
 import Common.Id
 import Common.View
+import Common.Utils
+import Control.Monad
 import Data.Maybe
 import Data.Monoid
                
@@ -26,36 +31,40 @@ import Data.Monoid
 --- Data type and type class
 
 class Recognizable f where
-   recognizer   :: f a -> Recognizer a
-   recognizeAll :: f a -> a -> a -> [Environment]
-   recognize    :: f a -> a -> a -> Maybe Environment
+   recognizer     :: f a -> Recognizer a
+   recognizeAll   :: f a -> a -> a -> [Environment]
+   recognize      :: f a -> a -> a -> Maybe Environment
+   recognizeTrans :: f a -> Trans (a, a) () 
    -- default definitions
-   recognizeAll    = unR . recognizer
-   recognize r a b = listToMaybe $ recognizeAll r a b
+   recognizeAll r a b = map snd $ transApply (recognizeTrans r) (a, b)
+   recognize    r a b = listToMaybe $ recognizeAll r a b
+   recognizeTrans     = unR . recognizer
 
-newtype Recognizer a = R { unR :: a -> a -> [Environment] }
+newtype Recognizer a = R { unR :: Trans (a, a) () }
 
 instance LiftView Recognizer where
-   liftViewIn v r = R $ \a b -> do
-      (x, _) <- matchM v a
-      (y, _) <- matchM v b
-      recognizeAll r x y
+   liftViewIn v r = 
+      let f = fmap fst . match v 
+      in R $ makeTrans f *** makeTrans f >>> unR r
 
 instance Monoid (Recognizer a) where
-   mempty      = R $ \_ _ -> []
-   mappend f g = R $ \x y -> recognizeAll f x y ++ recognizeAll g x y
+   mempty      = R $ mempty
+   mappend f g = R $ unR f `mappend` unR g
 
 instance Recognizable Recognizer where
    recognizer = id
 
+recognizerReferences :: Recognizer a -> [Some Ref]
+recognizerReferences = transReferences . unR
+
 -----------------------------------------------------------
 --- Constructor functions
 
-makeRecognizer :: (a -> a -> Maybe Environment) -> Recognizer a
-makeRecognizer f = makeRecognizerList (\a b -> maybeToList $ f a b)
+makeRecognizer :: (a -> a -> Bool) -> Recognizer a
+makeRecognizer eq = makeRecognizerEnvMonad $ \a b -> guard (eq a b)
 
-makeRecognizerBool :: (a -> a -> Bool) -> Recognizer a
-makeRecognizerBool eq = makeRecognizerList $ \a b -> [ mempty | eq a b ]
+makeRecognizerEnvMonad :: (a -> a -> EnvMonad ()) -> Recognizer a
+makeRecognizerEnvMonad = makeRecognizerTrans . makeTrans . uncurry
 
-makeRecognizerList :: (a -> a -> [Environment]) -> Recognizer a
-makeRecognizerList = R
+makeRecognizerTrans :: Trans (a, a) () -> Recognizer a
+makeRecognizerTrans = R

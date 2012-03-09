@@ -1,64 +1,64 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="1.0.6 (0)">
   <list>
-    <elem name="algebra.equations.buggy.abc.minus-4ac" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.abc.minus-b" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.abc.one-solution" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.abc.two-a" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.cancel-minus" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.coverup.even-power" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.coverup.even-power-forget" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.coverup.even-power-too-early" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.coverup.square-minus" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.coverup.times-mul" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.coverup.times-with-plus" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.distr-square" buggy="true" rewriterule="true"/>
-    <elem name="algebra.equations.buggy.distr-square-forget" buggy="true" rewriterule="true"/>
-    <elem name="algebra.equations.buggy.distr-times-denom" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.distr-times-plus" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.distr-times-plus-forget" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.distr-times-plus-sign" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.distr-times-too-many" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.divide-negate" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.divide-numdenom" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.division-by-var-both" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.division-by-var-zero" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.flip-negate-one-side" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.minus-minus" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.multiply-forget-one" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.multiply-one-side" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.negate-all" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.negate-one-side" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.plus" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.priority-times" buggy="true" rewriterule="false"/>
-    <elem name="algebra.equations.buggy.square-multiplication" buggy="true" rewriterule="true"/>
-    <elem name="algebra.equations.coverup.negate" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.coverup.numerator" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.coverup.onevar.minus-left" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.coverup.onevar.minus-right" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.coverup.onevar.plus" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.coverup.power" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.coverup.times" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.linear.distr-times" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.linear.flip" buggy="false" rewriterule="true"/>
-    <elem name="algebra.equations.linear.merge" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.abc" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.approx" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.cancel" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.common-factor" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.distr-div" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.distr-square" buggy="false" rewriterule="true"/>
-    <elem name="algebra.equations.quadratic.left-square" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.move-left" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.nice-factors" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.no-lin" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.prepare-split" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.product-zero" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.same-con-factor" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.same-factor" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.scale" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.simpler-poly" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.simpler-sqrt" buggy="false" rewriterule="false"/>
-    <elem name="algebra.equations.quadratic.square-both" buggy="false" rewriterule="true"/>
+    <elem name="algebra.equations.buggy.abc.minus-4ac" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.abc.minus-b" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.abc.one-solution" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.abc.two-a" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.cancel-minus" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.coverup.even-power" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.coverup.even-power-forget" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.coverup.even-power-too-early" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.coverup.square-minus" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.coverup.times-mul" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.coverup.times-with-plus" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.distr-square" buggy="true" arguments="0" rewriterule="true"/>
+    <elem name="algebra.equations.buggy.distr-square-forget" buggy="true" arguments="0" rewriterule="true"/>
+    <elem name="algebra.equations.buggy.distr-times-denom" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.distr-times-plus" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.distr-times-plus-forget" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.distr-times-plus-sign" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.distr-times-too-many" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.divide-negate" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.divide-numdenom" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.division-by-var-both" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.division-by-var-zero" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.flip-negate-one-side" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.minus-minus" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.multiply-forget-one" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.multiply-one-side" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.negate-all" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.negate-one-side" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.plus" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.priority-times" buggy="true" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.buggy.square-multiplication" buggy="true" arguments="0" rewriterule="true"/>
+    <elem name="algebra.equations.coverup.negate" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.coverup.numerator" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.coverup.onevar.minus-left" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.coverup.onevar.minus-right" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.coverup.onevar.plus" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.coverup.power" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.coverup.times" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.linear.distr-times" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.linear.flip" buggy="false" arguments="0" rewriterule="true"/>
+    <elem name="algebra.equations.linear.merge" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.abc" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.approx" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.cancel" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.common-factor" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.distr-div" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.distr-square" buggy="false" arguments="0" rewriterule="true"/>
+    <elem name="algebra.equations.quadratic.left-square" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.move-left" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.nice-factors" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.no-lin" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.prepare-split" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.product-zero" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.same-con-factor" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.same-factor" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.scale" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.simpler-poly" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.simpler-sqrt" buggy="false" arguments="0" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.square-both" buggy="false" arguments="0" rewriterule="true"/>
   </list>
 </reply>
 

@@ -111,7 +111,7 @@ envMonadRefsIO monad =
       r :? _   -> return [Some r]
       _        -> return []
  where
-   (++++) = liftM2 (++)
+   a ++++ b = liftM2 (++) (safeIO a) (safeIO b)
 
 envMonadFunctionRefsIO :: (a -> EnvMonad b) -> IO [Some Ref]
 envMonadFunctionRefsIO = safeIO . envMonadRefsIO . ($ error "catch me")

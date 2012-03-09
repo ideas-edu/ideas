@@ -210,7 +210,7 @@ rulelistS = makeService "rulelist"
    \name (or identifier), whether the rule is buggy, and whether the rule was \
    \expressed as an observable rewrite rule. See rulesinfo for more details \
    \about the rules." $
-   allRules ::: Exercise :-> listType (tuple3 (Tag "name" String) (Tag "buggy" Bool) (Tag "rewriterule" Bool))
+   allRules ::: Exercise :-> listType (tuple4 (Tag "name" String) (Tag "buggy" Bool) (Tag "arguments" Int) (Tag "rewriterule" Bool))
 
 rulesinfoS :: Service
 rulesinfoS = makeService "rulesinfo"
@@ -231,7 +231,7 @@ allExercises = map make . sortBy (comparing f)
    make (Some ex) =
       (showId ex, description ex, show (status ex))
 
-allRules :: Exercise a -> [(String, Bool, Bool)]
+allRules :: Exercise a -> [(String, Bool, Int, Bool)]
 allRules = map make . ruleset
  where
-   make r  = (showId r, isBuggy r, isRewriteRule r)
+   make r  = (showId r, isBuggy r, length $ getReferences r, isRewriteRule r)

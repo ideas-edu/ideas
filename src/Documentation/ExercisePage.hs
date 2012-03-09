@@ -82,13 +82,14 @@ exercisePage exampleFileExists ex = do
    let rs   = rulesInStrategy (strategy ex)
        goUp = up (length (qualifiers ex))
        f r  = [ link (goUp ++ ruleFile r) $ ttText (showId r)
+              , text $ show $ length $ getReferences r
               , text $ showBool $ isBuggy r
               , text $ showBool $ r `elem` rs
               , when (isRewriteRule r) $
                    ruleToHTML (Some ex) r
               ]
    table True
-      ( [ text "Rule name", text "Buggy"
+      ( [ text "Rule name", text "Args", text "Buggy"
         , text "Used", text "Rewrite rule"
         ]
       : map f (ruleset ex)

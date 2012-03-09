@@ -57,9 +57,14 @@ makeRulePages dir = do
 rulePage :: Exercise a -> ExampleMap a -> [Id] ->  Rule (Context a) -> HTMLBuilder
 rulePage ex exMap usedIn r = do
    idboxHTML "rule" (getId r)
-   let idList = text . intercalate ", " . map showId
+   let commas  = text . intercalate ", "
+       idList  = commas . map showId
+       refList = let f :: Some Ref -> String
+                     f (Some ref) = show ref
+                 in commas . map f . getReferences
    para $ table False
-      [ [bold $ text "Buggy", text $ showBool (isBuggy r)]
+      [ [bold $ text "Parameters", refList r]
+      , [bold $ text "Buggy", text $ showBool (isBuggy r)]
       , [bold $ text "Rewrite rule", text $ showBool (isRewriteRule r)]
       , [bold $ text "Siblings", idList $ ruleSiblings r]
       ]

@@ -501,6 +501,12 @@ checksForDerivation ex d = do
       ++ "  with  " ++ prettyPrinterContext ex y
       ++ "  using  " ++ show r
 
-   let xs = [ x | x <- terms d, not (similarity ex x x) ]
-   assertNull "self similarity" $ take 1 $ flip map xs $ \hd ->
-      "term not similar to itself: " ++ prettyPrinterContext ex hd
+   assertNull "self similarity" $ take 1 $ do 
+      x <- terms d
+      guard (not (similarity ex x x))
+      return $ "term not similar to itself: " ++ prettyPrinterContext ex x
+      
+   -- Parameters 
+   assertNull "parameters" $ take 1 $ do
+      (r, env) <- steps d
+      maybeToList (checkReferences r env)

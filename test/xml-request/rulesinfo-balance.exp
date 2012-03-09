@@ -1,0 +1,1853 @@
+<reply result="ok" version="1.0.6 (0)">
+  <rule name="algebra.equations.linear.balance.buggy.addbal1" buggy="true" rewriterule="false">
+    <description>
+      2.1.1.1: Links en rechts hetzelfde optellen; links +b en rechts -b
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal10" buggy="true" rewriterule="false">
+    <description>
+      2.1.1.4: Je telt er rechts {?} bij op, maar links trek je {?} er vanaf.
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal11" buggy="true" rewriterule="false">
+    <description>
+      2.1.3.3: Links en rechts hetzelfde optellen; rechts -b links niet(s)
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal12" buggy="true" rewriterule="false">
+    <description>
+      2.1.3.4: Links en rechts hetzelfde optellen; rechts +b en links niet(s)
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal13" buggy="true" rewriterule="false">
+    <description>
+      2.1.3.5: Links en rechts hetzelfde optellen; links -ax rechts niet(s)
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal14" buggy="true" rewriterule="false">
+    <description>
+      2.1.3.6: Links en rechts hetzelfde optellen; links +ax en rechts niet(s)
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal15" buggy="true" rewriterule="false">
+    <description>
+      2.1.3.7: Links en rechts hetzelfde optellen; rechts -ax links niet(s)
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal16" buggy="true" rewriterule="false">
+    <description>
+      2.1.3.8: Links en rechts hetzelfde optellen; rechts +ax en links niet(s)
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal2" buggy="true" rewriterule="false">
+    <description>
+      2.1.1.2: Links en rechts hetzelfde optellen; links -b en rechts +b
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal3" buggy="true" rewriterule="false">
+    <description>
+      2.1.2.1: Links en rechts hetzelfde optellen; links +cx en rechts -cx
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal4" buggy="true" rewriterule="false">
+    <description>
+      2.1.2.2: Links en rechts hetzelfde optellen; links -cx en rechts +cx
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal5" buggy="true" rewriterule="false">
+    <description>
+      2.1.3.1: Links en rechts hetzelfde optellen; links -b rechts niet(s)
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal6" buggy="true" rewriterule="false">
+    <description>
+      2.1.3.2: Links en rechts hetzelfde optellen; links +b en rechts niet(s)
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal7" buggy="true" rewriterule="false">
+    <description>
+      2.1.4.1: Links en rechts hetzelfde optellen; links -ax en rechts +ax
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal8" buggy="true" rewriterule="false">
+    <description>
+      2.1.4.2: Links en rechts hetzelfde optellen; links -cx en rechts +cx
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.addbal9" buggy="true" rewriterule="false">
+    <description>
+      2.1.1.3: Je trekt er rechts {?} vanaf, maar links tel je {?} erbij op.
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.flip1" buggy="true" rewriterule="false">
+    <description>
+      2.0.1: Links en rechts alleen maar verwisseld?
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.misc1" buggy="true" rewriterule="false">
+    <description>
+      3.1.1: Doe je wat je wilt doen?
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.misc2" buggy="true" rewriterule="false">
+    <description>
+      3.2.1: Doe je wat je wilt doen? vermenigvuldig de hele linkerkant met p
+    </description>
+    <argument>
+      factor
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.misc3" buggy="true" rewriterule="false">
+    <description>
+      3.2.2: Doe je wat je wilt doen? neem het tegengestelde van de hele linkerkant
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.misc4" buggy="true" rewriterule="false">
+    <description>
+      3.2.3: Doe je wat je wilt doen? Deel de hele linkerkant door p
+    </description>
+    <argument>
+      factor
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.mulbal1" buggy="true" rewriterule="false">
+    <description>
+      2.2.1: Links en rechts hetzelfde vermenigvuldigen; verkeerd om gedeeld
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.mulbal2" buggy="true" rewriterule="false">
+    <description>
+      2.2.2: Links en rechts hetzelfde vermenigvuldigen; links *a; rechts *b
+    </description>
+    <argument>
+      factor1
+    </argument>
+    <argument>
+      factor2
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.mulbal3" buggy="true" rewriterule="false">
+    <description>
+      2.2.3.1: Links en rechts hetzelfde vermenigvuldigen; links *p, rechts niet (of andersom)
+    </description>
+    <argument>
+      factor
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.mulbal4" buggy="true" rewriterule="false">
+    <description>
+      2.2.3.2: Links en rechts hetzelfde vermenigvuldigen; links /p, rechts niet
+    </description>
+    <argument>
+      factor
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.mulbal5" buggy="true" rewriterule="false">
+    <description>
+      2.2.3.3: Links en rechts hetzelfde vermenigvuldigen; links en rechts *-1
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.mulbal6" buggy="true" rewriterule="false">
+    <description>
+      2.2.7: Links en rechts hetzelfde vermenigvuldigen; een kant door p delen, andere kant niets
+    </description>
+    <argument>
+      factor
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.multiply1" buggy="true" rewriterule="false">
+    <description>
+      1.2.1: fout bij vermenigvuldigen
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.multiply2" buggy="true" rewriterule="false">
+    <description>
+      1.2.2: fout bij vermenigvuldigen
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.multiply3" buggy="true" rewriterule="false">
+    <description>
+      1.2.3.1: fout bij vermenigvuldigen; min raakt kwijt
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.multiply4" buggy="true" rewriterule="false">
+    <description>
+      1.2.3.2: fout bij vermenigvuldigen; min te veel
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.multiply5" buggy="true" rewriterule="false">
+    <description>
+      1.2.3.4: fout bij vermenigvuldigen; delen door negatief getal
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.par1" buggy="true" rewriterule="false">
+    <description>
+      1.3.1.1: fout bij haakjes wegwerken; haakjes staan er niet voor niets
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.par10" buggy="true" rewriterule="false">
+    <description>
+      1.3.7: fout bij haakjes wegwerken; denk aan 'voorrangsregels'
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.par11" buggy="true" rewriterule="false">
+    <description>
+      1.3.1.4: fout bij haakjes wegwerken met unaire min; haakjes staan er niet voor niets
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.par2" buggy="true" rewriterule="false">
+    <description>
+      1.3.1.2: fout bij haakjes wegwerken; haakjes staan er niet voor niets
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.par4" buggy="true" rewriterule="false">
+    <description>
+      1.3.2.1: fout bij haakjes wegwerken; haakjes goed uitwerken
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.par5" buggy="true" rewriterule="false">
+    <description>
+      1.3.2.2: fout bij haakjes wegwerken; haakjes goed uitwerken
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.par6" buggy="true" rewriterule="false">
+    <description>
+      1.3.3: fout bij haakjes wegwerken; haakjes goed uitwerken
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.par7" buggy="true" rewriterule="false">
+    <description>
+      1.3.4: fout bij haakjes wegwerken; haakjes goed uitwerken
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.par8" buggy="true" rewriterule="false">
+    <description>
+      1.3.5: fout bij haakjes wegwerken; kijk goed waar de haakjes staan
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.buggy.par9" buggy="true" rewriterule="false">
+    <description>
+      1.3.6: fout bij haakjes wegwerken; haakjes goed uitwerken
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.calculate" buggy="false" rewriterule="false">
+    <description>
+      algebra.equations.linear.balance.calculate
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.collect" buggy="false" rewriterule="false">
+    <description>
+      algebra.equations.linear.balance.collect
+    </description>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="minus"/>
+              <OMA>
+                <OMS cd="arith1" name="times"/>
+                <OMI>
+                  4
+                </OMI>
+                <OMV name="x"/>
+              </OMA>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              2
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="plus"/>
+              <OMI>
+                12
+              </OMI>
+              <OMA>
+                <OMS cd="arith1" name="times"/>
+                <OMI>
+                  5
+                </OMI>
+                <OMV name="x"/>
+              </OMA>
+            </OMA>
+            <OMI>
+              5
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                3
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              2
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMI>
+              7
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                5
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                16
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              6
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="plus"/>
+              <OMA>
+                <OMS cd="arith1" name="unary_minus"/>
+                <OMA>
+                  <OMS cd="arith1" name="times"/>
+                  <OMI>
+                    3
+                  </OMI>
+                  <OMV name="x"/>
+                </OMA>
+              </OMA>
+              <OMA>
+                <OMS cd="arith1" name="times"/>
+                <OMI>
+                  6
+                </OMI>
+                <OMV name="x"/>
+              </OMA>
+            </OMA>
+            <OMI>
+              15
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                16
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              6
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                3
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              15
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="minus"/>
+              <OMA>
+                <OMS cd="arith1" name="times"/>
+                <OMI>
+                  2
+                </OMI>
+                <OMV name="x"/>
+              </OMA>
+              <OMA>
+                <OMS cd="arith1" name="times"/>
+                <OMI>
+                  3
+                </OMI>
+                <OMV name="x"/>
+              </OMA>
+            </OMA>
+            <OMI>
+              5
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="plus"/>
+              <OMI>
+                10
+              </OMI>
+              <OMA>
+                <OMS cd="arith1" name="times"/>
+                <OMI>
+                  5
+                </OMI>
+                <OMV name="x"/>
+              </OMA>
+            </OMA>
+            <OMI>
+              5
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              5
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMI>
+              5
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                5
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+  </rule>
+  <rule name="algebra.equations.linear.balance.con-left-minus" buggy="false" rewriterule="false">
+    <description>
+      algebra.equations.linear.balance.con-left-minus
+    </description>
+    <argument>
+      term
+    </argument>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMI>
+            17
+          </OMI>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMI>
+              4
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                10
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMI>
+            13
+          </OMI>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                10
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+  </rule>
+  <rule name="algebra.equations.linear.balance.con-left-plus" buggy="false" rewriterule="false">
+    <description>
+      algebra.equations.linear.balance.con-left-plus
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.con-right-minus" buggy="false" rewriterule="false">
+    <description>
+      algebra.equations.linear.balance.con-right-minus
+    </description>
+    <argument>
+      term
+    </argument>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                5
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              3
+            </OMI>
+          </OMA>
+          <OMI>
+            18
+          </OMI>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="times"/>
+            <OMI>
+              5
+            </OMI>
+            <OMV name="x"/>
+          </OMA>
+          <OMI>
+            15
+          </OMI>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMI>
+              19
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                3
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMI>
+              5
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                3
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMI>
+              24
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMI>
+              15
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                9
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+          </OMA>
+          <OMI>
+            6
+          </OMI>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                9
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMI>
+              9
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+  </rule>
+  <rule name="algebra.equations.linear.balance.con-right-plus" buggy="false" rewriterule="false">
+    <description>
+      algebra.equations.linear.balance.con-right-plus
+    </description>
+    <argument>
+      term
+    </argument>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                11
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              12
+            </OMI>
+          </OMA>
+          <OMI>
+            21
+          </OMI>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="times"/>
+            <OMI>
+              11
+            </OMI>
+            <OMV name="x"/>
+          </OMA>
+          <OMI>
+            33
+          </OMI>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                12
+              </OMI>
+            </OMA>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                5
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+          </OMA>
+          <OMI>
+            33
+          </OMI>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="times"/>
+            <OMI>
+              5
+            </OMI>
+            <OMV name="x"/>
+          </OMA>
+          <OMI>
+            45
+          </OMI>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                11
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              12
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMI>
+              34
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="times"/>
+            <OMI>
+              11
+            </OMI>
+            <OMV name="x"/>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMI>
+              22
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+  </rule>
+  <rule name="algebra.equations.linear.balance.distribute" buggy="false" rewriterule="false">
+    <description>
+      algebra.equations.linear.balance.distribute
+    </description>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="times"/>
+            <OMI>
+              4
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="minus"/>
+              <OMV name="x"/>
+              <OMI>
+                1
+              </OMI>
+            </OMA>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                11
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              12
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                4
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              4
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                11
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              12
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="times"/>
+            <OMI>
+              4
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="minus"/>
+              <OMV name="x"/>
+              <OMI>
+                4
+              </OMI>
+            </OMA>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="times"/>
+            <OMI>
+              5
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="plus"/>
+              <OMA>
+                <OMS cd="arith1" name="times"/>
+                <OMI>
+                  2
+                </OMI>
+                <OMV name="x"/>
+              </OMA>
+              <OMI>
+                1
+              </OMI>
+            </OMA>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                4
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              16
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                10
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              5
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="times"/>
+            <OMI>
+              2
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="minus"/>
+              <OMI>
+                5
+              </OMI>
+              <OMA>
+                <OMS cd="arith1" name="times"/>
+                <OMI>
+                  3
+                </OMI>
+                <OMV name="x"/>
+              </OMA>
+            </OMA>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMI>
+              6
+            </OMI>
+            <OMV name="x"/>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMI>
+              10
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                6
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMI>
+              6
+            </OMI>
+            <OMV name="x"/>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+  </rule>
+  <rule name="algebra.equations.linear.balance.div-to-fraction" buggy="false" rewriterule="false">
+    <description>
+      turn a division into a multiplication with a fraction
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.negate" buggy="false" rewriterule="true">
+    <description>
+      Remove negation on both sides of an equation
+    </description>
+    <CMP>
+      -a == -b ~&gt; a == b
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="relation1" name="eq"/>
+              <OMA>
+                <OMS cd="arith1" name="unary_minus"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMA>
+                <OMS cd="arith1" name="unary_minus"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="relation1" name="eq"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="algebra.equations.linear.balance.remove-div" buggy="false" rewriterule="false">
+    <description>
+      remove division
+    </description>
+    <argument>
+      factor
+    </argument>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMA>
+                <OMS cd="arith1" name="divide"/>
+                <OMI>
+                  1
+                </OMI>
+                <OMI>
+                  2
+                </OMI>
+              </OMA>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              4
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                2
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMA>
+              <OMS cd="extra" name="mixedfraction"/>
+              <OMI>
+                2
+              </OMI>
+              <OMI>
+                1
+              </OMI>
+              <OMI>
+                2
+              </OMI>
+            </OMA>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMV name="x"/>
+            <OMI>
+              8
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                4
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              5
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMA>
+                <OMS cd="arith1" name="divide"/>
+                <OMI>
+                  1
+                </OMI>
+                <OMI>
+                  4
+                </OMI>
+              </OMA>
+              <OMV name="x"/>
+            </OMA>
+            <OMA>
+              <OMS cd="arith1" name="divide"/>
+              <OMI>
+                1
+              </OMI>
+              <OMI>
+                2
+              </OMI>
+            </OMA>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMA>
+                <OMS cd="arith1" name="divide"/>
+                <OMI>
+                  5
+                </OMI>
+                <OMI>
+                  2
+                </OMI>
+              </OMA>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              2
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMV name="x"/>
+            <OMI>
+              2
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                10
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              8
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMA>
+                <OMS cd="arith1" name="divide"/>
+                <OMI>
+                  1
+                </OMI>
+                <OMI>
+                  4
+                </OMI>
+              </OMA>
+              <OMV name="x"/>
+            </OMA>
+            <OMA>
+              <OMS cd="arith1" name="divide"/>
+              <OMI>
+                3
+              </OMI>
+              <OMI>
+                4
+              </OMI>
+            </OMA>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                2
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMA>
+              <OMS cd="arith1" name="divide"/>
+              <OMI>
+                1
+              </OMI>
+              <OMI>
+                2
+              </OMI>
+            </OMA>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMV name="x"/>
+            <OMI>
+              3
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                8
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              2
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+  </rule>
+  <rule name="algebra.equations.linear.balance.scale-to-one" buggy="false" rewriterule="false">
+    <description>
+      algebra.equations.linear.balance.scale-to-one
+    </description>
+    <argument>
+      factor
+    </argument>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="times"/>
+            <OMI>
+              5
+            </OMI>
+            <OMV name="x"/>
+          </OMA>
+          <OMI>
+            15
+          </OMI>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMV name="x"/>
+          <OMI>
+            3
+          </OMI>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="times"/>
+            <OMI>
+              11
+            </OMI>
+            <OMV name="x"/>
+          </OMA>
+          <OMI>
+            33
+          </OMI>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMV name="x"/>
+          <OMI>
+            3
+          </OMI>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                3
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMI>
+              24
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMV name="x"/>
+          <OMI>
+            8
+          </OMI>
+        </OMA>
+      </OMOBJ>
+    </example>
+  </rule>
+  <rule name="algebra.equations.linear.balance.smart-div" buggy="false" rewriterule="false">
+    <description>
+      divide by common factor
+    </description>
+    <argument>
+      factor
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.var-left-minus" buggy="false" rewriterule="false">
+    <description>
+      algebra.equations.linear.balance.var-left-minus
+    </description>
+    <argument>
+      term
+    </argument>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                6
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              2
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                2
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              14
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                4
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              2
+            </OMI>
+          </OMA>
+          <OMI>
+            14
+          </OMI>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMI>
+              3
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                6
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                3
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              24
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMI>
+              3
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                3
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+          </OMA>
+          <OMI>
+            24
+          </OMI>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                5
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              7
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                2
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              10
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                3
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              7
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMI>
+              10
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+  </rule>
+  <rule name="algebra.equations.linear.balance.var-left-plus" buggy="false" rewriterule="false">
+    <description>
+      algebra.equations.linear.balance.var-left-plus
+    </description>
+    <argument>
+      term
+    </argument>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                2
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              8
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMI>
+              18
+            </OMI>
+            <OMV name="x"/>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                3
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              8
+            </OMI>
+          </OMA>
+          <OMI>
+            18
+          </OMI>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                4
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              7
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMA>
+                <OMS cd="arith1" name="times"/>
+                <OMI>
+                  5
+                </OMI>
+                <OMV name="x"/>
+              </OMA>
+            </OMA>
+            <OMI>
+              24
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                9
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+            <OMI>
+              7
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMI>
+              24
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMA>
+                <OMS cd="arith1" name="times"/>
+                <OMI>
+                  5
+                </OMI>
+                <OMV name="x"/>
+              </OMA>
+            </OMA>
+            <OMI>
+              6
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="arith1" name="minus"/>
+            <OMI>
+              2
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                3
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMA>
+                <OMS cd="arith1" name="times"/>
+                <OMI>
+                  2
+                </OMI>
+                <OMV name="x"/>
+              </OMA>
+            </OMA>
+            <OMI>
+              6
+            </OMI>
+          </OMA>
+          <OMI>
+            2
+          </OMI>
+        </OMA>
+      </OMOBJ>
+    </example>
+  </rule>
+  <rule name="algebra.equations.linear.balance.var-right-minus" buggy="false" rewriterule="false">
+    <description>
+      algebra.equations.linear.balance.var-right-minus
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.balance.var-right-plus" buggy="false" rewriterule="false">
+    <description>
+      algebra.equations.linear.balance.var-right-plus
+    </description>
+    <argument>
+      term
+    </argument>
+  </rule>
+  <rule name="algebra.equations.linear.flip" buggy="false" rewriterule="true">
+    <description>
+      flip equation
+    </description>
+    <CMP>
+      a == b ~&gt; b == a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="relation1" name="eq"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="relation1" name="eq"/>
+              <OMV name="$1"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <example>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMA>
+              <OMS cd="arith1" name="divide"/>
+              <OMI>
+                13
+              </OMI>
+              <OMI>
+                10
+              </OMI>
+            </OMA>
+          </OMA>
+          <OMV name="x"/>
+        </OMA>
+      </OMOBJ>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMV name="x"/>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMA>
+              <OMS cd="arith1" name="divide"/>
+              <OMI>
+                13
+              </OMI>
+              <OMI>
+                10
+              </OMI>
+            </OMA>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </example>
+  </rule>
+</reply>
+

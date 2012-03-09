@@ -244,6 +244,7 @@ xmlDecodeType b dec serviceType =
 useAttribute :: Type a t -> Maybe (t -> String)
 useAttribute String = Just id
 useAttribute Bool   = Just (map toLower . show)
+useAttribute Int    = Just show
 useAttribute _      = Nothing
 
 decodeState :: Monad m => Bool -> Exercise a -> (XML -> m a) -> XML -> m (State a)

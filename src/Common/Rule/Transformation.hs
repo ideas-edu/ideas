@@ -27,7 +27,7 @@ module Common.Rule.Transformation
    , makeTransLiftContext, makeTransLiftContext_
      -- * Using transformations
    , transApply, transApplyWith
-   , getRewriteRules, getReferences, isZeroTrans
+   , getRewriteRules, transReferences, isZeroTrans
    ) where
 
 import Common.Environment
@@ -191,12 +191,12 @@ getRewriteRules trans =
       Rewrite r -> [Some r]
       _         -> descendTrans getRewriteRules trans
       
-getReferences :: Trans a b -> [Some Ref]
-getReferences trans = 
+transReferences :: Trans a b -> [Some Ref]
+transReferences trans = 
    case trans of
       Ref r      -> [Some r]
       EnvMonad f -> envMonadFunctionRefs f
-      _          -> descendTrans getReferences trans
+      _          -> descendTrans transReferences trans
 
 isZeroTrans :: Trans a b -> Bool
 isZeroTrans = or . rec

@@ -16,7 +16,7 @@
 -----------------------------------------------------------------------------
 module Common.Rule.Abstract
    ( -- * Rule data type and accessors
-     Rule, transformation, recognizer
+     Rule, transformation, recognizer, getReferences, checkReferences
      -- * Constructor functions
    , makeRule, ruleMaybe, ruleList, ruleTrans, ruleRewrite
    , buggyRule, minorRule, rewriteRule, rewriteRules
@@ -27,18 +27,21 @@ module Common.Rule.Abstract
    , isRewriteRule, isRecognizer, doAfter
      -- * Recognizer
    , addRecognizer, addRecognizerBool
-   , addRecognizerList, addTransRecognizer
+   , addTransRecognizer, addRecognizerEnvMonad
    ) where
 
 import Common.Environment
 import Common.Classes
 import Common.Id
 import Common.Rewriting
+import Common.Rule.EnvironmentMonad
 import Common.Rule.Transformation
 import Common.Rule.Recognizer
+import Common.Utils
 import Common.View
 import Control.Arrow
 import Control.Monad
+import Data.List
 import Data.Monoid
 import Test.QuickCheck
 
@@ -96,6 +99,19 @@ instance (Arbitrary a, CoArbitrary a) => Arbitrary (Rule a) where
 
 transformation :: Rule a -> Transformation a
 transformation = getTrans
+
+getReferences :: Rule a -> [Some Ref]
+getReferences r = 
+   sortBy (\(Some x) (Some y) -> compareId (getId x) (getId y)) $
+   nubBy  (\(Some x) (Some y) -> getId x == getId y) $ 
+   transReferences (transformation r) ++ recognizerReferences (recognizer r)
+
+checkReferences :: Rule a -> Environment -> Maybe String
+checkReferences r env = do
+   let xs = map (\(Some a) -> getId a) (getReferences r)
+       ys = map getId (bindings env)
+   guard (xs /= ys)
+   return $ show r ++ " has " ++ show xs ++ " but produces " ++ show ys
 
 -----------------------------------------------------------
 --- Constructor functions
@@ -168,14 +184,13 @@ addRecognizer :: Recognizer a -> Rule a -> Rule a
 addRecognizer a r = r {getRecognizer = a `mappend` getRecognizer r}
 
 addRecognizerBool :: (a -> a -> Bool) -> Rule a -> Rule a
-addRecognizerBool eq = addRecognizer (makeRecognizerBool eq)
+addRecognizerBool eq = addRecognizer (makeRecognizer eq)
 
-addRecognizerList :: (a -> a -> [Environment]) -> Rule a -> Rule a
-addRecognizerList eq = addRecognizer (makeRecognizerList eq)
+addRecognizerEnvMonad :: (a -> a -> EnvMonad ()) -> Rule a -> Rule a
+addRecognizerEnvMonad = addRecognizer . makeRecognizerEnvMonad
 
 addTransRecognizer :: (a -> a -> Bool) -> Rule a -> Rule a
 addTransRecognizer eq r = flip addRecognizer r $ 
-   makeRecognizerList $ \a b -> do
-      (x, env) <- transApply (transformation r) a
-      guard (x `eq` b)
-      return env
+   let t = first (transformation r) >>> transList (uncurry p)
+       p x y = [ () | eq x y ] 
+   in makeRecognizerTrans t

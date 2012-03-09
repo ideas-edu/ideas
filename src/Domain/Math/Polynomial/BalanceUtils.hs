@@ -155,8 +155,7 @@ buggyBalanceExprRule = buggyRule . bugbal
 
 buggyBalanceRecognizer :: IsId n => n -> (a -> a -> EnvMonad ()) -> Rule a
 buggyBalanceRecognizer n p = 
-   let eq a b = execEnvMonad (p a b) mempty
-   in addRecognizerList eq $ buggy $ emptyRule (bugbal n)
+   addRecognizerEnvMonad p $ buggy $ emptyRule (bugbal n)
 
 ------------------------------------------------------------
 -- Helpers

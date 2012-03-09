@@ -12,7 +12,6 @@
 module Common.Rule.Recognizer
    ( -- * data type and type class
      Recognizable(..), Recognizer
-   , recognizerReferences
      -- * Constructor functions
    , makeRecognizer, makeRecognizerEnvMonad, makeRecognizerTrans
    ) where
@@ -22,7 +21,6 @@ import Common.Rule.EnvironmentMonad
 import Common.Rule.Transformation
 import Common.Id
 import Common.View
-import Common.Utils
 import Control.Monad
 import Data.Maybe
 import Data.Monoid
@@ -54,8 +52,8 @@ instance Monoid (Recognizer a) where
 instance Recognizable Recognizer where
    recognizer = id
 
-recognizerReferences :: Recognizer a -> [Some Ref]
-recognizerReferences = transReferences . unR
+instance HasRefs (Recognizer a) where
+   allRefs = allRefs . unR
 
 -----------------------------------------------------------
 --- Constructor functions

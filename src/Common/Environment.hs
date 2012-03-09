@@ -20,7 +20,7 @@ module Common.Environment
    , fromBinding, showValue, getTermValue
      -- * Heterogeneous environment
    , Environment, makeEnvironment, singleBinding
-   , HasEnvironment(..)
+   , HasEnvironment(..), HasRefs(..)
    , bindings, noBindings, (?)
    ) where
 
@@ -115,6 +115,9 @@ instance Monoid Environment where
    mempty = Env mempty
    mappend a b = Env (envMap a `mappend` envMap b) -- left has presedence
 
+instance HasRefs Environment where
+   allRefs env = [ Some ref | Binding ref _ <- bindings env ]
+
 makeEnvironment :: [Binding] -> Environment
 makeEnvironment xs = Env $ M.fromList [ (getId a, a) | a <- xs ]
 
@@ -138,6 +141,18 @@ class HasEnvironment env where
 -- local helper
 changeEnv :: HasEnvironment env => (Environment -> Environment) -> env -> env
 changeEnv f env = setEnvironment (f (environment env)) env
+
+class HasRefs a where
+   getRefs   :: a -> [Some Ref]
+   allRefs   :: a -> [Some Ref] -- with duplicates
+   getRefIds :: a -> [Id]
+   -- default implementation
+   getRefIds a = [ getId r | Some r <- getRefs a]
+   getRefs = sortBy cmp . nubBy eq . allRefs
+    where
+      cmp :: Some Ref -> Some Ref -> Ordering
+      cmp (Some x) (Some y) = compareId (getId x) (getId y)
+      eq a b = cmp a b == EQ
 
 instance HasEnvironment Environment where
    environment    = id

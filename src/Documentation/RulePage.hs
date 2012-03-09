@@ -59,9 +59,7 @@ rulePage ex exMap usedIn r = do
    idboxHTML "rule" (getId r)
    let commas  = text . intercalate ", "
        idList  = commas . map showId
-       refList = let f :: Some Ref -> String
-                     f (Some ref) = show ref
-                 in commas . map f . getReferences
+       refList = commas . map show . getRefIds
    para $ table False
       [ [bold $ text "Parameters", refList r]
       , [bold $ text "Buggy", text $ showBool (isBuggy r)]

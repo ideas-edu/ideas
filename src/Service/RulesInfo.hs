@@ -41,7 +41,7 @@ rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
           txt   = if null descr then showId r else descr
       unless (null txt) $
          element "description" $ text txt
-      forM_ (getReferences r) $ \(Some a) -> 
+      forM_ (getRefs r) $ \(Some a) -> 
          element "argument" (text (show a))
       forM_ (ruleSiblings r) $ \s ->
          element "sibling" $ text $ showId s

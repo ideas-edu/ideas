@@ -234,4 +234,4 @@ allExercises = map make . sortBy (comparing f)
 allRules :: Exercise a -> [(String, Bool, Int, Bool)]
 allRules = map make . ruleset
  where
-   make r  = (showId r, isBuggy r, length $ getReferences r, isRewriteRule r)
+   make r  = (showId r, isBuggy r, length $ getRefs r, isRewriteRule r)

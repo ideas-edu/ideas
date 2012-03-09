@@ -82,7 +82,7 @@ exercisePage exampleFileExists ex = do
    let rs   = rulesInStrategy (strategy ex)
        goUp = up (length (qualifiers ex))
        f r  = [ link (goUp ++ ruleFile r) $ ttText (showId r)
-              , text $ show $ length $ getReferences r
+              , text $ show $ length $ getRefs r
               , text $ showBool $ isBuggy r
               , text $ showBool $ r `elem` rs
               , when (isRewriteRule r) $

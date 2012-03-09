@@ -16,7 +16,7 @@
 -----------------------------------------------------------------------------
 module Common.Rule.Abstract
    ( -- * Rule data type and accessors
-     Rule, transformation, recognizer, getReferences, checkReferences
+     Rule, transformation, recognizer, checkReferences
      -- * Constructor functions
    , makeRule, ruleMaybe, ruleList, ruleTrans, ruleRewrite
    , buggyRule, minorRule, rewriteRule, rewriteRules
@@ -37,11 +37,9 @@ import Common.Rewriting
 import Common.Rule.EnvironmentMonad
 import Common.Rule.Transformation
 import Common.Rule.Recognizer
-import Common.Utils
 import Common.View
 import Control.Arrow
 import Control.Monad
-import Data.List
 import Data.Monoid
 import Test.QuickCheck
 
@@ -97,19 +95,16 @@ instance (Arbitrary a, CoArbitrary a) => Arbitrary (Rule a) where
       make :: Bool -> Id -> (a -> Maybe a) -> Rule a
       make b n f = setMinor b $ makeRule n f
 
+instance HasRefs (Rule a) where
+   allRefs r = allRefs (transformation r) ++ allRefs (recognizer r)
+
 transformation :: Rule a -> Transformation a
 transformation = getTrans
 
-getReferences :: Rule a -> [Some Ref]
-getReferences r = 
-   sortBy (\(Some x) (Some y) -> compareId (getId x) (getId y)) $
-   nubBy  (\(Some x) (Some y) -> getId x == getId y) $ 
-   transReferences (transformation r) ++ recognizerReferences (recognizer r)
-
 checkReferences :: Rule a -> Environment -> Maybe String
 checkReferences r env = do
-   let xs = map (\(Some a) -> getId a) (getReferences r)
-       ys = map getId (bindings env)
+   let xs = getRefIds r
+       ys = getRefIds env
    guard (xs /= ys)
    return $ show r ++ " has " ++ show xs ++ " but produces " ++ show ys
 

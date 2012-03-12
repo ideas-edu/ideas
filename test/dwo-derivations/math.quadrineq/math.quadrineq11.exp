@@ -1,11 +1,11 @@
-<reply result="ok" version="1.0.3 (0)">
+<reply result="ok" version="1.0.7 (0)">
   <list>
     <elem ruleid="algebra.inequalities.to-equation">
       <expr>
         4*x^2+6*x == x^2+3*x+18
       </expr>
       <context>
-        <item name="clipboard" value="[ineq == (4*x^2+6*x < x^2+3*x+18)]"/>
+        <item name="clipboard" value="[ineq == (4*x^2+6*x &lt; x^2+3*x+18)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.move-left">
@@ -13,7 +13,7 @@
         3*x^2+3*x-18 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[ineq == (4*x^2+6*x < x^2+3*x+18)]"/>
+        <item name="clipboard" value="[ineq == (4*x^2+6*x &lt; x^2+3*x+18)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.simpler-poly">
@@ -21,7 +21,7 @@
         x^2+x-6 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[ineq == (4*x^2+6*x < x^2+3*x+18)]"/>
+        <item name="clipboard" value="[ineq == (4*x^2+6*x &lt; x^2+3*x+18)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
@@ -29,7 +29,7 @@
         (x-2)*(x+3) == 0
       </expr>
       <context>
-        <item name="clipboard" value="[ineq == (4*x^2+6*x < x^2+3*x+18)]"/>
+        <item name="clipboard" value="[ineq == (4*x^2+6*x &lt; x^2+3*x+18)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.equations.quadratic.product-zero">
@@ -37,7 +37,7 @@
         x == 2 or x == -3
       </expr>
       <context>
-        <item name="clipboard" value="[ineq == (4*x^2+6*x < x^2+3*x+18)]"/>
+        <item name="clipboard" value="[ineq == (4*x^2+6*x &lt; x^2+3*x+18)]"/>
       </context>
     </elem>
     <elem ruleid="algebra.inequalities.give-solution">

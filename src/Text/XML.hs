@@ -136,7 +136,15 @@ attribute :: Attr -> XMLBuilder
 attribute = XMLBuilder . modify . appendAttrBS
 
 (.=.) :: String -> String -> XMLBuilder
-n .=. s = attribute (n := s)
+n .=. s = attribute (n := escapeAttr s)
+
+escapeAttr :: String -> String
+escapeAttr = concatMap f
+ where 
+   f '<' = "&lt;"
+   f '&' = "&amp;"
+   f '"' = "&quot;"
+   f c   = [c]
 
 builder :: Element -> XMLBuilder
 builder = XMLBuilder . modify . appendElemBS . Right

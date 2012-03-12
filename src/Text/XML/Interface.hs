@@ -19,7 +19,6 @@ module Text.XML.Interface
 
 import Control.Arrow
 import Data.Char (chr, ord)
-import Data.Maybe
 import Text.Parsing (parseSimple)
 import Text.XML.Document (Name)
 import Text.XML.Parser (document)
@@ -62,19 +61,21 @@ normalize doc = toElement (D.root doc)
 
    refToString :: D.Reference -> String
    refToString (D.CharRef i)   = [chr i]
-   refToString (D.EntityRef _) = "" -- error
+   refToString (D.EntityRef s) = maybe "" return (lookup s general)
+      
 
    refToContent :: D.Reference -> Content
    refToContent (D.CharRef i)   = [Left [chr i]]
-   refToContent (D.EntityRef s) =
-      fromJust (lookup s entities)
+   refToContent (D.EntityRef s) = maybe [] id (lookup s entities)
 
    entities :: [(String, Content)]
    entities =
       [ (n, toContent (snd ext)) | (n, ext) <- D.externals doc ] ++
       -- predefined entities
-      map (second (return . Left . return))
-         [("lt",'<'), ("gt",'>'), ("amp",'&'), ("apos",'\''), ("quot",'"')]
+      map (second (return . Left . return)) general
+
+   general :: [(String, Char)]
+   general = [("lt",'<'), ("gt",'>'), ("amp",'&'), ("apos",'\''), ("quot",'"')]
 
    merge :: Content -> Content
    merge (Left s:Left t:rest) = merge (Left (s++t) : rest)

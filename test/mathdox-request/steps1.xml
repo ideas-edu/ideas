@@ -1,5 +1,5 @@
 <request service="stepsremaining" exerciseid="linearalgebra.gaussianelim" source="test">
-  <state><OMOBJ xmlns="..." version="2.0" cdbase="...">
+  <state><OMOBJ version="2.0">
     <OMA><OMS cd="linalg2" name="matrix"/>
          <OMA><OMS cd="linalg2" name="matrixrow"/>
               <OMI>2</OMI><OMI>3</OMI><OMI>1</OMI>

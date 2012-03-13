@@ -1,6 +1,6 @@
 <request service="problemdecomposition" exerciseid="linearalgebra.gaussianelim" source="test">
   <location>Gaussian elimination</location>
-  <state><OMOBJ xmlns="..." version="2.0" cdbase="...">
+  <state><OMOBJ version="2.0">
     <OMA><OMS cd="linalg2" name="matrix"/>
          <OMA><OMS cd="linalg2" name="matrixrow"/>
               <OMI>2</OMI><OMI>3</OMI><OMI>1</OMI>
@@ -10,7 +10,7 @@
          </OMA>
     </OMA></OMOBJ>
   </state>
-  <answer><OMOBJ xmlns="..." version="2.0" cdbase="...">
+  <answer><OMOBJ version="2.0">
     <OMA><OMS cd="linalg2" name="matrix"/>
          <OMA><OMS cd="linalg2" name="matrixrow"/>
               <OMI>1</OMI><OMI>0</OMI><OMI>2</OMI>

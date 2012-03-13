@@ -1,7 +1,6 @@
 <request service="derivation" exerciseid="math.derivative">
 <state>
 <prefix>[]</prefix>
-<context></context>
 <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" 
 cdbase="http://www.openmath.org/cd">
       <OMA>
@@ -18,5 +17,6 @@ cdbase="http://www.openmath.org/cd">
         </OMBIND>
       </OMA>
 </OMOBJ>
+<context></context>
 </state>
 </request>

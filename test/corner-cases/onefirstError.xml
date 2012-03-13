@@ -1,7 +1,7 @@
 <request service="onefirst" exerciseid="math.lineq" encoding="string">
 <state>
 <prefix>[]</prefix>
-<context></context>
 <expr>x == 3</expr>
+<context></context>
 </state>
 </request>

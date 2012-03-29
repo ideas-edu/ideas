@@ -1,0 +1,8 @@
+<request service="diagnose" exerciseid="algebra.equations.linear.balance" encoding="string" source="test">
+  <state>
+<expr>
+x == sqrt 9
+</expr>
+  </state>
+<expr> x == 3 </expr>
+</request>

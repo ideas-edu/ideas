@@ -1,0 +1,13 @@
+<reply result="ok" version="1.0.3 (0)">
+  <expected ready="true" ruleid="algebra.equations.linear.balance.calculate">
+    <state>
+      <prefix>
+        [6,0,0,0,1,0]
+      </prefix>
+      <expr>
+        x == 3
+      </expr>
+    </state>
+  </expected>
+</reply>
+

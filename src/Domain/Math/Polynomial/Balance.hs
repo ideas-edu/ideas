@@ -164,6 +164,7 @@ divideCommonFactor = doAfter (fmap distributeDiv) $
    supplyParameters divisionRule getArg
  where
    getArg (lhs :==: rhs)
+      | null xs               = fail "no factor"
       | all (/=0) ns && n > 1 = return (fromInteger n)
       | otherwise             = fail "no factor"
     where

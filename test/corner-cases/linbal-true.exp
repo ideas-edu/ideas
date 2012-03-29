@@ -1,0 +1,13 @@
+<reply result="ok" version="1.0.7 (0)">
+  <elem ruleid="algebra.equations.linear.balance.calculate" location="[]">
+    <state>
+      <prefix>
+        [6,0,0,0,1,0]
+      </prefix>
+      <expr>
+        true
+      </expr>
+    </state>
+  </elem>
+</reply>
+

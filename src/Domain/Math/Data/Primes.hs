@@ -101,9 +101,9 @@ coprime = rec `on` primeFactors
          GT -> rec xs yr
    rec _ _ = True
 
--- | All factors of a number
+-- | All factors of a (positive) number
 factors :: Int -> [Int]
-factors = sort . rec . primeFactors
+factors = sort . rec . primeFactors . abs
  where
    rec []     = [1]
    rec (x:xs) = [ a*b | b <- take n (powers x), a <- rec zs ]

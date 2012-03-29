@@ -37,7 +37,7 @@ type Factors = IM.IntMap Int
 toFactors :: Integer -> Factors
 toFactors a
    | a == 0    = IM.singleton 0 1
-   | otherwise = rec $ primeFactors $ fromInteger $ abs a
+   | otherwise = rec $ primeFactors $ abs $ fromInteger a
  where
    rec []     = IM.empty
    rec (x:xs) = IM.insert x (length ys + 1) (rec zs)

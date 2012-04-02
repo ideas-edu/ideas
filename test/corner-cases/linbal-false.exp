@@ -1,0 +1,23 @@
+<reply result="ok" version="1.0.9 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.balance.distribute">
+      <expr>
+        6*x+3 == 6*x+2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.var-left-minus">
+      <argument description="term">
+        6*x
+      </argument>
+      <expr>
+        3 == 2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.balance.intro-false">
+      <expr>
+        false
+      </expr>
+    </elem>
+  </list>
+</reply>
+

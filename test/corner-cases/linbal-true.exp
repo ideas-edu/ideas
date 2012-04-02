@@ -1,8 +1,8 @@
-<reply result="ok" version="1.0.7 (0)">
-  <elem ruleid="algebra.equations.linear.balance.calculate" location="[]">
+<reply result="ok" version="1.0.9 (0)">
+  <elem ruleid="algebra.equations.linear.balance.intro-true" location="[]">
     <state>
       <prefix>
-        [6,0,0,0,1,0]
+        [7,0,0,1,1,1,1,1,1,1,0,1,0,1,0,1,0]
       </prefix>
       <expr>
         true

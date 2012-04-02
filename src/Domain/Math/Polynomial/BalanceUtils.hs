@@ -72,7 +72,7 @@ matchPlusCon expr =
 -- Strategy
 
 cleaner :: WithBool (Equation Expr) -> WithBool (Equation Expr)
-cleaner = join . fmap (trivial . fmap cleanerExpr)
+cleaner = fmap (fmap cleanerExpr)
 
 cleanerExpr :: Expr -> Expr
 cleanerExpr = transform f -- no fixpoint is needed
@@ -103,6 +103,7 @@ adjacent f = rec
          Nothing -> x:rec (y:rest)
    rec xs = xs
 
+{-
 trivial :: Equation Expr -> WithBool (Equation Expr)
 trivial eq@(lhs :==: rhs) =
    case (match rationalView lhs, match rationalView rhs) of
@@ -117,7 +118,7 @@ nonsense :: Expr -> Bool
 nonsense = any p . universe
  where
    p (_ :/: a) = maybe False (==0) (match rationalView a)
-   p _         = False
+   p _         = False -}
 
 ------------------------------------------------------------
 -- References

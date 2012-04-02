@@ -57,7 +57,8 @@ balanceExercise = makeExercise
 
 balanceOrder :: [Id]
 balanceOrder =
-   [ getId removeDivision, getId collect
+   [ getId introTrue, getId introFalse
+   , getId removeDivision, getId collect
    , getId varRightMinus, getId varRightPlus
    , getId conLeftMinus, getId conLeftPlus
    , getId varLeftMinus, getId varLeftPlus   -- prefer variable to left
@@ -93,6 +94,7 @@ balanceStrategy = cleanUpStrategyAfter (applyTop cleaner) $
    <%> try (atomic (use (check conditionVarsRHS) <*> use flipEquation))
        -- divide by a common factor (but not as final "scale-to-one" step)
    <%> many (notS (use scaleToOne) <*> use divideCommonFactor)
+   <%> many (use introTrue <|> use introFalse)
  where
    -- move constants to left only if there are no variables on the left
    p1 = maybe False (either (const False) (hasNoVar . leftHandSide) . fromWithBool) . fromContext
@@ -265,6 +267,22 @@ distribute = makeRule (linbal, "distribute") $ checkForChange $
    f (a :-: (b :-: c)) = f (a-b+c)
    f (a :-: Negate b)  = f (a+b)
    f a = descend f a
+
+introTrue :: Rule (WithBool (Equation Expr))
+introTrue = makeRule (linbal, "intro-true") $ f . fromWithBool . cleaner
+ where
+   f (Right (lhs :==: rhs)) | lhs == rhs = Just true
+   f _ = Nothing
+
+introFalse :: Rule (WithBool (Equation Expr))
+introFalse = makeRule (linbal, "intro-false") $ f . fromWithBool . cleaner
+ where
+   f (Right (lhs :==: rhs)) = do
+      x <- match rationalView lhs
+      y <- match rationalView rhs
+      guard (x /= y)
+      return false
+   f _ = Nothing
 
 -- for debugging
 {-

@@ -1,4 +1,4 @@
-<reply result="ok" version="1.0.6 (0)">
+<reply result="ok" version="1.0.9 (0)">
   <rule name="algebra.equations.linear.balance.buggy.addbal1" buggy="true" rewriterule="false">
     <description>
       2.1.1.1: Links en rechts hetzelfde optellen; links +b en rechts -b
@@ -1041,6 +1041,16 @@
   <rule name="algebra.equations.linear.balance.div-to-fraction" buggy="false" rewriterule="false">
     <description>
       turn a division into a multiplication with a fraction
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.intro-false" buggy="false" rewriterule="false">
+    <description>
+      algebra.equations.linear.balance.intro-false
+    </description>
+  </rule>
+  <rule name="algebra.equations.linear.balance.intro-true" buggy="false" rewriterule="false">
+    <description>
+      algebra.equations.linear.balance.intro-true
     </description>
   </rule>
   <rule name="algebra.equations.linear.balance.negate" buggy="false" rewriterule="true">

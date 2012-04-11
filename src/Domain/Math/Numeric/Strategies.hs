@@ -12,6 +12,7 @@
 module Domain.Math.Numeric.Strategies
    ( naturalStrategy, integerStrategy
    , rationalStrategy, fractionStrategy
+   , fractionLiberalStrategy
    ) where
 
 import Common.Library
@@ -70,8 +71,28 @@ fractionStrategy = label "simplify" $
         -- <|> use (calcDivisionWith "integer" integerNF)  -- not needed?
          ) |>
       somewhere
+         (use fractionTimesCancelDenNom <|> use fractionTimesCancelNomDen) |>
+      somewhere
          (  use doubleNegate <|> use negateZero <|> use divisionDenominator
         <|> use fractionPlus <|> use fractionTimes <|> use divisionNumerator
          ) |>
       somewhere (use fractionPlusScale) |>
       somewhere (use simplerFraction)
+
+fractionLiberalStrategy :: LabeledStrategy (Context Expr)
+fractionLiberalStrategy = label "simplify" $
+   repeatS $
+      somewhere
+         (  use (calcPlusWith     "integer" integerNF)
+        <|> use (calcMinusWith    "integer" integerNF)
+        <|> use (calcTimesWith    "integer" integerNF) -- not needed?
+        <|> use doubleNegate 
+        <|> use negateZero 
+        <|> use divisionDenominator
+        <|> use fractionPlus 
+        <|> use fractionTimes 
+        <|> use divisionNumerator
+        <|> use fractionPlusScale
+        <|> use simplerFraction
+        -- <|> use (calcDivisionWith "integer" integerNF)  -- not needed?
+         )

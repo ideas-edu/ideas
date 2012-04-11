@@ -161,3 +161,23 @@ fractionTimes = makeRule (alg, "fraction-times") f
       (c, d)   <- matchM fractionForm e2 `mplus` liftM (\n -> (n, 1)) (matchM integerNF e2)
       return (build fractionForm (a*c, b*d))
    f _ = Nothing
+
+fractionTimesCancelNomDen :: Rule Expr
+fractionTimesCancelNomDen = makeRule (alg, "fraction-times-cancel-denominator-nominator") f
+ where
+   f (e1 :*: e2) = do
+      (a, b)   <- matchM fractionForm e1 `mplus` liftM (\n -> (n, 1)) (matchM integerNF e1)
+      (c, d)   <- matchM fractionForm e2 `mplus` liftM (\n -> (n, 1)) (matchM integerNF e2)
+      guard (a==d)
+      return (build fractionForm (c, b))
+   f _ = Nothing
+
+fractionTimesCancelDenNom :: Rule Expr
+fractionTimesCancelDenNom = makeRule (alg, "fraction-times-cancel-nominator-denominator") f
+ where
+   f (e1 :*: e2) = do
+      (a, b)   <- matchM fractionForm e1 `mplus` liftM (\n -> (n, 1)) (matchM integerNF e1)
+      (c, d)   <- matchM fractionForm e2 `mplus` liftM (\n -> (n, 1)) (matchM integerNF e2)
+      guard (b==c)
+      return (build fractionForm (a, d))
+   f _ = Nothing

@@ -44,6 +44,7 @@ exerciseList =
    -- , Some integerExercise
    -- , Some rationalExercise
      Some fractionExercise
+   , Some fractionLiberalExercise
    , Some coverUpExercise
    , Some linearExercise
    , Some linearMixedExercise

@@ -12,10 +12,12 @@
 module Domain.Math.Numeric.Exercises
    ( naturalExercise, integerExercise
    , rationalExercise, fractionExercise
+   , fractionLiberalExercise
    ) where
 
 import Common.Library
 import Domain.Math.Expr
+import Domain.Math.Numeric.Examples
 import Domain.Math.Numeric.Generators
 import Domain.Math.Numeric.Strategies
 import Domain.Math.Numeric.Views
@@ -58,10 +60,24 @@ rationalExercise = (numericExercise rationalStrategy)
 
 fractionExercise :: Exercise Expr
 fractionExercise = (numericExercise fractionStrategy)
-   { exerciseId     = describe "simplify expression (fractions)" $
+   { exerciseId     = describe "simplify fractions" $
                          newId "arithmetic.fractions"
+   , status         = Provisional
    , ready          = predicateView rationalNF
-   , randomExercise = simpleGenerator (rationalGenerator 5)
+   , examples       = fractionExamples
+   , strategy       = fractionStrategy
+--   , randomExercise = simpleGenerator (rationalGenerator 5) -- JJ: This is not a very good random generator for fraction exercises.
+   }
+
+fractionLiberalExercise :: Exercise Expr
+fractionLiberalExercise = (numericExercise fractionLiberalStrategy)
+   { exerciseId     = describe "simplify fractions liberally" $
+                         newId "arithmetic.fractions.liberal"
+   , status         = Provisional
+   , ready          = predicateView rationalNF
+   , examples       = fractionExamples
+   , strategy       = fractionStrategy
+--   , randomExercise = simpleGenerator (rationalGenerator 5) -- JJ: This is not a very good random generator for fraction exercises.
    }
 
 calculateResults :: [[Expr]]

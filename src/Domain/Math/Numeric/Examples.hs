@@ -13,6 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Numeric.Examples
    ( fractionExamples
+   , fractionLiberalExamples
    ) where
 
 import Common.Exercise
@@ -31,3 +32,10 @@ fractionExamples =
       , 18/(4/5-1/2) -- VWO A, Sep 2010
       ]
 
+fractionLiberalExamples :: Examples Expr
+fractionLiberalExamples =
+   level Easy 
+      [ 3/5 + 1/3
+      , 1/2 + 2/4
+      , 3/2 + 2/3
+      , 7/11 + 3/11 ]

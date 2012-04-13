@@ -86,13 +86,15 @@ fractionLiberalStrategy = label "simplify" $
          (  use (calcPlusWith     "integer" integerNF)
         <|> use (calcMinusWith    "integer" integerNF)
         <|> use (calcTimesWith    "integer" integerNF) -- not needed?
+        -- <|> use (calcDivisionWith "integer" integerNF) -- not needed?
+        <|> use fractionTimesCancelDenNom 
+        <|> use fractionTimesCancelNomDen
         <|> use doubleNegate 
         <|> use negateZero 
         <|> use divisionDenominator
         <|> use fractionPlus 
-        <|> use fractionTimes 
-        <|> use divisionNumerator
+        <|> use fractionTimes  
+        <|> use divisionNumerator 
         <|> use fractionPlusScale
-        <|> use simplerFraction
-        -- <|> use (calcDivisionWith "integer" integerNF)  -- not needed?
+        <|> use simplerFraction 
          )

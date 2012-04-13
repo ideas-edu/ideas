@@ -163,7 +163,7 @@ fractionForm :: View Expr (Integer, Integer)
 fractionForm = "num.fraction-form" @> makeView f g
  where
    f = match (divView >>> integerNF *** integerNF)
-   g (a, b) = fromInteger a :/: fromInteger b
+   g (a, b) = fromInteger a ./. fromInteger b
 
 rationalRelaxedForm :: View Expr Rational
 rationalRelaxedForm = "num.rational-relaxed" @> makeView (optionNegate f) fromRational

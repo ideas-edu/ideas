@@ -75,8 +75,8 @@ fractionLiberalExercise = (numericExercise fractionLiberalStrategy)
                          newId "arithmetic.fractions.liberal"
    , status         = Provisional
    , ready          = predicateView rationalNF
-   , examples       = fractionExamples
-   , strategy       = fractionStrategy
+   , examples       = fractionLiberalExamples
+   , strategy       = fractionLiberalStrategy
 --   , randomExercise = simpleGenerator (rationalGenerator 5) -- JJ: This is not a very good random generator for fraction exercises.
    }
 

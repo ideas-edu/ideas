@@ -24,7 +24,7 @@ import Common.Utils.Uniplate
 import Data.Char
 import Data.List
 import Data.Maybe
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 
 newtype Script = S { scriptDecls :: [Decl] }
 

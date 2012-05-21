@@ -33,7 +33,7 @@ import Common.Algebra.Law
 import Control.Applicative (Applicative)
 import Control.Monad (liftM2)
 import Data.Foldable (Foldable)
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Data.Traversable (Traversable)
 
 --------------------------------------------------------

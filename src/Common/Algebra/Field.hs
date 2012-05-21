@@ -224,7 +224,7 @@ instance Num a => Num (SafeNum a) where
    signum = liftM signum
    fromInteger = return . fromInteger
 
-instance Fractional a => Fractional (SafeNum a) where
+instance (Eq a, Fractional a) => Fractional (SafeNum a) where
    a / b = liftM2 (/) a (safeDivisor b)
    recip = liftM recip . safeDivisor
    fromRational = return . fromRational
@@ -239,11 +239,11 @@ instance Num a => Ring (SafeNum a) where
    plusInverse = negate
    (<->)       = (-)
 
-instance Fractional a => Field (SafeNum a) where
+instance (Eq a, Fractional a) => Field (SafeNum a) where
    timesInverse = recip
    (</>)        = (/)
 
-safeDivisor :: Num a => SafeNum a -> SafeNum a
+safeDivisor :: (Eq a, Num a) => SafeNum a -> SafeNum a
 safeDivisor m = m >>= \a ->
    if a == 0 then fail "division by zero" else return a
 

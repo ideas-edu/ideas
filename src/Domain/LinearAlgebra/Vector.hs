@@ -152,22 +152,22 @@ liftV2 op v1 v2 = fromList $ zipWith op (toList v1) (toList v2)
 toUnit :: Floating a => Vector a -> Vector a
 toUnit v = scale (1 / norm v) v
 
-isUnit :: Floating a => Vector a -> Bool
+isUnit :: (Eq a,Floating a) => Vector a -> Bool
 isUnit v = norm v == 1
 
-isZero :: Num a => Vector a -> Bool
+isZero :: (Eq a,Num a) => Vector a -> Bool
 isZero = all (==0) . toList
 
 makeOrthogonal :: Num a => Vector a -> Vector a -> Vector a
 makeOrthogonal v1 v2 = v2 - scale (innerProduct v1 v2) v1
 
-orthogonal :: Num a => Vector a -> Vector a -> Bool
+orthogonal :: (Eq a,Num a) => Vector a -> Vector a -> Bool
 orthogonal v1 v2 = innerProduct v1 v2 == 0
 
 scale :: Num a => a -> Vector a -> Vector a
 scale a = liftV (*a)
 
-orthonormalList :: Floating a => [Vector a] -> Bool
+orthonormalList :: (Eq a,Floating a) => [Vector a] -> Bool
 orthonormalList xs = all isUnit xs && all (uncurry orthogonal) pairs
  where
    pairs = [ (a, b) | (i, a) <- zip [0::Int ..] xs, (j, b) <- zip [0..] xs, i < j ]

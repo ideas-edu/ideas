@@ -96,7 +96,7 @@ polyViewWith v = polyView >>> second (traverseView v)
 quadraticView :: View Expr (String, Expr, Expr, Expr)
 quadraticView = quadraticViewWith identity
 
-quadraticViewWith :: Fractional a => View Expr a -> View Expr (String, a, a, a)
+quadraticViewWith :: (Eq a,Fractional a) => View Expr a -> View Expr (String, a, a, a)
 quadraticViewWith v = polyViewWith v >>> second quadraticPolyView >>> (f <-> g)
  where
    f (s, (a, b, c)) = (s, a, b, c)
@@ -108,7 +108,7 @@ quadraticViewWith v = polyViewWith v >>> second quadraticPolyView >>> (f <-> g)
 linearView :: View Expr (String, Expr, Expr)
 linearView = linearViewWith identity
 
-linearViewWith :: Fractional a => View Expr a -> View Expr (String, a, a)
+linearViewWith :: (Eq a,Fractional a) => View Expr a -> View Expr (String, a, a)
 linearViewWith v = polyViewWith v >>> second linearPolyView >>> (f <-> g)
  where
    f (s, (a, b)) = (s, a, b)
@@ -117,35 +117,35 @@ linearViewWith v = polyViewWith v >>> second linearPolyView >>> (f <-> g)
 -------------------------------------------------------------------
 -- Views on polynomials (degree)
 
-constantPolyView :: Num a => View (Polynomial a) a
+constantPolyView :: (Eq a,Num a) => View (Polynomial a) a
 constantPolyView = makeView (isList1 . fromPolynomial) (buildList . list1)
 
-linearPolyView :: Num a => View (Polynomial a) (a, a)
+linearPolyView :: (Eq a,Num a) => View (Polynomial a) (a, a)
 linearPolyView = makeView (isList2 . fromPolynomial) (buildList . list2)
 
-quadraticPolyView :: Num a => View (Polynomial a) (a, a, a)
+quadraticPolyView :: (Eq a,Num a) => View (Polynomial a) (a, a, a)
 quadraticPolyView = makeView (isList3 . fromPolynomial) (buildList . list3)
 
-cubicPolyView :: Num a => View (Polynomial a) (a, a, a, a)
+cubicPolyView :: (Eq a,Num a) => View (Polynomial a) (a, a, a, a)
 cubicPolyView = makeView (isList4 . fromPolynomial) (buildList . list4)
 
 -------------------------------------------------------------------
 -- Views on polynomials (number of terms)
 
-monomialPolyView :: Num a => View (Polynomial a) (a, Int)
+monomialPolyView :: (Eq a,Num a) => View (Polynomial a) (a, Int)
 monomialPolyView = makeView (isList1 . terms) (buildPairs . list1)
 
-binomialPolyView :: Num a => View (Polynomial a) ((a, Int), (a, Int))
+binomialPolyView :: (Eq a,Num a) => View (Polynomial a) ((a, Int), (a, Int))
 binomialPolyView = makeView (isList2 . terms) (buildPairs . list2)
 
-trinomialPolyView :: Num a => View (Polynomial a) ((a, Int), (a, Int), (a, Int))
+trinomialPolyView :: (Eq a,Num a) => View (Polynomial a) ((a, Int), (a, Int), (a, Int))
 trinomialPolyView = makeView (isList3 . terms) (buildPairs . list3)
 
 -- helpers
-buildList :: Num a => [a] -> Polynomial a
+buildList :: (Eq a,Num a) => [a] -> Polynomial a
 buildList = buildPairs . flip zip [0..] . reverse
 
-buildPairs :: Num a => [(a, Int)] -> Polynomial a
+buildPairs :: (Eq a,Num a) => [(a, Int)] -> Polynomial a
 buildPairs as
    | null as   = 0
    | otherwise = sum (map f as)
@@ -180,7 +180,7 @@ isList4 :: [a] -> Maybe (a, a, a, a)
 isList4 [a, b, c, d] = Just (a, b, c, d)
 isList4 _            = Nothing
 
-terms :: Num a => Polynomial a -> [(a, Int)]
+terms :: (Eq a,Num a) => Polynomial a -> [(a, Int)]
 terms = filter ((/=0) . fst) . flip zip [0..] . reverse . fromPolynomial
 
 -------------------------------------------------------------------
@@ -191,7 +191,7 @@ listOfPowerFactors pv v =
    toView sumView >>> listView (powerFactorViewForWith pv v)
 
 -- Generalization
-polyForm :: Num a => Bool -> View Expr a -> View Expr (String, Polynomial a)
+polyForm :: (Eq a,Num a) => Bool -> View Expr a -> View Expr (String, Polynomial a)
 polyForm relaxed v = makeView f (uncurry g)
  where
    f e = do
@@ -201,18 +201,18 @@ polyForm relaxed v = makeView f (uncurry g)
       return (pv, buildPairs xs)
    g pv = build (listOfPowerFactors pv v) . reverse . terms
 
-polyNormalForm :: Num a => View Expr a -> View Expr (String, Polynomial a)
+polyNormalForm :: (Eq a,Num a) => View Expr a -> View Expr (String, Polynomial a)
 polyNormalForm = polyForm False
 
 -- relaxes the condition that all powers should be distinct
-polyRelaxedForm :: Num a => View Expr a -> View Expr (String, Polynomial a)
+polyRelaxedForm :: (Eq a,Num a) => View Expr a -> View Expr (String, Polynomial a)
 polyRelaxedForm = polyForm True
 
 -------------------------------------------------------------------
 -- Normal forms for equations
 
 -- Excludes equations such as 1==1 or 0==1
-linearEquationViewWith :: Fractional a => View Expr a -> View (Equation Expr) (String, a)
+linearEquationViewWith :: (Eq a,Fractional a) => View Expr a -> View (Equation Expr) (String, a)
 linearEquationViewWith v = makeView f g
  where
    f (lhs :==: rhs) = do

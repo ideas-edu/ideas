@@ -63,7 +63,7 @@ timesLM lm1@(LM m1 c1) lm2@(LM m2 c2)
    | M.null m2 = return $ fmap (*c2) lm1
    | otherwise = Nothing
 
-divLM :: Fractional a => LinearMap a -> LinearMap a -> Maybe (LinearMap a)
+divLM :: (Eq a,Fractional a) => LinearMap a -> LinearMap a -> Maybe (LinearMap a)
 divLM lm (LM m2 c2) = do
    guard (M.null m2 && c2 /= 0)
    return $ fmap (/c2) lm

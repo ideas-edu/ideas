@@ -242,7 +242,7 @@ matchDouble f expr =
 -------------------------------------------------------------------
 -- Helper functions
 
-optionNegate :: Num a => (Expr -> Maybe a) -> Expr -> Maybe a
+optionNegate :: (Eq a,Num a) => (Expr -> Maybe a) -> Expr -> Maybe a
 optionNegate f (Negate a) = do b <- f a; guard (b /= 0); return (negate b)
 optionNegate f a          = f a
 

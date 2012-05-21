@@ -50,23 +50,23 @@ type SqMap a = M.Map P.PrimeFactors a
 -- Primitive operations on maps
 
 -- re-establish invariants
-makeMap :: Num a => SqMap a -> SqMap a
+makeMap :: (Eq a,Num a) => SqMap a -> SqMap a
 makeMap = M.filter (/=0) . M.foldWithKey f M.empty
  where
    f k a m
       | a == 0    = m
       | otherwise = M.unionWith (+) (fmap (*a) (sqrtPF k)) m
 
-plusSqMap :: Num a => SqMap a -> SqMap a -> SqMap a
+plusSqMap :: (Eq a,Num a) => SqMap a -> SqMap a -> SqMap a
 plusSqMap m1 m2 = M.filter (/=0) (M.unionWith (+) m1 m2)
 
-minusSqMap :: Num a => SqMap a -> SqMap a -> SqMap a
+minusSqMap :: (Eq a,Num a) => SqMap a -> SqMap a -> SqMap a
 minusSqMap m1 m2 = m1 `plusSqMap` negateSqMap m2
 
 negateSqMap :: Num a => SqMap a -> SqMap a
 negateSqMap = fmap negate
 
-timesSqMap :: Num a => SqMap a -> SqMap a -> SqMap a
+timesSqMap :: (Eq a,Num a) => SqMap a -> SqMap a -> SqMap a
 timesSqMap m1 m2 =
    case (M.toList m1, M.toList m2) of
       ([], _) -> M.empty
@@ -78,7 +78,7 @@ timesSqMap m1 m2 =
              f i    = M.mapKeys (*i)
          in makeMap (M.foldWithKey op M.empty m2)
 
-recipSqMap :: Fractional a => SqMap a -> SqMap a
+recipSqMap :: (Eq a,Fractional a) => SqMap a -> SqMap a
 recipSqMap m =
    case M.toList m of
       []       -> error "SquareRoot: division by zero"
@@ -101,7 +101,7 @@ sqrtPF n
 -------------------------------------------------------------
 -- Type class instances
 
-instance Num a => Show (SquareRoot a) where
+instance (Show a,Eq a,Num a) => Show (SquareRoot a) where
    show (S isNeg m) = g (map f (M.toList m)) ++ imPart
     where
       f (n, a) = ( signum a == -1
@@ -122,7 +122,7 @@ instance Num a => Show (SquareRoot a) where
 instance Functor SquareRoot where
    fmap f (S b m) = S b (M.map f m)
 
-instance Num a => Num (SquareRoot a) where
+instance (Eq a,Num a) => Num (SquareRoot a) where
    S b1 m1 + S b2 m2 = S (b1 || b2) (plusSqMap  m1 m2)
    S b1 m1 - S b2 m2 = S (b1 || b2) (minusSqMap m1 m2)
    S b1 m1 * S b2 m2 = S (b1 || b2) (timesSqMap m1 m2)
@@ -133,16 +133,16 @@ instance Num a => Num (SquareRoot a) where
    abs    = error "abs not defined for square roots"
    signum = error "signum not defined for square roots"
 
-instance Fractional a => SafeDiv (SquareRoot a) where
+instance (Eq a,Fractional a) => SafeDiv (SquareRoot a) where
    safeDiv x y
       | y == 0    = Nothing
       | otherwise = Just (x/y)
 
-instance Fractional a => Fractional (SquareRoot a) where
+instance (Eq a,Fractional a) => Fractional (SquareRoot a) where
    recip (S b m) = S b (recipSqMap m)
    fromRational  = con . fromRational
 
-instance Fractional a => Arbitrary (SquareRoot a) where
+instance (Eq a,Fractional a) => Arbitrary (SquareRoot a) where
    arbitrary = sized $ \n -> do
       let make r1 r2 = fromRational r1 * sqrtRational r2
       i <- choose (0, 10)
@@ -173,7 +173,7 @@ fromSquareRoot a =
       []              -> Just 0
       _ -> Nothing
 
-con :: Num a => a -> SquareRoot a
+con :: (Eq a,Num a) => a -> SquareRoot a
 con a = S False (if a==0 then M.empty else M.singleton 1 a)
 
 sqrt :: Num a => Integer -> SquareRoot a
@@ -183,13 +183,13 @@ sqrt n
  where
    m = sqrtPF (fromIntegral (abs n))
 
-scale :: Num a => a -> SquareRoot a -> SquareRoot a
+scale :: (Eq a,Num a) => a -> SquareRoot a -> SquareRoot a
 scale a sr = if a==0 then 0 else fmap (*a) sr
 
 isqrt :: Integer -> Integer
 isqrt = (floor :: Double -> Integer) . Prelude.sqrt . fromInteger
 
-sqrtRational :: Fractional a => Rational -> SquareRoot a
+sqrtRational :: (Eq a,Fractional a) => Rational -> SquareRoot a
 sqrtRational r = scale (1/fromIntegral b) (sqrt (a*b))
  where
    (a, b) = (numerator r, denominator r)

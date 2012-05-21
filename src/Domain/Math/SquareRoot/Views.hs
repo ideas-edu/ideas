@@ -23,7 +23,7 @@ import Domain.Math.Safe
 squareRootView :: View Expr (SquareRoot Expr)
 squareRootView = squareRootViewWith identity
 
-squareRootViewWith :: Fractional a => View Expr a -> View Expr (SquareRoot a)
+squareRootViewWith :: (Eq a,Fractional a) => View Expr a -> View Expr (SquareRoot a)
 squareRootViewWith v = makeView f g
  where
    f expr =

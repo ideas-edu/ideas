@@ -21,14 +21,14 @@ import Domain.LinearAlgebra.Matrix
 import Common.Utils
 import Domain.Math.Simplification
 
-ruleFindColumnJ :: Num a => Rule (Context (Matrix a))
+ruleFindColumnJ :: (Eq a, Num a) => Rule (Context (Matrix a))
 ruleFindColumnJ = minor $ ruleTrans (gaussId, "FindColumnJ") $ 
    makeTransLiftContext_ $ \m -> do
       cols <- liftM columns (subMatrix m)
       i    <- findIndexM nonZero cols
       columnJ := i
 
-ruleExchangeNonZero :: (Simplify a, Num a) => Rule (Context (Matrix a))
+ruleExchangeNonZero :: (Eq a, Simplify a, Num a) => Rule (Context (Matrix a))
 ruleExchangeNonZero = simplify $ ruleTrans (gaussId, "exchange") $
    supplyContextParameters rowExchange $ \m -> do
       nonEmpty m
@@ -38,7 +38,7 @@ ruleExchangeNonZero = simplify $ ruleTrans (gaussId, "exchange") $
       cov <- getCovered
       return (cov, i + cov)
 
-ruleScaleToOne :: (Reference a, Simplify a, Fractional a) => Rule (Context (Matrix a))
+ruleScaleToOne :: (Eq a, Reference a, Simplify a, Fractional a) => Rule (Context (Matrix a))
 ruleScaleToOne = simplify $ ruleTrans (gaussId, "scale") $
    supplyContextParameters rowScale $ \m -> do
       nonEmpty m
@@ -48,7 +48,7 @@ ruleScaleToOne = simplify $ ruleTrans (gaussId, "scale") $
       guard (pv /= 0)
       return (cov, 1 / pv)
 
-ruleZerosFP :: (Reference a, Simplify a, Fractional a) => Rule (Context (Matrix a))
+ruleZerosFP :: (Eq a, Reference a, Simplify a, Fractional a) => Rule (Context (Matrix a))
 ruleZerosFP = simplify $ ruleTrans (gaussId, "add") $
    supplyContextParameters rowAdd $ \m -> do
       nonEmpty m
@@ -59,7 +59,7 @@ ruleZerosFP = simplify $ ruleTrans (gaussId, "add") $
       let v = negate (col!!i)
       return (i + cov + 1, cov, v)
 
-ruleZerosBP :: (Reference a, Simplify a, Fractional a) => Rule (Context (Matrix a))
+ruleZerosBP :: (Eq a, Reference a, Simplify a, Fractional a) => Rule (Context (Matrix a))
 ruleZerosBP = simplify $ ruleTrans (gaussId, "add") $
    supplyContextParameters rowAdd $ \m -> do
       nonEmpty m
@@ -87,13 +87,13 @@ rowExchange = parameter2 "row1" "row2" $ \i j ->
       guard (i /= j && validRow i m && validRow j m)
       return (switchRows i j m)
 
-rowScale :: (Reference a, Num a) => ParamTrans (Int, a) (Matrix a)
+rowScale :: (Eq a, Reference a, Num a) => ParamTrans (Int, a) (Matrix a)
 rowScale = parameter2 "row" "scale factor" $ \i k -> 
    transMaybe $ \m -> do
       guard (k `notElem` [0, 1] && validRow i m)
       return (scaleRow i k m)
 
-rowAdd :: (Reference a, Num a) => ParamTrans (Int, Int, a) (Matrix a)
+rowAdd :: (Eq a, Reference a, Num a) => ParamTrans (Int, Int, a) (Matrix a)
 rowAdd = parameter3 "row1" "row2" "scale factor" $ \i j k -> 
    transMaybe $ \m -> do
       guard (k /= 0 && i /= j && validRow i m && validRow j m)

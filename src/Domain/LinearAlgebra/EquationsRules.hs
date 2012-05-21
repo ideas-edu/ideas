@@ -157,7 +157,7 @@ exchangeEquations = parameter2 "equation 1" "equation 2" exchange
                (middle, y:end) = splitAt (j-i-1) rest
            return $ begin++[y]++middle++[x]++end
 
-scaleEquation :: (Reference a, IsLinear a) => ParamTrans (Int, a) (LinearSystem a)
+scaleEquation :: (Eq a, Reference a, IsLinear a) => ParamTrans (Int, a) (LinearSystem a)
 scaleEquation = parameter2 "equation" "scale factor" $ \i a -> transMaybe $ \xs -> do
    guard (a `notElem` [0,1])
    changeAt i (fmap (a*)) xs

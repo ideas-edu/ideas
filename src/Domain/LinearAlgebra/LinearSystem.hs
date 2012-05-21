@@ -28,15 +28,15 @@ type LinearSystem a = Equations a
 getVarsSystem :: IsLinear a => LinearSystem a -> [String]
 getVarsSystem = S.toList . S.unions . map varSet . concatMap toList
 
-evalSystem :: (Uniplate a, IsLinear a) => (String -> a) -> LinearSystem a -> Bool
+evalSystem :: (Eq a,Uniplate a, IsLinear a) => (String -> a) -> LinearSystem a -> Bool
 evalSystem f =
    let evalEq (x :==: y) = x==y
    in all (evalEq . fmap (evalLinearExpr f))
 
-invalidSystem :: IsLinear a => LinearSystem a -> Bool
+invalidSystem :: (Eq a,IsLinear a) => LinearSystem a -> Bool
 invalidSystem = any invalidEquation
 
-invalidEquation :: IsLinear a => Equation a -> Bool
+invalidEquation :: (Eq a,IsLinear a) => Equation a -> Bool
 invalidEquation (lhs :==: rhs) = hasNoVar lhs && hasNoVar rhs && getConstant lhs /= getConstant rhs
 
 getSolution :: IsLinear a => LinearSystem a -> Maybe [(String, a)]
@@ -52,7 +52,7 @@ getSolution xs = do
       return (v, rhs)
 
 -- No constant on the left, no variables on the right
-inStandardForm :: IsLinear a => Equation a -> Bool
+inStandardForm :: (Eq a,IsLinear a) => Equation a -> Bool
 inStandardForm (lhs :==: rhs) = getConstant lhs == 0 && hasNoVar rhs
 
 toStandardForm :: IsLinear a => Equation a -> Equation a
@@ -60,10 +60,10 @@ toStandardForm (lhs :==: rhs) =
       let c = getConstant rhs - getConstant lhs
       in (lhs - rhs + c) :==: c
 
-inSolvedForm :: IsLinear a => LinearSystem a -> Bool
+inSolvedForm :: (Eq a,IsLinear a) => LinearSystem a -> Bool
 inSolvedForm xs = invalidSystem xs || isJust (getSolution xs)
 
-homogeneous :: IsLinear a => LinearSystem a -> Bool
+homogeneous :: (Eq a,IsLinear a) => LinearSystem a -> Bool
 homogeneous = all ((== 0) . rightHandSide)
 
 -- Conversions

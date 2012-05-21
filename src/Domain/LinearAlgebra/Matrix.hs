@@ -159,10 +159,10 @@ multiply a b
 -------------------------------------------------------
 -- Gaussian Elimination
 
-reduce :: Fractional a => Matrix a -> Matrix a
+reduce :: (Eq a,Fractional a) => Matrix a -> Matrix a
 reduce = backward . forward
 
-forward :: Fractional a => Matrix a -> Matrix a
+forward :: (Eq a,Fractional a) => Matrix a -> Matrix a
 forward m
    | h==0 || w==0 = m
    | all (==0) col = M $ zipWith (:) (repeat 0) $ rows $ forward $ M $ map tail $ rows m
@@ -176,7 +176,7 @@ forward m
    x      = entry (0,0) m
    col    = column 0 m
 
-backward :: Fractional a => Matrix a -> Matrix a
+backward :: (Eq a,Fractional a) => Matrix a -> Matrix a
 backward m = foldr f m [1..h-1]
  where
    (h, _) = dimensions m
@@ -185,13 +185,13 @@ backward m = foldr f m [1..h-1]
                          Nothing -> id
             in flip (foldr g) [0..i-1]
 
-rank :: Fractional a => Matrix a -> Int
+rank :: (Eq a,Fractional a) => Matrix a -> Int
 rank = length . filter (isJust . pivot) . rows . reduce
 
-nullity :: Fractional a => Matrix a -> Int
+nullity :: (Eq a,Fractional a) => Matrix a -> Int
 nullity m = snd (dimensions m) - rank m
 
-inverse :: Fractional a => Matrix a -> Maybe (Matrix a)
+inverse :: (Eq a,Fractional a) => Matrix a -> Maybe (Matrix a)
 inverse m
    | h /= w     = Nothing
    | rank m < w = Nothing
@@ -199,10 +199,10 @@ inverse m
  where
    (h, w) = dimensions m
 
-invertible :: Fractional a => Matrix a -> Bool
+invertible :: (Eq a,Fractional a) => Matrix a -> Bool
 invertible = isJust . inverse
 
-eqMatrix :: Fractional a => Matrix a -> Matrix a -> Bool
+eqMatrix :: (Eq a,Fractional a) => Matrix a -> Matrix a -> Bool
 eqMatrix m1 m2 = reduce m1 == reduce m2
 
 -- test = rank $ makeMatrix $ [[0 :: Rational ,1,1,1], [1,2,3,2], [3,1,1,3]]
@@ -260,15 +260,15 @@ addRow i j a m@(M rs)
 
 -------------------------------------------------------
 
-isLowerTriangular :: Num a => Matrix a -> Bool
+isLowerTriangular :: (Eq a,Num a) => Matrix a -> Bool
 isLowerTriangular = and . zipWith check [1..] . rows
  where check n = all (==0) . drop n
 
-isUpperTriangular :: Num a => Matrix a -> Bool
+isUpperTriangular :: (Eq a,Num a) => Matrix a -> Bool
 isUpperTriangular = and . zipWith check [0..] . rows
  where check n = all (==0) . take n
 
-inRowEchelonForm :: Num a => Matrix a -> Bool
+inRowEchelonForm :: (Eq a,Num a) => Matrix a -> Bool
 inRowEchelonForm (M rs) =
    not (any nonZero (dropWhile nonZero rs)) &&
    increasing (map (length . takeWhile (==0)) (filter nonZero rs))
@@ -276,22 +276,22 @@ inRowEchelonForm (M rs) =
    increasing (x:ys@(y:_)) = x < y && increasing ys
    increasing _ = True
 
-nonZero :: Num a => [a] -> Bool
+nonZero :: (Eq a,Num a) => [a] -> Bool
 nonZero = any (/=0)
 
 -- or row canonical form
-inRowReducedEchelonForm :: Num a => Matrix a -> Bool
+inRowReducedEchelonForm :: (Eq a,Num a) => Matrix a -> Bool
 inRowReducedEchelonForm m@(M rs) =
    inRowEchelonForm m &&
    all (==1) (mapMaybe pivot rs) &&
    all (isPivotColumn . flip column m . length . takeWhile (==0)) (filter nonZero rs)
 
-pivot :: Num a => Row a -> Maybe a
+pivot :: (Eq a,Num a) => Row a -> Maybe a
 pivot r = case dropWhile (==0) r of
              hd:_ -> Just hd
              _    -> Nothing
 
-isPivotColumn :: Num a => Column a -> Bool
+isPivotColumn :: (Eq a,Num a) => Column a -> Bool
 isPivotColumn c =
    case filter (/=0) c of
       [1] -> True

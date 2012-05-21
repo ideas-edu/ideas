@@ -75,7 +75,7 @@ ratioExprGen n = liftM fromRational $ ratioGen n (n `div` 4)
 ratioExprGenNonZero :: Int -> Gen Expr
 ratioExprGenNonZero n = liftM fromRational $ nonZero $ ratioGen n (n `div` 4)
 
-nonZero :: Num a => Gen a -> Gen a
+nonZero :: (Eq a,Num a) => Gen a -> Gen a
 nonZero = liftM (\a -> if a==0 then 1 else a)
 
 numSymbols :: [(Symbol, Maybe Int)]

@@ -39,29 +39,29 @@ import qualified Data.IntSet as IS
 
 newtype Polynomial a = P { unsafeP :: IM.IntMap a }
 
-invariant :: Num a => IM.IntMap a -> IM.IntMap a
+invariant :: (Eq a,Num a) => IM.IntMap a -> IM.IntMap a
 invariant = IM.filterWithKey (\n a -> n >= 0 && a /= 0)
 
-makeP :: Num a => IM.IntMap a -> Polynomial a
+makeP :: (Eq a,Num a) => IM.IntMap a -> Polynomial a
 makeP = P . invariant
 
-unP :: Num a => Polynomial a -> IM.IntMap a
+unP :: (Eq a,Num a) => Polynomial a -> IM.IntMap a
 unP = invariant . unsafeP
 
-toPolynomial :: Num a => [a] -> Polynomial a
+toPolynomial :: (Eq a,Num a) => [a] -> Polynomial a
 toPolynomial = makeP . IM.fromAscList . zip [0..] . reverse
 
-fromPolynomial :: Num a => Polynomial a -> [a]
+fromPolynomial :: (Eq a,Num a) => Polynomial a -> [a]
 fromPolynomial p = map (`coefficient` p) [d, d-1 .. 0]
  where d = degree p 
 
 -------------------------------------------------------------------
 -- Instances
 
-instance Num a => Eq (Polynomial a) where
+instance (Eq a,Num a) => Eq (Polynomial a) where
    p1 == p2 = unP p1 == unP p2
 
-instance Num a => Show (Polynomial a) where
+instance (Eq a,Show a,Num a) => Show (Polynomial a) where
    show p
       | p ==0     = "f(x) = 0"
       | otherwise = "f(x) = " ++ fix (concatMap f (reverse (IM.toList (unP p))))
@@ -78,7 +78,7 @@ instance Num a => Show (Polynomial a) where
                   '-':ys -> '-':dropWhile isSpace ys
                   ys     -> ys
 
-instance Fractional a => SafeDiv (Polynomial a) where
+instance (Eq a,Fractional a) => SafeDiv (Polynomial a) where
    -- polynomial division, no remainder
    safeDiv p1 p2
       | p2==0     = Nothing
@@ -98,7 +98,7 @@ instance Foldable Polynomial where
 instance Traversable Polynomial where
    sequenceA = liftA P . sequenceIntMap . unsafeP
 
-instance Num a => Num (Polynomial a) where
+instance (Eq a,Num a) => Num (Polynomial a) where
    p1 + p2 = makeP $ IM.unionWith (+) (unP p1) (unP p2)
    p1 * p2 = sum [ raise i (fmap (*a) p1) | (i, a) <- IM.toList (unP p2) ]
    
@@ -112,7 +112,7 @@ instance Num a => Num (Polynomial a) where
    abs    = error "abs not defined for polynomials"
    signum = error "signum not defined for polynomials"
 
-instance (Arbitrary a, Num a) => Arbitrary (Polynomial a) where
+instance (Eq a,Arbitrary a, Num a) => Arbitrary (Polynomial a) where
    arbitrary = do
       d <- choose (0, 5)
       let f n x = con x * var ^ n
@@ -122,50 +122,50 @@ instance (Arbitrary a, Num a) => Arbitrary (Polynomial a) where
 -- Functions on polynomials
 
 -- a single variable (such as "x")
-var :: Num a => Polynomial a
+var :: (Eq a,Num a) => Polynomial a
 var = makeP (IM.singleton 1 1)
 
-con :: Num a => a -> Polynomial a
+con :: (Eq a,Num a) => a -> Polynomial a
 con = makeP . IM.singleton 0
 
 -- | Raise all powers by a constant (discarding negative exponents)
-raise :: Num a => Int -> Polynomial a -> Polynomial a
+raise :: (Eq a,Num a) => Int -> Polynomial a -> Polynomial a
 raise i = makeP . IM.fromAscList . map (mapFirst (+i)) . IM.toList . unP
 
 ------------------------------------------------
 
-degree :: Num a => Polynomial a -> Int
+degree :: (Eq a,Num a) => Polynomial a -> Int
 degree p
    | IS.null is = 0
    | otherwise  = IS.findMax is
  where is = IM.keysSet (unP p)
 
-lowestDegree :: Num a => Polynomial a -> Int
+lowestDegree :: (Eq a,Num a) => Polynomial a -> Int
 lowestDegree p
    | IS.null is = 0
    | otherwise  = IS.findMin is
  where is = IM.keysSet (unP p)
 
-coefficient :: Num a => Int -> Polynomial a -> a
+coefficient :: (Eq a,Num a) => Int -> Polynomial a -> a
 coefficient n = IM.findWithDefault 0 n . unP
 
-isRoot :: Num a => Polynomial a -> a -> Bool
+isRoot :: (Eq a,Num a) => Polynomial a -> a -> Bool
 isRoot p a = eval p a == 0
 
 -- Returns the maximal number of positive roots (Descartes theorem)
 -- Multiple roots are counted separately
-positiveRoots :: Num a => Polynomial a -> Int
+positiveRoots :: (Eq a,Num a) => Polynomial a -> Int
 positiveRoots = signChanges . IM.elems . unP
 
 -- Returns the maximal number of negative roots (Descartes theorem)
 -- Multiple roots are counted separately
-negativeRoots :: Num a => Polynomial a -> Int
+negativeRoots :: (Eq a,Num a) => Polynomial a -> Int
 negativeRoots = signChanges . flipOdd . IM.elems . unP
  where
    flipOdd (x:y:zs) = x:negate y:flipOdd zs
    flipOdd xs = xs
 
-signChanges :: Num a => [a] -> Int
+signChanges :: (Eq a,Num a) => [a] -> Int
 signChanges = f . map signum
  where
    f (x:xs@(hd:_)) = if x==hd then f xs else 1 + f xs
@@ -173,21 +173,21 @@ signChanges = f . map signum
 
 ------------------------------------------------
 
-derivative :: Num a => Polynomial a -> Polynomial a
+derivative :: (Eq a,Num a) => Polynomial a -> Polynomial a
 derivative p = makeP $ IM.fromAscList
    [ (n-1, fromIntegral n*a) | (n, a) <- IM.toList (unP p) ]
 
-eval :: Num a => Polynomial a -> a -> a
+eval :: (Eq a,Num a) => Polynomial a -> a -> a
 eval p x = sum [ a * x^n | (n, a) <- IM.toList (unP p) ]
 
 -- polynomial long division
-divModPoly :: Fractional a => Polynomial a -> Polynomial a -> (Polynomial a, Polynomial a)
+divModPoly :: (Eq a,Fractional a) => Polynomial a -> Polynomial a -> (Polynomial a, Polynomial a)
 divModPoly p1 p2 = mapBoth toPolynomial $ 
    longDivision (fromPolynomial p2) (fromPolynomial p1)
 
 -- use polynomial long division to compute the greatest common factor
 -- of the polynomials
-polynomialGCD :: Fractional a => Polynomial a -> Polynomial a -> Polynomial a
+polynomialGCD :: (Eq a,Fractional a) => Polynomial a -> Polynomial a -> Polynomial a
 polynomialGCD x y
    | degree y > degree x = rec y x
    | otherwise           = rec x y
@@ -266,7 +266,7 @@ syntheticDivision a xs = (init zs, last zs)
                   ------ -
                        3    (remainder)
    -}
-longDivision :: Fractional a => [a] -> [a] -> ([a], [a])
+longDivision :: (Eq a,Fractional a) => [a] -> [a] -> ([a], [a])
 longDivision []     = error "longDivision by zero"
 longDivision (0:xs) = longDivision xs
 longDivision (x:xs) = recN

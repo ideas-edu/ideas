@@ -40,7 +40,7 @@ instance SafeDiv Double where
 instance Integral a => SafeDiv (Ratio a) where
    safeDiv = safeDivFractional
 
-safeDivFractional :: Fractional a => a -> a -> Maybe a
+safeDivFractional :: (Eq a,Fractional a) => a -> a -> Maybe a
 safeDivFractional x y
    | y /= 0    = Just (x / y)
    | otherwise = Nothing

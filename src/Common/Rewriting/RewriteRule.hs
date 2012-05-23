@@ -34,7 +34,6 @@ import Common.Utils.Uniplate (descend)
 import Common.View hiding (match)
 import Control.Monad
 import Data.Maybe
-import Data.Monoid
 import qualified Data.IntSet as IS
 import qualified Data.Map as M
 

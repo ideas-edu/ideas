@@ -12,7 +12,8 @@
 -----------------------------------------------------------------------------
 module Common.Algebra.Group
    ( -- * Monoids
-     module Data.Monoid, (<>), associative, leftIdentity
+     Monoid(..), (<>)
+   , associative, leftIdentity
    , rightIdentity, identityLaws, monoidLaws, commutativeMonoidLaws
    , idempotent
      -- * Groups
@@ -30,19 +31,14 @@ module Common.Algebra.Group
    ) where
 
 import Common.Algebra.Law
+import Common.Classes
 import Control.Applicative (Applicative)
 import Control.Monad (liftM2)
 import Data.Foldable (Foldable)
-import Data.Monoid hiding ((<>))
 import Data.Traversable (Traversable)
 
 --------------------------------------------------------
 -- Monoids
-
-infixl 6 <>
-
-(<>) :: Monoid a => a -> a -> a
-(<>) = mappend
 
 associative :: Monoid a => Law a
 associative = associativeFor (<>)

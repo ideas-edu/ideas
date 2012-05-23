@@ -40,7 +40,6 @@ import Common.Rule.Recognizer
 import Common.View
 import Control.Arrow
 import Control.Monad
-import Data.Monoid
 import Test.QuickCheck
 
 -----------------------------------------------------------

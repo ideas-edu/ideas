@@ -33,6 +33,7 @@ module Common.Algebra.Boolean
 import Common.Algebra.Group
 import Common.Algebra.Law
 import Control.Applicative
+import Common.Classes
 import Test.QuickCheck hiding ((><))
 
 --------------------------------------------------------

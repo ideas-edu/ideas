@@ -15,16 +15,13 @@ module Service.FeedbackScript.Syntax
    ( Script, makeScript, scriptDecls, makeText, textItems
    , Decl(..), DeclType(..), Text(..), Condition(..)
    , feedbackDecl, textForIdDecl
-   , module Data.Monoid, (<>)
    ) where
 
-import Common.Algebra.Group ((<>))
 import Common.Library
 import Common.Utils.Uniplate
 import Data.Char
 import Data.List
 import Data.Maybe
-import Data.Monoid hiding ((<>))
 
 newtype Script = S { scriptDecls :: [Decl] }
 

@@ -13,10 +13,10 @@
 -----------------------------------------------------------------------------
 module Service.FeedbackScript.Parser (parseScript, Script) where
 
+import Common.Classes
 import Common.Id
 import Control.Monad.Error
 import Data.Char
-import Data.Monoid hiding ((<>))
 import Service.FeedbackScript.Syntax
 import Text.ParserCombinators.Parsec
 import Text.Parsing

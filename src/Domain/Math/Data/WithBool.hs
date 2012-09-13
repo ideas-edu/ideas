@@ -25,12 +25,13 @@ import Data.Char (toLower)
 import Data.Foldable
 import Data.Traversable
 import Domain.Logic.Formula
+import Test.QuickCheck
 
 -------------------------------------------------------------------
 -- Abstract data type and instances
 
 newtype WithBool a = WB { fromWithBool :: Either Bool a }
-   deriving (Eq, Ord, Functor)
+   deriving (Eq, Ord, Functor, Arbitrary)
 
 instance Show a => Show (WithBool a) where
    show = either (map toLower . show) show . fromWithBool

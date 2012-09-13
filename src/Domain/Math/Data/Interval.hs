@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Data.Interval
    ( -- * Data types
-     Interval, Endpoint(..)
+     Interval, Endpoint
      -- * Interval constructors
    , empty, point, unbounded, open, closed
    , leftOpen, rightOpen, greaterThan, greaterThanOrEqualTo
@@ -46,7 +46,7 @@ data Segment a = S (Endpoint a) (Endpoint a)
    deriving Eq
 
 data Endpoint a = Excluding a | Including a | Unbounded
-   deriving Eq
+   deriving (Eq,Show)
 
 instance Ord a => BoolValue (Interval a) where
    fromBool b = if b then unbounded else empty

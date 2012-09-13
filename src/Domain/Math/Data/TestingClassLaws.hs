@@ -13,6 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Data.TestingClassLaws where
    
+import Domain.Math.Data.DecimalFraction
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Interval(Endpoint(..))
 import Domain.Math.Data.OrList
@@ -22,6 +23,7 @@ import Domain.Math.Data.Relation
 
 import Test.ClassLaws
 import Control.Monad.Laws
+import Text.Show.Laws
 
 ------------------------------------------------------------------------------
 
@@ -109,3 +111,16 @@ testFunctorAll = do testFunctorPolynomial
                     testFunctorRelation
                     testFunctorSquareRoot
                     testFunctorWithBool
+
+------------------------------------------------------------------------------
+
+instance ShowLaws DecimalFraction
+
+type instance Param DecimalFraction = ()
+
+instance TestEqual DecimalFraction where
+  testEqual p _ = testEq (==) p
+
+testShowDecimalFraction
+  = do quickLawCheck (undefined::ShowLaw DecimalFraction)
+

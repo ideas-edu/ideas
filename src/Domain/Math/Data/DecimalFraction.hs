@@ -14,7 +14,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Data.DecimalFraction
-   ( DecimalFraction, fromDouble, validDivisor, digits
+   ( DecimalFraction(..), fromDouble, validDivisor, digits
    ) where
 
 import Control.Monad
@@ -22,9 +22,11 @@ import Data.Maybe
 import Data.Ratio
 import Domain.Math.Safe
 
+import Test.QuickCheck
+
 -- |Data type for decimal fractions
 newtype DecimalFraction = DF Rational -- Invariant: denominator is valid
-   deriving (Eq, Ord, Num, Real)
+   deriving (Eq, Ord, Num, Real, Arbitrary)
 
 instance Show DecimalFraction where
    show d@(DF r) = show x ++ "." ++ replicate extra '0' ++ show y

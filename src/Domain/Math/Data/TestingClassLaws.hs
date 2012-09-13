@@ -121,6 +121,34 @@ type instance Param DecimalFraction = ()
 instance TestEqual DecimalFraction where
   testEqual p _ = testEq (==) p
 
+-- Problem in digits
 testShowDecimalFraction
   = do quickLawCheck (undefined::ShowLaw DecimalFraction)
 
+------------------------------------------------------------------------------
+
+instance ShowLaws (Interval a)
+
+type instance Param (Interval a) = ()
+
+instance TestEqual (Interval a) where
+  testEqual p _ = testEq (==) p
+
+-- Problem in digits
+testShowInterval
+  = do quickLawCheck (undefined::ShowLaw (Interval Int))
+
+{------------------------------------------------------------------------------
+
+instance ShowLaws DecimalFraction
+
+type instance Param DecimalFraction = ()
+
+instance TestEqual DecimalFraction where
+  testEqual p _ = testEq (==) p
+
+-- Problem in digits
+testShowDecimalFraction
+  = do quickLawCheck (undefined::ShowLaw DecimalFraction)
+
+-}

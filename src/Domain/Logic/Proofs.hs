@@ -19,6 +19,7 @@ import Common.Library
 import Common.Rewriting.AC
 import Common.Utils
 import Common.Utils.Uniplate
+import Common.Traversal.Navigator
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -55,15 +56,6 @@ proofExercise = makeExercise
                       in exampleProofs ++ [(q :&&: p, p :&&: (q :||: q))]
    }
 
-instance (IsTerm a, IsTerm b) => IsTerm (a, b) where
-   toTerm (a, b) = binary tupleSymbol (toTerm a) (toTerm b)
-   fromTerm term = do
-      (a, b) <- isBinary tupleSymbol term
-      liftM2 (,) (fromTerm a) (fromTerm b)
-
-tupleSymbol :: Symbol
-tupleSymbol = newSymbol "basic.tuple"
-
 proofStrategy :: LabeledStrategy (Context [(SLogic, SLogic)])
 proofStrategy = label "proof equivalent" $
    repeatS (
@@ -89,7 +81,7 @@ proofStrategy = label "proof equivalent" $
           ]
 
    notDNF :: Rule SLogic
-   notDNF = minorRule $ makeSimpleRule "not-dnf" $ \p ->
+   notDNF = minor $ makeRule "not-dnf" $ \p ->
       if isDNF p then Nothing else Just p
 
 -----------------------------------------------------------------------------
@@ -130,36 +122,37 @@ useRules = alternatives . map liftToContext
 onceLeft :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onceLeft s = ruleMoveDown <*> s <*> ruleMoveUp
  where
-   ruleMoveDown = minorRule $ makeSimpleRule "MoveDown" (down 1)
-   ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
+   ruleMoveDown = minorRule "MoveDown" (downTo 1)
+   ruleMoveUp   = minorRule "MoveUp" safeUp
 
    safeUp a = Just (fromMaybe a (up a))
 
 onceRight :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onceRight s = ruleMoveDown <*> s <*> ruleMoveUp
  where
-   ruleMoveDown = minorRule $ makeSimpleRule "MoveDown" (down 2)
-   ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
+   ruleMoveDown = minor $ makeRule "MoveDown" (downTo 2)
+   ruleMoveUp   = minorRule "MoveUp" safeUp
 
    safeUp a = Just (fromMaybe a (up a))
-
-testje :: Rule (Context SLogic)
-testje = makeSimpleRule "testje" $ \a -> error $ show a
 
 go n = printDerivation proofExercise [exampleProofs !! n] --(p :||: Not p, Not F)
  --where p = Var (ShowString "p")
 
 normLogicRule :: Rule (SLogic, SLogic)
-normLogicRule = makeSimpleRule "Normalize" $ \tuple@(p, q) -> do
+normLogicRule = ruleMaybe "Normalize" $ \tuple@(p, q) -> do
    guard (p /= q)
    let xs  = sort (varsLogic p `union` varsLogic q)
        new = (normLogicWith xs p, normLogicWith xs q)
    guard (tuple /= new)
    return new
 
+-- disabled for now
+
 -- Find a common subexpression that can be treated as a box
 commonExprAtom :: Rule (Context (SLogic, SLogic))
-commonExprAtom = makeSimpleRule "commonExprAtom" $ withCM $ \(p, q) -> do
+commonExprAtom = ruleMaybe "commonExprAtom" $ const Nothing {- \ctx -> do
+   undefined
+   (p, q) <- fromContext ctx
    let f  = filter same . filter ok . nub . sort . universe
        xs = f p `intersect` f q -- todo: only largest common sub expr
        ok (Var _) = False
@@ -173,12 +166,12 @@ commonExprAtom = makeSimpleRule "commonExprAtom" $ withCM $ \(p, q) -> do
           | a == this = Var new
           | otherwise = descend (sub a) this
    case xs of
-      hd:_ -> do modifyVar substVar ((show new, show hd):)
-                 return (sub hd p, sub hd q)
+      hd:_ -> do undefined -- modifyVar substRef ((show new, show hd):)
+                 return (replaceInContext (sub hd p, sub hd q) ctx)
       _ -> fail "not applicable"
 
-substVar :: Var [(String, String)]
-substVar = newVar "subst" []
+substRef :: Ref [(String, String)]
+substRef = makeRef "subst" -}
 
 logicVars :: [ShowString]
 logicVars = [ ShowString [c] | c <- ['a'..] ]
@@ -196,14 +189,14 @@ normLogicWith xs p = make (filter keep (subsets xs))
 
 -- p \/ q \/ ~p     ~> T           (propageren)
 tautologyOr :: Rule SLogic
-tautologyOr = makeSimpleRule "tautologyOr" $ \p -> do
+tautologyOr = ruleMaybe "tautologyOr" $ \p -> do
    let xs = disjunctions p
    guard (any (\x -> Not x `elem` xs) xs)
    return T
 
 -- p /\ q /\ p      ~> p /\ q
 idempotencyAnd :: Rule SLogic
-idempotencyAnd = makeSimpleRule "idempotencyAnd" $ \p -> do
+idempotencyAnd = ruleMaybe "idempotencyAnd" $ \p -> do
    let xs = conjunctions p
        ys = nub xs
    guard (length ys < length xs)
@@ -211,7 +204,7 @@ idempotencyAnd = makeSimpleRule "idempotencyAnd" $ \p -> do
 
 -- p /\ q /\ ~p     ~> F           (propageren)
 contradictionAnd :: Rule SLogic
-contradictionAnd = makeSimpleRule "contradictionAnd" $ \p -> do
+contradictionAnd = ruleMaybe "contradictionAnd" $ \p -> do
    let xs = conjunctions p
    guard (any (\x -> Not x `elem` xs) xs)
    return F
@@ -219,7 +212,7 @@ contradictionAnd = makeSimpleRule "contradictionAnd" $ \p -> do
 -- (p /\ q) \/ ... \/ (p /\ q /\ r)    ~> (p /\ q) \/ ...
 --    (subset relatie tussen rijtjes: bijzonder geval is gelijke rijtjes)
 absorptionSubset :: Rule SLogic
-absorptionSubset = makeSimpleRule "absorptionSubset" $ \p -> do
+absorptionSubset = ruleList "absorptionSubset" $ \p -> do
    let xss = map conjunctions (disjunctions p)
        yss = nub $ filter (\xs -> all (ok xs) xss) xss
        ok xs ys = not (ys `isSubsetOf` xs) || xs == ys
@@ -229,7 +222,7 @@ absorptionSubset = makeSimpleRule "absorptionSubset" $ \p -> do
 -- p \/ ... \/ (~p /\ q /\ r)  ~> p \/ ... \/ (q /\ r)
 --    (p is hier een losse variabele)
 fakeAbsorption :: Rule SLogic
-fakeAbsorption = makeSimpleRuleList "fakeAbsorption" $ \p -> do
+fakeAbsorption = makeRule "fakeAbsorption" $ \p -> do
    let xs = disjunctions p
    v <- [ a | a@(Var _) <- xs ]
    let ys  = map (ands . filter (/= Not v) . conjunctions) xs
@@ -240,7 +233,7 @@ fakeAbsorption = makeSimpleRuleList "fakeAbsorption" $ \p -> do
 -- ~p \/ ... \/ (p /\ q /\ r)  ~> ~p \/ ... \/ (q /\ r)
 --   (p is hier een losse variabele)
 fakeAbsorptionNot :: Rule SLogic
-fakeAbsorptionNot = makeSimpleRuleList "fakeAbsorptionNot" $ \p -> do
+fakeAbsorptionNot = makeRule "fakeAbsorptionNot" $ \p -> do
    let xs = disjunctions p
    v <- [ a | Not a@(Var _) <- xs ]
    let ys  = map (ands . filter (/= v) . conjunctions) xs
@@ -249,13 +242,13 @@ fakeAbsorptionNot = makeSimpleRuleList "fakeAbsorptionNot" $ \p -> do
    return new
 
 topIsNot :: Rule (SLogic, SLogic)
-topIsNot = makeSimpleRule "top-is-not" f
+topIsNot = makeRule "top-is-not" f
  where
    f (Not p, Not q) = Just (p, q)
    f _ = Nothing
 
 acTopRuleFor :: IsId a => a -> View SLogic (SLogic, SLogic) -> Rule [(SLogic, SLogic)]
-acTopRuleFor s v = makeSimpleRuleList s f
+acTopRuleFor s v = makeRule s f
  where
    f [(lhs, rhs)] = do
       let collect a = maybe [a] (\(x, y) -> collect x ++ collect y) (match v a)
@@ -281,7 +274,7 @@ topIsEquiv = acTopRuleFor "top-is-equiv" $ makeView isEquiv (uncurry equivalent)
    isEquiv _           = Nothing
 
 topIsImpl :: Rule [(SLogic, SLogic)]
-topIsImpl = makeSimpleRule "top-is-impl" f
+topIsImpl = makeRule "top-is-impl" f
  where
    f [(p :->: q, r :->: s)] = do
       guard (eqLogic p r && eqLogic q s)

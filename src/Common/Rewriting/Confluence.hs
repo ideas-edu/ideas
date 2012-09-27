@@ -16,7 +16,8 @@ module Common.Rewriting.Confluence
    ) where
 
 import Common.Id
-import Common.Navigator
+import Common.Traversal.Navigator
+import Common.Traversal.Utils
 import Common.Rewriting.RewriteRule
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
@@ -43,28 +44,32 @@ rewriteTerm r t = do
 
 -- uniplate-like helper-functions
 somewhereM :: Uniplate a => (a -> [a]) -> a -> [a]
-somewhereM f = concatMap leave . rec . navigator
+somewhereM f = map unfocus . rec . uniplateNav
  where
-   rec ca = changeM f ca ++ concatMap rec (allDowns ca)
+   rec ca = changeG f ca ++ concatMap rec (downs ca)
+
+uniplateNav :: Uniplate a => a -> UniplateNavigator a
+uniplateNav = focus
 
 ----------------------------------------------------
 
 type Pair   a = (RewriteRule a, Term)
 type Triple a = (RewriteRule a, Term, Term)
 
-superImpose :: RewriteRule a -> RewriteRule a -> [Navigator Term]
-superImpose r1 r2 = rec (navigator lhs1)
+superImpose :: RewriteRule a -> RewriteRule a -> [UniplateNavigator Term]
+superImpose r1 r2 = rec (uniplateNav lhs1)
  where
     lhs1 :~> _ = ruleSpecTerm r1
     lhs2 :~> _ = ruleSpecTerm (renumber r1 r2)
 
     rec ca = case current ca of
-                Just (TMeta _) -> []
-                Just a -> maybe [] (return . (`subTop` ca)) (unify a lhs2) ++ concatMap rec (allDowns ca)
-                Nothing -> []
+                TMeta _ -> []
+                a       -> maybe [] (return . (`subTop` ca)) (unify a lhs2) ++ 
+                           concatMap rec (downs ca)
 
+    subTop :: Substitution -> UniplateNavigator Term -> UniplateNavigator Term
     subTop s ca = fromMaybe ca $
-       fmap (change (s |->)) (top ca) >>= navigateTo (location ca)
+       navigateTo (location ca) (change (s |->) (top ca))
 
     renumber r = case metaInRewriteRule r of
                     [] -> id
@@ -77,9 +82,9 @@ criticalPairs rs =
    , r2       <- rs
    , na <- superImpose r1 r2
    , compareId r1 r2 == LT || not (null (location na))
-   , a  <- leave na
+   , let a = unfocus na
    , b1 <- rewriteTerm r1 a
-   , b2 <- changeM (rewriteTerm r2) na >>= leave
+   , b2 <- map unfocus (changeG (rewriteTerm r2) na)
    ]
 
 noDiamondPairs :: Config -> [RewriteRule a] -> [(Term, Triple a, Triple a)]

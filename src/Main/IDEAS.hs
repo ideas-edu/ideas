@@ -21,6 +21,7 @@ import Service.ServiceList
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.LinearAlgebra.Checks as LA
 import qualified Domain.Logic as Logic
+import qualified Domain.Logic.Proofs as Logic
 import qualified Domain.Math.ExerciseList as Math
 import qualified Domain.RelationAlgebra as RA
 
@@ -53,7 +54,7 @@ exercises =
    [ -- logic and relation-algebra
      Some Logic.dnfExercise
    , Some Logic.dnfUnicodeExercise
-   -- , Some Logic.proofExercise
+   , Some Logic.proofExercise
    , Some RA.cnfExercise
      -- linear algebra
    , Some LA.gramSchmidtExercise

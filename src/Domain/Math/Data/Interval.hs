@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Data.Interval
    ( -- * Data types
-     Interval, Endpoint
+     Interval, Endpoint(..)
      -- * Interval constructors
    , empty, point, unbounded, open, closed
    , leftOpen, rightOpen, greaterThan, greaterThanOrEqualTo

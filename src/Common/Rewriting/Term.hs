@@ -108,6 +108,11 @@ instance IsTerm ShowString where
    fromTerm (TVar s) = return (ShowString s)
    fromTerm _        = fail "fromTerm"
 
+instance (IsTerm a, IsTerm b) => IsTerm (a, b) where
+   toTerm (a, b) = TList [toTerm a, toTerm b]
+   fromTerm (TList [a, b]) = liftM2 (,) (fromTerm a) (fromTerm b)
+   fromTerm _              = fail "fromTerm"
+
 instance (IsTerm a, IsTerm b) => IsTerm (Either a b) where
    toTerm = either toTerm toTerm
    fromTerm expr =

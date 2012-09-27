@@ -26,6 +26,7 @@ import Service.FeedbackScript.Analysis
 import Service.ModeJSON (processJSON)
 import Service.ModeXML (processXML)
 import Service.Request
+import System.IO
 
 main :: IO ()
 main = do
@@ -43,6 +44,7 @@ main = do
          when (Logging True `elem` flags) $
             writeIORef logRef $ -- save logging action for later
                logMessage req input txt "local" startTime
+         hSetBinaryMode stdout True
          putStrLn txt
 
       -- documentation mode

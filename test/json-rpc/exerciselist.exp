@@ -112,8 +112,13 @@
       },
       {
          "exerciseid": "arithmetic.fractions",
-         "description": "simplify expression (fractions)",
-         "status": "Alpha"
+         "description": "simplify fractions",
+         "status": "Provisional"
+      },
+      {
+         "exerciseid": "arithmetic.fractions.liberal",
+         "description": "simplify fractions liberally",
+         "status": "Provisional"
       },
       {
          "exerciseid": "calculus.differentiation",
@@ -156,6 +161,11 @@
          "status": "Provisional"
       },
       {
+         "exerciseid": "logic.proof",
+         "description": "Prove two propositions equivalent",
+         "status": "Experimental"
+      },
+      {
          "exerciseid": "logic.propositional.dnf",
          "description": "Proposition to DNF",
          "status": "Stable"
@@ -173,5 +183,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.7.9 (0)"
+   "version": "1.0.9 (0)"
 }

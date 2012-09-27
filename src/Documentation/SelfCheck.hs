@@ -21,6 +21,7 @@ import Service.ModeJSON
 import Service.ModeXML
 import Service.Request
 import System.Directory
+import System.IO
 import qualified Common.Algebra.Boolean as Algebra
 import qualified Common.Algebra.Field as Algebra
 import qualified Common.Rewriting.Substitution as Substitution
@@ -87,22 +88,27 @@ blackBoxTests run path = do
 
 doBlackBoxTest :: (DomainReasoner Bool -> IO Bool) -> DataFormat -> FilePath -> IO TestSuite
 doBlackBoxTest run format path = do
+   hSetBinaryMode stdout True
    b <- doesFileExist expPath
    return $ if not b
       then warn $ expPath ++ " does not exist"
       else assertIO (stripDirectoryPart path) $ run $ do
          -- Comparing output with expected output
-         (txt, expt) <- liftIO $ do
+         (h1, h2, txt, expt) <- liftIO $ do
             useFixedStdGen -- fix the random number generator
-            txt  <- readFile path
-            expt <- liftIO $ readFile expPath
-            return (txt, expt)
+            h1   <- openBinaryFile path ReadMode
+            txt  <- hGetContents h1
+            h2   <- openBinaryFile expPath ReadMode
+            expt <- hGetContents h2
+            return (h1, h2, txt, expt)
          out  <- case format of
                     JSON -> liftM snd3 (processJSON txt)
                     XML  -> liftM snd3 (processXML txt)
          -- Conditional forces evaluation of the result, to make sure that
          -- all file handles are closed afterwards.
-         if out ~= expt then return True else return False
+         if out ~= expt 
+            then liftIO (hClose h1 >> hClose h2) >> return True 
+            else liftIO (hClose h1 >> hClose h2) >> return False
        `catchError`
          \_ -> return False
  where

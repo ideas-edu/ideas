@@ -12,7 +12,7 @@
 -----------------------------------------------------------------------------
 module Common.Traversal.Utils
    ( -- * Update type class
-     Update(..), current, change, replace, changeM
+     Update(..), current, change, replace, changeM, changeG
      -- * Focus type class
    , Focus(..), liftFocus, unliftFocus
      -- * Wrapper type class
@@ -42,7 +42,10 @@ replace :: Update f => a -> f a -> f a
 replace  = change . const
 
 changeM :: Update f => (a -> Maybe a) -> f a -> Maybe (f a)
-changeM f a = liftM (`replace` a) (f (current a))
+changeM = changeG
+
+changeG :: (Update f, Monad g) => (a -> g a) -> f a -> g (f a)
+changeG f a = liftM (`replace` a) (f (current a))
 
 ---------------------------------------------------------------
 -- Focus type class

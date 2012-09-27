@@ -1,4 +1,4 @@
-<reply result="ok" version="0.7.9 (0)">
+<reply result="ok" version="1.0.9 (0)">
   <list>
     <elem exerciseid="algebra.equations.coverup" description="solve an equation by covering up" status="Provisional"/>
     <elem exerciseid="algebra.equations.linear" description="solve a linear equation" status="Stable"/>
@@ -22,7 +22,8 @@
     <elem exerciseid="algebra.manipulation.polynomial.factor" description="factorize the expression" status="Provisional"/>
     <elem exerciseid="algebra.manipulation.rational.simplify" description="simplify a rational expression (with a variable in a divisor)" status="Alpha"/>
     <elem exerciseid="arithmetic.exponents" description="simplify expression (powers)" status="Provisional"/>
-    <elem exerciseid="arithmetic.fractions" description="simplify expression (fractions)" status="Alpha"/>
+    <elem exerciseid="arithmetic.fractions" description="simplify fractions" status="Provisional"/>
+    <elem exerciseid="arithmetic.fractions.liberal" description="simplify fractions liberally" status="Provisional"/>
     <elem exerciseid="calculus.differentiation" description="Derivative" status="Provisional"/>
     <elem exerciseid="calculus.differentiation.polynomial" description="Find the derivative of a polynomial. First normalize the polynomial (e.g., with distribution). Don't make use of the product-rule, or other chain rules." status="Provisional"/>
     <elem exerciseid="calculus.differentiation.product" description="Use the product-rule to find the derivative of a polynomial. Keep the parentheses in your answer." status="Provisional"/>
@@ -31,6 +32,7 @@
     <elem exerciseid="linearalgebra.gramschmidt" description="Gram-Schmidt" status="Alpha"/>
     <elem exerciseid="linearalgebra.linsystem" description="Solve Linear System" status="Stable"/>
     <elem exerciseid="linearalgebra.systemwithmatrix" description="Solve Linear System with Matrix" status="Provisional"/>
+    <elem exerciseid="logic.proof" description="Prove two propositions equivalent" status="Experimental"/>
     <elem exerciseid="logic.propositional.dnf" description="Proposition to DNF" status="Stable"/>
     <elem exerciseid="logic.propositional.dnf.unicode" description="Proposition to DNF (unicode support)" status="Stable"/>
     <elem exerciseid="relationalgebra.cnf" description="To conjunctive normal form" status="Alpha"/>

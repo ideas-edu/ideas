@@ -74,6 +74,8 @@ instance Reference Char where
 instance Reference a => Reference [a] where
    makeRef = makeRefList
 
+instance (Reference a, Reference b) => Reference (a, b)
+
 -----------------------------------------------------------
 -- Binding
 

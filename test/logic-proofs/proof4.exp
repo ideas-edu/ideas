@@ -67,10 +67,28 @@
          "p /\\ q == q /\\ p, ~p /\\ ~q == ~p /\\ ~q"
       ],
       [
-         "normalize",
+         "top-is-and",
          [
          ],
-         "p /\\ q == p /\\ q, ~p /\\ ~q == ~p /\\ ~q"
+         "p == p, q == q, ~p /\\ ~q == ~p /\\ ~q"
+      ],
+      [
+         "top-is-and",
+         [
+         ],
+         "p == p, q == q, ~p == ~p, ~q == ~q"
+      ],
+      [
+         "top-is-not",
+         [
+         ],
+         "p == p, q == q, p == p, ~q == ~q"
+      ],
+      [
+         "top-is-not",
+         [
+         ],
+         "p == p, q == q, p == p, q == q"
       ]
    ],
    "error": null,

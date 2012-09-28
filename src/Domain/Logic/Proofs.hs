@@ -21,6 +21,7 @@ import Common.Utils
 import Common.Utils.Uniplate
 import Common.Traversal.Navigator
 import Control.Monad
+import Data.Foldable (toList)
 import Data.List
 import Data.Maybe
 import Domain.Logic.Examples
@@ -32,33 +33,39 @@ import Domain.Logic.Rules
 import Domain.Logic.Strategies (somewhereOr)
 import Domain.Math.Expr ()
 
-p = parser proofExercise "~(p || (~p /\\ q)) == ~(p || q)"
-
 see :: Int -> IO ()
 see n = printDerivation proofExercise (snd (examples proofExercise !! n))
 
 -- Currently, we use the DWA strategy
-proofExercise :: Exercise [(SLogic, SLogic)]
+proofExercise :: Exercise Proof
 proofExercise = makeExercise
    { exerciseId     = describe "Prove two propositions equivalent" $
                          newId "logic.proof"
    , status         = Experimental
-   , parser         = mapSecond return . parseLogicProof
+   , parser         = mapSecond makeProof . parseLogicProof
    , prettyPrinter  = let f (p, q) = ppLogicPars p ++ " == " ++ ppLogicPars q
-                      in intercalate ", " . map f
+                      in intercalate ", " . map f . subProofs
 --   , equivalence    = \(p, _) (r, s) -> eqLogic p r && eqLogic r s
 --   , similarity     = \(p, q) (r, s) -> equalLogicA p r && equalLogicA q s
-   , suitable       = predicate $ all (uncurry eqLogic)
-   , ready          = predicate $ all (uncurry equalLogicA)
+   , suitable       = predicate $ all (uncurry eqLogic) . subProofs
+   , ready          = predicate $ all (uncurry equalLogicA) . subProofs
    , strategy       = proofStrategy
    , navigation     = termNavigator
-   , examples       = map (\a -> (Easy, return a)) $
+   , examples       = map (\a -> (Easy, makeProof	 a)) $
                       let p = Var (ShowString "p")
                           q = Var (ShowString "q")
                       in exampleProofs ++ [(q :&&: p, p :&&: (q :||: q))]
    }
 
-proofStrategy :: LabeledStrategy (Context [(SLogic, SLogic)])
+type Proof = Logic (SLogic, SLogic)
+
+subProofs :: Proof -> [(SLogic, SLogic)]
+subProofs = toList
+
+makeProof :: (SLogic, SLogic) -> Proof
+makeProof = Var
+
+proofStrategy :: LabeledStrategy (Context Proof)
 proofStrategy = label "proof equivalent" $
    repeatS (
          somewhere (useC commonExprAtom)
@@ -72,7 +79,7 @@ proofStrategy = label "proof equivalent" $
    rest =  use notDNF <*> useC (repeatS dnfStrategyDWA)
        <|> simpler
 
-   simpler :: Strategy (Context [(SLogic, SLogic)])
+   simpler :: Strategy (Context Proof)
    simpler =
       use tautologyOr <|> use idempotencyAnd <|> use contradictionAnd
       <|> use absorptionSubset <|> use fakeAbsorption <|> use fakeAbsorptionNot
@@ -136,9 +143,6 @@ onceRight s = ruleMoveDown <*> s <*> ruleMoveUp
    ruleMoveUp   = minorRule "MoveUp" safeUp
 
    safeUp a = Just (fromMaybe a (up a))
-
-go n = printDerivation proofExercise [exampleProofs !! n] --(p :||: Not p, Not F)
- --where p = Var (ShowString "p")
 
 normLogicRule :: Rule (SLogic, SLogic)
 normLogicRule = ruleMaybe "Normalize" $ \tuple@(p, q) -> do
@@ -243,10 +247,10 @@ fakeAbsorptionNot = makeRule "fakeAbsorptionNot" $ \p -> do
    guard (p /= new)
    return new
 
-topIsNot :: Rule (SLogic, SLogic)
+topIsNot :: Rule Proof
 topIsNot = makeRule "top-is-not" f
  where
-   f (Not p, Not q) = Just (p, q)
+   f (Var (Not p, Not q)) = Just (Not (Var (p, q)))
    f _ = Nothing
 
 acTopRuleFor :: IsId a => a -> View SLogic (SLogic, SLogic) -> Rule [(SLogic, SLogic)]
@@ -263,24 +267,39 @@ acTopRuleFor s v = makeRule s f
       return list
    f _ = []
 
-topIsAnd :: Rule [(SLogic, SLogic)]
-topIsAnd = acTopRuleFor "top-is-and" $ makeView isAnd (uncurry (<&&>))
+topIsAnd :: Rule Proof
+topIsAnd = makeRule "top-is-and" $ \xs -> 
+   case xs of
+      Var (x, y) -> do
+         zs <- applyAll (acTopRuleFor "top-is-and" $ makeView isAnd (uncurry (<&&>))) [(x, y)] 
+         return (foldl1 (:&&:) (map Var zs))
+      _ -> []
 
-topIsOr :: Rule [(SLogic, SLogic)]
-topIsOr = acTopRuleFor "top-is-or" $ makeView isOr (uncurry (<||>))
+topIsOr :: Rule Proof
+topIsOr = makeRule "top-is-or" $ \xs -> 
+   case xs of
+      Var (x, y) -> do
+         zs <- applyAll (acTopRuleFor "top-is-or" $ makeView isOr (uncurry (<||>))) [(x, y)]
+         return (foldl1 (:||:) (map Var zs))
+      _ -> []
 
-topIsEquiv :: Rule [(SLogic, SLogic)]
-topIsEquiv = acTopRuleFor "top-is-equiv" $ makeView isEquiv (uncurry equivalent)
+topIsEquiv :: Rule Proof
+topIsEquiv = makeRule "top-is-equiv" $ \xs -> 
+   case xs of
+      Var (x, y) -> do
+         zs <- applyAll (acTopRuleFor "top-is-equiv" $ makeView isEquiv (uncurry equivalent)) [(x, y)]
+         return (foldl1 (:<->:) (map Var zs))
+      _ -> []
  where
    isEquiv (p :<->: q) = Just (p, q)
    isEquiv _           = Nothing
 
-topIsImpl :: Rule [(SLogic, SLogic)]
+topIsImpl :: Rule Proof
 topIsImpl = makeRule "top-is-impl" f
  where
-   f [(p :->: q, r :->: s)] = do
+   f (Var (p :->: q, r :->: s)) = do
       guard (eqLogic p r && eqLogic q s)
-      return [(p, r), (q, s)]
+      return (Var (p, r) :->: Var (q, s))
    f _ = Nothing
 
 {- Strategie voor sterke(?) normalisatie

@@ -53,6 +53,30 @@
          [
          ],
          "p /\\ ~q == p /\\ ~q, q /\\ ~p == q /\\ ~p"
+      ],
+      [
+         "top-is-and",
+         [
+         ],
+         "p == p, ~q == ~q, q /\\ ~p == q /\\ ~p"
+      ],
+      [
+         "top-is-and",
+         [
+         ],
+         "p == p, ~q == ~q, q == q, ~p == ~p"
+      ],
+      [
+         "top-is-not",
+         [
+         ],
+         "p == p, q == q, q == q, ~p == ~p"
+      ],
+      [
+         "top-is-not",
+         [
+         ],
+         "p == p, q == q, q == q, p == p"
       ]
    ],
    "error": null,

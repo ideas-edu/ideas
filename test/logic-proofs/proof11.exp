@@ -25,34 +25,46 @@
          "~p || q == q || ~p, p -> s == ~s -> ~p"
       ],
       [
-         "logic.propositional.defimpl",
+         "top-is-or",
          [
          ],
-         "~p || q == q || ~p, ~p || s == ~s -> ~p"
+         "~p == ~p, q == q, p -> s == ~s -> ~p"
+      ],
+      [
+         "top-is-not",
+         [
+         ],
+         "p == p, q == q, p -> s == ~s -> ~p"
       ],
       [
          "logic.propositional.defimpl",
          [
          ],
-         "~p || q == q || ~p, ~p || s == ~~s || ~p"
+         "p == p, q == q, ~p || s == ~s -> ~p"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "p == p, q == q, ~p || s == ~~s || ~p"
       ],
       [
          "logic.propositional.notnot",
          [
          ],
-         "~p || q == q || ~p, ~p || s == s || ~p"
+         "p == p, q == q, ~p || s == s || ~p"
       ],
       [
-         "normalize",
+         "top-is-or",
          [
          ],
-         "(~p /\\ ~q) || (~p /\\ q) || (p /\\ q) == (~p /\\ ~q) || (~p /\\ q) || (p /\\ q), ~p || s == s || ~p"
+         "p == p, q == q, ~p == ~p, s == s"
       ],
       [
-         "normalize",
+         "top-is-not",
          [
          ],
-         "(~p /\\ ~q) || (~p /\\ q) || (p /\\ q) == (~p /\\ ~q) || (~p /\\ q) || (p /\\ q), (~p /\\ ~s) || (~p /\\ s) || (p /\\ s) == (~p /\\ ~s) || (~p /\\ s) || (p /\\ s)"
+         "p == p, q == q, p == p, s == s"
       ]
    ],
    "error": null,

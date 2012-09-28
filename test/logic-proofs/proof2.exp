@@ -1,0 +1,61 @@
+{
+   "result": [
+      [
+         "logic.propositional.demorganand",
+         [
+         ],
+         "(p /\\ ~q) || (q /\\ ~p) == (p || q) /\\ (~p || ~q)"
+      ],
+      [
+         "logic.propositional.andoveror",
+         [
+         ],
+         "(p /\\ ~q) || (q /\\ ~p) == ((p || q) /\\ ~p) || ((p || q) /\\ ~q)"
+      ],
+      [
+         "logic.propositional.andoveror",
+         [
+         ],
+         "(p /\\ ~q) || (q /\\ ~p) == (p /\\ ~p) || (q /\\ ~p) || ((p || q) /\\ ~q)"
+      ],
+      [
+         "logic.propositional.andoveror",
+         [
+         ],
+         "(p /\\ ~q) || (q /\\ ~p) == (p /\\ ~p) || (q /\\ ~p) || (p /\\ ~q) || (q /\\ ~q)"
+      ],
+      [
+         "logic.propositional.compland",
+         [
+         ],
+         "(p /\\ ~q) || (q /\\ ~p) == F || (q /\\ ~p) || (p /\\ ~q) || (q /\\ ~q)"
+      ],
+      [
+         "logic.propositional.compland",
+         [
+         ],
+         "(p /\\ ~q) || (q /\\ ~p) == F || (q /\\ ~p) || (p /\\ ~q) || F"
+      ],
+      [
+         "logic.propositional.falsezeroor",
+         [
+         ],
+         "(p /\\ ~q) || (q /\\ ~p) == (q /\\ ~p) || (p /\\ ~q) || F"
+      ],
+      [
+         "logic.propositional.falsezeroor",
+         [
+         ],
+         "(p /\\ ~q) || (q /\\ ~p) == (q /\\ ~p) || (p /\\ ~q)"
+      ],
+      [
+         "top-is-or",
+         [
+         ],
+         "p /\\ ~q == p /\\ ~q, q /\\ ~p == q /\\ ~p"
+      ]
+   ],
+   "error": null,
+   "id": 42,
+   "version": "1.0.9 (0)"
+}

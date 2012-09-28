@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.Parser
-   ( parseLogic, parseLogicPars, parseLogicUnicodePars -- , parseLogicProof
+   ( parseLogic, parseLogicPars, parseLogicUnicodePars, parseLogicProof
    , ppLogicPars, ppLogicUnicodePars
    ) where
 
@@ -42,6 +42,13 @@ parseLogicUnicodePars input =
 parseBalanced :: Parser a -> String -> Either String a
 parseBalanced p input =
    maybe (parseSimple p input) (Left . show) (balanced [('(', ')')] input)
+
+parseLogicProof :: String -> Either String (SLogic, SLogic)
+parseLogicProof = parseSimple $ do
+   p <- parserSLogic False False
+   reservedOp "=="
+   q <- parserSLogic False False
+   return (p, q)
 
 -- generalized parser
 parserSLogic :: Bool -> Bool -> Parser SLogic
@@ -80,7 +87,7 @@ parserSLogic unicode extraPars = pLogic
 lexer :: P.TokenParser a
 lexer = P.makeTokenParser $ emptyDef
    { reservedNames   = ["T", "F"]
-   , reservedOpNames = ["~", "<->", "->", "||", "/\\"]
+   , reservedOpNames = ["~", "<->", "->", "||", "/\\", "=="]
    , identStart      = lower
    , identLetter     = lower
    , opStart         = fail ""

@@ -1,5 +1,7 @@
-default: ideas ideasWX
+default: ideas
 all: binaries documentation
+
+.PHONY: test
 
 SRCDIR = src
 
@@ -66,10 +68,12 @@ documentation: docs $(BINDIR)/ideas.cgi
 pages: docs $(BINDIR)/ideas.cgi
 	make -C $(DOCDIR) pages || exit 1
 
-test: $(TESTDIR)/test.log
+test: 
+	$(BINDIR)/ideas.cgi --test
 
-$(TESTDIR)/test.log: $(HS-SOURCES) $(BINDIR)/ideas.cgi
-	make -C $(TESTDIR) || exit 1
+# $(TESTDIR)/test.log
+# $(TESTDIR)/test.log: $(HS-SOURCES) $(BINDIR)/ideas.cgi
+# 	make -C $(TESTDIR) || exit 1
 
 #---------------------------------------------------------------------------------------
 # Helper targets

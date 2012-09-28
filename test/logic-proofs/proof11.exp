@@ -1,0 +1,61 @@
+{
+   "result": [
+      [
+         "top-is-impl",
+         [
+         ],
+         "p -> q == ~q -> ~p, p -> s == ~s -> ~p"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~p || q == ~q -> ~p, p -> s == ~s -> ~p"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~p || q == ~~q || ~p, p -> s == ~s -> ~p"
+      ],
+      [
+         "logic.propositional.notnot",
+         [
+         ],
+         "~p || q == q || ~p, p -> s == ~s -> ~p"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~p || q == q || ~p, ~p || s == ~s -> ~p"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~p || q == q || ~p, ~p || s == ~~s || ~p"
+      ],
+      [
+         "logic.propositional.notnot",
+         [
+         ],
+         "~p || q == q || ~p, ~p || s == s || ~p"
+      ],
+      [
+         "normalize",
+         [
+         ],
+         "(~p /\\ ~q) || (~p /\\ q) || (p /\\ q) == (~p /\\ ~q) || (~p /\\ q) || (p /\\ q), ~p || s == s || ~p"
+      ],
+      [
+         "normalize",
+         [
+         ],
+         "(~p /\\ ~q) || (~p /\\ q) || (p /\\ q) == (~p /\\ ~q) || (~p /\\ q) || (p /\\ q), (~p /\\ ~s) || (~p /\\ s) || (p /\\ s) == (~p /\\ ~s) || (~p /\\ s) || (p /\\ s)"
+      ]
+   ],
+   "error": null,
+   "id": 42,
+   "version": "1.0.9 (0)"
+}

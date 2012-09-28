@@ -1,0 +1,43 @@
+{
+   "result": [
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~p || q || ~p == (p -> q) || q"
+      ],
+      [
+         "absorptionsubset",
+         [
+         ],
+         "~p || q == (p -> q) || q"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~p || q == ~p || q || q"
+      ],
+      [
+         "logic.propositional.idempor",
+         [
+         ],
+         "~p || q == ~p || q"
+      ],
+      [
+         "top-is-or",
+         [
+         ],
+         "~p == ~p, q == q"
+      ],
+      [
+         "top-is-not",
+         [
+         ],
+         "p == p, q == q"
+      ]
+   ],
+   "error": null,
+   "id": 42,
+   "version": "1.0.9 (0)"
+}

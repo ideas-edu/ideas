@@ -1,0 +1,73 @@
+{
+   "result": [
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~p || (q -> r) == (p -> q) -> (p -> r)"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~p || ~q || r == (p -> q) -> (p -> r)"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~p || ~q || r == ~(p -> q) || (p -> r)"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~p || ~q || r == ~(~p || q) || (p -> r)"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~p || ~q || r == ~(~p || q) || ~p || r"
+      ],
+      [
+         "logic.propositional.demorganor",
+         [
+         ],
+         "~p || ~q || r == (~~p /\\ ~q) || ~p || r"
+      ],
+      [
+         "logic.propositional.notnot",
+         [
+         ],
+         "~p || ~q || r == (p /\\ ~q) || ~p || r"
+      ],
+      [
+         "fakeabsorptionnot",
+         [
+         ],
+         "~p || ~q || r == ~q || ~p || r"
+      ],
+      [
+         "top-is-or",
+         [
+         ],
+         "~p == ~p, ~q == ~q, r == r"
+      ],
+      [
+         "top-is-not",
+         [
+         ],
+         "p == p, ~q == ~q, r == r"
+      ],
+      [
+         "top-is-not",
+         [
+         ],
+         "p == p, q == q, r == r"
+      ]
+   ],
+   "error": null,
+   "id": 42,
+   "version": "1.0.9 (0)"
+}

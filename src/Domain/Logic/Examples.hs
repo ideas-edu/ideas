@@ -39,3 +39,20 @@ exampleProofs = [(Not(p :||: (Not p :&&: q)), Not(p :||: q)),
    q = Var (ShowString "q")
    s = Var (ShowString "s")
    r = Var (ShowString "r")
+
+{-
+makeTestCases :: IO ()
+makeTestCases = zipWithM_ makeTestCase [0..] exampleProofs
+   
+makeTestCase :: Int -> (SLogic, SLogic) -> IO ()
+makeTestCase n (p, q) = 
+   writeFile ("proof" ++ show n ++ ".json")  
+      (json $ show p ++ " == " ++ show q)
+   
+json :: String -> String
+json s = unlines
+   [ "{ \"method\" : \"derivation\""
+   , ", \"params\" : [[\"logic.proof\", \"[]\", " ++ show s ++ ", \"\"]]"
+   , ", \"id\"     : 42"
+   , "}"
+   ] -}

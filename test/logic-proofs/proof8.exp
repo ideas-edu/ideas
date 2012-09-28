@@ -1,0 +1,67 @@
+{
+   "result": [
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~(p -> ~q) || q == (s || (s -> (q || p))) /\\ q"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~(~p || ~q) || q == (s || (s -> (q || p))) /\\ q"
+      ],
+      [
+         "logic.propositional.demorganor",
+         [
+         ],
+         "(~~p /\\ ~~q) || q == (s || (s -> (q || p))) /\\ q"
+      ],
+      [
+         "logic.propositional.notnot",
+         [
+         ],
+         "(p /\\ ~~q) || q == (s || (s -> (q || p))) /\\ q"
+      ],
+      [
+         "logic.propositional.notnot",
+         [
+         ],
+         "(p /\\ q) || q == (s || (s -> (q || p))) /\\ q"
+      ],
+      [
+         "logic.propositional.absorpor",
+         [
+         ],
+         "q == (s || (s -> (q || p))) /\\ q"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "q == (s || ~s || q || p) /\\ q"
+      ],
+      [
+         "logic.propositional.complor",
+         [
+         ],
+         "q == (T || q || p) /\\ q"
+      ],
+      [
+         "logic.propositional.truezeroor",
+         [
+         ],
+         "q == T /\\ q"
+      ],
+      [
+         "logic.propositional.truezeroand",
+         [
+         ],
+         "q == q"
+      ]
+   ],
+   "error": null,
+   "id": 42,
+   "version": "1.0.9 (0)"
+}

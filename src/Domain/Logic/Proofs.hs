@@ -32,6 +32,8 @@ import Domain.Logic.Rules
 import Domain.Logic.Strategies (somewhereOr)
 import Domain.Math.Expr ()
 
+p = parser proofExercise "~(p || (~p /\\ q)) == ~(p || q)"
+
 see :: Int -> IO ()
 see n = printDerivation proofExercise (snd (examples proofExercise !! n))
 
@@ -41,7 +43,7 @@ proofExercise = makeExercise
    { exerciseId     = describe "Prove two propositions equivalent" $
                          newId "logic.proof"
    , status         = Experimental
---   , parser         = parseLogicProof
+   , parser         = mapSecond return . parseLogicProof
    , prettyPrinter  = let f (p, q) = ppLogicPars p ++ " == " ++ ppLogicPars q
                       in intercalate ", " . map f
 --   , equivalence    = \(p, _) (r, s) -> eqLogic p r && eqLogic r s

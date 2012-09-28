@@ -1,0 +1,121 @@
+{
+   "result": [
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~(~(p -> q) || (p /\\ q)) == (p -> q) /\\ (~p || ~q)"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~(~(~p || q) || (p /\\ q)) == (p -> q) /\\ (~p || ~q)"
+      ],
+      [
+         "logic.propositional.demorganor",
+         [
+         ],
+         "~~(~p || q) /\\ ~(p /\\ q) == (p -> q) /\\ (~p || ~q)"
+      ],
+      [
+         "logic.propositional.notnot",
+         [
+         ],
+         "(~p || q) /\\ ~(p /\\ q) == (p -> q) /\\ (~p || ~q)"
+      ],
+      [
+         "logic.propositional.demorganand",
+         [
+         ],
+         "(~p || q) /\\ (~p || ~q) == (p -> q) /\\ (~p || ~q)"
+      ],
+      [
+         "logic.propositional.andoveror",
+         [
+         ],
+         "((~p || q) /\\ ~p) || ((~p || q) /\\ ~q) == (p -> q) /\\ (~p || ~q)"
+      ],
+      [
+         "logic.propositional.absorpand",
+         [
+         ],
+         "~p || ((~p || q) /\\ ~q) == (p -> q) /\\ (~p || ~q)"
+      ],
+      [
+         "logic.propositional.andoveror",
+         [
+         ],
+         "~p || (~p /\\ ~q) || (q /\\ ~q) == (p -> q) /\\ (~p || ~q)"
+      ],
+      [
+         "logic.propositional.absorpor",
+         [
+         ],
+         "~p || (q /\\ ~q) == (p -> q) /\\ (~p || ~q)"
+      ],
+      [
+         "logic.propositional.compland",
+         [
+         ],
+         "~p || F == (p -> q) /\\ (~p || ~q)"
+      ],
+      [
+         "logic.propositional.falsezeroor",
+         [
+         ],
+         "~p == (p -> q) /\\ (~p || ~q)"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~p == (~p || q) /\\ (~p || ~q)"
+      ],
+      [
+         "logic.propositional.andoveror",
+         [
+         ],
+         "~p == ((~p || q) /\\ ~p) || ((~p || q) /\\ ~q)"
+      ],
+      [
+         "logic.propositional.absorpand",
+         [
+         ],
+         "~p == ~p || ((~p || q) /\\ ~q)"
+      ],
+      [
+         "logic.propositional.andoveror",
+         [
+         ],
+         "~p == ~p || (~p /\\ ~q) || (q /\\ ~q)"
+      ],
+      [
+         "logic.propositional.absorpor",
+         [
+         ],
+         "~p == ~p || (q /\\ ~q)"
+      ],
+      [
+         "logic.propositional.compland",
+         [
+         ],
+         "~p == ~p || F"
+      ],
+      [
+         "logic.propositional.falsezeroor",
+         [
+         ],
+         "~p == ~p"
+      ],
+      [
+         "top-is-not",
+         [
+         ],
+         "p == p"
+      ]
+   ],
+   "error": null,
+   "id": 42,
+   "version": "1.0.9 (0)"
+}

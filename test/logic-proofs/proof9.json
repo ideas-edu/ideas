@@ -1,0 +1,4 @@
+{ "method" : "derivation"
+, "params" : [["logic.proof", "[]", "p -> q -> r == (p -> q) -> p -> r", ""]]
+, "id"     : 42
+}

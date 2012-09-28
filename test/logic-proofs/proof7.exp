@@ -1,0 +1,85 @@
+{
+   "result": [
+      [
+         "idempotencyand",
+         [
+         ],
+         "(q -> (~p -> q)) -> p == ~p -> (q /\\ p)"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~(q -> (~p -> q)) || p == ~p -> (q /\\ p)"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~(~q || (~p -> q)) || p == ~p -> (q /\\ p)"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "~(~q || ~~p || q) || p == ~p -> (q /\\ p)"
+      ],
+      [
+         "logic.propositional.notnot",
+         [
+         ],
+         "~(~q || p || q) || p == ~p -> (q /\\ p)"
+      ],
+      [
+         "logic.propositional.demorganor",
+         [
+         ],
+         "(~~q /\\ ~(p || q)) || p == ~p -> (q /\\ p)"
+      ],
+      [
+         "logic.propositional.notnot",
+         [
+         ],
+         "(q /\\ ~(p || q)) || p == ~p -> (q /\\ p)"
+      ],
+      [
+         "logic.propositional.demorganor",
+         [
+         ],
+         "(q /\\ ~p /\\ ~q) || p == ~p -> (q /\\ p)"
+      ],
+      [
+         "contradictionand",
+         [
+         ],
+         "F || p == ~p -> (q /\\ p)"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "F || p == ~~p || (q /\\ p)"
+      ],
+      [
+         "logic.propositional.notnot",
+         [
+         ],
+         "F || p == p || (q /\\ p)"
+      ],
+      [
+         "logic.propositional.absorpor",
+         [
+         ],
+         "F || p == p"
+      ],
+      [
+         "logic.propositional.falsezeroor",
+         [
+         ],
+         "p == p"
+      ]
+   ],
+   "error": null,
+   "id": 42,
+   "version": "1.0.9 (0)"
+}

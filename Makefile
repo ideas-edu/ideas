@@ -163,7 +163,7 @@ $(SRCDIR)/Domain/Programming/InlinePatternBindings.hs : \
 ifeq ($(IDEASSERVER), yes)
 
 INSTALL-CGI    = /var/www/cgi-bin
-INSTALL-DOC    = /var/www/html/docs/latest
+INSTALL-DOC    = /var/www/docs/latest
 INSTALL-SCRIPT = /var/www/cgi-bin/scripts
 
 install: ideas

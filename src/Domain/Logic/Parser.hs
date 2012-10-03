@@ -45,9 +45,9 @@ parseBalanced p input =
 
 parseLogicProof :: String -> Either String (SLogic, SLogic)
 parseLogicProof = parseSimple $ do
-   p <- parserSLogic False False
+   p <- parserSLogic False True
    reservedOp "=="
-   q <- parserSLogic False False
+   q <- parserSLogic False True
    return (p, q)
 
 -- generalized parser

@@ -1,118 +1,76 @@
 {
    "result": [
       [
-         "logic.propositional.defimpl",
+         "commonexpratom",
          [
          ],
-         "~(~(p -> q) || (p /\\ q)) == (p -> q) /\\ (~p || ~q)"
+         "~(a -> (p /\\ q)) == a /\\ (~p || ~q)"
+      ],
+      [
+         "logic.propositional.andoveror",
+         [
+         ],
+         "~(a -> (p /\\ q)) == (a /\\ ~p) || (a /\\ ~q)"
       ],
       [
          "logic.propositional.defimpl",
          [
          ],
-         "~(~(~p || q) || (p /\\ q)) == (p -> q) /\\ (~p || ~q)"
+         "~(~a || (p /\\ q)) == (a /\\ ~p) || (a /\\ ~q)"
       ],
       [
          "logic.propositional.demorganor",
          [
          ],
-         "~~(~p || q) /\\ ~(p /\\ q) == (p -> q) /\\ (~p || ~q)"
+         "~~a /\\ ~(p /\\ q) == (a /\\ ~p) || (a /\\ ~q)"
       ],
       [
          "logic.propositional.notnot",
          [
          ],
-         "(~p || q) /\\ ~(p /\\ q) == (p -> q) /\\ (~p || ~q)"
+         "a /\\ ~(p /\\ q) == (a /\\ ~p) || (a /\\ ~q)"
       ],
       [
          "logic.propositional.demorganand",
          [
          ],
-         "(~p || q) /\\ (~p || ~q) == (p -> q) /\\ (~p || ~q)"
+         "a /\\ (~p || ~q) == (a /\\ ~p) || (a /\\ ~q)"
       ],
       [
          "logic.propositional.andoveror",
          [
          ],
-         "((~p || q) /\\ ~p) || ((~p || q) /\\ ~q) == (p -> q) /\\ (~p || ~q)"
+         "(a /\\ ~p) || (a /\\ ~q) == (a /\\ ~p) || (a /\\ ~q)"
       ],
       [
-         "logic.propositional.absorpand",
+         "top-is-or",
          [
          ],
-         "~p || ((~p || q) /\\ ~q) == (p -> q) /\\ (~p || ~q)"
+         "(a /\\ ~p) || (a /\\ ~q) == (a /\\ ~p) || (a /\\ ~q)"
       ],
       [
-         "logic.propositional.andoveror",
+         "top-is-and",
          [
          ],
-         "~p || (~p /\\ ~q) || (q /\\ ~q) == (p -> q) /\\ (~p || ~q)"
+         "(a /\\ ~p) || (a /\\ ~q) == (a /\\ ~p) || (a /\\ ~q)"
       ],
       [
-         "logic.propositional.absorpor",
+         "top-is-and",
          [
          ],
-         "~p || (q /\\ ~q) == (p -> q) /\\ (~p || ~q)"
-      ],
-      [
-         "logic.propositional.compland",
-         [
-         ],
-         "~p || F == (p -> q) /\\ (~p || ~q)"
-      ],
-      [
-         "logic.propositional.falsezeroor",
-         [
-         ],
-         "~p == (p -> q) /\\ (~p || ~q)"
-      ],
-      [
-         "logic.propositional.defimpl",
-         [
-         ],
-         "~p == (~p || q) /\\ (~p || ~q)"
-      ],
-      [
-         "logic.propositional.andoveror",
-         [
-         ],
-         "~p == ((~p || q) /\\ ~p) || ((~p || q) /\\ ~q)"
-      ],
-      [
-         "logic.propositional.absorpand",
-         [
-         ],
-         "~p == ~p || ((~p || q) /\\ ~q)"
-      ],
-      [
-         "logic.propositional.andoveror",
-         [
-         ],
-         "~p == ~p || (~p /\\ ~q) || (q /\\ ~q)"
-      ],
-      [
-         "logic.propositional.absorpor",
-         [
-         ],
-         "~p == ~p || (q /\\ ~q)"
-      ],
-      [
-         "logic.propositional.compland",
-         [
-         ],
-         "~p == ~p || F"
-      ],
-      [
-         "logic.propositional.falsezeroor",
-         [
-         ],
-         "~p == ~p"
+         "(a /\\ ~p) || (a /\\ ~q) == (a /\\ ~p) || (a /\\ ~q)"
       ],
       [
          "top-is-not",
          [
          ],
-         "p == p"
+         "(a /\\ ~p) || (a /\\ ~q) == (a /\\ ~p) || (a /\\ ~q)"
+      ],
+      [
+         "top-is-not",
+         [
+         ],
+         "(a /\\ ~p) || (a /\\ ~q) == (a /\\ ~p) || (a /\\ ~q)"
       ]
    ],
    "error": null,

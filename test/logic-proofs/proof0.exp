@@ -4,19 +4,19 @@
          "top-is-not",
          [
          ],
-         "p || (~p /\\ q) == p || q"
+         "~(p || (~p /\\ q)) == ~(p || q)"
       ],
       [
          "fakeabsorption",
          [
          ],
-         "p || q == p || q"
+         "~(p || q) == ~(p || q)"
       ],
       [
          "top-is-or",
          [
          ],
-         "p == p, q == q"
+         "~(p || q) == ~(p || q)"
       ]
    ],
    "error": null,

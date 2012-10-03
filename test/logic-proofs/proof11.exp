@@ -4,67 +4,67 @@
          "top-is-impl",
          [
          ],
-         "p -> q == ~q -> ~p, p -> s == ~s -> ~p"
+         "(p -> q) -> (p -> s) == (~q -> ~p) -> (~s -> ~p)"
       ],
       [
          "logic.propositional.defimpl",
          [
          ],
-         "~p || q == ~q -> ~p, p -> s == ~s -> ~p"
+         "(~p || q) -> (p -> s) == (~q -> ~p) -> (~s -> ~p)"
       ],
       [
          "logic.propositional.defimpl",
          [
          ],
-         "~p || q == ~~q || ~p, p -> s == ~s -> ~p"
+         "(~p || q) -> (p -> s) == (~~q || ~p) -> (~s -> ~p)"
       ],
       [
          "logic.propositional.notnot",
          [
          ],
-         "~p || q == q || ~p, p -> s == ~s -> ~p"
+         "(~p || q) -> (p -> s) == (q || ~p) -> (~s -> ~p)"
       ],
       [
          "top-is-or",
          [
          ],
-         "~p == ~p, q == q, p -> s == ~s -> ~p"
+         "(~p || q) -> (p -> s) == (~p || q) -> (~s -> ~p)"
       ],
       [
          "top-is-not",
          [
          ],
-         "p == p, q == q, p -> s == ~s -> ~p"
+         "(~p || q) -> (p -> s) == (~p || q) -> (~s -> ~p)"
       ],
       [
          "logic.propositional.defimpl",
          [
          ],
-         "p == p, q == q, ~p || s == ~s -> ~p"
+         "(~p || q) -> (~p || s) == (~p || q) -> (~s -> ~p)"
       ],
       [
          "logic.propositional.defimpl",
          [
          ],
-         "p == p, q == q, ~p || s == ~~s || ~p"
+         "(~p || q) -> (~p || s) == (~p || q) -> (~~s || ~p)"
       ],
       [
          "logic.propositional.notnot",
          [
          ],
-         "p == p, q == q, ~p || s == s || ~p"
+         "(~p || q) -> (~p || s) == (~p || q) -> (s || ~p)"
       ],
       [
          "top-is-or",
          [
          ],
-         "p == p, q == q, ~p == ~p, s == s"
+         "(~p || q) -> (~p || s) == (~p || q) -> (~p || s)"
       ],
       [
          "top-is-not",
          [
          ],
-         "p == p, q == q, p == p, s == s"
+         "(~p || q) -> (~p || s) == (~p || q) -> (~p || s)"
       ]
    ],
    "error": null,

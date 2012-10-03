@@ -1,4 +1,4 @@
 { "method" : "derivation"
-, "params" : [["logic.proof", "[]", "(p -> q) -> p -> s == (~q -> ~p) -> ~s -> ~p", ""]]
+, "params" : [["logic.proof", "[]", "(p -> q) -> (p -> s) == (~q -> ~p) -> (~s -> ~p)", ""]]
 , "id"     : 42
 }

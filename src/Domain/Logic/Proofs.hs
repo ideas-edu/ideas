@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -19,11 +20,10 @@ import Common.Library
 import Common.Rewriting.AC
 import Common.Utils
 import Common.Utils.Uniplate
-import Common.Traversal.Navigator
 import Control.Monad
 import Data.Foldable (toList)
 import Data.List
-import Data.Maybe
+import qualified Data.Set as S
 import Domain.Logic.Examples
 import Domain.Logic.Formula
 import Domain.Logic.GeneralizedRules
@@ -43,15 +43,14 @@ proofExercise = makeExercise
                          newId "logic.proof"
    , status         = Experimental
    , parser         = mapSecond makeProof . parseLogicProof
-   , prettyPrinter  = let f (p, q) = ppLogicPars p ++ " == " ++ ppLogicPars q
-                      in intercalate ", " . map f . subProofs
---   , equivalence    = \(p, _) (r, s) -> eqLogic p r && eqLogic r s
---   , similarity     = \(p, q) (r, s) -> equalLogicA p r && equalLogicA q s
+   , prettyPrinter  = showProof
+   , equivalence    = withoutContext equivalentProofs
+   , similarity     = withoutContext similarProofs
    , suitable       = predicate $ all (uncurry eqLogic) . subProofs
    , ready          = predicate $ all (uncurry equalLogicA) . subProofs
    , strategy       = proofStrategy
    , navigation     = termNavigator
-   , examples       = map (\a -> (Easy, makeProof	 a)) $
+   , examples       = map (\a -> (Easy, makeProof a)) $
                       let p = Var (ShowString "p")
                           q = Var (ShowString "q")
                       in exampleProofs ++ [(q :&&: p, p :&&: (q :||: q))]
@@ -65,11 +64,31 @@ subProofs = toList
 makeProof :: (SLogic, SLogic) -> Proof
 makeProof = Var
 
+proofPair :: Proof -> (SLogic, SLogic)
+proofPair x = (catLogic (fmap fst x), catLogic (fmap snd x))
+
+showProof :: Proof -> String
+showProof = uncurry f . proofPair
+ where
+   f p q = ppLogicPars p ++ " == " ++ ppLogicPars q
+
+equivalentProofs :: Proof -> Proof -> Bool
+equivalentProofs proof1 proof2 =
+   let (p1, q1) = proofPair proof1
+       (p2, q2) = proofPair proof2
+   in eqLogic p1 p2 && eqLogic q1 q2
+
+similarProofs :: Proof -> Proof -> Bool
+similarProofs proof1 proof2 =
+   let (p1, q1) = proofPair proof1
+       (p2, q2) = proofPair proof2
+   in equalLogicA p1 p2 && equalLogicA q1 q2
+
 proofStrategy :: LabeledStrategy (Context Proof)
 proofStrategy = label "proof equivalent" $
    repeatS (
-         somewhere (useC commonExprAtom)
-      |> somewhere splitTop
+         somewhere splitTop
+      |> somewhere (useC commonExprAtom)
       |> somewhere rest
       ) <*>
    repeatS (somewhere (use normLogicRule))
@@ -128,6 +147,7 @@ dnfStrategyDWA =
 useRules :: [Rule SLogic] -> Strategy (Context SLogic)
 useRules = alternatives . map liftToContext
 
+{-
 onceLeft :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onceLeft s = ruleMoveDown <*> s <*> ruleMoveUp
  where
@@ -142,7 +162,7 @@ onceRight s = ruleMoveDown <*> s <*> ruleMoveUp
    ruleMoveDown = minor $ makeRule "MoveDown" (downTo 2)
    ruleMoveUp   = minorRule "MoveUp" safeUp
 
-   safeUp a = Just (fromMaybe a (up a))
+   safeUp a = Just (fromMaybe a (up a)) -}
 
 normLogicRule :: Rule (SLogic, SLogic)
 normLogicRule = ruleMaybe "Normalize" $ \tuple@(p, q) -> do
@@ -156,28 +176,29 @@ normLogicRule = ruleMaybe "Normalize" $ \tuple@(p, q) -> do
 
 -- Find a common subexpression that can be treated as a box
 commonExprAtom :: Rule (Context (SLogic, SLogic))
-commonExprAtom = ruleMaybe "commonExprAtom" $ const Nothing {- \ctx -> do
-   undefined
-   (p, q) <- fromContext ctx
-   let f  = filter same . filter ok . nub . sort . universe
-       xs = f p `intersect` f q -- todo: only largest common sub expr
-       ok (Var _) = False
-       ok T       = False
-       ok F       = False
-       ok (Not a) = ok a
-       ok _       = True
+commonExprAtom = ruleTrans "commonExprAtom" $ makeTransLiftContext $ \(p, q) -> do
+   let xs = filter (same <&&> complement isAtomic) (largestCommonSubExpr p q) 
        same cse = eqLogic (sub cse p) (sub cse q)
        new = head (logicVars \\ (varsLogic p `union` varsLogic q))
        sub a this
           | a == this = Var new
           | otherwise = descend (sub a) this
    case xs of
-      hd:_ -> do undefined -- modifyVar substRef ((show new, show hd):)
-                 return (replaceInContext (sub hd p, sub hd q) ctx)
+      hd:_ -> do
+         xs <- substRef :? []
+         substRef := (show new, show hd):xs
+         return (sub hd p, sub hd q)
       _ -> fail "not applicable"
 
+largestCommonSubExpr :: (Uniplate a, Ord a) => a -> a -> [a]
+largestCommonSubExpr x = rec 
+ where
+   uniX  = S.fromList (universe x)
+   rec y | y `S.member` uniX = [y]
+         | otherwise         = concatMap rec (children y)
+
 substRef :: Ref [(String, String)]
-substRef = makeRef "subst" -}
+substRef = makeRef "subst"
 
 logicVars :: [ShowString]
 logicVars = [ ShowString [c] | c <- ['a'..] ]
@@ -253,10 +274,10 @@ topIsNot = makeRule "top-is-not" f
    f (Var (Not p, Not q)) = Just (Not (Var (p, q)))
    f _ = Nothing
 
-acTopRuleFor :: IsId a => a -> View SLogic (SLogic, SLogic) -> Rule [(SLogic, SLogic)]
+acTopRuleFor :: IsId s => s -> (forall a . View (Logic a) (Logic a, Logic a)) -> Rule Proof
 acTopRuleFor s v = makeRule s f
  where
-   f [(lhs, rhs)] = do
+   f (Var (lhs, rhs)) = do
       let collect a = maybe [a] (\(x, y) -> collect x ++ collect y) (match v a)
           make    = foldr1 (curry (build v))
           xs = collect lhs
@@ -264,32 +285,17 @@ acTopRuleFor s v = makeRule s f
       guard (length xs > 1 && length ys > 1)
       list <- liftM (map (make *** make)) (pairingsAC False xs ys)
       guard (all (uncurry eqLogic) list)
-      return list
+      return (foldr1 (curry (build v)) (map Var list))
    f _ = []
 
 topIsAnd :: Rule Proof
-topIsAnd = makeRule "top-is-and" $ \xs -> 
-   case xs of
-      Var (x, y) -> do
-         zs <- applyAll (acTopRuleFor "top-is-and" $ makeView isAnd (uncurry (<&&>))) [(x, y)] 
-         return (foldl1 (:&&:) (map Var zs))
-      _ -> []
+topIsAnd = acTopRuleFor "top-is-and" (makeView isAnd (uncurry (<&&>)))
 
 topIsOr :: Rule Proof
-topIsOr = makeRule "top-is-or" $ \xs -> 
-   case xs of
-      Var (x, y) -> do
-         zs <- applyAll (acTopRuleFor "top-is-or" $ makeView isOr (uncurry (<||>))) [(x, y)]
-         return (foldl1 (:||:) (map Var zs))
-      _ -> []
+topIsOr = acTopRuleFor "top-is-or" (makeView isOr (uncurry (<||>)))
 
 topIsEquiv :: Rule Proof
-topIsEquiv = makeRule "top-is-equiv" $ \xs -> 
-   case xs of
-      Var (x, y) -> do
-         zs <- applyAll (acTopRuleFor "top-is-equiv" $ makeView isEquiv (uncurry equivalent)) [(x, y)]
-         return (foldl1 (:<->:) (map Var zs))
-      _ -> []
+topIsEquiv = acTopRuleFor "top-is-equiv" (makeView isEquiv (uncurry equivalent))
  where
    isEquiv (p :<->: q) = Just (p, q)
    isEquiv _           = Nothing

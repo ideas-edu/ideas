@@ -52,19 +52,19 @@
          "top-is-or",
          [
          ],
-         "~p == ~p, ~q == ~q, r == r"
+         "~p || ~q || r == ~p || ~q || r"
       ],
       [
          "top-is-not",
          [
          ],
-         "p == p, ~q == ~q, r == r"
+         "~p || ~q || r == ~p || ~q || r"
       ],
       [
          "top-is-not",
          [
          ],
-         "p == p, q == q, r == r"
+         "~p || ~q || r == ~p || ~q || r"
       ]
    ],
    "error": null,

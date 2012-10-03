@@ -61,10 +61,20 @@ instance BoolValue Bool where
    isTrue   = id
    isFalse  = not
 
+instance BoolValue b => BoolValue (a -> b) where
+   fromBool x = const (fromBool x)
+   isTrue  = error "not implemented"
+   isFalse = error "not implemented"
+   
 instance Boolean Bool where
    (<&&>)     = (&&)
    (<||>)     = (||)
    complement = not
+
+instance Boolean b => Boolean (a -> b) where
+   f <&&> g   = \x -> f x <&&> g x
+   f <||> g   = \x -> f x <||> g x
+   complement = (.) complement
 
 ands :: Boolean a => [a] -> a -- or use mconcat with And monoid
 ands xs | null xs   = true

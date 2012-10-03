@@ -12,7 +12,7 @@
 WINDOWS = $(shell ghc-pkg list  | (grep -q Win32 && echo yes || echo no))
 WX      = $(shell ghc-pkg list  | (grep -q wx    && echo yes || echo no))
 SVN     = $(shell test -e /usr/bin/svn && echo yes || echo no)
-IDEASSERVER = $(shell hostname | (grep -q ideas && echo yes || echo no))
+IDEASSERVER = $(shell hostname | (grep -q vhost0034.zoo.cs.uu.nl && echo yes || echo no))
 
 ifeq ($(WINDOWS), yes)
 EXE  = .exe

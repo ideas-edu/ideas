@@ -14,29 +14,30 @@
 -----------------------------------------------------------------------------
 module Service.State
    ( -- * Exercise state
-     State, makeState, empyStateContext, emptyState
-   , exercise, statePrefix, stateContext, stateTerm
+     State, makeState, makeNoState, empyStateContext, emptyState
+   , exercise, statePrefixes, stateContext, stateTerm
      -- * Types
    , stateType
    ) where
 
 import Common.Library
 import Common.Utils (readM)
+import Data.List
 import Data.Maybe
 import Service.Types
 
 data State a = State
-   { exercise     :: Exercise a
-   , statePrefix  :: Maybe (Prefix (Context a))
-   , stateContext :: Context a
+   { exercise      :: Exercise a
+   , statePrefixes :: [Prefix (Context a)]
+   , stateContext  :: Context a
    }
 
 instance Show (State a) where
    show s = unlines $ "State {" : map ("   "++) xs ++ ["}"]
     where
       xs = [ "exercise = " ++ showId s
-           , "prefix   = " ++ maybe "no prefix" show (statePrefix s)
-           , "steps    = " ++ maybe "no prefix" (show . prefixToSteps) (statePrefix s)
+           , "prefix   = " ++ intercalate ";" (map show (statePrefixes s))
+           , "steps    = " ++ intercalate ";" (map (show . prefixToSteps) (statePrefixes s))
            , "term     = " ++ prettyPrinterContext (exercise s) (stateContext s)
            ]
 
@@ -49,11 +50,15 @@ stateTerm = fromMaybe (error "invalid term") . fromContext . stateContext
 
 -----------------------------------------------------------
 
-makeState :: Exercise a -> Maybe (Prefix (Context a)) -> Context a -> State a
+makeState :: Exercise a -> [Prefix (Context a)] -> Context a -> State a
 makeState = State
 
+-- State without a prefix
+makeNoState :: Exercise a -> Context a -> State a
+makeNoState = flip makeState [] 
+
 empyStateContext :: Exercise a -> Context a -> State a
-empyStateContext ex = makeState ex (Just pr)
+empyStateContext ex = makeState ex [pr]
  where
    pr = emptyPrefix (strategy ex)
 
@@ -71,10 +76,10 @@ stateType = Tag "state" (Iso (f <-> g) tp)
       in makeState ex (mp >>= flip makePrefix str . h) ctx
    g st =
       ( exercise st
-      , fmap show (statePrefix st)
+      , fmap show (statePrefixes st)
       , stateContext st
       )
    tp = tuple3 Exercise prefixType Context
 
    -- iso prevents that prefix is turned into an (XML) attribute
-   prefixType = maybeType (Tag "prefix" (Iso identity String))
+   prefixType = List (Tag "prefix" (Iso identity String))

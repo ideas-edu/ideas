@@ -22,32 +22,37 @@ problemDecomposition :: Maybe Id -> State a -> Maybe a -> Either String (Reply a
 problemDecomposition msloc state answer
    | isNothing $ subStrategy sloc (strategy ex) =
         Left "request error: invalid location for strategy"
+   | null answers = 
+        Left "strategy error: not able to compute an expected answer"
    | otherwise =
-   let pr = fromMaybe (emptyPrefix $ strategy ex) (statePrefix state) in
-         case (runPrefixLocation sloc pr requestedTerm, fmap (inContext ex) answer) of
-            ([], _) -> Left "strategy error: not able to compute an expected answer"
-            (answers, Just answeredTerm)
-               | not (null witnesses) -> Right $
+         case maybeAnswer of
+            Just answeredTerm | not (null witnesses) -> Right $
                     Ok newLocation newState
                   where
                     witnesses   = filter (similarity ex answeredTerm . fst) $ take 1 answers
                     (newCtx, newPrefix) = head witnesses
                     newLocation = nextTaskLocation (strategy ex) sloc $
                                      fromMaybe topId $ nextMajorForPrefix newPrefix newCtx
-                    newState    = makeState ex (Just newPrefix) newCtx
-            ((expected, pref):_, maybeAnswer) -> Right $
+                    newState    = makeState ex [newPrefix] newCtx
+            _ -> Right $
                     Incorrect isEquiv newLocation expState arguments
              where
                newLocation = subTaskLocation (strategy ex) sloc loc
-               expState = makeState ex (Just pref) expected
+               expState = makeState ex [pref] expected
                isEquiv  = maybe False (equivalence ex expected) maybeAnswer
+               (expected, pref) = head answers
                (loc, arguments) = fromMaybe (topId, mempty) $
-                                     firstMajorInPrefix pr pref
+                                     firstMajorInPrefix prefix pref
  where
    ex    = exercise state
    topId = getId (strategy ex)
    sloc  = fromMaybe topId msloc
+   answers       = runPrefixLocation sloc prefix requestedTerm
    requestedTerm = stateContext state
+   maybeAnswer   = fmap (inContext ex) answer
+   prefix = case statePrefixes state of
+               []   -> emptyPrefix (strategy ex)
+               hd:_ -> hd
 
 -- | Continue with a prefix until a certain strategy location is reached. At least one
 -- major rule should have been executed

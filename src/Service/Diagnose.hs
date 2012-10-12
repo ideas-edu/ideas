@@ -94,7 +94,7 @@ diagnose state new
  where
    ex        = exercise state
    newc      = inContext ex new
-   restarted = restartIfNeeded (makeState ex Nothing newc)
+   restarted = restartIfNeeded (makeNoState ex newc)
    similar   = similarity ex (stateContext state) newc
 
    expected = do
@@ -123,7 +123,7 @@ diagnose state new
 -- When resetting the prefix, also make sure that the context is refreshed
 restartIfNeeded :: State a -> State a
 restartIfNeeded state
-   | isNothing (statePrefix state) && canBeRestarted ex =
+   | null (statePrefixes state) && canBeRestarted ex =
         emptyState ex (stateTerm state)
    | otherwise = state
  where

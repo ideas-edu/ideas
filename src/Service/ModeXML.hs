@@ -254,16 +254,16 @@ decodeState b ex f xmlTop = do
    term <- decodeContext b ex f xml
    return (makeState ex mpr term)
 
-decodePrefix :: Monad m => Exercise a -> XML -> m (Maybe (Prefix (Context a)))
+decodePrefix :: Monad m => Exercise a -> XML -> m [Prefix (Context a)]
 decodePrefix ex xml
    | all isSpace prefixText =
-        return (Just (emptyPrefix str))
+        return [emptyPrefix str]
    | prefixText ~= "no prefix" =
-        return Nothing
+        return []
    | otherwise = do
         a  <- readM prefixText
         pr <- makePrefix a str
-        return (Just pr)
+        return [pr]
  where
    prefixText = maybe "" getData (findChild "prefix" xml)
    str = strategy ex

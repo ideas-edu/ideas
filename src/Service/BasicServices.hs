@@ -31,12 +31,12 @@ generate ex = liftM (emptyState ex) . randomTerm ex
 derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))
 derivation mcfg state =
    mapSecond (biMap (\(r, _, as) -> (r, as)) stateContext) $
-   case (statePrefix state, mcfg) of
-      (Nothing, _) -> Left "Prefix is required"
+   case mcfg of
+      _ | null ps -> Left "Prefix is required"
       -- configuration is only allowed beforehand: hence, the prefix
       -- should be empty (or else, the configuration is ignored). This
       -- restriction should probably be relaxed later on.
-      (Just p, Just cfg) | null (prefixToSteps p) ->
+      Just cfg | all (null . prefixToSteps) ps ->
          let newStrategy = configure cfg (strategy ex)
              newExercise = ex {strategy = newStrategy}
          in rec timeout d0 (empyStateContext newExercise (stateContext state))
@@ -44,6 +44,7 @@ derivation mcfg state =
  where
    d0 = emptyDerivation state
    ex = exercise state
+   ps = statePrefixes state
    timeout = 50 :: Int
 
    rec i acc st =
@@ -59,16 +60,16 @@ derivation mcfg state =
 -- Note that we have to inspect the last step of the prefix afterwards, because
 -- the remaining part of the derivation could consist of minor rules only.
 allfirsts :: State a -> Either String [(Rule (Context a), Location, Environment, State a)]
-allfirsts state =
-   case statePrefix state of
-      Nothing ->
-         Left "Prefix is required"
-      Just p0 ->
-         let tree = cutOnStep (stop . lastStepInPrefix) (prefixTree p0 (stateContext state))
-             f (r1, _, _, _) (r2, _, _, _) =
-                ruleOrdering (exercise state) r1 r2
-         in Right $ noDuplicates $ sortBy f $ mapMaybe make $ derivations tree
+allfirsts state
+   | null ps   = Left "Prefix is required"
+   | otherwise =
+        let trees  = map tree ps
+            tree p = cutOnStep (stop . lastStepInPrefix) (prefixTree p (stateContext state))
+            f (r1, _, _, _) (r2, _, _, _) =
+               ruleOrdering (exercise state) r1 r2
+        in Right $ noDuplicates $ sortBy f $ mapMaybe make $ concatMap derivations trees
  where
+   ps   = statePrefixes state
    stop = maybe False isMajor
 
    make d = do
@@ -78,7 +79,7 @@ allfirsts state =
             ( r
             , location (lastTerm d)
             , env
-            , makeState (exercise state) (Just prefixEnd) (lastTerm d)
+            , makeState (exercise state) [prefixEnd] (lastTerm d)
             )
          _ -> Nothing
 
@@ -110,7 +111,7 @@ allapplications state = sortBy cmp (xs ++ ys)
    ys = f (top (stateContext state))
 
    f c = g c ++ concatMap f (downs c)
-   g c = [ (r, location new, makeState ex Nothing new)
+   g c = [ (r, location new, makeNoState ex new)
          | r   <- ruleset ex
          , (r, location c) `notElem` ps
          , new <- applyAll r c
@@ -129,16 +130,18 @@ setLocation loc c0 = fromMaybe c0 (navigateTo loc c0)
 -- strategy), or I return a new term without a prefix. A final scenario is that the rule cannot be applied
 -- to the current term at the given location, in which case the request is invalid.
 apply :: Rule (Context a) -> Location -> Environment -> State a -> Either String (State a)
-apply r loc env state = maybe applyOff applyOn (statePrefix state)
+apply r loc env state 
+   | null (statePrefixes state) = applyOff
+   | otherwise                  = applyOn
  where
-   applyOn _ = -- scenario 1: on-strategy
+   applyOn = -- scenario 1: on-strategy
       maybe applyOff Right $ listToMaybe
       [ s1 | Right xs <- [allfirsts state], (r1, loc1, env1, s1) <- xs, r==r1, loc==loc1, noBindings env || env==env1 ]
 
    ca = setLocation loc (stateContext state)
    applyOff  = -- scenario 2: off-strategy
       case transApplyWith env (transformation r) ca of
-         (new, _):_ -> Right (makeState (exercise state) Nothing new)
+         (new, _):_ -> Right (makeNoState (exercise state) new)
          []         -> Left ("Cannot apply " ++ show r)
 
 ready :: State a -> Bool

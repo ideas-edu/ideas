@@ -192,7 +192,10 @@ encodeState f st = do
    theTerm <- f (stateTerm st)
    return $ Array
       [ String (showId (exercise st))
-      , String (maybe "NoPrefix" show (statePrefix st))
+      , String $ case statePrefixes st of
+                    []  -> "NoPrefix"
+                    [p] -> show p
+                    _   -> "MultiPrefix"
       , theTerm
       , encodeContext (stateContext st)
       ]

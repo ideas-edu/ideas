@@ -70,6 +70,9 @@ main = do
          liftIO $ writeIORef logRef $ -- save logging action for later
             logMessage req input txt addr startTime
          setHeader "Content-type" ctp
+         -- Cross-Origin Resource Sharing (CORS) prevents browser warnings
+         -- about cross-site scripting
+         setHeader "Access-Control-Allow-Origin" "*"
          output txt
 
    -- log request to database

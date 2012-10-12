@@ -37,6 +37,7 @@ import Data.Maybe
 import Data.Monoid
 import Data.Time
 import Test.QuickCheck
+import System.IO
 import qualified Data.Foldable as F
 import qualified Data.Sequence as S
 
@@ -161,12 +162,13 @@ reset = modify $ \c -> c {column = 0}
 -- Running a test suite
 
 runTestSuite :: TestSuite -> IO ()
-runTestSuite s = runTestSuiteResult s >> return ()
+runTestSuite = void . runTestSuiteResult
 
 runTestSuiteResult :: TestSuite -> IO TestSuiteResult
-runTestSuiteResult s =
+runTestSuiteResult s = do
+   hSetBuffering stdout NoBuffering
    updateDiffTime $ liftM result $
-   execStateT (unTSM s >> newline) (C 0 mempty)
+      execStateT (unTSM s >> newline) (C 0 mempty)
 
 ----------------------------------------------------------------
 -- Test Suite Result

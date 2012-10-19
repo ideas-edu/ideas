@@ -25,12 +25,7 @@ data Evaluator inp out a = Evaluator
    , decoder :: Decoder inp a
    }
 
-data Encoder s a = Encoder
-   { encodeType    :: forall t . Type a t -> t -> DomainReasoner s
-   , encodeCtxTerm :: Context a -> DomainReasoner s
-   , encodeTerm    :: a -> DomainReasoner s
-   , encodeTuple   :: [s] -> s
-   }
+type Encoder s a = forall t . Type a t -> t -> DomainReasoner s
 
 data Decoder s a = Decoder
    { decodeType      :: forall t . Type a t -> s -> DomainReasoner (t, s)
@@ -45,7 +40,7 @@ eval f (tv ::: tp) s =
          (a, s1) <- decodeType (decoder f) t1 s
          eval f (tv a ::: t2) s1
       _ ->
-         encodeType (encoder f) tp tv
+         encoder f tp tv
 
 decodeDefault :: Decoder s a -> Type a t -> s -> DomainReasoner (t, s)
 decodeDefault dec tp s =
@@ -69,37 +64,6 @@ decodeDefault dec tp s =
          return (script, s)
       _ ->
          fail $ "No support for argument type: " ++ show tp
-
-encodeDefault :: Encoder s a -> Type a t -> t -> DomainReasoner s
-encodeDefault enc tp tv =
-   case tp of
-      Iso p t    -> encodeType enc t (to p tv)
-      Pair t1 t2 ->
-         case tv of
-            (a, b) -> do
-               x <- encodeType enc t1 a
-               y <- encodeType enc t2 b
-               return (encodeTuple enc [x, y])
-      List t        -> liftM (encodeTuple enc) (mapM (encodeType enc t) tv)
-      t1 :|: t2     -> case tv of
-                          Left  a -> encodeType enc t1 a
-                          Right b -> encodeType enc t2 b
-      Unit          -> return (encodeTuple enc [])
-      Tag _ t1      -> encodeType enc t1 tv
-      Rule          -> encodeType enc String (showId tv)
-      Term          -> encodeTerm enc tv
-      Context       -> fromContext tv >>= encodeType enc Term
-      Location      -> encodeAsString enc tv
-      Id            -> encodeAsString enc tv
-      Int           -> encodeAsString enc tv
-      Exercise      -> return (encodeTuple enc [])
-      IO t          -> do a <- liftIO (runIO tv)
-                          encodeType enc (Exception :|: t) a
-      Exception     -> fail tv
-      _             -> fail ("No support for result type: " ++ show tp)
-
-encodeAsString :: Show b => Encoder s a -> b -> DomainReasoner s
-encodeAsString enc a = encodeType enc String (show a)
 
 runIO :: IO a -> IO (Either String a)
 runIO m = liftM Right m `catch` (return . Left . show)

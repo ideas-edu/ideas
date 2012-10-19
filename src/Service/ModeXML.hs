@@ -115,7 +115,7 @@ stringFormatConverterTp :: Exercise a -> Evaluator XML XMLBuilder a
 stringFormatConverterTp ex =
    Evaluator (xmlEncoder False f ex) (xmlDecoder False g ex)
  where
-   f  = liftM (element "expr" . text . prettyPrinter ex) . fromContext
+   f  = return . element "expr" . text . prettyPrinter ex
    g xml0 = do
       xml <- findChild "expr" xml0 -- quick fix
       -- guard (name xml == "expr")
@@ -132,12 +132,7 @@ openMathConverterTp :: Bool -> Exercise a -> Evaluator XML XMLBuilder a
 openMathConverterTp withMF ex =
    Evaluator (xmlEncoder True f ex) (xmlDecoder True g ex)
  where
-   f ctx = liftM (builder . toXML) $
-      {- case changeT (return . markFocus) ctx >>= leaveT of
-         Just term | useFocus ->
-            return (toOMOBJ (term :: Term))
-         _ -> -}
-            fromContext ctx >>= (handleMixedFractions . toOpenMath ex)
+   f a = liftM (builder . toXML) $ handleMixedFractions $ toOpenMath ex a
    g xml = do
       xob   <- findChild "OMOBJ" xml
       omobj <- liftEither (xml2omobj xob)
@@ -148,45 +143,44 @@ openMathConverterTp withMF ex =
    -- Remove special mixed-fraction symbol (depending on boolean argument)
    handleMixedFractions = if withMF then id else liftM noMixedFractions
 
-{-
-   markFocus :: Term -> Term
-   markFocus = unary (newSymbol focusSymbol)
 
-   noFocus :: OMOBJ -> OMOBJ
-   noFocus (OMA [OMS s, x]) | s == focusSymbol = x
-   noFocus a = a
-
-   focusSymbol = makeSymbol "ideas" "focus"
-   useFocus = False -}
-
-xmlEncoder :: Bool -> (Context a -> DomainReasoner XMLBuilder) -> Exercise a -> Encoder XMLBuilder a
-xmlEncoder isOM f ex = Encoder
-   { encodeType    = xmlEncodeType isOM (xmlEncoder isOM f ex) ex
-   , encodeCtxTerm = f
-   , encodeTerm    = f . inContext ex -- (not so nice)
-   , encodeTuple   = sequence_
-   }
-
-xmlEncodeType :: Bool -> Encoder XMLBuilder a -> Exercise a -> Type a t -> t -> DomainReasoner XMLBuilder
-xmlEncodeType b enc ex serviceType =
-   case serviceType of
+xmlEncoder :: Bool -> (a -> DomainReasoner XMLBuilder) -> Exercise a -> Encoder XMLBuilder a
+xmlEncoder isOM enc ex tp a =
+   case tp of
+      Iso p t    -> xmlEncoder isOM enc ex t (to p a)
+      Pair t1 t2 -> do
+         sx <- xmlEncoder isOM enc ex t1 (fst a)
+         sy <- xmlEncoder isOM enc ex t2 (snd a)
+         return (sx >> sy)
+      t1 :|: t2 -> case a of
+                      Left  x -> xmlEncoder isOM enc ex t1 x
+                      Right y -> xmlEncoder isOM enc ex t2 y
+       
+      List t -> liftM sequence_ (mapM (xmlEncoder isOM enc ex t) a)
+      Exercise      -> return (return ())
+      Exception     -> fail a
+      Unit          -> return (return ())
+      Id            -> return (text (show a))
+      IO t          -> do x <- liftIO (runIO a)
+                          xmlEncoder isOM enc ex (Exception :|: t) x
       Tp.Tag s t1
-         | s == "RulesInfo" -> \_ ->
-              rulesInfoXML ex (encodeTerm enc)
+         | s == "RulesInfo" -> 
+              rulesInfoXML ex enc
          | otherwise ->
               case useAttribute t1 of
-                 Just f | s /= "message" -> return . (s .=.) . f
-                 _  -> liftM (element s) . xmlEncodeType b enc ex t1
-      Tp.Strategy   -> return . builder . strategyToXML
-      Tp.Rule       -> return . ("ruleid" .=.) . showId
-      Tp.Term       -> encodeTerm enc
-      Tp.Context    -> encodeContext b (encodeCtxTerm enc)
-      Tp.Location   -> return . ("location" .=.) . show
-      Tp.BindingTp  -> return . encodeTypedBinding b
-      Tp.Text       -> encodeText enc ex
-      Tp.Bool       -> return . text . map toLower . show
-      Tp.String     -> return . text
-      _             -> encodeDefault enc serviceType
+                 Just f | s /= "message" -> return (s .=. f a)
+                 _  -> liftM (element s) (xmlEncoder isOM enc ex t1 a)
+      Tp.Strategy   -> return (builder (strategyToXML a))
+      Tp.Rule       -> return ("ruleid" .=. showId a)
+      Tp.Term       -> enc a
+      Tp.Context    -> encodeContext isOM enc a
+      Tp.Location   -> return ("location" .=. show a)
+      Tp.BindingTp  -> return (encodeTypedBinding isOM a)
+      Tp.Text       -> encodeText enc ex a
+      Tp.Bool       -> return (text (map toLower (show a)))
+      Tp.Int        -> return (text (show a))
+      Tp.String     -> return (text a)
+      _             -> fail $ "Type " ++ show tp ++ " not supported in XML"
 
 xmlDecoder :: Bool -> (XML -> DomainReasoner a) -> Exercise a -> Decoder XML a
 xmlDecoder b f ex = Decoder
@@ -331,9 +325,10 @@ encodeEnvironment b ctx
       | null loc  = id
       | otherwise = insertRef (makeRef "location") loc 
 
-encodeContext :: Monad m => Bool -> (Context a -> m XMLBuilder) -> Context a -> m XMLBuilder
+encodeContext :: Monad m => Bool -> (a -> m XMLBuilder) -> Context a -> m XMLBuilder
 encodeContext b f ctx = do
-   xml <- f ctx
+   a   <- fromContext ctx
+   xml <- f a
    return (xml >> encodeEnvironment b ctx)
 
 encodeTypedBinding :: Bool -> Binding -> XMLBuilder
@@ -365,11 +360,13 @@ decodeArgEnvironment b =
    termBinding :: String -> Term -> Binding
    termBinding = makeBinding . makeRef
    
-encodeText :: Encoder s a -> Exercise a -> Text -> DomainReasoner s
-encodeText enc ex = liftM (encodeTuple enc) . mapM f . textItems
+encodeText :: (a -> DomainReasoner XMLBuilder) -> Exercise a -> Text -> DomainReasoner XMLBuilder
+encodeText f ex = liftM sequence_ . mapM make . textItems
  where
-   f (TextTerm a) = fromMaybe (encodeAsString enc a) $ do
+   make t@(TextTerm a) = fromMaybe (returnText t) $ do
       v <- hasTermView ex
       b <- match v a
-      return (encodeTerm enc b)
-   f a = encodeAsString enc a
+      return (f b)
+   make a = returnText a
+   
+   returnText = return . text . show

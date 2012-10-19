@@ -29,14 +29,14 @@ typedExample ex service args = do
          Nothing -> return $
             stdReply (showId service) enc ex (return ())
          Just (reqTuple ::: reqTp) -> do
-            xml <- encodeType (encoder evaluator) reqTp reqTuple
+            xml <- encoder evaluator reqTp reqTuple
             return $
                stdReply (showId service) enc ex xml
    -- Construct a reply in xml
    reply <-
       case foldl dynamicApply (serviceFunction service) args of
          reply ::: replyTp -> do
-            xml <- encodeType (encoder evaluator) replyTp reply
+            xml <- encoder evaluator replyTp reply
             return (resultOk xml)
     `catchError`
       (return . resultError)

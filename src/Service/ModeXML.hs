@@ -33,6 +33,7 @@ import Service.State
 import Service.StrategyInfo
 import Service.Types
 import Text.OpenMath.Object
+import Text.HTML hiding (text)
 import Text.XML
 import qualified Service.Types as Tp
 
@@ -43,7 +44,8 @@ processXML input = do
    resp <- xmlReply req xml
               `catchError` (return . resultError)
    vers <- getVersion
-   let out = showXML (if null vers then resp else addVersion vers resp)
+   let out | encoding req == Just HTMLEncoding = show resp
+           | otherwise = showXML (if null vers then resp else addVersion vers resp)
    return (req, out, "application/xml")
 
 addVersion :: String -> XML -> XML
@@ -79,18 +81,20 @@ xmlReply request xml = do
                  return (Some emptyExercise)
             | otherwise ->
                  fail "unknown exercise code"
-   Some conv <-
-      case encoding request of
-         Just StringEncoding -> return (stringFormatConverter ex)
-         -- always use special mixed fraction symbol
-         _ -> return (openMathConverter ex)
-         -- _ | fromDWO request -> return (dwoConverter ex)
-         --   | otherwise       -> return (openMathConverter ex)
-   res <- evalService conv srv xml
-   return (resultOk res)
-
---fromDWO :: Request -> Bool
---fromDWO = (== Just "dwo") . fmap (map toLower) . source
+   case encoding request of
+      Just StringEncoding -> do
+         Some conv <- return (stringFormatConverter ex)
+         res <- evalService conv srv xml
+         return (resultOk res) 
+         
+      Just HTMLEncoding -> do
+         Some conv <- return (htmlEvaluator ex)
+         res <- evalService conv srv xml
+         return (htmlPage "Title" Nothing res) 
+      _ -> do 
+         Some conv <- return (openMathConverter ex)
+         res <- evalService conv srv xml
+         return (resultOk res)  
 
 extractExerciseId :: Monad m => XML -> m Id
 extractExerciseId = liftM newId . findAttribute "exerciseid"
@@ -142,7 +146,6 @@ openMathConverterTp withMF ex =
    
    -- Remove special mixed-fraction symbol (depending on boolean argument)
    handleMixedFractions = if withMF then id else liftM noMixedFractions
-
 
 xmlEncoder :: Bool -> (a -> DomainReasoner XMLBuilder) -> Exercise a -> Encoder XMLBuilder a
 xmlEncoder isOM enc ex tp a =
@@ -370,3 +373,43 @@ encodeText f ex = liftM sequence_ . mapM make . textItems
    make a = returnText a
    
    returnText = return . text . show
+   
+--------------------
+
+htmlEvaluator :: Some Exercise -> Some (Evaluator XML HTMLBuilder)
+htmlEvaluator (Some ex) =
+   Some (Evaluator (htmlEncoder f ex) (decoder (stringFormatConverterTp ex)))
+ where
+   f  = return . preText . prettyPrinter ex
+
+htmlEncoder :: (a -> DomainReasoner HTMLBuilder) -> Exercise a -> Encoder HTMLBuilder a
+htmlEncoder enc ex tp a =
+   case tp of
+      Iso p t    -> htmlEncoder enc ex t (to p a)
+      Pair t1 t2 -> do
+         sx <- htmlEncoder enc ex t1 (fst a)
+         sy <- htmlEncoder enc ex t2 (snd a)
+         return (sx >> sy)
+      t1 :|: t2 -> case a of
+                      Left  x -> htmlEncoder enc ex t1 x
+                      Right y -> htmlEncoder enc ex t2 y
+       
+      List t        -> liftM sequence_ (mapM (htmlEncoder enc ex t) a)
+      Exercise      -> return (return ())
+      Exception     -> fail a
+      Unit          -> return (return ())
+      Id            -> return (text (show a))
+      IO t          -> do x <- liftIO (runIO a)
+                          htmlEncoder enc ex (Exception :|: t) x
+      Tp.Tag _ t1   -> htmlEncoder enc ex t1 a
+      Tp.Strategy   -> return (builder (strategyToXML a))
+      Tp.Rule       -> return (preText ("   => " ++ showId a))
+      Tp.Term       -> enc a
+      Tp.Context    -> encodeContext False enc a
+      Tp.Location   -> return ("location" .=. show a)
+      Tp.BindingTp  -> return $ preText ("     {" ++ showId a ++ " = " ++ showValue a ++ "}")
+      Tp.Text       -> encodeText enc ex a
+      Tp.Bool       -> return (text (map toLower (show a)))
+      Tp.Int        -> return (text (show a))
+      Tp.String     -> return (text a)
+      _             -> fail $ "Type " ++ show tp ++ " not supported in XML"

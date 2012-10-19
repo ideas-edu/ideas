@@ -30,7 +30,7 @@ import Control.Monad
 import Data.Char
 import Data.List
 import Prelude hiding (div)
-import Text.XML hiding (text)
+import Text.XML
 import qualified Text.XML as XML
 
 type HTML = XML
@@ -110,9 +110,6 @@ bullet = XML.unescaped "&#8226;"
 
 image :: String -> HTMLBuilder
 image n = element "img" ("src" .=. n)
-
-text :: String -> HTMLBuilder
-text = XML.text
 
 divClass :: String -> HTMLBuilder -> HTMLBuilder
 divClass n = classA n . element "div"

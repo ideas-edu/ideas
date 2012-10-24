@@ -14,56 +14,32 @@ module Service.Evaluator where
 
 import Common.Library
 import Control.Monad
-import Service.DomainReasoner
 import Service.Types
 
-evalService :: Evaluator inp out a -> Service -> inp -> DomainReasoner out
+evalService :: Monad m => Evaluator m out a -> Service -> m out
 evalService f = eval f . serviceFunction
 
-data Evaluator inp out a = Evaluator
-   { encoder :: Encoder out a
-   , decoder :: Decoder inp a
+data Evaluator m out a = Evaluator
+   { encoder :: Encoder m out a
+   , decoder :: Decoder m a
    }
 
-type Encoder out a = TypedValue a -> DomainReasoner out
+type Encoder m out a = TypedValue a -> m out
 
-data Decoder s a = Decoder
-   { decodeType      :: forall t . Type a t -> s -> DomainReasoner (t, s)
-   , decodeTerm      :: s -> DomainReasoner a
+data Decoder m a = Decoder
+   { decodeType      :: forall t . Type a t -> m t
+   , decodeTerm      :: m a
    , decoderExercise :: Exercise a
    }
 
-eval :: Evaluator inp out a -> TypedValue a -> inp -> DomainReasoner out
-eval f tv@(val ::: tp) s =
+eval :: Monad m => Evaluator m out a -> TypedValue a -> m out
+eval f tv@(val ::: tp) =
    case tp of
       t1 :-> t2 -> do
-         (a, s1) <- decodeType (decoder f) t1 s
-         eval f (val a ::: t2) s1
+         a <- decodeType (decoder f) t1
+         eval f (val a ::: t2)
       _ ->
          encoder f tv
-
-decodeDefault :: Decoder s a -> Type a t -> s -> DomainReasoner (t, s)
-decodeDefault dec tp s =
-   case tp of
-      Iso p t  -> liftM (from (first p)) (decodeType dec t s)
-      Pair t1 t2 -> do
-         (a, s1) <- decodeType dec t1 s
-         (b, s2) <- decodeType dec t2 s1
-         return ((a, b), s2)
-      t1 :|: t2 ->
-         liftM (first Left)  (decodeType dec t1 s) `mplus`
-         liftM (first Right) (decodeType dec t2 s)
-      Unit ->
-         return ((), s)
-      Tag _ t1 ->
-         decodeType dec t1 s
-      Exercise ->
-         return (decoderExercise dec, s)
-      Script -> do
-         script <- defaultScript (getId (decoderExercise dec))
-         return (script, s)
-      _ ->
-         fail $ "No support for argument type: " ++ show tp
 
 runIO :: IO a -> IO (Either String a)
 runIO m = liftM Right m `catch` (return . Left . show)

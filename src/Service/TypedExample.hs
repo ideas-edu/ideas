@@ -23,19 +23,20 @@ import Text.XML
 
 typedExample :: Exercise a -> Service -> [TypedValue a] -> DomainReasoner (XML, XML, Bool)
 typedExample ex service args = do
+   let noXML = makeXML "xml" (return ()) -- quick fix
    -- Construct a request in xml
    request <-
       case makeArgType args of
          Nothing -> return $
             stdReply (showId service) enc ex (return ())
          Just tv -> do
-            xml <- encoder evaluator tv
+            xml <- runEval (encoder evaluator tv) noXML
             return $
                stdReply (showId service) enc ex xml
    -- Construct a reply in xml
    reply <- do
       let tv = foldl dynamicApply (serviceFunction service) args
-      xml <- encoder evaluator tv
+      xml <- runEval (encoder evaluator tv) noXML
       return (resultOk xml)
     `catchError`
       (return . resultError)

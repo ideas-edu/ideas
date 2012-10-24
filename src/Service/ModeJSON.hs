@@ -17,6 +17,7 @@ module Service.ModeJSON (processJSON, jsonTuple) where
 import Common.Library hiding (exerciseId)
 import Common.Utils (Some(..), distinct, readM)
 import Control.Monad.Error
+import Control.Monad.State (StateT, evalStateT, get, put, modify)
 import Data.Char
 import Service.DomainReasoner
 import Service.Evaluator
@@ -87,16 +88,21 @@ myHandler fun arg = do
    srv  <- findService fun
    case jsonConverter ex of
       Some conv ->
-         evalService conv srv arg
+         runEval (evalService conv srv) arg
 
-jsonConverter :: Some Exercise -> Some (Evaluator JSON JSON)
-jsonConverter (Some ex) =
+type EvalJSON = StateT JSON DomainReasoner
+
+runEval :: EvalJSON a -> JSON -> DomainReasoner a
+runEval = evalStateT
+
+jsonConverter :: Some Exercise -> Some (Evaluator EvalJSON JSON)
+jsonConverter (Some ex) = 
    Some (Evaluator (jsonEncoder ex) (jsonDecoder ex))
 
-jsonEncoder :: Exercise a -> Encoder JSON a
+jsonEncoder :: Exercise a -> Encoder EvalJSON JSON a
 jsonEncoder ex = jsonEncode (String . prettyPrinter ex)
 
-jsonEncode :: (a -> JSON) -> Encoder JSON a
+jsonEncode :: (a -> JSON) -> Encoder EvalJSON JSON a
 jsonEncode enc tv@(val ::: tp)
    | length (tupleList tv) > 1 =
         liftM jsonTuple (mapM (jsonEncode enc) (tupleList tv))
@@ -147,46 +153,82 @@ jsonEncode enc tv@(val ::: tp)
       | s `elem` ["ruletext", "message", "accept"] = tupleList (x ::: t)
    tupleList tv = [tv]
 
-jsonDecoder :: Exercise a -> Decoder JSON a
+jsonDecoder :: Exercise a -> Decoder EvalJSON a
 jsonDecoder ex = Decoder
    { decodeType      = decode (jsonDecoder ex)
    , decodeTerm      = reader (parser ex)
    , decoderExercise = ex
    }
  where
-   reader :: Monad m => (String -> Either String a) -> JSON -> m a
-   reader f (String s) = either (fail . show) return (f s)
-   reader _  _         = fail "Expecting a string when reading a term"
+   reader :: (String -> Either String a) -> EvalJSON a
+   reader f = do
+      json <- get
+      case json of
+         String s -> either (fail . show) return (f s)
+         _        -> fail "Expecting a string when reading a term"
 
-   decode :: Decoder JSON a -> Type a t -> JSON -> DomainReasoner (t, JSON)
+   decode :: Decoder EvalJSON a -> Type a t -> EvalJSON t
    decode dec serviceType =
       case serviceType of
          Tp.Location -> useFirst decodeLocation
-         Tp.Term     -> useFirst $ decodeTerm dec
+         Tp.Term     -> useFirst $ \json -> do
+                           old <- get
+                           put json
+                           a <- decodeTerm dec
+                           put old
+                           return a
          Tp.Rule     -> useFirst $ \x -> jsonToId x >>= getRule (decoderExercise dec)
-         Tp.Exercise -> \json -> case json of
-                                       Array (String _:rest) -> return (decoderExercise dec, Array rest)
-                                       _ -> return (decoderExercise dec, json)
-         Tp.Int      -> useFirst $ \json -> case json of
-                                               Number (I n) -> return (fromIntegral n)
-                                               _        -> fail "not an integer"
+         Tp.Exercise -> do json <- get
+                           case json of
+                              Array (String _:rest) -> put (Array rest) >> return (decoderExercise dec)
+                              _ -> return (decoderExercise dec)
+         Tp.Int      -> useFirst $ \json ->
+                                      case json of
+                                         Number (I n) -> return (fromIntegral n)
+                                         _        -> fail "not an integer"
          Tp.String   -> useFirst $ \json -> case json of
                                                String s -> return s
                                                _        -> fail "not a string"
          Tp.Tag s t
             | s == "state" -> do
                  f <- equalM stateType serviceType
-                 useFirst (liftM f . decodeState (decoderExercise dec) (decodeTerm dec))
+                 useFirst $ \json -> do
+                    old <- get
+                    put json
+                    a <- decodeState (decoderExercise dec) (decodeTerm dec)
+                    put old
+                    return (f a)
             | s == "args" -> do
                  f <- equalM envType t
                  useFirst $ liftM f . decodeContext
-         _ -> decodeDefault dec serviceType
+            | otherwise ->
+                 decodeType dec t
+                
+         Tp.Iso p t  -> liftM (from p) (decodeType dec t)
+         Pair t1 t2 -> do
+            a <- decodeType dec t1
+            b <- decodeType dec t2 
+            return (a, b)
+        
+         t1 :|: t2 ->
+            liftM Left  (decodeType dec t1) `mplus`
+            liftM Right (decodeType dec t2)
+         Unit -> return ()
+         Exercise ->
+            return (decoderExercise dec)
+         Script -> 
+            lift (defaultScript (getId (decoderExercise dec)))
+         _ -> fail $ "No support for argument type: " ++ show serviceType
 
-   useFirst :: Monad m => (JSON -> m a) -> JSON -> m (a, JSON)
-   useFirst f (Array (x:xs)) = do
-      a <- f x
-      return (a, Array xs)
-   useFirst _ _ = fail "expecting an argument"
+   useFirst :: (JSON -> EvalJSON a) -> EvalJSON a
+   useFirst f = do
+      json <- get
+      case json of
+         Array (x:xs) -> do
+            a <- f x
+            put (Array xs)
+            return a
+         _ -> fail "expecting an argument"
 
 jsonToId :: Monad m => JSON -> m Id
 jsonToId = liftM (newId :: String -> Id) . fromJSON
@@ -213,14 +255,22 @@ encodeContext = Object . map f . bindings
  where
    f a = (showId a, String $ showValue a)
 
-decodeState :: Monad m => Exercise a -> (JSON -> m a) -> JSON -> m (State a)
-decodeState ex f (Array [a]) = decodeState ex f a
-decodeState ex f (Array [String _code, String p, ce, jsonContext]) = do
-   let mpr = readM p >>= (`makePrefix` strategy ex)
-   a    <- f ce
-   env  <- decodeContext jsonContext
-   return $ makeState ex mpr (makeContext ex env a)
-decodeState _ _ s = fail $ "invalid state" ++ show s
+decodeState :: Exercise a -> EvalJSON a -> EvalJSON (State a)
+decodeState ex f = do
+   json <- get
+   rec json
+ where
+   rec (Array [a]) = rec a
+   rec (Array [String _code, String p, ce, jsonContext]) = do
+      let mpr = readM p >>= (`makePrefix` strategy ex)
+      a    <- do old <- get 
+                 put ce 
+                 a <- f
+                 put old
+                 return a
+      env  <- decodeContext jsonContext
+      return $ makeState ex mpr (makeContext ex env a)
+   rec s = fail $ "invalid state" ++ show s
 
 decodeContext :: Monad m => JSON -> m Environment
 decodeContext (String "") = decodeContext (Object []) -- Being backwards compatible (for now)
@@ -231,7 +281,7 @@ decodeContext (Object xs) = foldM (flip add) mempty xs
    add _             = fail "invalid item in context"
 decodeContext json = fail $ "invalid context: " ++ show json
 
-encodeResult :: (a -> JSON) -> Result a -> DomainReasoner JSON
+encodeResult :: (a -> JSON) -> Result a -> EvalJSON JSON
 encodeResult enc result =
    case result of
       -- SyntaxError _ -> [("result", String "SyntaxError")]

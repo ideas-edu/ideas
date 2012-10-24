@@ -28,16 +28,15 @@ typedExample ex service args = do
       case makeArgType args of
          Nothing -> return $
             stdReply (showId service) enc ex (return ())
-         Just (reqTuple ::: reqTp) -> do
-            xml <- encoder evaluator reqTp reqTuple
+         Just tv -> do
+            xml <- encoder evaluator tv
             return $
                stdReply (showId service) enc ex xml
    -- Construct a reply in xml
-   reply <-
-      case foldl dynamicApply (serviceFunction service) args of
-         reply ::: replyTp -> do
-            xml <- encoder evaluator replyTp reply
-            return (resultOk xml)
+   reply <- do
+      let tv = foldl dynamicApply (serviceFunction service) args
+      xml <- encoder evaluator tv
+      return (resultOk xml)
     `catchError`
       (return . resultError)
    -- Check request/reply pair

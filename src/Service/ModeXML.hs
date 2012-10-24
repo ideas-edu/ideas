@@ -148,41 +148,41 @@ openMathConverterTp withMF ex =
    handleMixedFractions = if withMF then id else liftM noMixedFractions
 
 xmlEncoder :: Bool -> (a -> DomainReasoner XMLBuilder) -> Exercise a -> Encoder XMLBuilder a
-xmlEncoder isOM enc ex tp a =
+xmlEncoder isOM enc ex (val ::: tp) =
    case tp of
-      Iso p t    -> xmlEncoder isOM enc ex t (to p a)
+      Iso p t    -> xmlEncoder isOM enc ex (to p val ::: t)
       Pair t1 t2 -> do
-         sx <- xmlEncoder isOM enc ex t1 (fst a)
-         sy <- xmlEncoder isOM enc ex t2 (snd a)
+         sx <- xmlEncoder isOM enc ex (fst val ::: t1)
+         sy <- xmlEncoder isOM enc ex (snd val ::: t2)
          return (sx >> sy)
-      t1 :|: t2 -> case a of
-                      Left  x -> xmlEncoder isOM enc ex t1 x
-                      Right y -> xmlEncoder isOM enc ex t2 y
+      t1 :|: t2 -> case val of
+                      Left  x -> xmlEncoder isOM enc ex (x ::: t1)
+                      Right y -> xmlEncoder isOM enc ex (y ::: t2)
        
-      List t -> liftM sequence_ (mapM (xmlEncoder isOM enc ex t) a)
+      List t -> liftM sequence_ (mapM (xmlEncoder isOM enc ex . (::: t)) val)
       Exercise      -> return (return ())
-      Exception     -> fail a
+      Exception     -> fail val
       Unit          -> return (return ())
-      Id            -> return (text (show a))
-      IO t          -> do x <- liftIO (runIO a)
-                          xmlEncoder isOM enc ex (Exception :|: t) x
+      Id            -> return (text (show val))
+      IO t          -> do x <- liftIO (runIO val)
+                          xmlEncoder isOM enc ex (x ::: Exception :|: t)
       Tp.Tag s t1
          | s == "RulesInfo" -> 
               rulesInfoXML ex enc
          | otherwise ->
               case useAttribute t1 of
-                 Just f | s /= "message" -> return (s .=. f a)
-                 _  -> liftM (element s) (xmlEncoder isOM enc ex t1 a)
-      Tp.Strategy   -> return (builder (strategyToXML a))
-      Tp.Rule       -> return ("ruleid" .=. showId a)
-      Tp.Term       -> enc a
-      Tp.Context    -> encodeContext isOM enc a
-      Tp.Location   -> return ("location" .=. show a)
-      Tp.BindingTp  -> return (encodeTypedBinding isOM a)
-      Tp.Text       -> encodeText enc ex a
-      Tp.Bool       -> return (text (map toLower (show a)))
-      Tp.Int        -> return (text (show a))
-      Tp.String     -> return (text a)
+                 Just f | s /= "message" -> return (s .=. f val)
+                 _  -> liftM (element s) (xmlEncoder isOM enc ex (val ::: t1))
+      Tp.Strategy   -> return (builder (strategyToXML val))
+      Tp.Rule       -> return ("ruleid" .=. showId val)
+      Tp.Term       -> enc val
+      Tp.Context    -> encodeContext isOM enc val
+      Tp.Location   -> return ("location" .=. show val)
+      Tp.BindingTp  -> return (encodeTypedBinding isOM val)
+      Tp.Text       -> encodeText enc ex val
+      Tp.Bool       -> return (text (map toLower (show val)))
+      Tp.Int        -> return (text (show val))
+      Tp.String     -> return (text val)
       _             -> fail $ "Type " ++ show tp ++ " not supported in XML"
 
 xmlDecoder :: Bool -> (XML -> DomainReasoner a) -> Exercise a -> Decoder XML a
@@ -383,8 +383,8 @@ htmlEvaluator (Some ex) =
    f  = return . preText . prettyPrinter ex
 
 htmlEncoder :: (a -> DomainReasoner HTMLBuilder) -> Exercise a -> Encoder HTMLBuilder a
-htmlEncoder enc ex tp a =
-   case tp of
+htmlEncoder enc ex (_ ::: tp) =
+   case tp of {-
       Iso p t    -> htmlEncoder enc ex t (to p a)
       Pair t1 t2 -> do
          sx <- htmlEncoder enc ex t1 (fst a)
@@ -411,5 +411,5 @@ htmlEncoder enc ex tp a =
       Tp.Text       -> encodeText enc ex a
       Tp.Bool       -> return (text (map toLower (show a)))
       Tp.Int        -> return (text (show a))
-      Tp.String     -> return (text a)
+      Tp.String     -> return (text a) -}
       _             -> fail $ "Type " ++ show tp ++ " not supported in XML"

@@ -25,7 +25,7 @@ data Evaluator inp out a = Evaluator
    , decoder :: Decoder inp a
    }
 
-type Encoder s a = forall t . Type a t -> t -> DomainReasoner s
+type Encoder out a = TypedValue a -> DomainReasoner out
 
 data Decoder s a = Decoder
    { decodeType      :: forall t . Type a t -> s -> DomainReasoner (t, s)
@@ -34,13 +34,13 @@ data Decoder s a = Decoder
    }
 
 eval :: Evaluator inp out a -> TypedValue a -> inp -> DomainReasoner out
-eval f (tv ::: tp) s =
+eval f tv@(val ::: tp) s =
    case tp of
       t1 :-> t2 -> do
          (a, s1) <- decodeType (decoder f) t1 s
-         eval f (tv a ::: t2) s1
+         eval f (val a ::: t2) s1
       _ ->
-         encoder f tp tv
+         encoder f tv
 
 decodeDefault :: Decoder s a -> Type a t -> s -> DomainReasoner (t, s)
 decodeDefault dec tp s =

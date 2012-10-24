@@ -97,48 +97,48 @@ jsonEncoder :: Exercise a -> Encoder JSON a
 jsonEncoder ex = jsonEncode (String . prettyPrinter ex)
 
 jsonEncode :: (a -> JSON) -> Encoder JSON a
-jsonEncode enc tp a
-   | length xs > 1 =
-        liftM jsonTuple (mapM (\(b ::: t) -> jsonEncode enc t b) xs)
+jsonEncode enc tv@(val ::: tp)
+   | length (tupleList tv) > 1 =
+        liftM jsonTuple (mapM (jsonEncode enc) (tupleList tv))
    | otherwise =
         case tp of
-           Iso p t   -> jsonEncode enc t (to p a)
-           t1 :|: t2 -> case a of
-              Left  x -> jsonEncode enc t1 x
-              Right y -> jsonEncode enc t2 y
+           Iso p t   -> jsonEncode enc (to p val ::: t)
+           t1 :|: t2 -> case val of
+              Left  x -> jsonEncode enc (x ::: t1)
+              Right y -> jsonEncode enc (y ::: t2)
+           
            Pair t1 t2 -> do
-              x <- jsonEncode enc t1 (fst a)
-              y <- jsonEncode enc t2 (snd a)
+              x <- jsonEncode enc (fst val ::: t1)
+              y <- jsonEncode enc (snd val ::: t2)
               return (jsonTuple [x, y])
            Tp.Tag s t
               | s `elem` ["elem", "list"] ->
-                   jsonEncode enc t a
+                   jsonEncode enc (val ::: t)
               | s == "Result" -> do
                    conv <- equalM tp submitType
-                   encodeResult enc (conv a)
+                   encodeResult enc (conv val)
               | s == "state" -> do
                    conv <- equalM tp stateType
-                   return (encodeState enc (conv a))
-              | otherwise -> liftM (\b -> Object [(s, b)]) (jsonEncode enc t a)
-           Tp.Rule       -> return (toJSON (showId a))
-           Tp.Context    -> liftM enc (fromContext a)
-           Tp.Term       -> return (enc a)
+                   return (encodeState enc (conv val))
+              | otherwise -> liftM (\b -> Object [(s, b)]) (jsonEncode enc (val ::: t))
+
+           Tp.Rule       -> return (toJSON (showId val))
+           Tp.Context    -> liftM enc (fromContext val)
+           Tp.Term       -> return (enc val)
            Tp.Unit       -> return Null
-           Tp.IO t       -> do x <- liftIO (runIO a)
-                               jsonEncode enc (Exception :|: t) x
-           Tp.Exception  -> fail a
-           Tp.Location   -> return (toJSON (show a))
-           Tp.List t     -> liftM Array (mapM (jsonEncode enc t) a)
+           Tp.IO t       -> do x <- liftIO (runIO val)
+                               jsonEncode enc (x ::: Exception :|: t)
+           Tp.Exception  -> fail val
+           Tp.Location   -> return (toJSON (show val))
+           Tp.List t     -> liftM Array (mapM (jsonEncode enc . (::: t)) val)
            Tp.BindingTp  -> return $
-                               Object [(showId a, String (showValue a))]
-           Tp.Text       -> return (toJSON (show a))
-           Tp.Int        -> return (toJSON a)
-           Tp.Bool       -> return (toJSON a)
-           Tp.String     -> return (toJSON a)
+                               Object [(showId val, String (showValue val))]
+           Tp.Text       -> return (toJSON (show val))
+           Tp.Int        -> return (toJSON val)
+           Tp.Bool       -> return (toJSON val)
+           Tp.String     -> return (toJSON val)
            _             -> fail $ "Type " ++ show tp ++ " not supported in JSON"
  where
-   xs = tupleList (a ::: tp)
-
    tupleList :: TypedValue a -> [TypedValue a]
    tupleList (x ::: Tp.Iso p t)   = tupleList (to p x ::: t)
    tupleList (p ::: Tp.Pair t1 t2) =
@@ -238,13 +238,13 @@ encodeResult enc result =
       Buggy rs      -> return $ Object [("result", String "Buggy"), ("rules", Array $ map (String . showId) rs)]
       NotEquivalent -> return $ Object [("result", String "NotEquivalent")]
       Ok rs st      -> do
-         json <- jsonEncode enc stateType st
+         json <- jsonEncode enc (st ::: stateType)
          return $ Object [("result", String "Ok"), ("rules", Array $ map (String . showId) rs), ("state", json)]
       Detour rs st  -> do
-         json <- jsonEncode enc stateType st
+         json <- jsonEncode enc (st ::: stateType)
          return $ Object [("result", String "Detour"), ("rules", Array $ map (String . showId) rs), ("state", json)]
       Unknown st    -> do
-         json <- jsonEncode enc stateType st
+         json <- jsonEncode enc (st ::: stateType)
          return $ Object [("result", String "Unknown"), ("state", json)]
 
 jsonTuple :: [JSON] -> JSON

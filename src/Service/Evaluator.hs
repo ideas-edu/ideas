@@ -12,8 +12,6 @@
 -----------------------------------------------------------------------------
 module Service.Evaluator where
 
-import Common.Library
-import Control.Monad
 import Service.Types
 
 evalService :: Monad m => Evaluator m out a -> Service -> m out
@@ -26,20 +24,13 @@ data Evaluator m out a = Evaluator
 
 type Encoder m out a = TypedValue a -> m out
 
-data Decoder m a = Decoder
-   { decodeType      :: forall t . Type a t -> m t
-   , decodeTerm      :: m a
-   , decoderExercise :: Exercise a
-   }
+data Decoder m a = Decoder { decode :: forall t . Type a t -> m t }
 
 eval :: Monad m => Evaluator m out a -> TypedValue a -> m out
 eval f tv@(val ::: tp) =
    case tp of
       t1 :-> t2 -> do
-         a <- decodeType (decoder f) t1
+         a <- decode (decoder f) t1
          eval f (val a ::: t2)
       _ ->
          encoder f tv
-
-runIO :: IO a -> IO (Either String a)
-runIO m = liftM Right m `catch` (return . Left . show)

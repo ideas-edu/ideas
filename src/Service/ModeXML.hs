@@ -20,7 +20,7 @@ module Service.ModeXML
 import Common.Library hiding (exerciseId, (:=))
 import Common.Utils (Some(..), readM)
 import Control.Monad
-import Control.Monad.State (StateT, evalStateT, get, put, modify)
+import Control.Monad.State (StateT, evalStateT, get, put)
 import Control.Monad.Trans
 import Data.Char
 import Data.List
@@ -34,6 +34,7 @@ import Service.RulesInfo (rulesInfoXML)
 import Service.State
 import Service.StrategyInfo
 import Service.Types
+import System.Random
 import Text.OpenMath.Object
 import Text.HTML hiding (text)
 import Text.XML
@@ -116,6 +117,9 @@ resultError txt = makeXML "reply" $ do
 
 type EvalXML = StateT XML DomainReasoner
 
+keep :: (XML -> EvalXML a) -> EvalXML a
+keep f = get >>= f
+
 runEval :: EvalXML a -> XML -> DomainReasoner a
 runEval = evalStateT
 
@@ -154,9 +158,10 @@ openMathConverterTp withMF ex =
    -- Remove special mixed-fraction symbol (depending on boolean argument)
    handleMixedFractions = if withMF then id else liftM noMixedFractions
 
-xmlEncoder :: Bool -> (a -> EvalXML XMLBuilder) -> Exercise a -> Encoder EvalXML XMLBuilder a
+xmlEncoder :: Monad m => Bool -> (a -> m XMLBuilder) -> Exercise a -> Encoder m XMLBuilder a
 xmlEncoder isOM enc ex (val ::: tp) =
    case tp of
+      _ :-> _    -> fail "Function type in encoder"
       Iso p t    -> xmlEncoder isOM enc ex (to p val ::: t)
       Pair t1 t2 -> do
          sx <- xmlEncoder isOM enc ex (fst val ::: t1)
@@ -167,64 +172,49 @@ xmlEncoder isOM enc ex (val ::: tp) =
                       Right y -> xmlEncoder isOM enc ex (y ::: t2)
        
       List t -> liftM sequence_ (mapM (xmlEncoder isOM enc ex . (::: t)) val)
-      Exercise      -> return (return ())
-      Exception     -> fail val
       Unit          -> return (return ())
-      Id            -> return (text (show val))
-      IO t          -> do x <- liftIO (runIO val)
-                          xmlEncoder isOM enc ex (x ::: Exception :|: t)
       Tp.Tag s t1
          | s == "RulesInfo" -> 
               rulesInfoXML ex enc
+         | s == "Exception" -> do
+              f <- equalM t1 stringType
+              fail (f val)
          | otherwise ->
               case useAttribute t1 of
                  Just f | s /= "message" -> return (s .=. f val)
                  _  -> liftM (element s) (xmlEncoder isOM enc ex (val ::: t1))
-      Tp.Strategy   -> return (builder (strategyToXML val))
-      Tp.Rule       -> return ("ruleid" .=. showId val)
-      Tp.Term       -> enc val
-      Tp.Context    -> encodeContext isOM enc val
-      Tp.Location   -> return ("location" .=. show val)
-      Tp.BindingTp  -> return (encodeTypedBinding isOM val)
-      Tp.Text       -> encodeText enc ex val
-      Tp.Bool       -> return (text (map toLower (show val)))
-      Tp.Int        -> return (text (show val))
-      Tp.String     -> return (text val)
-      _             -> fail $ "Type " ++ show tp ++ " not supported in XML"
+      Const ctp -> 
+         case ctp of
+            Id        -> return (text (show val))
+            Exercise  -> return (return ())
+            Strategy  -> return (builder (strategyToXML val))
+            Rule      -> return ("ruleid" .=. showId val)
+            Term      -> enc val
+            Context   -> encodeContext isOM enc val
+            Location  -> return ("location" .=. show val)
+            BindingTp -> return (encodeTypedBinding isOM val)
+            Text      -> encodeText enc ex val
+            Bool      -> return (text (map toLower (show val)))
+            Int       -> return (text (show val))
+            String    -> return (text val)
+            _         -> fail $ "Type " ++ show tp ++ " not supported in XML"
 
 xmlDecoder :: Bool -> EvalXML a -> Exercise a -> Decoder EvalXML a
-xmlDecoder b f ex = Decoder
-   { decodeType      = xmlDecodeType b (xmlDecoder b f ex)
-   , decodeTerm      = f
-   , decoderExercise = ex
-   }
+xmlDecoder b f ex = Decoder (xmlDecodeType b ex f)
 
-xmlDecodeType :: Bool -> Decoder EvalXML a -> Type a t -> EvalXML t
-xmlDecodeType b dec serviceType =
+xmlDecodeType :: Bool -> Exercise a -> EvalXML a -> Type a t -> EvalXML t
+xmlDecodeType b ex getTerm serviceType =
    case serviceType of
-      Tp.Context     -> decodeContext b (decoderExercise dec) (decodeTerm dec)
-      Tp.Location    -> keep $ liftM (read . getData) . findChild "location"
-      Tp.Id          -> keep $ \xml -> do
-                           a <- findChild "location" xml
-                           return (newId (getData a))
-      Tp.Rule        -> keep $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . newId . getData) . findChild "ruleid"
-      Tp.Term        -> decodeTerm dec
-      Tp.StrategyCfg -> keep decodeConfiguration
-      Tp.Script      -> keep $ \xml ->
-                           case findAttribute "script" xml of
-                              Just s  -> lift (readScript s)
-                              Nothing ->
-                                 lift (defaultScript (getId (decoderExercise dec)))
       Tp.Tag s t
          | s == "state" -> do
               g  <- equalM stateType serviceType
-              st <- decodeState b (decoderExercise dec) (decodeTerm dec)
+              st <- decodeState b ex getTerm
               return (g st)
          | s == "answer" -> do
               xml <- get
               c   <- findChild "answer" xml
               put c
-              a <- xmlDecodeType b dec t
+              a <- xmlDecodeType b ex getTerm t
               put xml
               return a
          | s == "difficulty" -> keep $ \xml -> do
@@ -244,39 +234,43 @@ xmlDecodeType b dec serviceType =
               xml <- get
               cx  <- findChild s xml
               put cx
-              a   <- xmlDecodeType b dec t
+              a   <- xmlDecodeType b ex getTerm t
               put xml
               return a
-
-      Iso p t  -> liftM (from p) (xmlDecodeType b dec t)
+      Iso p t  -> liftM (from p) (xmlDecodeType b ex getTerm t)
       Pair t1 t2 -> do
-         a <- xmlDecodeType b dec t1
-         b <- xmlDecodeType b dec t2
-         return (a, b)
+         x <- xmlDecodeType b ex getTerm t1
+         y <- xmlDecodeType b ex getTerm t2
+         return (x, y)
       t1 :|: t2 ->
-         liftM Left  (xmlDecodeType b dec t1) `mplus`
-         liftM Right (xmlDecodeType b dec t2)
-      Unit ->
-         return ()
-      Tag _ t1 ->
-         xmlDecodeType b dec t1
-      Exercise ->
-         return (decoderExercise dec)
-      Script ->
-         lift (defaultScript (getId (decoderExercise dec)))
-      _ ->
-         fail $ "No support for argument type in XML: " ++ show serviceType
- where
-   keep :: (XML -> EvalXML a) -> EvalXML a
-   keep f = do
-      xml <- get
-      f xml
+         liftM Left  (xmlDecodeType b ex getTerm t1) `mplus`
+         liftM Right (xmlDecodeType b ex getTerm t2)
+      Unit -> return ()
+      Const ctp -> 
+         case ctp of
+            Context  -> decodeContext b ex getTerm
+            Location -> keep $ liftM (read . getData) . findChild "location"
+            Id       -> keep $ \xml -> do
+                           a <- findChild "location" xml
+                           return (newId (getData a))
+            Rule     -> keep $ fromMaybe (fail "unknown rule") 
+                             . liftM (getRule ex . newId . getData) 
+                             . findChild "ruleid"
+            Term     -> getTerm
+            StratCfg -> keep decodeConfiguration
+            Script   -> keep $ \xml -> lift $
+                           case findAttribute "script" xml of
+                              Just s  -> readScript s
+                              Nothing -> defaultScript (getId ex)
+            StdGen   -> liftIO newStdGen
+            Exercise -> return ex
+            _        -> fail $ "No support for argument type in XML: " ++ show serviceType
 
 useAttribute :: Type a t -> Maybe (t -> String)
-useAttribute String = Just id
-useAttribute Bool   = Just (map toLower . show)
-useAttribute Int    = Just show
-useAttribute _      = Nothing
+useAttribute (Const String) = Just id
+useAttribute (Const Bool)   = Just (map toLower . show)
+useAttribute (Const Int)    = Just show
+useAttribute _              = Nothing
 
 decodeState :: Bool -> Exercise a -> EvalXML a -> EvalXML (State a)
 decodeState b ex f = do
@@ -421,7 +415,7 @@ htmlEvaluator (Some ex) =
    f  = return . preText . prettyPrinter ex
 
 htmlEncoder :: (a -> EvalXML HTMLBuilder) -> Exercise a -> Encoder EvalXML HTMLBuilder a
-htmlEncoder enc ex (_ ::: tp) =
+htmlEncoder _ _ (_ ::: tp) =
    case tp of {-
       Iso p t    -> htmlEncoder enc ex t (to p a)
       Pair t1 t2 -> do

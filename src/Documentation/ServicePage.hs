@@ -90,9 +90,9 @@ examplesFor s = tryAll [ f t | (t, f) <- list, s == t ]
 
    (f +++ g) ex = f ex ++ g ex
 
-   noCfg _   = [Nothing ::: maybeType StrategyCfg]
+   noCfg _   = [Nothing ::: maybeType strategyCfgType]
    noArgs _  = []
-   exArgs ex = [ex ::: Exercise]
+   exArgs ex = [ex ::: exerciseType]
 
 tryAll :: [DomainReasoner a] -> DomainReasoner [a]
 tryAll xs =

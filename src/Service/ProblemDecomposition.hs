@@ -121,6 +121,6 @@ replyType = Iso (f <-> g) tp
    g (Incorrect a b c d) = Right (a, b, c, d)
 
    tp  =  Tag "correct"   (tuple2 locType stateType)
-      :|: Tag "incorrect" (tuple4 (Tag "equivalent" Bool) locType stateType envType)
+      :|: Tag "incorrect" (tuple4 (Tag "equivalent" boolType) locType stateType envType)
 
-   locType = Tag "location" Id
+   locType = Tag "location" idType

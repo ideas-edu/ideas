@@ -79,7 +79,7 @@ stateType = Tag "state" (Iso (f <-> g) tp)
       , fmap show (statePrefixes st)
       , stateContext st
       )
-   tp = tuple3 Exercise prefixType Context
+   tp = tuple3 exerciseType prefixType contextType
 
    -- iso prevents that prefix is turned into an (XML) attribute
-   prefixType = List (Tag "prefix" (Iso identity String))
+   prefixType = List (Tag "prefix" (Iso identity stringType))

@@ -65,7 +65,7 @@ stdReply s enc ex body = makeXML "request" $ do
 
 makeArgType :: [TypedValue a] -> Maybe (TypedValue a)
 makeArgType []   = fail "makeArgType: empty list"
-makeArgType [_ ::: Exercise] = fail "makeArgType: empty list"
+makeArgType [_ ::: Const Exercise] = fail "makeArgType: empty list"
 makeArgType [tv] = return tv
 makeArgType ((a1 ::: t1) : rest) = do
    a2 ::: t2 <- makeArgType rest

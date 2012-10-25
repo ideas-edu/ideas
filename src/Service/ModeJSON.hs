@@ -17,7 +17,7 @@ module Service.ModeJSON (processJSON, jsonTuple) where
 import Common.Library hiding (exerciseId)
 import Common.Utils (Some(..), distinct, readM)
 import Control.Monad.Error
-import Control.Monad.State (StateT, evalStateT, get, put, modify)
+import Control.Monad.State (StateT, evalStateT, get, put)
 import Data.Char
 import Service.DomainReasoner
 import Service.Evaluator
@@ -25,6 +25,7 @@ import Service.Request
 import Service.State
 import Service.Submit
 import Service.Types hiding (String)
+import System.Random
 import Text.JSON
 import qualified Service.Types as Tp
 
@@ -126,24 +127,26 @@ jsonEncode enc tv@(val ::: tp)
               | s == "state" -> do
                    conv <- equalM tp stateType
                    return (encodeState enc (conv val))
+              | s == "Exception" -> do
+                   f <- equalM t stringType
+                   fail (f val)
               | otherwise -> liftM (\b -> Object [(s, b)]) (jsonEncode enc (val ::: t))
 
-           Tp.Rule       -> return (toJSON (showId val))
-           Tp.Context    -> liftM enc (fromContext val)
-           Tp.Term       -> return (enc val)
            Tp.Unit       -> return Null
-           Tp.IO t       -> do x <- liftIO (runIO val)
-                               jsonEncode enc (x ::: Exception :|: t)
-           Tp.Exception  -> fail val
-           Tp.Location   -> return (toJSON (show val))
            Tp.List t     -> liftM Array (mapM (jsonEncode enc . (::: t)) val)
-           Tp.BindingTp  -> return $
+           Const ctp -> 
+              case ctp of
+                 Location  -> return (toJSON (show val))
+                 Rule      -> return (toJSON (showId val))
+                 Context   -> liftM enc (fromContext val)
+                 Term      -> return (enc val)
+                 BindingTp -> return $
                                Object [(showId val, String (showValue val))]
-           Tp.Text       -> return (toJSON (show val))
-           Tp.Int        -> return (toJSON val)
-           Tp.Bool       -> return (toJSON val)
-           Tp.String     -> return (toJSON val)
-           _             -> fail $ "Type " ++ show tp ++ " not supported in JSON"
+                 Text      -> return (toJSON (show val))
+                 Int       -> return (toJSON val)
+                 Bool      -> return (toJSON val)
+                 Tp.String -> return (toJSON val)
+                 _         -> fail $ "Type " ++ show tp ++ " not supported in JSON"
  where
    tupleList :: TypedValue a -> [TypedValue a]
    tupleList (x ::: Tp.Iso p t)   = tupleList (to p x ::: t)
@@ -154,71 +157,69 @@ jsonEncode enc tv@(val ::: tp)
    tupleList tv = [tv]
 
 jsonDecoder :: Exercise a -> Decoder EvalJSON a
-jsonDecoder ex = Decoder
-   { decodeType      = decode (jsonDecoder ex)
-   , decodeTerm      = reader (parser ex)
-   , decoderExercise = ex
-   }
+jsonDecoder ex = Decoder (decode ex)
  where
-   reader :: (String -> Either String a) -> EvalJSON a
-   reader f = do
+   reader :: Exercise a -> EvalJSON a
+   reader ex = do
       json <- get
       case json of
-         String s -> either (fail . show) return (f s)
+         String s -> either (fail . show) return (parser ex s)
          _        -> fail "Expecting a string when reading a term"
 
-   decode :: Decoder EvalJSON a -> Type a t -> EvalJSON t
-   decode dec serviceType =
+   decode :: Exercise a -> Type a t -> EvalJSON t
+   decode ex serviceType =
       case serviceType of
-         Tp.Location -> useFirst decodeLocation
-         Tp.Term     -> useFirst $ \json -> do
-                           old <- get
-                           put json
-                           a <- decodeTerm dec
-                           put old
-                           return a
-         Tp.Rule     -> useFirst $ \x -> jsonToId x >>= getRule (decoderExercise dec)
-         Tp.Exercise -> do json <- get
-                           case json of
-                              Array (String _:rest) -> put (Array rest) >> return (decoderExercise dec)
-                              _ -> return (decoderExercise dec)
-         Tp.Int      -> useFirst $ \json ->
-                                      case json of
-                                         Number (I n) -> return (fromIntegral n)
-                                         _        -> fail "not an integer"
-         Tp.String   -> useFirst $ \json -> case json of
-                                               String s -> return s
-                                               _        -> fail "not a string"
          Tp.Tag s t
             | s == "state" -> do
                  f <- equalM stateType serviceType
                  useFirst $ \json -> do
                     old <- get
                     put json
-                    a <- decodeState (decoderExercise dec) (decodeTerm dec)
+                    a <- decodeState ex (reader ex)
                     put old
                     return (f a)
             | s == "args" -> do
                  f <- equalM envType t
                  useFirst $ liftM f . decodeContext
             | otherwise ->
-                 decodeType dec t
-                
-         Tp.Iso p t  -> liftM (from p) (decodeType dec t)
+                 decode ex t         
+         Tp.Iso p t  -> liftM (from p) (decode ex t)
          Pair t1 t2 -> do
-            a <- decodeType dec t1
-            b <- decodeType dec t2 
+            a <- decode ex t1
+            b <- decode ex t2 
             return (a, b)
         
          t1 :|: t2 ->
-            liftM Left  (decodeType dec t1) `mplus`
-            liftM Right (decodeType dec t2)
+            liftM Left  (decode ex t1) `mplus`
+            liftM Right (decode ex t2)
          Unit -> return ()
-         Exercise ->
-            return (decoderExercise dec)
-         Script -> 
-            lift (defaultScript (getId (decoderExercise dec)))
-         _ -> fail $ "No support for argument type: " ++ show serviceType
+         Const ctp ->
+            case ctp of
+               Term     -> useFirst $ \json -> do
+                           old <- get
+                           put json
+                           a <- reader ex
+                           put old
+                           return a
+               Exercise -> 
+                        do json <- get
+                           case json of
+                              Array (String _:rest) -> put (Array rest) >> return ex
+                              _ -> return ex
+               Int -> useFirst $ \json ->
+                              case json of
+                                 Number (I n) -> return (fromIntegral n)
+                                 _        -> fail "not an integer"
+               Tp.String -> useFirst $ \json -> 
+                                 case json of
+                                    String s -> return s
+                                    _        -> fail "not a string"
+               Location -> useFirst decodeLocation
+               Rule     -> useFirst $ \x -> jsonToId x >>= getRule ex
+               StdGen   -> liftIO newStdGen
+               Exercise -> return ex
+               Script   -> lift (defaultScript (getId ex))
+               _        -> fail $ "No support for argument type: " ++ show serviceType
 
    useFirst :: (JSON -> EvalJSON a) -> EvalJSON a
    useFirst f = do

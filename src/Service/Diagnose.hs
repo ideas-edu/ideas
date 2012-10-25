@@ -151,19 +151,19 @@ diagnosisType = Iso (f <-> g) tp
    g (Correct b s)      = Right (Right (Right (Right (b, s))))
 
    tp  =
-       (  Tag "buggy"         (Pair envType Rule)
+       (  Tag "buggy"         (Pair envType ruleType)
 --      :|: Tag "missing"       Unit
 --      :|: Tag "incorrectpart" (List Term)
       :|: Tag "notequiv"      Unit
        )
       :|:
        (  Tag "similar"  (Pair   readyBool stateType)
-      :|: Tag "expected" (tuple3 readyBool stateType Rule)
-      :|: Tag "detour"   (tuple4 readyBool stateType envType Rule)
+      :|: Tag "expected" (tuple3 readyBool stateType ruleType)
+      :|: Tag "detour"   (tuple4 readyBool stateType envType ruleType)
       :|: Tag "correct"  (Pair   readyBool stateType)
        )
 
-   readyBool = Tag "ready" Bool
+   readyBool = Tag "ready" boolType
 
 ----------------------------------------------------------------
 -- Compare answer sets (and search for missing parts/incorrect parts)

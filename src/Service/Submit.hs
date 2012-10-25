@@ -59,8 +59,8 @@ submitType = Tag "Result" (Iso (f <-> g) tp)
    g (Detour rs s)   = Right (Right (Right (Left (rs, s))))
    g (Unknown s)     = Right (Right (Right (Right s)))
 
-   tp  =  List Rule
+   tp  =  List ruleType
       :|: Unit
-      :|: Pair (List Rule) stateType
-      :|: Pair (List Rule) stateType
+      :|: Pair (List ruleType) stateType
+      :|: Pair (List ruleType) stateType
       :|: stateType

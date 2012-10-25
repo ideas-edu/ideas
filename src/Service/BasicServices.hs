@@ -12,7 +12,7 @@
 module Service.BasicServices
    ( -- * Basic Services
      stepsremaining, findbuggyrules, ready, allfirsts, derivation
-   , onefirst, applicable, allapplications, apply, generate
+   , onefirst, applicable, allapplications, apply, generate, generateWith
    ) where
 
 import Common.Library hiding (derivation, applicable, apply, ready)
@@ -21,11 +21,18 @@ import Common.Utils (fst3)
 import Data.List
 import Data.Maybe
 import Service.State
+import System.Random
 import Control.Monad
 import qualified Common.Classes as Apply
 
 generate :: Exercise a -> Maybe Difficulty -> IO (State a)
 generate ex = liftM (emptyState ex) . randomTerm ex
+
+generateWith :: StdGen -> Exercise a -> Maybe Difficulty -> Either String (State a)
+generateWith rng ex md = 
+   case randomTermWith rng ex md of
+      Just a  -> return (emptyState ex a)
+      Nothing -> fail "No random term"
 
 -- TODO: add a location to each step
 derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))

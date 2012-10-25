@@ -52,7 +52,7 @@ derivationS = makeService "derivation"
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $
    -- derivationTemp ::: maybeType StrategyCfg :-> stateType :-> errorType (derivationType Rule Context)
-   derivation ::: maybeType StrategyCfg :-> stateType :-> errorType (derivationType (tuple2 Rule envType) Context)
+   derivation ::: maybeType strategyCfgType :-> stateType :-> errorType (derivationType (tuple2 ruleType envType) contextType)
 
 allfirstsS :: Service
 allfirstsS = makeService "allfirsts"
@@ -60,7 +60,7 @@ allfirstsS = makeService "allfirsts"
    \onefirst service to get only one suggestion. For each suggestion, a new \
    \state, the rule used, and the location where the rule was applied are \
    \returned." $
-   allfirsts ::: stateType :-> errorType (listType (tuple4 Rule Location envType stateType))
+   allfirsts ::: stateType :-> errorType (listType (tuple4 ruleType locationType envType stateType))
 
 onefirstS :: Service
 onefirstS = makeService "onefirst"
@@ -68,47 +68,47 @@ onefirstS = makeService "onefirst"
    \service to get all possible steps that are allowed by the strategy. In \
    \addition to a new state, the rule used and the location where to apply \
    \this rule are returned." $
-   onefirst ::: stateType :-> elemType (errorType (tuple4 Rule Location envType stateType))
+   onefirst ::: stateType :-> elemType (errorType (tuple4 ruleType locationType envType stateType))
 
 readyS :: Service
 readyS = makeService "ready"
    "Test if the current expression is in a form accepted as a final answer. \
    \For this, the strategy is not used." $
-   ready ::: stateType :-> Bool
+   ready ::: stateType :-> boolType
 
 stepsremainingS :: Service
 stepsremainingS = makeService "stepsremaining"
    "Computes how many steps are remaining to be done, according to the \
    \strategy. For this, only the first derivation is considered, which \
    \corresponds to the one returned by the derivation service." $
-   stepsremaining ::: stateType :-> errorType Int
+   stepsremaining ::: stateType :-> errorType intType
 
 applicableS :: Service
 applicableS = makeService "applicable"
    "Given a current expression and a location in this expression, this service \
    \yields all rules that can be applied at this location, regardless of the \
    \strategy." $
-   applicable ::: Location :-> stateType :-> listType Rule
+   applicable ::: locationType :-> stateType :-> listType ruleType
 
 allapplicationsS :: Service
 allapplicationsS = makeService "allapplications"
    "Given a current expression, this service yields all rules that can be \
    \applied at a certain location, regardless wether the rule used is buggy \
    \or not. Some results are within the strategy, others are not." $
-   allapplications ::: stateType :-> listType (tuple3 Rule Location stateType)
+   allapplications ::: stateType :-> listType (tuple3 ruleType locationType stateType)
 
 applyS :: Service
 applyS = makeService "apply"
    "Apply a rule at a certain location to the current expression. If this rule \
    \was not expected by the strategy, we deviate from it. If the rule cannot \
    \be applied, this service call results in an error." $
-   apply ::: Rule :-> Location :-> Tag "args" envType :-> stateType :-> errorType stateType
+   apply ::: ruleType :-> locationType :-> Tag "args" envType :-> stateType :-> errorType stateType
 
 generateS :: Service
 generateS = makeService "generate"
    "Given an exercise code and a difficulty level (optional), this service \
    \returns an initial state with a freshly generated expression." $
-   generate ::: Exercise :-> maybeType difficultyType :-> IO stateType
+   generateWith ::: stdGenType :-> exerciseType :-> maybeType difficultyType :-> errorType stateType
 
 examplesS :: Service
 examplesS = makeService "examples"
@@ -116,21 +116,21 @@ examplesS = makeService "examples"
    \with an exercise. These are the examples that appear at the page generated \
    \for each exercise. Also see the generate service, which returns a random \
    \start term." $
-   (map snd . examples) ::: Exercise :-> listType Term
+   (map snd . examples) ::: exerciseType :-> listType termType
 
 findbuggyrulesS :: Service
 findbuggyrulesS = makeService "findbuggyrules"
    "Search for common misconceptions (buggy rules) in an expression (compared \
    \to the current state). It is assumed that the expression is indeed not \
    \correct. This service has been superseded by the diagnose service." $
-   findbuggyrules ::: stateType :-> Term :-> listType (tuple3 Rule Location envType)
+   findbuggyrules ::: stateType :-> termType :-> listType (tuple3 ruleType locationType envType)
 
 submitS :: Service
 submitS = deprecate $ makeService "submit"
    "Analyze an expression submitted by a student. Possible answers are Buggy, \
    \NotEquivalent, Ok, Detour, and Unknown. This service has been superseded \
    \by the diagnose service." $
-   Submit.submit ::: stateType :-> Term :-> Submit.submitType
+   Submit.submit ::: stateType :-> termType :-> Submit.submitType
 
 diagnoseS :: Service
 diagnoseS = makeService "diagnose"
@@ -142,7 +142,7 @@ diagnoseS = makeService "diagnose"
    \expression was not expected by the strategy, but the applied rule was \
    \detected), and Correct (it is correct, but we don't know which rule was \
    \applied)." $
-   Diagnose.diagnose ::: stateType :-> Term :-> Diagnose.diagnosisType
+   Diagnose.diagnose ::: stateType :-> termType :-> Diagnose.diagnosisType
 
 ------------------------------------------------------
 -- Services with a feedback component
@@ -152,14 +152,14 @@ onefirsttextS = makeService "onefirsttext"
    "Similar to the onefirst service, except that the result is now returned as \
    \a formatted text message. The optional string is for announcing the event \
    \leading to this service call (which can influence the returned result)." $
-   onefirsttext ::: Script :-> stateType :-> maybeType String
-                :-> tuple2 (messageType Text) (maybeType stateType)
+   onefirsttext ::: scriptType :-> stateType :-> maybeType stringType
+                :-> tuple2 (messageType textType) (maybeType stateType)
 
 derivationtextS :: Service
 derivationtextS = makeService "derivationtext"
    "Similar to the derivation service, but the rules appearing in the derivation \
    \have been replaced by a short description of the rule." $
-   derivationtext ::: Script :-> stateType :-> errorType (derivationType (Tag "ruletext" String) Context)
+   derivationtext ::: scriptType :-> stateType :-> errorType (derivationType (Tag "ruletext" stringType) contextType)
 
 submittextS :: Service
 submittextS = deprecate $ makeService "submittext"
@@ -169,12 +169,12 @@ submittextS = deprecate $ makeService "submittext"
    \The boolean in the \
    \result specifies whether the submitted term is accepted and incorporated \
    \in the new state." $
-   submittext ::: Script :-> stateType :-> String :-> messageAndState
+   submittext ::: scriptType :-> stateType :-> stringType :-> messageAndState
 
 feedbacktextS :: Service
 feedbacktextS = makeService "feedbacktext"
    "Textual feedback for diagnose service. Experimental." $
-   feedbacktext ::: Script :-> stateType :-> Term :-> messageAndState
+   feedbacktext ::: scriptType :-> stateType :-> termType :-> messageAndState
 
 -- Helper type for submittext and feedbacktext: reorders elements, and inserts
 -- some extra tags
@@ -183,7 +183,7 @@ messageAndState = Iso (f <-> g) tp
  where
    f ((a, b), c) = (a, b, c)
    g (a, b, c)   = ((a, b), c)
-   tp  = tuple2 (messageType (tuple2 (Tag "accept" Bool) Text)) stateType
+   tp  = tuple2 (messageType (tuple2 (Tag "accept" boolType) textType)) stateType
 
 ------------------------------------------------------
 -- Problem decomposition service
@@ -193,7 +193,7 @@ problemdecompositionS = makeService "problemdecomposition"
    "Strategy service developed for the SURF project Intelligent Feedback for a \
    \binding with the MathDox system on linear algebra exercises. This is a \
    \composite service, and available for backwards compatibility." $
-   problemDecomposition ::: maybeType Id  :-> stateType :-> maybeType (Tag "answer" Term) :-> errorType replyType
+   problemDecomposition ::: maybeType idType  :-> stateType :-> maybeType (Tag "answer" termType) :-> errorType replyType
 
 ------------------------------------------------------
 -- Reflective services
@@ -202,7 +202,7 @@ exerciselistS :: [Some Exercise] -> Service
 exerciselistS list = makeService "exerciselist"
    "Returns all exercises known to the system. For each exercise, its domain, \
    \identifier, a short description, and its current status are returned." $
-   allExercises list ::: listType (tuple3 (Tag "exerciseid" String) (Tag "description" String) (Tag "status" String))
+   allExercises list ::: listType (tuple3 (Tag "exerciseid" stringType) (Tag "description" stringType) (Tag "status" stringType))
 
 rulelistS :: Service
 rulelistS = makeService "rulelist"
@@ -210,7 +210,7 @@ rulelistS = makeService "rulelist"
    \name (or identifier), whether the rule is buggy, and whether the rule was \
    \expressed as an observable rewrite rule. See rulesinfo for more details \
    \about the rules." $
-   allRules ::: Exercise :-> listType (tuple4 (Tag "name" String) (Tag "buggy" Bool) (Tag "arguments" Int) (Tag "rewriterule" Bool))
+   allRules ::: exerciseType :-> listType (tuple4 (Tag "name" stringType) (Tag "buggy" boolType) (Tag "arguments" intType) (Tag "rewriterule" boolType))
 
 rulesinfoS :: Service
 rulesinfoS = makeService "rulesinfo"
@@ -221,7 +221,7 @@ rulesinfoS = makeService "rulesinfo"
 strategyinfoS :: Service
 strategyinfoS = makeService "strategyinfo"
    "Returns the representation of the strategy of a particular exercise." $
-   (toStrategy . strategy) ::: Exercise :-> Strategy
+   (toStrategy . strategy) ::: exerciseType :-> strategyType
 
 allExercises :: [Some Exercise] -> [(String, String, String)]
 allExercises = map make . sortBy (comparing f)

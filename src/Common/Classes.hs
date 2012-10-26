@@ -15,7 +15,7 @@ module Common.Classes
    ( -- * Type class Monoid (for backwards compatibility)
      Monoid, mempty, mappend, mconcat, (<>)
      -- * Type class Apply
-   , Apply, apply, applyAll, applicable, applyD, applyM
+   , Apply, apply, applyAll, applicable, applyD, applyM, applyList
      -- * Type class Container
    , Container, singleton, getSingleton
      -- * Type class BiArrow
@@ -63,6 +63,9 @@ applyD ta a = fromMaybe a (apply ta a)
 -- | Same as apply, except that the result (at most one) is returned in some monad
 applyM :: (Apply t, Monad m) => t a -> a -> m a
 applyM ta = maybe (fail "applyM") return . apply ta
+
+applyList :: Apply t => [t a] -> a -> Maybe a
+applyList xs a = foldl (\m r -> m >>= applyM r) (Just a) xs
 
 -----------------------------------------------------------
 -- Type class Container

@@ -21,6 +21,7 @@ module Common.Utils
    , useFixedStdGen, fst3, snd3, thd3
    , headM, findIndexM
    , elementAt, changeAt, replaceAt
+   , list
    ) where
 
 import Data.Char
@@ -117,3 +118,6 @@ changeAt i f as =
 
 replaceAt :: Monad m => Int -> a -> [a] -> m [a]
 replaceAt i = changeAt i . const
+
+list :: b -> ([a] -> b) -> [a] -> b
+list b f xs = if null xs then b else f xs

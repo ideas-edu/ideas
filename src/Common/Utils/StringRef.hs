@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -18,6 +20,7 @@ module Common.Utils.StringRef
    ) where
 
 import Data.Bits
+import Data.Data
 import Data.IORef
 import Data.List
 import System.IO.Unsafe
@@ -27,7 +30,7 @@ import qualified Data.IntMap as IM
 -- StringRef datatype and instance declarations
 
 data StringRef = S !Int
-   deriving (Eq, Ord)
+   deriving (Eq, Ord, Data, Typeable)
 
 ----------------------------------------------------------------
 -- Hash table

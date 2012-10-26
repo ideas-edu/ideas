@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -15,7 +16,7 @@ module Common.Id
    ( Id, IsId(..), HasId(..), Identify(..), ( # ), sameId
    , unqualified, qualifiers, qualification
    , describe, description, showId, compareId
-   , mempty, isEmptyId
+   , mempty, isEmptyId, listQualify
    ) where
 
 import Common.Classes
@@ -23,6 +24,7 @@ import Common.Utils (splitsWithElem)
 import Common.Utils.StringRef
 import Control.Monad
 import Data.Char
+import Data.Data
 import Data.List
 import Data.Monoid
 import Data.Ord
@@ -36,6 +38,7 @@ data Id = Id
    , idDescription :: String
    , idRef         :: !StringRef
    }
+ deriving (Data, Typeable)
 
 instance Show Id where
    show = intercalate "." . idList
@@ -188,3 +191,6 @@ describe = changeId . describeId
            a {idDescription = s}
       | otherwise =
            a {idDescription = s ++ " " ++ idDescription a}
+           
+listQualify :: (IsId a, IsId b) => [a] -> b -> Id -- TODO: clean me up
+listQualify ls h = foldr appendId (newId h) (map newId ls)

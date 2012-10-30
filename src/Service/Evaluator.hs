@@ -12,21 +12,45 @@
 -----------------------------------------------------------------------------
 module Service.Evaluator where
 
+import Common.View
+import Control.Monad
+import Data.Monoid
+import qualified Data.Map as M
 import Service.Types
 
-evalService :: Monad m => Evaluator m out a -> Service -> m out
+evalService :: Monad m => Evaluator (Const b) m a -> Service -> m a
 evalService f = eval f . serviceFunction
 
-data Evaluator m out a = Evaluator
-   { encoder :: Encoder m out a
-   , decoder :: Decoder m a
+data Evaluator f m a = Evaluator
+   { encoder :: Encoder (TypeRep f) m a
+   , decoder :: Decoder (TypeRep f) m
    }
 
-type Encoder m out a = TypedValue a -> m out
+type Encoder    f m a = TypedValue f -> m a
+type EncoderMap f m a = M.Map String (Encoder (TypeRep f) m a)
 
-data Decoder m a = Decoder { decode :: forall t . Type a t -> m t }
+encodeWith :: (Monad m, Monoid a) 
+           => EncoderMap f m a -> Encoder f m a -> Encoder (TypeRep f) m a
+encodeWith m enc = rec
+ where
+   rec (val ::: tp) =
+      case tp of
+         _ :-> _    -> fail "encodeType: function"
+         t1 :|: t2  -> case val of
+                          Left a  -> rec (a ::: t1)
+                          Right a -> rec (a ::: t2) 
+         Pair t1 t2 -> liftM2 mappend
+                          (rec (fst val ::: t1))
+                          (rec (snd val ::: t2))
+         List t     -> liftM mconcat (mapM (rec . (::: t)) val)
+         Unit       -> return mempty
+         Tag s t    -> M.findWithDefault rec s m (val ::: t)
+         Iso v t    -> rec (to v val ::: t)
+         Const ctp  -> enc (val ::: ctp)
 
-eval :: Monad m => Evaluator m out a -> TypedValue a -> m out
+data Decoder f m = Decoder { decode :: forall t . f t -> m t }
+
+eval :: Monad m => Evaluator f m a -> TypedValue (TypeRep f) -> m a
 eval f tv@(val ::: tp) =
    case tp of
       t1 :-> t2 -> do

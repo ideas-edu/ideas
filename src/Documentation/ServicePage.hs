@@ -99,13 +99,13 @@ tryAll xs =
    let f m = liftM return m `catchError` const (return [])
    in liftM concat (mapM f xs)
 
-newState :: Monad m => Exercise a -> String -> m (TypedValue a)
+newState :: Monad m => Exercise a -> String -> m (TypedValue (Type a))
 newState ex s =
    case parser ex s of
       Left msg -> fail ("newState: " ++ msg)
       Right a  -> return (emptyState ex a ::: stateType)
 
-type Args = forall a . Exercise a -> [TypedValue a]
+type Args = forall a . Exercise a -> [TypedValue (Type a)]
 
 makeExample :: String -> Args -> String -> DomainReasoner Example
 makeExample exName f srvName = do

@@ -19,6 +19,7 @@ import Common.Utils (Some(..), distinct, readM)
 import Control.Monad.Error
 import Control.Monad.State (StateT, evalStateT, get, put)
 import Data.Char
+import qualified Data.Map as M
 import Service.DomainReasoner
 import Service.Evaluator
 import Service.Request
@@ -83,31 +84,30 @@ jsonRequest json = do
 
 myHandler :: JSON_RPC_Handler DomainReasoner
 myHandler fun arg = do
-   ex   <- if fun == "exerciselist"
-           then return (Some emptyExercise)
-           else extractExerciseId arg >>= findExercise
-   srv  <- findService fun
-   case jsonConverter ex of
-      Some conv ->
-         runEval (evalService conv srv) arg
+   Some ex <- 
+      if fun == "exerciselist"
+      then return (Some emptyExercise)
+      else extractExerciseId arg >>= findExercise
+   srv <- findService fun
+   runEval (evalService (jsonConverter ex) srv) arg
 
 type EvalJSON = StateT JSON DomainReasoner
 
 runEval :: EvalJSON a -> JSON -> DomainReasoner a
 runEval = evalStateT
 
-jsonConverter :: Some Exercise -> Some (Evaluator EvalJSON JSON)
-jsonConverter (Some ex) = 
-   Some (Evaluator (jsonEncoder ex) (jsonDecoder ex))
+jsonConverter :: Exercise a -> Evaluator (Const a) EvalJSON JSON
+jsonConverter ex = Evaluator (jsonEncoder ex) (jsonDecoder ex)
 
-jsonEncoder :: Exercise a -> Encoder EvalJSON JSON a
+jsonEncoder :: Exercise a -> Encoder (Type a) EvalJSON JSON
 jsonEncoder ex = jsonEncode (String . prettyPrinter ex)
 
-jsonEncode :: (a -> JSON) -> Encoder EvalJSON JSON a
+jsonEncode :: (a -> JSON) -> Encoder (Type a) EvalJSON JSON
 jsonEncode enc tv@(val ::: tp)
    | length (tupleList tv) > 1 =
         liftM jsonTuple (mapM (jsonEncode enc) (tupleList tv))
    | otherwise =
+        -- encodeWith (jsonEncoderMap enc) (jsonEncodeConst enc) tv
         case tp of
            Iso p t   -> jsonEncode enc (to p val ::: t)
            t1 :|: t2 -> case val of
@@ -130,25 +130,16 @@ jsonEncode enc tv@(val ::: tp)
               | s == "Exception" -> do
                    f <- equalM t stringType
                    fail (f val)
+              | s == "Location" -> do
+                   f <- equalM t (List intType)
+                   return (toJSON (show (f val)))
               | otherwise -> liftM (\b -> Object [(s, b)]) (jsonEncode enc (val ::: t))
 
-           Tp.Unit       -> return Null
-           Tp.List t     -> liftM Array (mapM (jsonEncode enc . (::: t)) val)
-           Const ctp -> 
-              case ctp of
-                 Location  -> return (toJSON (show val))
-                 Rule      -> return (toJSON (showId val))
-                 Context   -> liftM enc (fromContext val)
-                 Term      -> return (enc val)
-                 BindingTp -> return $
-                               Object [(showId val, String (showValue val))]
-                 Text      -> return (toJSON (show val))
-                 Int       -> return (toJSON val)
-                 Bool      -> return (toJSON val)
-                 Tp.String -> return (toJSON val)
-                 _         -> fail $ "Type " ++ show tp ++ " not supported in JSON"
+           Tp.Unit   -> return Null
+           Tp.List t -> liftM Array (mapM (jsonEncode enc . (::: t)) val)
+           Const ctp -> jsonEncodeConst enc (val ::: ctp)
  where
-   tupleList :: TypedValue a -> [TypedValue a]
+   tupleList :: TypedValue (TypeRep f) -> [TypedValue (TypeRep f)]
    tupleList (x ::: Tp.Iso p t)   = tupleList (to p x ::: t)
    tupleList (p ::: Tp.Pair t1 t2) =
       tupleList (fst p ::: t1) ++ tupleList (snd p ::: t2)
@@ -156,7 +147,46 @@ jsonEncode enc tv@(val ::: tp)
       | s `elem` ["ruletext", "message", "accept"] = tupleList (x ::: t)
    tupleList tv = [tv]
 
-jsonDecoder :: Exercise a -> Decoder EvalJSON a
+{-
+jsonEncoderMap :: (a -> JSON) -> EncoderMap (Const a) EvalJSON JSON
+jsonEncoderMap enc = M.fromList
+   [ ("state", \(val ::: tp) -> do
+        conv <- equalM (Tag "state" tp) stateType
+        return (encodeState enc (conv val)))
+   , ("Result", \(val ::: tp) -> do
+        conv <- equalM (Tag "Result" tp) submitType
+        encodeResult enc (conv val))
+   , ("Exception", \(val ::: tp) -> do
+        f <- equalM tp stringType
+        fail (f val))
+   ] -}
+
+jsonEncodeConst :: (a -> JSON) -> Encoder (Const a) EvalJSON JSON
+jsonEncodeConst enc (val ::: tp) =
+   case tp of
+      Rule      -> return (toJSON (showId val))
+      Context   -> liftM enc (fromContext val)
+      Term      -> return (enc val)
+      BindingTp -> return $
+                    Object [(showId val, String (showValue val))]
+      Text      -> return (toJSON (show val))
+      Int       -> return (toJSON val)
+      Bool      -> return (toJSON val)
+      Tp.String -> return (toJSON val)
+      _         -> fail $ "Type " ++ show tp ++ " not supported in JSON"
+
+instance Monoid JSON where
+   mempty = Null
+   mappend Null a = a
+   mappend a Null = a
+   mappend (Array xs) (Array ys) = Array (xs ++ ys)
+   mappend (Array xs) b = Array (xs ++ [b])
+   mappend a (Array xs) = Array (a:xs)
+   mappend (Object xs) (Object ys) | distinct (map fst (xs ++ ys))
+      = Object (xs ++ ys)
+   mappend x y = Array [x, y]
+
+jsonDecoder :: Exercise a -> Decoder (Type a) EvalJSON
 jsonDecoder ex = Decoder (decode ex)
  where
    reader :: Exercise a -> EvalJSON a
@@ -181,6 +211,9 @@ jsonDecoder ex = Decoder (decode ex)
             | s == "args" -> do
                  f <- equalM envType t
                  useFirst $ liftM f . decodeContext
+            | s == "Location" -> do
+                 f <- equalM (List intType) t 
+                 liftM f (useFirst decodeLocation)
             | otherwise ->
                  decode ex t         
          Tp.Iso p t  -> liftM (from p) (decode ex t)
@@ -214,7 +247,6 @@ jsonDecoder ex = Decoder (decode ex)
                                  case json of
                                     String s -> return s
                                     _        -> fail "not a string"
-               Location -> useFirst decodeLocation
                Rule     -> useFirst $ \x -> jsonToId x >>= getRule ex
                StdGen   -> liftIO newStdGen
                Exercise -> return ex

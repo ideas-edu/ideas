@@ -23,7 +23,7 @@ module Service.Types
    , maybeType, optionType
    , errorType, difficultyType, listType, envType, elemType
    , derivationType, messageType
-   , equal, equalM
+   , Equal(..), ShowF(..), equalM
    ) where
 
 import Common.Library
@@ -39,14 +39,14 @@ import System.Random
 data Service = Service
    { serviceId         :: Id
    , serviceDeprecated :: Bool
-   , serviceFunction   :: forall a . TypedValue a
+   , serviceFunction   :: forall a . TypedValue (Type a)
    }
 
 instance HasId Service where
    getId = serviceId
    changeId f a = a { serviceId = f (serviceId a) }
 
-makeService :: String -> String -> (forall a . TypedValue a) -> Service
+makeService :: String -> String -> (forall a . TypedValue (Type a)) -> Service
 makeService s descr f = describe descr (Service (newId s) False f)
 
 deprecate :: Service -> Service
@@ -82,8 +82,6 @@ instance Equal (Const a) where
    equal Term      Term      = Just id
    equal Context   Context   = Just id
    equal Script    Script    = Just id
-   equal Location  Location  = Just id     
-   equal Id        Id        = Just id     
    equal StratCfg  StratCfg  = Just id     
    equal BindingTp BindingTp = Just id     
    equal Text      Text      = Just id     
@@ -98,7 +96,7 @@ infixr 5 :|:
 infix  2 :::
 infixr 3 :->
 
-data TypedValue a = forall t . t ::: Type a t
+data TypedValue f = forall t . t ::: f t
 
 tuple2 :: TypeRep f t1 -> TypeRep f t2 -> TypeRep f (t1, t2)
 tuple2 = Pair
@@ -134,10 +132,10 @@ scriptType :: Type a Script
 scriptType = Const Script
 
 locationType :: Type a Location
-locationType = Const Location
+locationType = Tag "Location" $ List intType
 
 idType :: Type a Id
-idType = Const Id
+idType = Tag "Id" $ Iso (newId <-> show) stringType
 
 strategyCfgType :: Type a StrategyConfiguration
 strategyCfgType = Const StratCfg
@@ -221,8 +219,6 @@ data Const a t where
    Context   :: Const a (Context a)
    -- other types
    Script    :: Const a Script
-   Location  :: Const a Location
-   Id        :: Const a Id
    StratCfg  :: Const a StrategyConfiguration
    BindingTp :: Const a Binding
    Text      :: Const a Text
@@ -258,8 +254,6 @@ instance ShowF (Const a) where
    showF Term      = "Term"
    showF Context   = "Context"
    showF Script    = "Script"
-   showF Location  = "Location"
-   showF Id        = "Id"
    showF StratCfg  = "StrategyConfiguration"
    showF BindingTp = "Binding"
    showF Text      = "TextMessage"

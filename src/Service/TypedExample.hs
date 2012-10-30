@@ -21,7 +21,7 @@ import Service.ModeXML
 import Service.Types
 import Text.XML
 
-typedExample :: Exercise a -> Service -> [TypedValue a] -> DomainReasoner (XML, XML, Bool)
+typedExample :: Exercise a -> Service -> [TypedValue (Type a)] -> DomainReasoner (XML, XML, Bool)
 typedExample ex service args = do
    let noXML = makeXML "xml" (return ()) -- quick fix
    -- Construct a request in xml
@@ -52,8 +52,8 @@ typedExample ex service args = do
    return (request, reply, xmlTest)
  where
    (evaluator, enc)
-      | isJust (hasTermView ex) = (openMathConverterTp False ex, "openmath")
-      | otherwise               = (stringFormatConverterTp ex, "string")
+      | isJust (hasTermView ex) = (openMathConverter False ex, "openmath")
+      | otherwise               = (stringFormatConverter ex, "string")
 
 stdReply :: String -> String -> Exercise a -> XMLBuilder -> XML
 stdReply s enc ex body = makeXML "request" $ do
@@ -63,7 +63,7 @@ stdReply s enc ex body = makeXML "request" $ do
    "encoding"   .=. enc
    body
 
-makeArgType :: [TypedValue a] -> Maybe (TypedValue a)
+makeArgType :: [TypedValue (Type a)] -> Maybe (TypedValue (Type a))
 makeArgType []   = fail "makeArgType: empty list"
 makeArgType [_ ::: Const Exercise] = fail "makeArgType: empty list"
 makeArgType [tv] = return tv
@@ -71,11 +71,11 @@ makeArgType ((a1 ::: t1) : rest) = do
    a2 ::: t2 <- makeArgType rest
    return $ (a1, a2) ::: Pair t1 t2
 
-dynamicApply :: TypedValue a -> TypedValue a -> TypedValue a
+dynamicApply :: Equal f => TypedValue (TypeRep f) -> TypedValue (TypeRep f) -> TypedValue (TypeRep f)
 dynamicApply fun arg =
    case (fun, arg) of
       (f ::: t1 :-> t2, a ::: t3) ->
          case equal t3 t1 of
             Just eq -> f (eq a) ::: t2
-            Nothing -> error $ "mismatch (argument type): " ++ show t3 ++ " does not match " ++ show t1
+            Nothing -> error $ "mismatch (argument type)"
       _ -> error "mismatch (not a function)"

@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# OPTIONS -fno-warn-orphans #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -19,6 +20,7 @@ module Common.Rewriting.Term
      -- * Terms
    , Term(..), IsTerm(..), termView
    , fromTermM, fromTermWith
+   , toTermGeneric, fromTermGeneric, testTermGeneric
      -- * Functions and symbols
    , WithFunctions(..), isSymbol, isFunction
    , unary, binary, isUnary, isBinary
@@ -37,9 +39,11 @@ import Common.Utils.QuickCheck
 import Common.Utils.Uniplate
 import Common.View
 import Control.Monad
+import Data.Data
 import Data.Function
+import Data.Generics
 import Data.Maybe
-import Data.Typeable
+import Data.Tree
 import qualified Data.IntSet as IS
 import qualified Data.Set as S
 
@@ -78,6 +82,7 @@ makeAssociative (S _ a) = S True a
 
 data Term = TVar   String
           | TCon   Symbol [Term]
+          | TMyCon Constr [Term]
           | TList  [Term]
           | TNum   Integer
           | TFloat Double
@@ -85,10 +90,17 @@ data Term = TVar   String
  deriving (Show, Read, Eq, Ord, Typeable)
 
 instance Uniplate Term where
-   uniplate (TCon x xs) = plate (function x) ||* xs
-   uniplate (TList xs)  = plate TList ||* xs
-   uniplate term        = plate term
+   uniplate (TCon x xs)   = plate (function x) ||* xs
+   uniplate (TMyCon x xs) = plate TMyCon |- x ||* xs
+   uniplate (TList xs)    = plate TList ||* xs
+   uniplate term          = plate term
 
+instance Read Constr where
+  readList = error "Cannot read an Constr value!"
+
+instance Ord Constr where
+  compare = error "Not implemented Ord for Constr!"
+  
 -----------------------------------------------------------
 -- * Type class for conversion to/from terms
 
@@ -151,6 +163,34 @@ fromTermWith f a = do
    (s, xs) <- getFunction a
    ys      <- mapM fromTermM xs
    f s ys
+
+toTermGeneric :: Data a => a -> Term
+toTermGeneric = 
+    gdefault `extQ` atString `extQ` atDouble `extQ` atInteger -- `ext1Q` atList
+  where
+    gdefault  x = TMyCon (toConstr x) $ gmapQ toTermGeneric x
+    atInteger x = TNum x
+    atDouble  x = TFloat x
+    atString  x = TVar x    -- Might not be the case for other domains!
+    -- atList :: Data a => [a] -> Term
+    -- atList xs   = TList (map toTermGeneric xs)
+
+fromTermGeneric :: Data a => Term -> Maybe a
+fromTermGeneric = 
+    gdefault `extR` atTVar `extR` atTFloat `extR` atTNum --`ext1R` atTList
+  where
+    gdefault (TMyCon con ts) = constrArgs (fromConstr con)
+      where
+        perarg args = const (tail args, fromTermGeneric (head args)) 
+        constrArgs x = do 
+          guard (glength x == length ts)
+          snd (gmapAccumM perarg ts x)
+    gdefault _ = Nothing
+
+    atTNum   t = case t of TNum x   -> Just x; _ -> Nothing
+    atTVar   t = case t of TVar x   -> Just x; _ -> Nothing
+    atTFloat t = case t of TFloat x -> Just x; _ -> Nothing
+--    atTList  t = case t of TList xs -> mapM fromTermGeneric xs; _ -> Nothing
 
 -----------------------------------------------------------
 -- * Functions and symbols
@@ -279,3 +319,19 @@ instance Arbitrary Term where
       , unaryGens $ map (unary . newSymbol) ["h", "k"]
       , binaryGens $ map (binary . newSymbol) ["f", "g"]
       ]
+
+testTermGeneric :: IO ()
+testTermGeneric = do
+  let propTermGeneric :: (Data a, Eq a) => a -> Bool
+      propTermGeneric x = fromTermGeneric (toTermGeneric x) == Just x
+  quickCheck (propTermGeneric :: [Integer] -> Bool)
+  quickCheck (propTermGeneric :: String -> Bool)
+  quickCheckWith (stdArgs {maxSize = 10}) (propTermGeneric :: Tree Integer -> Bool)
+
+instance Arbitrary a => Arbitrary (Tree a) where 
+  arbitrary = sized arbTree
+    where
+      arbTree 0 = liftM (flip Node []) arbitrary
+      arbTree n = liftM2 Node arbitrary (replicateM m $ arbTree m)
+        where
+          m = n `div` 2

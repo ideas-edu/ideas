@@ -96,10 +96,10 @@ instance Uniplate Term where
    uniplate term          = plate term
 
 instance Read Constr where
-  readList = error "Cannot read an Constr value!"
+  readList = error "Cannot read a Constr value"
 
 instance Ord Constr where
-  compare = error "Not implemented Ord for Constr!"
+  compare = error "Not implemented Ord for Constr"
   
 -----------------------------------------------------------
 -- * Type class for conversion to/from terms

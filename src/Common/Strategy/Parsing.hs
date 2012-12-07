@@ -73,15 +73,23 @@ newState core a = push core (S emptyStack [] [] 0 a)
 ----------------------------------------------------------------------
 -- Parse derivation tree
 
-parseDerivationTree :: State l a -> DerivationTree (Step l a) (State l a)
-parseDerivationTree = makeTree $ \state ->
-   let xs = firsts state
-   in ( any (isReady . fst) xs
-      , [ (step, s) | (Result step, s) <- xs ]
-      )
+parseDerivationTree :: Bool -> State l a -> DerivationTree (Step l a) (State l a)
+parseDerivationTree search
+    | search     = mapSecond (changeStack removeRecAnnotations) . tree
+    | otherwise  = tree
+  where
+    tree = makeTree $ \state ->
+      let xs = firsts search state
+      in ( any (isReady . fst) xs , [ (step, s) | (Result step, s) <- xs ] )
 
-firsts :: State l a -> [(Result (Step l a), State l a)]
-firsts st =
+    removeRecAnnotations (Stack as ss rs) =
+        Stack (map f as) (map f ss) (map f rs)
+      where
+        f (Rec (-666) Fail) = Succeed
+        f core              = descend f core
+
+firsts :: Bool -> State l a -> [(Result (Step l a), State l a)]
+firsts search st =
    case pop st of
       Nothing        -> [(Ready, st)]
       Just (core, s) -> firstsStep core s
@@ -90,22 +98,23 @@ firsts st =
       case core of
          a :*: b   -> firstsStep a (push b state)
          a :|: b   -> chooseFor True a ++ chooseFor False b
-         a :%: b   -> firstsStep (coreInterleave a b) state
+         a :%: b   -> firstsStep (coreInterleave search a b) state
          a :!%: b  -> firstsStep a (suspend b state)
          Rec i a   -> incrTimer state >>= firstsStep (substCoreVar i core a)
          Var _     -> freeCoreVar "firsts"
          Rule r    -> hasStep r
          Label l a -> firstsStep (coreLabel l a) state
          Atomic a  -> firstsStep a (useAtomic state)
-         Not a     -> guard (checkNot a state) >> firsts state
+         Not a     -> guard (checkNot a state) >> firsts search state
          a :|>: b  -> firstsStep (coreOrElse a b) state
          Many a    -> firstsStep (coreMany a) state
          Repeat a  -> firstsStep (coreRepeat a) state
          Fail      -> []
-         Succeed   -> firsts state
+         Succeed   -> firsts search state
     where
       chooseFor b  = flip firstsStep (makeChoice b state)
       hasStep step = [ (Result (head (trace s)), s) | s <- useRule step state ]
+      -- hasStep step = [ (Result step, s) | s <- useRule step (traceStep step state) ]
 
 -- helper datatype
 data Result a = Result a | Ready deriving  Show
@@ -134,7 +143,7 @@ runState st =
       case core of
          a :*: b   -> runStep a (push b state)
          a :|: b   -> runStep a state ++ runStep b state
-         a :%: b   -> runStep (coreInterleave a b) state
+         a :%: b   -> runStep (coreInterleave False a b) state
          a :!%: b  -> runStep a (suspend b state)
          Rec i a   -> incrTimer state >>= runStep (substCoreVar i core a)
          Var _     -> freeCoreVar "runState"
@@ -171,7 +180,7 @@ replay n0 bs0 = replayState n0 bs0 . flip makeState noValue
                         []   -> fail "replay failed"
                         x:xs -> let new = if x then a else b
                                 in replayStep n xs new (makeChoice x state)
-         a :%: b   -> replayStep n bs (coreInterleave a b) state
+         a :%: b   -> replayStep n bs (coreInterleave False a b) state
          a :!%: b  -> replayStep n bs a (suspend b state)
          Rec i a   -> replayStep n bs (substCoreVar i core a) state
          Var _     -> freeCoreVar "replay"
@@ -191,19 +200,21 @@ replay n0 bs0 = replayState n0 bs0 . flip makeState noValue
 coreLabel :: l -> StepCore l a -> StepCore l a
 coreLabel l a = Rule (Enter l) :*: a :*: Rule (Exit l)
 
-coreInterleave :: StepCore l a -> StepCore l a -> StepCore l a
-coreInterleave a b = (a :!%: b) :|: (b :!%: a) :|: emptyOnly (a :*: b)
- where
-   emptyOnly core =
+coreInterleave :: Bool -> StepCore l a -> StepCore l a -> StepCore l a
+coreInterleave search a b = (a :!%: b) :|: (b :!%: a') :|: emptyOnly (a :*: b)
+  where
+    a' = if search then Rec (-666) Fail :*: a else a
+    emptyOnly core =
       case core of
+         Rec (-666) Fail :*: y -> emptyOnly y
          Rule step | interleaveAfter step -> Fail
          Not _    -> core
          x :|>: y -> emptyOnly x .|. (Not x :*: emptyOnly y)
          Repeat x -> emptyOnly (coreRepeat x)
          x :|: y  -> emptyOnly x .|. emptyOnly y
          x :*: y  -> emptyOnly x .*. emptyOnly y
-         x :%: y  -> emptyOnly x .*. emptyOnly y -- no more interleaving
-         x :!%: y -> emptyOnly x .*. emptyOnly y -- no more interleaving
+         x :%: y  -> emptyOnly x .*. emptyOnly y -- no more interleaving                                                
+         x :!%: y -> emptyOnly x .*. emptyOnly y -- no more interleaving                                                
          _        -> descend emptyOnly core
 
 ----------------------------------------------------------------------

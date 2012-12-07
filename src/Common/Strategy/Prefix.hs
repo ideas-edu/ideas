@@ -61,9 +61,9 @@ makePrefix (i:is) ls = liftM P $
    mkCore = processLabelInfo id . toCore . toStrategy
 
 -- | Create a derivation tree with a "prefix" as annotation.
-prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
-prefixTree (P s) a = fmap value $ updateAnnotations (\_ _ -> P) $
-   parseDerivationTree s {value = a}
+prefixTree :: Bool -> Prefix a -> a -> DerivationTree (Prefix a) a
+prefixTree search (P s) a = fmap value $ updateAnnotations (\_ _ -> P) $
+   parseDerivationTree search s {value = a}
 
 prefixToSteps :: Prefix a -> [Step LabelInfo a]
 prefixToSteps (P t) = reverse (trace t)

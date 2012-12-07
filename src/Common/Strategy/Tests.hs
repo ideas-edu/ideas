@@ -142,7 +142,7 @@ s1 === s2 = rec 100 [(start s1, start s2)]
       eqFst  = (==) `on` fst
 
 myFirsts :: State l a -> [(Result (Step l a), State l a)]
-myFirsts = concatMap f . firsts
+myFirsts = concatMap f . firsts False
  where
    f pair@(result, a) =
       case result of

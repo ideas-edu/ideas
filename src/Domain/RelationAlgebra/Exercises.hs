@@ -41,7 +41,7 @@ cnfExercise = makeExercise
 
 stepsRemaining :: Int -> RelAlg -> Maybe Int
 stepsRemaining i =
-   lengthMax i . derivationTree toCNF . inContext cnfExercise
+   lengthMax i . derivationTree False toCNF . inContext cnfExercise
 
 {- cnfExerciseSimple :: Exercise RelAlg
 cnfExerciseSimple = cnfExercise

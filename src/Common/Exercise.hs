@@ -347,7 +347,7 @@ type ExerciseDerivation a = Derivation (Rule (Context a), Environment) (Context 
 defaultDerivation :: Exercise a -> a -> ExerciseDerivation a
 defaultDerivation ex a =
    let ca     = inContext ex a
-       tree   = sortTree (ruleOrdering ex `on` fst) (derivationTree (strategy ex) ca)
+       tree   = sortTree (ruleOrdering ex `on` fst) (derivationTree False (strategy ex) ca)
        single = emptyDerivation ca
    in fromMaybe single (derivation tree)
 
@@ -439,7 +439,7 @@ checkExamples ex = do
 
 checksForTerm :: Bool -> Exercise a -> a -> TestSuite
 checksForTerm leftMost ex a = do
-   let tree = derivationTree (strategy ex) (inContext ex a)
+   let tree = derivationTree False (strategy ex) (inContext ex a)
    -- Left-most derivation
    when leftMost $
       case derivation tree of

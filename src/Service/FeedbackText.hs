@@ -30,10 +30,13 @@ derivationtext script state =
 
 onefirsttext :: Script -> State a -> Maybe String -> (Text, Maybe (State a))
 onefirsttext script old event =
-   ( feedbackHint (event == Just "hint button") env script
+   ( feedbackHint feedbackId env script
    , fmap fth4 next
    )
  where
+   feedbackId = newId $ if event == Just "hint button" 
+                        then "hint" 
+                        else "step"
    ex   = exercise old
    next = either (const Nothing) Just (onefirst old)
    fth4 (_, _, _, a) = a

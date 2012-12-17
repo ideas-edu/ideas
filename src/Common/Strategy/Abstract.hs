@@ -14,7 +14,7 @@ module Common.Strategy.Abstract
    ( Strategy, IsStrategy(..)
    , LabeledStrategy, label, unlabel
    , fullDerivationTree, derivationTree, rulesInStrategy
-   -- , mapRules, mapRulesS, mapRulesM
+   , mapRules, mapRulesS
    , cleanUpStrategy, cleanUpStrategyAfter
      -- Accessors to the underlying representation
    , toCore, fromCore, liftCore, liftCore2, makeLabeledStrategy

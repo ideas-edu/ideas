@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Common.Strategy.Prefix
    ( Prefix, emptyPrefix, makePrefix
-   , prefixToSteps, prefixTree, stepsToRules, lastStepInPrefix
+   , prefixToSteps, prefixTree, stepsToRules, lastStepInPrefix, activeLabels
    ) where
 
 import Common.DerivationTree
@@ -22,6 +22,7 @@ import Common.Strategy.Abstract
 import Common.Strategy.Parsing
 import Common.Rule
 import Control.Monad
+import Data.List
 import Data.Maybe
 
 -----------------------------------------------------------
@@ -75,3 +76,10 @@ stepsToRules xs = [ r | RuleStep _ r <- xs ]
 -- | Returns the last rule of a prefix (if such a rule exists)
 lastStepInPrefix :: Prefix a -> Maybe (Step LabelInfo a)
 lastStepInPrefix (P t) = listToMaybe (trace t)
+
+-- | Calculate the active labels                                                                                        
+activeLabels :: Prefix a -> [LabelInfo]
+activeLabels p = nub [l | Enter l <- steps] \\ [l | Exit l <- steps]
+   where
+      steps = prefixToSteps p
+

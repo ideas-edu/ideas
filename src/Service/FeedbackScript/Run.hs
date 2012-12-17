@@ -14,11 +14,13 @@
 module Service.FeedbackScript.Run
    ( Script
    , Environment(..), newEnvironment
-   , feedbackDiagnosis, feedbackHint
+   , feedbackDiagnosis, feedbackHint, feedbackHints
    , ruleToString, feedbackIds, attributeIds, conditionIds
+   , eval
    ) where
 
 import Common.Library hiding (ready, Environment)
+import Common.Strategy.Abstract (LabelInfo)
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -31,6 +33,7 @@ data Environment a = Env
    { oldReady   :: Bool
    , expected   :: Maybe (Rule (Context a))
    , recognized :: Maybe (Rule (Context a))
+   , actives    :: Maybe [LabelInfo]
    , diffPair   :: Maybe (String, String)
    , before     :: Maybe Term
    , after      :: Maybe Term
@@ -38,21 +41,25 @@ data Environment a = Env
    }
 
 newEnvironment :: State a -> Environment a
-newEnvironment st = Env
-   { oldReady   = ready st
-   , expected   = fmap fst4 next
-   , recognized = Nothing
-   , diffPair   = Nothing
-   , before     = f st
-   , after      = liftM fth4 next >>= f
-   , afterText  = liftM fth4 next >>= g
-   }
+newEnvironment st = newEnvironmentFor st next
+  where
+    next = either (const Nothing) Just (onefirst st)
+
+newEnvironmentFor :: State a -> Maybe (Rule (Context a), b, c, State a) -> Environment a
+newEnvironmentFor st next = Env
+  { oldReady   = ready st
+  , expected   = fmap (\(x,_,_,_) -> x) next
+  , recognized = Nothing
+  , actives    = listToMaybe (stateLabels st)
+  , diffPair   = Nothing
+  , before     = f st
+  , after      = liftM fth4 next >>= f
+  , afterText  = liftM fth4 next >>= g
+  }
  where
-   next = either (const Nothing) Just (onefirst st)
-   f s  = fmap (`build` stateTerm s) (hasTermView (exercise s))
-   g s  = return $ prettyPrinter (exercise s) (stateTerm s)
-   fst4 (a, _, _, _) = a
-   fth4 (_, _, _, a) = a
+  f s  = fmap (`build` stateTerm s) (hasTermView (exercise s))
+  g s  = return $ prettyPrinter (exercise s) (stateTerm s)
+  fth4 (_,_,_,x) = x
 
 toText :: Environment a -> Script -> Text -> Maybe Text
 toText env script = eval env script . Right
@@ -122,12 +129,18 @@ feedbackDiagnosis diagnosis env =
  where
    makeOk    = makeDefault "Well done!"
    makeWrong = makeDefault "This is incorrect."
-   makeDefault dt s e = fromMaybe (TextString dt) . make s e
+   makeDefault dt s e = fromMaybe (TextString dt) . make (newId s) e
 
-feedbackHint :: Bool -> Environment a -> Script -> Text
-feedbackHint b env script =
-   fromMaybe (defaultHint env script) $
-   make (if b then "hint" else "step") env script
+feedbackHint :: Id -> Environment a -> Script -> Text
+feedbackHint feedbackId env script =
+   fromMaybe (defaultHint env script) $ make feedbackId env script
+
+feedbackHints :: Id -> [(Rule (Context a), b, c, State a)] -> State a -> Script -> [Text]
+feedbackHints feedbackId nexts state script =
+   map (\env -> fromMaybe (defaultHint env script) $ 
+     make feedbackId env script) envs
+  where
+    envs = map (newEnvironmentFor state . Just) nexts
 
 defaultHint :: Environment a -> Script -> Text
 defaultHint env script = makeText $
@@ -135,12 +148,12 @@ defaultHint env script = makeText $
       Just r  -> ruleToString env script r
       Nothing -> "Sorry, not hint available."
 
-make :: String -> Environment a -> Script -> Maybe Text
-make s env script = toText env script (TextRef (newId s))
+make :: Id -> Environment a -> Script -> Maybe Text
+make feedbackId env script = toText env script (TextRef feedbackId)
 
 feedbackIds :: [Id]
 feedbackIds = map newId
-   ["same", "noteq", "unknown", "ok", "buggy", "detour", "hint", "step"]
+   ["same", "noteq", "unknown", "ok", "buggy", "detour", "hint", "step", "label"]
 
 attributeIds :: [Id]
 attributeIds =

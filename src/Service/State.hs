@@ -15,12 +15,14 @@
 module Service.State
    ( -- * Exercise state
      State, makeState, makeNoState, empyStateContext, emptyState
-   , exercise, statePrefixes, stateContext, stateTerm
+   , exercise, statePrefixes, stateContext, stateTerm, stateLabels
      -- * Types
    , stateType
    ) where
 
 import Common.Library
+import Common.Strategy.Abstract (LabelInfo)
+import Common.Strategy.Prefix (activeLabels)
 import Common.Utils (readM)
 import Data.List
 import Data.Maybe
@@ -47,6 +49,14 @@ instance HasId (State a) where
 
 stateTerm :: State a -> a
 stateTerm = fromMaybe (error "invalid term") . fromContext . stateContext
+
+stateLabels :: State a -> [[LabelInfo]]
+stateLabels state =
+    map (filterRules . activeLabels) $ statePrefixes state
+  where
+    rs          = ruleset $ exercise state
+    isRule      = flip elem (map getId rs) . getId
+    filterRules = filter (not . isRule)
 
 -----------------------------------------------------------
 

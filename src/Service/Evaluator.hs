@@ -15,6 +15,8 @@ module Service.Evaluator where
 import Common.View
 import Control.Monad
 import Data.Monoid
+import qualified Data.Foldable as F
+import qualified Data.Traversable as T
 import qualified Data.Map as M
 import Service.Types
 
@@ -43,6 +45,7 @@ encodeWith m enc = rec
                           (rec (fst val ::: t1))
                           (rec (snd val ::: t2))
          List t     -> liftM mconcat (mapM (rec . (::: t)) val)
+         Tree t     -> liftM F.fold (T.mapM (rec . (::: t)) val)
          Unit       -> return mempty
          Tag s t    -> M.findWithDefault rec s m (val ::: t)
          Iso v t    -> rec (to v val ::: t)

@@ -21,7 +21,7 @@ module Service.Types
    , scriptType, locationType, idType, bindingType, strategyCfgType
    , textType, stdGenType
    , maybeType, optionType
-   , errorType, difficultyType, listType, envType, elemType
+   , errorType, difficultyType, listType, envType, elemType, treeType
    , derivationType, messageType
    , Equal(..), ShowF(..), equalM
    ) where
@@ -30,6 +30,7 @@ import Common.Library
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Data.Tree
 import Service.FeedbackScript.Syntax
 import System.Random
 
@@ -67,6 +68,7 @@ instance Equal f => Equal (TypeRep f) where
                                     return $ \(x, y) -> (f x, g y)
    equal (a :|: b)  (c :|: d)  = liftM2 biMap (equal a c) (equal b d)
    equal (List a)   (List b)   = fmap map (equal a b)
+   equal (Tree a)   (Tree b)   = fmap fmap (equal a b)
    equal (Tag s1 a) (Tag s2 b) | s1 == s2 = equal a b
    equal Unit       Unit       = Just id
    equal (Const a)  (Const b)  = equal a b
@@ -173,6 +175,9 @@ errorType t = Tag "Exception" stringType :|: t
 listType :: Type a t -> Type a [t] -- with list "tag"
 listType = Tag "list" . List . elemType
 
+treeType :: Type a t -> Type a (Tree t) -- with tree "tag"                                                                            
+treeType = Tag "tree" . Tree . elemType
+
 envType :: Type a Environment
 envType = Iso (makeEnvironment <-> bindings) (List bindingType)
 
@@ -204,6 +209,7 @@ data TypeRep f t where
    Tag   :: String -> TypeRep f t1 -> TypeRep f t1
    -- Type constructors
    List  :: TypeRep f t  -> TypeRep f [t]
+   Tree  :: TypeRep f t  -> TypeRep f (Tree t)
    Pair  :: TypeRep f t1 -> TypeRep f t2 -> TypeRep f (t1, t2)
    (:|:) :: TypeRep f t1 -> TypeRep f t2 -> TypeRep f (Either t1 t2)
    Unit  :: TypeRep f ()
@@ -241,6 +247,7 @@ instance ShowF f => Show (TypeRep f t) where
    show (t1 :|: t2)    = show t1 ++ " | " ++ show t2
    show (Tag s _)      = s -- ++ "@(" ++ show t ++ ")"
    show (List t)       = "[" ++ show t ++ "]"
+   show (Tree t)       = "Tree " ++ show t
    show Unit           = "()"
    show (Const c)      = showF c
 

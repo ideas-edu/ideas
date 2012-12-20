@@ -11,7 +11,12 @@
 -- Analysis of a feedbackscript
 --
 -----------------------------------------------------------------------------
-module Service.FeedbackScript.Analysis (withScripts) where
+module Service.FeedbackScript.Analysis 
+   ( -- Analysis functions
+     withScripts, analyzeScript
+     -- Message type
+   , Message(..)
+   ) where
 
 import Common.Library
 import Common.Utils (Some(..))

@@ -19,7 +19,8 @@ import Common.Utils (Some(..), distinct, readM)
 import Control.Monad.Error
 import Control.Monad.State (StateT, evalStateT, get, put)
 import Data.Char
-import qualified Data.Map as M
+import qualified Data.Traversable as T
+import Data.Tree
 import Service.DomainReasoner
 import Service.Evaluator
 import Service.Request
@@ -137,6 +138,7 @@ jsonEncode enc tv@(val ::: tp)
 
            Tp.Unit   -> return Null
            Tp.List t -> liftM Array (mapM (jsonEncode enc . (::: t)) val)
+           Tp.Tree t -> liftM treeToJSON (T.mapM (jsonEncode enc . (::: t)) val)
            Const ctp -> jsonEncodeConst enc (val ::: ctp)
  where
    tupleList :: TypedValue (TypeRep f) -> [TypedValue (TypeRep f)]
@@ -146,6 +148,14 @@ jsonEncode enc tv@(val ::: tp)
    tupleList (x ::: Tag s t)
       | s `elem` ["ruletext", "message", "accept"] = tupleList (x ::: t)
    tupleList tv = [tv]
+
+   treeToJSON :: Tree JSON -> JSON
+   treeToJSON (Node r ts) =
+     case r of
+       (Array [x, t]) -> Object [ ("rootLabel", x)
+                                , ("type", t)
+                                , ("subForest", Array $ map treeToJSON ts) ]
+       _ -> error "ModeJSON: malformed tree!"
 
 {-
 jsonEncoderMap :: (a -> JSON) -> EncoderMap (Const a) EvalJSON JSON
@@ -249,7 +259,6 @@ jsonDecoder ex = Decoder (decode ex)
                                     _        -> fail "not a string"
                Rule     -> useFirst $ \x -> jsonToId x >>= getRule ex
                StdGen   -> liftIO newStdGen
-               Exercise -> return ex
                Script   -> lift (defaultScript (getId ex))
                _        -> fail $ "No support for argument type: " ++ show serviceType
 

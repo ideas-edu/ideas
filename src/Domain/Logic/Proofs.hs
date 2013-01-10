@@ -26,6 +26,7 @@ import Control.Monad
 import Data.Foldable (toList)
 import Data.List
 import qualified Data.Set as S
+import Domain.Logic.BuggyRules
 import Domain.Logic.Examples
 import Domain.Logic.Formula
 import Domain.Logic.GeneralizedRules
@@ -51,6 +52,7 @@ proofExercise = makeExercise
    , suitable       = predicate $ all (uncurry eqLogic) . subProofs
    , ready          = predicate $ all (uncurry equalLogicA) . subProofs
    , strategy       = proofStrategy
+   , extraRules     = map use (extraLogicRules ++ buggyRules)
    , navigation     = termNavigator
    , examples       = map (\a -> (Easy, makeProof a)) $
                       let p = Var (ShowString "p")

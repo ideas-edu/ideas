@@ -1,0 +1,4 @@
+{ "method" : "submit"
+, "params" : [["logic.proof", "[]", "p || ~p == T", ""], "~p || p == T"]
+, "id"     : 421
+}

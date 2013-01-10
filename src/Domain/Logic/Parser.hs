@@ -43,11 +43,11 @@ parseBalanced :: Parser a -> String -> Either String a
 parseBalanced p input =
    maybe (parseSimple p input) (Left . show) (balanced [('(', ')')] input)
 
-parseLogicProof :: String -> Either String (SLogic, SLogic)
-parseLogicProof = parseSimple $ do
-   p <- parserSLogic False True
+parseLogicProof :: Bool -> String -> Either String (SLogic, SLogic)
+parseLogicProof unicode = parseSimple $ do
+   p <- parserSLogic unicode True
    reservedOp "=="
-   q <- parserSLogic False True
+   q <- parserSLogic unicode True
    return (p, q)
 
 -- generalized parser

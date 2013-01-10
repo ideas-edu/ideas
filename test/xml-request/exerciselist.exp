@@ -1,4 +1,4 @@
-<reply result="ok" version="1.0.9 (0)">
+<reply result="ok" version="1.0.10 (0)">
   <list>
     <elem exerciseid="algebra.equations.coverup" description="solve an equation by covering up" status="Provisional"/>
     <elem exerciseid="algebra.equations.linear" description="solve a linear equation" status="Stable"/>
@@ -35,6 +35,7 @@
     <elem exerciseid="logic.proof" description="Prove two propositions equivalent" status="Experimental"/>
     <elem exerciseid="logic.propositional.dnf" description="Proposition to DNF" status="Stable"/>
     <elem exerciseid="logic.propositional.dnf.unicode" description="Proposition to DNF (unicode support)" status="Stable"/>
+    <elem exerciseid="logic.propositional.proof.unicode" description="Prove two propositions equivalent (unicode support)" status="Experimental"/>
     <elem exerciseid="relationalgebra.cnf" description="To conjunctive normal form" status="Alpha"/>
   </list>
 </reply>

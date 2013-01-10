@@ -12,7 +12,9 @@
 -- Exercise for the logic domain: to prove two propositions equivalent
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Proofs (proofExercise) where
+module Domain.Logic.Proofs 
+   ( proofExercise, proofUnicodeExercise
+   ) where
 
 import Common.Algebra.Boolean
 import Common.Algebra.CoBoolean
@@ -42,7 +44,7 @@ proofExercise = makeExercise
    { exerciseId     = describe "Prove two propositions equivalent" $
                          newId "logic.proof"
    , status         = Experimental
-   , parser         = mapSecond makeProof . parseLogicProof
+   , parser         = mapSecond makeProof . parseLogicProof False
    , prettyPrinter  = showProof
    , equivalence    = withoutContext equivalentProofs
    , similarity     = withoutContext similarProofs
@@ -54,6 +56,14 @@ proofExercise = makeExercise
                       let p = Var (ShowString "p")
                           q = Var (ShowString "q")
                       in exampleProofs ++ [(q :&&: p, p :&&: (q :||: q))]
+   }
+
+proofUnicodeExercise :: Exercise Proof
+proofUnicodeExercise = proofExercise 
+   { exerciseId    = describe "Prove two propositions equivalent (unicode support)" $
+                        newId "logic.propositional.proof.unicode"
+   , parser        = mapSecond makeProof . parseLogicProof True
+   , prettyPrinter = showProofUnicode
    }
 
 type Proof = Logic (SLogic, SLogic)
@@ -71,6 +81,11 @@ showProof :: Proof -> String
 showProof = uncurry f . proofPair
  where
    f p q = ppLogicPars p ++ " == " ++ ppLogicPars q
+
+showProofUnicode :: Proof -> String
+showProofUnicode = uncurry f . proofPair
+ where
+   f p q = ppLogicUnicodePars p ++ " == " ++ ppLogicUnicodePars q
 
 equivalentProofs :: Proof -> Proof -> Bool
 equivalentProofs proof1 proof2 =

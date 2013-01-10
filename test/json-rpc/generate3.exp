@@ -1,0 +1,12 @@
+{
+   "result": [
+      "logic.propositional.proof.unicode",
+      "[]",
+      "(p → ¬q) → q == (s ∨ (s → (q ∨ p))) ∧ q",
+      {
+      }
+   ],
+   "error": null,
+   "id": 421,
+   "version": "1.0.10 (0)"
+}

@@ -55,6 +55,7 @@ exercises =
      Some Logic.dnfExercise
    , Some Logic.dnfUnicodeExercise
    , Some Logic.proofExercise
+   , Some Logic.proofUnicodeExercise
    , Some RA.cnfExercise
      -- linear algebra
    , Some LA.gramSchmidtExercise

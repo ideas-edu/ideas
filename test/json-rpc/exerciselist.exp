@@ -176,6 +176,11 @@
          "status": "Stable"
       },
       {
+         "exerciseid": "logic.propositional.proof.unicode",
+         "description": "Prove two propositions equivalent (unicode support)",
+         "status": "Experimental"
+      },
+      {
          "exerciseid": "relationalgebra.cnf",
          "description": "To conjunctive normal form",
          "status": "Alpha"
@@ -183,5 +188,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "1.0.9 (0)"
+   "version": "1.0.10 (0)"
 }

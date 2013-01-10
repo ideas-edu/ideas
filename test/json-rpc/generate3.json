@@ -1,0 +1,4 @@
+{ "method" : "generate"
+, "params" : ["logic.propositional.proof.unicode", "easy"]
+, "id"     : 421
+}

@@ -1,12 +1,6 @@
 {
    "result": [
       [
-         "top-is-impl",
-         [
-         ],
-         "(p -> q) -> (p -> s) == (~q -> ~p) -> (~s -> ~p)"
-      ],
-      [
          "logic.propositional.defimpl",
          [
          ],
@@ -25,49 +19,37 @@
          "(~p || q) -> (p -> s) == (q || ~p) -> (~s -> ~p)"
       ],
       [
-         "top-is-or",
+         "logic.propositional.defimpl",
          [
          ],
-         "(~p || q) -> (p -> s) == (~p || q) -> (~s -> ~p)"
-      ],
-      [
-         "top-is-not",
-         [
-         ],
-         "(~p || q) -> (p -> s) == (~p || q) -> (~s -> ~p)"
+         "(~p || q) -> (~p || s) == (q || ~p) -> (~s -> ~p)"
       ],
       [
          "logic.propositional.defimpl",
          [
          ],
-         "(~p || q) -> (~p || s) == (~p || q) -> (~s -> ~p)"
-      ],
-      [
-         "logic.propositional.defimpl",
-         [
-         ],
-         "(~p || q) -> (~p || s) == (~p || q) -> (~~s || ~p)"
+         "(~p || q) -> (~p || s) == (q || ~p) -> (~~s || ~p)"
       ],
       [
          "logic.propositional.notnot",
          [
          ],
-         "(~p || q) -> (~p || s) == (~p || q) -> (s || ~p)"
+         "(~p || q) -> (~p || s) == (q || ~p) -> (s || ~p)"
       ],
       [
-         "top-is-or",
+         "normalize",
          [
          ],
-         "(~p || q) -> (~p || s) == (~p || q) -> (~p || s)"
+         "((~p /\\ ~q) || (~p /\\ q) || (p /\\ q)) -> (~p || s) == ((~p /\\ ~q) || (~p /\\ q) || (p /\\ q)) -> (s || ~p)"
       ],
       [
-         "top-is-not",
+         "normalize",
          [
          ],
-         "(~p || q) -> (~p || s) == (~p || q) -> (~p || s)"
+         "((~p /\\ ~q) || (~p /\\ q) || (p /\\ q)) -> ((~p /\\ ~s) || (~p /\\ s) || (p /\\ s)) == ((~p /\\ ~q) || (~p /\\ q) || (p /\\ q)) -> ((~p /\\ ~s) || (~p /\\ s) || (p /\\ s))"
       ]
    ],
    "error": null,
    "id": 42,
-   "version": "1.0.9 (0)"
+   "version": "1.0.10 (0)"
 }

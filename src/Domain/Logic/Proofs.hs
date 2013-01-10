@@ -193,7 +193,7 @@ normLogicRule = ruleMaybe "Normalize" $ \tuple@(p, q) -> do
 
 -- Find a common subexpression that can be treated as a box
 commonExprAtom :: Rule (Context (SLogic, SLogic))
-commonExprAtom = ruleTrans "commonExprAtom" $ makeTransLiftContext $ \(p, q) -> do
+commonExprAtom = minor $ ruleTrans "commonExprAtom" $ makeTransLiftContext $ \(p, q) -> do
    let xs = filter (same <&&> complement isAtomic) (largestCommonSubExpr p q) 
        same cse = eqLogic (sub cse p) (sub cse q)
        new = head (logicVars \\ (varsLogic p `union` varsLogic q))
@@ -286,13 +286,13 @@ fakeAbsorptionNot = makeRule "fakeAbsorptionNot" $ \p -> do
    return new
 
 topIsNot :: Rule Proof
-topIsNot = makeRule "top-is-not" f
+topIsNot = minorRule "top-is-not" f
  where
    f (Var (Not p, Not q)) = Just (Not (Var (p, q)))
    f _ = Nothing
 
 acTopRuleFor :: IsId s => s -> (forall a . View (Logic a) (Logic a, Logic a)) -> Rule Proof
-acTopRuleFor s v = makeRule s f
+acTopRuleFor s v = minorRule s f
  where
    f (Var (lhs, rhs)) = do
       let collect a = maybe [a] (\(x, y) -> collect x ++ collect y) (match v a)
@@ -300,7 +300,7 @@ acTopRuleFor s v = makeRule s f
           xs = collect lhs
           ys = collect rhs
       guard (length xs > 1 && length ys > 1)
-      list <- liftM (map (make *** make)) (pairingsAC False xs ys)
+      list <- liftM (map (make *** make)) (pairingsA False xs ys)
       guard (all (uncurry eqLogic) list)
       return (foldr1 (curry (build v)) (map Var list))
    f _ = []
@@ -318,7 +318,7 @@ topIsEquiv = acTopRuleFor "top-is-equiv" (makeView isEquiv (uncurry equivalent))
    isEquiv _           = Nothing
 
 topIsImpl :: Rule Proof
-topIsImpl = makeRule "top-is-impl" f
+topIsImpl = minorRule "top-is-impl" f
  where
    f (Var (p :->: q, r :->: s)) = do
       guard (eqLogic p r && eqLogic q s)

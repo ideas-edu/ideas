@@ -1,19 +1,7 @@
 {
    "result": [
       [
-         "top-is-not",
-         [
-         ],
-         "~(p || (~p /\\ q)) == ~(p || q)"
-      ],
-      [
          "fakeabsorption",
-         [
-         ],
-         "~(p || q) == ~(p || q)"
-      ],
-      [
-         "top-is-or",
          [
          ],
          "~(p || q) == ~(p || q)"
@@ -21,5 +9,5 @@
    ],
    "error": null,
    "id": 42,
-   "version": "1.0.9 (0)"
+   "version": "1.0.10 (0)"
 }

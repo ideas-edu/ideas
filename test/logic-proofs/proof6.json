@@ -1,4 +1,4 @@
 { "method" : "derivation"
-, "params" : [["logic.proof", "[]", "(p -> q) || (q -> p) == T", ""]]
+, "params" : [["logic.proof", "[[]]", "(p -> q) || (q -> p) == T", ""]]
 , "id"     : 42
 }

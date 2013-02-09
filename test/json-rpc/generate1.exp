@@ -1,7 +1,7 @@
 {
    "result": [
       "relationalgebra.cnf",
-      "[]",
+      "[[]]",
       "I \\/ (V- ; (s /\\ q) ; (s ! q)) /\\ r ! q",
       {
       }

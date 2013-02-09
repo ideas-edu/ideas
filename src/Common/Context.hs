@@ -36,6 +36,7 @@ import Common.View hiding (left, right)
 import Control.Monad
 import Data.Maybe
 
+
 ----------------------------------------------------------
 -- Abstract data type
 
@@ -167,3 +168,4 @@ changeInContext f (C env a) = C env (changeNavigator f a)
 
 replaceInContext :: a -> Context a -> Context a
 replaceInContext = changeInContext . const
+

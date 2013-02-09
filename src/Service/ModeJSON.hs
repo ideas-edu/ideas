@@ -285,9 +285,8 @@ encodeState :: (a -> JSON) -> State a -> JSON
 encodeState f st = Array
    [ String (showId (exercise st))
    , String $ case statePrefixes st of
-                 []  -> "NoPrefix"
-                 [p] -> show p
-                 _   -> "MultiPrefix"
+                 [] -> "NoPrefix"
+                 ps -> show ps
    , f (stateTerm st)
    , encodeContext (stateContext st)
    ]
@@ -304,14 +303,14 @@ decodeState ex f = do
  where
    rec (Array [a]) = rec a
    rec (Array [String _code, String p, ce, jsonContext]) = do
-      let mpr = readM p >>= (`makePrefix` strategy ex)
+      ps   <- readM p >>= mapM (`makePrefix` strategy ex)
       a    <- do old <- get 
                  put ce 
                  a <- f
                  put old
                  return a
       env  <- decodeContext jsonContext
-      return $ makeState ex mpr (makeContext ex env a)
+      return $ makeState ex ps (makeContext ex env a)
    rec s = fail $ "invalid state" ++ show s
 
 decodeContext :: Monad m => JSON -> m Environment

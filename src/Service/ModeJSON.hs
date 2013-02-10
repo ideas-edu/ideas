@@ -19,6 +19,7 @@ import Common.Utils (Some(..), distinct, readM)
 import Control.Monad.Error
 import Control.Monad.State (StateT, evalStateT, get, put)
 import Data.Char
+import Data.List (intercalate)
 import qualified Data.Traversable as T
 import Data.Tree
 import Service.DomainReasoner
@@ -286,7 +287,7 @@ encodeState f st = Array
    [ String (showId (exercise st))
    , String $ case statePrefixes st of
                  [] -> "NoPrefix"
-                 ps -> show ps
+                 ps -> intercalate ";" $ map show ps
    , f (stateTerm st)
    , encodeContext (stateContext st)
    ]
@@ -301,9 +302,13 @@ decodeState ex f = do
    json <- get
    rec json
  where
+   deintercalate xs =  
+       let (ys, zs) = break (==';') xs 
+       in  ys : case zs of []      -> []
+                           (_:zs') -> deintercalate zs'
    rec (Array [a]) = rec a
    rec (Array [String _code, String p, ce, jsonContext]) = do
-      ps   <- readM p >>= mapM (`makePrefix` strategy ex)
+      ps   <- mapM (readM >>= liftM (`makePrefix` strategy ex)) $ deintercalate p
       a    <- do old <- get 
                  put ce 
                  a <- f

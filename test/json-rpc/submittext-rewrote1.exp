@@ -4,7 +4,7 @@
       "You rewrote ~x || ~y into ~x /\\ ~y. This is incorrect. Press the Back button and try again. You may ask for a hint.",
       [
          "logic.propositional.dnf",
-         "[[]]",
+         "[]",
          "~(~x || ~y)",
          {
          }

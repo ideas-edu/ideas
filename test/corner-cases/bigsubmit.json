@@ -2,7 +2,7 @@
 , "event": "submit button"
 , "method": "submittext"
 , "params": [ [ "logic.dnf"
-              , "[[]]"
+              , "[]"
               , "(r /\\ p /\\ ~s /\\ (p || r)) || (r /\\ p /\\ s /\\ ~p /\\ ~r) || (~r /\\ ~p /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r))) || (~q /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r))) || (s /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r)))"
               , { "location": "[0]" }
               ]

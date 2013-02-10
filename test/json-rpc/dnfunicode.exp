@@ -1,7 +1,7 @@
 {
    "result": [
       "logic.propositional.dnf.unicode",
-      "[[]]",
+      "[]",
       "(r ↔ q) ∨ ((q ∧ r) ↔ ¬p)",
       {
       }

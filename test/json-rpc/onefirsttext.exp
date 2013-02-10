@@ -3,7 +3,7 @@
       "Use De Morgan to rewrite ~(~x || ~y) into ~~x /\\ ~~y.",
       [
          "logic.propositional.dnf",
-         "[[5,1,1,0,1,1,0,0,1,1,1]]",
+         "[5,1,1,0,1,1,0,0,1,1,1]",
          "~~x /\\ ~~y",
          {
          }

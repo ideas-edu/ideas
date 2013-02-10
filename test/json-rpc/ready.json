@@ -1,4 +1,4 @@
 { "method" : "ready"
-, "params" : [["logic.dnf", "[[]]", "~(~x || ~y)", ""]]
+, "params" : [["logic.dnf", "[]", "~(~x || ~y)", ""]]
 , "id"     : 421
 }

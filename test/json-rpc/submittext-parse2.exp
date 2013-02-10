@@ -4,7 +4,7 @@
       "Syntax error: ambiguous use of operators (write parentheses)",
       [
          "logic.propositional.dnf",
-         "[[]]",
+         "[]",
          "~(~x || ~y)",
          {
          }

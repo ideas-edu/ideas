@@ -1,7 +1,7 @@
 {
    "result": [
       "logic.propositional.proof.unicode",
-      "[[]]",
+      "[]",
       "(p → ¬q) → q == (s ∨ (s → (q ∨ p))) ∧ q",
       {
       }

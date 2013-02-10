@@ -1,4 +1,4 @@
 { "method" : "submittext"
-, "params" : [["logic.dnf", "[[]]", "~(~x || ~y)", ""], "p /\\ q)"]
+, "params" : [["logic.dnf", "[]", "~(~x || ~y)", ""], "p /\\ q)"]
 , "id"     : 421
 }

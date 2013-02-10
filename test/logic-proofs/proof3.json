@@ -1,4 +1,4 @@
 { "method" : "derivation"
-, "params" : [["logic.proof", "[[]]", "~(p || ~(p || ~q)) == ~(p || q)", ""]]
+, "params" : [["logic.proof", "[]", "~(p || ~(p || ~q)) == ~(p || q)", ""]]
 , "id"     : 42
 }

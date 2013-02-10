@@ -1,4 +1,4 @@
 { "method" : "submit"
-, "params" : [["logic.dnf", "[[]]", "~(~x || ~y)", ""], "~x /\\ ~~y"]
+, "params" : [["logic.dnf", "[]", "~(~x || ~y)", ""], "~x /\\ ~~y"]
 , "id"     : 2805
 }

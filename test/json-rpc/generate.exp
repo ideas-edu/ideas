@@ -1,7 +1,7 @@
 {
    "result": [
       "logic.propositional.dnf",
-      "[[]]",
+      "[]",
       "(p || (q -> p)) -> (p || r || r)",
       {
       }

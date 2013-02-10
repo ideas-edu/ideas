@@ -4,7 +4,7 @@
       "(line 1, column 7): Closing symbol ) has no matching symbol",
       [
          "logic.propositional.dnf",
-         "[[]]",
+         "[]",
          "~(~x || ~y)",
          {
          }

@@ -22,13 +22,14 @@ module Common.DerivationTree
    , leafs, lengthMax
      -- * Adapters
    , restrictHeight, restrictWidth, updateAnnotations
-   , cutOnStep, mergeMaybeSteps, sortTree
+   , cutOnStep, mergeMaybeSteps, sortTree, cutOnTerm
      -- * Conversions
    , derivation, randomDerivation, derivations
    ) where
 
 import Common.Classes
 import Common.Derivation
+import Control.Arrow
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -151,6 +152,10 @@ cutOnStep p = rec
    f (s, t)
       | p s       = (s, singleNode (root t) True)
       | otherwise = (s, rec t)
+
+cutOnTerm :: (a -> Bool) -> DerivationTree s a -> DerivationTree s a
+cutOnTerm p (DT r e bs) = 
+    DT r e (map (second (cutOnTerm p)) $ filter (not . p . root . snd) bs)
 
 -----------------------------------------------------------------------------
 -- Conversions from a derivation tree

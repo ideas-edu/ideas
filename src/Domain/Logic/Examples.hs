@@ -15,26 +15,33 @@ module Domain.Logic.Examples
    ( exampleProofs
    ) where
 
+import Common.Exercise
 import Common.Utils (ShowString(..))
 import Domain.Logic.Formula
 
-exampleProofs :: [(SLogic, SLogic)]
-exampleProofs = [(Not(p :||: (Not p :&&: q)), Not(p :||: q)),
-                ((p :->:q):||: Not p, (p :->: q) :||: q),
-                ((p :&&: Not q):||:(q :&&: Not p), (p :||:q):&&:Not(p :&&: q)),
-                (Not(p :||: Not(p :||: Not q)), Not(p :||: q)),
-                (p :<->: q, (p :->: q) :&&: (q :->: p)),
-                ((p :&&: q) :->: p, T),
-                ((p :->: q) :||: (q :->: p), T),
-                ((q :->: (Not p :->: q)) :->: p, Not p :->: (q :&&: ((p :&&: q) :&&: q))),
-                ((p :->: Not q):->:q, (s :||:(s :->:(q :||: p))) :&&: q),
-                (p :->: (q :->: r), (p :->: q) :->: (p :->:r)),
-                (Not((p :->: q) :->: Not(q :->: p)), p :<->: q),
-                 ((p :->: q):->: (p :->: s), (Not q :->: Not p) :->: (Not s :->: Not p)),
-                (Not((p :->:q) :->: (p:&&:q)), (p :->: q) :&&: (Not p :||: Not q)),
-                (Not((p :<->: q) :->: (p :||: (p :<->: q))), F)]
+exampleProofs :: [(Difficulty, (SLogic, SLogic))]
+exampleProofs = 
+   [ {-  1 -} difficult $ (Not(p :||: (Not p :&&: q)), Not(p :||: q))
+   , {-  2 -} difficult $ ((p :->:q):||: Not p, (p :->: q) :||: q)
+   , {-  3 -} ok        $ ((p :&&: Not q):||:(q :&&: Not p), (p :||:q):&&:Not(p :&&: q))
+   , {-  4 -} difficult $ (Not(p :||: Not(p :||: Not q)), Not(p :||: q))
+   , {-  5 -} ok        $ (p :<->: q, (p :->: q) :&&: (q :->: p))
+   , {-  6 -} difficult $ ((p :&&: q) :->: p, T)
+   , {-  7 -} ok        $ ((p :->: q) :||: (q :->: p), T)
+   , {-  8 -} difficult $ ((q :->: (Not p :->: q)) :->: p, Not p :->: (q :&&: ((p :&&: q) :&&: q)))
+   , {-  9 -} ok        $ ((p :->: Not q):->:q, (s :||:(s :->:(q :||: p))) :&&: q)
+   , {- 10 -} difficult $ (p :->: (q :->: r), (p :->: q) :->: (p :->:r))
+   , {- 11 -} ok        $ (Not((p :->: q) :->: Not(q :->: p)), p :<->: q)
+   , {- 12 -} ok        $ ((p :->: q):->: (p :->: s), (Not q :->: Not p) :->: (Not s :->: Not p))
+   , {- 13 -} difficult $ (Not((p :->:q) :->: (p:&&:q)), (p :->: q) :&&: (Not p :||: Not q))
+   , {- 14 -} difficult $ (Not((p :<->: q) :->: (p :||: (p :<->: q))), F)
+   , {- 15 -} difficult $ (q :&&: p, p :&&: (q :||: q))
+   ]
 
  where
+   difficult x = (Difficult, x)
+   ok x = (Medium, x)
+ 
    p = Var (ShowString "p")
    q = Var (ShowString "q")
    s = Var (ShowString "s")

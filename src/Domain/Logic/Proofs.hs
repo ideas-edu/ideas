@@ -23,6 +23,8 @@ import Common.Rewriting.AC
 import Common.Utils
 import Common.Utils.Uniplate
 import Control.Monad
+import Data.Function
+import Data.Maybe
 import Data.Foldable (toList)
 import Data.List
 import qualified Data.Set as S
@@ -37,7 +39,11 @@ import Domain.Logic.Strategies (somewhereOr)
 import Domain.Math.Expr ()
 
 see :: Int -> IO ()
-see n = printDerivation proofExercise (snd (examples proofExercise !! n))
+see n = do
+   let a   = snd (examples proofExercise !! n)
+       der = defaultDerivation proofExercise a
+   printDerivation proofExercise a
+   putStrLn $ ">> " ++ show (derivationLength der) ++ " steps\n"
 
 -- Currently, we use the DWA strategy
 proofExercise :: Exercise Proof
@@ -54,10 +60,7 @@ proofExercise = makeExercise
    , strategy       = proofStrategy
    , extraRules     = map use (extraLogicRules ++ buggyRules)
    , navigation     = termNavigator
-   , examples       = map (\a -> (Easy, makeProof a)) $
-                      let p = Var (ShowString "p")
-                          q = Var (ShowString "q")
-                      in exampleProofs ++ [(q :&&: p, p :&&: (q :||: q))]
+   , examples       = map (\(d, a) -> (d, makeProof a)) exampleProofs
    }
 
 proofUnicodeExercise :: Exercise Proof
@@ -105,29 +108,67 @@ proofStrategy :: LabeledStrategy (Context Proof)
 proofStrategy = label "proof equivalent" $
    repeatS (
          somewhere splitTop
-      |> somewhere (useC commonExprAtom)
+      |> somewhere (useC commonExprAtom)   -- (tijdelijk uitgezet)
       |> somewhere rest
       ) <*>
-   repeatS (somewhere (use normLogicRule))
+   normStrategy -- repeatS (somewhere (use normLogicRule))
  where
    splitTop =  use topIsNot  <|> use topIsAnd <|> use topIsOr
-           <|> use topIsImpl <|> use topIsEquiv
+           <|> use topIsImpl <|> use topIsEquiv <|>
+               use topIsAndCom <|> use topIsOrCom <|> use topIsEquivCom
    rest =  use notDNF <*> useC (repeatS dnfStrategyDWA)
        <|> simpler
 
    simpler :: Strategy (Context Proof)
-   simpler =
-      use tautologyOr <|> use idempotencyAnd <|> use contradictionAnd
-      <|> use absorptionSubset <|> use fakeAbsorption <|> use fakeAbsorptionNot
-      <|> alternatives (map use list)
-
-   list = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleIdempOr
-          , ruleAbsorpOr, ruleComplOr
-          ]
+   simpler = alternatives $ map use
+      [ tautologyOr, idempotencyOr, idempotencyAnd, contradictionAnd
+   --   , absorptionSubset, fakeAbsorption, fakeAbsorptionNot
+      , ruleFalseZeroOr, ruleTrueZeroOr, ruleIdempOr
+      , ruleAbsorpOr, ruleComplOr
+      ]
+ 
 
    notDNF :: Rule SLogic
    notDNF = minor $ makeRule "not-dnf" $ \p ->
       if isDNF p then Nothing else Just p
+
+normStrategy :: Strategy (Context Proof)
+normStrategy = repeatS (somewhere (
+   use sortRuleOr <|> 
+   use sortRuleAnd <|> 
+   use ruleIdempOr <|> 
+   use ruleIdempAnd <|> 
+   use ruleAndOverOr <|>
+   use ruleComplAnd <|> 
+   use ruleFalseZeroOr)
+   ) -- <|> somewhereOr introStrat)
+       
+--introStrat :: Strategy SLogic
+--introStrat = check missing <*> use introTrueLeft <*> layer [] introCompl
+
+sortRuleBy :: (b -> b -> Ordering) -> View a [b] -> Transformation a
+sortRuleBy cmp v = makeTrans $ \p -> do
+   xs <- match v p
+   guard (not (sortedBy cmp xs))
+   let ys = sortBy cmp xs
+   return (build v ys)
+   
+sortRuleOr :: Rule SLogic
+sortRuleOr = ruleTrans "CommOr.sort" $ 
+   sortRuleBy compareVar $ disjunctions <-> ors
+   
+sortRuleAnd :: Rule SLogic
+sortRuleAnd = ruleTrans "CommAnd.sort" $ 
+   sortRuleBy compareVar $ conjunctions <-> ands
+
+compareVar :: Ord a => Logic a -> Logic a -> Ordering
+compareVar = compare `on` (\x -> (varsLogic x, x))
+
+sortedBy :: (a -> a -> Ordering) -> [a] -> Bool
+sortedBy cmp = rec 
+ where
+   rec (x:y:zs) = cmp x y /= GT && rec (y:zs)
+   rec _        = True 
 
 -----------------------------------------------------------------------------
 -- To DNF, with priorities (the "DWA" approach)
@@ -165,29 +206,13 @@ useRules :: [Rule SLogic] -> Strategy (Context SLogic)
 useRules = alternatives . map liftToContext
 
 {-
-onceLeft :: IsStrategy f => f (Context a) -> Strategy (Context a)
-onceLeft s = ruleMoveDown <*> s <*> ruleMoveUp
- where
-   ruleMoveDown = minorRule "MoveDown" (downTo 1)
-   ruleMoveUp   = minorRule "MoveUp" safeUp
-
-   safeUp a = Just (fromMaybe a (up a))
-
-onceRight :: IsStrategy f => f (Context a) -> Strategy (Context a)
-onceRight s = ruleMoveDown <*> s <*> ruleMoveUp
- where
-   ruleMoveDown = minor $ makeRule "MoveDown" (downTo 2)
-   ruleMoveUp   = minorRule "MoveUp" safeUp
-
-   safeUp a = Just (fromMaybe a (up a)) -}
-
 normLogicRule :: Rule (SLogic, SLogic)
 normLogicRule = ruleMaybe "Normalize" $ \tuple@(p, q) -> do
    guard (p /= q)
    let xs  = sort (varsLogic p `union` varsLogic q)
        new = (normLogicWith xs p, normLogicWith xs q)
    guard (tuple /= new)
-   return new
+   return new -}
 
 -- disabled for now
 
@@ -220,6 +245,7 @@ substRef = makeRef "subst"
 logicVars :: [ShowString]
 logicVars = [ ShowString [c] | c <- ['a'..] ]
 
+{-
 normLogic :: Ord a => Logic a -> Logic a
 normLogic p = normLogicWith (sort (varsLogic p)) p
 
@@ -230,28 +256,39 @@ normLogicWith xs p = make (filter keep (subsets xs))
    make = ors . map atoms
    atoms ys = ands [ f (x `elem` ys) (Var x) | x <- xs ]
    f b = if b then id else Not
+-}
 
--- p \/ q \/ ~p     ~> T           (propageren)
+-- p \/ q \/ ~p  ~>  reorder p and ~p 
 tautologyOr :: Rule SLogic
-tautologyOr = ruleMaybe "tautologyOr" $ \p -> do
+tautologyOr = ruleMaybe "tautology-or.sort" $ \p -> do
    let xs = disjunctions p
-   guard (any (\x -> Not x `elem` xs) xs)
-   return T
+       ys = sortBy compareVar xs
+   guard (xs /= ys && any (\x -> Not x `elem` xs) xs)
+   return (ors ys)
 
--- p /\ q /\ p      ~> p /\ q
-idempotencyAnd :: Rule SLogic
-idempotencyAnd = ruleMaybe "idempotencyAnd" $ \p -> do
+-- p /\ q /\ ~p  ~>  reorder p and ~p 
+contradictionAnd :: Rule SLogic
+contradictionAnd = ruleMaybe "contradiction-and.sort" $ \p -> do
    let xs = conjunctions p
-       ys = nub xs
-   guard (length ys < length xs)
+       ys = sortBy compareVar xs
+   guard (xs /= ys && any (\x -> Not x `elem` xs) xs)
    return (ands ys)
 
--- p /\ q /\ ~p     ~> F           (propageren)
-contradictionAnd :: Rule SLogic
-contradictionAnd = ruleMaybe "contradictionAnd" $ \p -> do
+-- p \/ q \/ p      ~> reorder p's
+idempotencyOr :: Rule SLogic
+idempotencyOr = ruleMaybe "idempotency-or.sort" $ \p -> do
+   let xs = disjunctions p
+       ys = sortBy compareVar xs
+   guard (xs /= ys && not (distinct xs))
+   return (ors ys)
+
+-- p /\ q /\ p      ~> reorder p's
+idempotencyAnd :: Rule SLogic
+idempotencyAnd = ruleMaybe "idempotency-and.sort" $ \p -> do
    let xs = conjunctions p
-   guard (any (\x -> Not x `elem` xs) xs)
-   return F
+       ys = sortBy compareVar xs
+   guard (xs /= ys && not (distinct xs))
+   return (ands ys)
 
 -- (p /\ q) \/ ... \/ (p /\ q /\ r)    ~> (p /\ q) \/ ...
 --    (subset relatie tussen rijtjes: bijzonder geval is gelijke rijtjes)
@@ -284,38 +321,50 @@ fakeAbsorptionNot = makeRule "fakeAbsorptionNot" $ \p -> do
        new = ors ys
    guard (p /= new)
    return new
+   
+acTopRuleFor :: Bool -> (forall a . Isomorphism (Logic a) [Logic a])
+             -> Transformation Proof
+acTopRuleFor com ep = makeTrans $ \proof -> do
+   pair <- maybeToList (getSingleton proof)
+   let pairings = if com then pairingsAC else pairingsA
+       ep2 = ep *** ep
+       (xs, ys) = from ep2 pair
+   guard (length xs > 1 && length ys > 1)
+   list <- liftM (map (to ep2)) (pairings False xs ys)
+   guard (all (uncurry eqLogic) list)
+   return (to ep (map Var list))
 
-topIsNot :: Rule Proof
-topIsNot = minorRule "top-is-not" f
+collect :: View a (a, a) -> Isomorphism a [a]
+collect v = f <-> g
  where
-   f (Var (Not p, Not q)) = Just (Not (Var (p, q)))
-   f _ = Nothing
+   f x = maybe [x] (\(y, z) -> f y ++ f z) (match v x)
+   g   = foldr1 (curry (build v))
 
-acTopRuleFor :: IsId s => s -> (forall a . View (Logic a) (Logic a, Logic a)) -> Rule Proof
-acTopRuleFor s v = minorRule s f
- where
-   f (Var (lhs, rhs)) = do
-      let collect a = maybe [a] (\(x, y) -> collect x ++ collect y) (match v a)
-          make    = foldr1 (curry (build v))
-          xs = collect lhs
-          ys = collect rhs
-      guard (length xs > 1 && length ys > 1)
-      list <- liftM (map (make *** make)) (pairingsA False xs ys)
-      guard (all (uncurry eqLogic) list)
-      return (foldr1 (curry (build v)) (map Var list))
-   f _ = []
+andView, orView, eqView :: View (Logic a) (Logic a, Logic a)
+andView = makeView isAnd (uncurry (<&&>))
+orView  = makeView isOr  (uncurry (<||>))
+eqView  = makeView isEq  (uncurry equivalent)
+ where 
+   isEq (p :<->: q) = Just (p, q)
+   isEq _           = Nothing
 
 topIsAnd :: Rule Proof
-topIsAnd = acTopRuleFor "top-is-and" (makeView isAnd (uncurry (<&&>)))
+topIsAnd = minor $ ruleTrans "top-is-and" $ acTopRuleFor False (collect andView)
 
 topIsOr :: Rule Proof
-topIsOr = acTopRuleFor "top-is-or" (makeView isOr (uncurry (<||>)))
+topIsOr = minor $ ruleTrans "top-is-or" $ acTopRuleFor False (collect orView)
 
 topIsEquiv :: Rule Proof
-topIsEquiv = acTopRuleFor "top-is-equiv" (makeView isEquiv (uncurry equivalent))
- where
-   isEquiv (p :<->: q) = Just (p, q)
-   isEquiv _           = Nothing
+topIsEquiv = minor $ ruleTrans "top-is-equiv"  $ acTopRuleFor False (collect eqView)
+
+topIsAndCom :: Rule Proof
+topIsAndCom = ruleTrans "top-is-and.com" $ acTopRuleFor True (collect andView)
+
+topIsOrCom :: Rule Proof
+topIsOrCom = ruleTrans "top-is-or.com" $ acTopRuleFor True (collect orView)
+
+topIsEquivCom :: Rule Proof
+topIsEquivCom = ruleTrans "top-is-equiv.com"  $ acTopRuleFor True (collect eqView)
 
 topIsImpl :: Rule Proof
 topIsImpl = minorRule "top-is-impl" f
@@ -323,6 +372,12 @@ topIsImpl = minorRule "top-is-impl" f
    f (Var (p :->: q, r :->: s)) = do
       guard (eqLogic p r && eqLogic q s)
       return (Var (p, r) :->: Var (q, s))
+   f _ = Nothing
+
+topIsNot :: Rule Proof
+topIsNot = minorRule "top-is-not" f
+ where
+   f (Var (Not p, Not q)) = Just (Not (Var (p, q)))
    f _ = Nothing
 
 {- Strategie voor sterke(?) normalisatie

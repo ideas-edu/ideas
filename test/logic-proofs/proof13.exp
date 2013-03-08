@@ -91,19 +91,55 @@
          "(p /\\ q /\\ ~p /\\ q) || (~p /\\ ~q /\\ ~p /\\ q) == F"
       ],
       [
-         "contradictionand",
+         "contradiction-and.sort",
          [
          ],
-         "F || (~p /\\ ~q /\\ ~p /\\ q) == F"
+         "(p /\\ ~p /\\ q /\\ q) || (~p /\\ ~q /\\ ~p /\\ q) == F"
       ],
       [
-         "contradictionand",
+         "contradiction-and.sort",
+         [
+         ],
+         "(p /\\ ~p /\\ q /\\ q) || (~p /\\ ~p /\\ q /\\ ~q) == F"
+      ],
+      [
+         "logic.propositional.compland",
+         [
+         ],
+         "(F /\\ q /\\ q) || (~p /\\ ~p /\\ q /\\ ~q) == F"
+      ],
+      [
+         "commor.sort",
+         [
+         ],
+         "(~p /\\ ~p /\\ q /\\ ~q) || (F /\\ q /\\ q) == F"
+      ],
+      [
+         "logic.propositional.compland",
+         [
+         ],
+         "(~p /\\ ~p /\\ F) || (F /\\ q /\\ q) == F"
+      ],
+      [
+         "command.sort",
+         [
+         ],
+         "(F /\\ ~p /\\ ~p) || (F /\\ q /\\ q) == F"
+      ],
+      [
+         "logic.propositional.falsezeroand",
+         [
+         ],
+         "F || (F /\\ q /\\ q) == F"
+      ],
+      [
+         "logic.propositional.falsezeroand",
          [
          ],
          "F || F == F"
       ],
       [
-         "absorptionsubset",
+         "logic.propositional.falsezeroor",
          [
          ],
          "F == F"
@@ -111,5 +147,5 @@
    ],
    "error": null,
    "id": 42,
-   "version": "1.0.9 (0)"
+   "version": "1.0.11 (0)"
 }

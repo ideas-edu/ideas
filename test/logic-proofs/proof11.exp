@@ -19,37 +19,37 @@
          "(~p || q) -> (p -> s) == (q || ~p) -> (~s -> ~p)"
       ],
       [
-         "logic.propositional.defimpl",
+         "top-is-or.com",
          [
          ],
-         "(~p || q) -> (~p || s) == (q || ~p) -> (~s -> ~p)"
+         "(~p || q) -> (p -> s) == (~p || q) -> (~s -> ~p)"
       ],
       [
          "logic.propositional.defimpl",
          [
          ],
-         "(~p || q) -> (~p || s) == (q || ~p) -> (~~s || ~p)"
+         "(~p || q) -> (~p || s) == (~p || q) -> (~s -> ~p)"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "(~p || q) -> (~p || s) == (~p || q) -> (~~s || ~p)"
       ],
       [
          "logic.propositional.notnot",
          [
          ],
-         "(~p || q) -> (~p || s) == (q || ~p) -> (s || ~p)"
+         "(~p || q) -> (~p || s) == (~p || q) -> (s || ~p)"
       ],
       [
-         "normalize",
+         "top-is-or.com",
          [
          ],
-         "((~p /\\ ~q) || (~p /\\ q) || (p /\\ q)) -> (~p || s) == ((~p /\\ ~q) || (~p /\\ q) || (p /\\ q)) -> (s || ~p)"
-      ],
-      [
-         "normalize",
-         [
-         ],
-         "((~p /\\ ~q) || (~p /\\ q) || (p /\\ q)) -> ((~p /\\ ~s) || (~p /\\ s) || (p /\\ s)) == ((~p /\\ ~q) || (~p /\\ q) || (p /\\ q)) -> ((~p /\\ ~s) || (~p /\\ s) || (p /\\ s))"
+         "(~p || q) -> (~p || s) == (~p || q) -> (~p || s)"
       ]
    ],
    "error": null,
    "id": 42,
-   "version": "1.0.10 (0)"
+   "version": "1.0.11 (0)"
 }

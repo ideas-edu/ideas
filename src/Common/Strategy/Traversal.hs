@@ -13,7 +13,7 @@ module Common.Strategy.Traversal
    ( layer, traverse, Option
      -- * Options
    , topdown, bottomup, leftToRight, rightToLeft
-   , full, spine, stop, once, parentFilter
+   , full, spine, stop, once, traversalFilter, parentFilter
      -- * One-pass traversals
    , fulltd, fullbu, oncetd, oncebu, somewhere
      -- * Fixpoint traversals
@@ -117,6 +117,9 @@ setVisit v = O $ \t -> t {getVisit = v}
 
 setCombinator :: Combinator -> Option a
 setCombinator c = O $ \t -> t {getCombinator = c}
+
+traversalFilter :: (a -> Bool) -> Option a
+traversalFilter ok = O $ \t -> t {getFilters = ok:getFilters t}
 
 parentFilter :: Navigator a => (a -> [Int]) -> Option a
 parentFilter p = O $ \t -> t {getFilters = ok:getFilters t}

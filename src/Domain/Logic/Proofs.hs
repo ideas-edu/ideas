@@ -23,7 +23,7 @@ import Common.Rewriting.AC
 import Common.Utils
 import Common.Utils.Uniplate
 import Control.Monad
-import Data.Function
+import Data.Function (on)
 import Data.Maybe
 import Data.Foldable (toList)
 import Data.List
@@ -37,6 +37,8 @@ import Domain.Logic.Parser
 import Domain.Logic.Rules
 import Domain.Logic.Strategies (somewhereOr)
 import Domain.Math.Expr ()
+import Common.Traversal.Navigator
+import Common.Traversal.Utils
 
 see :: Int -> IO ()
 see n = do
@@ -108,25 +110,29 @@ proofStrategy :: LabeledStrategy (Context Proof)
 proofStrategy = label "proof equivalent" $
    repeatS (
          somewhere splitTop
-      |> somewhere (useC commonExprAtom)   -- (tijdelijk uitgezet)
+      -- |> somewhere (useC commonExprAtom)   -- (tijdelijk uitgezet)
       |> somewhere rest
-      ) <*>
-   normStrategy -- repeatS (somewhere (use normLogicRule))
+      )  
+     <*> normStrategy
  where
    splitTop =  use topIsNot  <|> use topIsAnd <|> use topIsOr
            <|> use topIsImpl <|> use topIsEquiv <|>
                use topIsAndCom <|> use topIsOrCom <|> use topIsEquivCom
    rest =  use notDNF <*> useC (repeatS dnfStrategyDWA)
        <|> simpler
+       <|> simplerOld
 
    simpler :: Strategy (Context Proof)
    simpler = alternatives $ map use
       [ tautologyOr, idempotencyOr, idempotencyAnd, contradictionAnd
-   --   , absorptionSubset, fakeAbsorption, fakeAbsorptionNot
+      , ruleAbsorpOrNot, ruleAbsorpAndNot
       , ruleFalseZeroOr, ruleTrueZeroOr, ruleIdempOr
       , ruleAbsorpOr, ruleComplOr
       ]
- 
+      
+   simplerOld :: Strategy (Context Proof)
+   simplerOld = alternatives $ map use
+      [absorptionSubset, fakeAbsorption, fakeAbsorptionNot]
 
    notDNF :: Rule SLogic
    notDNF = minor $ makeRule "not-dnf" $ \p ->
@@ -140,8 +146,11 @@ normStrategy = repeatS (somewhere (
    use ruleIdempAnd <|> 
    use ruleAndOverOr <|>
    use ruleComplAnd <|> 
-   use ruleFalseZeroOr)
-   ) -- <|> somewhereOr introStrat)
+   use ruleFalseZeroOr <|>
+   use ruleFalseZeroAnd)
+   |>
+   somewhereDisjunct introduceVar
+   )
        
 --introStrat :: Strategy SLogic
 --introStrat = check missing <*> use introTrueLeft <*> layer [] introCompl
@@ -217,6 +226,7 @@ normLogicRule = ruleMaybe "Normalize" $ \tuple@(p, q) -> do
 -- disabled for now
 
 -- Find a common subexpression that can be treated as a box
+{-
 commonExprAtom :: Rule (Context (SLogic, SLogic))
 commonExprAtom = minor $ ruleTrans "commonExprAtom" $ makeTransLiftContext $ \(p, q) -> do
    let xs = filter (same <&&> complement isAtomic) (largestCommonSubExpr p q) 
@@ -244,6 +254,7 @@ substRef = makeRef "subst"
 
 logicVars :: [ShowString]
 logicVars = [ ShowString [c] | c <- ['a'..] ]
+-}
 
 {-
 normLogic :: Ord a => Logic a -> Logic a
@@ -403,3 +414,112 @@ Twijfelachtige regel bij stap 3: samennemen in plaats van aanvullen:
    (p /\ q /\ r) \/ ... \/ (~p /\ q /\ r)   ~> q /\ r
           (p is hier een losse variable)
 -}
+
+-----------------------------------------------
+-- Introduction of var
+
+introduceVar :: Strategy (Context Proof)
+introduceVar =  check missing
+            <*> use introTrueLeft 
+            <*> layer [] introCompl
+
+missing :: Context Proof -> Bool
+missing = isJust . missingVar
+
+localEqVars :: Context Proof -> [ShowString]
+localEqVars cp = fromMaybe [] $ do
+   t <- currentTerm cp
+   case fromTerm t of
+      Just (p, q) -> return (varsLogic p `union` varsLogic q)
+      Nothing     -> liftM localEqVars (up cp)
+
+missingVar :: Context Proof -> Maybe ShowString
+missingVar cp = 
+   case currentTerm cp >>= fromTerm of
+      Just p -> listToMaybe (localEqVars cp \\ varsLogic p)
+      Nothing -> Nothing
+  
+introTrueLeft :: Rule SLogic
+introTrueLeft = rewriteRule "IntroTrueLeft" $
+   \x -> x  :~>  T :&&: x
+   
+introCompl :: Rule (Context Proof)
+introCompl = makeRule "IntroCompl" $ \cp -> do
+   a   <- missingVar (safe up cp)
+   let f x = do
+          p <- fromTerm x 
+          q <- introTautology a p
+          return (toTerm q)
+   changeTerm f cp 
+ where
+   introTautology :: a -> Logic a -> Maybe (Logic a)
+   introTautology a T = Just (Var a :||: Not (Var a))
+   introTautology _ _ = Nothing
+ 
+ 
+go = applyAll (somewhereDisjunct introduceVar) $ inContext proofExercise $ 
+   makeProof (p :||: (Not p :&&: q), p :||: q)
+ where 
+   p = Var (ShowString "p")
+   q = Var (ShowString "q") 
+   
+{-
+somewhereEq :: IsStrategy f => f (Context Proof) -> Strategy (Context Proof)
+somewhereEq s = traverse [once, topdown] 
+   (check isEq <*> layer [] s)
+ where
+   isEq :: Context Proof -> Bool
+   isEq cp = fromMaybe False $ do
+      t <- currentTerm cp
+      case fromTerm t :: Maybe (SLogic, SLogic) of
+         Just (p, q) -> return True
+         _           -> return False -}
+   
+somewhereDisjunct :: IsStrategy f => f (Context Proof) -> Strategy (Context Proof)
+somewhereDisjunct s = traverse [once, topdown] 
+   (check isEq <*> layer [] (somewhereOrG s))
+ where
+   isEq :: Context Proof -> Bool
+   isEq cp = fromMaybe False $ do
+      t <- currentTerm cp
+      case fromTerm t :: Maybe (SLogic, SLogic) of
+         Just (p, q) -> return True
+         _           -> return False -- :-(
+
+somewhereOrG :: IsStrategy g => g (Context a) -> Strategy (Context a)
+somewhereOrG s =
+   let isOr a = case currentTerm a >>= (fromTerm :: Term -> Maybe SLogic) of
+                   Just (_ :||: _) -> True
+                   _               -> False
+   in fix $ \this -> check (Prelude.not . isOr) <*> s
+                 <|> check isOr <*> layer [] this
+                 
+----------------------
+
+ruleAbsorpOrNot :: Rule SLogic
+ruleAbsorpOrNot = rewriteRules "AbsorpOrNot.distr"
+   [ -- not inside
+     \x y -> x :||: (Not x :&&: y)  :~>  (x :||: Not x) :&&: (x :||: y)
+   , \x y -> x :||: (y :&&: Not x)  :~>  (x :||: y) :&&: (x :||: Not x)
+   , \x y -> (Not x :&&: y) :||: x  :~>  (Not x :||: x) :&&: (y :||: x)
+   , \x y -> (y :&&: Not x) :||: x  :~>  (y :||: x) :&&: (Not x :||: x)
+     -- not outside
+   , \x y -> Not x :||: (x :&&: y)  :~>  (Not x :||: x) :&&: (Not x :||: y)
+   , \x y -> Not x :||: (y :&&: x)  :~>  (Not x :||: y) :&&: (Not x :||: x)
+   , \x y -> (x :&&: y) :||: Not x  :~>  (x :||: Not x) :&&: (y :||: Not x)
+   , \x y -> (y :&&: x) :||: Not x  :~>  (y :||: Not x) :&&: (x :||: Not x)
+   ]
+   
+ruleAbsorpAndNot :: Rule SLogic
+ruleAbsorpAndNot = rewriteRules "AbsorpAndNot.distr"
+   [ -- not inside
+     \x y -> x :&&: (Not x :||: y)  :~>  (x :&&: Not x) :||: (x :&&: y)
+   , \x y -> x :&&: (y :||: Not x)  :~>  (x :&&: y) :||: (x :&&: Not x)
+   , \x y -> (Not x :||: y) :&&: x  :~>  (Not x :&&: x) :||: (y :&&: x)
+   , \x y -> (y :||: Not x) :&&: x  :~>  (y :&&: x) :||: (Not x :&&: x)
+     -- not outside
+   , \x y -> Not x :&&: (x :||: y)  :~>  (Not x :||: x) :&&: (Not x :||: y)
+   , \x y -> Not x :&&: (y :||: x)  :~>  (Not x :||: y) :&&: (Not x :||: x)
+   , \x y -> (x :||: y) :&&: Not x  :~>  (x :||: Not x) :&&: (y :||: Not x)
+   , \x y -> (y :||: x) :&&: Not x  :~>  (y :||: Not x) :&&: (x :||: Not x)
+   ]

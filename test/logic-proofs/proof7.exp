@@ -1,79 +1,115 @@
 {
    "result": [
       [
-         "idempotencyand",
+         "idempotency-and.sort",
          [
          ],
-         "(q -> (~p -> q)) -> p == ~p -> (q /\\ p)"
+         "(q -> (~p -> q)) -> p == ~p -> (p /\\ q /\\ q /\\ q)"
       ],
       [
          "logic.propositional.defimpl",
          [
          ],
-         "~(q -> (~p -> q)) || p == ~p -> (q /\\ p)"
+         "~(q -> (~p -> q)) || p == ~p -> (p /\\ q /\\ q /\\ q)"
       ],
       [
          "logic.propositional.defimpl",
          [
          ],
-         "~(~q || (~p -> q)) || p == ~p -> (q /\\ p)"
+         "~(~q || (~p -> q)) || p == ~p -> (p /\\ q /\\ q /\\ q)"
       ],
       [
          "logic.propositional.defimpl",
          [
          ],
-         "~(~q || ~~p || q) || p == ~p -> (q /\\ p)"
+         "~(~q || ~~p || q) || p == ~p -> (p /\\ q /\\ q /\\ q)"
       ],
       [
          "logic.propositional.notnot",
          [
          ],
-         "~(~q || p || q) || p == ~p -> (q /\\ p)"
+         "~(~q || p || q) || p == ~p -> (p /\\ q /\\ q /\\ q)"
       ],
       [
          "logic.propositional.demorganor",
          [
          ],
-         "(~~q /\\ ~(p || q)) || p == ~p -> (q /\\ p)"
+         "(~~q /\\ ~(p || q)) || p == ~p -> (p /\\ q /\\ q /\\ q)"
       ],
       [
          "logic.propositional.notnot",
          [
          ],
-         "(q /\\ ~(p || q)) || p == ~p -> (q /\\ p)"
+         "(q /\\ ~(p || q)) || p == ~p -> (p /\\ q /\\ q /\\ q)"
       ],
       [
          "logic.propositional.demorganor",
          [
          ],
-         "(q /\\ ~p /\\ ~q) || p == ~p -> (q /\\ p)"
+         "(q /\\ ~p /\\ ~q) || p == ~p -> (p /\\ q /\\ q /\\ q)"
       ],
       [
-         "contradictionand",
+         "contradiction-and.sort",
          [
          ],
-         "F || p == ~p -> (q /\\ p)"
+         "(~p /\\ q /\\ ~q) || p == ~p -> (p /\\ q /\\ q /\\ q)"
       ],
       [
-         "logic.propositional.defimpl",
+         "absorpornot.distr",
          [
          ],
-         "F || p == ~~p || (q /\\ p)"
+         "(~p || p) /\\ ((q /\\ ~q) || p) == ~p -> (p /\\ q /\\ q /\\ q)"
       ],
       [
-         "logic.propositional.notnot",
+         "fakeabsorption",
          [
          ],
-         "F || p == p || (q /\\ p)"
+         "(T || p) /\\ ((q /\\ ~q) || p) == ~p -> (p /\\ q /\\ q /\\ q)"
       ],
       [
-         "logic.propositional.absorpor",
+         "logic.propositional.compland",
          [
          ],
-         "F || p == p"
+         "(T || p) /\\ (F || p) == ~p -> (p /\\ q /\\ q /\\ q)"
       ],
       [
          "logic.propositional.falsezeroor",
+         [
+         ],
+         "(T || p) /\\ p == ~p -> (p /\\ q /\\ q /\\ q)"
+      ],
+      [
+         "logic.propositional.absorpand",
+         [
+         ],
+         "p == ~p -> (p /\\ q /\\ q /\\ q)"
+      ],
+      [
+         "logic.propositional.idempand",
+         [
+         ],
+         "p == ~p -> (p /\\ q /\\ q)"
+      ],
+      [
+         "logic.propositional.idempand",
+         [
+         ],
+         "p == ~p -> (p /\\ q)"
+      ],
+      [
+         "logic.propositional.defimpl",
+         [
+         ],
+         "p == ~~p || (p /\\ q)"
+      ],
+      [
+         "logic.propositional.notnot",
+         [
+         ],
+         "p == p || (p /\\ q)"
+      ],
+      [
+         "logic.propositional.absorpor",
          [
          ],
          "p == p"
@@ -81,5 +117,5 @@
    ],
    "error": null,
    "id": 42,
-   "version": "1.0.9 (0)"
+   "version": "1.0.11 (0)"
 }

@@ -43,19 +43,37 @@
          "~p || ~q || r == (p /\\ ~q) || ~p || r"
       ],
       [
-         "fakeabsorptionnot",
+         "absorpornot.distr",
+         [
+         ],
+         "~p || ~q || r == ((p || ~p) /\\ (~q || ~p)) || r"
+      ],
+      [
+         "fakeabsorption",
+         [
+         ],
+         "~p || ~q || r == ((p || T) /\\ (~q || ~p)) || r"
+      ],
+      [
+         "logic.propositional.truezeroor",
+         [
+         ],
+         "~p || ~q || r == (T /\\ (~q || ~p)) || r"
+      ],
+      [
+         "logic.propositional.truezeroand",
          [
          ],
          "~p || ~q || r == ~q || ~p || r"
       ],
       [
-         "normalize",
+         "top-is-or.com",
          [
          ],
-         "(~p /\\ ~q /\\ ~r) || (~p /\\ ~q /\\ r) || (~p /\\ q /\\ ~r) || (~p /\\ q /\\ r) || (p /\\ ~q /\\ ~r) || (p /\\ ~q /\\ r) || (p /\\ q /\\ r) == (~p /\\ ~q /\\ ~r) || (~p /\\ ~q /\\ r) || (~p /\\ q /\\ ~r) || (~p /\\ q /\\ r) || (p /\\ ~q /\\ ~r) || (p /\\ ~q /\\ r) || (p /\\ q /\\ r)"
+         "~p || ~q || r == ~p || ~q || r"
       ]
    ],
    "error": null,
    "id": 42,
-   "version": "1.0.10 (0)"
+   "version": "1.0.11 (0)"
 }

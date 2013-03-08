@@ -23,7 +23,7 @@ module Common.Context
      -- * Lifting
    , liftToContext, contextView
    , use, useC, applyTop
-   , currentTerm, replaceInContext, currentInContext, changeInContext
+   , currentTerm, changeTerm, replaceInContext, currentInContext, changeInContext
    ) where
 
 import Common.Environment
@@ -124,7 +124,11 @@ changeNavigator f (NoNav a)   = NoNav (f a)
 currentT :: ContextNavigator a -> Maybe Term
 currentT (TermNav a) = Just (current a)
 currentT _           = Nothing
-   
+
+changeT :: (Term -> Maybe Term) -> ContextNavigator a -> Maybe (ContextNavigator a)
+changeT f (TermNav a) = fmap TermNav (changeM f a)
+changeT _ _           = Nothing
+
 castT :: IsTerm b => ContextNavigator a -> Maybe (ContextNavigator b)
 castT (TermNav a) = Just (TermNav a)
 castT _           = Nothing
@@ -159,6 +163,11 @@ useC = liftViewIn (makeView f g)
    
 currentTerm :: Context a -> Maybe Term
 currentTerm = currentT . getNavigator
+
+changeTerm :: (Term -> Maybe Term) -> Context a -> Maybe (Context a)
+changeTerm f c = do
+   new <- changeT f (getNavigator c)
+   return c {getNavigator = new}
 
 currentInContext :: Context a -> Maybe a
 currentInContext (C _   a) = currentNavigator a

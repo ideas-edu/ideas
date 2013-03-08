@@ -1,7 +1,31 @@
 {
    "result": [
       [
+         "absorpornot.distr",
+         [
+         ],
+         "~((p || ~p) /\\ (p || q)) == ~(p || q)"
+      ],
+      [
          "fakeabsorption",
+         [
+         ],
+         "~((p || T) /\\ (p || q)) == ~(p || q)"
+      ],
+      [
+         "logic.propositional.truezeroor",
+         [
+         ],
+         "~(T /\\ (p || q)) == ~(p || q)"
+      ],
+      [
+         "logic.propositional.truezeroand",
+         [
+         ],
+         "~(p || q) == ~(p || q)"
+      ],
+      [
+         "top-is-or.com",
          [
          ],
          "~(p || q) == ~(p || q)"
@@ -9,5 +33,5 @@
    ],
    "error": null,
    "id": 42,
-   "version": "1.0.10 (0)"
+   "version": "1.0.11 (0)"
 }

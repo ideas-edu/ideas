@@ -2,11 +2,11 @@
    "result": [
       "logic.propositional.proof.unicode",
       "[]",
-      "(p → ¬q) → q == (s ∨ (s → (q ∨ p))) ∧ q",
+      "(p → q) ∨ (q → p) == T",
       {
       }
    ],
    "error": null,
    "id": 421,
-   "version": "1.0.10 (0)"
+   "version": "1.0.11 (0)"
 }

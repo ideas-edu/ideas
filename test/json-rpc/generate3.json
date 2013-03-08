@@ -1,4 +1,4 @@
 { "method" : "generate"
-, "params" : ["logic.propositional.proof.unicode", "easy"]
+, "params" : ["logic.propositional.proof.unicode", "medium"]
 , "id"     : 421
 }

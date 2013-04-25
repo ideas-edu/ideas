@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifyrational" encoding="string">
-  <state>
-    <expr>
-      (a^2-9)/(a^3-4*a^2+3*a)
-    </expr>
-  </state>
-</request>

@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.rationaleq" encoding="string">
-  <state>
-    <expr>
-      (x-2)/(x-3) == x/2
-    </expr>
-  </state>
-</request>

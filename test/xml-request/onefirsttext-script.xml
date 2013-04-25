@@ -1,7 +1,0 @@
-<request service="onefirsttext" exerciseid="algebra.equations.linear" encoding="string" script="math.quadreq-en.txt">
-  <state>
-    <expr>
-      (x+3)/2 == 5*(1/2*x+1+1/2)
-    </expr>
-  </state>
-</request>

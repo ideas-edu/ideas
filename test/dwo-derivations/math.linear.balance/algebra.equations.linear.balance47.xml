@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-    <expr>
-      (5*x-1)/6-2 == -4*x+(3*x-6)/2
-    </expr>
-  </state>
-</request>

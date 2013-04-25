@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="calculus.differentiation.quotient" encoding="string">
-  <state>
-    <expr>
-      D(x) ((-3)/(x+4))
-    </expr>
-  </state>
-</request>

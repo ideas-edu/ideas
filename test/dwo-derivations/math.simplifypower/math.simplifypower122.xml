@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifypower" encoding="string">
-  <state>
-    <expr>
-      a^2*8/a
-    </expr>
-  </state>
-</request>

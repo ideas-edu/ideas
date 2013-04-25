@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="calculus.differentiation.quotient" encoding="string">
-  <state>
-    <expr>
-      D(x) ((x^3-3)/(4-x)+x^2)
-    </expr>
-  </state>
-</request>

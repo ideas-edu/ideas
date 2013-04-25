@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.rationaleq" encoding="string">
-  <state>
-    <expr>
-      (x^2-4)/(3*x-6) == (x^2-4)/(2*x+1)
-    </expr>
-  </state>
-</request>

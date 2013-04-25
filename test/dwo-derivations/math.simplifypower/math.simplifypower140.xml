@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifypower" encoding="string">
-  <state>
-    <expr>
-      6*a^7-5*a^2+a^7
-    </expr>
-  </state>
-</request>

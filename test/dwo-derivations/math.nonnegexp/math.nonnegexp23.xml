@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.nonnegexp" encoding="string">
-  <state>
-    <expr>
-      (4*a*b)^(-1)*(b^2)^(-3)
-    </expr>
-  </state>
-</request>

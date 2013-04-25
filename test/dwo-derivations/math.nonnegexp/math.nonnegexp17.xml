@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.nonnegexp" encoding="string">
-  <state>
-    <expr>
-      a*b^(-2)
-    </expr>
-  </state>
-</request>

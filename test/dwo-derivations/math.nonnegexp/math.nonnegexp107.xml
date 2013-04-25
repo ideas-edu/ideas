@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.nonnegexp" encoding="string">
-  <state>
-    <expr>
-      2*(3*a)^(-1/4)
-    </expr>
-  </state>
-</request>

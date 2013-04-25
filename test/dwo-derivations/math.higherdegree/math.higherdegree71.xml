@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      2*x^4-15*x^2+25 == 0
-    </expr>
-  </state>
-</request>

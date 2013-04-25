@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.powerof" encoding="string">
-  <state>
-    <expr>
-      a^4*root a 3/(a^6*sqrt a)
-    </expr>
-  </state>
-</request>

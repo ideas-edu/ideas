@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-    <expr>
-      2*x-(3*x+5) == 10+5*(x-1)
-    </expr>
-  </state>
-</request>

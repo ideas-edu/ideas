@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-    <expr>
-      5*x+3 == 18
-    </expr>
-  </state>
-</request>

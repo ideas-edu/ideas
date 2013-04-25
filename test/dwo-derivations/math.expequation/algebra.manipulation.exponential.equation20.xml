@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.exponential.equation" encoding="string">
-  <state>
-    <expr>
-      2*9^(1-2*x) == 6*sqrt 3
-    </expr>
-  </state>
-</request>

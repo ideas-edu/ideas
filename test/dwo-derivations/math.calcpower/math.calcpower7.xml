@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.calcpower" encoding="string">
-  <state>
-    <expr>
-      (1/2)^(-4)
-    </expr>
-  </state>
-</request>

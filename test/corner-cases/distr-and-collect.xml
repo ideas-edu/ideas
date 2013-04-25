@@ -1,7 +1,0 @@
-<request service="allfirsts" exerciseid="algebra.equations.linear.balance" encoding="string" source="test">
-  <state>
-<expr>
-(3*x+2)*4 == 1
-</expr>
-  </state>
-</request>

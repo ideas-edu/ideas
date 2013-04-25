@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      4-3*x^5 == 100
-    </expr>
-  </state>
-</request>

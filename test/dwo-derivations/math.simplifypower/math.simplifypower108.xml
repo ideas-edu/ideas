@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifypower" encoding="string">
-  <state>
-    <expr>
-      (a^2)^(-3)/a^(-1)
-    </expr>
-  </state>
-</request>

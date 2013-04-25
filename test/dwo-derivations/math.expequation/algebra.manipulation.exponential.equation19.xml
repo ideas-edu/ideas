@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.exponential.equation" encoding="string">
-  <state>
-    <expr>
-      4^(2*x-3) == 2*sqrt 2
-    </expr>
-  </state>
-</request>

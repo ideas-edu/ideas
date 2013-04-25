@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.exponential.equation" encoding="string">
-  <state>
-    <expr>
-      4^(3*x)+5 == 69
-    </expr>
-  </state>
-</request>

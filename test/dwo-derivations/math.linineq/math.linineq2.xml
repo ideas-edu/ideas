@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.linineq" encoding="string">
-  <state>
-    <expr>
-      4*(x-3) &gt; 3*(x-4)
-    </expr>
-  </state>
-</request>

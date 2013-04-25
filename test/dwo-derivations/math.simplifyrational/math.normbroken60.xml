@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifyrational" encoding="string">
-  <state>
-    <expr>
-      (p^2-12*p+36)/(p^2-6*p)
-    </expr>
-  </state>
-</request>

@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="calculus.differentiation.quotient" encoding="string">
-  <state>
-    <expr>
-      D(x) ((3-2*x)/(2*x^2-3)+x^3)
-    </expr>
-  </state>
-</request>

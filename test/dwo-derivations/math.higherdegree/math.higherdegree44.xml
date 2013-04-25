@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      1-3*x^5 == 97
-    </expr>
-  </state>
-</request>

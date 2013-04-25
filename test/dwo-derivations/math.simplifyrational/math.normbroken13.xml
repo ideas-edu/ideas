@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifyrational" encoding="string">
-  <state>
-    <expr>
-      2/a-3/b
-    </expr>
-  </state>
-</request>

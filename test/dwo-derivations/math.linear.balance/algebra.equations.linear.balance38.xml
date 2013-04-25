@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-    <expr>
-      2/5*x-1/4 == 1/2*x+3/4
-    </expr>
-  </state>
-</request>

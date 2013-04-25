@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.nonnegexp" encoding="string">
-  <state>
-    <expr>
-      a^(-1)/(8*b^(-2/3))
-    </expr>
-  </state>
-</request>

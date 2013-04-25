@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifypower" encoding="string">
-  <state>
-    <expr>
-      (2*a)^4*(-3*a^2)
-    </expr>
-  </state>
-</request>

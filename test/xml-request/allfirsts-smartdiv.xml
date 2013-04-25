@@ -1,7 +1,0 @@
-<request service="allfirsts" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-    <expr>
-      2*(x-5) == 4
-    </expr>
-  </state>
-</request>

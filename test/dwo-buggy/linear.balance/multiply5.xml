@@ -1,6 +1,0 @@
-<request service="diagnose" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-    <expr>-3*x == 12</expr>
-  </state>
-  <expr>x == 4</expr>
-</request>

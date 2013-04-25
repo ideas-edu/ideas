@@ -1,6 +1,0 @@
-<request service="diagnose" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-    <expr>x*4/2 == 1</expr>
-  </state>
-  <expr>x/8 == 1</expr>
-</request>

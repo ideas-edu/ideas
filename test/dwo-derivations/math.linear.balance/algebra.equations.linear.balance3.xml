@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-    <expr>
-      19-3*x == -5
-    </expr>
-  </state>
-</request>

@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.exponential.equation" encoding="string">
-  <state>
-    <expr>
-      3^(x+5) == 243/sqrt 3
-    </expr>
-  </state>
-</request>

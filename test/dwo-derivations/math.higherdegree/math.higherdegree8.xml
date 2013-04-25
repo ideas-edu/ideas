@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      1/2*x^4-13 == 55/2
-    </expr>
-  </state>
-</request>

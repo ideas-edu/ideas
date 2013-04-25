@@ -1,6 +1,0 @@
-<request service="diagnose" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-    <expr>2*x+4 == 11</expr>
-  </state>
-  <expr>x+2 == 11</expr>
-</request>

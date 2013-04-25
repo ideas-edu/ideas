@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadrineq" encoding="string">
-  <state>
-    <expr>
-      x^2 &lt; x^2
-    </expr>
-  </state>
-</request>

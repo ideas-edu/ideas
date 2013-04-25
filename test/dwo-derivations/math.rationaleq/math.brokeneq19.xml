@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.rationaleq" encoding="string">
-  <state>
-    <expr>
-      (x^2+5*x)/(2*x^2) == (x^2+5*x)/(x^2+4)
-    </expr>
-  </state>
-</request>

@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="calculus.differentiation.polynomial" encoding="string">
-  <state>
-    <expr>
-      D(x) ((x-1)*(2*x+5))
-    </expr>
-  </state>
-</request>

@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.lineq" encoding="string">
-  <state>
-    <expr>
-      x-1/5 == 2
-    </expr>
-  </state>
-</request>

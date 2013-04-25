@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadreq" encoding="string">
-  <state>
-    <expr>
-      5*x^2+3*x == 3*x+2
-    </expr>
-  </state>
-</request>

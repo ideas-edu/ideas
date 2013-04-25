@@ -1,4 +1,0 @@
-{ "method" : "allfirsts"
-, "params" : [["logic.dnf", "[]", "((((s || p) || p) || q) || q) || t", ""]]
-, "id"     : 421
-}

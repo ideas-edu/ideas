@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      16-32*x^5 == -227
-    </expr>
-  </state>
-</request>

@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadreq" encoding="string">
-  <state>
-    <expr>
-      12*(x^2-3*x)+8 == 56
-    </expr>
-  </state>
-</request>

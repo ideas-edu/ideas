@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.polynomial.expand" encoding="string">
-  <state>
-    <expr>
-      3*(x-2)*2*x
-    </expr>
-  </state>
-</request>

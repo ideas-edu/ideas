@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.exponential.equation" encoding="string">
-  <state>
-    <expr>
-      2*7^(4*x-1) == 98
-    </expr>
-  </state>
-</request>

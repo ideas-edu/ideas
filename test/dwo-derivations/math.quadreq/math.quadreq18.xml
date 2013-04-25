@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadreq" encoding="string">
-  <state>
-    <expr>
-      (7+2*x)^2 == 7
-    </expr>
-  </state>
-</request>

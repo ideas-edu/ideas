@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.nonnegexp" encoding="string">
-  <state>
-    <expr>
-      7*a^(-3/4)
-    </expr>
-  </state>
-</request>

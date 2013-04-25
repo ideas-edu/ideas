@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="calculus.differentiation.product" encoding="string">
-  <state>
-    <expr>
-      D(x) ((4*x+1)*(3*x^3-x^2+2*x))
-    </expr>
-  </state>
-</request>

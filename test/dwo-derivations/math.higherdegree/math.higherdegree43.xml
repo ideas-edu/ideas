@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      14-11*x^7 == 25
-    </expr>
-  </state>
-</request>

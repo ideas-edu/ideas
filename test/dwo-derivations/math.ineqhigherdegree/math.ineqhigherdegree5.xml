@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.ineqhigherdegree" encoding="string">
-  <state>
-    <expr>
-      -(1/2*x+2)^3 &lt; -1
-    </expr>
-  </state>
-</request>

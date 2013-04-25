@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.powerof" encoding="string">
-  <state>
-    <expr>
-      root (a^6) 3
-    </expr>
-  </state>
-</request>

@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.lineq" encoding="string">
-  <state>
-    <expr>
-      4*x-7 == -5*x-24
-    </expr>
-  </state>
-</request>

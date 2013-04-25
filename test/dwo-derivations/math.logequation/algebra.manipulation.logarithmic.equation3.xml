@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.logarithmic.equation" encoding="string">
-  <state>
-    <expr>
-      log 4 (x-3) == 1+1/2
-    </expr>
-  </state>
-</request>

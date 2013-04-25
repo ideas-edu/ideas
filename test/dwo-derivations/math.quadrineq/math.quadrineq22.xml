@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadrineq" encoding="string">
-  <state>
-    <expr>
-      x &gt;= x
-    </expr>
-  </state>
-</request>

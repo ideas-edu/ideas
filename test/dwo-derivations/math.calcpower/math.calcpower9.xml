@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.calcpower" encoding="string">
-  <state>
-    <expr>
-      (3/5)^(-1)
-    </expr>
-  </state>
-</request>

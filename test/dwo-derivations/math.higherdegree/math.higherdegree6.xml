@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      1/9*x^6+12 == 93
-    </expr>
-  </state>
-</request>

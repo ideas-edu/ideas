@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.lineq" encoding="string">
-  <state>
-    <expr>
-      1-(4*x+2)/3 == 3*x-(5*x-1)/4
-    </expr>
-  </state>
-</request>

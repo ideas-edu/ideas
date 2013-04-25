@@ -1,4 +1,0 @@
-{ "method" : "derivation"
-, "params" : [["logic.dnf", "[]", "~(~x || ~y)", ""]]
-, "id"     : 421
-}

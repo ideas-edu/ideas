@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      x^5-12 == 20
-    </expr>
-  </state>
-</request>

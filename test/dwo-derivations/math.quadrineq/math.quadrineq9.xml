@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadrineq" encoding="string">
-  <state>
-    <expr>
-      x^2-9/2*x &lt; 7-3*x
-    </expr>
-  </state>
-</request>

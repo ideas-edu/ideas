@@ -1,4 +1,0 @@
-{ "method" : "generate"
-, "params" : ["relationalg.cnf", "medium"]
-, "id"     : 421
-}

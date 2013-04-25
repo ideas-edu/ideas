@@ -1,7 +1,0 @@
-<request service="apply" exerciseid="math.lineq" encoding="string">
-<ruleid>algebra.equations.linear.remove-div</ruleid>
-<location>[]</location>
-<state>
-<expr>5*(x-1) == x/2</expr>
-</state>
-</request>

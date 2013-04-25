@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.exponents.equation" encoding="string">
-  <state>
-    <expr>
-      x^(-7) == 110
-    </expr>
-  </state>
-</request>

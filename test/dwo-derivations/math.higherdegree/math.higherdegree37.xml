@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      1/8*x^7+24 == 40
-    </expr>
-  </state>
-</request>

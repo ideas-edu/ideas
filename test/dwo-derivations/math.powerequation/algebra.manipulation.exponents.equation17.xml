@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.exponents.equation" encoding="string">
-  <state>
-    <expr>
-      3*x^5+7 == 15
-    </expr>
-  </state>
-</request>

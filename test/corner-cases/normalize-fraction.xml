@@ -1,5 +1,0 @@
-<request service="onefirst" exerciseid="math.lineq" encoding="string">
-<state>
-<expr>x==4/6</expr>
-</state>
-</request>

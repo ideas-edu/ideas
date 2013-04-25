@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifyrational" encoding="string">
-  <state>
-    <expr>
-      2*x/(x-1)+x/(x+2)
-    </expr>
-  </state>
-</request>

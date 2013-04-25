@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      1/4*x^6+14 == 30
-    </expr>
-  </state>
-</request>

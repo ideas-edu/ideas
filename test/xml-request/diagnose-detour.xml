@@ -1,6 +1,0 @@
-<request service="diagnose" exerciseid="math.lineq" encoding="string">
-  <state>
-    <expr> 2*(x+1) == 5 </expr>
-  </state>
-  <expr> x+1 == 5/2 </expr>
-</request>

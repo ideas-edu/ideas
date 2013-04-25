@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadreq" encoding="string">
-  <state>
-    <expr>
-      1/4*x^2+12 == 16
-    </expr>
-  </state>
-</request>

@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.factor" encoding="string">
-  <state>
-    <expr>
-      x^2-x-2
-    </expr>
-  </state>
-</request>

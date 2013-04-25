@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.exponents.equation" encoding="string">
-  <state>
-    <expr>
-      2*x^3+9 == 19
-    </expr>
-  </state>
-</request>

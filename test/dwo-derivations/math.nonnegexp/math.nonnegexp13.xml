@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.nonnegexp" encoding="string">
-  <state>
-    <expr>
-      4/(a^(-1)*b^(1/3))
-    </expr>
-  </state>
-</request>

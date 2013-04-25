@@ -1,8 +1,0 @@
-<reply result="ok" version="0.7.7 (0)">
-  <buggy ruleid="algebra.equations.linear.balance.buggy.addbal4">
-    <argument description="term">
-      5*x
-    </argument>
-  </buggy>
-</reply>
-

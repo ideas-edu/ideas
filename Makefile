@@ -38,7 +38,8 @@ haddock:
 	$(HADDOCK) --html -o $(HADDOCKDIR) --prologue=$(DOCSDIR)/prologue --title="Ideas: feedback services for intelligent tutoring systems" $(HS-SOURCES)
 	
 hlint:
-	$(HLINT) --report=$(DOCSDIR)/hlint.html $(HS-SOURCES) | exit 0
+	$(HLINT) --report=$(DOCSDIR)/hlint.html $(HS-SOURCES)
+	exit 0
 
 #---------------------------------------------------------------------------------------
 # Cabal targets

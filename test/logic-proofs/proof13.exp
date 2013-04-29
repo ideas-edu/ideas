@@ -109,28 +109,16 @@
          "(F /\\ q /\\ q) || (~p /\\ ~p /\\ q /\\ ~q) == F"
       ],
       [
-         "commor.sort",
+         "logic.propositional.falsezeroand",
          [
          ],
-         "(~p /\\ ~p /\\ q /\\ ~q) || (F /\\ q /\\ q) == F"
+         "F || (~p /\\ ~p /\\ q /\\ ~q) == F"
       ],
       [
          "logic.propositional.compland",
          [
          ],
-         "(~p /\\ ~p /\\ F) || (F /\\ q /\\ q) == F"
-      ],
-      [
-         "command.sort",
-         [
-         ],
-         "(F /\\ ~p /\\ ~p) || (F /\\ q /\\ q) == F"
-      ],
-      [
-         "logic.propositional.falsezeroand",
-         [
-         ],
-         "F || (F /\\ q /\\ q) == F"
+         "F || (~p /\\ ~p /\\ F) == F"
       ],
       [
          "logic.propositional.falsezeroand",

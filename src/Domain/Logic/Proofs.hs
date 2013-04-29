@@ -110,17 +110,13 @@ proofStrategy :: LabeledStrategy (Context Proof)
 proofStrategy = label "proof equivalent" $
    repeatS (
          somewhere splitTop
-      -- |> somewhere (useC commonExprAtom)   -- (tijdelijk uitgezet)
+      -- somewhere (useC commonExprAtom)   -- (tijdelijk uitgezet)
       |> somewhere rest
       )  
      <*> normStrategy
  where
-   splitTop =  use topIsNot  <|> use topIsAnd <|> use topIsOr
-           <|> use topIsImpl <|> use topIsEquiv <|>
-               use topIsAndCom <|> use topIsOrCom <|> use topIsEquivCom
    rest =  use notDNF <*> useC (repeatS dnfStrategyDWA)
        <|> simpler
-       <|> simplerOld
 
    simpler :: Strategy (Context Proof)
    simpler = alternatives $ map use
@@ -129,28 +125,33 @@ proofStrategy = label "proof equivalent" $
       , ruleFalseZeroOr, ruleTrueZeroOr, ruleIdempOr
       , ruleAbsorpOr, ruleComplOr
       ]
-      
-   simplerOld :: Strategy (Context Proof)
-   simplerOld = alternatives $ map use
-      [absorptionSubset, fakeAbsorption, fakeAbsorptionNot]
 
    notDNF :: Rule SLogic
    notDNF = minor $ makeRule "not-dnf" $ \p ->
       if isDNF p then Nothing else Just p
 
+splitTop =  use topIsNot  <|> use topIsAnd <|> use topIsOr
+           <|> use topIsImpl <|> use topIsEquiv <|>
+               use topIsAndCom <|> use topIsOrCom <|> use topIsEquivCom
+
 normStrategy :: Strategy (Context Proof)
-normStrategy = repeatS (somewhere (
-   use sortRuleOr <|> 
-   use sortRuleAnd <|> 
-   use ruleIdempOr <|> 
-   use ruleIdempAnd <|> 
-   use ruleAndOverOr <|>
-   use ruleComplAnd <|> 
-   use ruleFalseZeroOr <|>
-   use ruleFalseZeroAnd)
+normStrategy = repeatS $
+   somewhere (use ruleFalseZeroAnd <|> use ruleTrueZeroOr)
+   |>
+   somewhere (use ruleComplAnd)
+   |>
+   somewhere (
+      use sortRuleAnd <|> 
+      use ruleIdempOr <|> 
+      use ruleIdempAnd <|> 
+      use ruleAndOverOr <|>
+      use ruleFalseZeroOr
+      )
+   |> 
+   somewhere (use sortRuleOr)
    |>
    somewhereDisjunct introduceVar
-   )
+ 
        
 --introStrat :: Strategy SLogic
 --introStrat = check missing <*> use introTrueLeft <*> layer [] introCompl
@@ -301,6 +302,7 @@ idempotencyAnd = ruleMaybe "idempotency-and.sort" $ \p -> do
    guard (xs /= ys && not (distinct xs))
    return (ands ys)
 
+{-
 -- (p /\ q) \/ ... \/ (p /\ q /\ r)    ~> (p /\ q) \/ ...
 --    (subset relatie tussen rijtjes: bijzonder geval is gelijke rijtjes)
 absorptionSubset :: Rule SLogic
@@ -331,7 +333,7 @@ fakeAbsorptionNot = makeRule "fakeAbsorptionNot" $ \p -> do
    let ys  = map (ands . filter (/= v) . conjunctions) xs
        new = ors ys
    guard (p /= new)
-   return new
+   return new -}
    
 acTopRuleFor :: Bool -> (forall a . Isomorphism (Logic a) [Logic a])
              -> Transformation Proof
@@ -427,16 +429,15 @@ missing :: Context Proof -> Bool
 missing = isJust . missingVar
 
 localEqVars :: Context Proof -> [ShowString]
-localEqVars cp = fromMaybe [] $ do
-   t <- currentTerm cp
-   case fromTerm t of
-      Just (p, q) -> return (varsLogic p `union` varsLogic q)
-      Nothing     -> liftM localEqVars (up cp)
+localEqVars cp =
+   case currentTerm cp >>= fromTerm of
+      Just (p, q) -> varsLogic p `union` varsLogic q
+      Nothing     -> maybe [] localEqVars (up cp)
 
 missingVar :: Context Proof -> Maybe ShowString
 missingVar cp = 
    case currentTerm cp >>= fromTerm of
-      Just p -> listToMaybe (localEqVars cp \\ varsLogic p)
+      Just p  -> listToMaybe (localEqVars cp \\ varsLogic p)
       Nothing -> Nothing
   
 introTrueLeft :: Rule SLogic
@@ -445,11 +446,8 @@ introTrueLeft = rewriteRule "IntroTrueLeft" $
    
 introCompl :: Rule (Context Proof)
 introCompl = makeRule "IntroCompl" $ \cp -> do
-   a   <- missingVar (safe up cp)
-   let f x = do
-          p <- fromTerm x 
-          q <- introTautology a p
-          return (toTerm q)
+   a <- missingVar (safe up cp)
+   let f = fromTerm >=> fmap toTerm . introTautology a
    changeTerm f cp 
  where
    introTautology :: a -> Logic a -> Maybe (Logic a)
@@ -457,13 +455,13 @@ introCompl = makeRule "IntroCompl" $ \cp -> do
    introTautology _ _ = Nothing
  
  
+ {-
 go = applyAll (somewhereDisjunct introduceVar) $ inContext proofExercise $ 
    makeProof (p :||: (Not p :&&: q), p :||: q)
  where 
    p = Var (ShowString "p")
    q = Var (ShowString "q") 
    
-{-
 somewhereEq :: IsStrategy f => f (Context Proof) -> Strategy (Context Proof)
 somewhereEq s = traverse [once, topdown] 
    (check isEq <*> layer [] s)
@@ -476,15 +474,11 @@ somewhereEq s = traverse [once, topdown]
          _           -> return False -}
    
 somewhereDisjunct :: IsStrategy f => f (Context Proof) -> Strategy (Context Proof)
-somewhereDisjunct s = traverse [once, topdown] 
-   (check isEq <*> layer [] (somewhereOrG s))
+somewhereDisjunct s = oncetd (check isEq <*> layer [] (somewhereOrG s))
  where
    isEq :: Context Proof -> Bool
-   isEq cp = fromMaybe False $ do
-      t <- currentTerm cp
-      case fromTerm t :: Maybe (SLogic, SLogic) of
-         Just (p, q) -> return True
-         _           -> return False -- :-(
+   isEq cp = (isJust :: Maybe (SLogic, SLogic) -> Bool)
+             (currentTerm cp >>= fromTerm :: Maybe (SLogic, SLogic))
 
 somewhereOrG :: IsStrategy g => g (Context a) -> Strategy (Context a)
 somewhereOrG s =

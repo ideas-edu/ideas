@@ -7,25 +7,25 @@
          "~p || q || ~p == (p -> q) || q"
       ],
       [
-         "absorptionsubset",
+         "idempotency-or.sort",
          [
          ],
-         "~p || q == (p -> q) || q"
+         "~p || ~p || q == (p -> q) || q"
       ],
       [
          "logic.propositional.defimpl",
          [
          ],
-         "~p || q == ~p || q || q"
+         "~p || ~p || q == ~p || q || q"
       ],
       [
          "logic.propositional.idempor",
          [
          ],
-         "~p || q == ~p || q"
+         "~p || ~p || q == ~p || q"
       ],
       [
-         "top-is-or.com",
+         "logic.propositional.idempor",
          [
          ],
          "~p || q == ~p || q"

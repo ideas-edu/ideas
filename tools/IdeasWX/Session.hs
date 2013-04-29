@@ -84,7 +84,7 @@ thisExerciseFor txt (Some ex) ref =
    case parser ex txt of
       Left err  -> return (Just $ show err)
       Right a -> do
-         let new = emptyDerivation $ makeState ex (Just $ emptyPrefix $ strategy ex) (inContext ex a)
+         let new = emptyDerivation $ makeState ex [emptyPrefix $ strategy ex] (inContext ex a)
          setValue ref $ Some $ SessionState new
          return Nothing         
     

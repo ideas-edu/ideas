@@ -49,13 +49,7 @@
          "~p || ~q || r == ((p || ~p) /\\ (~q || ~p)) || r"
       ],
       [
-         "fakeabsorption",
-         [
-         ],
-         "~p || ~q || r == ((p || T) /\\ (~q || ~p)) || r"
-      ],
-      [
-         "logic.propositional.truezeroor",
+         "logic.propositional.complor",
          [
          ],
          "~p || ~q || r == (T /\\ (~q || ~p)) || r"

@@ -44,7 +44,9 @@ debugFrame session = do
       set rulebox [items := rs, selection := 0]
       set txt [text := msg]
    r2 <- execObserver $ \(Some st) -> do
-      let xs = maybe [] (map show . prefixToSteps) (statePrefix (currentState (getDerivation st)))
+      let xs = case statePrefixes (currentState (getDerivation st)) of
+                  hd:_ -> map show (prefixToSteps hd)
+                  _    -> []
       set stp [items := xs]
       
    set f [on closing := do 

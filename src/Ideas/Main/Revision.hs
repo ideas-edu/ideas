@@ -7,3 +7,7 @@ revision :: Int
 revision = 0
 lastChanged :: String 
 lastChanged = "unknown"
+
+svnRev = "$Revision$"
+svnId  = "$Id$"
+svnLCD = "$LastChangedDate$"

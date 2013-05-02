@@ -35,7 +35,7 @@ ideas:
 # Documentation
 
 haddock:
-	$(HADDOCK) --html -o $(HADDOCKDIR) --prologue=$(DOCSDIR)/prologue --title="Ideas: feedback services for intelligent tutoring systems" $(HS-SOURCES)
+	$(HADDOCK) -o $(HADDOCKDIR) --prologue=$(DOCSDIR)/prologue --title="Ideas: feedback services for intelligent tutoring systems" $(HS-SOURCES)
 	
 hlint:
 	$(HLINT) --report=$(DOCSDIR)/hlint.html $(HS-SOURCES)

@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -11,25 +12,28 @@
 -- Main module for feedback services
 --
 -----------------------------------------------------------------------------
-module Ideas.Main (main) where
+module Ideas.Main.Default (defaultMain, ideasVersion) where
 
 import Ideas.Common.Utils (useFixedStdGen)
 import Control.Monad
 import Data.IORef
 import Data.Time
 import Ideas.Documentation.Make
-import Ideas.Main.IDEAS
 import Ideas.Main.LoggingDatabase
 import Ideas.Main.Options
 import Network.CGI
+import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.ModeJSON (processJSON)
 import Ideas.Service.ModeXML (processXML)
 import Ideas.Service.Request
 import System.IO
 
-main :: IO ()
-main = do
+ideasVersion :: String
+ideasVersion = "X" -- automatically copied from ideas.cabal
+
+defaultMain :: (forall a . DomainReasoner a -> IO a) -> IO ()
+defaultMain run = do
    startTime <- getCurrentTime
    flags     <- serviceOptions
    logRef    <- newIORef (return ())
@@ -49,12 +53,12 @@ main = do
 
       -- documentation mode
       _ | documentationMode flags ->
-             useIDEAS $
+             run $
                 let f = makeDocumentation (docDir flags) (testDir flags)
                 in mapM_ f (docItems flags)
 
       -- feedback script options
-        | scriptMode flags -> useIDEAS $
+        | scriptMode flags -> run $
              withScripts (Just (scriptDir flags))
                          [ a | MakeScriptFor a <- flags ]
                          [ a | AnalyzeScript a <- flags ]
@@ -79,9 +83,10 @@ main = do
    when (withLogging flags) $
       join (readIORef logRef)
 
-process :: String -> IO (Request, String, String)
-process input = useIDEAS $
-   case discoverDataFormat input of
-      Just XML  -> processXML input
-      Just JSON -> processJSON input
-      _ -> fail "Invalid input"
+ where
+   process :: String -> IO (Request, String, String)
+   process input = run $
+      case discoverDataFormat input of
+         Just XML  -> processXML input
+         Just JSON -> processJSON input
+         _ -> fail "Invalid input"

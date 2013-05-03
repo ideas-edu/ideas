@@ -94,8 +94,7 @@ Library
     Ideas.Documentation.ServicePage
     Ideas.Documentation.TestsPage
     Ideas.Documentation.ViewPage
-    Ideas.Main
-    Ideas.Main.IDEAS
+    Ideas.Main.Default
     Ideas.Main.LoggingDatabase
     Ideas.Main.Options
     Ideas.Main.Revision

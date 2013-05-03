@@ -1,8 +1,6 @@
 default: ideas
 all: ideas haddock hlint sdist
 
-VERSION = 1.0.11
-
 #---------------------------------------------------------------------------------------
 # Applications, directories
 
@@ -12,6 +10,7 @@ GHCI    = ghci
 HADDOCK = haddock
 HLINT   = hlint
 RM      = rm
+SVN     = svn
 
 GHCWARN = -Wall -fwarn-tabs
 

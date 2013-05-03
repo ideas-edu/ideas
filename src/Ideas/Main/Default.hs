@@ -12,7 +12,7 @@
 -- Main module for feedback services
 --
 -----------------------------------------------------------------------------
-module Ideas.Main.Default (defaultMain, ideasVersion) where
+module Ideas.Main.Default (defaultMain) where
 
 import Ideas.Common.Utils (useFixedStdGen)
 import Control.Monad
@@ -28,9 +28,6 @@ import Ideas.Service.ModeJSON (processJSON)
 import Ideas.Service.ModeXML (processXML)
 import Ideas.Service.Request
 import System.IO
-
-ideasVersion :: String
-ideasVersion = "X" -- automatically copied from ideas.cabal
 
 defaultMain :: (forall a . DomainReasoner a -> IO a) -> IO ()
 defaultMain run = do

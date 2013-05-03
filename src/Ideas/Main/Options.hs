@@ -38,15 +38,15 @@ header =
 
 versionText :: String
 versionText =
-  "version " ++ version ++ ", revision " ++ show revision ++
+  "version " ++ ideasVersion ++ ", revision " ++ show ideasRevision ++
   ", logging " ++ (if logEnabled then "enabled" else "disabled")
 
 fullVersion :: String
-fullVersion = "version " ++ version ++ " (revision "
-           ++ show revision ++ ", " ++ lastChanged ++ ")"
+fullVersion = "version " ++ ideasVersion ++ " (revision "
+           ++ show ideasRevision ++ ", " ++ ideasLastChanged ++ ")"
 
 shortVersion :: String
-shortVersion = version ++ " (" ++ show revision ++ ")"
+shortVersion = ideasVersion ++ " (" ++ show ideasRevision ++ ")"
 
 options :: [OptDescr Flag]
 options =

@@ -45,21 +45,20 @@ newEnvironment st = newEnvironmentFor st next
   where
     next = either (const Nothing) Just (onefirst st)
 
-newEnvironmentFor :: State a -> Maybe (Rule (Context a), b, c, State a) -> Environment a
+newEnvironmentFor :: State a -> Maybe ((Rule (Context a), b, c), State a) -> Environment a
 newEnvironmentFor st next = Env
   { oldReady   = ready st
-  , expected   = fmap (\(x,_,_,_) -> x) next
+  , expected   = fmap (\((x,_,_),_) -> x) next
   , recognized = Nothing
   , actives    = listToMaybe (stateLabels st)
   , diffPair   = Nothing
   , before     = f st
-  , after      = liftM fth4 next >>= f
-  , afterText  = liftM fth4 next >>= g
+  , after      = liftM snd next >>= f
+  , afterText  = liftM snd next >>= g
   }
  where
   f s  = fmap (`build` stateTerm s) (hasTermView (exercise s))
   g s  = return $ prettyPrinter (exercise s) (stateTerm s)
-  fth4 (_,_,_,x) = x
 
 toText :: Environment a -> Script -> Text -> Maybe Text
 toText env script = eval env script . Right
@@ -135,7 +134,7 @@ feedbackHint :: Id -> Environment a -> Script -> Text
 feedbackHint feedbackId env script =
    fromMaybe (defaultHint env script) $ make feedbackId env script
 
-feedbackHints :: Id -> [(Rule (Context a), b, c, State a)] -> State a -> Script -> [Text]
+feedbackHints :: Id -> [((Rule (Context a), b, c), State a)] -> State a -> Script -> [Text]
 feedbackHints feedbackId nexts state script =
    map (\env -> fromMaybe (defaultHint env script) $ 
      make feedbackId env script) envs

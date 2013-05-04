@@ -31,7 +31,7 @@ derivationtext script state =
 onefirsttext :: Script -> State a -> Maybe String -> (Text, Maybe (State a))
 onefirsttext script old event =
    ( feedbackHint feedbackId env script
-   , fmap fth4 next
+   , fmap snd next
    )
  where
    feedbackId = newId $ if event == Just "hint button" 
@@ -39,10 +39,9 @@ onefirsttext script old event =
                         else "step"
    ex   = exercise old
    next = either (const Nothing) Just (onefirst old)
-   fth4 (_, _, _, a) = a
    env  = (newEnvironment old)
       { diffPair = do
-          new      <- fmap fth4 next
+          new      <- fmap snd next
           oldC     <- fromContext (stateContext old)
           a        <- fromContext (stateContext new)
           (d1, d2) <- difference ex oldC a

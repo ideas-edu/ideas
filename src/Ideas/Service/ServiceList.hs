@@ -51,7 +51,6 @@ derivationS = makeService "derivation"
    \current expression. The first optional argument lets you configure the \
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $
-   -- derivationTemp ::: maybeType StrategyCfg :-> stateType :-> errorType (derivationType Rule Context)
    derivation ::: maybeType strategyCfgType :-> stateType :-> errorType (derivationType (tuple2 ruleType envType) contextType)
 
 allfirstsS :: Service
@@ -60,7 +59,7 @@ allfirstsS = makeService "allfirsts"
    \onefirst service to get only one suggestion. For each suggestion, a new \
    \state, the rule used, and the location where the rule was applied are \
    \returned." $
-   allfirsts ::: stateType :-> errorType (listType (tuple4 ruleType locationType envType stateType))
+   allfirsts ::: stateType :-> errorType (listType (tuple2 stepInfoType stateType))
 
 onefirstS :: Service
 onefirstS = makeService "onefirst"
@@ -68,7 +67,7 @@ onefirstS = makeService "onefirst"
    \service to get all possible steps that are allowed by the strategy. In \
    \addition to a new state, the rule used and the location where to apply \
    \this rule are returned." $
-   onefirst ::: stateType :-> elemType (errorType (tuple4 ruleType locationType envType stateType))
+   onefirst ::: stateType :-> elemType (errorType (tuple2 stepInfoType stateType))
 
 readyS :: Service
 readyS = makeService "ready"

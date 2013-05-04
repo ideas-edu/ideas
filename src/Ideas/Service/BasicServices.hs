@@ -21,6 +21,7 @@ import Ideas.Common.Utils (fst3)
 import Data.List
 import Data.Maybe
 import Ideas.Service.State
+import Ideas.Service.Types (StepInfo)
 import System.Random
 import Control.Monad
 import qualified Ideas.Common.Classes as Apply
@@ -57,7 +58,7 @@ derivation mcfg state =
    rec i acc st =
       case onefirst st of
          Left _         -> Right acc
-         Right (r, l, as, next)
+         Right ((r, l, as), next)
             | i <= 0    -> Left msg
             | otherwise -> rec (i-1) (acc `extend` ((r, l, as), next)) next
     where
@@ -66,13 +67,13 @@ derivation mcfg state =
 
 -- Note that we have to inspect the last step of the prefix afterwards, because
 -- the remaining part of the derivation could consist of minor rules only.
-allfirsts :: State a -> Either String [(Rule (Context a), Location, Environment, State a)]
+allfirsts :: State a -> Either String [(StepInfo a, State a)]
 allfirsts state
    | null ps   = Left "Prefix is required"
    | otherwise =
         let trees  = map tree ps
             tree p = cutOnStep (stop . lastStepInPrefix) (prefixTree False p (stateContext state))
-            f (r1, _, _, _) (r2, _, _, _) =
+            f ((r1, _, _), _) ((r2, _, _), _) =
                ruleOrdering (exercise state) r1 r2
         in Right $ noDuplicates $ sortBy f $ mapMaybe make $ concatMap derivations trees
  where
@@ -83,9 +84,9 @@ allfirsts state
       prefixEnd <- lastStep d
       case lastStepInPrefix prefixEnd of
          Just (RuleStep env r) | isMajor r -> return
-            ( r
-            , location (lastTerm d)
-            , env
+            ( (r
+              , location (lastTerm d)
+              , env)
             , makeState (exercise state) [prefixEnd] (lastTerm d)
             )
          _ -> Nothing
@@ -93,11 +94,11 @@ allfirsts state
    noDuplicates []     = []
    noDuplicates (x:xs) = x : noDuplicates (filter (not . eq x) xs)
 
-   eq (r1, l1, a1, s1) (r2, l2, a2, s2) =
+   eq ((r1, l1, a1), s1) ((r2, l2, a2), s2) =
       r1==r2 && l1==l2 && a1==a2 && exercise s1 == exercise s2
       && similarity (exercise s1) (stateContext s1) (stateContext s2)
 
-onefirst :: State a -> Either String (Rule (Context a), Location, Environment, State a)
+onefirst :: State a -> Either String (StepInfo a, State a)
 onefirst state =
    case allfirsts state of
       Right []     -> Left "No step possible"
@@ -113,7 +114,7 @@ allapplications :: State a -> [(Rule (Context a), Location, State a)]
 allapplications state = sortBy cmp (xs ++ ys)
  where
    ex = exercise state
-   xs = either (const []) (map (\(r, l, _, s) -> (r, l, s))) (allfirsts state)
+   xs = either (const []) (map (\((r, l, _), s) -> (r, l, s))) (allfirsts state)
    ps = [ (r, loc) | (r, loc, _) <- xs ]
    ys = f (top (stateContext state))
 
@@ -143,7 +144,7 @@ apply r loc env state
  where
    applyOn = -- scenario 1: on-strategy
       maybe applyOff Right $ listToMaybe
-      [ s1 | Right xs <- [allfirsts state], (r1, loc1, env1, s1) <- xs, r==r1, loc==loc1, noBindings env || env==env1 ]
+      [ s1 | Right xs <- [allfirsts state], ((r1, loc1, env1), s1) <- xs, r==r1, loc==loc1, noBindings env || env==env1 ]
 
    ca = setLocation loc (stateContext state)
    applyOff  = -- scenario 2: off-strategy

@@ -78,7 +78,7 @@ diagnose state new
    -- Was the submitted term expected by the strategy?
    | isJust expected =
         -- If yes, return new state and rule
-        let (r, _, _, ns) = fromJust expected
+        let ((r, _, _), ns) = fromJust expected
         in Expected (ready ns) ns r
 
    -- Is the submitted term (very) similar to the previous one?
@@ -99,7 +99,7 @@ diagnose state new
 
    expected = do
       let xs = either (const []) id $ allfirsts (restartIfNeeded state)
-          p (_, _, _, ns) = similarity ex newc (stateContext ns) -- use rule recognizer?
+          p (_, ns) = similarity ex newc (stateContext ns) -- use rule recognizer?
       listToMaybe (filter p xs)
 
    discovered searchForBuggy = listToMaybe $

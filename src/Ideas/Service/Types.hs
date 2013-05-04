@@ -22,7 +22,7 @@ module Ideas.Service.Types
    , textType, stdGenType
    , maybeType, optionType
    , errorType, difficultyType, listType, envType, elemType, treeType
-   , derivationType, messageType, stateType
+   , derivationType, messageType, stateType, StepInfo, stepInfoType
    , Equal(..), ShowF(..), equalM
    ) where
 
@@ -203,6 +203,11 @@ derivationType t1 t2 = Iso (f <-> g) (listType (tuple2 t1 t2))
 
 stateType :: Type a (State a)
 stateType = Const State
+
+type StepInfo a = (Rule (Context a), Location, Environment) -- find a good place
+
+stepInfoType :: Type a (StepInfo a)
+stepInfoType = tuple3 ruleType locationType envType -- what, where, how
 
 --------------------------------------------------------------
 

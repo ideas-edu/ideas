@@ -16,17 +16,13 @@ module Ideas.Service.State
    ( -- * Exercise state
      State, makeState, makeNoState, empyStateContext, emptyState
    , exercise, statePrefixes, stateContext, stateTerm, stateLabels
-     -- * Types
-   , stateType
    ) where
 
 import Ideas.Common.Library
 import Ideas.Common.Strategy.Abstract (LabelInfo)
 import Ideas.Common.Strategy.Prefix (activeLabels)
-import Ideas.Common.Utils (readM)
 import Data.List
 import Data.Maybe
-import Ideas.Service.Types
 
 data State a = State
    { exercise      :: Exercise a
@@ -74,22 +70,3 @@ empyStateContext ex = makeState ex [pr]
 
 emptyState :: Exercise a -> a -> State a
 emptyState ex = empyStateContext ex . inContext ex
-
---------------------------------------------------------------
-
-stateType :: Type a (State a)
-stateType = Tag "state" (Iso (f <-> g) tp)
- where
-   f (ex, mp, ctx) =
-      let str = strategy ex
-          h   = fromMaybe [] . readM
-      in makeState ex (mp >>= flip makePrefix str . h) ctx
-   g st =
-      ( exercise st
-      , fmap show (statePrefixes st)
-      , stateContext st
-      )
-   tp = tuple3 exerciseType prefixType contextType
-
-   -- iso prevents that prefix is turned into an (XML) attribute
-   prefixType = List (Tag "prefix" (Iso identity stringType))

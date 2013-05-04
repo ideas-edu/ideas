@@ -126,15 +126,9 @@ jsonEncode enc tv@(val ::: tp)
               | s == "Result" -> do
                    conv <- equalM tp submitType
                    encodeResult enc (conv val)
-              | s == "state" -> do
-                   conv <- equalM tp stateType
-                   return (encodeState enc (conv val))
               | s == "Exception" -> do
                    f <- equalM t stringType
                    fail (f val)
-              | s == "Location" -> do
-                   f <- equalM t (List intType)
-                   return (toJSON (show (f val)))
               | otherwise -> liftM (\b -> Object [(s, b)]) (jsonEncode enc (val ::: t))
 
            Tp.Unit   -> return Null
@@ -158,26 +152,14 @@ jsonEncode enc tv@(val ::: tp)
                                 , ("subForest", Array $ map treeToJSON ts) ]
        _ -> error "ModeJSON: malformed tree!"
 
-{-
-jsonEncoderMap :: (a -> JSON) -> EncoderMap (Const a) EvalJSON JSON
-jsonEncoderMap enc = M.fromList
-   [ ("state", \(val ::: tp) -> do
-        conv <- equalM (Tag "state" tp) stateType
-        return (encodeState enc (conv val)))
-   , ("Result", \(val ::: tp) -> do
-        conv <- equalM (Tag "Result" tp) submitType
-        encodeResult enc (conv val))
-   , ("Exception", \(val ::: tp) -> do
-        f <- equalM tp stringType
-        fail (f val))
-   ] -}
-
 jsonEncodeConst :: (a -> JSON) -> Encoder (Const a) EvalJSON JSON
 jsonEncodeConst enc (val ::: tp) =
    case tp of
+      State     -> return (encodeState enc val)
       Rule      -> return (toJSON (showId val))
       Context   -> liftM enc (fromContext val)
       Term      -> return (enc val)
+      Location  -> return (toJSON (show val))
       BindingTp -> return $
                     Object [(showId val, String (showValue val))]
       Text      -> return (toJSON (show val))
@@ -211,20 +193,9 @@ jsonDecoder ex = Decoder (decode ex)
    decode ex serviceType =
       case serviceType of
          Tp.Tag s t
-            | s == "state" -> do
-                 f <- equalM stateType serviceType
-                 useFirst $ \json -> do
-                    old <- get
-                    put json
-                    a <- decodeState ex (reader ex)
-                    put old
-                    return (f a)
             | s == "args" -> do
                  f <- equalM envType t
                  useFirst $ liftM f . decodeContext
-            | s == "Location" -> do
-                 f <- equalM (List intType) t 
-                 liftM f (useFirst decodeLocation)
             | otherwise ->
                  decode ex t         
          Tp.Iso p t  -> liftM (from p) (decode ex t)
@@ -239,6 +210,12 @@ jsonDecoder ex = Decoder (decode ex)
          Unit -> return ()
          Const ctp ->
             case ctp of
+               State ->  useFirst $ \json -> do
+                    old <- get
+                    put json
+                    a <- decodeState ex (reader ex)
+                    put old
+                    return a
                Term     -> useFirst $ \json -> do
                            old <- get
                            put json
@@ -250,6 +227,7 @@ jsonDecoder ex = Decoder (decode ex)
                            case json of
                               Array (String _:rest) -> put (Array rest) >> return ex
                               _ -> return ex
+               Location -> useFirst decodeLocation
                Int -> useFirst $ \json ->
                               case json of
                                  Number (I n) -> return (fromIntegral n)

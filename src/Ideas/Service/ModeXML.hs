@@ -90,11 +90,7 @@ xmlReply request xml = do
          conv <- return (stringFormatConverter ex)
          res  <- runEval (evalService conv srv) xml
          return (resultOk res) 
-         
-      Just HTMLEncoding -> do
-         conv <- return (htmlEvaluator ex)
-         res  <- runEval (evalService conv srv) xml
-         return (htmlPage "Title" Nothing res) 
+
       _ -> do
          conv <- return (openMathConverter True ex)
          res  <- runEval (evalService conv srv) xml
@@ -163,9 +159,6 @@ xmlEncoderMap isOM ex enc = M.fromList $
    , ("Exception", \(val ::: tp) -> do
         f <- equalM tp stringType
         fail (f val))
-   , ("Location", \(val ::: tp) -> do
-        f <- equalM tp (List intType)
-        return ("location" .=. show (f val)))
      -- both element and attribute, depending on context
    , ("LocationId", \(val ::: tp) -> do
         f <- equalM tp idType
@@ -196,8 +189,10 @@ xmlEncoderConst isOM enc ex (val ::: tp) =
       Exercise  -> return (return ())
       Strategy  -> return (builder (strategyToXML val))
       Rule      -> return ("ruleid" .=. showId val)
+      State     -> encodeState isOM enc val
       Term      -> enc val
       Context   -> encodeContext isOM enc val
+      Location  -> return ("location" .=. show val)
       BindingTp -> return (encodeTypedBinding isOM val)
       Text      -> encodeText enc ex val
       Bool      -> return (text (map toLower (show val)))
@@ -212,10 +207,6 @@ xmlDecodeType :: Bool -> Exercise a -> EvalXML a -> Type a t -> EvalXML t
 xmlDecodeType b ex getTerm serviceType =
    case serviceType of
       Tp.Tag s t
-         | s == "state" -> do
-              g  <- equalM stateType serviceType
-              st <- decodeState b ex getTerm
-              return (g st)
          | s == "answer" -> do
               xml <- get
               c   <- findChild "answer" xml
@@ -227,11 +218,6 @@ xmlDecodeType b ex getTerm serviceType =
               g <- equalM difficultyType serviceType
               a <- findAttribute "difficulty" xml
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
-         {- s == "prefix" -> \xml -> do
-              f  <- equalM String t
-              mp <- decodePrefix (decoderExercise dec) xml
-              s  <- maybe (fail "no prefix") (return . show) mp
-              return (f s, xml) -}
          | s == "args" -> keep $ \xml -> do
               g   <- equalM envType t
               env <- decodeArgEnvironment b xml
@@ -240,9 +226,6 @@ xmlDecodeType b ex getTerm serviceType =
               g <- equalM stringType t
               a <- findChild "location" xml
               return (g (getData a))
-         | s == "Location" -> keep $ \xml -> do
-              g <- equalM (List intType) t 
-              liftM (g . read . getData) (findChild "location" xml)
          | otherwise -> do
               xml <- get
               cx  <- findChild s xml
@@ -261,11 +244,13 @@ xmlDecodeType b ex getTerm serviceType =
       Unit -> return ()
       Const ctp -> 
          case ctp of
+            State    -> decodeState b ex getTerm
             Context  -> decodeContext b ex getTerm
             Rule     -> keep $ fromMaybe (fail "unknown rule") 
                              . liftM (getRule ex . newId . getData) 
                              . findChild "ruleid"
             Term     -> getTerm
+            Location -> keep $ liftM (read . getData) . findChild "location"
             StratCfg -> keep decodeConfiguration
             Script   -> keep $ \xml -> lift $
                            case findAttribute "script" xml of
@@ -280,6 +265,14 @@ useAttribute (Const String) = return id
 useAttribute (Const Bool)   = return (map toLower . show)
 useAttribute (Const Int)    = return show
 useAttribute _              = fail "not a primitive type"
+
+-- exerciseType prefixType contextType
+encodeState :: Monad m => Bool -> (a -> m XMLBuilder) -> State a -> m XMLBuilder
+encodeState isOM enc st = do
+   ctx <- encodeContext isOM enc (stateContext st)
+   return $ element "state" $ do
+      mapM_ (element "prefix" . text . show) (statePrefixes st)
+      ctx
 
 decodeState :: Bool -> Exercise a -> EvalXML a -> EvalXML (State a)
 decodeState b ex f = do
@@ -414,56 +407,3 @@ encodeText f ex = liftM sequence_ . mapM make . textItems
    make a = returnText a
    
    returnText = return . text . show
-   
-{-
-txtType :: Type a Text
-txtType = Tag "Text" $ Iso (f <-> g) tp
- where
-   g (TextString s) = Left (Left s)
-   g (TextTerm t)   = Left (Right (Left undefined ))
-   g (TextRef i)    = Left (Right (Right i))
-   g TextEmpty      = Right (Right ())
-   g (t1 :<>: t2)   = Right (Left (t1, t2))
-   f = undefined
-   tp = (stringType :|: Const Term :|: idType) 
-        :|: (tuple2 txtType txtType :|: Unit) -}
-   
---------------------
-
-htmlEvaluator :: Exercise a -> Evaluator (Const a) EvalXML HTMLBuilder
-htmlEvaluator ex =
-   Evaluator (htmlEncoder f ex) (decoder (stringFormatConverter ex))
- where
-   f  = return . preText . prettyPrinter ex
-
-htmlEncoder :: (a -> EvalXML HTMLBuilder) -> Exercise a -> Encoder (Type a) EvalXML HTMLBuilder
-htmlEncoder _ _ (_ ::: tp) =
-   case tp of {-
-      Iso p t    -> htmlEncoder enc ex t (to p a)
-      Pair t1 t2 -> do
-         sx <- htmlEncoder enc ex t1 (fst a)
-         sy <- htmlEncoder enc ex t2 (snd a)
-         return (sx >> sy)
-      t1 :|: t2 -> case a of
-                      Left  x -> htmlEncoder enc ex t1 x
-                      Right y -> htmlEncoder enc ex t2 y
-       
-      List t        -> liftM sequence_ (mapM (htmlEncoder enc ex t) a)
-      Exercise      -> return (return ())
-      Exception     -> fail a
-      Unit          -> return (return ())
-      Id            -> return (text (show a))
-      IO t          -> do x <- liftIO (runIO a)
-                          htmlEncoder enc ex (Exception :|: t) x
-      Tp.Tag _ t1   -> htmlEncoder enc ex t1 a
-      Tp.Strategy   -> return (builder (strategyToXML a))
-      Tp.Rule       -> return (preText ("   => " ++ showId a))
-      Tp.Term       -> enc a
-      Tp.Context    -> encodeContext False enc a
-      Tp.Location   -> return ("location" .=. show a)
-      Tp.BindingTp  -> return $ preText ("     {" ++ showId a ++ " = " ++ showValue a ++ "}")
-      Tp.Text       -> encodeText enc ex a
-      Tp.Bool       -> return (text (map toLower (show a)))
-      Tp.Int        -> return (text (show a))
-      Tp.String     -> return (text a) -}
-      _             -> fail $ "Type " ++ show tp ++ " not supported in XML"

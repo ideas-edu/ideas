@@ -22,7 +22,7 @@ module Ideas.Service.Types
    , textType, stdGenType
    , maybeType, optionType
    , errorType, difficultyType, listType, envType, elemType, treeType
-   , derivationType, messageType
+   , derivationType, messageType, stateType
    , Equal(..), ShowF(..), equalM
    ) where
 
@@ -32,6 +32,7 @@ import Data.List
 import Data.Maybe
 import Data.Tree
 import Ideas.Service.FeedbackScript.Syntax
+import Ideas.Service.State
 import System.Random
 
 -----------------------------------------------------------------------------
@@ -80,9 +81,11 @@ instance Equal (Const a) where
    equal String    String    = Just id
    equal Exercise  Exercise  = Just id
    equal Strategy  Strategy  = Just id
+   equal State     State     = Just id
    equal Rule      Rule      = Just id
    equal Term      Term      = Just id
    equal Context   Context   = Just id
+   equal Location  Location  = Just id
    equal Script    Script    = Just id
    equal StratCfg  StratCfg  = Just id     
    equal BindingTp BindingTp = Just id     
@@ -134,7 +137,7 @@ scriptType :: Type a Script
 scriptType = Const Script
 
 locationType :: Type a Location
-locationType = Tag "Location" $ List intType
+locationType = Const Location
 
 idType :: Type a Id
 idType = Tag "Id" $ Iso (newId <-> show) stringType
@@ -198,6 +201,11 @@ derivationType t1 t2 = Iso (f <-> g) (listType (tuple2 t1 t2))
    f = foldl extend (emptyDerivation (error "derivationType") )
    g = map (\(_, s, a) -> (s, a)) . triples
 
+stateType :: Type a (State a)
+stateType = Const State
+
+--------------------------------------------------------------
+
 type Type a = TypeRep (Const a)
 
 data TypeRep f t where
@@ -220,10 +228,12 @@ data Const a t where
    -- exercise specific
    Exercise  :: Const a (Exercise a)
    Strategy  :: Const a (Strategy (Context a))
+   State     :: Const a (State a)
    Rule      :: Const a (Rule (Context a))
    Term      :: Const a a
    Context   :: Const a (Context a)
    -- other types
+   Location  :: Const a [Int]
    Script    :: Const a Script
    StratCfg  :: Const a StrategyConfiguration
    BindingTp :: Const a Binding
@@ -257,9 +267,11 @@ instance Show (Const a t) where
 instance ShowF (Const a) where
    showF Exercise  = "Exercise"
    showF Strategy  = "Strategy"
+   showF State     = "State"
    showF Rule      = "Rule"
    showF Term      = "Term"
    showF Context   = "Context"
+   showF Location  = "Location"
    showF Script    = "Script"
    showF StratCfg  = "StrategyConfiguration"
    showF BindingTp = "Binding"

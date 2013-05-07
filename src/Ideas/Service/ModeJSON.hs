@@ -163,8 +163,7 @@ jsonEncodeConst enc (val ::: tp) =
          in jsonEncode enc (xs ::: listType (Pair t1 t2))
       Term      -> return (enc val)
       Location  -> return (toJSON (show val))
-      BindingTp -> return $
-                    Object [(showId val, String (showValue val))]
+      Environment -> return (encodeEnvironment val)
       Text      -> return (toJSON (show val))
       Int       -> return (toJSON val)
       Bool      -> return (toJSON val)
@@ -262,6 +261,12 @@ decodeLocation (String s) = liftM toLocation (readM s)
 decodeLocation _          = fail "expecting a string for a location"
 
 --------------------------
+
+-- legacy representation
+encodeEnvironment :: Environment -> JSON
+encodeEnvironment = 
+   let f a = Object [(showId a, String (showValue a))]
+   in Array . map f . bindings
 
 encodeState :: (a -> JSON) -> State a -> JSON
 encodeState f st = Array

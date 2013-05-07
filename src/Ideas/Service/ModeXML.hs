@@ -151,6 +151,9 @@ openMathConverter withMF ex =
 xmlEncoder :: Monad m => Bool -> (a -> m XMLBuilder) -> Exercise a -> Encoder (Type a) m XMLBuilder
 xmlEncoder isOM enc ex tv@(val ::: tp) =
    case tp of
+      -- special case for onefirst service; insert elem Tag
+      Const String :|: Pair t (Const State) | isJust (equal stepInfoType t) ->
+         rec (val ::: (Const String :|: elemType (Pair t (Const State))))
       -- special case for exceptions
       Const String :|: t -> 
          case val of
@@ -216,7 +219,7 @@ xmlEncoderConst isOM enc ex (val ::: tp) =
          let xs = map (\(_, s, a) -> (s, a)) (triples val)
          in xmlEncoder isOM enc ex (xs ::: listType (Pair t1 t2))
       Location  -> return ("location" .=. show val)
-      BindingTp -> return (encodeTypedBinding isOM val)
+      Environment -> return (mapM_ (encodeTypedBinding isOM) (bindings val))
       Text      -> encodeText enc ex val
       Bool      -> return (text (map toLower (show val)))
       Int       -> return (text (show val))

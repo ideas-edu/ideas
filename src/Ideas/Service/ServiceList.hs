@@ -67,7 +67,7 @@ onefirstS = makeService "onefirst"
    \service to get all possible steps that are allowed by the strategy. In \
    \addition to a new state, the rule used and the location where to apply \
    \this rule are returned." $
-   onefirst ::: stateType :-> errorType (elemType (tuple2 stepInfoType stateType))
+   onefirst ::: typed -- stateType :-> errorType (tuple2 stepInfoType stateType)
 
 readyS :: Service
 readyS = makeService "ready"

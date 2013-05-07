@@ -18,7 +18,7 @@ module Ideas.Service.Types
    , TypeRep(..), Const(..), Type, TypedValue(..), tuple2, tuple3, tuple4
    , stringType, intType, boolType
    , exerciseType, strategyType, ruleType, termType, contextType
-   , scriptType, locationType, idType, bindingType, strategyCfgType
+   , scriptType, locationType, idType, strategyCfgType
    , textType, stdGenType
    , maybeType, optionType
    , errorType, difficultyType, listType, envType, elemType, treeType
@@ -77,23 +77,23 @@ instance Equal f => Equal (TypeRep f) where
    equal _          _          = Nothing
 
 instance Equal (Const a) where
-   equal Int        Int        = Just id
-   equal Bool       Bool       = Just id
-   equal String     String     = Just id
-   equal Exercise   Exercise   = Just id
-   equal Strategy   Strategy   = Just id
-   equal State      State      = Just id
-   equal Rule       Rule       = Just id
-   equal Term       Term       = Just id
-   equal Context    Context    = Just id
+   equal Int         Int         = Just id
+   equal Bool        Bool        = Just id
+   equal String      String      = Just id
+   equal Exercise    Exercise    = Just id
+   equal Strategy    Strategy    = Just id
+   equal State       State       = Just id
+   equal Rule         Rule       = Just id
+   equal Term        Term        = Just id
+   equal Context     Context     = Just id
    equal (Derivation a b) (Derivation c d) = liftM2 biMap (equal a c) (equal b d)
-   equal Location   Location   = Just id
-   equal Script     Script     = Just id
-   equal StratCfg   StratCfg   = Just id     
-   equal BindingTp  BindingTp  = Just id     
-   equal Text       Text       = Just id     
-   equal StdGen     StdGen     = Just id     
-   equal _          _          = Nothing
+   equal Location    Location    = Just id
+   equal Script      Script      = Just id
+   equal StratCfg    StratCfg    = Just id     
+   equal Environment Environment = Just id   
+   equal Text        Text        = Just id     
+   equal StdGen      StdGen      = Just id     
+   equal _           _           = Nothing
 
 infixr 5 :|:
 
@@ -147,9 +147,6 @@ idType = Tag "Id" $ Iso (newId <-> show) stringType
 strategyCfgType :: Type a StrategyConfiguration
 strategyCfgType = Const StratCfg
 
-bindingType :: Type a Binding
-bindingType = Const BindingTp
-
 textType :: Type a Text
 textType = Const Text
 
@@ -184,7 +181,7 @@ treeType :: Type a t -> Type a (Tree t) -- with tree "tag"
 treeType = Tag "tree" . Tree . elemType
 
 envType :: Type a Environment
-envType = Iso (makeEnvironment <-> bindings) (List bindingType)
+envType = Const Environment
 
 elemType :: Type a t -> Type a t
 elemType = Tag "elem"
@@ -230,24 +227,24 @@ data TypeRep f t where
 
 data Const a t where
    -- exercise specific
-   Exercise   :: Const a (Exercise a)
-   Strategy   :: Const a (Strategy (Context a))
-   State      :: Const a (State a)
-   Rule       :: Const a (Rule (Context a))
-   Term       :: Const a a
-   Context    :: Const a (Context a)
-   Derivation :: TypeRep (Const a) t1 -> TypeRep (Const a) t2 -> Const a (Derivation t1 t2)
+   Exercise    :: Const a (Exercise a)
+   Strategy    :: Const a (Strategy (Context a))
+   State       :: Const a (State a)
+   Rule        :: Const a (Rule (Context a))
+   Term        :: Const a a
+   Context     :: Const a (Context a)
+   Derivation  :: TypeRep (Const a) t1 -> TypeRep (Const a) t2 -> Const a (Derivation t1 t2)
    -- other types
-   Location   :: Const a Location
-   Script     :: Const a Script
-   StratCfg   :: Const a StrategyConfiguration
-   BindingTp  :: Const a Binding
-   Text       :: Const a Text
-   StdGen     :: Const a StdGen
+   Location    :: Const a Location
+   Script      :: Const a Script
+   StratCfg    :: Const a StrategyConfiguration
+   Environment :: Const a Environment
+   Text        :: Const a Text
+   StdGen      :: Const a StdGen
    -- basic types
-   Bool       :: Const a Bool
-   Int        :: Const a Int
-   String     :: Const a String
+   Bool        :: Const a Bool
+   Int         :: Const a Int
+   String      :: Const a String
 
 class ShowF f where
    showF :: f a -> String
@@ -270,22 +267,22 @@ instance Show (Const a t) where
    show = showF
 
 instance ShowF (Const a) where
-   showF Exercise   = "Exercise"
-   showF Strategy   = "Strategy"
-   showF State      = "State"
-   showF Rule       = "Rule"
-   showF Term       = "Term"
-   showF Context    = "Context"
+   showF Exercise    = "Exercise"
+   showF Strategy    = "Strategy"
+   showF State       = "State"
+   showF Rule        = "Rule"
+   showF Term        = "Term"
+   showF Context     = "Context"
    showF (Derivation t1 t2) = "Derivation " ++ show t1 ++ " " ++ show t2
-   showF Location   = "Location"
-   showF Script     = "Script"
-   showF StratCfg   = "StrategyConfiguration"
-   showF BindingTp  = "Binding"
-   showF Text       = "TextMessage"
-   showF StdGen     = "StdGen"
-   showF Bool       = "Bool"
-   showF Int        = "Int" 
-   showF String     = "String"
+   showF Location    = "Location"
+   showF Script      = "Script"
+   showF StratCfg    = "StrategyConfiguration"
+   showF Environment = "Environment"
+   showF Text        = "TextMessage"
+   showF StdGen      = "StdGen"
+   showF Bool        = "Bool"
+   showF Int         = "Int" 
+   showF String      = "String"
 
 showTuple :: ShowF f => TypeRep f t -> String
 showTuple tp = "(" ++ intercalate ", " (collect tp) ++ ")"

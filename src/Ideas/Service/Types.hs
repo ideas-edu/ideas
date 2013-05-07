@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, Rank2Types #-}
+{-# LANGUAGE GADTs, Rank2Types, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, UndecidableInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -24,6 +24,7 @@ module Ideas.Service.Types
    , errorType, difficultyType, listType, envType, elemType, treeType
    , derivationType, messageType, stateType, StepInfo, stepInfoType
    , Equal(..), ShowF(..), equalM
+   , Typed(..)
    ) where
 
 import Ideas.Common.Library
@@ -76,22 +77,23 @@ instance Equal f => Equal (TypeRep f) where
    equal _          _          = Nothing
 
 instance Equal (Const a) where
-   equal Int       Int       = Just id
-   equal Bool      Bool      = Just id
-   equal String    String    = Just id
-   equal Exercise  Exercise  = Just id
-   equal Strategy  Strategy  = Just id
-   equal State     State     = Just id
-   equal Rule      Rule      = Just id
-   equal Term      Term      = Just id
-   equal Context   Context   = Just id
-   equal Location  Location  = Just id
-   equal Script    Script    = Just id
-   equal StratCfg  StratCfg  = Just id     
-   equal BindingTp BindingTp = Just id     
-   equal Text      Text      = Just id     
-   equal StdGen    StdGen    = Just id     
-   equal _         _         = Nothing
+   equal Int        Int        = Just id
+   equal Bool       Bool       = Just id
+   equal String     String     = Just id
+   equal Exercise   Exercise   = Just id
+   equal Strategy   Strategy   = Just id
+   equal State      State      = Just id
+   equal Rule       Rule       = Just id
+   equal Term       Term       = Just id
+   equal Context    Context    = Just id
+   equal (Derivation a b) (Derivation c d) = liftM2 biMap (equal a c) (equal b d)
+   equal Location   Location   = Just id
+   equal Script     Script     = Just id
+   equal StratCfg   StratCfg   = Just id     
+   equal BindingTp  BindingTp  = Just id     
+   equal Text       Text       = Just id     
+   equal StdGen     StdGen     = Just id     
+   equal _          _          = Nothing
 
 infixr 5 :|:
 
@@ -173,7 +175,7 @@ optionType :: t1 -> Type a t1 -> Type a t1
 optionType a t = Iso (fromMaybe a <-> Just) (maybeType t)
 
 errorType :: Type a t -> Type a (Either String t)
-errorType t = Tag "Exception" stringType :|: t
+errorType t = stringType :|: t
 
 listType :: Type a t -> Type a [t] -- with list "tag"
 listType = Tag "list" . List . elemType
@@ -196,10 +198,7 @@ difficultyType = Tag "difficulty" (Iso (f <-> show) stringType)
    f = fromMaybe Medium . readDifficulty
 
 derivationType :: Type a t1 -> Type a t2 -> Type a (Derivation t1 t2)
-derivationType t1 t2 = Iso (f <-> g) (listType (tuple2 t1 t2))
- where
-   f = foldl extend (emptyDerivation (error "derivationType") )
-   g = map (\(_, s, a) -> (s, a)) . triples
+derivationType t1 t2 = Const (Derivation t1 t2)
 
 stateType :: Type a (State a)
 stateType = Const State
@@ -231,23 +230,24 @@ data TypeRep f t where
 
 data Const a t where
    -- exercise specific
-   Exercise  :: Const a (Exercise a)
-   Strategy  :: Const a (Strategy (Context a))
-   State     :: Const a (State a)
-   Rule      :: Const a (Rule (Context a))
-   Term      :: Const a a
-   Context   :: Const a (Context a)
+   Exercise   :: Const a (Exercise a)
+   Strategy   :: Const a (Strategy (Context a))
+   State      :: Const a (State a)
+   Rule       :: Const a (Rule (Context a))
+   Term       :: Const a a
+   Context    :: Const a (Context a)
+   Derivation :: TypeRep (Const a) t1 -> TypeRep (Const a) t2 -> Const a (Derivation t1 t2)
    -- other types
-   Location  :: Const a [Int]
-   Script    :: Const a Script
-   StratCfg  :: Const a StrategyConfiguration
-   BindingTp :: Const a Binding
-   Text      :: Const a Text
-   StdGen    :: Const a StdGen
+   Location   :: Const a Location
+   Script     :: Const a Script
+   StratCfg   :: Const a StrategyConfiguration
+   BindingTp  :: Const a Binding
+   Text       :: Const a Text
+   StdGen     :: Const a StdGen
    -- basic types
-   Bool      :: Const a Bool
-   Int       :: Const a Int
-   String    :: Const a String
+   Bool       :: Const a Bool
+   Int        :: Const a Int
+   String     :: Const a String
 
 class ShowF f where
    showF :: f a -> String
@@ -270,21 +270,22 @@ instance Show (Const a t) where
    show = showF
 
 instance ShowF (Const a) where
-   showF Exercise  = "Exercise"
-   showF Strategy  = "Strategy"
-   showF State     = "State"
-   showF Rule      = "Rule"
-   showF Term      = "Term"
-   showF Context   = "Context"
-   showF Location  = "Location"
-   showF Script    = "Script"
-   showF StratCfg  = "StrategyConfiguration"
-   showF BindingTp = "Binding"
-   showF Text      = "TextMessage"
-   showF StdGen    = "StdGen"
-   showF Bool      = "Bool"
-   showF Int       = "Int" 
-   showF String    = "String"
+   showF Exercise   = "Exercise"
+   showF Strategy   = "Strategy"
+   showF State      = "State"
+   showF Rule       = "Rule"
+   showF Term       = "Term"
+   showF Context    = "Context"
+   showF (Derivation t1 t2) = "Derivation " ++ show t1 ++ " " ++ show t2
+   showF Location   = "Location"
+   showF Script     = "Script"
+   showF StratCfg   = "StrategyConfiguration"
+   showF BindingTp  = "Binding"
+   showF Text       = "TextMessage"
+   showF StdGen     = "StdGen"
+   showF Bool       = "Bool"
+   showF Int        = "Int" 
+   showF String     = "String"
 
 showTuple :: ShowF f => TypeRep f t -> String
 showTuple tp = "(" ++ intercalate ", " (collect tp) ++ ")"
@@ -293,3 +294,53 @@ showTuple tp = "(" ++ intercalate ", " (collect tp) ++ ")"
    collect (Pair t1 t2) = collect t1 ++ collect t2
    collect (Iso _ t)    = collect t
    collect t            = [showF t]
+   
+---------------------------------------------------------------
+
+class Typed a t | t -> a where
+   typeOf    :: t -> Type a t
+   typed     :: Type a t
+   typedList :: Type a [t]
+   -- default implementation
+   typeOf    = const typed
+   typedList = List typed
+
+instance Typed a Int where
+   typed = Const Int
+   
+instance Typed a Bool where
+   typed = Const Bool
+
+instance Typed a Char where
+   typed     = Iso (head <-> return) stringType
+   typedList = stringType
+
+instance Typed a (Rule (Context a)) where
+   typed = Const Rule
+
+instance Typed a Location where
+   typed = Const Location
+
+instance Typed a Environment where
+   typed = envType
+
+instance Typed a (State a) where
+   typed = Const State
+
+instance Typed a (Exercise a) where
+   typed = Const Exercise
+   
+instance (Typed a t1, Typed a t2) => Typed a (t1, t2) where
+   typed = Pair typed typed
+   
+instance (Typed a t1, Typed a t2, Typed a t3) => Typed a (t1, t2, t3) where
+   typed = tuple3 typed typed typed
+   
+instance (Typed a t1, Typed a t2) => Typed a (t1 -> t2) where
+   typed = typed :-> typed
+
+instance (Typed a t1, Typed a t2) => Typed a (Either t1 t2) where
+   typed = typed :|: typed
+      
+instance Typed a t => Typed a [t] where
+   typed = typedList

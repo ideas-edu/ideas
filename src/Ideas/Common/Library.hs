@@ -23,7 +23,7 @@ import Ideas.Common.Derivation as Export
 import Ideas.Common.DerivationTree as Export
 import Ideas.Common.Exercise as Export
 import Ideas.Common.Id as Export
-import Ideas.Common.Traversal.Navigator as Export (arity, top)
+import Ideas.Common.Traversal.Navigator as Export (Location, toLocation, fromLocation, arity, top)
 import Ideas.Common.Predicate as Export
 import Ideas.Common.Rewriting as Export
 import Ideas.Common.Strategy as Export hiding (fail, not, repeat, replicate, sequence, until)

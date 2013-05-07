@@ -37,7 +37,6 @@ import Ideas.Service.StrategyInfo
 import Ideas.Service.Types
 import System.Random
 import Ideas.Text.OpenMath.Object
-import Ideas.Text.HTML hiding (text)
 import Ideas.Text.XML
 import qualified Ideas.Service.Types as Tp
 
@@ -150,8 +149,29 @@ openMathConverter withMF ex =
    handleMixedFractions = if withMF then id else liftM noMixedFractions
 
 xmlEncoder :: Monad m => Bool -> (a -> m XMLBuilder) -> Exercise a -> Encoder (Type a) m XMLBuilder
-xmlEncoder isOM enc ex tv =
-   encodeWith (xmlEncoderMap isOM ex enc) (xmlEncoderConst isOM enc ex) tv
+xmlEncoder isOM enc ex tv@(val ::: tp) =
+   case tp of
+      -- special case for exceptions
+      Const String :|: t -> 
+         case val of
+            Left s  -> fail s
+            Right a -> rec (a ::: t)
+      -- special cases for lists
+      List t@(Const Rule) -> do
+         xs <- mapM (\a -> rec (a ::: t)) val
+         return (encodeAsList xs)
+      List t@(Pair _ _) -> do
+         xs <- mapM (\a -> rec (a ::: t)) val
+         return (encodeAsList xs)
+      List t@(Iso _ _) -> do
+         xs <- mapM (\a -> rec (a ::: t)) val
+         return (encodeAsList xs)
+      _ -> encodeWith (xmlEncoderMap isOM ex enc) (xmlEncoderConst isOM enc ex) tv
+ where
+   rec = xmlEncoder isOM enc ex
+
+encodeAsList :: [XMLBuilder] -> XMLBuilder
+encodeAsList = element "list" . mapM_ (element "elem")
 
 xmlEncoderMap :: Monad m => Bool -> Exercise a -> (a -> m XMLBuilder) -> EncoderMap (Const a) m XMLBuilder
 xmlEncoderMap isOM ex enc = M.fromList $
@@ -192,6 +212,9 @@ xmlEncoderConst isOM enc ex (val ::: tp) =
       State     -> encodeState isOM enc val
       Term      -> enc val
       Context   -> encodeContext isOM enc val
+      Derivation t1 t2 ->
+         let xs = map (\(_, s, a) -> (s, a)) (triples val)
+         in xmlEncoder isOM enc ex (xs ::: listType (Pair t1 t2))
       Location  -> return ("location" .=. show val)
       BindingTp -> return (encodeTypedBinding isOM val)
       Text      -> encodeText enc ex val
@@ -250,7 +273,7 @@ xmlDecodeType b ex getTerm serviceType =
                              . liftM (getRule ex . newId . getData) 
                              . findChild "ruleid"
             Term     -> getTerm
-            Location -> keep $ liftM (read . getData) . findChild "location"
+            Location -> keep $ liftM (toLocation . read . getData) . findChild "location"
             StratCfg -> keep decodeConfiguration
             Script   -> keep $ \xml -> lift $
                            case findAttribute "script" xml of
@@ -356,7 +379,7 @@ encodeEnvironment b ctx
                     builder (omobj2xml (toOMOBJ term))
                  _ -> "value" .=. showValue tb
  where
-   loc    = location ctx
+   loc    = fromLocation (location ctx)
    values = bindings (withLoc ctx)
    withLoc
       | null loc  = id

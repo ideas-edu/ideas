@@ -72,17 +72,20 @@ testNavigator s gen = suite (s ++ " Navigator") $ do
    
    suite "location" $ do
       prop gen "loc up" $ hasUp    ==>> 
-         fmap location . up ==! init . location
+         fmap locationList . up ==! init . locationList
       prop gen "loc down" $ hasDown  ==>> 
-         fmap location . down ==! (++[0]) . location
+         fmap locationList . down ==! (++[0]) . locationList
       prop gen "loc downLast" $ hasDown  ==>> 
-         fmap location . downLast ==! (\a -> location a ++ [arity a-1])  
+         fmap locationList . downLast ==! (\a -> locationList a ++ [arity a-1])  
       prop gen "loc left" $ hasLeft  ==>> 
-         fmap location . left ==! changeLast pred . location
+         fmap locationList . left ==! changeLast pred . locationList
       prop gen "loc right" $ hasRight ==>> 
-         fmap location . right ==! changeLast succ . location
+         fmap locationList . right ==! changeLast succ . locationList
       prop gen "childnr" $ 
-         childnr === fromMaybe 0 . listToMaybe . reverse . location
+         childnr === fromMaybe 0 . listToMaybe . reverse . locationList
+
+locationList :: Navigator a => a -> [Int]
+locationList = fromLocation . location
 
 -------------------------------------------------------------------------
 -- tests

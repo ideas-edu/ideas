@@ -109,7 +109,7 @@ liftCN _ (C _   (NoNav _))   = fail "noNavigator"
 navLocation :: ContextNavigator a -> Location
 navLocation (TermNav a) = location a
 navLocation (Simple a)  = location a
-navLocation (NoNav _)   = []
+navLocation (NoNav _)   = mempty
 
 currentNavigator :: ContextNavigator a -> Maybe a
 currentNavigator (TermNav a) = matchM termView (current a)

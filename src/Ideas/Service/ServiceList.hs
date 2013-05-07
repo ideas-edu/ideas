@@ -59,7 +59,7 @@ allfirstsS = makeService "allfirsts"
    \onefirst service to get only one suggestion. For each suggestion, a new \
    \state, the rule used, and the location where the rule was applied are \
    \returned." $
-   allfirsts ::: stateType :-> errorType (listType (tuple2 stepInfoType stateType))
+   allfirsts ::: typed -- stateType :-> errorType (listType (tuple2 stepInfoType stateType))
 
 onefirstS :: Service
 onefirstS = makeService "onefirst"
@@ -73,28 +73,28 @@ readyS :: Service
 readyS = makeService "ready"
    "Test if the current expression is in a form accepted as a final answer. \
    \For this, the strategy is not used." $
-   ready ::: stateType :-> boolType
+   ready ::: typed -- stateType :-> boolType
 
 stepsremainingS :: Service
 stepsremainingS = makeService "stepsremaining"
    "Computes how many steps are remaining to be done, according to the \
    \strategy. For this, only the first derivation is considered, which \
    \corresponds to the one returned by the derivation Ideas.Service." $
-   stepsremaining ::: stateType :-> errorType intType
+   stepsremaining ::: typed -- stateType :-> errorType intType
 
 applicableS :: Service
 applicableS = makeService "applicable"
    "Given a current expression and a location in this expression, this service \
    \yields all rules that can be applied at this location, regardless of the \
    \strategy." $
-   applicable ::: locationType :-> stateType :-> listType ruleType
+   applicable ::: typed -- locationType :-> stateType :-> listType ruleType
 
 allapplicationsS :: Service
 allapplicationsS = makeService "allapplications"
    "Given a current expression, this service yields all rules that can be \
    \applied at a certain location, regardless wether the rule used is buggy \
    \or not. Some results are within the strategy, others are not." $
-   allapplications ::: stateType :-> listType (tuple3 ruleType locationType stateType)
+   allapplications ::: typed -- stateType :-> listType (tuple3 ruleType locationType stateType)
 
 applyS :: Service
 applyS = makeService "apply"

@@ -101,10 +101,10 @@ runEval = evalStateT
 jsonConverter :: Exercise a -> Evaluator (Const a) EvalJSON JSON
 jsonConverter ex = Evaluator (jsonEncoder ex) (jsonDecoder ex)
 
-jsonEncoder :: Exercise a -> Encoder (Type a) EvalJSON JSON
+jsonEncoder :: Monad m => Exercise a -> Encoder (Type a) m JSON
 jsonEncoder ex = jsonEncode (String . prettyPrinter ex)
 
-jsonEncode :: (a -> JSON) -> Encoder (Type a) EvalJSON JSON
+jsonEncode :: Monad m => (a -> JSON) -> Encoder (Type a) m JSON
 jsonEncode enc tv@(val ::: tp)
    | length (tupleList tv) > 1 =
         liftM jsonTuple (mapM (jsonEncode enc) (tupleList tv))
@@ -152,12 +152,15 @@ jsonEncode enc tv@(val ::: tp)
                                 , ("subForest", Array $ map treeToJSON ts) ]
        _ -> error "ModeJSON: malformed tree!"
 
-jsonEncodeConst :: (a -> JSON) -> Encoder (Const a) EvalJSON JSON
+jsonEncodeConst :: Monad m => (a -> JSON) -> Encoder (Const a) m JSON
 jsonEncodeConst enc (val ::: tp) =
    case tp of
       State     -> return (encodeState enc val)
       Rule      -> return (toJSON (showId val))
       Context   -> liftM enc (fromContext val)
+      Derivation t1 t2 ->
+         let xs = map (\(_, s, a) -> (s, a)) (triples val)
+         in jsonEncode enc (xs ::: listType (Pair t1 t2))
       Term      -> return (enc val)
       Location  -> return (toJSON (show val))
       BindingTp -> return $
@@ -254,8 +257,8 @@ jsonDecoder ex = Decoder (decode ex)
 jsonToId :: Monad m => JSON -> m Id
 jsonToId = liftM (newId :: String -> Id) . fromJSON
 
-decodeLocation :: Monad m => JSON -> m [Int]
-decodeLocation (String s) = readM s
+decodeLocation :: Monad m => JSON -> m Location
+decodeLocation (String s) = liftM toLocation (readM s)
 decodeLocation _          = fail "expecting a string for a location"
 
 --------------------------
@@ -305,7 +308,7 @@ decodeContext (Object xs) = foldM (flip add) mempty xs
    add _             = fail "invalid item in context"
 decodeContext json = fail $ "invalid context: " ++ show json
 
-encodeResult :: (a -> JSON) -> Result a -> EvalJSON JSON
+encodeResult :: Monad m => (a -> JSON) -> Result a -> m JSON
 encodeResult enc result =
    case result of
       -- SyntaxError _ -> [("result", String "SyntaxError")]

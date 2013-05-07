@@ -11,8 +11,10 @@
 --
 -----------------------------------------------------------------------------
 module Ideas.Common.Traversal.Navigator
-   ( -- * Navigator type class
-     Navigator(..), Location
+   ( -- * Location information
+     Location, toLocation, fromLocation
+     -- * Navigator type class
+   , Navigator(..)
    , isTop, isLeaf
    , hasLeft, hasRight, hasUp, hasDown
    , top, leftMost, rightMost, leftMostLeaf, rightMostLeaf
@@ -28,6 +30,7 @@ module Ideas.Common.Traversal.Navigator
    , UniplateNavigator
    ) where
 
+import Ideas.Common.Algebra.Group
 import Ideas.Common.Traversal.Utils
 import Ideas.Common.Traversal.Iterator
 import Ideas.Common.Utils.Uniplate
@@ -39,7 +42,18 @@ import Data.Maybe
 ---------------------------------------------------------------
 -- Navigator type class
 
-type Location = [Int]
+newtype Location = L { fromLocation :: [Int] }
+ deriving (Eq, Ord)
+ 
+instance Show Location where
+   show = show . fromLocation
+
+instance Monoid Location where
+   mempty = L []
+   L xs `mappend` L ys = L (xs ++ ys)
+   
+toLocation :: [Int] -> Location
+toLocation = L
 
 -- | For a minimal complete definition, provide an implemention for downs or
 -- allDowns. All other functions need an implementation as well, except for
@@ -56,7 +70,7 @@ class Navigator a where
    -- default definitions
    downLast = liftM (fixp right) . down
    childnr  = pred . length . fixpl left
-   location = map childnr . drop 1 . reverse . fixpl up
+   location = toLocation . map childnr . drop 1 . reverse . fixpl up
 
 instance Navigator a => Navigator (Mirror a) where
    up       = liftWrapper up
@@ -135,9 +149,11 @@ navigateTowards is a = go (navigation (location a) is) a
 navigation :: Navigator a => Location -> Location -> [a -> Maybe a]
 navigation old new = replicate upnr up ++ map downTo ds
  where
-   same = length (takeWhile id (zipWith (==) old new))
-   upnr = length old - same
-   ds   = drop same new
+   os   = fromLocation old
+   ns   = fromLocation new
+   same = length (takeWhile id (zipWith (==) os ns))
+   upnr = length os - same
+   ds   = drop same ns
 
 ----------------------------------------------------------------
 -- Tree walks

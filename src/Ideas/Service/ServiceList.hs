@@ -51,7 +51,7 @@ derivationS = makeService "derivation"
    \current expression. The first optional argument lets you configure the \
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $
-   derivation ::: maybeType strategyCfgType :-> stateType :-> errorType (derivationType (tuple2 ruleType envType) contextType)
+   derivation ::: typed -- maybeType strategyCfgType :-> stateType :-> errorType (derivationType (tuple2 ruleType envType) contextType)
 
 allfirstsS :: Service
 allfirstsS = makeService "allfirsts"
@@ -67,7 +67,7 @@ onefirstS = makeService "onefirst"
    \service to get all possible steps that are allowed by the strategy. In \
    \addition to a new state, the rule used and the location where to apply \
    \this rule are returned." $
-   onefirst ::: stateType :-> elemType (errorType (tuple2 stepInfoType stateType))
+   onefirst ::: stateType :-> errorType (elemType (tuple2 stepInfoType stateType))
 
 readyS :: Service
 readyS = makeService "ready"
@@ -107,7 +107,7 @@ generateS :: Service
 generateS = makeService "generate"
    "Given an exercise code and a difficulty level (optional), this service \
    \returns an initial state with a freshly generated expression." $
-   generateWith ::: stdGenType :-> exerciseType :-> maybeType difficultyType :-> errorType stateType
+   generateWith ::: typed -- stdGenType :-> exerciseType :-> maybeType difficultyType :-> errorType stateType
 
 examplesS :: Service
 examplesS = makeService "examples"

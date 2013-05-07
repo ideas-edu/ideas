@@ -355,7 +355,8 @@ decodeEnvironment b = do
 decodeConfiguration :: MonadPlus m => XML -> m StrategyConfiguration
 decodeConfiguration xml =
    case findChild "configuration" xml of
-      Just this -> mapM decodeAction (children this)
+      Just this -> liftM makeStrategyConfiguration $ 
+                      mapM decodeAction (children this)
       Nothing   -> fail "no strategy configuration"
  where
    decodeAction item = do

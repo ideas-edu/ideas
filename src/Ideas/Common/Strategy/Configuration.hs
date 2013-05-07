@@ -11,8 +11,8 @@
 -----------------------------------------------------------------------------
 module Ideas.Common.Strategy.Configuration
    ( -- Types and constructors
-     StrategyConfiguration, ConfigItem
-   , ConfigLocation, byName, byGroup
+     StrategyConfiguration, makeStrategyConfiguration
+   , ConfigItem, ConfigLocation, byName, byGroup
    , ConfigAction(..), configActions
      --  Configure
   ,  configure, configureNow
@@ -29,7 +29,11 @@ import Data.Maybe
 ---------------------------------------------------------------------
 -- Types and constructors
 
-type StrategyConfiguration = [ConfigItem]
+newtype StrategyConfiguration = SC { configItems :: [ConfigItem] }
+
+makeStrategyConfiguration :: [ConfigItem] -> StrategyConfiguration
+makeStrategyConfiguration = SC
+
 type ConfigItem = (ConfigLocation, ConfigAction)
 
 data ConfigLocation
@@ -72,7 +76,7 @@ configureCore cfg = mapFirst (change [])
 
 getActions :: LabelInfo -> [String]
            -> StrategyConfiguration -> [ConfigAction]
-getActions info groups = map snd . filter (select . fst)
+getActions info groups = map snd . filter (select . fst) . configItems
  where
    select (ByName a)  = getId info == a
    select (ByGroup s) = showId s `elem` groups

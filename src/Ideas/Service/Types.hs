@@ -324,11 +324,23 @@ instance Typed a Location where
 instance Typed a Environment where
    typed = envType
 
+instance Typed a StdGen where
+   typed = stdGenType
+   
+instance Typed a Difficulty where
+   typed = difficultyType
+
 instance Typed a (State a) where
    typed = Const State
 
 instance Typed a (Exercise a) where
    typed = Const Exercise
+   
+instance Typed a (Context a) where
+   typed = Const Context
+   
+instance Typed a StrategyConfiguration where
+   typed = Const StratCfg
    
 instance (Typed a t1, Typed a t2) => Typed a (t1, t2) where
    typed = Pair typed typed
@@ -339,8 +351,14 @@ instance (Typed a t1, Typed a t2, Typed a t3) => Typed a (t1, t2, t3) where
 instance (Typed a t1, Typed a t2) => Typed a (t1 -> t2) where
    typed = typed :-> typed
 
+instance Typed a t => Typed a (Maybe t) where
+   typed = maybeType typed
+
 instance (Typed a t1, Typed a t2) => Typed a (Either t1 t2) where
    typed = typed :|: typed
+
+instance (Typed a t1, Typed a t2) => Typed a (Derivation t1 t2) where
+   typed = Const (Derivation typed typed)
       
 instance Typed a t => Typed a [t] where
    typed = typedList

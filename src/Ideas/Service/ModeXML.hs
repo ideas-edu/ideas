@@ -198,7 +198,7 @@ xmlEncoderMap isOM ex enc = M.fromList $
         fail (f val))
      -- both element and attribute, depending on context
    , ("LocationId", \(val ::: tp) -> do
-        f <- equalM tp idType
+        f <- equalM tp (Const Id)
         return $ element "location"$ text $ show $ f val)
    , ("buggy", \tv@(val ::: tp) -> 
         case useAttribute tp of
@@ -229,6 +229,9 @@ xmlEncoderConst isOM enc ex (val ::: tp) =
       State     -> encodeState isOM enc val
       Term      -> enc val
       Context   -> encodeContext isOM enc val
+      -- Special case for derivationtext
+      Derivation (Const String) t -> 
+         xmlEncoderConst isOM enc ex (val ::: Derivation (Tag "ruletext" (Const String)) t)     
       Derivation t1 t2 ->
          let xs = map (\(_, s, a) -> (s, a)) (triples val)
          in xmlEncoder isOM enc ex (xs ::: listType (Pair t1 t2))
@@ -258,10 +261,6 @@ xmlDecodeType b ex getTerm serviceType =
               g <- equalM difficultyType serviceType
               a <- findAttribute "difficulty" xml
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
-         | s == "Id" -> keep $ \xml -> do
-              g <- equalM stringType t
-              a <- findChild "location" xml
-              return (g (getData a))
          | otherwise -> do
               xml <- get
               cx  <- findChild s xml
@@ -295,6 +294,9 @@ xmlDecodeType b ex getTerm serviceType =
                               Nothing -> defaultScript (getId ex)
             StdGen   -> liftIO newStdGen
             Exercise -> return ex
+            Id       -> keep $ \xml -> do
+                           a <- findChild "location" xml
+                           return (newId (getData a))
             _        -> fail $ "No support for argument type in XML: " ++ show serviceType
 
 useAttribute :: Monad m => Type a t -> m (t -> String)

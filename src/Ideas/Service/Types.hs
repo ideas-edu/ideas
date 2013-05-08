@@ -18,7 +18,7 @@ module Ideas.Service.Types
    , TypeRep(..), Const(..), Type, TypedValue(..), tuple2, tuple3, tuple4
    , stringType, intType, boolType
    , exerciseType, strategyType, ruleType, termType, contextType
-   , scriptType, locationType, idType, strategyCfgType
+   , scriptType, locationType, strategyCfgType
    , textType, stdGenType
    , maybeType, optionType
    , errorType, difficultyType, listType, envType, elemType, treeType
@@ -87,6 +87,7 @@ instance Equal (Const a) where
    equal Term        Term        = Just id
    equal Context     Context     = Just id
    equal (Derivation a b) (Derivation c d) = liftM2 biMap (equal a c) (equal b d)
+   equal Id          Id          = Just id
    equal Location    Location    = Just id
    equal Script      Script      = Just id
    equal StratCfg    StratCfg    = Just id     
@@ -140,9 +141,6 @@ scriptType = Const Script
 
 locationType :: Type a Location
 locationType = Const Location
-
-idType :: Type a Id
-idType = Tag "Id" $ Iso (newId <-> show) stringType
 
 strategyCfgType :: Type a StrategyConfiguration
 strategyCfgType = Const StratCfg
@@ -232,6 +230,7 @@ data Const a t where
    Context     :: Const a (Context a)
    Derivation  :: TypeRep (Const a) t1 -> TypeRep (Const a) t2 -> Const a (Derivation t1 t2)
    -- other types
+   Id          :: Const a Id
    Location    :: Const a Location
    Script      :: Const a Script
    StratCfg    :: Const a StrategyConfiguration
@@ -271,6 +270,7 @@ instance ShowF (Const a) where
    showF Term        = "Term"
    showF Context     = "Context"
    showF (Derivation t1 t2) = "Derivation " ++ show t1 ++ " " ++ show t2
+   showF Id          = "Id"
    showF Location    = "Location"
    showF Script      = "Script"
    showF StratCfg    = "StrategyConfiguration"
@@ -311,6 +311,9 @@ instance Typed a Char where
 
 instance Typed a (Rule (Context a)) where
    typed = Const Rule
+
+instance Typed a Id where
+   typed = Const Id
 
 instance Typed a Location where
    typed = Const Location

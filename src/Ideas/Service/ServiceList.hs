@@ -122,7 +122,7 @@ findbuggyrulesS = makeService "findbuggyrules"
    "Search for common misconceptions (buggy rules) in an expression (compared \
    \to the current state). It is assumed that the expression is indeed not \
    \correct. This service has been superseded by the diagnose Ideas.Service." $
-   findbuggyrules ::: stateType :-> termType :-> typed -- listType (tuple3 ruleType locationType envType)
+   findbuggyrules ::: stateType :-> typed :-> typed -- listType (tuple3 ruleType locationType envType)
 
 submitS :: Service
 submitS = deprecate $ makeService "submit"
@@ -158,7 +158,7 @@ derivationtextS :: Service
 derivationtextS = makeService "derivationtext"
    "Similar to the derivation service, but the rules appearing in the derivation \
    \have been replaced by a short description of the rule." $
-   derivationtext ::: scriptType :-> stateType :-> errorType (derivationType (Tag "ruletext" stringType) contextType)
+   derivationtext ::: typed -- scriptType :-> stateType :-> errorType (derivationType (Tag "ruletext" stringType) contextType)
 
 submittextS :: Service
 submittextS = deprecate $ makeService "submittext"
@@ -183,7 +183,7 @@ problemdecompositionS = makeService "problemdecomposition"
    "Strategy service developed for the SURF project Intelligent Feedback for a \
    \binding with the MathDox system on linear algebra exercises. This is a \
    \composite service, and available for backwards compatibility." $
-   problemDecomposition ::: maybeType idType  :-> stateType :-> maybeType (Tag "answer" termType) :-> errorType replyType
+   problemDecomposition ::: typed -- maybeType idType  :-> stateType :-> maybeType (Tag "answer" termType) :-> errorType replyType
 
 ------------------------------------------------------
 -- Reflective services

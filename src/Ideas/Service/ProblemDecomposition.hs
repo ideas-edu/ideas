@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -18,15 +19,15 @@ import Data.Maybe
 import Ideas.Service.State
 import Ideas.Service.Types
 
-problemDecomposition :: Maybe Id -> State a -> Maybe a -> Either String (Reply a)
-problemDecomposition msloc state answer
+problemDecomposition :: Maybe Id -> State a -> Maybe (Answer a) -> Either String (Reply a)
+problemDecomposition msloc state maybeAnswer
    | isNothing $ subStrategy sloc (strategy ex) =
         Left "request error: invalid location for strategy"
    | null answers = 
         Left "strategy error: not able to compute an expected answer"
    | otherwise =
          case maybeAnswer of
-            Just answeredTerm | not (null witnesses) -> Right $
+            Just (Answer answeredTerm) | not (null witnesses) -> Right $
                     Ok newLocation newState
                   where
                     witnesses   = filter (similarity ex answeredTerm . fst) $ take 1 answers
@@ -39,7 +40,7 @@ problemDecomposition msloc state answer
              where
                newLocation = subTaskLocation (strategy ex) sloc loc
                expState = makeState ex [pref] expected
-               isEquiv  = maybe False (equivalence ex expected) maybeAnswer
+               isEquiv  = maybe False (equivalence ex expected . fromAnswer) maybeAnswer
                (expected, pref) = head answers
                (loc, arguments) = fromMaybe (topId, mempty) $
                                      firstMajorInPrefix prefix pref
@@ -49,7 +50,6 @@ problemDecomposition msloc state answer
    sloc  = fromMaybe topId msloc
    answers       = runPrefixLocation sloc prefix requestedTerm
    requestedTerm = stateContext state
-   maybeAnswer   = fmap (inContext ex) answer
    prefix = case statePrefixes state of
                []   -> emptyPrefix (strategy ex)
                hd:_ -> hd
@@ -105,11 +105,19 @@ runPrefixMajor p0 =
 ------------------------------------------------------------------------
 -- Data types for replies
 
+newtype Answer a = Answer { fromAnswer :: Context a }
+
 data Reply a = Ok Id (State a)
              | Incorrect Bool Id (State a) Environment
 
 ------------------------------------------------------------------------
 -- Type definition
+
+instance Typed a (Answer a) where 
+   typed = Tag "answer" $ Iso (Answer <-> fromAnswer) (Const Context)
+
+instance Typed a (Reply a) where
+   typed = replyType
 
 replyType :: Type a (Reply a)
 replyType = Iso (f <-> g) tp
@@ -123,4 +131,4 @@ replyType = Iso (f <-> g) tp
    tp  =  Tag "correct"   (tuple2 locType stateType)
       :|: Tag "incorrect" (tuple4 (Tag "equivalent" boolType) locType stateType envType)
 
-   locType = Tag "LocationId" idType
+   locType = Tag "LocationId" (Const Id)

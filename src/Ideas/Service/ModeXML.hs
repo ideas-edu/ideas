@@ -152,6 +152,12 @@ openMathConverter withMF ex =
 xmlEncoder :: Monad m => Bool -> (a -> m XMLBuilder) -> Exercise a -> Encoder (Type a) m XMLBuilder
 xmlEncoder isOM enc ex tv@(val ::: tp) =
    case tp of
+      -- meta-information
+      Tag "Info" (Iso iso t) -> 
+         let this = to iso val in
+         case t of 
+            List (Const Rule) -> return (rulesShortInfo this)
+            _ -> rec (this ::: t)
       -- special case for onefirst service; insert elem Tag
       Const String :|: Pair t (Const State) | isJust (equal stepInfoType t) ->
          rec (val ::: (Const String :|: elemType (Pair t (Const State))))
@@ -190,7 +196,7 @@ xmlEncoderMap isOM ex enc = M.fromList $
          txt <- encodeText enc ex (FeedbackText.text msg)
          return $ element "message" $ do
             case FeedbackText.accept msg of
-               Just b  -> "accept" .=. map toLower (show b)
+               Just b  -> "accept" .=. showBool b
                Nothing -> return ()
             txt)
    , ("Exception", \(val ::: tp) -> do
@@ -225,9 +231,8 @@ xmlEncoderConst isOM enc ex (val ::: tp) =
    case tp of
       Exercise  -> return (return ())
       Strategy  -> return (builder (strategyToXML val))
-      Rule      -> return ("ruleid" .=. showId val)
+      Rule      -> return ("ruleid" .=. show val) -- encodeRule val)
       State     -> encodeState isOM enc val
-      Term      -> enc val
       Context   -> encodeContext isOM enc val
       -- Special case for derivationtext
       Derivation (Const String) t -> 
@@ -238,7 +243,7 @@ xmlEncoderConst isOM enc ex (val ::: tp) =
       Location  -> return ("location" .=. show val)
       Environment -> return (mapM_ (encodeTypedBinding isOM) (bindings val))
       Text      -> encodeText enc ex val
-      Bool      -> return (text (map toLower (show val)))
+      Bool      -> return (text (showBool val))
       Int       -> return (text (show val))
       String    -> return (text val)
       _         -> fail $ "Type " ++ show tp ++ " not supported in XML"
@@ -284,7 +289,6 @@ xmlDecodeType b ex getTerm serviceType =
             Rule     -> keep $ fromMaybe (fail "unknown rule") 
                              . liftM (getRule ex . newId . getData) 
                              . findChild "ruleid"
-            Term     -> getTerm
             Environment -> keep $ decodeArgEnvironment b
             Location -> keep $ liftM (toLocation . read . getData) . findChild "location"
             StratCfg -> keep decodeConfiguration
@@ -301,17 +305,26 @@ xmlDecodeType b ex getTerm serviceType =
 
 useAttribute :: Monad m => Type a t -> m (t -> String)
 useAttribute (Const String) = return id
-useAttribute (Const Bool)   = return (map toLower . show)
+useAttribute (Const Bool)   = return showBool
 useAttribute (Const Int)    = return show
 useAttribute _              = fail "not a primitive type"
 
--- exerciseType prefixType contextType
 encodeState :: Monad m => Bool -> (a -> m XMLBuilder) -> State a -> m XMLBuilder
 encodeState isOM enc st = do
    ctx <- encodeContext isOM enc (stateContext st)
    return $ element "state" $ do
       mapM_ (element "prefix" . text . show) (statePrefixes st)
       ctx
+
+rulesShortInfo :: [Rule a] -> XMLBuilder
+rulesShortInfo = encodeAsList . map ruleShortInfo
+
+ruleShortInfo :: Rule a -> XMLBuilder
+ruleShortInfo r = do 
+   "name"        .=. showId r
+   "buggy"       .=. showBool (isBuggy r)
+   "arguments"   .=. show (length (getRefs r))
+   "rewriterule" .=. showBool (isRewriteRule r)
 
 decodeState :: Bool -> Exercise a -> EvalXML a -> EvalXML (State a)
 decodeState b ex f = do
@@ -447,3 +460,6 @@ encodeText f ex = liftM sequence_ . mapM make . textItems
    make a = returnText a
    
    returnText = return . text . show
+   
+showBool :: Bool -> String
+showBool = map toLower . show

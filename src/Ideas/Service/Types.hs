@@ -17,7 +17,7 @@ module Ideas.Service.Types
      -- * Types
    , TypeRep(..), Const(..), Type, TypedValue(..), tuple2, tuple3, tuple4
    , stringType, intType, boolType
-   , exerciseType, strategyType, ruleType, termType, contextType
+   , exerciseType, strategyType, ruleType, contextType
    , scriptType, locationType, strategyCfgType
    , textType, stdGenType
    , maybeType, optionType
@@ -84,7 +84,6 @@ instance Equal (Const a) where
    equal Strategy    Strategy    = Just id
    equal State       State       = Just id
    equal Rule         Rule       = Just id
-   equal Term        Term        = Just id
    equal Context     Context     = Just id
    equal (Derivation a b) (Derivation c d) = liftM2 biMap (equal a c) (equal b d)
    equal Id          Id          = Just id
@@ -129,9 +128,6 @@ strategyType = Const Strategy
 
 ruleType :: Type a (Rule (Context a))
 ruleType = Const Rule
-
-termType :: Type a a
-termType = Const Term
 
 contextType :: Type a (Context a)
 contextType = Const Context
@@ -226,7 +222,6 @@ data Const a t where
    Strategy    :: Const a (Strategy (Context a))
    State       :: Const a (State a)
    Rule        :: Const a (Rule (Context a))
-   Term        :: Const a a
    Context     :: Const a (Context a)
    Derivation  :: TypeRep (Const a) t1 -> TypeRep (Const a) t2 -> Const a (Derivation t1 t2)
    -- other types
@@ -267,7 +262,6 @@ instance ShowF (Const a) where
    showF Strategy    = "Strategy"
    showF State       = "State"
    showF Rule        = "Rule"
-   showF Term        = "Term"
    showF Context     = "Context"
    showF (Derivation t1 t2) = "Derivation " ++ show t1 ++ " " ++ show t2
    showF Id          = "Id"
@@ -311,6 +305,9 @@ instance Typed a Char where
 
 instance Typed a (Rule (Context a)) where
    typed = Const Rule
+
+instance Typed a (Strategy (Context a)) where
+   typed = Const Strategy
 
 instance Typed a Id where
    typed = Const Id

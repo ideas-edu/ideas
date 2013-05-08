@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -32,8 +33,8 @@ import qualified Ideas.Service.Submit as Submit
 serviceList :: [Service]
 serviceList =
    [ derivationS, allfirstsS, onefirstS, readyS
-   , stepsremainingS, applicableS, allapplicationsS
-   , applyS, generateS
+   , stepsremainingS, allapplicationsS
+   , applyS, generateS, applicableS
    , examplesS, submitS, diagnoseS
    , onefirsttextS, findbuggyrulesS
    , submittextS, derivationtextS
@@ -83,7 +84,7 @@ stepsremainingS = makeService "stepsremaining"
    stepsremaining ::: typed -- stateType :-> errorType intType
 
 applicableS :: Service
-applicableS = makeService "applicable"
+applicableS = deprecate $ makeService "applicable"
    "Given a current expression and a location in this expression, this service \
    \yields all rules that can be applied at this location, regardless of the \
    \strategy." $
@@ -115,7 +116,7 @@ examplesS = makeService "examples"
    \with an exercise. These are the examples that appear at the page generated \
    \for each exercise. Also see the generate service, which returns a random \
    \start term." $
-   (map snd . examples) ::: exerciseType :-> listType termType
+   (\ex -> map (inContext ex . snd) (examples ex)) ::: exerciseType :-> listType contextType
 
 findbuggyrulesS :: Service
 findbuggyrulesS = makeService "findbuggyrules"
@@ -200,7 +201,7 @@ rulelistS = makeService "rulelist"
    \name (or identifier), whether the rule is buggy, and whether the rule was \
    \expressed as an observable rewrite rule. See rulesinfo for more details \
    \about the rules." $
-   allRules ::: exerciseType :-> listType (tuple4 (Tag "name" stringType) (Tag "buggy" boolType) (Tag "arguments" intType) (Tag "rewriterule" boolType))
+   (Info . ruleset) ::: typed -- exerciseType :-> listType (tuple4 (Tag "name" stringType) (Tag "buggy" boolType) (Tag "arguments" intType) (Tag "rewriterule" boolType))
 
 rulesinfoS :: Service
 rulesinfoS = makeService "rulesinfo"
@@ -211,7 +212,7 @@ rulesinfoS = makeService "rulesinfo"
 strategyinfoS :: Service
 strategyinfoS = makeService "strategyinfo"
    "Returns the representation of the strategy of a particular exercise." $
-   (toStrategy . strategy) ::: exerciseType :-> strategyType
+   (toStrategy . strategy) ::: typed -- exerciseType :-> strategyType
 
 allExercises :: [Some Exercise] -> [(String, String, String)]
 allExercises = map make . sortBy (comparing f)
@@ -221,7 +222,7 @@ allExercises = map make . sortBy (comparing f)
    make (Some ex) =
       (showId ex, description ex, show (status ex))
 
-allRules :: Exercise a -> [(String, Bool, Int, Bool)]
-allRules = map make . ruleset
- where
-   make r  = (showId r, isBuggy r, length $ getRefs r, isRewriteRule r)
+newtype Info a = Info { fromInfo :: a }
+
+instance Typed a t => Typed a (Info t) where
+   typed = Tag "Info" $ Iso (Info <-> fromInfo) typed

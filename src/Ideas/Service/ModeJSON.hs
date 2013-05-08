@@ -121,6 +121,12 @@ jsonEncode enc tv@(val ::: tp)
               y <- jsonEncode enc (snd val ::: t2)
               return (jsonTuple [x, y])
            Tp.Tag s t
+              | s == "Info" -> 
+                   case t of 
+                      Iso iso (List (Const Rule)) -> 
+                         let this = to iso val
+                         in return (rulesShortInfo this)
+                      _ -> jsonEncode enc (val ::: t)
               | s `elem` ["elem", "list"] ->
                    jsonEncode enc (val ::: t)
               | s == "Result" -> do
@@ -164,7 +170,6 @@ jsonEncodeConst enc (val ::: tp) =
       Derivation t1 t2 ->
          let xs = map (\(_, s, a) -> (s, a)) (triples val)
          in jsonEncode enc (xs ::: listType (Pair t1 t2))
-      Term      -> return (enc val)
       Location  -> return (toJSON (show val))
       Environment -> return (encodeEnvironment val)
       Text      -> return (toJSON (show val))
@@ -224,12 +229,6 @@ jsonDecoder ex = Decoder (decode ex)
                            a <- reader ex
                            put old
                            return (inContext ex a)
-               Term     -> useFirst $ \json -> do
-                           old <- get
-                           put json
-                           a <- reader ex
-                           put old
-                           return a
                Exercise -> 
                         do json <- get
                            case json of
@@ -344,3 +343,14 @@ jsonTuple xs =
  where
    f (Object [p]) = Just p
    f _ = Nothing
+   
+rulesShortInfo :: [Rule a] -> JSON
+rulesShortInfo = Array . map ruleShortInfo
+
+ruleShortInfo :: Rule a -> JSON
+ruleShortInfo r = Object
+   [ ("name",        toJSON (showId r))
+   , ("buggy",       toJSON (isBuggy r))
+   , ("arguments",   toJSON (length (getRefs r)))
+   , ("rewriterule", toJSON (isRewriteRule r))
+   ]

@@ -244,10 +244,6 @@ xmlDecodeType b ex getTerm serviceType =
               g <- equalM difficultyType serviceType
               a <- findAttribute "difficulty" xml
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
-         | s == "args" -> keep $ \xml -> do
-              g   <- equalM envType t
-              env <- decodeArgEnvironment b xml
-              return (g env)
          | s == "Id" -> keep $ \xml -> do
               g <- equalM stringType t
               a <- findChild "location" xml
@@ -276,6 +272,7 @@ xmlDecodeType b ex getTerm serviceType =
                              . liftM (getRule ex . newId . getData) 
                              . findChild "ruleid"
             Term     -> getTerm
+            Environment -> keep $ decodeArgEnvironment b
             Location -> keep $ liftM (toLocation . read . getData) . findChild "location"
             StratCfg -> keep decodeConfiguration
             Script   -> keep $ \xml -> lift $

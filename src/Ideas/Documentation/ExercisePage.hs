@@ -192,7 +192,7 @@ diagnosisPage ef ex = do
       case (parser ex t0, parser ex t1) of
          (Left msg, _) -> "parse error (before): " ++ msg
          (_, Left msg) -> "parse error (after): "  ++ msg
-         (Right a, Right b) -> show (diagnose (emptyState ex a) b)
+         (Right a, Right b) -> show (diagnose (emptyState ex a) (inContext ex b))
 
 forStep :: Int -> ((Rule (Context a), Environment), Environment) -> HTMLBuilder
 forStep n ((r, local), global) = do

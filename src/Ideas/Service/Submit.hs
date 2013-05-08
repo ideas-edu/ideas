@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -41,8 +42,11 @@ fromDiagnose diagnosis =
 --      Diagnose.Missing         -> NotEquivalent
 --      Diagnose.IncorrectPart _ -> NotEquivalent
 
-submit :: State a -> a -> Result a
+submit :: State a -> Context a -> Result a
 submit state = fromDiagnose . diagnose state
+
+instance Typed a (Result a) where
+   typed = submitType
 
 submitType :: Type a (Result a)
 submitType = Tag "Result" (Iso (f <-> g) tp)

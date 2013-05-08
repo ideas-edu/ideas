@@ -67,7 +67,7 @@ feedbacktext script old a =
       Detour _ s _ _ -> (True,  output, s)
       Correct _ s    -> (False, output, s)
  where
-   diagnosis = diagnose old a
+   diagnosis = diagnose old (inContext ex a)
    output    = feedbackDiagnosis diagnosis env script
    ex  = exercise old
    env = (newEnvironment old)

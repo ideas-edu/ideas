@@ -195,9 +195,6 @@ jsonDecoder ex = Decoder (decode ex)
    decode ex serviceType =
       case serviceType of
          Tp.Tag s t
-            | s == "args" -> do
-                 f <- equalM envType t
-                 useFirst $ liftM f . decodeContext
             | otherwise ->
                  decode ex t         
          Tp.Iso p t  -> liftM (from p) (decode ex t)
@@ -218,6 +215,12 @@ jsonDecoder ex = Decoder (decode ex)
                     a <- decodeState ex (reader ex)
                     put old
                     return a
+               Context  -> useFirst $ \json -> do
+                           old <- get
+                           put json
+                           a <- reader ex
+                           put old
+                           return (inContext ex a)
                Term     -> useFirst $ \json -> do
                            old <- get
                            put json
@@ -229,6 +232,7 @@ jsonDecoder ex = Decoder (decode ex)
                            case json of
                               Array (String _:rest) -> put (Array rest) >> return ex
                               _ -> return ex
+               Environment -> useFirst decodeContext
                Location -> useFirst decodeLocation
                Int -> useFirst $ \json ->
                               case json of

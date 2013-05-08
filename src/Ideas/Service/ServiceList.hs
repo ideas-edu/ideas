@@ -101,7 +101,7 @@ applyS = makeService "apply"
    "Apply a rule at a certain location to the current expression. If this rule \
    \was not expected by the strategy, we deviate from it. If the rule cannot \
    \be applied, this service call results in an error." $
-   apply ::: ruleType :-> locationType :-> Tag "args" envType :-> stateType :-> errorType stateType
+   apply ::: typed -- ruleType :-> locationType :-> envType :-> stateType :-> errorType stateType
 
 generateS :: Service
 generateS = makeService "generate"
@@ -122,14 +122,14 @@ findbuggyrulesS = makeService "findbuggyrules"
    "Search for common misconceptions (buggy rules) in an expression (compared \
    \to the current state). It is assumed that the expression is indeed not \
    \correct. This service has been superseded by the diagnose Ideas.Service." $
-   findbuggyrules ::: stateType :-> termType :-> listType (tuple3 ruleType locationType envType)
+   findbuggyrules ::: stateType :-> termType :-> typed -- listType (tuple3 ruleType locationType envType)
 
 submitS :: Service
 submitS = deprecate $ makeService "submit"
    "Analyze an expression submitted by a student. Possible answers are Buggy, \
    \NotEquivalent, Ok, Detour, and Unknown. This service has been superseded \
    \by the diagnose Ideas.Service." $
-   Submit.submit ::: stateType :-> termType :-> Submit.submitType
+   Submit.submit ::: typed -- stateType :-> termType :-> typed -- Submit.submitType
 
 diagnoseS :: Service
 diagnoseS = makeService "diagnose"
@@ -141,7 +141,7 @@ diagnoseS = makeService "diagnose"
    \expression was not expected by the strategy, but the applied rule was \
    \detected), and Correct (it is correct, but we don't know which rule was \
    \applied)." $
-   Diagnose.diagnose ::: stateType :-> termType :-> Diagnose.diagnosisType
+   Diagnose.diagnose ::: typed -- stateType :-> contextType :-> Diagnose.diagnosisType
 
 ------------------------------------------------------
 -- Services with a feedback component

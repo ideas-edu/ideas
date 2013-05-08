@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -66,10 +67,10 @@ newState diagnosis =
 ----------------------------------------------------------------
 -- The diagnose service
 
-diagnose :: State a -> a -> Diagnosis a
+diagnose :: State a -> Context a -> Diagnosis a
 diagnose state new
    -- Is the submitted term equivalent?
-   | not (equivalence ex (stateContext state) newc) =
+   | not (equivalence ex (stateContext state) new) =
         -- Is the rule used discoverable by trying all known buggy rules?
         case discovered True of
            Just (r, as) -> Buggy as r -- report the buggy rule
@@ -93,13 +94,12 @@ diagnose state new
               Correct (ready restarted) restarted
  where
    ex        = exercise state
-   newc      = inContext ex new
-   restarted = restartIfNeeded (makeNoState ex newc)
-   similar   = similarity ex (stateContext state) newc
+   restarted = restartIfNeeded (makeNoState ex new)
+   similar   = similarity ex (stateContext state) new
 
    expected = do
       let xs = either (const []) id $ allfirsts (restartIfNeeded state)
-          p (_, ns) = similarity ex newc (stateContext ns) -- use rule recognizer?
+          p (_, ns) = similarity ex new (stateContext ns) -- use rule recognizer?
       listToMaybe (filter p xs)
 
    discovered searchForBuggy = listToMaybe $
@@ -110,10 +110,10 @@ diagnose state new
       ]
     where
       diff = if searchForBuggy then difference else differenceEqual
-      (sub1, sub2) =
-         case diff ex (stateTerm state) new of
-            Just (a, b) -> (inContext ex a, inContext ex b)
-            Nothing     -> (stateContext state, newc)
+      (sub1, sub2) = fromMaybe (stateContext state, new) $ do
+         newTerm <- fromContext new
+         (a, b)  <- diff ex (stateTerm state) newTerm
+         return (inContext ex a, inContext ex b)
 
 ----------------------------------------------------------------
 -- Helpers
@@ -128,6 +128,9 @@ restartIfNeeded state
    | otherwise = state
  where
    ex = exercise state
+
+instance Typed a (Diagnosis a) where
+   typed = diagnosisType
 
 diagnosisType :: Type a (Diagnosis a)
 diagnosisType = Iso (f <-> g) tp

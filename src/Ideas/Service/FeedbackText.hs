@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -10,7 +11,8 @@
 --
 -----------------------------------------------------------------------------
 module Ideas.Service.FeedbackText
-   ( onefirsttext, submittext, derivationtext, feedbacktext
+   ( Message, accept, text
+   , onefirsttext, submittext, derivationtext, feedbacktext
    ) where
 
 import Ideas.Common.Library hiding (derivation)
@@ -19,6 +21,16 @@ import Ideas.Service.Diagnose
 import Ideas.Service.FeedbackScript.Run
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
+import Ideas.Service.Types
+
+data Message = M { accept :: Maybe Bool, text :: Text }
+
+instance Typed a Message where
+   typed = Tag "message" $ Iso (f <-> g) tp 
+    where
+      f   = either (\(b, t) -> M (Just b) t) (M Nothing)
+      g m = maybe (Right (text m)) (\b -> Left (b, text m)) (accept m)
+      tp = tuple2 boolType textType :|: textType
 
 ------------------------------------------------------------
 -- Services
@@ -28,9 +40,9 @@ derivationtext script state =
    let f = ruleToString (newEnvironment state) script . fst
    in right (mapFirst f) (derivation Nothing state)
 
-onefirsttext :: Script -> State a -> Maybe String -> (Text, Maybe (State a))
+onefirsttext :: Script -> State a -> Maybe String -> (Message, Maybe (State a))
 onefirsttext script old event =
-   ( feedbackHint feedbackId env script
+   ( M Nothing (feedbackHint feedbackId env script)
    , fmap snd next
    )
  where
@@ -51,28 +63,32 @@ onefirsttext script old event =
 -- Feedback messages for submit service (free student input). The boolean
 -- indicates whether the student is allowed to continue (True), or forced
 -- to go back to the previous state (False)
-submittext :: Script -> State a -> String -> (Bool, Text, State a)
+submittext :: Script -> State a -> String -> (Message, State a)
 submittext script old input =
-   case parser (exercise old) input of
-      Left msg -> (False, TextString msg, old)
-      Right a  -> feedbacktext script old a
-
-feedbacktext :: Script -> State a -> a -> (Bool, Text, State a)
-feedbacktext script old a =
-   case diagnosis of
-      Buggy _ _      -> (False, output, old)
-      NotEquivalent  -> (False, output, old)
-      Expected _ s _ -> (True,  output, s)
-      Similar _ s    -> (True,  output, s)
-      Detour _ s _ _ -> (True,  output, s)
-      Correct _ s    -> (False, output, s)
+   case parser ex input of
+      Left msg -> (M (Just False) (TextString msg), old)
+      Right a  -> feedbacktext script old (inContext ex a)
  where
-   diagnosis = diagnose old (inContext ex a)
+   ex = exercise old
+
+feedbacktext :: Script -> State a -> Context a -> (Message, State a)
+feedbacktext script old new =
+   case diagnosis of
+      Buggy _ _      -> (msg False, old)
+      NotEquivalent  -> (msg False, old)
+      Expected _ s _ -> (msg True, s)
+      Similar _ s    -> (msg True, s)
+      Detour _ s _ _ -> (msg True, s)
+      Correct _ s    -> (msg False, s)
+ where
+   diagnosis = diagnose old new
    output    = feedbackDiagnosis diagnosis env script
+   msg b     = M (Just b) output
    ex  = exercise old
    env = (newEnvironment old)
             { diffPair = do
-                 oldC     <- fromContext (stateContext old)
-                 (d1, d2) <- difference ex oldC a
+                 oldTerm  <- fromContext (stateContext old)
+                 newTerm  <- fromContext new
+                 (d1, d2) <- difference ex oldTerm newTerm
                  return (prettyPrinter ex d1, prettyPrinter ex d2)
             }

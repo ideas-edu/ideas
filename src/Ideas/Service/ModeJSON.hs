@@ -141,7 +141,10 @@ jsonEncode enc tv@(val ::: tp)
    tupleList (p ::: Tp.Pair t1 t2) =
       tupleList (fst p ::: t1) ++ tupleList (snd p ::: t2)
    tupleList (x ::: Tag s t)
-      | s `elem` ["ruletext", "message", "accept"] = tupleList (x ::: t)
+      | s `elem` ["ruletext", "message"] = tupleList (x ::: t)
+   tupleList (ev ::: (t1 :|: t2)) =
+      either (\x -> tupleList (x ::: t1)) 
+             (\x -> tupleList (x ::: t2)) ev
    tupleList tv = [tv]
 
    treeToJSON :: Tree JSON -> JSON

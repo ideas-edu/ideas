@@ -151,8 +151,8 @@ onefirsttextS = makeService "onefirsttext"
    "Similar to the onefirst service, except that the result is now returned as \
    \a formatted text message. The optional string is for announcing the event \
    \leading to this service call (which can influence the returned result)." $
-   onefirsttext ::: scriptType :-> stateType :-> maybeType stringType
-                :-> tuple2 (messageType textType) (maybeType stateType)
+   onefirsttext ::: typed -- scriptType :-> stateType :-> maybeType stringType
+                -- :-> tuple2 (Tag "message" textType) (maybeType stateType)
 
 derivationtextS :: Service
 derivationtextS = makeService "derivationtext"
@@ -168,21 +168,12 @@ submittextS = deprecate $ makeService "submittext"
    \The boolean in the \
    \result specifies whether the submitted term is accepted and incorporated \
    \in the new state." $
-   submittext ::: scriptType :-> stateType :-> stringType :-> messageAndState
+   submittext ::: typed -- scriptType :-> stateType :-> stringType :-> tuple2 typed stateType
 
 feedbacktextS :: Service
 feedbacktextS = makeService "feedbacktext"
    "Textual feedback for diagnose Ideas.Service. Experimental." $
-   feedbacktext ::: scriptType :-> stateType :-> termType :-> messageAndState
-
--- Helper type for submittext and feedbacktext: reorders elements, and inserts
--- some extra tags
-messageAndState :: Type a (Bool, Text, State a)
-messageAndState = Iso (f <-> g) tp
- where
-   f ((a, b), c) = (a, b, c)
-   g (a, b, c)   = ((a, b), c)
-   tp  = tuple2 (messageType (tuple2 (Tag "accept" boolType) textType)) stateType
+   feedbacktext ::: typed -- scriptType :-> stateType :-> contextType :-> tuple2 typed stateType
 
 ------------------------------------------------------
 -- Problem decomposition service

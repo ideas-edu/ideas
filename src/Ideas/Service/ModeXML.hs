@@ -28,6 +28,7 @@ import qualified Data.Map as M
 import Data.Maybe
 import Ideas.Service.DomainReasoner
 import Ideas.Service.Evaluator
+import qualified Ideas.Service.FeedbackText as FeedbackText
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.OpenMathSupport
 import Ideas.Service.Request
@@ -169,6 +170,10 @@ xmlEncoder isOM enc ex tv@(val ::: tp) =
       List t@(Iso _ _) -> do
          xs <- mapM (\a -> rec (a ::: t)) val
          return (encodeAsList xs)
+      --
+      Pair t1 t2 -> liftM2 mappend
+                       (rec (fst val ::: t1))
+                       (rec (snd val ::: t2))
       _ -> encodeWith (xmlEncoderMap isOM ex enc) (xmlEncoderConst isOM enc ex) tv
  where
    rec = xmlEncoder isOM enc ex
@@ -179,6 +184,15 @@ encodeAsList = element "list" . mapM_ (element "elem")
 xmlEncoderMap :: Monad m => Bool -> Exercise a -> (a -> m XMLBuilder) -> EncoderMap (Const a) m XMLBuilder
 xmlEncoderMap isOM ex enc = M.fromList $
    [ ("RulesInfo", \_ -> rulesInfoXML ex enc)
+   , ("message", \(val ::: tp) -> do
+         f <- equalM (Tag "message" tp) (typed :: Type a FeedbackText.Message)
+         let msg = f val
+         txt <- encodeText enc ex (FeedbackText.text msg)
+         return $ element "message" $ do
+            case FeedbackText.accept msg of
+               Just b  -> "accept" .=. map toLower (show b)
+               Nothing -> return ()
+            txt)
    , ("Exception", \(val ::: tp) -> do
         f <- equalM tp stringType
         fail (f val))
@@ -193,7 +207,7 @@ xmlEncoderMap isOM ex enc = M.fromList $
    ] ++
    -- extra elements
    [ (s, liftM (element s) . xmlEncoder isOM enc ex)
-   | s <- [ "list", "elem", "state", "prefix", "message"
+   | s <- [ "list", "elem", "state", "prefix"
           , "similar", "notequiv", "expected", "detour"
           , "correct", "incorrect"]
    ] ++

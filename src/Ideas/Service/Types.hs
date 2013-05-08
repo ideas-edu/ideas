@@ -22,7 +22,7 @@ module Ideas.Service.Types
    , textType, stdGenType
    , maybeType, optionType
    , errorType, difficultyType, listType, envType, elemType, treeType
-   , derivationType, messageType, stateType, StepInfo, stepInfoType
+   , derivationType, stateType, StepInfo, stepInfoType
    , Equal(..), ShowF(..), equalM
    , Typed(..)
    ) where
@@ -186,9 +186,6 @@ envType = Const Environment
 elemType :: Type a t -> Type a t
 elemType = Tag "elem"
 
-messageType :: Type a t -> Type a t
-messageType = Tag "message"
-
 difficultyType :: Type a Difficulty
 difficultyType = Tag "difficulty" (Iso (f <-> show) stringType)
  where
@@ -338,6 +335,12 @@ instance Typed a (Context a) where
    
 instance Typed a StrategyConfiguration where
    typed = Const StratCfg
+   
+instance Typed a Script where
+   typed = scriptType
+
+instance Typed a Text where
+   typed = textType
    
 instance (Typed a t1, Typed a t2) => Typed a (t1, t2) where
    typed = Pair typed typed

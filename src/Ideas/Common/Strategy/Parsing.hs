@@ -26,6 +26,7 @@ import Ideas.Common.Rule
 import Ideas.Common.Utils.Uniplate
 import Control.Arrow
 import Control.Monad
+import Data.Monoid
 
 ----------------------------------------------------------------------
 -- Step data type

@@ -12,10 +12,8 @@
 --
 -----------------------------------------------------------------------------
 module Ideas.Common.Classes
-   ( -- * Type class Monoid (for backwards compatibility)
-     Monoid, mempty, mappend, mconcat, (<>)
-     -- * Type class Apply
-   , Apply, apply, applyAll, applicable, applyD, applyM, applyList
+   ( -- * Type class Apply
+     Apply, apply, applyAll, applicable, applyD, applyM, applyList
      -- * Type class Container
    , Container, singleton, getSingleton
      -- * Type class BiArrow
@@ -27,18 +25,8 @@ module Ideas.Common.Classes
    ) where
 
 import Control.Arrow
-import Data.Monoid (Monoid, mempty, mappend, mconcat)
 import Data.Maybe
-
 import qualified Data.Set as S
-
------------------------------------------------------------
--- Type class Monoid (for backwards compatibility)
-
-infixl 6 <>
-
-(<>) :: Monoid a => a -> a -> a
-(<>) = mappend
 
 -----------------------------------------------------------
 -- Type class Apply

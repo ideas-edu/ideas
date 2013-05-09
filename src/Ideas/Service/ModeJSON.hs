@@ -19,6 +19,7 @@ import Ideas.Common.Utils (Some(..), distinct, readM)
 import Control.Monad.Error
 import Control.Monad.State (StateT, evalStateT, get, put)
 import Data.Char
+import Data.Monoid
 import Data.List (intercalate)
 import qualified Data.Traversable as T
 import Data.Tree
@@ -161,6 +162,8 @@ jsonEncode enc tv@(val ::: tp)
 jsonEncodeConst :: Monad m => (a -> JSON) -> Encoder (Const a) m JSON
 jsonEncodeConst enc (val ::: tp) =
    case tp of
+      SomeExercise -> case val of
+                         Some ex -> return (exerciseInfo ex)
       State     -> return (encodeState enc val)
       Rule      -> return (toJSON (showId val))
       Context   -> liftM enc (fromContext val)
@@ -347,4 +350,11 @@ ruleShortInfo r = Object
    , ("buggy",       toJSON (isBuggy r))
    , ("arguments",   toJSON (length (getRefs r)))
    , ("rewriterule", toJSON (isRewriteRule r))
+   ]
+   
+exerciseInfo :: Exercise a -> JSON
+exerciseInfo ex = Object 
+   [ ("exerciseid", toJSON (showId ex))
+   , ("description", toJSON (description ex))
+   , ("status", toJSON (show (status ex)))
    ]

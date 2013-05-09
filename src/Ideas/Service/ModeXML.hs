@@ -24,6 +24,7 @@ import Control.Monad.State (StateT, evalStateT, get, put)
 import Control.Monad.Trans
 import Data.Char
 import Data.List
+import Data.Monoid
 import qualified Data.Map as M
 import Data.Maybe
 import Ideas.Service.DomainReasoner
@@ -165,18 +166,7 @@ xmlEncoder isOM enc ex tv@(val ::: tp) =
             Left s  -> fail s
             Right a -> rec (a ::: t)
       -- special cases for lists
-      List t@(Const Rule) -> do
-         xs <- mapM (\a -> rec (a ::: t)) val
-         return (encodeAsList xs)
-      List t@(Pair _ _) -> do
-         xs <- mapM (\a -> rec (a ::: t)) val
-         return (encodeAsList xs)
-      List t@(Tag s _) | s `elem` ["RuleShortInfo"] -> do
-         xs <- mapM (\a -> rec (a ::: t)) val
-         return (encodeAsList xs)
-      List t@(Iso _ _) -> do
-         xs <- mapM (\a -> rec (a ::: t)) val
-         return (encodeAsList xs)
+      List t -> liftM encodeAsList (mapM (\a -> rec (a ::: t)) val)
       --
       Pair t1 t2 -> liftM2 mappend
                        (rec (fst val ::: t1))
@@ -231,6 +221,8 @@ xmlEncoderConst :: Monad m => Bool -> (a -> m XMLBuilder) -> Exercise a -> Encod
 xmlEncoderConst isOM enc ex (val ::: tp) =
    case tp of
       Exercise  -> return (return ())
+      SomeExercise -> case val of
+                         Some ex -> return (exerciseInfo ex)
       Strategy  -> return (builder (strategyToXML val))
       Rule      -> return ("ruleid" .=. show val) -- encodeRule val)
       State     -> encodeState isOM enc val
@@ -240,7 +232,7 @@ xmlEncoderConst isOM enc ex (val ::: tp) =
          xmlEncoderConst isOM enc ex (val ::: Derivation (Tag "ruletext" (Const String)) t)     
       Derivation t1 t2 ->
          let xs = map (\(_, s, a) -> (s, a)) (triples val)
-         in xmlEncoder isOM enc ex (xs ::: listType (Pair t1 t2))
+         in xmlEncoder isOM enc ex (xs ::: List (Pair t1 t2))
       Location  -> return ("location" .=. show val)
       Environment -> return (mapM_ (encodeTypedBinding isOM) (bindings val))
       Text      -> encodeText enc ex val
@@ -458,6 +450,12 @@ encodeText f ex = liftM sequence_ . mapM make . textItems
    make a = returnText a
    
    returnText = return . text . show
-   
+
+exerciseInfo :: Exercise a -> XMLBuilder 
+exerciseInfo ex = do
+   "exerciseid"  .=. showId ex
+   "description" .=. description ex
+   "status"      .=. show (status ex)
+
 showBool :: Bool -> String
 showBool = map toLower . show

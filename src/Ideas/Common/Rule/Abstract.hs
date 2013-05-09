@@ -38,6 +38,7 @@ import Ideas.Common.Rule.EnvironmentMonad
 import Ideas.Common.Rule.Transformation
 import Ideas.Common.Rule.Recognizer
 import Ideas.Common.View
+import Data.Monoid
 import Control.Arrow
 import Control.Monad
 import Test.QuickCheck

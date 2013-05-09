@@ -24,6 +24,7 @@ import Ideas.Common.Strategy.Abstract (LabelInfo)
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Data.Monoid
 import Ideas.Service.BasicServices
 import Ideas.Service.Diagnose
 import Ideas.Service.FeedbackScript.Syntax

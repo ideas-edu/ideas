@@ -15,7 +15,8 @@ module Ideas.Service.Types
      Service, makeService, deprecate
    , serviceDeprecated, serviceFunction
      -- * Types
-   , TypeRep(..), Const(..), Type, TypedValue(..), tuple2, tuple3, tuple4
+   , TypeRep(..), Const(..), Type, TypedValue(..)
+   , tuple2, tuple3, tuple4
    , stringType, intType, boolType
    , exerciseType, strategyType, ruleType, contextType
    , scriptType, locationType, strategyCfgType
@@ -28,6 +29,7 @@ module Ideas.Service.Types
    ) where
 
 import Ideas.Common.Library
+import Ideas.Common.Utils
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -91,6 +93,7 @@ instance Equal (Const a) where
    equal Script      Script      = Just id
    equal StratCfg    StratCfg    = Just id     
    equal Environment Environment = Just id   
+   equal SomeExercise SomeExercise = Just id
    equal Text        Text        = Just id     
    equal StdGen      StdGen      = Just id     
    equal _           _           = Nothing
@@ -218,24 +221,25 @@ data TypeRep f t where
 
 data Const a t where
    -- exercise specific
-   Exercise    :: Const a (Exercise a)
-   Strategy    :: Const a (Strategy (Context a))
-   State       :: Const a (State a)
-   Rule        :: Const a (Rule (Context a))
-   Context     :: Const a (Context a)
-   Derivation  :: TypeRep (Const a) t1 -> TypeRep (Const a) t2 -> Const a (Derivation t1 t2)
+   Exercise     :: Const a (Exercise a)
+   Strategy     :: Const a (Strategy (Context a))
+   State        :: Const a (State a)
+   Rule         :: Const a (Rule (Context a))
+   Context      :: Const a (Context a)
+   Derivation   :: TypeRep (Const a) t1 -> TypeRep (Const a) t2 -> Const a (Derivation t1 t2)
    -- other types
-   Id          :: Const a Id
-   Location    :: Const a Location
-   Script      :: Const a Script
-   StratCfg    :: Const a StrategyConfiguration
-   Environment :: Const a Environment
-   Text        :: Const a Text
-   StdGen      :: Const a StdGen
+   Id           :: Const a Id
+   Location     :: Const a Location
+   Script       :: Const a Script
+   StratCfg     :: Const a StrategyConfiguration
+   Environment  :: Const a Environment
+   Text         :: Const a Text
+   StdGen       :: Const a StdGen
+   SomeExercise :: Const a (Some Exercise)
    -- basic types
-   Bool        :: Const a Bool
-   Int         :: Const a Int
-   String      :: Const a String
+   Bool         :: Const a Bool
+   Int          :: Const a Int
+   String       :: Const a String
 
 class ShowF f where
    showF :: f a -> String
@@ -248,7 +252,7 @@ instance ShowF f => Show (TypeRep f t) where
    show (t1 :-> t2)    = show t1 ++ " -> " ++ show t2
    show t@(Pair _ _)   = showTuple t
    show (t1 :|: t2)    = show t1 ++ " | " ++ show t2
-   show (Tag s _)      = s -- ++ "@(" ++ show t ++ ")"
+   show (Tag s _)      = s
    show (List t)       = "[" ++ show t ++ "]"
    show (Tree t)       = "Tree " ++ show t
    show Unit           = "()"
@@ -258,22 +262,23 @@ instance Show (Const a t) where
    show = showF
 
 instance ShowF (Const a) where
-   showF Exercise    = "Exercise"
-   showF Strategy    = "Strategy"
-   showF State       = "State"
-   showF Rule        = "Rule"
-   showF Context     = "Context"
+   showF Exercise     = "Exercise"
+   showF Strategy     = "Strategy"
+   showF State        = "State"
+   showF Rule         = "Rule"
+   showF Context      = "Context"
    showF (Derivation t1 t2) = "Derivation " ++ show t1 ++ " " ++ show t2
-   showF Id          = "Id"
-   showF Location    = "Location"
-   showF Script      = "Script"
-   showF StratCfg    = "StrategyConfiguration"
-   showF Environment = "Environment"
-   showF Text        = "TextMessage"
-   showF StdGen      = "StdGen"
-   showF Bool        = "Bool"
-   showF Int         = "Int" 
-   showF String      = "String"
+   showF Id           = "Id"
+   showF Location     = "Location"
+   showF Script       = "Script"
+   showF StratCfg     = "StrategyConfiguration"
+   showF Environment  = "Environment"
+   showF Text         = "TextMessage"
+   showF StdGen       = "StdGen"
+   showF SomeExercise = "Exercise"
+   showF Bool         = "Bool"
+   showF Int          = "Int" 
+   showF String       = "String"
 
 showTuple :: ShowF f => TypeRep f t -> String
 showTuple tp = "(" ++ intercalate ", " (collect tp) ++ ")"
@@ -362,3 +367,6 @@ instance (Typed a t1, Typed a t2) => Typed a (Derivation t1 t2) where
       
 instance Typed a t => Typed a [t] where
    typed = typedList
+   
+instance Typed a (Some Exercise) where
+   typed = Const SomeExercise

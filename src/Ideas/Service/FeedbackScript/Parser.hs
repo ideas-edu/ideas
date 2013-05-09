@@ -17,6 +17,7 @@ import Ideas.Common.Classes
 import Ideas.Common.Id
 import Control.Monad.Error
 import Data.Char
+import Data.Monoid
 import Ideas.Service.FeedbackScript.Syntax
 import Text.ParserCombinators.Parsec
 import Ideas.Text.Parsing

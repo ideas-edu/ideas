@@ -31,9 +31,9 @@ module Ideas.Common.Algebra.Group
    ) where
 
 import Ideas.Common.Algebra.Law
-import Ideas.Common.Classes
 import Control.Applicative (Applicative)
 import Control.Monad (liftM2)
+import Data.Monoid
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 

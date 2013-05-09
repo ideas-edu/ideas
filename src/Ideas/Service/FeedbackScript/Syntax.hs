@@ -22,6 +22,7 @@ import Ideas.Common.Utils.Uniplate
 import Data.Char
 import Data.List
 import Data.Maybe
+import Data.Monoid
 
 newtype Script = S { scriptDecls :: [Decl] }
 

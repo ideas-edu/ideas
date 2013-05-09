@@ -18,11 +18,9 @@ import Ideas.Common.Utils (Some(..))
 import Data.List (sortBy)
 import Data.Ord
 import Ideas.Service.BasicServices
-import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.FeedbackText
-import Ideas.Service.ProblemDecomposition (problemDecomposition, replyType)
+import Ideas.Service.ProblemDecomposition (problemDecomposition)
 import Ideas.Service.RulesInfo
-import Ideas.Service.State
 import Ideas.Service.Types
 import qualified Ideas.Service.Diagnose as Diagnose
 import qualified Ideas.Service.Submit as Submit
@@ -116,14 +114,14 @@ examplesS = makeService "examples"
    \with an exercise. These are the examples that appear at the page generated \
    \for each exercise. Also see the generate service, which returns a random \
    \start term." $
-   (\ex -> map (inContext ex . snd) (examples ex)) ::: exerciseType :-> listType contextType
+   (\ex -> map (inContext ex . snd) (examples ex)) ::: typed -- exerciseType :-> listType contextType
 
 findbuggyrulesS :: Service
 findbuggyrulesS = makeService "findbuggyrules"
    "Search for common misconceptions (buggy rules) in an expression (compared \
    \to the current state). It is assumed that the expression is indeed not \
    \correct. This service has been superseded by the diagnose Ideas.Service." $
-   findbuggyrules ::: stateType :-> typed :-> typed -- listType (tuple3 ruleType locationType envType)
+   findbuggyrules ::: typed -- listType (tuple3 ruleType locationType envType)
 
 submitS :: Service
 submitS = deprecate $ makeService "submit"
@@ -193,7 +191,7 @@ exerciselistS :: [Some Exercise] -> Service
 exerciselistS list = makeService "exerciselist"
    "Returns all exercises known to the system. For each exercise, its domain, \
    \identifier, a short description, and its current status are returned." $
-   allExercises list ::: listType (tuple3 (Tag "exerciseid" stringType) (Tag "description" stringType) (Tag "status" stringType))
+   allExercises list ::: typed -- listType (tuple3 (Tag "exerciseid" stringType) (Tag "description" stringType) (Tag "status" stringType))
 
 rulelistS :: Service
 rulelistS = makeService "rulelist"
@@ -214,8 +212,8 @@ strategyinfoS = makeService "strategyinfo"
    "Returns the representation of the strategy of a particular exercise." $
    (toStrategy . strategy) ::: typed -- exerciseType :-> strategyType
 
-allExercises :: [Some Exercise] -> [(String, String, String)]
-allExercises = map make . sortBy (comparing f)
+allExercises :: [Some Exercise] -> [Some Exercise] -- [(String, String, String)]
+allExercises = {- map make . -} sortBy (comparing f)
  where
    f :: Some Exercise -> String
    f (Some ex) = showId ex

@@ -16,7 +16,6 @@ module Ideas.Common.Algebra.Law
    ) where
 
 import Ideas.Common.Rewriting
-import Ideas.Common.Rewriting.RewriteRule
 import Test.QuickCheck
 
 infix 1 :==:

@@ -32,7 +32,6 @@ import Ideas.Common.Rewriting.Term
 import Ideas.Common.Rewriting.Unification
 import Ideas.Common.Utils.Uniplate (descend)
 import Ideas.Common.View hiding (match)
-import Control.Monad
 import Data.Maybe
 import Data.Monoid
 import qualified Data.IntSet as IS

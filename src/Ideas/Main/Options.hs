@@ -98,8 +98,9 @@ testDir flags = case [ d | TestDir d <- flags ] of
 
 scriptDir :: [Flag] -> String
 scriptDir flags = case [ d | ScriptDir d <- flags ] of
+                     []  -> "scripts"
                      d:_ -> d
-                     _   -> "scripts"
+                      
 
 documentationMode :: [Flag] -> Bool
 documentationMode = not . null . docItems

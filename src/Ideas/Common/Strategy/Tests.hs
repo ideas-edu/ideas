@@ -17,7 +17,6 @@ module Ideas.Common.Strategy.Tests (tests) where
 import Ideas.Common.Algebra.Group
 import Ideas.Common.Algebra.Law
 import Ideas.Common.Classes
-import Ideas.Common.Id
 import Ideas.Common.Strategy
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Parsing

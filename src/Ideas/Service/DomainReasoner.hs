@@ -32,7 +32,7 @@ data DomainReasoner = DR
    , exServices  :: [Some Exercise] -> [Service]
    , views       :: [ViewPackage]
    , aliases     :: [(Id, Id)]
-   , scriptDir   :: Maybe FilePath -- change name!
+   , scriptDirs  :: [FilePath]
    , scripts     :: [(Id, FilePath)]
    , testSuite   :: TestSuite
    , version     :: String
@@ -46,7 +46,7 @@ instance Monoid DomainReasoner where
       , exServices  = exServices c1  <> exServices c2
       , views       = views c1       <> views c2 
       , aliases     = aliases c1     <> aliases c2
-      , scriptDir   = scriptDir c1   <> scriptDir c2 
+      , scriptDirs  = scriptDirs c1  <> scriptDirs c2 
       , scripts     = scripts c1     <> scripts c2 
       , testSuite   = testSuite c1   <> testSuite c2
       , version     = version c1     <> version c2
@@ -83,7 +83,8 @@ defaultScript dr =
 
 -- | Returns an empty script if the file does not exist
 readScript :: DomainReasoner -> FilePath -> IO Script
-readScript dr file =
-   parseScript (scriptDir dr) file
- `catchError`
-   \_ -> return mempty
+readScript dr file = msum $
+   [ parseScript (Just d) file | d <- scriptDirs dr ]
+   ++ [ parseScript Nothing file
+      , return mempty
+      ]

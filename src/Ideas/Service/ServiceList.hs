@@ -213,12 +213,10 @@ strategyinfoS = makeService "strategyinfo"
    (toStrategy . strategy) ::: typed -- exerciseType :-> strategyType
 
 allExercises :: [Some Exercise] -> [Some Exercise] -- [(String, String, String)]
-allExercises = {- map make . -} sortBy (comparing f)
+allExercises = sortBy (comparing f)
  where
    f :: Some Exercise -> String
    f (Some ex) = showId ex
-   make (Some ex) =
-      (showId ex, description ex, show (status ex))
 
 newtype RuleShortInfo a = RuleShortInfo { fromRuleShortInfo :: Rule (Context a) }
 

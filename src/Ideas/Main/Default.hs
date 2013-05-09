@@ -20,9 +20,10 @@ import Data.IORef
 import Data.Time
 import Ideas.Documentation.Make
 import Ideas.Main.LoggingDatabase
-import Ideas.Main.Options
+import Ideas.Main.Options hiding (scriptDir, fullVersion)
+import qualified Ideas.Main.Options as Options
 import Network.CGI
-import Ideas.Service.DomainReasoner hiding (scriptDir)
+import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.ModeJSON (processJSON)
 import Ideas.Service.ModeXML (processXML)
@@ -30,7 +31,7 @@ import Ideas.Service.Request
 import System.IO
 
 defaultMain :: DomainReasoner -> IO ()
-defaultMain dr = do
+defaultMain = extendDR $ \dr -> do
    startTime <- getCurrentTime
    flags     <- serviceOptions
    logRef    <- newIORef (return ())
@@ -41,7 +42,7 @@ defaultMain dr = do
          when (FixRNG `elem` flags)
             useFixedStdGen -- use a predictable "random" number generator
          input    <- readFile file
-         (req, txt, _) <- process input
+         (req, txt, _) <- process dr input
          when (Logging True `elem` flags) $
             writeIORef logRef $ -- save logging action for later
                logMessage req input txt "local" startTime
@@ -55,7 +56,7 @@ defaultMain dr = do
 
       -- feedback script options
         | scriptMode flags -> 
-             withScripts dr (Just (scriptDir flags))
+             withScripts dr (Just (Options.scriptDir flags))
                             [ a | MakeScriptFor a <- flags ]
                             [ a | AnalyzeScript a <- flags ]
 
@@ -66,7 +67,7 @@ defaultMain dr = do
          input <- case raw of
                      Nothing -> fail "Invalid request: environment variable \"input\" is empty"
                      Just s  -> return s
-         (req, txt, ctp) <- liftIO $ process input
+         (req, txt, ctp) <- liftIO $ process dr input
          liftIO $ writeIORef logRef $ -- save logging action for later
             logMessage req input txt addr startTime
          setHeader "Content-type" ctp
@@ -79,10 +80,17 @@ defaultMain dr = do
    when (withLogging flags) $
       join (readIORef logRef)
 
- where
-   process :: String -> IO (Request, String, String)
-   process input =
-      case discoverDataFormat input of
-         Just XML  -> processXML dr input
-         Just JSON -> processJSON dr input
-         _ -> fail "Invalid input"
+process :: DomainReasoner -> String -> IO (Request, String, String)
+process dr input = do
+   case discoverDataFormat input of
+      Just XML  -> processXML  dr input
+      Just JSON -> processJSON dr input
+      _ -> fail "Invalid input"
+      
+extendDR :: (DomainReasoner -> IO ()) -> DomainReasoner -> IO ()
+extendDR f dr = do
+   flags <- serviceOptions
+   f dr { scriptDirs  = [Options.scriptDir flags]
+        , version     = shortVersion
+        , fullVersion = Options.fullVersion
+        }

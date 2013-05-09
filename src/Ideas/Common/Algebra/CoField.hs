@@ -21,7 +21,6 @@ import Ideas.Common.Algebra.Field
 import Ideas.Common.Algebra.Group
 import Ideas.Common.Algebra.SmartGroup
 import Control.Arrow ((***))
-import Control.Monad
 import qualified Control.Applicative as A
 
 class CoSemiRing a where

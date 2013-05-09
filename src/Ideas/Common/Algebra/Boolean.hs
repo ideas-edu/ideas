@@ -33,7 +33,6 @@ module Ideas.Common.Algebra.Boolean
 import Ideas.Common.Algebra.Group
 import Ideas.Common.Algebra.Law
 import Control.Applicative
-import Ideas.Common.Classes
 import Test.QuickCheck hiding ((><))
 
 --------------------------------------------------------

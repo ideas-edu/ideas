@@ -153,11 +153,9 @@ xmlEncoder :: Monad m => Bool -> (a -> m XMLBuilder) -> Exercise a -> Encoder (T
 xmlEncoder isOM enc ex tv@(val ::: tp) =
    case tp of
       -- meta-information
-      Tag "Info" (Iso iso t) -> 
-         let this = to iso val in
-         case t of 
-            List (Const Rule) -> return (rulesShortInfo this)
-            _ -> rec (this ::: t)
+      Tag "RuleShortInfo" t -> do
+         f <- equalM t (Const Rule)
+         return (ruleShortInfo (f val))
       -- special case for onefirst service; insert elem Tag
       Const String :|: Pair t (Const State) | isJust (equal stepInfoType t) ->
          rec (val ::: (Const String :|: elemType (Pair t (Const State))))
@@ -171,6 +169,9 @@ xmlEncoder isOM enc ex tv@(val ::: tp) =
          xs <- mapM (\a -> rec (a ::: t)) val
          return (encodeAsList xs)
       List t@(Pair _ _) -> do
+         xs <- mapM (\a -> rec (a ::: t)) val
+         return (encodeAsList xs)
+      List t@(Tag s _) | s `elem` ["RuleShortInfo"] -> do
          xs <- mapM (\a -> rec (a ::: t)) val
          return (encodeAsList xs)
       List t@(Iso _ _) -> do
@@ -315,9 +316,6 @@ encodeState isOM enc st = do
    return $ element "state" $ do
       mapM_ (element "prefix" . text . show) (statePrefixes st)
       ctx
-
-rulesShortInfo :: [Rule a] -> XMLBuilder
-rulesShortInfo = encodeAsList . map ruleShortInfo
 
 ruleShortInfo :: Rule a -> XMLBuilder
 ruleShortInfo r = do 

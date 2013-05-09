@@ -81,7 +81,7 @@ criticalPairs rs =
    | r1       <- rs
    , r2       <- rs
    , na <- superImpose r1 r2
-   , compareId r1 r2 == LT || not (null (location na))
+   , compareId r1 r2 == LT || not (null (fromLocation (location na)))
    , let a = unfocus na
    , b1 <- rewriteTerm r1 a
    , b2 <- map unfocus (changeG (rewriteTerm r2) na)

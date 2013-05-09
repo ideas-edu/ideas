@@ -121,12 +121,9 @@ jsonEncode enc tv@(val ::: tp)
               y <- jsonEncode enc (snd val ::: t2)
               return (jsonTuple [x, y])
            Tp.Tag s t
-              | s == "Info" -> 
-                   case t of 
-                      Iso iso (List (Const Rule)) -> 
-                         let this = to iso val
-                         in return (rulesShortInfo this)
-                      _ -> jsonEncode enc (val ::: t)
+              | s == "RuleShortInfo" -> do
+                   f <- equalM t (Const Rule)
+                   return (ruleShortInfo (f val))
               | s `elem` ["elem", "list"] ->
                    jsonEncode enc (val ::: t)
               | s == "Result" -> do
@@ -343,9 +340,6 @@ jsonTuple xs =
  where
    f (Object [p]) = Just p
    f _ = Nothing
-   
-rulesShortInfo :: [Rule a] -> JSON
-rulesShortInfo = Array . map ruleShortInfo
 
 ruleShortInfo :: Rule a -> JSON
 ruleShortInfo r = Object

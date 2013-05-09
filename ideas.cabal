@@ -50,52 +50,17 @@ Library
     Ideas.Common.Predicate
     Ideas.Common.Rewriting
     Ideas.Common.Rewriting.AC
-    Ideas.Common.Rewriting.Confluence
-    Ideas.Common.Rewriting.Difference
-    Ideas.Common.Rewriting.RewriteRule
-    Ideas.Common.Rewriting.Substitution
-    Ideas.Common.Rewriting.Term
-    Ideas.Common.Rewriting.Unification
     Ideas.Common.Rule
-    Ideas.Common.Rule.Abstract
-    Ideas.Common.Rule.EnvironmentMonad
-    Ideas.Common.Rule.Parameter
-    Ideas.Common.Rule.Recognizer
-    Ideas.Common.Rule.Transformation
     Ideas.Common.Strategy
-    Ideas.Common.Strategy.Abstract
-    Ideas.Common.Strategy.Combinators
-    Ideas.Common.Strategy.Configuration
-    Ideas.Common.Strategy.Core
-    Ideas.Common.Strategy.Location
-    Ideas.Common.Strategy.Parsing
-    Ideas.Common.Strategy.Prefix
-    Ideas.Common.Strategy.Tests
-    Ideas.Common.Strategy.Traversal
     Ideas.Common.Traversal.Iterator
     Ideas.Common.Traversal.Navigator
-    Ideas.Common.Traversal.Tests
     Ideas.Common.Traversal.Utils
     Ideas.Common.Utils
     Ideas.Common.Utils.QuickCheck
-    Ideas.Common.Utils.StringRef
     Ideas.Common.Utils.TestSuite
     Ideas.Common.Utils.Uniplate
     Ideas.Common.View
-    Ideas.Documentation.DefaultPage
-    Ideas.Documentation.ExampleFile
-    Ideas.Documentation.ExercisePage
-    Ideas.Documentation.Make
-    Ideas.Documentation.OpenMathDerivations
-    Ideas.Documentation.OverviewPages
-    Ideas.Documentation.RulePage
-    Ideas.Documentation.RulePresenter
-    Ideas.Documentation.SelfCheck
-    Ideas.Documentation.ServicePage
-    Ideas.Documentation.TestsPage
-    Ideas.Documentation.ViewPage
     Ideas.Main.Default
-    Ideas.Main.LoggingDatabase
     Ideas.Main.Options
     Ideas.Main.Revision
     Ideas.Service.BasicServices
@@ -110,14 +75,9 @@ Library
     Ideas.Service.ModeJSON
     Ideas.Service.ModeXML
     Ideas.Service.OpenMathSupport
-    Ideas.Service.ProblemDecomposition
     Ideas.Service.Request
-    Ideas.Service.RulesInfo
     Ideas.Service.ServiceList
     Ideas.Service.State
-    Ideas.Service.StrategyInfo
-    Ideas.Service.Submit
-    Ideas.Service.TypedExample
     Ideas.Service.Types
     Ideas.Text.HTML
     Ideas.Text.JSON
@@ -134,16 +94,55 @@ Library
     Ideas.Text.OpenMath.FMP
     Ideas.Text.OpenMath.Object
     Ideas.Text.OpenMath.Symbol
-    Ideas.Text.OpenMath.Tests
     Ideas.Text.Parsing
-    Ideas.Text.UTF8
     Ideas.Text.XML
+  Other-modules:
+    Ideas.Common.Rewriting.Confluence
+    Ideas.Common.Rewriting.Difference
+    Ideas.Common.Rewriting.RewriteRule
+    Ideas.Common.Rewriting.Substitution
+    Ideas.Common.Rewriting.Term
+    Ideas.Common.Rewriting.Unification
+    Ideas.Common.Rule.Abstract
+    Ideas.Common.Rule.EnvironmentMonad
+    Ideas.Common.Rule.Parameter
+    Ideas.Common.Rule.Recognizer
+    Ideas.Common.Rule.Transformation
+    Ideas.Common.Strategy.Abstract
+    Ideas.Common.Strategy.Combinators
+    Ideas.Common.Strategy.Configuration
+    Ideas.Common.Strategy.Core
+    Ideas.Common.Strategy.Location
+    Ideas.Common.Strategy.Parsing
+    Ideas.Common.Strategy.Prefix
+    Ideas.Common.Strategy.Tests
+    Ideas.Common.Strategy.Traversal
+    Ideas.Common.Traversal.Tests
+    Ideas.Common.Utils.StringRef   
+    Ideas.Documentation.DefaultPage
+    Ideas.Documentation.ExampleFile
+    Ideas.Documentation.ExercisePage
+    Ideas.Documentation.Make
+    Ideas.Documentation.OpenMathDerivations
+    Ideas.Documentation.OverviewPages
+    Ideas.Documentation.RulePage
+    Ideas.Documentation.RulePresenter
+    Ideas.Documentation.SelfCheck
+    Ideas.Documentation.ServicePage
+    Ideas.Documentation.TestsPage
+    Ideas.Documentation.ViewPage
+    Ideas.Main.LoggingDatabase
+    Ideas.Service.ProblemDecomposition
+    Ideas.Service.RulesInfo   
+    Ideas.Service.StrategyInfo
+    Ideas.Service.Submit
+    Ideas.Service.TypedExample
+    Ideas.Text.OpenMath.Tests   
+    Ideas.Text.UTF8
     Ideas.Text.XML.Document
     Ideas.Text.XML.Interface
     Ideas.Text.XML.Parser
     Ideas.Text.XML.Unicode
-  Other-modules:
-  
 
 --------------------------------------------------------------------------------
 

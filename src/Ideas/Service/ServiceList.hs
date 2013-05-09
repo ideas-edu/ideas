@@ -201,7 +201,7 @@ rulelistS = makeService "rulelist"
    \name (or identifier), whether the rule is buggy, and whether the rule was \
    \expressed as an observable rewrite rule. See rulesinfo for more details \
    \about the rules." $
-   (Info . ruleset) ::: typed -- exerciseType :-> listType (tuple4 (Tag "name" stringType) (Tag "buggy" boolType) (Tag "arguments" intType) (Tag "rewriterule" boolType))
+   (map RuleShortInfo . ruleset) ::: typed -- exerciseType :-> listType (tuple4 (Tag "name" stringType) (Tag "buggy" boolType) (Tag "arguments" intType) (Tag "rewriterule" boolType))
 
 rulesinfoS :: Service
 rulesinfoS = makeService "rulesinfo"
@@ -222,7 +222,7 @@ allExercises = map make . sortBy (comparing f)
    make (Some ex) =
       (showId ex, description ex, show (status ex))
 
-newtype Info a = Info { fromInfo :: a }
+newtype RuleShortInfo a = RuleShortInfo { fromRuleShortInfo :: Rule (Context a) }
 
-instance Typed a t => Typed a (Info t) where
-   typed = Tag "Info" $ Iso (Info <-> fromInfo) typed
+instance Typed a (RuleShortInfo a) where
+   typed = Tag "RuleShortInfo" $ Iso (RuleShortInfo <-> fromRuleShortInfo) typed

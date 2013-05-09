@@ -15,6 +15,7 @@ import Ideas.Common.Exercise
 import Ideas.Common.Utils (useFixedStdGen, Some(..), snd3)
 import Ideas.Common.Utils.TestSuite
 import Control.Monad
+import Control.Monad.Error
 import Data.List
 import Ideas.Service.DomainReasoner
 import Ideas.Service.ModeJSON
@@ -32,39 +33,34 @@ import qualified Ideas.Text.JSON as JSON
 import qualified Ideas.Text.OpenMath.Tests as OpenMath
 import qualified Ideas.Text.UTF8 as UTF8
 
-selfCheck :: String -> DomainReasoner TestSuite
-selfCheck dir = do
-   list        <- getExercises
-   domainSuite <- getTestSuite
-   run         <- runWithCurrent
+selfCheck :: DomainReasoner -> String -> TestSuite
+selfCheck dr dir = do
+   suite "Framework checks" $ do
+      suite "Text encodings" $ do
+         addProperty "UTF8 encoding" UTF8.propEncoding
+         addProperty "JSON encoding" JSON.propEncoding
+         addProperty "OpenMath encoding" OpenMath.propEncoding
+      Substitution.tests
+      Unification.unificationTests
+      Traversal.tests
+      Strategy.tests
+      suite "Field properties" $
+         mapM_ (addProperty "field") Algebra.propsField
+      suite "Boolean properties" $
+         mapM_ (addProperty "boolean") Algebra.propsBoolean
 
-   return $ do
-      suite "Framework checks" $ do
-         suite "Text encodings" $ do
-            addProperty "UTF8 encoding" UTF8.propEncoding
-            addProperty "JSON encoding" JSON.propEncoding
-            addProperty "OpenMath encoding" OpenMath.propEncoding
-         Substitution.tests
-         Unification.unificationTests
-         Traversal.tests
-         Strategy.tests
-         suite "Field properties" $
-            mapM_ (addProperty "field") Algebra.propsField
-         suite "Boolean properties" $
-            mapM_ (addProperty "boolean") Algebra.propsBoolean
+   suite "Domain checks" (testSuite dr)
 
-      suite "Domain checks" domainSuite
+   suite "Exercise checks" $
+      forM_ (exercises dr) $ \(Some ex) ->
+         exerciseTestSuite ex
 
-      suite "Exercise checks" $
-         forM_ list $ \(Some ex) ->
-            exerciseTestSuite ex
-
-      suite "Black box tests" $
-         join (liftIO (blackBoxTests run dir))
+   suite "Black box tests" $
+      join (liftIO (blackBoxTests dr dir))
 
 -- Returns the number of tests performed
-blackBoxTests :: (DomainReasoner Bool -> IO Bool) -> String -> IO TestSuite
-blackBoxTests run path = do
+blackBoxTests :: DomainReasoner -> String -> IO TestSuite
+blackBoxTests dr path = do
    putStrLn ("Scanning " ++ path)
    -- analyse content
    xs0 <- getDirectoryContents path
@@ -72,9 +68,9 @@ blackBoxTests run path = do
        (json, xs2) = partition (".json" `isSuffixOf`) xs1
    -- perform tests
    ts1 <- forM json $ \x ->
-             doBlackBoxTest run JSON (path ++ "/" ++ x)
+             doBlackBoxTest dr JSON (path ++ "/" ++ x)
    ts2 <- forM xml $ \x ->
-             doBlackBoxTest run XML (path ++ "/" ++ x)
+             doBlackBoxTest dr XML (path ++ "/" ++ x)
    -- recursively visit subdirectories
    ts3 <- forM (filter ((/= ".") . take 1) xs2) $ \x -> do
              let p = path ++ "/" ++ x
@@ -82,17 +78,17 @@ blackBoxTests run path = do
              if not valid
                 then return (return ())
                 else liftM (suite $ "Directory " ++ simplerDirectory p)
-                           (blackBoxTests run p)
+                           (blackBoxTests dr p)
    return $
       sequence_ (ts1 ++ ts2 ++ ts3)
 
-doBlackBoxTest :: (DomainReasoner Bool -> IO Bool) -> DataFormat -> FilePath -> IO TestSuite
-doBlackBoxTest run format path = do
+doBlackBoxTest :: DomainReasoner -> DataFormat -> FilePath -> IO TestSuite
+doBlackBoxTest dr format path = do
    hSetBinaryMode stdout True
    b <- doesFileExist expPath
    return $ if not b
       then warn $ expPath ++ " does not exist"
-      else assertIO (stripDirectoryPart path) $ run $ do
+      else assertIO (stripDirectoryPart path) $ do
          -- Comparing output with expected output
          (h1, h2, txt, expt) <- liftIO $ do
             useFixedStdGen -- fix the random number generator
@@ -102,8 +98,8 @@ doBlackBoxTest run format path = do
             expt <- hGetContents h2
             return (h1, h2, txt, expt)
          out  <- case format of
-                    JSON -> liftM snd3 (processJSON txt)
-                    XML  -> liftM snd3 (processXML txt)
+                    JSON -> liftM snd3 (processJSON dr txt)
+                    XML  -> liftM snd3 (processXML dr txt)
          -- Conditional forces evaluation of the result, to make sure that
          -- all file handles are closed afterwards.
          if out ~= expt 

@@ -20,8 +20,8 @@ module Ideas.Service.ModeXML
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Common.Utils (Some(..), readM)
 import Control.Monad
-import Control.Monad.State (StateT, evalStateT, get, put)
-import Control.Monad.Trans
+import Control.Monad.State (StateT, evalStateT, get, put, gets)
+import Control.Monad.Error
 import Data.Char
 import Data.List
 import Data.Monoid
@@ -38,19 +38,19 @@ import Ideas.Service.State
 import Ideas.Service.StrategyInfo
 import Ideas.Service.Types
 import System.Random
+import System.IO.Error
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
 import qualified Ideas.Service.Types as Tp
 
-processXML :: String -> DomainReasoner (Request, String, String)
-processXML input = do
-   xml  <- liftEither (parseXML input)
-   req  <- liftEither (xmlRequest xml)
-   resp <- xmlReply req xml
+processXML :: DomainReasoner -> String -> IO (Request, String, String)
+processXML dr input = do
+   xml  <- either fail return (parseXML input)
+   req  <- either fail return (xmlRequest xml)
+   resp <- xmlReply dr req xml
               `catchError` (return . resultError)
-   vers <- getVersion
    let out | encoding req == Just HTMLEncoding = show resp
-           | otherwise = showXML (if null vers then resp else addVersion vers resp)
+           | otherwise = showXML (addVersion (version dr) resp)
    return (req, out, "application/xml")
 
 addVersion :: String -> XML -> XML
@@ -75,12 +75,12 @@ xmlRequest xml = do
       , encoding   = enc
       }
 
-xmlReply :: Request -> XML -> DomainReasoner XML
-xmlReply request xml = do
-   srv <- findService (service request)
+xmlReply :: DomainReasoner -> Request -> XML -> IO XML
+xmlReply dr request xml = do
+   srv <- findService dr (service request)
    Some ex  <-
       case exerciseId request of
-         Just code -> findExercise code
+         Just code -> findExercise dr code
          Nothing
             | service request == "exerciselist" ->
                  return (Some emptyExercise)
@@ -89,12 +89,12 @@ xmlReply request xml = do
    case encoding request of
       Just StringEncoding -> do
          conv <- return (stringFormatConverter ex)
-         res  <- runEval (evalService conv srv) xml
+         res  <- runEval dr (evalService conv srv) xml
          return (resultOk res) 
 
       _ -> do
          conv <- return (openMathConverter True ex)
-         res  <- runEval (evalService conv srv) xml
+         res  <- runEval dr (evalService conv srv) xml
          return (resultOk res)  
 
 extractExerciseId :: Monad m => XML -> m Id
@@ -105,21 +105,21 @@ resultOk body = makeXML "reply" $ do
    "result" .=. "ok"
    body
 
-resultError :: String -> XML
+resultError :: IOError -> XML
 resultError txt = makeXML "reply" $ do
    "result" .=. "error"
-   element "message" (text txt)
+   element "message" (text $ ioeGetErrorString txt)
 
 ------------------------------------------------------------
 -- Mixing abstract syntax (OpenMath format) and concrete syntax (string)
 
-type EvalXML = StateT XML DomainReasoner
+type EvalXML = StateT (DomainReasoner, XML) IO
 
 keep :: (XML -> EvalXML a) -> EvalXML a
-keep f = get >>= f
+keep f = gets snd >>= f
 
-runEval :: EvalXML a -> XML -> DomainReasoner a
-runEval = evalStateT
+runEval :: DomainReasoner -> EvalXML a -> XML -> IO a
+runEval dr m xml = evalStateT m (dr, xml)
 
 stringFormatConverter :: Exercise a -> Evaluator (Const a) EvalXML XMLBuilder
 stringFormatConverter ex =
@@ -127,7 +127,7 @@ stringFormatConverter ex =
  where
    f  = return . element "expr" . text . prettyPrinter ex
    g = do
-      xml0 <- get
+      xml0 <- gets snd
       xml  <- findChild "expr" xml0 -- quick fix
       -- guard (name xml == "expr")
       let input = getData xml
@@ -139,7 +139,7 @@ openMathConverter withMF ex =
  where
    f a = liftM (builder . toXML) $ handleMixedFractions $ toOpenMath ex a
    g = do
-      xml   <- get 
+      xml   <- gets snd
       xob   <- findChild "OMOBJ" xml
       case xml2omobj xob of
          Left  msg   -> fail msg
@@ -249,22 +249,22 @@ xmlDecodeType b ex getTerm serviceType =
    case serviceType of
       Tp.Tag s t
          | s == "answer" -> do
-              xml <- get
+              (dr, xml) <- get
               c   <- findChild "answer" xml
-              put c
+              put (dr, c)
               a <- xmlDecodeType b ex getTerm t
-              put xml
+              put (dr, xml)
               return a
          | s == "difficulty" -> keep $ \xml -> do
               g <- equalM difficultyType serviceType
               a <- findAttribute "difficulty" xml
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
          | otherwise -> do
-              xml <- get
+              (dr, xml) <- get
               cx  <- findChild s xml
-              put cx
+              put (dr, cx)
               a   <- xmlDecodeType b ex getTerm t
-              put xml
+              put (dr, xml)
               return a
       Iso p t  -> liftM (from p) (xmlDecodeType b ex getTerm t)
       Pair t1 t2 -> do
@@ -285,10 +285,11 @@ xmlDecodeType b ex getTerm serviceType =
             Environment -> keep $ decodeArgEnvironment b
             Location -> keep $ liftM (toLocation . read . getData) . findChild "location"
             StratCfg -> keep decodeConfiguration
-            Script   -> keep $ \xml -> lift $
-                           case findAttribute "script" xml of
-                              Just s  -> readScript s
-                              Nothing -> defaultScript (getId ex)
+            Script   -> keep $ \xml -> do
+                           dr <- gets fst
+                           lift $ case findAttribute "script" xml of
+                              Just s  -> readScript dr s
+                              Nothing -> defaultScript dr (getId ex)
             StdGen   -> liftIO newStdGen
             Exercise -> return ex
             Id       -> keep $ \xml -> do
@@ -318,12 +319,12 @@ ruleShortInfo r = do
 
 decodeState :: Bool -> Exercise a -> EvalXML a -> EvalXML (State a)
 decodeState b ex f = do
-   xmlTop <- get
+   (dr, xmlTop) <- get
    xml  <- findChild "state" xmlTop
-   put xml
+   put (dr, xml)
    mpr  <- decodePrefix ex xml
    term <- decodeContext b ex f
-   put xmlTop
+   put (dr, xmlTop)
    return (makeState ex mpr term)
 
 decodePrefix :: Exercise a -> XML -> EvalXML [Prefix (Context a)]
@@ -350,7 +351,7 @@ decodeContext b ex f = do
 
 decodeEnvironment :: Bool -> EvalXML Environment
 decodeEnvironment b = do
-   xml <- get
+   xml <- gets snd
    case findChild "context" xml of
       Just this -> foldM add mempty (children this)
       Nothing   -> return mempty

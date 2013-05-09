@@ -13,26 +13,25 @@ module Ideas.Documentation.DefaultPage where
 
 import Ideas.Common.Id
 import Control.Monad
-import Ideas.Service.DomainReasoner
+import Ideas.Service.DomainReasoner hiding (version)
 import Ideas.Service.Types
 import System.Directory
 import System.FilePath
 import Ideas.Text.HTML
 import qualified Ideas.Text.XML as XML
 
-generatePage :: String -> String -> HTMLBuilder -> DomainReasoner ()
+generatePage :: DomainReasoner -> String -> String -> HTMLBuilder -> IO ()
 generatePage = generatePageAt 0
 
-generatePageAt :: Int -> String -> String -> HTMLBuilder -> DomainReasoner ()
-generatePageAt n dir txt body = do
-   version <- getFullVersion
-   let filename = dir ++ "/" ++ txt
+generatePageAt :: Int -> DomainReasoner -> String -> String -> HTMLBuilder -> IO ()
+generatePageAt n dr dir txt body = do
+   let version  = fullVersion dr
+       filename = dir ++ "/" ++ txt
        dirpart  = takeDirectory filename
        doc      = defaultPage version (findTitle body) n body
-   liftIO $ do
-      putStrLn $ "Generating " ++ filename
-      unless (null dirpart) (createDirectoryIfMissing True dirpart)
-      writeFile filename (showHTML doc)
+   putStrLn $ "Generating " ++ filename
+   unless (null dirpart) (createDirectoryIfMissing True dirpart)
+   writeFile filename (showHTML doc)
 
 defaultPage :: String -> String -> Int -> HTMLBuilder -> HTML
 defaultPage version title level builder =

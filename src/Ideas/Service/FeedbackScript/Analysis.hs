@@ -22,6 +22,7 @@ import Ideas.Common.Library
 import Ideas.Common.Utils (Some(..))
 import Ideas.Common.Utils.Uniplate
 import Control.Monad
+import Control.Monad.Error
 import Data.Either
 import Data.List
 import Ideas.Service.DomainReasoner
@@ -29,25 +30,24 @@ import Ideas.Service.FeedbackScript.Parser
 import Ideas.Service.FeedbackScript.Run
 import Ideas.Service.FeedbackScript.Syntax
 
-withScripts :: Maybe FilePath -> [String] -> [FilePath] -> DomainReasoner ()
-withScripts path xs ys = do
+withScripts :: DomainReasoner -> Maybe FilePath -> [String] -> [FilePath] -> IO ()
+withScripts dr path xs ys = do
    -- generate scripts
    forM_ xs $ \s -> do
-      Some ex <- findExercise (newId s)
-      liftIO $ print (generateScript ex)
+      Some ex <- findExercise dr (newId s)
+      print (generateScript ex)
    -- analyze scripts
    forM_ ys $ \file -> do
-      liftIO $ putStrLn $ "Parsing " ++ show file
-      script <- liftIO $ parseScript path file
+      putStrLn $ "Parsing " ++ show file
+      script <- parseScript path file
       let sups = [ a | Supports as <- scriptDecls script, a <- as ]
       exs <- forM sups $ \a ->
-                liftM Right (findExercise a)
+                liftM Right (findExercise dr a)
               `catchError` \_ -> return $ Left $ UnknownExercise a
 
       let ms = lefts exs ++ analyzeScript (rights exs) script
-      liftIO $ do
-         putStrLn $ unlines $ map show ms
-         putStrLn $ "(errors: " ++ show (length ms) ++ ")"
+      putStrLn $ unlines $ map show ms
+      putStrLn $ "(errors: " ++ show (length ms) ++ ")"
 
 generateScript :: Exercise a -> Script
 generateScript ex = makeScript $

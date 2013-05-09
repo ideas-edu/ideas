@@ -25,18 +25,17 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.Types
 import Ideas.Text.HTML
 
-makeOverviewExercises :: String -> DomainReasoner ()
-makeOverviewExercises dir = do
-   list <- getExercises
-   generatePage dir exerciseOverviewPageFile $
-      exerciseOverviewPage False list
-   generatePage dir exerciseOverviewAllPageFile $
-      exerciseOverviewPage True list
+makeOverviewExercises :: DomainReasoner -> String -> IO ()
+makeOverviewExercises dr dir = do
+   generatePage dr dir exerciseOverviewPageFile $
+      exerciseOverviewPage False $ exercises dr
+   generatePage dr dir exerciseOverviewAllPageFile $
+      exerciseOverviewPage True $ exercises dr
 
-makeOverviewServices :: String -> DomainReasoner ()
-makeOverviewServices dir = do
-   list <- getServices
-   generatePage dir serviceOverviewPageFile (serviceOverviewPage list)
+makeOverviewServices :: DomainReasoner -> String -> IO ()
+makeOverviewServices dr dir =
+   generatePage dr dir serviceOverviewPageFile $ 
+      serviceOverviewPage $ services dr
 
 exerciseOverviewPage :: Bool -> [Some Exercise] -> HTMLBuilder
 exerciseOverviewPage showAll list = do

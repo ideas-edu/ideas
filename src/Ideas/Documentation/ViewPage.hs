@@ -23,15 +23,15 @@ import Prelude hiding ((^))
 import Ideas.Service.DomainReasoner
 import Ideas.Text.HTML
 
-makeViewPages :: String -> DomainReasoner ()
-makeViewPages dir = do
-   views <- liftM (sortBy compareId) getViews
-   generatePage dir viewsOverviewPageFile (makeOverviewPage views)
-   forM_ views $ \v -> do
+makeViewPages :: DomainReasoner -> String -> IO ()
+makeViewPages dr dir = do
+   let sortedViews = sortBy compareId (views dr)
+   generatePage dr dir viewsOverviewPageFile (makeOverviewPage sortedViews)
+   forM_ sortedViews $ \v -> do
       let exFile = dir ++ "/" ++ diagnosisExampleFile (getId v)
-      xs <- liftIO $ liftM items (readExampleFile exFile)
+      xs <- liftM items (readExampleFile exFile)
                `catch` \_ -> return []
-      generatePageAt 1 dir (viewPageFile v) (viewPage xs v)
+      generatePageAt 1 dr dir (viewPageFile v) (viewPage xs v)
 
 makeOverviewPage :: HasId a => [a] -> HTMLBuilder
 makeOverviewPage xs = do

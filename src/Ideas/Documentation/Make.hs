@@ -27,42 +27,39 @@ import Ideas.Service.DomainReasoner
 data DocItem = Pages | SelfCheck | BlackBox (Maybe String)
    deriving Eq
 
-makeDocumentation :: String -> String -> DocItem -> DomainReasoner ()
-makeDocumentation docDir testDir item =
+makeDocumentation :: DomainReasoner -> String -> String -> DocItem -> IO ()
+makeDocumentation dr docDir testDir item =
    case item of
       Pages -> do
          report "Generating overview pages"
-         makeOverviewExercises docDir
-         makeOverviewServices  docDir
+         makeOverviewExercises dr docDir
+         makeOverviewServices  dr docDir
          report "Generating exercise pages"
-         exs <- getExercises
-         forM_ exs $ \(Some ex) ->
-            makeExercisePage docDir ex
+         forM_ (exercises dr) $ \(Some ex) ->
+            makeExercisePage dr docDir ex
          report "Generating view pages"
-         makeViewPages docDir
+         makeViewPages dr docDir
          report "Generating rule pages"
-         makeRulePages docDir
+         makeRulePages dr docDir
          report "Generating service pages"
-         getServices >>= mapM_ (makeServicePage docDir)
+         mapM_ (makeServicePage dr docDir) (services dr)
          report "Running tests"
-         makeTestsPage docDir testDir
+         makeTestsPage dr docDir testDir
          {- report "Status hashtable"
          let file = docDir ++ "/hashtable.out"
          liftIO $ do
             putStrLn $ "Generating " ++ show file
             tableStatus >>= writeFile file -}
       SelfCheck -> do
-         checks <- selfCheck testDir
-         result <- liftIO (runTestSuiteResult checks)
+         result <- runTestSuiteResult (selfCheck dr testDir)
          liftIO (printSummary result)
       BlackBox mdir -> do
-         run    <- runWithCurrent
-         checks <- liftIO $ blackBoxTests run (fromMaybe testDir mdir)
-         result <- liftIO $ runTestSuiteResult checks
+         checks <- blackBoxTests dr (fromMaybe testDir mdir)
+         result <- runTestSuiteResult checks
          liftIO (printSummary result)
 
-report :: String -> DomainReasoner ()
-report s = liftIO $ do
+report :: String -> IO ()
+report s = do
    let line = replicate 75 '-'
    putStrLn line
    putStrLn ("--- " ++ s)

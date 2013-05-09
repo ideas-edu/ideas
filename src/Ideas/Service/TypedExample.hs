@@ -13,6 +13,7 @@
 module Ideas.Service.TypedExample (typedExample) where
 
 import Ideas.Common.Library
+import Control.Monad.Error
 import Data.Char
 import Data.Maybe
 import Ideas.Service.DomainReasoner
@@ -21,8 +22,8 @@ import Ideas.Service.ModeXML
 import Ideas.Service.Types
 import Ideas.Text.XML
 
-typedExample :: Exercise a -> Service -> [TypedValue (Type a)] -> DomainReasoner (XML, XML, Bool)
-typedExample ex service args = do
+typedExample :: DomainReasoner -> Exercise a -> Service -> [TypedValue (Type a)] -> IO (XML, XML, Bool)
+typedExample dr ex service args = do
    let noXML = makeXML "xml" (return ()) -- quick fix
    -- Construct a request in xml
    request <-
@@ -30,22 +31,21 @@ typedExample ex service args = do
          Nothing -> return $
             stdReply (showId service) enc ex (return ())
          Just tv -> do
-            xml <- runEval (encoder evaluator tv) noXML
+            xml <- runEval dr (encoder evaluator tv) noXML
             return $
                stdReply (showId service) enc ex xml
    -- Construct a reply in xml
    reply <- do
       let tv = foldl dynamicApply (serviceFunction service) args
-      xml <- runEval (encoder evaluator tv) noXML
+      xml <- runEval dr (encoder evaluator tv) noXML
       return (resultOk xml)
     `catchError`
       (return . resultError)
    -- Check request/reply pair
-   vers <- getVersion
    xmlTest <- do
-      (_, txt, _) <- processXML (show request)
+      (_, txt, _) <- processXML dr (show request)
       let p   = filter (not . isSpace)
-          out = showXML (if null vers then reply else addVersion vers reply)
+          out = showXML (addVersion (version dr) reply)
       return (p txt == p out)
      `catchError`
       const (return False)

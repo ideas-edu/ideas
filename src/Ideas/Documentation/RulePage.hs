@@ -28,10 +28,10 @@ import qualified Ideas.Text.XML as XML
 
 data ExItem a = EI (Exercise a) (ExampleMap a)
 
-makeRulePages :: String -> DomainReasoner ()
-makeRulePages dir = do
-   exs <- getExercises
-   let exMap = M.fromList
+makeRulePages :: DomainReasoner -> String -> IO ()
+makeRulePages dr dir = do
+   let exs = exercises dr
+       exMap = M.fromList
           [ (getId ex, Some (EI ex (collectExamples ex)))
           | Some ex <- exs
           ]
@@ -47,7 +47,7 @@ makeRulePages dir = do
             case M.findWithDefault noExamples (getId ex) exMap of
                Some (EI ex1 e) ->
                   forM_ (getRule ex1 ruleId) $ \r ->
-                     generatePageAt lev dir (ruleFile ruleId) $
+                     generatePageAt lev dr dir (ruleFile ruleId) $
                         rulePage ex1 e usedIn r
           where
             noExamples = Some (EI ex M.empty)

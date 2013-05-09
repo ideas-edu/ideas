@@ -18,11 +18,10 @@ import Ideas.Documentation.SelfCheck
 import Ideas.Service.DomainReasoner
 import Ideas.Text.HTML
 
-makeTestsPage :: String -> String -> DomainReasoner ()
-makeTestsPage docDir testDir = do
-   checks <- selfCheck testDir
-   result <- liftIO (runTestSuiteResult checks)
-   generatePage docDir testsPageFile (testsPage result)
+makeTestsPage :: DomainReasoner -> String -> String -> IO ()
+makeTestsPage dr docDir testDir = do
+   result <- runTestSuiteResult (selfCheck dr testDir)
+   generatePage dr docDir testsPageFile (testsPage result)
 
 testsPage :: TestSuiteResult -> HTMLBuilder
 testsPage result = do

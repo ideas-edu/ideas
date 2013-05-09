@@ -13,7 +13,6 @@
 -----------------------------------------------------------------------------
 module Ideas.Service.FeedbackScript.Parser (parseScript, Script) where
 
-import Ideas.Common.Classes
 import Ideas.Common.Id
 import Control.Monad.Error
 import Data.Char

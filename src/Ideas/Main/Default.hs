@@ -22,15 +22,15 @@ import Ideas.Documentation.Make
 import Ideas.Main.LoggingDatabase
 import Ideas.Main.Options
 import Network.CGI
-import Ideas.Service.DomainReasoner
+import Ideas.Service.DomainReasoner hiding (scriptDir)
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.ModeJSON (processJSON)
 import Ideas.Service.ModeXML (processXML)
 import Ideas.Service.Request
 import System.IO
 
-defaultMain :: (forall a . DomainReasoner a -> IO a) -> IO ()
-defaultMain run = do
+defaultMain :: DomainReasoner -> IO ()
+defaultMain dr = do
    startTime <- getCurrentTime
    flags     <- serviceOptions
    logRef    <- newIORef (return ())
@@ -50,15 +50,14 @@ defaultMain run = do
 
       -- documentation mode
       _ | documentationMode flags ->
-             run $
-                let f = makeDocumentation (docDir flags) (testDir flags)
-                in mapM_ f (docItems flags)
+             let f = makeDocumentation dr (docDir flags) (testDir flags)
+             in mapM_ f (docItems flags)
 
       -- feedback script options
-        | scriptMode flags -> run $
-             withScripts (Just (scriptDir flags))
-                         [ a | MakeScriptFor a <- flags ]
-                         [ a | AnalyzeScript a <- flags ]
+        | scriptMode flags -> 
+             withScripts dr (Just (scriptDir flags))
+                            [ a | MakeScriptFor a <- flags ]
+                            [ a | AnalyzeScript a <- flags ]
 
       -- cgi binary
       Nothing -> runCGI $ do
@@ -82,8 +81,8 @@ defaultMain run = do
 
  where
    process :: String -> IO (Request, String, String)
-   process input = run $
+   process input =
       case discoverDataFormat input of
-         Just XML  -> processXML input
-         Just JSON -> processJSON input
+         Just XML  -> processXML dr input
+         Just JSON -> processJSON dr input
          _ -> fail "Invalid input"

@@ -16,6 +16,7 @@ import Ideas.Common.Exercise
 import Ideas.Common.Id
 import Ideas.Common.Utils (Some(..))
 import Control.Monad
+import Control.Monad.Error
 import Ideas.Documentation.DefaultPage
 import Ideas.Service.DomainReasoner
 import Ideas.Service.State
@@ -24,10 +25,10 @@ import Ideas.Service.Types
 import Ideas.Text.HTML
 import Ideas.Text.XML (XML)
 
-makeServicePage :: String -> Service -> DomainReasoner ()
-makeServicePage dir s = do
-   xs <- examplesFor (showId s)
-   generatePageAt 1 dir (servicePageFile s)  (servicePage xs s)
+makeServicePage :: DomainReasoner -> String -> Service -> IO ()
+makeServicePage dr dir s = do
+   xs <- examplesFor dr (showId s)
+   generatePageAt 1 dr dir (servicePageFile s)  (servicePage xs s)
 
 servicePage :: [Example] -> Service -> HTMLBuilder
 servicePage xs s = do
@@ -64,20 +65,20 @@ servicePage xs s = do
 
 type Example = (String, (XML, XML, Bool))
 
-examplesFor :: String -> DomainReasoner [Example]
-examplesFor s = tryAll [ f t | (t, f) <- list, s == t ]
+examplesFor :: DomainReasoner -> String -> IO [Example]
+examplesFor dr s = tryAll [ f t | (t, f) <- list, s == t ]
  where
    list =
-      [ ("derivation",   makeExample "logic.dnf"  (noCfg +++ logic1))
-      , ("derivation",   makeExample "math.lineq" (noCfg +++ lineq1))
-      , ("allfirsts",    makeExample "logic.dnf"  logic2)
-      , ("allfirsts",    makeExample "math.lineq" lineq2)
-      , ("onefirst",     makeExample "logic.dnf"  logic2)
-      , ("onefirst",     makeExample "math.lineq" lineq2)
-      , ("rulesinfo",    makeExample "math.lineq" noArgs)
-      , ("rulelist",     makeExample "math.lineq" exArgs)
-      , ("strategyinfo", makeExample "math.lineq" exArgs)
-      , ("examples",     makeExample "math.lineq" exArgs)
+      [ ("derivation",   makeExample dr "logic.dnf"  (noCfg +++ logic1))
+      , ("derivation",   makeExample dr "math.lineq" (noCfg +++ lineq1))
+      , ("allfirsts",    makeExample dr "logic.dnf"  logic2)
+      , ("allfirsts",    makeExample dr "math.lineq" lineq2)
+      , ("onefirst",     makeExample dr "logic.dnf"  logic2)
+      , ("onefirst",     makeExample dr "math.lineq" lineq2)
+      , ("rulesinfo",    makeExample dr "math.lineq" noArgs)
+      , ("rulelist",     makeExample dr "math.lineq" exArgs)
+      , ("strategyinfo", makeExample dr "math.lineq" exArgs)
+      , ("examples",     makeExample dr "math.lineq" exArgs)
       ]
 
    logic1, logic2 :: Args
@@ -94,7 +95,7 @@ examplesFor s = tryAll [ f t | (t, f) <- list, s == t ]
    noArgs _  = []
    exArgs ex = [ex ::: exerciseType]
 
-tryAll :: [DomainReasoner a] -> DomainReasoner [a]
+tryAll :: [IO a] -> IO [a]
 tryAll xs =
    let f m = liftM return m `catchError` const (return [])
    in liftM concat (mapM f xs)
@@ -107,9 +108,9 @@ newState ex s =
 
 type Args = forall a . Exercise a -> [TypedValue (Type a)]
 
-makeExample :: String -> Args -> String -> DomainReasoner Example
-makeExample exName f srvName = do
-   Some ex <- findExercise (newId exName)
-   srv     <- findService srvName
-   tr      <- typedExample ex srv (f ex)
-   return (showId ex, tr)
+makeExample :: DomainReasoner -> String -> Args -> String -> IO Example
+makeExample dr exName f srvName = do
+   Some ex <- findExercise dr (newId exName)
+   srv     <- findService dr srvName
+   tr      <- typedExample dr ex srv (f ex)
+   return (showId ex, tr) 

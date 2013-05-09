@@ -1,4 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -11,179 +10,80 @@
 --
 -----------------------------------------------------------------------------
 module Ideas.Service.DomainReasoner
-   ( -- * Domain Reasoner data type
-     DomainReasoner, runDomainReasoner, runWithCurrent
-   , liftEither, MonadIO(..), catchError
-     -- * Update functions
-   , addExercises, addExercise, addExerciseService
-   , addServices, addService, addViews, addView
-   , addTestSuite
-   , addAliases, addScripts, setScriptDir
-   , setVersion, setFullVersion
-     -- * Accessor functions
-   , getExercises, getServices, getViews
-   , getVersion, getFullVersion, getTestSuite
-   , findExercise, findService
-   , readScript, defaultScript
+   ( DomainReasoner(..), newDomainReasoner
+   , services, findExercise, findService
+   , defaultScript, readScript
    ) where
-
-import Ideas.Common.Library
-import Ideas.Common.Utils (Some(..))
+   
+import Ideas.Common.Utils
 import Ideas.Common.Utils.TestSuite
-import Control.Monad.Error
-import Control.Monad.State
-import Data.Maybe
 import Ideas.Service.FeedbackScript.Parser
-import Ideas.Service.Types
+import Ideas.Service.Types (Service)
+import Ideas.Common.Library
+import Data.Maybe
+import Data.Monoid
+import Control.Monad.Error
 
 -----------------------------------------------------------------------
 -- Domain Reasoner data type
 
-newtype DomainReasoner a = DR { unDR :: ErrorT String (StateT Content IO) a }
-
-data Content = Content
+data DomainReasoner = DR
    { exercises   :: [Some Exercise]
-   , services    :: [Some Exercise] -> [Service]
+   , exServices  :: [Some Exercise] -> [Service]
    , views       :: [ViewPackage]
    , aliases     :: [(Id, Id)]
-   , scriptDir   :: Maybe FilePath
+   , scriptDir   :: Maybe FilePath -- change name!
    , scripts     :: [(Id, FilePath)]
    , testSuite   :: TestSuite
    , version     :: String
-   , fullVersion :: Maybe String
+   , fullVersion :: String
    }
 
-noContent :: Content
-noContent = Content [] (const []) [] [] Nothing [] (return ()) [] Nothing
+instance Monoid DomainReasoner where
+   mempty = DR mempty mempty mempty mempty mempty mempty mempty mempty mempty 
+   mappend c1 c2 = DR
+      { exercises   = exercises c1   <> exercises c2
+      , exServices  = exServices c1  <> exServices c2
+      , views       = views c1       <> views c2 
+      , aliases     = aliases c1     <> aliases c2
+      , scriptDir   = scriptDir c1   <> scriptDir c2 
+      , scripts     = scripts c1     <> scripts c2 
+      , testSuite   = testSuite c1   <> testSuite c2
+      , version     = version c1     <> version c2
+      , fullVersion = fullVersion c1 <> fullVersion c2
+      }
 
-runDomainReasoner :: DomainReasoner a -> IO a
-runDomainReasoner m = do
-   result <- evalStateT (runErrorT (unDR m)) noContent
-   case result of
-      Left msg -> fail msg
-      Right a  -> return a
-
--- | Returns a run function, based on the current state, inside the monad
-runWithCurrent :: DomainReasoner (DomainReasoner a -> IO a)
-runWithCurrent =
-   get >>= \st -> return (runDomainReasoner . (put st >>))
-
-liftEither :: Either String a -> DomainReasoner a
-liftEither = either throwError return
-
------------------------------------------------------------------------
--- Instance declarations
-
-instance Monad DomainReasoner where
-   return a   = DR (return a)
-   DR m >>= f = DR (m >>= unDR . f)
-   fail s     = DR (throwError s)
-
-instance MonadError String DomainReasoner where
-   throwError s   = DR (throwError s)
-   catchError m f = DR (unDR m `catchError` (unDR . f))
-
-instance MonadPlus DomainReasoner where
-   mzero       = DR mzero
-   a `mplus` b = DR (unDR a `mplus` unDR b)
-
-instance MonadState Content DomainReasoner where
-   get   = DR get
-   put s = DR (put s)
-
-instance MonadIO DomainReasoner where
-   liftIO m = DR (liftIO m)
+newDomainReasoner :: DomainReasoner      
+newDomainReasoner = mempty
 
 -----------------------------------------------------------------------
--- Update functions
+-- Domain Reasoner data type
 
-addExercises :: [Some Exercise] -> DomainReasoner ()
-addExercises xs = modify $ \c -> c { exercises = xs ++ exercises c }
-
-addExercise :: Some Exercise -> DomainReasoner ()
-addExercise ex = addExercises [ex]
-
-addExerciseService :: ([Some Exercise] -> Service) -> DomainReasoner ()
-addExerciseService f = modify $ \c ->
-   c { services = \xs -> f xs : services c xs }
-
-addServices :: [Service] -> DomainReasoner ()
-addServices = mapM_ (addExerciseService . const)
-
-addService :: Service -> DomainReasoner ()
-addService s = addServices [s]
-
-addViews :: [ViewPackage] -> DomainReasoner ()
-addViews xs = modify $ \c -> c { views = xs ++ views c }
-
-addView :: ViewPackage -> DomainReasoner ()
-addView = addViews . return
-
-addTestSuite :: TestSuite -> DomainReasoner ()
-addTestSuite m = modify $ \c -> c { testSuite = testSuite c >> m }
-
-addAliases :: [(Id, Id)] -> DomainReasoner ()
-addAliases xs = modify $ \c -> c { aliases = xs ++ aliases c }
-
-setScriptDir :: FilePath -> DomainReasoner ()
-setScriptDir path = modify $ \c -> c { scriptDir = Just path }
-
-addScripts :: [(Id, FilePath)] -> DomainReasoner ()
-addScripts xs = modify $ \c -> c { scripts = xs ++ scripts c }
-
-setVersion :: String -> DomainReasoner ()
-setVersion s = modify $ \c -> c { version = s }
-
-setFullVersion :: String -> DomainReasoner ()
-setFullVersion s = modify $ \c -> c  { fullVersion = Just s }
-
------------------------------------------------------------------------
--- Accessor functions
-
-getExercises :: DomainReasoner [Some Exercise]
-getExercises = gets exercises
-
-getServices :: DomainReasoner [Service]
-getServices = gets (\c -> services c (exercises c))
-
-getViews :: DomainReasoner [ViewPackage]
-getViews = gets views
-
-getVersion :: DomainReasoner String
-getVersion = gets version
-
-getFullVersion :: DomainReasoner String
-getFullVersion = gets fullVersion >>= maybe getVersion return
-
-getTestSuite :: DomainReasoner TestSuite
-getTestSuite = gets testSuite
-
-findExercise :: Id -> DomainReasoner (Some Exercise)
-findExercise i = do
-   xs    <- getExercises
-   table <- gets aliases
-   let res = fromMaybe i (lookup i table)
-   case [ a | a@(Some ex) <- xs, getId ex == res ] of
+findExercise :: Monad m => DomainReasoner -> Id -> m (Some Exercise)
+findExercise dr i =
+   case [ a | a@(Some ex) <- exercises dr, getId ex == realName ] of
       [this] -> return this
-      _      -> throwError $ "Exercise " ++ show i ++ " not found"
+      _      -> fail $ "Exercise " ++ show i ++ " not found"
+ where
+   realName = fromMaybe i (lookup i (aliases dr))
 
-findService :: String -> DomainReasoner Service
-findService txt = do
-   srvs <- getServices
-   case filter ((==txt) . showId) srvs of
+findService :: Monad m => DomainReasoner -> String -> m Service
+findService dr txt = do
+   case filter ((==txt) . showId) (services dr) of
       [hd] -> return hd
-      []   -> throwError $ "No service " ++ txt
-      _    -> throwError $ "Ambiguous service " ++ txt
+      []   -> fail $ "No service " ++ txt
+      _    -> fail $ "Ambiguous service " ++ txt
 
-defaultScript :: Id -> DomainReasoner Script
-defaultScript a = do
-   list <- gets scripts
-   maybe (return mempty) readScript (lookup a list)
+services :: DomainReasoner -> [Service]
+services dr = exServices dr (exercises dr)
+
+defaultScript :: DomainReasoner -> Id -> IO Script
+defaultScript dr = 
+   maybe (return mempty) (readScript dr) . (`lookup` scripts dr)
 
 -- | Returns an empty script if the file does not exist
-readScript :: FilePath -> DomainReasoner Script
-readScript file = do
-   path <- gets scriptDir
-   liftIO $ parseScript path file
-    `catchError`
-      \_ -> return mempty
+readScript :: DomainReasoner -> FilePath -> IO Script
+readScript dr file =
+   parseScript (scriptDir dr) file
+ `catchError`
+   \_ -> return mempty

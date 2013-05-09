@@ -14,6 +14,7 @@ module Ideas.Documentation.ExercisePage (makeExercisePage, idboxHTML) where
 import Ideas.Common.Library
 import Ideas.Common.Utils (Some(..))
 import Control.Monad
+import Control.Monad.Error
 import Data.Maybe
 import Ideas.Documentation.DefaultPage
 import Ideas.Documentation.ExampleFile
@@ -27,21 +28,21 @@ import System.Directory
 import System.Random
 import Ideas.Text.HTML
 
-makeExercisePage :: String -> Exercise a -> DomainReasoner ()
-makeExercisePage dir ex = do
+makeExercisePage :: DomainReasoner -> String -> Exercise a -> IO ()
+makeExercisePage dr dir ex = do
    let make     = makeId ex
-       makeId a = generatePageAt (length (qualifiers a)) dir . ($ getId a)
+       makeId a = generatePageAt (length (qualifiers a)) dr dir . ($ getId a)
        exFile   = dir ++ "/" ++ diagnosisExampleFile (getId ex)
 
-   exampleFileExists <- liftIO (doesFileExist exFile)
+   exampleFileExists <- doesFileExist exFile
 
    make exercisePageFile     (exercisePage exampleFileExists ex)
    make exerciseStrategyFile (strategyPage ex)
    unless (null (examples ex)) $ do
        make exerciseDerivationsFile (derivationsPage ex)
-       liftIO $ makeOpenMathDerivations dir ex
+       makeOpenMathDerivations dir ex
    when exampleFileExists $ do
-      ef <- liftIO (readExampleFile exFile)
+      ef <- readExampleFile exFile
       make exerciseDiagnosisFile (diagnosisPage ef ex)
     `catchError` \_ -> return ()
 

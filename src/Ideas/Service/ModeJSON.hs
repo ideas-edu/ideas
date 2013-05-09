@@ -17,7 +17,7 @@ module Ideas.Service.ModeJSON (processJSON, jsonTuple) where
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (Some(..), distinct, readM)
 import Control.Monad.Error
-import Control.Monad.State (StateT, evalStateT, get, put)
+import Control.Monad.State (StateT, evalStateT, get, gets, put)
 import Data.Char
 import Data.Monoid
 import Data.List (intercalate)
@@ -46,13 +46,12 @@ extractExerciseId json =
  where
    p c = not (isAlphaNum c || isSpace c || c `elem` ".-")
 
-processJSON :: String -> DomainReasoner (Request, String, String)
-processJSON input = do
-   json <- either throwError return (parseJSON input)
+processJSON :: DomainReasoner -> String -> IO (Request, String, String)
+processJSON dr input = do
+   json <- either fail return (parseJSON input)
    req  <- jsonRequest json
-   vers <- getVersion
-   resp <- jsonRPC json myHandler
-   let out = show $ (if null vers then id else addVersion vers) (toJSON resp)
+   resp <- jsonRPC json (myHandler dr)
+   let out = show $ addVersion (version dr) (toJSON resp)
    return (req, out, "application/json")
 
 addVersion :: String -> JSON -> JSON
@@ -85,19 +84,19 @@ jsonRequest json = do
       , encoding   = enc
       }
 
-myHandler :: JSON_RPC_Handler DomainReasoner
-myHandler fun arg = do
+myHandler :: DomainReasoner -> JSON_RPC_Handler IO
+myHandler dr fun arg = do
    Some ex <- 
       if fun == "exerciselist"
       then return (Some emptyExercise)
-      else extractExerciseId arg >>= findExercise
-   srv <- findService fun
-   runEval (evalService (jsonConverter ex) srv) arg
+      else extractExerciseId arg >>= findExercise dr
+   srv <- findService dr fun
+   runEval dr (evalService (jsonConverter ex) srv) arg
 
-type EvalJSON = StateT JSON DomainReasoner
+type EvalJSON = StateT (DomainReasoner, JSON) IO
 
-runEval :: EvalJSON a -> JSON -> DomainReasoner a
-runEval = evalStateT
+runEval :: DomainReasoner -> EvalJSON a -> JSON -> IO a
+runEval dr m json = evalStateT m (dr, json)
 
 jsonConverter :: Exercise a -> Evaluator (Const a) EvalJSON JSON
 jsonConverter ex = Evaluator (jsonEncoder ex) (jsonDecoder ex)
@@ -194,7 +193,7 @@ jsonDecoder ex = Decoder (decode ex)
  where
    reader :: Exercise a -> EvalJSON a
    reader ex = do
-      json <- get
+      json <- gets snd
       case json of
          String s -> either (fail . show) return (parser ex s)
          _        -> fail "Expecting a string when reading a term"
@@ -218,21 +217,21 @@ jsonDecoder ex = Decoder (decode ex)
          Const ctp ->
             case ctp of
                State ->  useFirst $ \json -> do
-                    old <- get
-                    put json
+                    (dr, old) <- get
+                    put (dr, json)
                     a <- decodeState ex (reader ex)
-                    put old
+                    put (dr, old)
                     return a
                Context  -> useFirst $ \json -> do
-                           old <- get
-                           put json
+                           (dr, old) <- get
+                           put (dr, json)
                            a <- reader ex
-                           put old
+                           put (dr, old)
                            return (inContext ex a)
                Exercise -> 
-                        do json <- get
+                        do (dr, json) <- get
                            case json of
-                              Array (String _:rest) -> put (Array rest) >> return ex
+                              Array (String _:rest) -> put (dr, Array rest) >> return ex
                               _ -> return ex
                Environment -> useFirst decodeContext
                Location -> useFirst decodeLocation
@@ -246,16 +245,17 @@ jsonDecoder ex = Decoder (decode ex)
                                     _        -> fail "not a string"
                Rule     -> useFirst $ \x -> jsonToId x >>= getRule ex
                StdGen   -> liftIO newStdGen
-               Script   -> lift (defaultScript (getId ex))
+               Script   -> do dr <- gets fst
+                              lift (defaultScript dr (getId ex))
                _        -> fail $ "No support for argument type: " ++ show serviceType
 
    useFirst :: (JSON -> EvalJSON a) -> EvalJSON a
    useFirst f = do
-      json <- get
+      (dr, json) <- get
       case json of
          Array (x:xs) -> do
             a <- f x
-            put (Array xs)
+            put (dr, Array xs)
             return a
          _ -> fail "expecting an argument"
 
@@ -291,7 +291,7 @@ encodeContext = Object . map f . bindings
 
 decodeState :: Exercise a -> EvalJSON a -> EvalJSON (State a)
 decodeState ex f = do
-   json <- get
+   json <- gets snd
    rec json
  where
    deintercalate xs =  
@@ -301,10 +301,10 @@ decodeState ex f = do
    rec (Array [a]) = rec a
    rec (Array [String _code, String p, ce, jsonContext]) = do
       ps   <- mapM (readM >>= liftM (`makePrefix` strategy ex)) $ deintercalate p
-      a    <- do old <- get 
-                 put ce 
+      a    <- do (dr, old) <- get 
+                 put (dr, ce)
                  a <- f
-                 put old
+                 put (dr, old)
                  return a
       env  <- decodeContext jsonContext
       return $ makeState ex ps (makeContext ex env a)

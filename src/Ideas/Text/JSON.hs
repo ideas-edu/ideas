@@ -20,6 +20,7 @@ module Ideas.Text.JSON
    , jsonRPC, JSON_RPC_Handler, propEncoding
    ) where
 
+import Control.Exception
 import Control.Monad.Error
 import Data.List (intercalate)
 import Data.Maybe
@@ -27,6 +28,7 @@ import Test.QuickCheck
 import Ideas.Text.Parsing
 import qualified Text.ParserCombinators.Parsec.Token as P
 import qualified Ideas.Text.UTF8 as UTF8
+import System.IO.Error
 
 data JSON
    = Number  Number        -- integer, real, or floating point
@@ -139,6 +141,9 @@ instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
    toJSON (a, b, c, d)           = Array [toJSON a, toJSON b, toJSON c, toJSON d]
    fromJSON (Array [a, b, c, d]) = liftM4 (,,,) (fromJSON a) (fromJSON b) (fromJSON c) (fromJSON d)
    fromJSON _                    = fail "expecting an array with 4 elements"
+
+instance InJSON IOException where
+   toJSON = toJSON . ioeGetErrorString
 
 --------------------------------------------------------
 -- Parser

@@ -30,6 +30,7 @@ import Data.Maybe
 -- Types and constructors
 
 newtype StrategyConfiguration = SC { configItems :: [ConfigItem] }
+   deriving Show
 
 makeStrategyConfiguration :: [ConfigItem] -> StrategyConfiguration
 makeStrategyConfiguration = SC

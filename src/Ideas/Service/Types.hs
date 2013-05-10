@@ -31,6 +31,7 @@ module Ideas.Service.Types
 import Ideas.Common.Library
 import Ideas.Common.Utils
 import Control.Monad
+import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Tree
@@ -257,6 +258,49 @@ instance ShowF f => Show (TypeRep f t) where
    show (Tree t)       = "Tree " ++ show t
    show Unit           = "()"
    show (Const c)      = showF c
+
+instance Show (TypedValue f) => Show (TypedValue (TypeRep f)) where
+   show (val ::: tp) = 
+      case tp of
+         Iso iso t  -> show (to iso val ::: t)
+         _ :-> _    -> "<<function>>"
+         Tag _ t    -> show (val ::: t)
+         List t     -> showAsList (map (show . (::: t)) val)
+         Tree t     -> showAsTree (fmap (show . (::: t)) val)
+         Pair t1 t2 -> "(" ++ show (fst val ::: t1) ++
+                       "," ++ show (snd val ::: t2) ++ ")"
+         t1 :|: t2  -> either (show . (::: t1)) (show . (::: t2)) val
+         Unit       -> "()"
+         Const t    -> show (val ::: t)
+
+showAsList :: [String] -> String
+showAsList xs = "[" ++ intercalate "," xs ++ "]"
+
+showAsTree :: Tree String -> String
+showAsTree (Node a ts)
+   | null ts   = a
+   | otherwise = a ++ "{" ++ intercalate "," (fmap showAsTree ts) ++ "}"
+
+instance Show (TypedValue (Const a)) where
+   show (val ::: tp) =
+      case tp of
+         Exercise         -> showId val
+         Strategy         -> show val
+         Rule             -> showId val
+         Id               -> showId val
+         SomeExercise     -> case val of Some ex -> showId ex
+         State            -> show val
+         Context          -> show (location val, environment val)
+         Derivation t1 t2 -> show (biMap (show . (::: t1)) (show . (::: t2)) val)
+         Location         -> show val
+         Script           -> show val
+         StratCfg         -> show val
+         Environment      -> show val
+         Text             -> show val
+         StdGen           -> show val
+         Bool             -> map toLower (show val)
+         Int              -> show val
+         String           -> val
 
 instance Show (Const a t) where
    show = showF

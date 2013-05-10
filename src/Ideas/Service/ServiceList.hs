@@ -19,6 +19,7 @@ import Data.List (sortBy)
 import Data.Ord
 import Ideas.Service.BasicServices
 import Ideas.Service.FeedbackText
+import Ideas.Service.State
 import Ideas.Service.ProblemDecomposition (problemDecomposition)
 import Ideas.Service.RulesInfo
 import Ideas.Service.Types
@@ -39,6 +40,7 @@ serviceList =
    , feedbacktextS
    , problemdecompositionS
    , rulelistS, rulesinfoS, strategyinfoS
+   , exerciseinfoS, stateinfoS
    ]
 
 ------------------------------------------------------
@@ -211,6 +213,16 @@ strategyinfoS :: Service
 strategyinfoS = makeService "strategyinfo"
    "Returns the representation of the strategy of a particular exercise." $
    (toStrategy . strategy) ::: typed -- exerciseType :-> strategyType
+
+exerciseinfoS :: Service
+exerciseinfoS = makeService "exerciseinfo"
+   "Exercise information" $
+   (id :: Exercise a -> Exercise a) ::: typed
+
+stateinfoS :: Service
+stateinfoS = makeService "stateinfo"
+   "State information" $
+   (id :: State a -> State a) ::: typed
 
 allExercises :: [Some Exercise] -> [Some Exercise] -- [(String, String, String)]
 allExercises = sortBy (comparing f)

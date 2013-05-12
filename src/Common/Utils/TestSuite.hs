@@ -40,6 +40,7 @@ import Test.QuickCheck
 import System.IO
 import qualified Data.Foldable as F
 import qualified Data.Sequence as S
+import Control.Exception (catch, IOException)
 
 ----------------------------------------------------------------
 -- Test Suite Monad
@@ -113,7 +114,7 @@ warn = (`addAssertion` return False) . warning . newMessage
 -- local helpers
 addAssertion :: Message -> IO Bool -> TestSuite
 addAssertion msg io = TSM $ do
-   b <- liftIO (io `catch` \_ -> return False)
+   b <- liftIO (io `catch` f)
    if b then do
       dot
       addResult okResult
@@ -122,6 +123,8 @@ addAssertion msg io = TSM $ do
       liftIO (print msg)
       reset
       addResult (messageResult msg)
+   where f :: IOException -> IO Bool
+         f = const $ return False
 
 withEmptyTree :: StateT Content IO () -> StateT Content IO TestSuiteResult
 withEmptyTree m = do

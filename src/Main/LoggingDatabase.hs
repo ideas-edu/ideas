@@ -20,6 +20,7 @@ import Service.Request
 import Data.Maybe
 import Database.HDBC
 import Database.HDBC.Sqlite3 (connectSqlite3)
+import Control.Exception (catch, IOException)
 
 logEnabled :: Bool
 logEnabled = True
@@ -55,7 +56,9 @@ logMessage req input output ipaddress begin = do
 
      -- close the connection to the database
      disconnect conn
-  `catch` \err -> do putStrLn $ "Error in logging to database: " ++ show err
+  `catch` f
+     where f :: IOException -> IO ()
+           f err = do putStrLn $ "Error in logging to database: " ++ show err
 
 {-
 -- | Log table schema

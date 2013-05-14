@@ -13,6 +13,7 @@
 module Ideas.Service.TypedExample (typedExample) where
 
 import Ideas.Common.Library
+import System.IO.Error
 import Control.Monad.Error
 import Data.Char
 import Data.Maybe
@@ -40,7 +41,7 @@ typedExample dr ex service args = do
       xml <- runEval dr (encoder evaluator tv) noXML
       return (resultOk xml)
     `catchError`
-      (return . resultError)
+      (return . resultError . ioeGetErrorString)
    -- Check request/reply pair
    xmlTest <- do
       (_, txt, _) <- processXML dr (show request)

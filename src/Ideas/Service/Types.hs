@@ -348,6 +348,9 @@ instance Typed a Int where
 instance Typed a Bool where
    typed = Const Bool
 
+instance Typed a () where
+   typed = Unit
+
 instance Typed a Char where
    typed     = Iso (head <-> return) stringType
    typedList = stringType

@@ -31,6 +31,7 @@ module Ideas.Common.Utils.TestSuite
    , isError, warning, messageLabel
    ) where
 
+import Control.Exception
 import Control.Monad.State
 import Data.List
 import Data.Maybe
@@ -38,6 +39,7 @@ import Data.Monoid
 import Data.Time
 import Test.QuickCheck
 import System.IO
+import Prelude hiding (catch)
 import qualified Data.Foldable as F
 import qualified Data.Sequence as S
 
@@ -113,7 +115,7 @@ warn = (`addAssertion` return False) . warning . newMessage
 -- local helpers
 addAssertion :: Message -> IO Bool -> TestSuite
 addAssertion msg io = TSM $ do
-   b <- liftIO (io `catch` \_ -> return False)
+   b <- liftIO (io `catch` handler)
    if b then do
       dot
       addResult okResult
@@ -122,6 +124,9 @@ addAssertion msg io = TSM $ do
       liftIO (print msg)
       reset
       addResult (messageResult msg)
+ where
+   handler :: SomeException -> IO Bool
+   handler _ = return False
 
 withEmptyTree :: StateT Content IO () -> StateT Content IO TestSuiteResult
 withEmptyTree m = do

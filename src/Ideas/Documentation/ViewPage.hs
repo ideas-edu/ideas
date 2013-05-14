@@ -16,10 +16,11 @@ import Ideas.Common.View
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Control.Exception
 import Ideas.Documentation.DefaultPage
 import Ideas.Documentation.ExampleFile
 import Ideas.Documentation.ExercisePage
-import Prelude hiding ((^))
+import Prelude hiding ((^), catch)
 import Ideas.Service.DomainReasoner
 import Ideas.Text.HTML
 
@@ -30,8 +31,11 @@ makeViewPages dr dir = do
    forM_ sortedViews $ \v -> do
       let exFile = dir ++ "/" ++ diagnosisExampleFile (getId v)
       xs <- liftM items (readExampleFile exFile)
-               `catch` \_ -> return []
+               `catch` handler
       generatePageAt 1 dr dir (viewPageFile v) (viewPage xs v)
+ where
+   handler :: SomeException -> IO [a]
+   handler _ = return []
 
 makeOverviewPage :: HasId a => [a] -> HTMLBuilder
 makeOverviewPage xs = do

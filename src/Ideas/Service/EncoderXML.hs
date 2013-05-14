@@ -17,7 +17,6 @@ module Ideas.Service.EncoderXML (xmlEncoder, encodeState) where
 import Control.Monad
 import Data.Char
 import Data.Maybe
-import Data.Monoid
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Common.Utils (Some(..))
 import Ideas.Service.Evaluator
@@ -32,13 +31,15 @@ import Ideas.Text.XML
 import qualified Data.Map as M
 import qualified Ideas.Service.FeedbackText as FeedbackText
 
-xmlEncoder :: Monad m => Bool -> (a -> m XMLBuilder) -> Exercise a -> Encoder (Type a) m XMLBuilder
+xmlEncoder :: Bool -> (a -> XMLBuilder) -> Exercise a -> Encoder (Type a) XMLBuilderM ()
 xmlEncoder isOM enc ex tv@(val ::: tp) =
    case tp of
       -- meta-information
       Tag "RuleShortInfo" t -> do
          f <- equalM t (Const Rule)
-         return (ruleShortInfo (f val))
+         ruleShortInfo (f val)
+      Tag "difficulty" (Iso iso (Const String)) ->
+         "difficulty" .=. to iso val
       -- special case for onefirst service; insert elem Tag
       Const String :|: Pair t (Const State) | isJust (equal stepInfoType t) ->
          rec (val ::: (Const String :|: elemType (Pair t (Const State))))
@@ -48,11 +49,10 @@ xmlEncoder isOM enc ex tv@(val ::: tp) =
             Left s  -> fail s
             Right a -> rec (a ::: t)
       -- special cases for lists
-      List t -> liftM encodeAsList (mapM (\a -> rec (a ::: t)) val)
+      List t -> encodeAsList (map (\a -> rec (a ::: t)) val)
       --
-      Pair t1 t2 -> liftM2 mappend
-                       (rec (fst val ::: t1))
-                       (rec (snd val ::: t2))
+      Pair t1 t2 -> do rec (fst val ::: t1)
+                       rec (snd val ::: t2)
       _ -> encodeWith (xmlEncoderMap isOM ex enc) (xmlEncoderConst isOM enc ex) tv
  where
    rec = xmlEncoder isOM enc ex
@@ -60,32 +60,31 @@ xmlEncoder isOM enc ex tv@(val ::: tp) =
 encodeAsList :: [XMLBuilder] -> XMLBuilder
 encodeAsList = element "list" . mapM_ (element "elem")
 
-xmlEncoderMap :: Monad m => Bool -> Exercise a -> (a -> m XMLBuilder) -> EncoderMap (Const a) m XMLBuilder
+xmlEncoderMap :: Bool -> Exercise a -> (a -> XMLBuilder) -> EncoderMap (Const a) XMLBuilderM ()
 xmlEncoderMap isOM ex enc = M.fromList $
    [ ("RulesInfo", \_ -> rulesInfoXML ex enc)
    , ("message", \(val ::: tp) -> do
          f <- equalM (Tag "message" tp) (typed :: Type a FeedbackText.Message)
          let msg = f val
-         txt <- encodeText enc ex (FeedbackText.text msg)
-         return $ element "message" $ do
+         element "message" $ do
             case FeedbackText.accept msg of
                Just b  -> "accept" .=. showBool b
                Nothing -> return ()
-            txt)
+            encodeText enc ex (FeedbackText.text msg))
    , ("Exception", \(val ::: tp) -> do
         f <- equalM tp stringType
         fail (f val))
      -- both element and attribute, depending on context
    , ("LocationId", \(val ::: tp) -> do
         f <- equalM tp (Const Id)
-        return $ element "location"$ text $ show $ f val)
+        element "location"$ text $ show $ f val)
    , ("buggy", \tv@(val ::: tp) -> 
         case useAttribute tp of
-           Just f -> return ("buggy" .=. f val)
-           _ -> liftM (element "buggy") (xmlEncoder isOM enc ex tv))
+           Just f -> "buggy" .=. f val
+           _ -> element "buggy" (xmlEncoder isOM enc ex tv))
    ] ++
    -- extra elements
-   [ (s, liftM (element s) . xmlEncoder isOM enc ex)
+   [ (s, element s . xmlEncoder isOM enc ex)
    | s <- [ "list", "elem", "state", "prefix"
           , "similar", "notequiv", "expected", "detour"
           , "correct", "incorrect"]
@@ -93,20 +92,20 @@ xmlEncoderMap isOM ex enc = M.fromList $
    -- extra attributes
    [ (s, \(val ::: tp) -> do 
         f <- useAttribute tp
-        return (s .=. f val))
+        s .=. f val)
    | s <- [ "name", "arguments", "rewriterule", "accept"
           , "exerciseid", "description", "status", "ready", "ruleid"
           , "ruletext", "equivalent"]
    ]
 
-xmlEncoderConst :: Monad m => Bool -> (a -> m XMLBuilder) -> Exercise a -> Encoder (Const a) m XMLBuilder
+xmlEncoderConst :: Bool -> (a -> XMLBuilder) -> Exercise a -> Encoder (Const a) XMLBuilderM ()
 xmlEncoderConst isOM enc ex (val ::: tp) =
    case tp of
-      Exercise  -> return (return ())
+      Exercise  -> return ()
       SomeExercise -> case val of
-                         Some a -> return (exerciseInfo a)
-      Strategy  -> return (builder (strategyToXML val))
-      Rule      -> return ("ruleid" .=. show val) -- encodeRule val)
+                         Some a -> exerciseInfo a
+      Strategy  -> builder (strategyToXML val)
+      Rule      -> "ruleid" .=. show val -- encodeRule val)
       State     -> encodeState isOM enc val
       Context   -> encodeContext isOM enc val
       -- Special case for derivationtext
@@ -115,15 +114,13 @@ xmlEncoderConst isOM enc ex (val ::: tp) =
       Derivation t1 t2 ->
          let xs = map (\(_, s, a) -> (s, a)) (triples val)
          in xmlEncoder isOM enc ex (xs ::: List (Pair t1 t2))
-      Location  -> return ("location" .=. show val)
-      Environment -> return (mapM_ (encodeTypedBinding isOM) (bindings val))
+      Location  -> "location" .=. show val
+      Environment -> mapM_ (encodeTypedBinding isOM) (bindings val)
       Text      -> encodeText enc ex val
-      Bool      -> return (text (showBool val))
-      Int       -> return (text (show val))
-      String    -> return (text val)
+      Bool      -> text (showBool val)
+      Int       -> text (show val)
+      String    -> text val
       _         -> fail $ "Type " ++ show tp ++ " not supported in XML"
-
-
 
 useAttribute :: Monad m => Type a t -> m (t -> String)
 useAttribute (Const String) = return id
@@ -131,12 +128,10 @@ useAttribute (Const Bool)   = return showBool
 useAttribute (Const Int)    = return show
 useAttribute _              = fail "not a primitive type"
 
-encodeState :: Monad m => Bool -> (a -> m XMLBuilder) -> State a -> m XMLBuilder
-encodeState isOM enc st = do
-   ctx <- encodeContext isOM enc (stateContext st)
-   return $ element "state" $ do
-      mapM_ (element "prefix" . text . show) (statePrefixes st)
-      ctx
+encodeState :: Bool -> (a -> XMLBuilder) -> State a -> XMLBuilder
+encodeState isOM enc st = element "state" $ do
+   mapM_ (element "prefix" . text . show) (statePrefixes st)
+   encodeContext isOM enc (stateContext st)
 
 ruleShortInfo :: Rule a -> XMLBuilder
 ruleShortInfo r = do 
@@ -163,11 +158,11 @@ encodeEnvironment isOM ctx
       | null loc  = id
       | otherwise = insertRef (makeRef "location") loc 
 
-encodeContext :: Monad m => Bool -> (a -> m XMLBuilder) -> Context a -> m XMLBuilder
+encodeContext :: Bool -> (a -> XMLBuilder) -> Context a -> XMLBuilder
 encodeContext isOM f ctx = do
-   a   <- fromContext ctx
-   xml <- f a
-   return (xml >> encodeEnvironment isOM ctx)
+   a <- fromContext ctx
+   f a
+   encodeEnvironment isOM ctx
 
 encodeTypedBinding :: Bool -> Binding -> XMLBuilder
 encodeTypedBinding b tb = element "argument" $ do
@@ -177,16 +172,14 @@ encodeTypedBinding b tb = element "argument" $ do
          omobj2xml $ toOMOBJ term
       _ -> text (showValue tb)
    
-encodeText :: Monad m => (a -> m XMLBuilder) -> Exercise a -> Text -> m XMLBuilder
-encodeText f ex = liftM sequence_ . mapM make . textItems
+encodeText :: (a -> XMLBuilder) -> Exercise a -> Text -> XMLBuilder
+encodeText f ex = mapM_ make . textItems
  where
-   make t@(TextTerm a) = fromMaybe (returnText t) $ do
+   make t@(TextTerm a) = fromMaybe (text (show t)) $ do
       v <- hasTermView ex
       b <- match v a
       return (f b)
-   make a = returnText a
-   
-   returnText = return . text . show
+   make a = text (show a)
 
 exerciseInfo :: Exercise a -> XMLBuilder 
 exerciseInfo ex = do

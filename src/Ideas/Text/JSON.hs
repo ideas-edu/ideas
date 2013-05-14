@@ -143,7 +143,9 @@ instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
    fromJSON _                    = fail "expecting an array with 4 elements"
 
 instance InJSON IOException where
-   toJSON = toJSON . ioeGetErrorString
+   toJSON     = toJSON . ioeGetErrorString
+   fromJSON (String s) = return (userError s)
+   fromJSON _ = fail "excepting a string" 
 
 --------------------------------------------------------
 -- Parser

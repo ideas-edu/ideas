@@ -24,14 +24,10 @@ import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML hiding (name)
 import qualified Data.Map as M
 
-rulesInfoXML :: Monad m => Exercise a -> (a -> m XMLBuilder) -> m XMLBuilder
-rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
+rulesInfoXML :: Exercise a -> (a -> XMLBuilder) -> XMLBuilder
+rulesInfoXML ex enc = forM_ (ruleset ex) $ \r ->
 
-   let pairs = M.findWithDefault [] (getId r) exampleMap
-   xs <- forM (take 3 pairs) $ \(a, b) ->
-            liftM2 (,) (enc a) (enc b)
-
-   return $ element "rule" $ do
+   element "rule" $ do
       "name"        .=. showId r
       "buggy"       .=. f (isBuggy r)
       "rewriterule" .=. f (isRewriteRule r)
@@ -55,12 +51,14 @@ rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
          element "FMP" $
             builder (omobj2xml (toObject fmp))
       -- Examples
-      forM_ xs $ \(a, b) ->
-         element "example" (a >> b)
+      let pairs = M.findWithDefault [] (getId r) exampleMap
+      forM_ (take 3 pairs) $ \(a, b) ->
+         element "example" $ do
+            enc a
+            enc b
  where
    f          = map toLower . show
    exampleMap = collectExamples ex
-   combine    = liftM sequence_
 
 rewriteRuleToFMP :: Bool -> RewriteRule a -> FMP
 rewriteRuleToFMP sound r

@@ -45,7 +45,7 @@ processXML dr input = do
    xml  <- either fail return (parseXML input)
    req  <- either fail return (xmlRequest xml)
    resp <- xmlReply dr req xml
-              `catchError` (return . resultError)
+              `catchError` (return . resultError . ioeGetErrorString)
    case encoding req of
       Just HTMLEncoding -> 
            let out = show resp
@@ -106,14 +106,15 @@ extractExerciseId :: Monad m => XML -> m Id
 extractExerciseId = liftM newId . findAttribute "exerciseid"
 
 resultOk :: XMLBuilder -> XML
-resultOk body = makeXML "reply" $ do
-   "result" .=. "ok"
-   body
+resultOk body = either resultError id $ 
+   buildXML "reply" $ do
+      "result" .=. "ok"
+      body
 
-resultError :: IOError -> XML
+resultError :: String -> XML
 resultError txt = makeXML "reply" $ do
    "result" .=. "error"
-   element "message" (text $ ioeGetErrorString txt)
+   element "message" (text txt)
 
 ------------------------------------------------------------
 -- Mixing abstract syntax (OpenMath format) and concrete syntax (string)
@@ -128,9 +129,9 @@ runEval dr m xml = evalStateT m (dr, xml)
 
 stringFormatConverter :: Exercise a -> Evaluator (Const a) EvalXML XMLBuilder
 stringFormatConverter ex =
-   Evaluator (xmlEncoder False f ex) (xmlDecoder False g ex)
+   Evaluator (return . xmlEncoder False f ex) (xmlDecoder False g ex)
  where
-   f  = return . element "expr" . text . prettyPrinter ex
+   f  = element "expr" . text . prettyPrinter ex
    g = do
       xml0 <- gets snd
       xml  <- findChild "expr" xml0 -- quick fix
@@ -141,14 +142,14 @@ stringFormatConverter ex =
 htmlConverter :: Exercise a -> Evaluator (Const a) EvalXML XMLBuilder
 htmlConverter ex = Evaluator 
    { decoder = decoder (stringFormatConverter ex)
-   , encoder = htmlEncoder (text . prettyPrinter ex) ex
+   , encoder = htmlEncoder ex
    }
 
 openMathConverter :: Bool -> Exercise a -> Evaluator (Const a) EvalXML XMLBuilder
 openMathConverter withMF ex =
-   Evaluator (xmlEncoder True f ex) (xmlDecoder True g ex)
+   Evaluator (return . xmlEncoder True f ex) (xmlDecoder True g ex)
  where
-   f a = liftM (builder . toXML) $ handleMixedFractions $ toOpenMath ex a
+   f a = toOpenMath ex a >>= builder . toXML . handleMixedFractions
    g = do
       xml   <- gets snd
       xob   <- findChild "OMOBJ" xml
@@ -159,7 +160,7 @@ openMathConverter withMF ex =
               Just a  -> return a
               Nothing -> fail "Invalid OpenMath object for this exercise"
    -- Remove special mixed-fraction symbol (depending on boolean argument)
-   handleMixedFractions = if withMF then id else liftM noMixedFractions
+   handleMixedFractions = if withMF then id else noMixedFractions
 
 xmlDecoder :: Bool -> EvalXML a -> Exercise a -> Decoder (Type a) EvalXML
 xmlDecoder b f ex = Decoder (xmlDecodeType b ex f)

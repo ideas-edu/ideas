@@ -27,30 +27,31 @@ import Ideas.Service.Types
 import Ideas.Service.EncoderXML
 import Ideas.Service.BasicServices
 
-htmlEncoder :: Monad m => (a -> HTMLBuilder) -> Exercise a -> Encoder (Type a) m HTMLBuilder
-htmlEncoder enc ex (val ::: tp) = 
+htmlEncoder :: Monad m => Exercise a -> Encoder (Type a) m HTMLBuilder
+htmlEncoder ex (val ::: tp) = 
    case tp of 
-      Iso iso t  -> htmlEncoder enc ex (to iso val ::: t)
-      Pair t1 t2 -> do x <- htmlEncoder enc ex (fst val ::: t1)
-                       y <- htmlEncoder enc ex (snd val ::: t2)
+      Iso iso t  -> htmlEncoder ex (to iso val ::: t)
+      Tag _ t    -> htmlEncoder ex (val ::: t)
+      Pair t1 t2 -> do x <- htmlEncoder ex (fst val ::: t1)
+                       y <- htmlEncoder ex (snd val ::: t2)
                        return (x >> br >> y)
       t1 :|: t2  -> case val of
-                       Left x  -> htmlEncoder enc ex (x ::: t1)
-                       Right x -> htmlEncoder enc ex (x ::: t2)
+                       Left x  -> htmlEncoder ex (x ::: t1)
+                       Right x -> htmlEncoder ex (x ::: t2)
       List (Const SomeExercise) -> 
          return (encodeExerciseList val)
       
       List t     -> liftM ul $ forM val $ \x -> 
-                       htmlEncoder enc ex (x ::: t)
-      Const t    -> encodeConst enc ex (val ::: t)
+                       htmlEncoder ex (x ::: t)
+      Const t    -> encodeConst ex (val ::: t)
       _ -> return (text $ "unknown: " ++ show tp)
       
-encodeConst :: Monad m => (a -> HTMLBuilder) -> Exercise a -> Encoder (Const a) m HTMLBuilder
-encodeConst enc ex (val ::: tp) =
+encodeConst :: Monad m => Exercise a -> Encoder (Const a) m HTMLBuilder
+encodeConst ex (val ::: tp) =
    case tp of 
       Exercise     -> return $ encodeExercise val
       Rule         -> return $ text $ "ruleid: " ++ showId val
-      Derivation t1 t2 -> htmlDerivation enc ex t1 t2 val
+      Derivation t1 t2 -> htmlDerivation ex t1 t2 val
       SomeExercise -> case val of
                          Some ex -> return $ text $ "exerciseid: " ++ showId ex
       Context      -> do return $ do
@@ -59,6 +60,7 @@ encodeConst enc ex (val ::: tp) =
       Location     -> return $ text $ "location: " ++ show val
       Environment  -> return $ text $ "environment: " ++ show val
       State        -> return $ htmlState val
+      String       -> return $ text val
       _ -> return (text $ "unknown const: " ++ show tp)
 
 data LinkManager a = LinkManager
@@ -67,6 +69,8 @@ data LinkManager a = LinkManager
    , urlForService   :: Service -> String
    , urlForExercises :: String -}
      urlForExercise   :: Exercise a -> String
+   , urlForExamples   :: Exercise a  -> String
+   , urlForRandomExample :: Difficulty -> Exercise a -> String
    --, urlForStrategy  :: Exercise a -> String
    --, urlForRules     :: Exercise a -> String
 --   , urlForRule      :: Exercise a -> Rule (Context a) -> String
@@ -78,6 +82,12 @@ data LinkManager a = LinkManager
    
 linkToExercise :: LinkManager a -> Exercise a -> HTMLBuilder -> HTMLBuilder
 linkToExercise lm = link . escapeInURL . urlForExercise lm
+   
+linkToExamples :: LinkManager a -> Exercise a -> HTMLBuilder -> HTMLBuilder
+linkToExamples lm = link . escapeInURL . urlForExamples lm
+   
+linkToRandomExample :: LinkManager a -> Difficulty -> Exercise a -> HTMLBuilder -> HTMLBuilder
+linkToRandomExample lm d = link . escapeInURL . urlForRandomExample lm d
    
 linkToState :: LinkManager a -> State a -> HTMLBuilder -> HTMLBuilder
 linkToState lm = link . escapeInURL . urlForState lm
@@ -96,6 +106,10 @@ lm = LinkManager
    { urlForExercise = \ex ->
         -- url ++ show (exampleRequest ex)
         url ++ show (exerciseInfoRequest ex)
+   , urlForExamples = \ex ->
+        url ++ show (examplesRequest ex)
+   , urlForRandomExample = \d ex ->
+        url ++ show (generateRequest d ex)
    , urlForState = \state -> 
         url ++ show (stateInfoRequest state)
    , urlForAllFirsts = \state ->
@@ -122,7 +136,15 @@ encodeExercise :: Exercise a -> HTMLBuilder
 encodeExercise ex = do
    h1 "1. General information"
    generalInfo
-   h1 "2. Rules"
+   h1 "2. Examples"
+   unless (null $ examples ex) $ 
+      parens $ linkToExamples lm ex $ text "examples"
+   unless (isNothing $ randomExercise ex) $
+      forM_ [VeryEasy .. VeryDifficult] $ \d -> 
+         parens $ linkToRandomExample lm d ex $ text $ show d
+   myForm (text "Other exercise: ")
+   submitScript ex
+   h1 "3. Rules"
    encodeRuleList ex
  where
    generalInfo = table False $ map bolds
@@ -178,32 +200,40 @@ htmlState state = do
    br
    text $ " ready: " ++ show (ready state)
    br
-   let parens s = text " (" >> s >> text ") "
+   submitScript2 state
+   myForm mempty
    parens $ linkToAllFirsts lm state $ text "allfirsts"
    parens $ linkToAllApplications lm state $ text "allapplications"
    parens $ linkToDerivation lm state $ text "derivation"
 
-htmlDerivation :: Monad m => (a -> HTMLBuilder) -> Exercise a -> Type a t1 -> Type a t2 -> Derivation t1 t2 -> m HTMLBuilder
-htmlDerivation enc ex t1 t2 d = do 
+htmlDerivation :: Monad m => Exercise a -> Type a t1 -> Type a t2 -> Derivation t1 t2 -> m HTMLBuilder
+htmlDerivation ex t1 t2 d = do 
    x  <- forTerm (firstTerm d)
    xs <- mapM make (triples d)
    return (sequence_ (x:xs))
  where
    make (_, s, a) = liftM2 (>>) (forStep s) (forTerm a)
-   forTerm a = htmlEncoder enc ex (a ::: t2)
+   forTerm a = htmlEncoder ex (a ::: t2)
    forStep s = do
-      x <- htmlEncoder enc ex (s ::: t1)
+      x <- htmlEncoder ex (s ::: t1)
       return $ h1 "Step" >> br >> x >> br
 
 stateToXML :: State a -> XMLBuilder
-stateToXML st = fromJust $ encodeState False enc st -- !!!!!!!!!!!!  fromJust
+stateToXML st = encodeState False enc st
  where
-   enc = return . element "expr" . text . prettyPrinter (exercise st)
+   enc = element "expr" . text . prettyPrinter (exercise st)
 
-exampleRequest :: Exercise a -> XML
-exampleRequest ex = makeXML "request" $ do
+examplesRequest :: Exercise a -> XML
+examplesRequest ex = makeXML "request" $ do
    "service"    .=. "examples"
    "exerciseid" .=. showId ex
+   "encoding"   .=. "html"
+
+generateRequest :: Difficulty -> Exercise a -> XML
+generateRequest d ex = makeXML "request" $ do
+   "service"    .=. "generate"
+   "exerciseid" .=. showId ex
+   "difficulty" .=. show d -- !!
    "encoding"   .=. "html"
 
 allFirstsRequest :: State a -> XML
@@ -248,3 +278,64 @@ escapeInURL = concatMap f
    f '>' = "%3E"
    f '&' = "%26"
    f c   = [c]
+   
+parens :: HTMLBuilder -> HTMLBuilder
+parens s = text " (" >> s >> text ") "
+
+
+myForm :: HTMLBuilder -> HTMLBuilder
+myForm this = element "form" $ do
+   "name"     .=. "myform" 
+   "onsubmit" .=. "return submitTerm()" 
+   "method"   .=. "post"
+   this
+   element "input" $ do
+      "type" .=. " text"
+      "name" .=. "myterm"
+   element "input" $ do
+      "type"  .=. "submit"
+      "value" .=. "Submit"
+
+-- stateinfo service
+submitScript :: Exercise a -> HTMLBuilder
+submitScript ex = element "script" $ do
+   "type" .=. "text/javascript"
+   unescaped (getTerm ++ code)
+ where
+   code    = "function submitTerm() {document.myform.action = \"" ++ action ++ "\");}"
+   action  = "ideas.cgi?input=\" + encodeURIComponent(\"" ++ request
+   request = "<request service='stateinfo' exerciseid='" ++ showId ex 
+          ++ "' encoding='html'><state><expr>\" + getTerm() + \"</expr></state></request>"
+
+          
+          
+-- diagnose service
+submitScript2 :: State a -> HTMLBuilder
+submitScript2 st = element "script" $ do
+   "type" .=. "text/javascript"
+   unescaped (getTerm ++ code)
+ where
+   code    = "function submitTerm() {document.myform.action = \"" ++ action ++ "\");}"
+   action  = "ideas.cgi?input=\" + encodeURIComponent(\"" ++ request
+   request = "<request service='diagnose' exerciseid='" ++ showId (exercise st)
+          ++ "' encoding='html'>" ++ ststr ++ "<expr>\"  + getTerm() + \"</expr></request>"
+          
+   ststr   = case fromBuilder (stateToXML st) of
+                Just el -> concatMap f (show el)
+                Nothing -> ""
+                
+   f '\\' = "\\\\"
+   f c = [c]
+ 
+getTerm :: String  
+getTerm = 
+   "function getTerm() {\
+   \   var s = document.myform.myterm.value;\
+   \   var result = \"\";\
+   \   for (var i=0;i<s.length;i++) {\
+   \      if (s[i]=='<') result+=\"&lt;\";\
+   \      else if (s[i]=='&') result+=\"&amp;\";\
+	\      else result+=s[i];\
+   \   }\
+   \   return result;\
+   \}"

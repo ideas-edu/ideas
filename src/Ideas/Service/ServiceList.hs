@@ -116,7 +116,7 @@ examplesS = makeService "examples"
    \with an exercise. These are the examples that appear at the page generated \
    \for each exercise. Also see the generate service, which returns a random \
    \start term." $
-   (\ex -> map (inContext ex . snd) (examples ex)) ::: typed -- exerciseType :-> listType contextType
+   (\ex -> map (second (inContext ex)) (examples ex)) ::: typed -- exerciseType :-> listType contextType
 
 findbuggyrulesS :: Service
 findbuggyrulesS = makeService "findbuggyrules"

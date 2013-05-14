@@ -82,7 +82,7 @@ xmlReply dr request xml = do
       case exerciseId request of
          Just code -> findExercise dr code
          Nothing
-            | service request == "exerciselist" ->
+            | service request `elem` ["exerciselist", "servicelist"] ->
                  return (Some emptyExercise)
             | otherwise ->
                  fail "unknown exercise code"
@@ -93,9 +93,9 @@ xmlReply dr request xml = do
          return (resultOk res) 
 
       Just HTMLEncoding -> do
-         let conv = htmlConverter ex
+         let conv = htmlConverter dr ex
          res  <- runEval dr (evalService conv srv) xml
-         return (htmlPage "EncoderHTML" Nothing res) 
+         return res 
 
       _ -> do
          conv <- return (openMathConverter True ex)
@@ -139,10 +139,10 @@ stringFormatConverter ex =
       let input = getData xml
       either (fail . show) return (parser ex input)
 
-htmlConverter :: Exercise a -> Evaluator (Const a) EvalXML XMLBuilder
-htmlConverter ex = Evaluator 
+htmlConverter :: DomainReasoner -> Exercise a -> Evaluator (Const a) EvalXML HTML
+htmlConverter dr ex = Evaluator 
    { decoder = decoder (stringFormatConverter ex)
-   , encoder = htmlEncoder ex
+   , encoder = return . htmlEncoder dr ex
    }
 
 openMathConverter :: Bool -> Exercise a -> Evaluator (Const a) EvalXML XMLBuilder

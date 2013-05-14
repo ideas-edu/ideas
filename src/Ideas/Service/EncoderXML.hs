@@ -71,10 +71,6 @@ xmlEncoderMap isOM ex enc = M.fromList $
                Just b  -> "accept" .=. showBool b
                Nothing -> return ()
             encodeText enc ex (FeedbackText.text msg))
-   , ("Exception", \(val ::: tp) -> do
-        f <- equalM tp stringType
-        fail (f val))
-     -- both element and attribute, depending on context
    , ("LocationId", \(val ::: tp) -> do
         f <- equalM tp (Const Id)
         element "location"$ text $ show $ f val)

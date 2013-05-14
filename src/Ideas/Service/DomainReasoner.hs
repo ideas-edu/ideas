@@ -11,8 +11,7 @@
 -----------------------------------------------------------------------------
 module Ideas.Service.DomainReasoner
    ( DomainReasoner(..), newDomainReasoner
-   , services, findExercise, findService
-   , defaultScript, readScript
+   , findExercise, findService, defaultScript, readScript
    ) where
    
 import Ideas.Common.Utils
@@ -29,7 +28,7 @@ import Control.Monad.Error
 
 data DomainReasoner = DR
    { exercises   :: [Some Exercise]
-   , exServices  :: [Some Exercise] -> [Service]
+   , services    :: [Service]
    , views       :: [ViewPackage]
    , aliases     :: [(Id, Id)]
    , scriptDirs  :: [FilePath]
@@ -43,7 +42,7 @@ instance Monoid DomainReasoner where
    mempty = DR mempty mempty mempty mempty mempty mempty mempty mempty mempty 
    mappend c1 c2 = DR
       { exercises   = exercises c1   <> exercises c2
-      , exServices  = exServices c1  <> exServices c2
+      , services    = services c1    <> services c2
       , views       = views c1       <> views c2 
       , aliases     = aliases c1     <> aliases c2
       , scriptDirs  = scriptDirs c1  <> scriptDirs c2 
@@ -73,9 +72,6 @@ findService dr txt = do
       [hd] -> return hd
       []   -> fail $ "No service " ++ txt
       _    -> fail $ "Ambiguous service " ++ txt
-
-services :: DomainReasoner -> [Service]
-services dr = exServices dr (exercises dr)
 
 defaultScript :: DomainReasoner -> Id -> IO Script
 defaultScript dr = 

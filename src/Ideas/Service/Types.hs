@@ -42,7 +42,7 @@ import System.Random
 -----------------------------------------------------------------------------
 -- Services
 
-data Service = Service
+data Service = S
    { serviceId         :: Id
    , serviceDeprecated :: Bool
    , serviceFunction   :: forall a . TypedValue (Type a)
@@ -53,7 +53,7 @@ instance HasId Service where
    changeId f a = a { serviceId = f (serviceId a) }
 
 makeService :: String -> String -> (forall a . TypedValue (Type a)) -> Service
-makeService s descr f = describe descr (Service (newId s) False f)
+makeService s descr f = describe descr (S (newId s) False f)
 
 deprecate :: Service -> Service
 deprecate s = s { serviceDeprecated = True }
@@ -83,6 +83,7 @@ instance Equal (Const a) where
    equal Int         Int         = Just id
    equal Bool        Bool        = Just id
    equal String      String      = Just id
+   equal Service     Service     = Just id
    equal Exercise    Exercise    = Just id
    equal Strategy    Strategy    = Just id
    equal State       State       = Just id
@@ -222,6 +223,7 @@ data TypeRep f t where
 
 data Const a t where
    -- exercise specific
+   Service      :: Const a Service
    Exercise     :: Const a (Exercise a)
    Strategy     :: Const a (Strategy (Context a))
    State        :: Const a (State a)
@@ -284,6 +286,7 @@ showAsTree (Node a ts)
 instance Show (TypedValue (Const a)) where
    show (val ::: tp) =
       case tp of
+         Service          -> showId val
          Exercise         -> showId val
          Strategy         -> show val
          Rule             -> showId val
@@ -306,6 +309,7 @@ instance Show (Const a t) where
    show = showF
 
 instance ShowF (Const a) where
+   showF Service      = "Service"
    showF Exercise     = "Exercise"
    showF Strategy     = "Strategy"
    showF State        = "State"
@@ -375,6 +379,9 @@ instance Typed a StdGen where
    
 instance Typed a Difficulty where
    typed = difficultyType
+
+instance Typed a Service where
+   typed = Const Service
 
 instance Typed a (State a) where
    typed = Const State

@@ -11,7 +11,9 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.ServiceList (serviceList, exerciselistS) where
+module Ideas.Service.ServiceList 
+   ( serviceList, exerciselistS, servicelistS
+   ) where
 
 import Ideas.Common.Library hiding (apply, applicable, derivation, ready)
 import Ideas.Common.Utils (Some(..))
@@ -195,6 +197,11 @@ exerciselistS list = makeService "exerciselist"
    \identifier, a short description, and its current status are returned." $
    allExercises list ::: typed -- listType (tuple3 (Tag "exerciseid" stringType) (Tag "description" stringType) (Tag "status" stringType))
 
+servicelistS :: [Service] -> Service
+servicelistS list = makeService "servicelist"
+   "List of all supported feedback services" $
+   allServices list ::: typed
+
 rulelistS :: Service
 rulelistS = makeService "rulelist"
    "Returns all rules of a particular exercise. For each rule, we return its \
@@ -229,6 +236,9 @@ allExercises = sortBy (comparing f)
  where
    f :: Some Exercise -> String
    f (Some ex) = showId ex
+
+allServices :: [Service] -> [Service]
+allServices = sortBy (comparing showId)
 
 newtype RuleShortInfo a = RuleShortInfo { fromRuleShortInfo :: Rule (Context a) }
 

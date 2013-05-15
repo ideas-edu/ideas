@@ -20,6 +20,7 @@ module Ideas.Text.XML
    ) where
 
 import Control.Arrow
+import Control.Monad
 import Data.Char
 import Data.Foldable (toList)
 import Data.Monoid
@@ -116,6 +117,13 @@ instance Monad XMLBuilderM where
       case fromXB m bs of
          Left s       -> Left s
          Right (b, a) -> fromXB (f a) b
+
+instance MonadPlus XMLBuilderM where
+   mzero = fail "XMLBuilderM: mzero"
+   mplus m1 m2 = XB $ \bs -> 
+      case fromXB m1 bs of
+         Left _   -> fromXB m2 bs
+         Right ok -> Right ok
 
 runXMLBuilder :: XMLBuilder -> Either String (AttrList, Content)
 runXMLBuilder m = 

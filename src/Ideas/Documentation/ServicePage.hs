@@ -111,6 +111,6 @@ type Args = forall a . Exercise a -> [TypedValue (Type a)]
 makeExample :: DomainReasoner -> String -> Args -> String -> IO Example
 makeExample dr exName f srvName = do
    Some ex <- findExercise dr (newId exName)
-   srv     <- findService dr srvName
+   srv     <- findService dr (newId srvName)
    tr      <- typedExample dr ex srv (f ex)
    return (showId ex, tr) 

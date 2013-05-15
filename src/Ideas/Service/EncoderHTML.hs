@@ -19,6 +19,7 @@ import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
+import Data.Ord
 import Ideas.Common.Library hiding (ready)
 import Ideas.Documentation.RulePresenter
 import Ideas.Text.XML
@@ -32,6 +33,12 @@ import Ideas.Service.BasicServices
 
 htmlEncoder :: DomainReasoner -> Exercise a -> TypedValue (Type a) -> HTML
 htmlEncoder dr ex tv = htmlPage "EncoderHTML" (Just "ideas.css") $ do
+   divClass "header" $ do
+      divClass "ideas-logo" $ image "ideas.png"
+      divClass "ounl-logo" $ image "ounl.png"
+      spanClass "menuitem" $ linkToIndex lm $ text "Index"
+      spanClass "menuitem" $ linkToExercises lm $ text "Exercises"
+      spanClass "menuitem" $ linkToServices lm $ text "Services"
    divClass "content" $
       encodeType ex tv
    divClass "footer" $
@@ -40,14 +47,19 @@ htmlEncoder dr ex tv = htmlPage "EncoderHTML" (Just "ideas.css") $ do
 encodeType :: Exercise a -> Encoder (Type a) XMLBuilderM ()
 encodeType ex (val ::: tp) = 
    case tp of 
-      Iso iso t  -> encodeType ex (to iso val ::: t)
-      Tag _ t    -> encodeType ex (val ::: t)
+      Iso iso t  -> do
+         f <- equalM (Tag "DomainReasoner" tp) typed
+         encodeIndex (f val)
+       `mplus`
+         encodeType ex (to iso val ::: t)
+      Tag s t    -> encodeType ex (val ::: t)
       Pair t1 t2 -> do encodeType ex (fst val ::: t1)
                        br
                        encodeType ex (snd val ::: t2)
       t1 :|: t2  -> case val of
                        Left x  -> encodeType ex (x ::: t1)
                        Right x -> encodeType ex (x ::: t2)
+      List (Const Service) -> encodeServiceList val
       List (Const SomeExercise) -> encodeExerciseList val
       List (Tag "RuleShortInfo" (Iso iso (Const Rule))) -> encodeRuleList ex (map (to iso) val)
       List t     -> ul [ encodeType ex (x ::: t) | x <- val ]
@@ -57,6 +69,7 @@ encodeType ex (val ::: tp) =
 encodeConst :: Exercise a -> Encoder (Const a) XMLBuilderM ()
 encodeConst ex tv@(val ::: tp) =
    case tp of 
+      Service      -> encodeService val
       Exercise     -> encodeExercise val
       Rule         -> text $ "ruleid: " ++ showId val
       Derivation t1 t2 -> htmlDerivation ex t1 t2 val
@@ -71,15 +84,15 @@ encodeConst ex tv@(val ::: tp) =
       _ -> text $ show tv
 
 data LinkManager a = LinkManager
-   { {- mainUrl         :: String
+   { urlForIndex     :: String
    , urlForServices  :: String
    , urlForService   :: Service -> String
-   , urlForExercises :: String -}
-     urlForExercise   :: Exercise a -> String
+   , urlForExercises :: String
+   , urlForExercise   :: Exercise a -> String
    , urlForExamples   :: Exercise a  -> String
    , urlForRandomExample :: Difficulty -> Exercise a -> String
    --, urlForStrategy  :: Exercise a -> String
-   --, urlForRules     :: Exercise a -> String
+   , urlForRules     :: Exercise a -> String
 --   , urlForRule      :: Exercise a -> Rule (Context a) -> String
    , urlForState      :: State a -> String
    , urlForAllFirsts  :: State a -> String
@@ -87,9 +100,30 @@ data LinkManager a = LinkManager
    , urlForDerivation :: State a -> String
    }
    
+linkToIndex :: LinkManager a -> HTMLBuilder -> HTMLBuilder
+linkToIndex = link . escapeInURL . urlForIndex
+
+linkToService :: LinkManager a -> Service -> HTMLBuilder -> HTMLBuilder
+linkToService lm = link . escapeInURL . urlForService lm
+ 
+linkToServices :: LinkManager a -> HTMLBuilder -> HTMLBuilder
+linkToServices = link . escapeInURL . urlForServices
+
+linkToExercises :: LinkManager a -> HTMLBuilder -> HTMLBuilder
+linkToExercises = link . escapeInURL . urlForExercises
+ 
 linkToExercise :: LinkManager a -> Exercise a -> HTMLBuilder -> HTMLBuilder
 linkToExercise lm = link . escapeInURL . urlForExercise lm
-   
+
+linkToStrategy :: LinkManager a -> Exercise a -> HTMLBuilder -> HTMLBuilder
+linkToStrategy _ _ = id
+
+linkToRules :: LinkManager a -> Exercise a -> HTMLBuilder -> HTMLBuilder
+linkToRules lm = link . escapeInURL . urlForRules lm
+
+linkToDerivations :: LinkManager a -> Exercise a -> HTMLBuilder -> HTMLBuilder
+linkToDerivations _ _ = id
+
 linkToExamples :: LinkManager a -> Exercise a -> HTMLBuilder -> HTMLBuilder
 linkToExamples lm = link . escapeInURL . urlForExamples lm
    
@@ -110,9 +144,18 @@ linkToDerivation lm = link . escapeInURL . urlForDerivation lm
 
 lm :: LinkManager a
 lm = LinkManager 
-   { urlForExercise = \ex ->
-        -- url ++ show (exampleRequest ex)
+   { urlForIndex = 
+        url  ++ show indexRequest
+   , urlForServices =
+        url ++ show serviceListRequest
+   , urlForService = \srv ->
+        url ++ show (serviceInfoRequest srv)
+   , urlForExercises = 
+        url ++ show exerciseListRequest
+   , urlForExercise = \ex ->
         url ++ show (exerciseInfoRequest ex)
+   , urlForRules = \ex ->
+        url ++ show (rulelistRequest ex)
    , urlForExamples = \ex ->
         url ++ show (examplesRequest ex)
    , urlForRandomExample = \d ex ->
@@ -129,19 +172,52 @@ lm = LinkManager
  where
    url = "http://localhost/ideas.cgi?input="
 
+encodeIndex :: DomainReasoner -> HTMLBuilder
+encodeIndex dr = do
+   h1 $ "Domain reasoner " ++ showId dr
+   htmlDescription dr
+   keyValueTable
+      [ ("version", text $ fullVersion dr)
+      , ("exercises", text $ show $ length $ exercises dr)
+      , ("services", text $ show $ length $ services dr)
+      ]
+   unless (null $ aliases dr) $ do
+      h2 "Exercise aliases"
+      table True $ 
+         [ text "alias", text "exercise"] :
+         [ [text (showId a), text (showId b)]
+         | (a, b) <- aliases dr
+         ]
+   unless (null $ scripts dr) $ do
+      h2 "Feedback scripts"
+      table True $ 
+         [ text "exercise", text "script"] :
+         [ [text (showId a), text file]
+         | (a, file) <- scripts dr
+         ]
+   
+encodeServiceList :: [Service] -> HTMLBuilder
+encodeServiceList list = do
+   h1 "Services"
+   forM_ (groupById list) $ \(i, s, xs) -> do
+      h2 $ show i ++ ". " ++ s
+      table False (map make xs)
+ where
+ 
+   make s = [ linkToService lm s (text (showId s)) >> 
+              when (serviceDeprecated s) (italic (text " (deprecated)"))
+            , text (description s)
+            ]
+
 encodeExerciseList :: [Some Exercise] -> HTMLBuilder
 encodeExerciseList list = do 
    h1 "Exercises"
-   forM_ (zip [1::Int ..] (grouping list)) $ \(i, (dom, xs)) -> do
+   forM_ (groupsWith f list) $ \(i, dom, xs) -> do
       h2 (show i ++ ". " ++ dom)
       table False (map make xs)
  where
-   grouping :: [Some Exercise] -> [(String, [Some Exercise])]
-   grouping = map g . groupBy eq
-   
-   eq a b      = f a == f b
-   f (Some ex) = listToMaybe (qualifiers (exerciseId ex))
-   g xs        = (fromMaybe "" (f (head xs)), xs)
+   f :: Some Exercise -> String
+   f (Some ex) = fromMaybe "" (listToMaybe (qualifiers (getId ex)))
  
    make :: Some Exercise -> [HTMLBuilder]
    make (Some ex) = 
@@ -150,11 +226,56 @@ encodeExerciseList list = do
       , text $ description ex
       ]
 
+groupById :: HasId a => [a] -> [(Int, String, [a])]
+groupById = groupsWith (fromMaybe "" . listToMaybe . qualifiers . getId)
+
+groupsWith :: (a -> String) -> [a] -> [(Int, String, [a])]
+groupsWith get = zipWith f [1..] . groupBy eq . sortBy (comparing get)
+ where
+   eq x y = get x == get y
+   f i xs = (i, get (head xs), xs)
+
+encodeService :: Service -> HTMLBuilder
+encodeService srv = do
+   h1 $ "Service " ++ showId srv
+   when (serviceDeprecated srv) $ 
+      para $ spanClass "warning" $ text "Warning: this service is deprecated"
+   htmlDescription srv
+   case serviceFunction srv of
+      _ ::: tp -> do 
+         let (xs, ys) = inputOutputTypes tp
+             f :: Some (Type a) -> HTMLBuilder
+             f (Some (t :|: Unit)) = text (show t) >> italic (text " (optional)")
+             f (Some tp) = text (show tp)
+         unless (null xs) $ para $ do 
+            bold $ text "Input"
+            ul (map f xs)
+         unless (null ys) $ para $ do
+            bold $ text "Output"
+            ul (map f ys)
+
+inputOutputTypes :: Type a t -> ([Some (Type a)], [Some (Type a)])
+inputOutputTypes tp =
+   case tp of
+      Iso _ t   -> inputOutputTypes t
+      t1 :-> t2 -> let (xs, ys) = inputOutputTypes t2 
+                   in (productType t1 ++ xs, ys)
+      Const String :|: t -> ([], productType t)
+      _         -> ([], productType tp)
+
+productType :: Type a t -> [Some (Type a)]
+productType tp = 
+   case tp of
+      Iso _ t    -> productType t
+      Pair t1 t2 -> productType t1 ++ productType t2
+      Unit       -> []
+      _          -> [Some tp]
+
 encodeExercise :: Exercise a -> HTMLBuilder
 encodeExercise ex = do
+   exerciseMenu ex
    h1 $ "Exercise " ++ showId ex
-   divClass "idbox" $ italic $ text (description ex)
-   h2 "General information"
+   htmlDescription ex
    generalInfo
    h2 "Example exercises"
    ul $ [ para $ linkToExamples lm ex $ text "list of examples"
@@ -172,48 +293,47 @@ encodeExercise ex = do
              myForm (text "other exercise: ")
              submitScript ex
         ]
-   encodeRuleList ex (ruleset ex)
  where
-   generalInfo = table False $ map bolds
-      [ [ text "Code",   ttText (showId ex)]
-      , [ text "Status", text (show $ status ex)]
-      , [ text "Strategy"
-        , link "" $ text (showId $ strategy ex)
-        ]
-      , [ text "Rules", text (show nrOfSoundRules)]
-      , [ text "Buggy rules", text (show nrOfBuggyRules)]
-      , [ text "OpenMath support"
-        , text $ showBool $ isJust $ hasTermView ex
-        ]
-      {- , [ text "Textual feedback"
-        , text $ showBool $ isJust $ getScript ex
-        ] -}
-      , [ text "Restartable strategy"
-        , text $ showBool $ canBeRestarted ex
-        ]
-      , [ text "Exercise generator"
-        , text $ showBool $ isJust $ randomExercise ex
-        ]
-      , [ text "Examples"
-        , text $ show $ length $ examples ex
-        ]
+   generalInfo = keyValueTable
+      [ ("Code",   ttText (showId ex))
+      , ("Status", text (show $ status ex))
+      , ("Strategy", link "" $ text (showId $ strategy ex))
+      , ("Rules", text (show nrOfSoundRules))
+      , ("Buggy rules", text (show nrOfBuggyRules))
+      , ("OpenMath support", text $ showBool $ isJust $ hasTermView ex)
+      , ("Restartable strategy", text $ showBool $ canBeRestarted ex)
+      , ("Exercise generator", text $ showBool $ isJust $ randomExercise ex)
+      , ("Examples", text $ show $ length $ examples ex)
       ]
   
    (nrOfBuggyRules, nrOfSoundRules) = 
       mapBoth length (partition isBuggy (ruleset ex))
-   
-   bolds (x:xs) = bold x:xs
-   bolds []     = []
+
+keyValueTable :: [(String, HTMLBuilder)] -> HTMLBuilder
+keyValueTable = 
+   let f (s, a) = [bold (text s), a]
+   in para . table False . map f 
+
+exerciseMenu :: Exercise a -> HTMLBuilder
+exerciseMenu ex = divClass "menubox" $ do
+   bold (text "Exercise")
+   ul [ linkToExercise lm ex    $ text "information"
+      , linkToStrategy lm ex    $ text "strategy"
+      , linkToRules lm ex       $ text "rules"
+      , linkToExamples lm ex    $ text "examples"
+      , linkToDerivations lm ex $ text "derivations"
+      ]
 
 showBool :: Bool -> String
 showBool b = if b then "yes" else "no"
 
 encodeRuleList :: Exercise a -> [Rule (Context a)] -> HTMLBuilder
 encodeRuleList ex rs = do
-      h1 $ "Rules for " ++ showId ex
-      table True (header:map f rs2)
-      h1 $ "Buggy rules for " ++ showId ex
-      table True (header:map f rs1)
+   exerciseMenu ex
+   h1 $ "Rules for " ++ showId ex
+   table True (header:map f rs2)
+   h1 $ "Buggy rules for " ++ showId ex
+   table True (header:map f rs1)
  where
    header = [ text "Rule name", text "Args"
             , text "Used", text "Rewrite rule"
@@ -257,6 +377,41 @@ stateToXML :: State a -> XMLBuilder
 stateToXML st = encodeState False enc st
  where
    enc = element "expr" . text . prettyPrinter (exercise st)
+
+htmlDescription :: HasId a => a -> HTMLBuilder
+htmlDescription a = unless (null (description a)) $ 
+   para $ do
+      bold $ text "Description"
+      br
+      spanClass "description" $ text $ description a
+   
+
+indexRequest :: XML
+indexRequest = makeXML "request" $ do
+   "service"    .=. "index"
+   "encoding"   .=. "html"
+
+exerciseListRequest :: XML
+exerciseListRequest = makeXML "request" $ do
+   "service"    .=. "exerciselist"
+   "encoding"   .=. "html"
+
+serviceListRequest :: XML
+serviceListRequest = makeXML "request" $ do
+   "service"    .=. "servicelist"
+   "encoding"   .=. "html"
+
+serviceInfoRequest :: Service -> XML
+serviceInfoRequest srv = makeXML "request" $ do
+   "service"    .=. "serviceinfo"
+   "encoding"   .=. "html"
+   element "location" $ text $ showId srv
+
+rulelistRequest :: Exercise a -> XML
+rulelistRequest ex = makeXML "request" $ do
+   "service"    .=. "rulelist"
+   "exerciseid" .=. showId ex
+   "encoding"   .=. "html"
 
 examplesRequest :: Exercise a -> XML
 examplesRequest ex = makeXML "request" $ do

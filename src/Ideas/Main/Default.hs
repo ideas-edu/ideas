@@ -12,12 +12,13 @@
 -- Main module for feedback services
 --
 -----------------------------------------------------------------------------
-module Ideas.Main.Default (defaultMain) where
+module Ideas.Main.Default (defaultMain, newDomainReasoner) where
 
 import Ideas.Common.Utils (useFixedStdGen)
 import Control.Monad
 import Data.IORef
 import Data.Time
+import Ideas.Common.Id
 import Ideas.Documentation.Make
 import Ideas.Main.LoggingDatabase
 import Ideas.Main.Options hiding (scriptDir, fullVersion)
@@ -91,6 +92,11 @@ extendDR :: (DomainReasoner -> IO ()) -> DomainReasoner -> IO ()
 extendDR f dr = do
    flags <- serviceOptions
    f dr { scriptDirs  = [Options.scriptDir flags]
-        , version     = shortVersion
-        , fullVersion = Options.fullVersion
         }
+        
+newDomainReasoner :: IsId a => a -> DomainReasoner      
+newDomainReasoner a = mempty 
+   { reasonerId  = newId a 
+   , version     = shortVersion
+   , fullVersion = Options.fullVersion
+   }

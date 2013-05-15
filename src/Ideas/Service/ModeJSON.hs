@@ -90,7 +90,7 @@ myHandler dr fun arg = do
       if fun == "exerciselist"
       then return (Some emptyExercise)
       else extractExerciseId arg >>= findExercise dr
-   srv <- findService dr fun
+   srv <- findService dr (newId fun)
    runEval dr (evalService (jsonConverter ex) srv) arg
 
 type EvalJSON = StateT (DomainReasoner, JSON) IO

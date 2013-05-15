@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -10,15 +11,16 @@
 --
 -----------------------------------------------------------------------------
 module Ideas.Service.DomainReasoner
-   ( DomainReasoner(..), newDomainReasoner
+   ( DomainReasoner(..)
    , findExercise, findService, defaultScript, readScript
    ) where
    
 import Ideas.Common.Utils
 import Ideas.Common.Utils.TestSuite
 import Ideas.Service.FeedbackScript.Parser
-import Ideas.Service.Types (Service)
+import Ideas.Service.Types
 import Ideas.Common.Library
+import Ideas.Main.Revision
 import Data.Maybe
 import Data.Monoid
 import Control.Monad.Error
@@ -27,7 +29,8 @@ import Control.Monad.Error
 -- Domain Reasoner data type
 
 data DomainReasoner = DR
-   { exercises   :: [Some Exercise]
+   { reasonerId  :: Id
+   , exercises   :: [Some Exercise]
    , services    :: [Service]
    , views       :: [ViewPackage]
    , aliases     :: [(Id, Id)]
@@ -39,9 +42,10 @@ data DomainReasoner = DR
    }
 
 instance Monoid DomainReasoner where
-   mempty = DR mempty mempty mempty mempty mempty mempty mempty mempty mempty 
+   mempty = DR mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty 
    mappend c1 c2 = DR
-      { exercises   = exercises c1   <> exercises c2
+      { reasonerId  = reasonerId c1  <> reasonerId c2
+      , exercises   = exercises c1   <> exercises c2
       , services    = services c1    <> services c2
       , views       = views c1       <> views c2 
       , aliases     = aliases c1     <> aliases c2
@@ -52,8 +56,20 @@ instance Monoid DomainReasoner where
       , fullVersion = fullVersion c1 <> fullVersion c2
       }
 
-newDomainReasoner :: DomainReasoner      
-newDomainReasoner = mempty
+instance HasId DomainReasoner where
+   getId = reasonerId
+   changeId f dr = dr { reasonerId = f (reasonerId dr) }
+
+instance Typed a DomainReasoner where
+   -- ignores views, scriptDirs, testSuite
+   typed = Tag "DomainReasoner" $ Iso (f <-> g) typed
+    where
+      f ((rid, ex, serv), (al, scr), (v, fv)) =
+         DR rid ex serv [] al [] scr mempty v fv
+      g dr = ( (reasonerId dr, exercises dr, services dr)
+             , (aliases dr, scripts dr)
+             , (version dr, fullVersion dr)
+             )
 
 -----------------------------------------------------------------------
 -- Domain Reasoner data type
@@ -66,12 +82,18 @@ findExercise dr i =
  where
    realName = fromMaybe i (lookup i (aliases dr))
 
-findService :: Monad m => DomainReasoner -> String -> m Service
-findService dr txt = do
-   case filter ((==txt) . showId) (services dr) of
-      [hd] -> return hd
-      []   -> fail $ "No service " ++ txt
-      _    -> fail $ "Ambiguous service " ++ txt
+findService :: Monad m => DomainReasoner -> Id -> m Service
+findService dr a 
+   | null (qualifiers a) = -- search for unqualified string
+        findWith (\s -> unqualified s == unqualified a) 
+   | otherwise = 
+        findWith (\s -> getId s == a)
+ where
+   findWith p  = single $ filter p $ services dr
+ 
+   single []   = fail $ "No service " ++ showId a
+   single [hd] = return hd
+   single _    = fail $ "Ambiguous service " ++ showId a
 
 defaultScript :: DomainReasoner -> Id -> IO Script
 defaultScript dr = 

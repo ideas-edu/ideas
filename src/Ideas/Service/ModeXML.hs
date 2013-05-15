@@ -77,12 +77,12 @@ xmlRequest xml = do
 
 xmlReply :: DomainReasoner -> Request -> XML -> IO XML
 xmlReply dr request xml = do
-   srv <- findService dr (service request)
+   srv <- findService dr (newId (service request))
    Some ex  <-
       case exerciseId request of
          Just code -> findExercise dr code
          Nothing
-            | service request `elem` ["exerciselist", "servicelist"] ->
+            | service request `elem` ["exerciselist", "servicelist", "serviceinfo", "index"] ->
                  return (Some emptyExercise)
             | otherwise ->
                  fail "unknown exercise code"
@@ -213,7 +213,7 @@ xmlDecodeType b ex getTerm serviceType =
                               Nothing -> defaultScript dr (getId ex)
             StdGen   -> liftIO newStdGen
             Exercise -> return ex
-            Id       -> keep $ \xml -> do
+            Id       -> keep $ \xml -> do -- improve!
                            a <- findChild "location" xml
                            return (newId (getData a))
             _        -> fail $ "No support for argument type in XML: " ++ show serviceType

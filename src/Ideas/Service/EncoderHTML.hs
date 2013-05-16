@@ -24,12 +24,15 @@ import Ideas.Common.Library hiding (ready)
 import Ideas.Documentation.RulePresenter
 import Ideas.Text.XML
 import Ideas.Text.HTML
+import Ideas.Service.Diagnose
 import Ideas.Service.DomainReasoner
 import Ideas.Service.Evaluator
 import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Service.EncoderXML
 import Ideas.Service.BasicServices
+import Ideas.Service.StrategyInfo
+import Ideas.Common.Strategy.Prefix
 
 htmlEncoder :: DomainReasoner -> Exercise a -> TypedValue (Type a) -> HTML
 htmlEncoder dr ex tv = htmlPage "EncoderHTML" (Just "ideas.css") $ do
@@ -50,6 +53,9 @@ encodeType ex (val ::: tp) =
       Iso iso t  -> do
          f <- equalM (Tag "DomainReasoner" tp) typed
          encodeIndex (f val)
+       `mplus` do
+         f <- equalM tp typed
+         htmlDiagnosis ex (f val)
        `mplus`
          encodeType ex (to iso val ::: t)
       Tag s t    -> encodeType ex (val ::: t)
@@ -62,7 +68,19 @@ encodeType ex (val ::: tp) =
       List (Const Service) -> encodeServiceList val
       List (Const SomeExercise) -> encodeExerciseList val
       List (Tag "RuleShortInfo" (Iso iso (Const Rule))) -> encodeRuleList ex (map (to iso) val)
-      List t     -> ul [ encodeType ex (x ::: t) | x <- val ]
+      List (Pair (Tag "difficulty" t) (Const Context)) -> do
+         f <- equalM (Tag "difficulty" t) typed
+         encodeExampleList ex (map (first f) val)
+      List (Const (Derivation (Pair (Const Rule) (Const Environment)) (Const Context))) ->
+         encodeDerivationList ex val
+      List t     -> do
+         f <- equalM tp typed
+         htmlAllFirsts ex (f val)
+       `mplus` do
+         f <- equalM tp typed
+         htmlAllApplications ex (f val)
+       `mplus`
+         ul [ encodeType ex (x ::: t) | x <- val ]
       Const t    -> encodeConst ex (val ::: t)
       _ -> text $ "unknown: " ++ show tp
       
@@ -71,15 +89,19 @@ encodeConst ex tv@(val ::: tp) =
    case tp of 
       Service      -> encodeService val
       Exercise     -> encodeExercise val
+      Strategy     -> encodeStrategy ex val
       Rule         -> text $ "ruleid: " ++ showId val
-      Derivation t1 t2 -> htmlDerivation ex t1 t2 val
+      Derivation (Pair (Const Rule) (Const Environment)) (Const Context) ->
+         exerciseHeader ex >> h2 "Derivation" >> htmlDerivation ex val
+      Derivation t1 t2 -> htmlDerivationWith mempty
+                             (\s -> encodeType ex (s ::: t1))
+                             (\a -> encodeType ex (a ::: t2)) val
       SomeExercise -> case val of
                          Some ex -> text $ "exerciseid: " ++ showId ex
-      Context      -> do h2 " context" 
-                         htmlState (empyStateContext ex val)
       Location     -> text $ "location: " ++ show val
       Environment  -> text $ "environment: " ++ show val
-      State        -> htmlState val
+      State        -> exerciseHeader ex >> htmlInteractiveState val
+      Context      -> text $ prettyPrinterContext ex val
       String       -> text val
       _ -> text $ show tv
 
@@ -91,8 +113,9 @@ data LinkManager a = LinkManager
    , urlForExercise   :: Exercise a -> String
    , urlForExamples   :: Exercise a  -> String
    , urlForRandomExample :: Difficulty -> Exercise a -> String
-   --, urlForStrategy  :: Exercise a -> String
+   , urlForStrategy  :: Exercise a -> String
    , urlForRules     :: Exercise a -> String
+   , urlForDerivations :: Exercise a -> String
 --   , urlForRule      :: Exercise a -> Rule (Context a) -> String
    , urlForState      :: State a -> String
    , urlForAllFirsts  :: State a -> String
@@ -116,13 +139,13 @@ linkToExercise :: LinkManager a -> Exercise a -> HTMLBuilder -> HTMLBuilder
 linkToExercise lm = link . escapeInURL . urlForExercise lm
 
 linkToStrategy :: LinkManager a -> Exercise a -> HTMLBuilder -> HTMLBuilder
-linkToStrategy _ _ = id
+linkToStrategy lm = link . escapeInURL . urlForStrategy lm
 
 linkToRules :: LinkManager a -> Exercise a -> HTMLBuilder -> HTMLBuilder
 linkToRules lm = link . escapeInURL . urlForRules lm
 
 linkToDerivations :: LinkManager a -> Exercise a -> HTMLBuilder -> HTMLBuilder
-linkToDerivations _ _ = id
+linkToDerivations lm = link . escapeInURL . urlForDerivations lm
 
 linkToExamples :: LinkManager a -> Exercise a -> HTMLBuilder -> HTMLBuilder
 linkToExamples lm = link . escapeInURL . urlForExamples lm
@@ -154,10 +177,14 @@ lm = LinkManager
         url ++ show exerciseListRequest
    , urlForExercise = \ex ->
         url ++ show (exerciseInfoRequest ex)
+   , urlForStrategy = \ex ->
+        url ++ show (strategyInfoRequest ex)
    , urlForRules = \ex ->
         url ++ show (rulelistRequest ex)
    , urlForExamples = \ex ->
         url ++ show (examplesRequest ex)
+   , urlForDerivations = \ex -> 
+        url ++ show (exampleDerivationsRequest ex)
    , urlForRandomExample = \d ex ->
         url ++ show (generateRequest d ex)
    , urlForState = \state -> 
@@ -230,10 +257,14 @@ groupById :: HasId a => [a] -> [(Int, String, [a])]
 groupById = groupsWith (fromMaybe "" . listToMaybe . qualifiers . getId)
 
 groupsWith :: (a -> String) -> [a] -> [(Int, String, [a])]
-groupsWith get = zipWith f [1..] . groupBy eq . sortBy (comparing get)
+groupsWith = orderedGroupsWith id 
+
+orderedGroupsWith :: Ord b => (b -> String) -> (a -> b) -> [a] -> [(Int, String, [a])]
+orderedGroupsWith showf get = 
+   zipWith f [1..] . groupBy eq . sortBy (comparing get)
  where
    eq x y = get x == get y
-   f i xs = (i, get (head xs), xs)
+   f i xs = (i, showf (get (head xs)), xs)
 
 encodeService :: Service -> HTMLBuilder
 encodeService srv = do
@@ -273,9 +304,7 @@ productType tp =
 
 encodeExercise :: Exercise a -> HTMLBuilder
 encodeExercise ex = do
-   exerciseMenu ex
-   h1 $ "Exercise " ++ showId ex
-   htmlDescription ex
+   exerciseHeader ex
    generalInfo
    h2 "Example exercises"
    ul $ [ para $ linkToExamples lm ex $ text "list of examples"
@@ -297,7 +326,7 @@ encodeExercise ex = do
    generalInfo = keyValueTable
       [ ("Code",   ttText (showId ex))
       , ("Status", text (show $ status ex))
-      , ("Strategy", link "" $ text (showId $ strategy ex))
+      , ("Strategy", linkToStrategy lm ex $ text (showId $ strategy ex))
       , ("Rules", text (show nrOfSoundRules))
       , ("Buggy rules", text (show nrOfBuggyRules))
       , ("OpenMath support", text $ showBool $ isJust $ hasTermView ex)
@@ -308,6 +337,12 @@ encodeExercise ex = do
   
    (nrOfBuggyRules, nrOfSoundRules) = 
       mapBoth length (partition isBuggy (ruleset ex))
+
+exerciseHeader :: Exercise a -> HTMLBuilder
+exerciseHeader ex = do
+   exerciseMenu ex
+   h1 $ "Exercise " ++ showId ex
+   htmlDescription ex
 
 keyValueTable :: [(String, HTMLBuilder)] -> HTMLBuilder
 keyValueTable = 
@@ -324,15 +359,29 @@ exerciseMenu ex = divClass "menubox" $ do
       , linkToDerivations lm ex $ text "derivations"
       ]
 
+encodeStrategy :: Exercise a -> Strategy (Context a) -> HTMLBuilder 
+encodeStrategy ex s = do
+   exerciseHeader ex
+   h2 "Strategy"
+   highlightXML True (strategyToXML s)
+   h2 "Locations"
+   let f (loc, a) =
+          [text (show loc), indent (length loc) >> text (showId a)]
+       indent n = text (replicate (3*n) '.')
+   table True
+      ( [text "Location", text "Label"]
+      : map f (strategyLocations (strategy ex))
+      )
+
 showBool :: Bool -> String
 showBool b = if b then "yes" else "no"
 
 encodeRuleList :: Exercise a -> [Rule (Context a)] -> HTMLBuilder
 encodeRuleList ex rs = do
-   exerciseMenu ex
-   h1 $ "Rules for " ++ showId ex
+   exerciseHeader ex
+   h2 $ "Rules for " ++ showId ex
    table True (header:map f rs2)
-   h1 $ "Buggy rules for " ++ showId ex
+   h2 $ "Buggy rules for " ++ showId ex
    table True (header:map f rs1)
  where
    header = [ text "Rule name", text "Args"
@@ -340,38 +389,155 @@ encodeRuleList ex rs = do
             ]
    (rs1, rs2) = partition isBuggy rs
    used = rulesInStrategy (strategy ex)
-   f r  = [ link "" $ ttText (showId r)
+   f r  = [ ttText (showId r)
           , text $ show $ length $ getRefs r
           , text $ showBool $ r `elem` used
           , when (isRewriteRule r) $
                ruleToHTML (Some ex) r
           ]
 
+encodeExampleList :: Exercise a -> [(Difficulty, Context a)] -> HTMLBuilder
+encodeExampleList ex list = do
+   exerciseHeader ex
+   h2 "Examples"
+   forM_ (orderedGroupsWith show fst list) $ \(_, s, xs) -> do
+      h3 $ s ++ " (" ++ show (length xs) ++ ")"
+      forM_ xs $ \(_, x) -> para $ do
+         let st = emptyStateContext ex x
+         spanClass "statelink" $ linkToState lm st $ element "img" $ do
+            "src" .=. "external.png"
+            "width" .=. "15"
+         text (prettyPrinterContext ex x) 
+
+encodeDerivationList :: Exercise a -> [Derivation (Rule (Context a), Environment) (Context a)] -> HTMLBuilder
+encodeDerivationList ex ds = do
+   exerciseHeader ex
+   h2 "Derivations"
+   forM_ (zip [1..] ds) $ \(i, d) -> do
+      h3 $ show i ++ "."
+      htmlDerivation ex d
+      
+htmlDerivation :: Exercise a -> Derivation (Rule (Context a), Environment) (Context a) -> HTMLBuilder
+htmlDerivation ex d = 
+   htmlDerivationWith (before d) forStep forTerm (derivationDiffEnv d)
+ where
+   before d = do
+      let st = emptyStateContext ex (firstTerm d)
+      spanClass "derivation-statelink" $ linkToState lm st $ element "img" $ do
+            "src" .=. "external.png"
+            "width" .=. "15"
+   forStep ((r, env1), env2) = do 
+      spanClass "derivation-step" $ do
+         unescaped "&#8658; "
+         text $ unqualified r
+         let showEnv e = unless (noBindings e) $ text $ ", " ++ show e
+         showEnv env1 -- local environment
+         showEnv env2 -- global environment (diff)
+   forTerm a = do 
+      divClass "term" $ text $ prettyPrinterContext ex a
+
 htmlState :: State a -> HTMLBuilder
 htmlState state = do
-   h2 "state"
-   text $ "state: " ++ show state
-   br
-   text $ " ready: " ++ show (ready state)
-   br
+   para $ divClass "state" $ do
+      spanClass "derivation-statelink" $ linkToState lm state $ element "img" $ do
+            "src" .=. "external.png"
+            "width" .=. "15"
+      divClass "term" $ text $ prettyPrinterContext (exercise state) (stateContext state)
+      text $ "ready: " ++ showBool (ready state)
+
+htmlInteractiveState :: State a -> HTMLBuilder
+htmlInteractiveState state = do
+   htmlState state
+   h2 "Feedback"
    submitScript2 state
    myForm mempty
-   parens $ linkToAllFirsts lm state $ text "allfirsts"
-   parens $ linkToAllApplications lm state $ text "allapplications"
-   parens $ linkToDerivation lm state $ text "derivation"
+   ul [ linkToAllFirsts lm state $ text "allfirsts"
+      , linkToAllApplications lm state $ text "allapplications"
+      , linkToDerivation lm state $ text "derivation"
+      ]
+   unless (noBindings state) $ do
+      h2 "Environment"
+      text $ show $ environment state
+   forM_ (zip [1..] (statePrefixes state)) $ \(i, pr) -> do
+      h2 $ "Prefix " ++ show i
+      let steps   = prefixToSteps pr
+          count p = text $ show $ length $ filter p steps
+          enter   = spanClass "step-enter" . text . show
+      keyValueTable 
+         [ ("steps", count (const True))
+         , ("rules", count isRuleStep)
+         , ("major rules", count isMajor)
+         , ("active labels", ul $ map enter $ activeLabels pr)
+         ]
+      sequence_ $ intersperse (text ", ") $ map htmlStep steps
+   
+isRuleStep :: Step l a -> Bool
+isRuleStep (RuleStep _ _) = True
+isRuleStep _ = False
+   
+htmlStep :: Show l => Step l a -> HTMLBuilder
+htmlStep (Enter l)      = spanClass "step-enter" $ text $ "enter " ++ show l
+htmlStep (Exit  l)      = spanClass "step-exit"  $ text $ "exit " ++ show l
+htmlStep (RuleStep _ r) = let s = if isMinor r then "minor" else "major"
+                          in spanClass ("step-"++s) $ text $ showId r
 
-htmlDerivation :: Exercise a -> Type a t1 -> Type a t2 -> Derivation t1 t2 -> HTMLBuilder
-htmlDerivation ex t1 t2 d = do 
-   forTerm (firstTerm d)
-   mapM_ make (triples d)
+htmlDerivationWith :: HTMLBuilder -> (s -> HTMLBuilder) -> (a -> HTMLBuilder) -> Derivation s a -> HTMLBuilder
+htmlDerivationWith before forStep forTerm d = 
+   divClass "derivation" $ do 
+      before
+      forTerm (firstTerm d)
+      forM_ (triples d) $ \(_, s, a) -> do
+         forStep s
+         forTerm a
+
+htmlAllFirsts :: Exercise a -> [(StepInfo a, State a)] -> HTMLBuilder
+htmlAllFirsts ex xs = do
+   exerciseHeader ex
+   h2 "All firsts"
+   ul (map (uncurry make) xs) 
  where
-   make (_, s, a) = forStep s >> forTerm a
-   forTerm a = encodeType ex (a ::: t2)
-   forStep s = do
-      h1 "Step"
-      br
-      encodeType ex (s ::: t1)
-      br
+   make (r, loc, env) s = do
+      keyValueTable 
+         [ ("Rule", text $ showId r)
+         , ("Location", text $ show loc)
+         , ("Environment", text $ show env)
+         ]
+      htmlState s
+
+htmlAllApplications :: Exercise a -> [(Rule (Context a), Location, State a)] -> HTMLBuilder
+htmlAllApplications ex xs = do
+   exerciseHeader ex
+   h2 "All applications"
+   ul (map make xs) 
+ where
+   make (r, loc, s) = do
+      keyValueTable 
+         [ ("Rule", text $ showId r)
+         , ("Location", text $ show loc)
+         -- , ("Environment", text $ show env)
+         ]
+      unless (isBuggy r) (htmlState s)
+
+htmlDiagnosis :: Exercise a -> Diagnosis a -> HTMLBuilder
+htmlDiagnosis ex diagnosis = do
+   exerciseHeader ex
+   case diagnosis of 
+      Buggy _ r -> do 
+         spanClass "error" $ text $ "Not equivalent: buggy rule " ++ show r
+      NotEquivalent -> 
+         spanClass "error" $ text "Not equivalent"
+      Similar _ s -> do
+         h2 "Similar term"
+         htmlInteractiveState s
+      Expected _ s r -> do
+         h2 $ "Expected (" ++ show r ++ ")"
+         htmlInteractiveState s
+      Detour _ s _ r -> do
+         h2 $ "Detour (" ++ show r ++ ")"
+         htmlInteractiveState s
+      Correct _ s -> do
+         h2 "Correct"
+         htmlInteractiveState s
 
 stateToXML :: State a -> XMLBuilder
 stateToXML st = encodeState False enc st
@@ -460,6 +626,18 @@ exerciseInfoRequest ex = makeXML "request" $ do
    "exerciseid" .=. showId ex
    "encoding"   .=. "html"
 
+strategyInfoRequest :: Exercise a -> XML
+strategyInfoRequest ex = makeXML "request" $ do
+   "service"    .=. "strategyinfo"
+   "exerciseid" .=. showId ex
+   "encoding"   .=. "html"
+
+exampleDerivationsRequest :: Exercise a -> XML
+exampleDerivationsRequest ex = makeXML "request" $ do
+   "service"    .=. "examplederivations"
+   "exerciseid" .=. showId ex
+   "encoding"   .=. "html"
+
 -- http://www.blooberry.com/indexdot/html/topics/urlencoding.htm
 escapeInURL :: String -> String
 escapeInURL = concatMap f
@@ -468,10 +646,6 @@ escapeInURL = concatMap f
    f '>' = "%3E"
    f '&' = "%26"
    f c   = [c]
-   
-parens :: HTMLBuilder -> HTMLBuilder
-parens s = text " (" >> s >> text ") "
-
 
 myForm :: HTMLBuilder -> HTMLBuilder
 myForm this = element "form" $ do

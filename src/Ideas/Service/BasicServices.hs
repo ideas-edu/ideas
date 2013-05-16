@@ -47,7 +47,7 @@ derivation mcfg state =
       Just cfg | all (null . prefixToSteps) ps ->
          let newStrategy = configure cfg (strategy ex)
              newExercise = ex {strategy = newStrategy}
-         in rec timeout d0 (empyStateContext newExercise (stateContext state))
+         in rec timeout d0 (emptyStateContext newExercise (stateContext state))
       _ -> rec timeout d0 state
  where
    d0 = emptyDerivation state

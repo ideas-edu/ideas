@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Ideas.Service.State
    ( -- * Exercise state
-     State, makeState, makeNoState, empyStateContext, emptyState
+     State, makeState, makeNoState, emptyStateContext, emptyState
    , exercise, statePrefixes, stateContext, stateTerm, stateLabels
    ) where
 
@@ -43,6 +43,11 @@ instance HasId (State a) where
    getId = getId . exercise
    changeId f s = s { exercise = changeId f (exercise s) }
 
+instance HasEnvironment (State a) where
+   environment = environment . stateContext
+   setEnvironment env s = 
+      s { stateContext = setEnvironment env (stateContext s) }
+
 stateTerm :: State a -> a
 stateTerm = fromMaybe (error "invalid term") . fromContext . stateContext
 
@@ -63,10 +68,10 @@ makeState = State
 makeNoState :: Exercise a -> Context a -> State a
 makeNoState = flip makeState [] 
 
-empyStateContext :: Exercise a -> Context a -> State a
-empyStateContext ex = makeState ex [pr]
+emptyStateContext :: Exercise a -> Context a -> State a
+emptyStateContext ex = makeState ex [pr]
  where
    pr = emptyPrefix (strategy ex)
 
 emptyState :: Exercise a -> a -> State a
-emptyState ex = empyStateContext ex . inContext ex
+emptyState ex = emptyStateContext ex . inContext ex

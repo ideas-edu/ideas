@@ -47,6 +47,7 @@ metaServiceList :: DomainReasoner -> [Service]
 metaServiceList dr = 
    [ indexS dr, servicelistS dr, serviceinfoS dr, exerciselistS dr
    , rulelistS, rulesinfoS, strategyinfoS, exerciseinfoS, stateinfoS
+   , examplederivationsS
    ]
 
 ------------------------------------------------------
@@ -249,6 +250,13 @@ allExercises = sortBy (comparing f)
  where
    f :: Some Exercise -> String
    f (Some ex) = showId ex
+
+examplederivationsS :: Service
+examplederivationsS = makeService "meta.examplederivations"
+   "Show example derivations" $ exampleDeriv ::: typed
+
+exampleDeriv :: Exercise a -> Either String [Derivation (Rule (Context a), Environment) (Context a)]
+exampleDeriv ex = mapM (derivation Nothing . emptyState ex . snd) (examples ex)
 
 allServices :: [Service] -> [Service]
 allServices = sortBy (comparing showId)

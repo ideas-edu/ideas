@@ -11,7 +11,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.ServiceList ( serviceList, metaServiceList) where
+module Ideas.Service.ServiceList (serviceList, metaServiceList, RuleShortInfo(..), exampleDeriv) where
 
 import Ideas.Common.Library hiding (apply, applicable, derivation, ready)
 import Ideas.Common.Utils (Some(..))
@@ -46,8 +46,8 @@ serviceList =
 metaServiceList :: DomainReasoner -> [Service]
 metaServiceList dr = 
    [ indexS dr, servicelistS dr, serviceinfoS dr, exerciselistS dr
-   , rulelistS, rulesinfoS, strategyinfoS, exerciseinfoS, stateinfoS
-   , examplederivationsS
+   , rulelistS, ruleinfoS, rulesinfoS, strategyinfoS, exerciseinfoS
+   , stateinfoS, examplederivationsS
    ]
 
 ------------------------------------------------------
@@ -223,6 +223,11 @@ rulelistS = makeService "meta.rulelist"
    \expressed as an observable rewrite rule. See rulesinfo for more details \
    \about the rules." $
    (map RuleShortInfo . ruleset) ::: typed
+
+ruleinfoS :: Service
+ruleinfoS = makeService "meta.ruleinfo"
+   "Information about a rule" $
+   (id :: Rule (Context a) -> Rule (Context a)) ::: typed
 
 rulesinfoS :: Service
 rulesinfoS = makeService "meta.rulesinfo"

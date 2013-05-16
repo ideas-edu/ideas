@@ -31,6 +31,7 @@ import Ideas.Service.OpenMathSupport
 import Ideas.Service.Request
 import Ideas.Service.State
 import Ideas.Service.EncoderXML
+import Ideas.Service.LinkManager
 import Ideas.Service.Types
 import Ideas.Service.EncoderHTML
 import System.Random
@@ -142,7 +143,8 @@ stringFormatConverter ex =
 htmlConverter :: DomainReasoner -> Exercise a -> Evaluator (Const a) EvalXML HTML
 htmlConverter dr ex = Evaluator 
    { decoder = decoder (stringFormatConverter ex)
-   , encoder = return . htmlEncoder dr ex
+     -- perhaps move link manager to html converter?
+   , encoder = return . htmlEncoder (dynamicLinks "ideas.cgi") dr ex
    }
 
 openMathConverter :: Bool -> Exercise a -> Evaluator (Const a) EvalXML XMLBuilder

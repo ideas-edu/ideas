@@ -228,9 +228,7 @@ encodeExercise lm ex = do
                 ]
         | isJust (randomExercise ex)
         ] ++
-        [ para $ do 
-             myForm (text "other exercise: ")
-             submitScript ex
+        [ para $ submitStateInfo lm ex
         | not (isStatic lm)
         ]
  where
@@ -391,8 +389,7 @@ htmlInteractiveState :: LinkManager -> State a -> HTMLBuilder
 htmlInteractiveState lm state = do
    htmlState lm state
    h2 "Feedback"
-   submitScript2 state
-   myForm mempty
+   submitDiagnose lm state
    ul [ linkToFirsts lm state $ text "allfirsts"
       , linkToApplications lm state $ text "allapplications"
       , linkToDerivation lm state $ text "derivation"
@@ -488,8 +485,8 @@ htmlDescription a = unless (null (description a)) $
       br
       spanClass "description" $ text $ description a
 
-myForm :: HTMLBuilder -> HTMLBuilder
-myForm this = element "form" $ do
+submitForm :: HTMLBuilder -> HTMLBuilder
+submitForm this = element "form" $ do
    "name"     .=. "myform" 
    "onsubmit" .=. "return submitTerm()" 
    "method"   .=. "post"
@@ -502,26 +499,20 @@ myForm this = element "form" $ do
       "value" .=. "Submit"
 
 -- stateinfo service
-submitScript :: Exercise a -> HTMLBuilder
-submitScript ex = element "script" $ do
-   "type" .=. "text/javascript"
-   unescaped (getTerm ++ code)
+submitStateInfo :: LinkManager -> Exercise a -> HTMLBuilder
+submitStateInfo lm ex = do
+   submitForm (text "other exercise: ")
+   submitRequest lm request
  where
-   code    = "function submitTerm() {document.myform.action = \"" ++ action ++ "\");}"
-   action  = "ideas.cgi?input=\" + encodeURIComponent(\"" ++ request
    request = "<request service='stateinfo' exerciseid='" ++ showId ex 
           ++ "' encoding='html'><state><expr>\" + getTerm() + \"</expr></state></request>"
 
-          
-          
 -- diagnose service
-submitScript2 :: State a -> HTMLBuilder
-submitScript2 st = element "script" $ do
-   "type" .=. "text/javascript"
-   unescaped (getTerm ++ code)
+submitDiagnose :: LinkManager -> State a -> HTMLBuilder
+submitDiagnose lm st = do
+   submitForm mempty
+   submitRequest lm request
  where
-   code    = "function submitTerm() {document.myform.action = \"" ++ action ++ "\");}"
-   action  = "ideas.cgi?input=\" + encodeURIComponent(\"" ++ request
    request = "<request service='diagnose' exerciseid='" ++ showId (exercise st)
           ++ "' encoding='html'>" ++ ststr ++ "<expr>\"  + getTerm() + \"</expr></request>"
           
@@ -532,15 +523,28 @@ submitScript2 st = element "script" $ do
    f '\\' = "\\\\"
    f c = [c]
  
-getTerm :: String  
-getTerm = 
-   "function getTerm() {\
-   \   var s = document.myform.myterm.value;\
-   \   var result = \"\";\
-   \   for (var i=0;i<s.length;i++) {\
-   \      if (s[i]=='<') result+=\"&lt;\";\
-   \      else if (s[i]=='&') result+=\"&amp;\";\
-	\      else result+=s[i];\
-   \   }\
-   \   return result;\
-   \}"
+submitRequest :: LinkManager -> String -> HTMLBuilder
+submitRequest lm request = submitURL $ 
+   quote (urlForRequest lm) ++ "+encodeURIComponent(" ++ quote request ++ ")"
+
+quote :: String -> String 
+quote s = '"' : s ++ ['"']
+
+-- Inject two JavaScript functions for handling the input form
+submitURL :: String -> HTMLBuilder
+submitURL url = element "script" $ do
+   "type" .=. "text/javascript"
+   unescaped $ 
+      "function getTerm() {\
+      \   var s = document.myform.myterm.value;\
+      \   var result = '';\
+      \   for (var i=0;i<s.length;i++) {\
+      \      if (s[i]=='<') result+='&lt;';\
+      \      else if (s[i]=='&') result+='&amp;';\
+	   \      else result+=s[i];\
+      \   }\
+      \   return result;\
+      \}\
+      \function submitTerm() {\
+      \   document.myform.action = " ++ url ++ ";\
+      \}"

@@ -41,11 +41,11 @@ import Ideas.Text.XML
 import Ideas.Text.HTML
 import qualified Ideas.Service.Types as Tp
 
-processXML :: DomainReasoner -> String -> IO (Request, String, String)
-processXML dr input = do
+processXML :: DomainReasoner -> Maybe String -> String -> IO (Request, String, String)
+processXML dr cgiBin input = do
    xml  <- either fail return (parseXML input)
    req  <- either fail return (xmlRequest xml)
-   resp <- xmlReply dr req xml
+   resp <- xmlReply dr cgiBin req xml
               `catchError` (return . resultError . ioeGetErrorString)
    case encoding req of
       Just HTMLEncoding -> 
@@ -76,8 +76,8 @@ xmlRequest xml = do
       , encoding   = enc
       }
 
-xmlReply :: DomainReasoner -> Request -> XML -> IO XML
-xmlReply dr request xml = do
+xmlReply :: DomainReasoner -> Maybe String -> Request -> XML -> IO XML
+xmlReply dr cgiBin request xml = do
    srv <- findService dr (newId (service request))
    Some ex  <-
       case exerciseId request of
@@ -94,7 +94,7 @@ xmlReply dr request xml = do
          return (resultOk res) 
 
       Just HTMLEncoding -> do
-         let conv = htmlConverter dr ex
+         let conv = htmlConverter dr cgiBin ex
          res  <- runEval dr (evalService conv srv) xml
          return res 
 
@@ -140,12 +140,15 @@ stringFormatConverter ex =
       let input = getData xml
       either (fail . show) return (parser ex input)
 
-htmlConverter :: DomainReasoner -> Exercise a -> Evaluator (Const a) EvalXML HTML
-htmlConverter dr ex = Evaluator 
+htmlConverter :: DomainReasoner -> Maybe String -> Exercise a -> Evaluator (Const a) EvalXML HTML
+htmlConverter dr cgiBin ex = Evaluator 
    { decoder = decoder (stringFormatConverter ex)
      -- perhaps move link manager to html converter?
-   , encoder = return . htmlEncoder (dynamicLinks "ideas.cgi") dr ex
+   , encoder = return . htmlEncoder lm dr ex
    }
+ where
+   lm = maybe staticLinks dynamicLinks cgiBin
+            
 
 openMathConverter :: Bool -> Exercise a -> Evaluator (Const a) EvalXML XMLBuilder
 openMathConverter withMF ex =

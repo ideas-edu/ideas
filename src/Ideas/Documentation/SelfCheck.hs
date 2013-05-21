@@ -99,7 +99,7 @@ doBlackBoxTest dr format path = do
             return (h1, h2, txt, expt)
          out  <- case format of
                     JSON -> liftM snd3 (processJSON dr txt)
-                    XML  -> liftM snd3 (processXML dr txt)
+                    XML  -> liftM snd3 (processXML dr Nothing txt)
          -- Conditional forces evaluation of the result, to make sure that
          -- all file handles are closed afterwards.
          if out ~= expt 

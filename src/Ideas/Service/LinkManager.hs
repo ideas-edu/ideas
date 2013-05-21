@@ -34,6 +34,7 @@ import Ideas.Service.EncoderXML (encodeState)
 
 data LinkManager = LinkManager
    { urlForResource      :: String -> String
+   , urlForRequest       :: String
    , isStatic            :: Bool
      -- links to services and exercises
    , urlForIndex         :: String
@@ -119,6 +120,7 @@ linkToDerivation = linkWith . urlForDerivation
 dynamicLinks :: String -> LinkManager
 dynamicLinks cgiBinary = LinkManager 
    { isStatic        = False
+   , urlForRequest   = prefix
    , urlForResource  = id
    , urlForIndex     = url $ simpleRequest "index"
    , urlForExercises = url $ simpleRequest "exerciselist"
@@ -143,7 +145,8 @@ dynamicLinks cgiBinary = LinkManager
    , urlForDerivation   = url . stateRequest "derivation"
    }
  where
-   url req = cgiBinary ++ "?input=" ++ show req
+   prefix  = cgiBinary ++ "?input="
+   url req = prefix ++ show req
 
 simpleRequest :: String -> XML
 simpleRequest s = makeRequest s mempty
@@ -188,6 +191,7 @@ staticLinks :: LinkManager
 staticLinks = LinkManager
    { isStatic        = True
    , urlForResource  = id
+   , urlForRequest   = ""
    , -- links to services and exercises
      urlForIndex     = "index.html"
    , urlForExercises = "exercises.html"

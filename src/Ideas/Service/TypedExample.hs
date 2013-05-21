@@ -44,7 +44,7 @@ typedExample dr ex service args = do
       (return . resultError . ioeGetErrorString)
    -- Check request/reply pair
    xmlTest <- do
-      (_, txt, _) <- processXML dr (show request)
+      (_, txt, _) <- processXML dr Nothing (show request)
       let p   = filter (not . isSpace)
           out = showXML (addVersion (version dr) reply)
       return (p txt == p out)

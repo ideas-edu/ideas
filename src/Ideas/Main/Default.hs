@@ -19,7 +19,7 @@ import Control.Monad
 import Data.IORef
 import Data.Time
 import Ideas.Common.Id
-import Ideas.Documentation.Make
+import qualified Ideas.Documentation.Make as Doc
 import Ideas.Main.LoggingDatabase
 import Ideas.Main.Options hiding (scriptDir, fullVersion)
 import qualified Ideas.Main.Options as Options
@@ -28,6 +28,7 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.ModeJSON (processJSON)
 import Ideas.Service.ModeXML (processXML)
+import Ideas.Service.DocumentationMaker
 import Ideas.Service.Request
 import System.IO
 
@@ -43,7 +44,7 @@ defaultMain = extendDR $ \dr -> do
          when (FixRNG `elem` flags)
             useFixedStdGen -- use a predictable "random" number generator
          input    <- readFile file
-         (req, txt, _) <- process dr input
+         (req, txt, _) <- process dr Nothing input
          when (Logging True `elem` flags) $
             writeIORef logRef $ -- save logging action for later
                logMessage req input txt "local" startTime
@@ -52,8 +53,10 @@ defaultMain = extendDR $ \dr -> do
 
       -- documentation mode
       _ | documentationMode flags ->
-             let f = makeDocumentation dr (docDir flags) (testDir flags)
-             in mapM_ f (docItems flags)
+             forM_ (docItems flags) $ \item -> 
+                case item of
+                   Doc.Pages -> makeDocumentation (docDir flags) dr
+                   _ -> Doc.makeDocumentation dr (docDir flags) (testDir flags) item
 
       -- feedback script options
         | scriptMode flags -> 
@@ -63,14 +66,16 @@ defaultMain = extendDR $ \dr -> do
 
       -- cgi binary
       Nothing -> runCGI $ do
-         addr  <- remoteAddr           -- the IP address of the remote host making the request
-         raw   <- getInput "input"     -- read input
-         input <- case raw of
-                     Nothing -> fail "Invalid request: environment variable \"input\" is empty"
-                     Just s  -> return s
-         (req, txt, ctp) <- liftIO $ process dr input
-         liftIO $ writeIORef logRef $ -- save logging action for later
-            logMessage req input txt addr startTime
+         addr   <- remoteAddr           -- the IP address of the remote host making the request
+         raw    <- getInput "input"     -- read input
+         cgiBin <- scriptName
+         input  <- case raw of
+                      Nothing -> fail "Invalid request: environment variable \"input\" is empty"
+                      Just s  -> return s
+         (req, txt, ctp) <- liftIO $ process dr (Just cgiBin) input
+         unless (encoding req == Just HTMLEncoding) $ 
+            liftIO $ writeIORef logRef $ -- save logging action for later
+               logMessage req input txt addr startTime
          setHeader "Content-type" ctp
          -- Cross-Origin Resource Sharing (CORS) prevents browser warnings
          -- about cross-site scripting
@@ -81,10 +86,10 @@ defaultMain = extendDR $ \dr -> do
    when (withLogging flags) $
       join (readIORef logRef)
 
-process :: DomainReasoner -> String -> IO (Request, String, String)
-process dr input = do
+process :: DomainReasoner -> Maybe String -> String -> IO (Request, String, String)
+process dr cgiBin input = do
    case discoverDataFormat input of
-      Just XML  -> processXML  dr input
+      Just XML  -> processXML dr cgiBin input
       Just JSON -> processJSON dr input
       _ -> fail "Invalid input"
       

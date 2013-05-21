@@ -16,19 +16,16 @@ module Ideas.Service.DocumentationMaker (makeDocumentation) where
 import Control.Monad
 import Ideas.Common.Library
 import System.Directory
-import System.FilePath
+import System.FilePath (takeDirectory)
 import Ideas.Common.Utils
 import Ideas.Service.EncoderHTML
 import Ideas.Service.DomainReasoner
 import Ideas.Service.LinkManager
 import Ideas.Service.ServiceList (RuleShortInfo(..), exampleDeriv)
 import Ideas.Service.Types
-import Main
 
-go = makeDocumentation ideasMath
-
-makeDocumentation :: DomainReasoner -> IO ()
-makeDocumentation dr = do
+makeDocumentation :: String -> DomainReasoner -> IO ()
+makeDocumentation dir dr = do
    putStrLn "Generating index pages"
    make urlForIndex emptyExercise (dr ::: typed)
    make urlForExercises emptyExercise (exercises dr ::: typed)
@@ -47,7 +44,7 @@ makeDocumentation dr = do
           make (\lm -> urlForRule lm ex r) ex (r ::: typed)
  where
    lm = staticLinks
-   make url ex tv = safeWrite ("newdoc/" ++ url lm) $ 
+   make url ex tv = safeWrite (dir </> url lm) $ 
       show $ htmlEncoder (linksUp (pathLevel $ url lm) lm) dr ex tv 
   
 safeWrite :: FilePath -> String -> IO ()

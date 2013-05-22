@@ -16,12 +16,13 @@ module Ideas.Main.Default (defaultMain, newDomainReasoner) where
 
 import Ideas.Common.Utils (useFixedStdGen)
 import Control.Monad
+import Ideas.Documentation.SelfCheck
 import Data.IORef
 import Data.Time
 import Ideas.Common.Id
-import qualified Ideas.Documentation.Make as Doc
+import Ideas.Common.Utils.TestSuite
 import Ideas.Main.LoggingDatabase
-import Ideas.Main.Options hiding (scriptDir, fullVersion)
+import Ideas.Main.Options hiding (fullVersion)
 import qualified Ideas.Main.Options as Options
 import Network.CGI
 import Ideas.Service.DomainReasoner
@@ -33,58 +34,68 @@ import Ideas.Service.Request
 import System.IO
 
 defaultMain :: DomainReasoner -> IO ()
-defaultMain = extendDR $ \dr -> do
+defaultMain dr = do
    startTime <- getCurrentTime
-   flags     <- serviceOptions
-   logRef    <- newIORef (return ())
+   flags     <- getFlags
+   if null flags
+      then defaultCGI dr startTime
+      else defaultCommandLine dr flags
 
-   case withInputFile flags of
-      -- from file
-      Just file -> do
-         when (FixRNG `elem` flags)
-            useFixedStdGen -- use a predictable "random" number generator
-         input    <- readFile file
-         (req, txt, _) <- process dr Nothing input
-         when (Logging True `elem` flags) $
-            writeIORef logRef $ -- save logging action for later
-               logMessage req input txt "local" startTime
-         hSetBinaryMode stdout True
-         putStrLn txt
-
-      -- documentation mode
-      _ | documentationMode flags ->
-             forM_ (docItems flags) $ \item -> 
-                case item of
-                   Doc.Pages -> makeDocumentation (docDir flags) dr
-                   _ -> Doc.makeDocumentation dr (docDir flags) (testDir flags) item
-
-      -- feedback script options
-        | scriptMode flags -> 
-             withScripts dr (Just (Options.scriptDir flags))
-                            [ a | MakeScriptFor a <- flags ]
-                            [ a | AnalyzeScript a <- flags ]
-
-      -- cgi binary
-      Nothing -> runCGI $ do
-         addr   <- remoteAddr           -- the IP address of the remote host making the request
-         raw    <- getInput "input"     -- read input
-         cgiBin <- scriptName
-         input  <- case raw of
-                      Nothing -> fail "Invalid request: environment variable \"input\" is empty"
-                      Just s  -> return s
-         (req, txt, ctp) <- liftIO $ process dr (Just cgiBin) input
-         unless (encoding req == Just HTMLEncoding) $ 
-            liftIO $ writeIORef logRef $ -- save logging action for later
-               logMessage req input txt addr startTime
-         setHeader "Content-type" ctp
-         -- Cross-Origin Resource Sharing (CORS) prevents browser warnings
-         -- about cross-site scripting
-         setHeader "Access-Control-Allow-Origin" "*"
-         output txt
-
+-- Invoked as a cgi binary
+defaultCGI :: DomainReasoner -> UTCTime -> IO ()
+defaultCGI dr startTime = do
+   logRef <- newIORef (return ())
+   runCGI $ do
+      addr   <- remoteAddr       -- the IP address of the remote host making the request
+      cgiBin <- scriptName       -- get name of binary
+      raw    <- getInput "input" -- read input
+      input  <- case raw of
+                   Nothing -> fail "Invalid request: environment variable \"input\" is empty"
+                   Just s  -> return s
+      (req, txt, ctp) <- liftIO $ process dr (Just cgiBin) input
+      -- save logging action for later
+      unless (encoding req == Just HTMLEncoding) $ 
+         liftIO $ writeIORef logRef $
+            logMessage req input txt addr startTime
+      setHeader "Content-type" ctp
+      -- Cross-Origin Resource Sharing (CORS) prevents browser warnings
+      -- about cross-site scripting
+      setHeader "Access-Control-Allow-Origin" "*"
+      output txt
    -- log request to database
-   when (withLogging flags) $
-      join (readIORef logRef)
+   join (readIORef logRef)
+   
+-- Invoked from command-line with flags
+defaultCommandLine :: DomainReasoner -> [Flag] -> IO ()
+defaultCommandLine dr flags = do
+   hSetBinaryMode stdout True
+   when (FixRNG `elem` flags)
+      useFixedStdGen -- use a predictable "random" number generator
+   mapM_ doAction flags
+ where
+   doAction flag =
+      case flag of
+         -- information
+         Version -> putStrLn ("IDEAS, " ++ versionText)
+         Help    -> putStrLn helpText
+         -- process input file
+         InputFile file -> do
+            input <- readFile file
+            (_, txt, _) <- process dr Nothing input
+            putStrLn txt
+         -- blackbox tests
+         Test dir -> do
+            tests  <- blackBoxTests dr dir
+            result <- runTestSuiteResult tests
+            printSummary result
+         -- generate documentation pages
+         MakePages dir -> 
+            makeDocumentation dr dir
+         -- feedback scripts
+         MakeScriptFor s    -> makeScriptFor dr s
+         AnalyzeScript file -> parseAndAnalyzeScript dr file
+         -- flags without an action
+         _ -> return ()
 
 process :: DomainReasoner -> Maybe String -> String -> IO (Request, String, String)
 process dr cgiBin input = do
@@ -92,12 +103,6 @@ process dr cgiBin input = do
       Just XML  -> processXML dr cgiBin input
       Just JSON -> processJSON dr input
       _ -> fail "Invalid input"
-      
-extendDR :: (DomainReasoner -> IO ()) -> DomainReasoner -> IO ()
-extendDR f dr = do
-   flags <- serviceOptions
-   f dr { scriptDirs  = [Options.scriptDir flags]
-        }
         
 newDomainReasoner :: IsId a => a -> DomainReasoner      
 newDomainReasoner a = mempty 

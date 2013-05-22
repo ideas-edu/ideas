@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Ideas.Service.FeedbackScript.Analysis 
    ( -- Analysis functions
-     withScripts, analyzeScript
+     makeScriptFor, parseAndAnalyzeScript, analyzeScript
      -- Message type
    , Message(..)
    ) where
@@ -30,50 +30,28 @@ import Ideas.Service.FeedbackScript.Parser
 import Ideas.Service.FeedbackScript.Run
 import Ideas.Service.FeedbackScript.Syntax
 
-withScripts :: DomainReasoner -> Maybe FilePath -> [String] -> [FilePath] -> IO ()
-withScripts dr path xs ys = do
-   -- generate scripts
-   forM_ xs $ \s -> do
-      Some ex <- findExercise dr (newId s)
-      print (generateScript ex)
-   -- analyze scripts
-   forM_ ys $ \file -> do
-      putStrLn $ "Parsing " ++ show file
-      script <- parseScript path file
-      let sups = [ a | Supports as <- scriptDecls script, a <- as ]
-      exs <- forM sups $ \a ->
-                liftM Right (findExercise dr a)
-              `catchError` \_ -> return $ Left $ UnknownExercise a
+makeScriptFor :: IsId a => DomainReasoner -> a -> IO ()
+makeScriptFor dr exId = do
+   Some ex <- findExercise dr (newId exId)
+   let (brs, nrs) = partition isBuggy (ruleset ex)
+   print $ makeScript $
+      Supports [getId ex] :
+      [ feedbackDecl s mempty | s <- feedbackIds ] ++
+      [ textForIdDecl r (makeText (description r)) | r <- nrs ] ++
+      [ textForIdDecl r (makeText (description r)) | r <- brs ]
+      
+parseAndAnalyzeScript :: DomainReasoner -> FilePath -> IO ()
+parseAndAnalyzeScript dr file = do
+   putStrLn $ "Parsing " ++ show file
+   script <- parseScript file
+   let sups = [ a | Supports as <- scriptDecls script, a <- as ]
+   exs <- forM sups $ \a ->
+             liftM Right (findExercise dr a)
+           `catchError` \_ -> return $ Left $ UnknownExercise a
 
-      let ms = lefts exs ++ analyzeScript (rights exs) script
-      putStrLn $ unlines $ map show ms
-      putStrLn $ "(errors: " ++ show (length ms) ++ ")"
-
-generateScript :: Exercise a -> Script
-generateScript ex = makeScript $
-   Supports [getId ex] :
-   [ feedbackDecl s mempty | s <- feedbackIds ] ++
-   [ textForIdDecl r (makeText (description r)) | r <- nrs ] ++
-   [ textForIdDecl r (makeText (description r)) | r <- brs ]
- where
-   (brs, nrs) = partition isBuggy (ruleset ex)
-
-data Message = UnknownExercise   Id
-             | UnknownFeedback   Id
-             | FeedbackUndefined Id
-             | NoTextForRule Id Id
-             | UnknownAttribute Id
-             | UnknownCondAttr  Id
-
-instance Show Message where
-   show message =
-      case message of
-         UnknownExercise a   -> "Unknown exercise id " ++ show a
-         UnknownFeedback a   -> "Unknown feedback category " ++ show a
-         FeedbackUndefined a -> "Feedback category " ++ show a ++ " is not defined"
-         NoTextForRule a b   -> "No text for rule " ++ show a ++ " of exercise " ++ show b
-         UnknownAttribute a  -> "Unknown attribute @" ++ show a ++ " in text"
-         UnknownCondAttr a   -> "Unknown attribute @" ++ show a ++ " in condition"
+   let ms = lefts exs ++ analyzeScript (rights exs) script
+   putStrLn $ unlines $ map show ms
+   putStrLn $ "(errors: " ++ show (length ms) ++ ")"
 
 analyzeScript :: [Some Exercise] -> Script -> [Message]
 analyzeScript exs script =
@@ -102,3 +80,20 @@ analyzeScript exs script =
 
    conditions  = [ c | Guarded _ _ xs <- decls , (c, _) <- xs ]
    condRefs = [ a | c <- conditions, CondRef a <- universe c ]
+      
+data Message = UnknownExercise   Id
+             | UnknownFeedback   Id
+             | FeedbackUndefined Id
+             | NoTextForRule Id Id
+             | UnknownAttribute Id
+             | UnknownCondAttr  Id
+
+instance Show Message where
+   show message =
+      case message of
+         UnknownExercise a   -> "Unknown exercise id " ++ show a
+         UnknownFeedback a   -> "Unknown feedback category " ++ show a
+         FeedbackUndefined a -> "Feedback category " ++ show a ++ " is not defined"
+         NoTextForRule a b   -> "No text for rule " ++ show a ++ " of exercise " ++ show b
+         UnknownAttribute a  -> "Unknown attribute @" ++ show a ++ " in text"
+         UnknownCondAttr a   -> "Unknown attribute @" ++ show a ++ " in condition"

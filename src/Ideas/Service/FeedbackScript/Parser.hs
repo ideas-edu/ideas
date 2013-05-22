@@ -15,33 +15,44 @@ module Ideas.Service.FeedbackScript.Parser (parseScript, Script) where
 
 import Ideas.Common.Id
 import Control.Monad.Error
+import Control.Exception hiding (try)
+import Prelude hiding (catch)
 import Data.Char
+import Data.List
 import Data.Monoid
+import System.Directory
 import Ideas.Service.FeedbackScript.Syntax
 import Text.ParserCombinators.Parsec
 import Ideas.Text.Parsing
+import System.FilePath
 
 -- chases all included script files
-parseScript :: Maybe FilePath -> FilePath -> IO Script
-parseScript path file = rec [] [file]
+parseScript :: FilePath -> IO Script
+parseScript file = rec [] [file]
  where
    rec _ [] = return mempty
    rec hist (a:as)
       | a `elem` hist = rec hist as
       | otherwise = do
-           s1 <- parseOneScriptFile path a
-           let new = [ b | Include bs <- scriptDecls s1, b <- bs ]
+           s1 <- parseOneScriptFile a
+           let new = map (replaceFileName file) (includes s1)
            s2 <- rec (a:hist) (new++as) -- depth-first
            return (s1 <> s2) -- included parts are inserted at the end
 
-parseOneScriptFile :: Maybe FilePath -> FilePath -> IO Script
-parseOneScriptFile path file = do
-   result <- parseFromFile script full
+parseOneScriptFile :: FilePath -> IO Script
+parseOneScriptFile file = do
+   result <- parseFromFile script file `catch` handler 
    case result of
       Left e   -> print e >> return mempty
       Right xs -> return xs
  where
-   full = maybe id (\p a -> p ++ "/" ++ a) path file
+   -- on failure, visit scripts directory (if this directory exists)
+   handler :: IOException -> IO (Either ParseError Script)
+   handler io = do 
+      b <- doesDirectoryExist "scripts"
+      if b && not ("scripts" `isPrefixOf` file)
+         then parseFromFile script ("scripts/" ++ file)
+         else throw io
 
 script :: Parser Script
 script = makeScript <$> complete decls

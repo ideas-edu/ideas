@@ -24,8 +24,8 @@ import Ideas.Service.LinkManager
 import Ideas.Service.ServiceList (RuleShortInfo(..), exampleDeriv)
 import Ideas.Service.Types
 
-makeDocumentation :: String -> DomainReasoner -> IO ()
-makeDocumentation dir dr = do
+makeDocumentation :: DomainReasoner -> String -> IO ()
+makeDocumentation dr dir = do
    putStrLn "Generating index pages"
    make urlForIndex emptyExercise (dr ::: typed)
    make urlForExercises emptyExercise (exercises dr ::: typed)

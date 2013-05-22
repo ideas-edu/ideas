@@ -33,7 +33,6 @@ data DomainReasoner = DR
    , services    :: [Service]
    , views       :: [ViewPackage]
    , aliases     :: [(Id, Id)]
-   , scriptDirs  :: [FilePath]
    , scripts     :: [(Id, FilePath)]
    , testSuite   :: TestSuite
    , version     :: String
@@ -41,14 +40,13 @@ data DomainReasoner = DR
    }
 
 instance Monoid DomainReasoner where
-   mempty = DR mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty 
+   mempty = DR mempty mempty mempty mempty mempty mempty mempty mempty mempty 
    mappend c1 c2 = DR
       { reasonerId  = reasonerId c1  <> reasonerId c2
       , exercises   = exercises c1   <> exercises c2
       , services    = services c1    <> services c2
       , views       = views c1       <> views c2 
       , aliases     = aliases c1     <> aliases c2
-      , scriptDirs  = scriptDirs c1  <> scriptDirs c2 
       , scripts     = scripts c1     <> scripts c2 
       , testSuite   = testSuite c1   <> testSuite c2
       , version     = version c1     <> version c2
@@ -60,11 +58,11 @@ instance HasId DomainReasoner where
    changeId f dr = dr { reasonerId = f (reasonerId dr) }
 
 instance Typed a DomainReasoner where
-   -- ignores views, scriptDirs, testSuite
+   -- ignores views, testSuite
    typed = Tag "DomainReasoner" $ Iso (f <-> g) typed
     where
       f ((rid, ex, serv), (al, scr), (v, fv)) =
-         DR rid ex serv [] al [] scr mempty v fv
+         DR rid ex serv [] al scr mempty v fv
       g dr = ( (reasonerId dr, exercises dr, services dr)
              , (aliases dr, scripts dr)
              , (version dr, fullVersion dr)
@@ -100,8 +98,4 @@ defaultScript dr =
 
 -- | Returns an empty script if the file does not exist
 readScript :: DomainReasoner -> FilePath -> IO Script
-readScript dr file = msum $
-   [ parseScript (Just d) file | d <- scriptDirs dr ]
-   ++ [ parseScript Nothing file
-      , return mempty
-      ]
+readScript dr file = parseScript file `mplus` return mempty

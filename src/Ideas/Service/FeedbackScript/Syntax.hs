@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Ideas.Service.FeedbackScript.Syntax
    ( Script, makeScript, scriptDecls, makeText, textItems
-   , Decl(..), DeclType(..), Text(..), Condition(..)
+   , Decl(..), DeclType(..), Text(..), Condition(..), includes
    , feedbackDecl, textForIdDecl
    ) where
 
@@ -60,6 +60,9 @@ feedbackDecl, textForIdDecl :: HasId a => a -> Text -> Decl
 feedbackDecl  a = Simple Feedback  [getId a]
 textForIdDecl a = Simple TextForId [getId a]
 
+includes :: Script -> [FilePath]
+includes script = [ file | Include xs <- scriptDecls script, file <- xs ]
+ 
 instance Show Script where
    show = unlines . map show . scriptDecls
 

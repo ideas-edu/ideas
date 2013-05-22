@@ -15,17 +15,8 @@ module Ideas.Service.Types
      Service, makeService, deprecate
    , serviceDeprecated, serviceFunction
      -- * Types
-   , TypeRep(..), Const(..), Type, TypedValue(..)
-   , tuple2, tuple3, tuple4
-   , stringType, intType, boolType
-   , exerciseType, strategyType, ruleType, contextType
-   , scriptType, locationType, strategyCfgType
-   , textType, stdGenType
-   , maybeType, optionType
-   , errorType, difficultyType, listType, envType, elemType, treeType
-   , derivationType, stateType, StepInfo, stepInfoType
+   , TypeRep(..), Const(..), Type, TypedValue(..), Typed(..)
    , Equal(..), ShowF(..), equalM
-   , Typed(..)
    ) where
 
 import Ideas.Common.Library
@@ -109,99 +100,6 @@ infix  2 :::
 infixr 3 :->
 
 data TypedValue f = forall t . t ::: f t
-
-tuple2 :: TypeRep f t1 -> TypeRep f t2 -> TypeRep f (t1, t2)
-tuple2 = Pair
-
-tuple3 :: TypeRep f t1 -> TypeRep f t2 -> TypeRep f t3 -> TypeRep f (t1, t2, t3)
-tuple3 t1 t2 t3 = Iso (f <-> g) (Pair t1 (Pair t2 t3))
- where
-   f (a, (b, c)) = (a, b, c)
-   g (a, b, c)   = (a, (b, c))
-
-tuple4 :: TypeRep f t1 -> TypeRep f t2 -> TypeRep f t3 -> TypeRep f t4 -> TypeRep f (t1, t2, t3, t4)
-tuple4 t1 t2 t3 t4 = Iso (f <-> g) (Pair t1 (Pair t2 (Pair t3 t4)))
- where
-   f (a, (b, (c, d))) = (a, b, c, d)
-   g (a, b, c, d)     = (a, (b, (c, d)))
-
-exerciseType :: Type a (Exercise a)
-exerciseType = Const Exercise
-
-strategyType :: Type a (Strategy (Context a))
-strategyType = Const Strategy
-
-ruleType :: Type a (Rule (Context a))
-ruleType = Const Rule
-
-contextType :: Type a (Context a)
-contextType = Const Context
-
-scriptType :: Type a Script
-scriptType = Const Script
-
-locationType :: Type a Location
-locationType = Const Location
-
-strategyCfgType :: Type a StrategyConfiguration
-strategyCfgType = Const StratCfg
-
-textType :: Type a Text
-textType = Const Text
-
-stdGenType :: Type a StdGen
-stdGenType = Const StdGen
-
-intType :: Type a Int
-intType = Const Int
-
-boolType :: Type a Bool
-boolType = Const Bool
-
-stringType :: Type a String
-stringType = Const String
-
-maybeType :: Type a t1 -> Type a (Maybe t1)
-maybeType t = Iso (f <-> g) (t :|: Unit)
- where
-   f = either Just (const Nothing)
-   g = maybe (Right ()) Left
-
-optionType :: t1 -> Type a t1 -> Type a t1
-optionType a t = Iso (fromMaybe a <-> Just) (maybeType t)
-
-errorType :: Type a t -> Type a (Either String t)
-errorType t = stringType :|: t
-
-listType :: Type a t -> Type a [t] -- with list "tag"
-listType = Tag "list" . List . elemType
-
-treeType :: Type a t -> Type a (Tree t) -- with tree "tag"                                                                            
-treeType = Tag "tree" . Tree . elemType
-
-envType :: Type a Environment
-envType = Const Environment
-
-elemType :: Type a t -> Type a t
-elemType = Tag "elem"
-
-difficultyType :: Type a Difficulty
-difficultyType = Tag "difficulty" (Iso (f <-> show) stringType)
- where
-   f = fromMaybe Medium . readDifficulty
-
-derivationType :: Type a t1 -> Type a t2 -> Type a (Derivation t1 t2)
-derivationType t1 t2 = Const (Derivation t1 t2)
-
-stateType :: Type a (State a)
-stateType = Const State
-
-type StepInfo a = (Rule (Context a), Location, Environment) -- find a good place
-
-stepInfoType :: Type a (StepInfo a)
-stepInfoType = tuple3 ruleType locationType envType -- what, where, how
-
---------------------------------------------------------------
 
 type Type a = TypeRep (Const a)
 
@@ -356,8 +254,8 @@ instance Typed a () where
    typed = Unit
 
 instance Typed a Char where
-   typed     = Iso (head <-> return) stringType
-   typedList = stringType
+   typed     = Iso (head <-> return) typed
+   typedList = Const String
 
 instance Typed a (Rule (Context a)) where
    typed = Const Rule
@@ -372,13 +270,15 @@ instance Typed a Location where
    typed = Const Location
 
 instance Typed a Environment where
-   typed = envType
+   typed = Const Environment
 
 instance Typed a StdGen where
-   typed = stdGenType
+   typed = Const StdGen
    
 instance Typed a Difficulty where
-   typed = difficultyType
+   typed = Tag "difficulty" (Iso (f <-> show) typed)
+    where
+      f = fromMaybe Medium . readDifficulty
 
 instance Typed a Service where
    typed = Const Service
@@ -396,22 +296,34 @@ instance Typed a StrategyConfiguration where
    typed = Const StratCfg
    
 instance Typed a Script where
-   typed = scriptType
+   typed = Const Script
 
 instance Typed a Text where
-   typed = textType
+   typed = Const Text
    
 instance (Typed a t1, Typed a t2) => Typed a (t1, t2) where
    typed = Pair typed typed
    
 instance (Typed a t1, Typed a t2, Typed a t3) => Typed a (t1, t2, t3) where
-   typed = tuple3 typed typed typed
+   typed = Iso (f <-> g) (Pair typed (Pair typed typed))
+    where
+      f (a, (b, c)) = (a, b, c)
+      g (a, b, c)   = (a, (b, c))
+   
+instance (Typed a t1, Typed a t2, Typed a t3, Typed a t4) => Typed a (t1, t2, t3, t4) where
+   typed = Iso (f <-> g) (Pair typed (Pair typed (Pair typed typed)))
+    where
+      f (a, (b, (c, d))) = (a, b, c, d)
+      g (a, b, c, d)     = (a, (b, (c, d)))
    
 instance (Typed a t1, Typed a t2) => Typed a (t1 -> t2) where
    typed = typed :-> typed
 
 instance Typed a t => Typed a (Maybe t) where
-   typed = maybeType typed
+   typed = Iso (f <-> g) (typed :|: Unit)
+    where
+      f = either Just (const Nothing)
+      g = maybe (Right ()) Left
 
 instance (Typed a t1, Typed a t2) => Typed a (Either t1 t2) where
    typed = typed :|: typed

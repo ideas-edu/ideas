@@ -13,8 +13,7 @@
 --
 -----------------------------------------------------------------------------
 module Ideas.Service.Submit
-   ( submit, Result(..)
-   , submitType
+   ( submit, Result(..) 
    ) where
 
 import Ideas.Common.Library
@@ -46,25 +45,16 @@ submit :: State a -> Context a -> Result a
 submit state = fromDiagnose . diagnose state
 
 instance Typed a (Result a) where
-   typed = submitType
-
-submitType :: Type a (Result a)
-submitType = Tag "Result" (Iso (f <-> g) tp)
- where
-   f (Left rs) = Buggy rs
-   f (Right (Left ())) = NotEquivalent
-   f (Right (Right (Left (rs, s)))) = Ok rs s
-   f (Right (Right (Right (Left (rs, s))))) = Detour rs s
-   f (Right (Right (Right (Right s)))) = Unknown s
-
-   g (Buggy rs)      = Left rs
-   g (NotEquivalent) = Right (Left ())
-   g (Ok rs s)       = Right (Right (Left (rs, s)))
-   g (Detour rs s)   = Right (Right (Right (Left (rs, s))))
-   g (Unknown s)     = Right (Right (Right (Right s)))
-
-   tp  =  List ruleType
-      :|: Unit
-      :|: Pair (List ruleType) stateType
-      :|: Pair (List ruleType) stateType
-      :|: stateType
+   typed = Tag "Result" (Iso (f <-> g) typed)
+    where
+      f (Left rs) = Buggy rs
+      f (Right (Left ())) = NotEquivalent
+      f (Right (Right (Left (rs, s)))) = Ok rs s
+      f (Right (Right (Right (Left (rs, s))))) = Detour rs s
+      f (Right (Right (Right (Right s)))) = Unknown s
+    
+      g (Buggy rs)      = Left rs
+      g (NotEquivalent) = Right (Left ())
+      g (Ok rs s)       = Right (Right (Left (rs, s)))
+      g (Detour rs s)   = Right (Right (Right (Left (rs, s))))
+      g (Unknown s)     = Right (Right (Right (Right s)))

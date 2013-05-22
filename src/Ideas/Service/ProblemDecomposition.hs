@@ -11,7 +11,7 @@
 --
 -----------------------------------------------------------------------------
 module Ideas.Service.ProblemDecomposition
-   ( problemDecomposition, replyType
+   ( problemDecomposition, Reply(..)
    ) where
 
 import Ideas.Common.Library
@@ -117,18 +117,10 @@ instance Typed a (Answer a) where
    typed = Tag "answer" $ Iso (Answer <-> fromAnswer) (Const Context)
 
 instance Typed a (Reply a) where
-   typed = replyType
-
-replyType :: Type a (Reply a)
-replyType = Iso (f <-> g) tp
- where
-   f (Left (a, b))        = Ok a b
-   f (Right (a, b, c, d)) = Incorrect a b c d
-
-   g (Ok a b)            = Left (a, b)
-   g (Incorrect a b c d) = Right (a, b, c, d)
-
-   tp  =  Tag "correct"   (tuple2 locType stateType)
-      :|: Tag "incorrect" (tuple4 (Tag "equivalent" boolType) locType stateType envType)
-
-   locType = Tag "LocationId" (Const Id)
+   typed = Tag "DecompositionReply" (Iso (f <-> g) typed)
+    where
+      f (Left (a, b))        = Ok a b
+      f (Right (a, b, c, d)) = Incorrect a b c d
+   
+      g (Ok a b)            = Left (a, b)
+      g (Incorrect a b c d) = Right (a, b, c, d)

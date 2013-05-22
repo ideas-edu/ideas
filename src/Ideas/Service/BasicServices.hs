@@ -13,6 +13,7 @@ module Ideas.Service.BasicServices
    ( -- * Basic Services
      stepsremaining, findbuggyrules, ready, allfirsts, derivation
    , onefirst, applicable, allapplications, apply, generate, generateWith
+   , StepInfo
    ) where
 
 import Ideas.Common.Library hiding (derivation, applicable, apply, ready)
@@ -21,7 +22,6 @@ import Ideas.Common.Utils (fst3)
 import Data.List
 import Data.Maybe
 import Ideas.Service.State
-import Ideas.Service.Types (StepInfo)
 import System.Random
 import Control.Monad
 import qualified Ideas.Common.Classes as Apply
@@ -64,6 +64,8 @@ derivation mcfg state =
     where
       msg = "Time out after " ++ show timeout ++ " steps. " ++
             show (biMap fst3 (prettyPrinterContext ex . stateContext) acc)
+
+type StepInfo a = (Rule (Context a), Location, Environment) -- find a good place
 
 -- Note that we have to inspect the last step of the prefix afterwards, because
 -- the remaining part of the derivation could consist of minor rules only.

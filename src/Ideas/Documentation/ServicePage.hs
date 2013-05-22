@@ -12,8 +12,7 @@
 -----------------------------------------------------------------------------
 module Ideas.Documentation.ServicePage (makeServicePage) where
 
-import Ideas.Common.Exercise
-import Ideas.Common.Id
+import Ideas.Common.Library hiding ((+++))
 import Ideas.Common.Utils (Some(..))
 import Control.Monad
 import Control.Monad.Error
@@ -91,9 +90,9 @@ examplesFor dr s = tryAll [ f t | (t, f) <- list, s == t ]
 
    (f +++ g) ex = f ex ++ g ex
 
-   noCfg _   = [Nothing ::: maybeType strategyCfgType]
+   noCfg _   = [(Nothing :: Maybe StrategyConfiguration) ::: typed]
    noArgs _  = []
-   exArgs ex = [ex ::: exerciseType]
+   exArgs ex = [ex ::: typed]
 
 tryAll :: [IO a] -> IO [a]
 tryAll xs =
@@ -104,7 +103,7 @@ newState :: Monad m => Exercise a -> String -> m (TypedValue (Type a))
 newState ex s =
    case parser ex s of
       Left msg -> fail ("newState: " ++ msg)
-      Right a  -> return (emptyState ex a ::: stateType)
+      Right a  -> return (emptyState ex a ::: typed)
 
 type Args = forall a . Exercise a -> [TypedValue (Type a)]
 

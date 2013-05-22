@@ -26,11 +26,10 @@ import Ideas.Service.Types
 data Message = M { accept :: Maybe Bool, text :: Text }
 
 instance Typed a Message where
-   typed = Tag "message" $ Iso (f <-> g) tp 
+   typed = Tag "message" $ Iso (f <-> g) typed 
     where
       f   = either (\(b, t) -> M (Just b) t) (M Nothing)
       g m = maybe (Right (text m)) (\b -> Left (b, text m)) (accept m)
-      tp = tuple2 boolType textType :|: textType
 
 ------------------------------------------------------------
 -- Services

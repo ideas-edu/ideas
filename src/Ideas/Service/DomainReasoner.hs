@@ -20,7 +20,6 @@ import Ideas.Common.Utils.TestSuite
 import Ideas.Service.FeedbackScript.Parser
 import Ideas.Service.Types
 import Ideas.Common.Library
-import Ideas.Main.Revision
 import Data.Maybe
 import Data.Monoid
 import Control.Monad.Error

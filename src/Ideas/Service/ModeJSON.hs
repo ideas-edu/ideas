@@ -127,10 +127,10 @@ jsonEncode enc tv@(val ::: tp)
               | s `elem` ["elem", "list"] ->
                    jsonEncode enc (val ::: t)
               | s == "Result" -> do
-                   conv <- equalM tp submitType
+                   conv <- equalM tp typed
                    encodeResult enc (conv val)
               | s == "Exception" -> do
-                   f <- equalM t stringType
+                   f <- equalM t typed
                    fail (f val)
               | otherwise -> liftM (\b -> Object [(s, b)]) (jsonEncode enc (val ::: t))
 
@@ -168,7 +168,7 @@ jsonEncodeConst enc (val ::: tp) =
       Context   -> liftM enc (fromContext val)
       Derivation t1 t2 ->
          let xs = map (\(_, s, a) -> (s, a)) (triples val)
-         in jsonEncode enc (xs ::: listType (Pair t1 t2))
+         in jsonEncode enc (xs ::: List (Pair t1 t2))
       Location  -> return (toJSON (show val))
       Environment -> return (encodeEnvironment val)
       Text      -> return (toJSON (show val))
@@ -326,13 +326,13 @@ encodeResult enc result =
       Buggy rs      -> return $ Object [("result", String "Buggy"), ("rules", Array $ map (String . showId) rs)]
       NotEquivalent -> return $ Object [("result", String "NotEquivalent")]
       Ok rs st      -> do
-         json <- jsonEncode enc (st ::: stateType)
+         json <- jsonEncode enc (st ::: typed)
          return $ Object [("result", String "Ok"), ("rules", Array $ map (String . showId) rs), ("state", json)]
       Detour rs st  -> do
-         json <- jsonEncode enc (st ::: stateType)
+         json <- jsonEncode enc (st ::: typed)
          return $ Object [("result", String "Detour"), ("rules", Array $ map (String . showId) rs), ("state", json)]
       Unknown st    -> do
-         json <- jsonEncode enc (st ::: stateType)
+         json <- jsonEncode enc (st ::: typed)
          return $ Object [("result", String "Unknown"), ("state", json)]
 
 jsonTuple :: [JSON] -> JSON

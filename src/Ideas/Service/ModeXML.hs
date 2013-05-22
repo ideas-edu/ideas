@@ -182,7 +182,7 @@ xmlDecodeType b ex getTerm serviceType =
               put (dr, xml)
               return a
          | s == "difficulty" -> keep $ \xml -> do
-              g <- equalM difficultyType serviceType
+              g <- equalM typed serviceType
               a <- findAttribute "difficulty" xml
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
          | otherwise -> do

@@ -13,9 +13,7 @@
 --
 -----------------------------------------------------------------------------
 module Ideas.Service.Diagnose
-   ( Diagnosis(..), diagnose, restartIfNeeded
-   , newState
-   , diagnosisType
+   ( Diagnosis(..), diagnose, restartIfNeeded, newState
    ) where
 
 import Ideas.Common.Library hiding (ready)
@@ -130,43 +128,25 @@ restartIfNeeded state
    ex = exercise state
 
 instance Typed a (Diagnosis a) where
-   typed = diagnosisType
-
-diagnosisType :: Type a (Diagnosis a)
-diagnosisType = Iso (f <-> g) tp
- where
-   f (Left (Left (as, r))) = Buggy as r
---   f (Left (Right (Left ()))) = Missing
---   f (Left (Right (Right (Left xs)))) = IncorrectPart xs
-   f (Left (Right ())) = NotEquivalent
-   f (Right (Left (b, s))) = Similar b s
-   f (Right (Right (Left (b, s, r)))) = Expected b s r
-   f (Right (Right (Right (Left (b, s, as, r))))) = Detour b s as r
-   f (Right (Right (Right (Right (b, s))))) = Correct b s
-
-   g (Buggy as r)       = Left (Left (as, r))
---   g Missing            = Left (Right (Left ()))
---   g (IncorrectPart xs) = Left (Right (Right (Left xs)))
-   g NotEquivalent      = Left (Right ())
-   g (Similar b s)      = Right (Left (b, s))
-   g (Expected b s r)   = Right (Right (Left (b, s, r)))
-   g (Detour b s as r)  = Right (Right (Right (Left (b, s, as, r))))
-   g (Correct b s)      = Right (Right (Right (Right (b, s))))
-
-   tp  =
-       (  Tag "buggy"         (Pair envType ruleType)
---      :|: Tag "missing"       Unit
---      :|: Tag "incorrectpart" (List Term)
-      :|: Tag "notequiv"      Unit
-       )
-      :|:
-       (  Tag "similar"  (Pair   readyBool stateType)
-      :|: Tag "expected" (tuple3 readyBool stateType ruleType)
-      :|: Tag "detour"   (tuple4 readyBool stateType envType ruleType)
-      :|: Tag "correct"  (Pair   readyBool stateType)
-       )
-
-   readyBool = Tag "ready" boolType
+   typed = Tag "Diagnosis" $ Iso (f <-> g) typed
+    where
+      f (Left (Left (as, r))) = Buggy as r
+   --   f (Left (Right (Left ()))) = Missing
+   --   f (Left (Right (Right (Left xs)))) = IncorrectPart xs
+      f (Left (Right ())) = NotEquivalent
+      f (Right (Left (b, s))) = Similar b s
+      f (Right (Right (Left (b, s, r)))) = Expected b s r
+      f (Right (Right (Right (Left (b, s, as, r))))) = Detour b s as r
+      f (Right (Right (Right (Right (b, s))))) = Correct b s
+   
+      g (Buggy as r)       = Left (Left (as, r))
+   --   g Missing            = Left (Right (Left ()))
+   --   g (IncorrectPart xs) = Left (Right (Right (Left xs)))
+      g NotEquivalent      = Left (Right ())
+      g (Similar b s)      = Right (Left (b, s))
+      g (Expected b s r)   = Right (Right (Left (b, s, r)))
+      g (Detour b s as r)  = Right (Right (Right (Left (b, s, as, r))))
+      g (Correct b s)      = Right (Right (Right (Right (b, s))))
 
 ----------------------------------------------------------------
 -- Compare answer sets (and search for missing parts/incorrect parts)

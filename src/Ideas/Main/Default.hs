@@ -16,7 +16,7 @@ module Ideas.Main.Default (defaultMain, newDomainReasoner) where
 
 import Ideas.Common.Utils (useFixedStdGen)
 import Control.Monad
-import Ideas.Documentation.SelfCheck
+import Ideas.Main.BlackBoxTests
 import Data.IORef
 import Data.Time
 import Ideas.Common.Id
@@ -29,7 +29,7 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.ModeJSON (processJSON)
 import Ideas.Service.ModeXML (processXML)
-import Ideas.Service.DocumentationMaker
+import Ideas.Main.Documentation
 import Ideas.Service.Request
 import System.IO
 

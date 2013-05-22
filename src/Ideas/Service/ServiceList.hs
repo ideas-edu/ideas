@@ -1,5 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -11,12 +9,9 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.ServiceList (serviceList, metaServiceList, RuleShortInfo(..), exampleDeriv) where
+module Ideas.Service.ServiceList (serviceList, metaServiceList) where
 
 import Ideas.Common.Library hiding (apply, applicable, derivation, ready)
-import Ideas.Common.Utils (Some(..))
-import Data.List (sortBy)
-import Data.Ord
 import Ideas.Service.BasicServices
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackText
@@ -123,7 +118,7 @@ examplesS = makeService "basic.examples"
    \with an exercise. These are the examples that appear at the page generated \
    \for each exercise. Also see the generate service, which returns a random \
    \start term." $
-   (\ex -> map (second (inContext ex)) (examples ex)) ::: typed
+   examplesContext ::: typed
 
 findbuggyrulesS :: Service
 findbuggyrulesS = makeService "basic.findbuggyrules"
@@ -204,12 +199,12 @@ exerciselistS :: DomainReasoner -> Service
 exerciselistS dr = makeService "meta.exerciselist"
    "Returns all exercises known to the system. For each exercise, its domain, \
    \identifier, a short description, and its current status are returned." $
-   allExercises (exercises dr) ::: typed
+   exercisesSorted dr ::: typed
 
 servicelistS :: DomainReasoner -> Service
 servicelistS dr = makeService "meta.servicelist"
    "List of all supported feedback services" $
-   allServices (services dr) ::: typed
+   servicesSorted dr ::: typed
 
 serviceinfoS :: DomainReasoner -> Service
 serviceinfoS dr = makeService "meta.serviceinfo"
@@ -222,7 +217,7 @@ rulelistS = makeService "meta.rulelist"
    \name (or identifier), whether the rule is buggy, and whether the rule was \
    \expressed as an observable rewrite rule. See rulesinfo for more details \
    \about the rules." $
-   (map RuleShortInfo . ruleset) ::: typed
+   ruleset ::: typed
 
 ruleinfoS :: Service
 ruleinfoS = makeService "meta.ruleinfo"
@@ -250,23 +245,6 @@ stateinfoS = makeService "meta.stateinfo"
    "State information" $
    (id :: State a -> State a) ::: typed
 
-allExercises :: [Some Exercise] -> [Some Exercise]
-allExercises = sortBy (comparing f)
- where
-   f :: Some Exercise -> String
-   f (Some ex) = showId ex
-
 examplederivationsS :: Service
 examplederivationsS = makeService "meta.examplederivations"
-   "Show example derivations" $ exampleDeriv ::: typed
-
-exampleDeriv :: Exercise a -> Either String [Derivation (Rule (Context a), Environment) (Context a)]
-exampleDeriv ex = mapM (derivation Nothing . emptyState ex . snd) (examples ex)
-
-allServices :: [Service] -> [Service]
-allServices = sortBy (comparing showId)
-
-newtype RuleShortInfo a = RuleShortInfo { fromRuleShortInfo :: Rule (Context a) }
-
-instance Typed a (RuleShortInfo a) where
-   typed = Tag "RuleShortInfo" $ Iso (RuleShortInfo <-> fromRuleShortInfo) typed
+   "Show example derivations" $ exampleDerivations ::: typed

@@ -25,7 +25,8 @@ module Ideas.Common.Exercise
    , randomTerm, randomTermWith, ruleset
    , makeContext, inContext, recognizeRule
    , ruleOrderingWith, ruleOrderingWithId
-   , Examples, mapExamples, Difficulty(..), readDifficulty, level
+   , Examples, mapExamples, examplesContext
+   , Difficulty(..), readDifficulty, level
    , hasTypeable, useTypeable, castFrom, castTo
      -- * Exercise status
    , Status(..), isPublic, isPrivate
@@ -153,6 +154,9 @@ type Examples a = [(Difficulty, a)]
 
 mapExamples :: (a -> b) -> Examples a -> Examples b
 mapExamples f = map (second f)
+
+examplesContext :: Exercise a -> Examples (Context a)
+examplesContext ex = mapExamples (inContext ex) (examples ex)
 
 data Difficulty = VeryEasy | Easy | Medium | Difficult | VeryDifficult
    deriving (Eq, Ord, Enum)

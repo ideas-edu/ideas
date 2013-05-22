@@ -13,7 +13,7 @@ module Ideas.Service.BasicServices
    ( -- * Basic Services
      stepsremaining, findbuggyrules, ready, allfirsts, derivation
    , onefirst, applicable, allapplications, apply, generate, generateWith
-   , StepInfo
+   , StepInfo, exampleDerivations
    ) where
 
 import Ideas.Common.Library hiding (derivation, applicable, apply, ready)
@@ -168,3 +168,6 @@ findbuggyrules state a =
    ]
  where
    ex = exercise state
+   
+exampleDerivations :: Exercise a -> Either String [Derivation (Rule (Context a), Environment) (Context a)]
+exampleDerivations ex = mapM (derivation Nothing . emptyState ex . snd) (examples ex)

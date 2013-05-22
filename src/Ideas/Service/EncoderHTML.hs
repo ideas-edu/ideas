@@ -21,9 +21,9 @@ import Data.List
 import Data.Maybe
 import Data.Ord
 import Ideas.Common.Library hiding (ready)
-import Ideas.Documentation.RulePresenter
 import Ideas.Text.XML
 import Ideas.Text.HTML
+import Ideas.Service.RulePresenter
 import Ideas.Service.Diagnose
 import Ideas.Service.DomainReasoner
 import Ideas.Service.Evaluator
@@ -53,17 +53,19 @@ htmlEncoder lm dr ex tv =
  where
    resource = urlForResource lm
 
-encodeType :: LinkManager -> Exercise a -> Encoder (Type a) XMLBuilderM ()
-encodeType lm ex (val ::: tp) = 
+encodeType :: LinkManager -> Exercise a -> TypedValue (Type a) -> XMLBuilder
+encodeType lm ex tv@(val ::: tp) = msum
+   [ encodeWith encodeIndex tv
+   , encodeWith (htmlDiagnosis lm ex) tv
+   , encodeWith (encodeExampleList lm ex) tv
+   , encodeWith (htmlAllFirsts lm ex) tv
+   , encodeWith (htmlAllApplications lm ex) tv
+   , encodeWith (encodeDerivation lm ex) tv
+   , encodeWith (encodeDerivationList lm ex) tv
+   ]
+ `mplus`
    case tp of 
-      Iso iso t  -> do
-         f <- equalM (Tag "DomainReasoner" tp) typed
-         encodeIndex (f val)
-       `mplus` do
-         f <- equalM tp typed
-         htmlDiagnosis lm ex (f val)
-       `mplus`
-         encodeType lm ex (to iso val ::: t)
+      Iso iso t  -> encodeType lm ex (to iso val ::: t)
       Tag _ t    -> encodeType lm ex (val ::: t)
       Pair t1 t2 -> do encodeType lm ex (fst val ::: t1)
                        br
@@ -74,40 +76,24 @@ encodeType lm ex (val ::: tp) =
       List (Const Service) -> encodeServiceList lm val
       List (Const SomeExercise) -> encodeExerciseList lm val
       List (Tag "RuleShortInfo" (Iso iso (Const Rule))) -> encodeRuleList lm ex (map (to iso) val)
-      List (Pair (Tag "difficulty" t) (Const Context)) -> do
-         f <- equalM (Tag "difficulty" t) typed
-         encodeExampleList lm ex (map (first f) val)
-      List (Const (Derivation (Pair (Const Rule) (Const Environment)) (Const Context))) ->
-         encodeDerivationList lm ex val
-      List t     -> do
-         f <- equalM tp typed
-         htmlAllFirsts lm ex (f val)
-       `mplus` do
-         f <- equalM tp typed
-         htmlAllApplications lm ex (f val)
-       `mplus`
+      List t ->
          ul [ encodeType lm ex (x ::: t) | x <- val ]
       Const t    -> encodeConst lm ex (val ::: t)
       _ -> text $ "unknown: " ++ show tp
 
-encodeConst :: LinkManager -> Exercise a -> Encoder (Const a) XMLBuilderM ()
+encodeConst :: LinkManager -> Exercise a -> TypedValue (Const a) -> XMLBuilder
 encodeConst lm ex tv@(val ::: tp) =
    case tp of 
-      Service      -> encodeService val
-      Exercise     -> encodeExercise lm val
-      Strategy     -> encodeStrategy lm ex val
-      Rule         -> encodeRule ex val
-      Derivation (Pair (Const Rule) (Const Environment)) (Const Context) ->
-         exerciseHeader lm ex >> h2 "Derivation" >> htmlDerivation lm ex val
-      Derivation t1 t2 -> htmlDerivationWith mempty
-                             (\s -> encodeType lm ex (s ::: t1))
-                             (\a -> encodeType lm ex (a ::: t2)) val
-      Location     -> text $ "location: " ++ show val
-      Environment  -> text $ "environment: " ++ show val
-      State        -> exerciseHeader lm ex >> htmlInteractiveState lm val
-      Context      -> text $ prettyPrinterContext ex val
-      String       -> text val
-      _ -> text $ show tv
+      Service     -> encodeService val
+      Exercise    -> encodeExercise lm val
+      Strategy    -> encodeStrategy lm ex val
+      Rule        -> encodeRule ex val
+      Location    -> text $ "location: " ++ show val
+      Environment -> text $ "environment: " ++ show val
+      State       -> exerciseHeader lm ex >> htmlInteractiveState lm val
+      Context     -> text $ prettyPrinterContext ex val
+      String      -> text val
+      _           -> text $ show tv
 
 encodeIndex :: DomainReasoner -> HTMLBuilder
 encodeIndex dr = do
@@ -346,6 +332,12 @@ encodeExampleList lm ex pairs = do
             "src" .=. "external.png"
             "width" .=. "15"
       text (prettyPrinterContext ex x) 
+
+encodeDerivation :: LinkManager -> Exercise a -> Derivation (Rule (Context a), Environment) (Context a) -> HTMLBuilder
+encodeDerivation lm ex d = do
+   exerciseHeader lm ex
+   h2 "Derivation"
+   htmlDerivation lm ex d
 
 encodeDerivationList :: LinkManager -> Exercise a -> [Derivation (Rule (Context a), Environment) (Context a)] -> HTMLBuilder
 encodeDerivationList lm ex ds = do

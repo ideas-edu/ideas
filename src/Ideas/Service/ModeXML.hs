@@ -12,10 +12,7 @@
 -- Services using XML notation
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.ModeXML
-   ( processXML, xmlRequest, openMathConverter, stringFormatConverter, runEval
-   , resultOk, resultError, addVersion
-   ) where
+module Ideas.Service.ModeXML (processXML) where
 
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Common.Utils (Some(..), readM)
@@ -34,6 +31,7 @@ import Ideas.Service.EncoderXML
 import Ideas.Service.LinkManager
 import Ideas.Service.Types
 import Ideas.Service.EncoderHTML
+import Ideas.Service.FeedbackScript.Parser (parseScriptSafe)
 import System.Random
 import System.IO.Error
 import Ideas.Text.OpenMath.Object
@@ -214,7 +212,7 @@ xmlDecodeType b ex getTerm serviceType =
             Script   -> keep $ \xml -> do
                            dr <- gets fst
                            lift $ case findAttribute "script" xml of
-                              Just s  -> readScript dr s
+                              Just s  -> parseScriptSafe s
                               Nothing -> defaultScript dr (getId ex)
             StdGen   -> liftIO newStdGen
             Exercise -> return ex

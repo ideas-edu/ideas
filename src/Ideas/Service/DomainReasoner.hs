@@ -12,7 +12,9 @@
 -----------------------------------------------------------------------------
 module Ideas.Service.DomainReasoner
    ( DomainReasoner(..)
-   , findExercise, findService, defaultScript, readScript
+   , exercisesSorted, servicesSorted
+   , findExercise, findService
+   , defaultScript -- , readScript
    ) where
    
 import Ideas.Common.Utils
@@ -20,9 +22,10 @@ import Ideas.Common.Utils.TestSuite
 import Ideas.Service.FeedbackScript.Parser
 import Ideas.Service.Types
 import Ideas.Common.Library
+import Data.Ord
+import Data.List
 import Data.Maybe
 import Data.Monoid
-import Control.Monad.Error
 
 -----------------------------------------------------------------------
 -- Domain Reasoner data type
@@ -69,7 +72,16 @@ instance Typed a DomainReasoner where
              )
 
 -----------------------------------------------------------------------
--- Domain Reasoner data type
+-- Domain Reasoner functions
+
+exercisesSorted :: DomainReasoner -> [Some Exercise]
+exercisesSorted = sortBy (comparing f) . exercises
+ where
+   f :: Some Exercise -> String
+   f (Some ex) = showId ex
+
+servicesSorted :: DomainReasoner -> [Service]
+servicesSorted = sortBy (comparing showId) . services
 
 findExercise :: Monad m => DomainReasoner -> Id -> m (Some Exercise)
 findExercise dr i =
@@ -94,8 +106,4 @@ findService dr a
 
 defaultScript :: DomainReasoner -> Id -> IO Script
 defaultScript dr = 
-   maybe (return mempty) (readScript dr) . (`lookup` scripts dr)
-
--- | Returns an empty script if the file does not exist
-readScript :: DomainReasoner -> FilePath -> IO Script
-readScript dr file = parseScript file `mplus` return mempty
+   maybe (return mempty) parseScriptSafe . (`lookup` scripts dr)

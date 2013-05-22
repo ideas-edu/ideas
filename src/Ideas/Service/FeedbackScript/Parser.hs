@@ -11,7 +11,9 @@
 -- Simple parser for feedback scripts
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.FeedbackScript.Parser (parseScript, Script) where
+module Ideas.Service.FeedbackScript.Parser 
+   ( parseScript, parseScriptSafe, Script
+   ) where
 
 import Ideas.Common.Id
 import Control.Monad.Error
@@ -25,6 +27,10 @@ import Ideas.Service.FeedbackScript.Syntax
 import Text.ParserCombinators.Parsec
 import Ideas.Text.Parsing
 import System.FilePath
+
+-- returns the empty script if something goes wrong
+parseScriptSafe :: FilePath -> IO Script
+parseScriptSafe file = parseScript file `mplus` return mempty
 
 -- chases all included script files
 parseScript :: FilePath -> IO Script

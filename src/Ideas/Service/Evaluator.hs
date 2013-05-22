@@ -13,43 +13,46 @@
 module Ideas.Service.Evaluator where
 
 import Ideas.Common.View
-import Control.Monad
 import Data.Monoid
 import qualified Data.Foldable as F
-import qualified Data.Traversable as T
-import qualified Data.Map as M
 import Ideas.Service.Types
+import Data.Function
 
 evalService :: Monad m => Evaluator (Const b) m a -> Service -> m a
 evalService f = eval f . serviceFunction
 
 data Evaluator f m a = Evaluator
-   { encoder :: Encoder (TypeRep f) m a
+   { encoder :: Encoder (TypeRep f) (m a)
    , decoder :: Decoder (TypeRep f) m
    }
 
-type Encoder    f m a = TypedValue f -> m a
-type EncoderMap f m a = M.Map String (Encoder (TypeRep f) m a)
+type Encoder f a = TypedValue f -> a
 
-encodeWith :: (Monad m, Monoid a) 
-           => EncoderMap f m a -> Encoder f m a -> Encoder (TypeRep f) m a
-encodeWith m enc = rec
- where
-   rec (val ::: tp) =
-      case tp of
-         _ :-> _    -> fail "encodeType: function"
-         t1 :|: t2  -> case val of
-                          Left a  -> rec (a ::: t1)
-                          Right a -> rec (a ::: t2) 
-         Pair t1 t2 -> liftM2 mappend
-                          (rec (fst val ::: t1))
-                          (rec (snd val ::: t2))
-         List t     -> liftM mconcat (mapM (rec . (::: t)) val)
-         Tree t     -> liftM F.fold (T.mapM (rec . (::: t)) val)
-         Unit       -> return mempty
-         Tag s t    -> M.findWithDefault rec s m (val ::: t)
-         Iso v t    -> rec (to v val ::: t)
-         Const ctp  -> enc (val ::: ctp)
+type Fix a = a -> a
+
+encodeTypeRep :: Monoid a => Encoder f a -> Encoder (TypeRep f) a
+encodeTypeRep = fix . encodeTypeRepFix
+
+encodeTypeRepFix :: Monoid a => Encoder f a -> Fix (Encoder (TypeRep f) a)
+encodeTypeRepFix enc rec (val ::: tp) =
+   case tp of
+      _ :-> _    -> mempty
+      t1 :|: t2  -> case val of
+                       Left a  -> rec (a ::: t1)
+                       Right a -> rec (a ::: t2)
+      Pair t1 t2 -> rec (fst val ::: t1) <> rec (snd val ::: t2)
+      List t     -> mconcat (map (rec . (::: t)) val)
+      Tree t     -> F.fold (fmap (rec . (::: t)) val)
+      Unit       -> mempty
+      Tag _ t    -> rec (val ::: t)
+      Iso v t    -> rec (to v val ::: t)
+      Const ctp  -> enc (val ::: ctp)
+      
+encodeWith :: (Monad m, Typed a t) => (t -> m b) -> Encoder (Type a) (m b)
+encodeWith enc (val ::: tp) = 
+   case equal tp typed of 
+      Just f  -> enc (f val)
+      Nothing -> fail "encoding failed"
 
 data Decoder f m = Decoder { decode :: forall t . f t -> m t }
 

@@ -80,7 +80,6 @@ instance Equal (Const a) where
    equal State       State       = Just id
    equal Rule         Rule       = Just id
    equal Context     Context     = Just id
-   equal (Derivation a b) (Derivation c d) = liftM2 biMap (equal a c) (equal b d)
    equal Id          Id          = Just id
    equal Location    Location    = Just id
    equal Script      Script      = Just id
@@ -99,7 +98,8 @@ infixr 5 :|:
 infix  2 :::
 infixr 3 :->
 
-data TypedValue f = forall t . t ::: f t
+data TypedValue f where
+   (:::) :: t -> f t -> TypedValue f
 
 type Type a = TypeRep (Const a)
 
@@ -127,7 +127,6 @@ data Const a t where
    State        :: Const a (State a)
    Rule         :: Const a (Rule (Context a))
    Context      :: Const a (Context a)
-   Derivation   :: TypeRep (Const a) t1 -> TypeRep (Const a) t2 -> Const a (Derivation t1 t2)
    -- other types
    Id           :: Const a Id
    Location     :: Const a Location
@@ -192,7 +191,6 @@ instance Show (TypedValue (Const a)) where
          SomeExercise     -> case val of Some ex -> showId ex
          State            -> show val
          Context          -> show (location val, environment val)
-         Derivation t1 t2 -> show (biMap (show . (::: t1)) (show . (::: t2)) val)
          Location         -> show val
          Script           -> show val
          StratCfg         -> show val
@@ -213,7 +211,6 @@ instance ShowF (Const a) where
    showF State        = "State"
    showF Rule         = "Rule"
    showF Context      = "Context"
-   showF (Derivation t1 t2) = "Derivation " ++ show t1 ++ " " ++ show t2
    showF Id           = "Id"
    showF Location     = "Location"
    showF Script       = "Script"
@@ -329,8 +326,11 @@ instance (Typed a t1, Typed a t2) => Typed a (Either t1 t2) where
    typed = typed :|: typed
 
 instance (Typed a t1, Typed a t2) => Typed a (Derivation t1 t2) where
-   typed = Const (Derivation typed typed)
-      
+   typed = Tag "Derivation" $ Iso (f <-> g) typed 
+    where
+      f (a, xs) = foldl extend (emptyDerivation a) xs
+      g d = (firstTerm d, [ (s, a) | (_, s, a) <- triples d ])
+
 instance Typed a t => Typed a [t] where
    typed = typedList
    

@@ -11,7 +11,7 @@
 -- Manages links to information
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.DocumentationMaker (makeDocumentation) where
+module Ideas.Main.Documentation (makeDocumentation) where
 
 import Control.Monad
 import Ideas.Common.Library
@@ -21,31 +21,33 @@ import Ideas.Common.Utils
 import Ideas.Service.EncoderHTML
 import Ideas.Service.DomainReasoner
 import Ideas.Service.LinkManager
-import Ideas.Service.ServiceList (RuleShortInfo(..), exampleDeriv)
+import Ideas.Service.BasicServices
 import Ideas.Service.Types
 
 makeDocumentation :: DomainReasoner -> String -> IO ()
 makeDocumentation dr dir = do
    putStrLn "Generating index pages"
-   make urlForIndex emptyExercise (dr ::: typed)
-   make urlForExercises emptyExercise (exercises dr ::: typed)
-   make urlForServices emptyExercise (services dr ::: typed)
+   makeIndex urlForIndex     (dr ::: typed)
+   makeIndex urlForExercises (exercises dr ::: typed)
+   makeIndex urlForServices  (services dr ::: typed)
    putStrLn "Generating service pages"
    forM_ (services dr) $ \srv -> 
-      make (\lm -> urlForService lm srv) emptyExercise (srv ::: typed)
+      makeIndex (`urlForService` srv) (srv ::: typed)
    putStrLn "Generating exercise pages"
    forM_ (exercises dr) $ \(Some ex) -> do
-      make (\lm -> urlForExercise lm ex) ex (ex ::: typed)
-      make (\lm -> urlForStrategy lm ex) ex (toStrategy (strategy ex) ::: typed)
-      make (\lm -> urlForRules lm ex) ex (map RuleShortInfo (ruleset ex) ::: typed)
-      make (\lm -> urlForExamples lm ex) ex (map (second (inContext ex)) (examples ex) ::: typed)
-      make (\lm -> urlForDerivations lm ex) ex (exampleDeriv ex ::: typed)
+      makeEx ex urlForExercise    (ex ::: typed)
+      makeEx ex urlForStrategy    (toStrategy (strategy ex) ::: typed)
+      makeEx ex urlForRules       (ruleset ex ::: typed)
+      makeEx ex urlForExamples    (map (second (inContext ex)) (examples ex) ::: typed)
+      makeEx ex urlForDerivations (exampleDerivations ex ::: typed)
       forM_ (ruleset ex) $ \r -> do
-          make (\lm -> urlForRule lm ex r) ex (r ::: typed)
+          make ex (urlForRule lm ex r) (r ::: typed)
  where
    lm = staticLinks
-   make url ex tv = safeWrite (dir </> url lm) $ 
-      show $ htmlEncoder (linksUp (pathLevel $ url lm) lm) dr ex tv 
+   makeIndex f = make emptyExercise (f lm)
+   makeEx ex f = make ex (f lm ex)
+   make ex url tv = safeWrite (dir </> url) $ 
+      show $ htmlEncoder (linksUp (pathLevel $ url) lm) dr ex tv
   
 safeWrite :: FilePath -> String -> IO ()
 safeWrite filename txt = do

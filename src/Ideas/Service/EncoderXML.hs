@@ -31,11 +31,15 @@ import Ideas.Service.Types
 import qualified Ideas.Service.ProblemDecomposition as PD
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
-import qualified Data.Map as M
 import qualified Ideas.Service.FeedbackText as FeedbackText
 
-xmlEncoder :: Bool -> (a -> XMLBuilder) -> Exercise a -> Encoder (Type a) XMLBuilderM ()
-xmlEncoder isOM enc ex tv@(val ::: tp) =
+xmlEncoder :: Bool -> (a -> XMLBuilder) -> Exercise a -> Encoder (Type a) XMLBuilder
+xmlEncoder isOM enc ex tv@(val ::: tp) = msum
+   [ encodeWith (encodeDiagnosis isOM enc) tv
+   , encodeWith (encodeDecompositionReply isOM enc) tv
+   , encodeWith (encodeDerivation rec) tv
+   , encodeWith (encodeDerivationText isOM enc) tv
+   ] `mplus`
    case tp of
       -- meta-information
       Tag "RuleShortInfo" t -> do
@@ -43,12 +47,18 @@ xmlEncoder isOM enc ex tv@(val ::: tp) =
          ruleShortInfo (f val)
       Tag "difficulty" (Iso iso (Const String)) ->
          "difficulty" .=. to iso val
-      Tag "Diagnosis" _ -> do
-         f <- equalM tp typed
-         encodeDiagnosis isOM enc (f val)
-      Tag "DecompositionReply" _ -> do
-         f <- equalM tp typed
-         encodeDecompositionReply isOM enc (f val)
+      Tag "RulesInfo" _ -> 
+         rulesInfoXML ex enc
+      Tag "message" _ -> do
+         f <- equalM tp (typed :: Type a FeedbackText.Message)
+         let msg = f val
+         element "message" $ do
+            case FeedbackText.accept msg of
+               Just b  -> "accept" .=. showBool b
+               Nothing -> return ()
+            encodeText enc ex (FeedbackText.text msg)
+      Tag "elem" t -> 
+         element "elem" (xmlEncoder isOM enc ex (val ::: t))
       -- special case for onefirst service; insert elem Tag
       Const String :|: Pair t (Const State) | isJust (equal stepInfoType t) ->
          rec (val ::: (Const String :|: Tag "elem" (Pair t (Const State))))
@@ -58,11 +68,9 @@ xmlEncoder isOM enc ex tv@(val ::: tp) =
             Left s  -> fail s
             Right a -> rec (a ::: t)
       -- special cases for lists
+      List (Const Rule) -> encodeAsList (map ruleShortInfo val)
       List t -> encodeAsList (map (\a -> rec (a ::: t)) val)
-      --
-      Pair t1 t2 -> do rec (fst val ::: t1)
-                       rec (snd val ::: t2)
-      _ -> encodeWith (xmlEncoderMap isOM ex enc) (xmlEncoderConst isOM enc ex) tv
+      _ -> encodeTypeRepFix (xmlEncoderConst isOM enc ex) rec tv
  where
    rec = xmlEncoder isOM enc ex
 
@@ -72,53 +80,27 @@ xmlEncoder isOM enc ex tv@(val ::: tp) =
 encodeAsList :: [XMLBuilder] -> XMLBuilder
 encodeAsList = element "list" . mapM_ (element "elem")
 
-xmlEncoderMap :: Bool -> Exercise a -> (a -> XMLBuilder) -> EncoderMap (Const a) XMLBuilderM ()
-xmlEncoderMap isOM ex enc = M.fromList $
-   [ ("RulesInfo", \_ -> rulesInfoXML ex enc)
-   , ("message", \(val ::: tp) -> do
-         f <- equalM (Tag "message" tp) (typed :: Type a FeedbackText.Message)
-         let msg = f val
-         element "message" $ do
-            case FeedbackText.accept msg of
-               Just b  -> "accept" .=. showBool b
-               Nothing -> return ()
-            encodeText enc ex (FeedbackText.text msg))
-   , ("elem", element "elem" . xmlEncoder isOM enc ex)
-   , ("ruletext", \(val ::: tp) -> do 
-        f <- equalM tp (Const String)
-        "ruletext" .=. f val)
-   ]
-
-xmlEncoderConst :: Bool -> (a -> XMLBuilder) -> Exercise a -> Encoder (Const a) XMLBuilderM ()
-xmlEncoderConst isOM enc ex (val ::: tp) =
+xmlEncoderConst :: Bool -> (a -> XMLBuilder) -> Exercise a -> Encoder (Const a) XMLBuilder
+xmlEncoderConst isOM enc ex tv@(val ::: tp) =
    case tp of
-      Exercise  -> return ()
       SomeExercise -> case val of
                          Some a -> exerciseInfo a
       Strategy  -> builder (strategyToXML val)
       Rule      -> "ruleid" .=. show val
       State     -> encodeState isOM enc val
       Context   -> encodeContext isOM enc val
-      -- Special case for derivationtext
-      Derivation (Const String) t -> 
-         xmlEncoderConst isOM enc ex (val ::: Derivation (Tag "ruletext" (Const String)) t)     
-      Derivation t1 t2 ->
-         let xs = map (\(_, s, a) -> (s, a)) (triples val)
-         in xmlEncoder isOM enc ex (xs ::: List (Pair t1 t2))
       Location  -> "location" .=. show val
       Environment -> encodeEnvironment isOM val
       Text      -> encodeText enc ex val
       Bool      -> text (showBool val)
-      Int       -> text (show val)
-      String    -> text val
-      _         -> fail $ "Type " ++ show tp ++ " not supported in XML"
+      _         -> text (show tv)
 
 encodeState :: Bool -> (a -> XMLBuilder) -> State a -> XMLBuilder
 encodeState isOM enc st = element "state" $ do
    mapM_ (element "prefix" . text . show) (statePrefixes st)
    encodeContext isOM enc (stateContext st)
 
-ruleShortInfo :: Rule a -> XMLBuilder
+ruleShortInfo :: Rule (Context a) -> XMLBuilder
 ruleShortInfo r = do 
    "name"        .=. showId r
    "buggy"       .=. showBool (isBuggy r)
@@ -154,7 +136,19 @@ encodeTypedBinding b tb = element "argument" $ do
       term | b -> builder $ 
          omobj2xml $ toOMOBJ term
       _ -> text (showValue tb)
-   
+
+encodeDerivation :: Encoder (Type a) XMLBuilder -> Derivation (Rule (Context a), Environment) (Context a) -> XMLBuilder
+encodeDerivation enc d = 
+   let xs = [ (s, a) | (_, s, a) <- triples d ]
+   in enc (xs ::: typed)
+
+encodeDerivationText :: Bool -> (a -> XMLBuilder) -> Derivation String (Context a) -> XMLBuilder
+encodeDerivationText isOM enc = encodeAsList . map f . triples
+ where
+   f (_, s, a) = do
+      "ruletext" .=. s
+      encodeContext isOM enc a
+
 encodeDiagnosis :: Bool -> (a -> XMLBuilder) -> Diagnosis a -> XMLBuilder
 encodeDiagnosis isOM enc diagnosis = 
    case diagnosis of

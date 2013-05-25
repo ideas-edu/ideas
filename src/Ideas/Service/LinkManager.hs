@@ -25,12 +25,14 @@ module Ideas.Service.LinkManager
    , linkToState, linkToFirsts, linkToApplications, linkToDerivation
    ) where
 
+import Control.Monad
 import Ideas.Common.Library
 import Ideas.Service.Types
 import Ideas.Service.State
 import Ideas.Text.HTML
 import Ideas.Text.XML
-import Ideas.Service.EncoderXML (encodeState)
+import Ideas.Service.Evaluator
+import Ideas.Service.EncoderXML
 
 data LinkManager = LinkManager
    { urlForResource      :: String -> String
@@ -169,9 +171,10 @@ stateRequest s state =
    exerciseRequestWith s (exercise state) (stateToXML state)
 
 stateToXML :: State a -> XMLBuilder
-stateToXML st = encodeState False enc st
+stateToXML st = join (runEncoderStateM encodeState xes st)
  where
    enc = element "expr" . text . prettyPrinter (exercise st)
+   xes = XMLEncoderState (exercise st) False enc
 
 linkWith :: (a -> String) -> a -> HTMLBuilder -> HTMLBuilder
 linkWith f = link . escapeInURL . f

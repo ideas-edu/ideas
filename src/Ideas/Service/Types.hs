@@ -273,7 +273,7 @@ instance Typed a StdGen where
    typed = Const StdGen
    
 instance Typed a Difficulty where
-   typed = Tag "difficulty" (Iso (f <-> show) typed)
+   typed = Tag "Difficulty" (Iso (f <-> show) typed)
     where
       f = fromMaybe Medium . readDifficulty
 

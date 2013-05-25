@@ -119,24 +119,11 @@ Library
     Ideas.Common.Strategy.Traversal
     Ideas.Common.Traversal.Tests
     Ideas.Common.Utils.StringRef   
-    Ideas.Documentation.DefaultPage
-    Ideas.Documentation.ExampleFile
-    Ideas.Documentation.ExercisePage
-    Ideas.Documentation.Make
-    Ideas.Documentation.OpenMathDerivations
-    Ideas.Documentation.OverviewPages
-    Ideas.Documentation.RulePage
-    Ideas.Documentation.RulePresenter
-    Ideas.Documentation.SelfCheck
-    Ideas.Documentation.ServicePage
-    Ideas.Documentation.TestsPage
-    Ideas.Documentation.ViewPage
     Ideas.Main.LoggingDatabase
     Ideas.Service.ProblemDecomposition
     Ideas.Service.RulesInfo   
     Ideas.Service.StrategyInfo
     Ideas.Service.Submit
-    Ideas.Service.TypedExample
     Ideas.Text.OpenMath.Tests   
     Ideas.Text.UTF8
     Ideas.Text.XML.Document

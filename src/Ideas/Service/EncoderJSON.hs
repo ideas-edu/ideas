@@ -27,10 +27,10 @@ import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
 import qualified Ideas.Service.Types as Tp
 
-jsonEncoder :: MonadPlus m => Exercise a -> Encoder (Type a) (m JSON)
+jsonEncoder :: MonadPlus m => Exercise a -> TypedValue (Type a) -> m JSON
 jsonEncoder ex = jsonEncode (String . prettyPrinter ex)
 
-jsonEncode :: MonadPlus m => (a -> JSON) -> Encoder (Type a) (m JSON)
+jsonEncode :: MonadPlus m => (a -> JSON) -> TypedValue (Type a) -> m JSON
 jsonEncode enc tv@(val ::: tp)
    | length (tupleList tv) > 1 =
         liftM jsonTuple (mapM (jsonEncode enc) (tupleList tv))
@@ -48,14 +48,9 @@ jsonEncode enc tv@(val ::: tp)
            List (Const Rule) -> do
               return $ Array $ map ruleShortInfo val
            Tp.Tag s t
-              | s `elem` ["elem", "list"] ->
-                   jsonEncode enc (val ::: t)
               | s == "Result" -> do
                    conv <- equalM tp typed
                    encodeResult enc (conv val)
-              | s == "Exception" -> do
-                   f <- equalM t typed
-                   fail (f val)
               | s == "Derivation" -> do
                    f <- equalM tp typed
                    encodeDerivation enc (f val)
@@ -74,7 +69,7 @@ jsonEncode enc tv@(val ::: tp)
    tupleList (p ::: Tp.Pair t1 t2) =
       tupleList (fst p ::: t1) ++ tupleList (snd p ::: t2)
    tupleList (x ::: Tag s t)
-      | s `elem` ["message"] = tupleList (x ::: t)
+      | s `elem` ["Message"] = tupleList (x ::: t)
    tupleList (ev ::: (t1 :|: t2)) =
       either (\x -> tupleList (x ::: t1)) 
              (\x -> tupleList (x ::: t2)) ev
@@ -88,7 +83,7 @@ jsonEncode enc tv@(val ::: tp)
                                 , ("subForest", Array $ map treeToJSON ts) ]
        _ -> error "ModeJSON: malformed tree!"
 
-jsonEncodeConst :: MonadPlus m => (a -> JSON) -> Encoder (Const a) (m JSON)
+jsonEncodeConst :: MonadPlus m => (a -> JSON) -> TypedValue (Const a) -> m JSON
 jsonEncodeConst enc (val ::: tp) =
    case tp of
       SomeExercise -> case val of

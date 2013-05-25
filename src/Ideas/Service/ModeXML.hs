@@ -128,9 +128,9 @@ runEval dr m xml = evalStateT m (dr, xml)
 
 stringFormatConverter :: Exercise a -> Evaluator (Const a) EvalXML XMLBuilder
 stringFormatConverter ex =
-   Evaluator (return . xmlEncoder False f ex) (xmlDecoder False g ex)
+   Evaluator (runEncoderStateM xmlEncoder xes) (xmlDecoder False g ex)
  where
-   f  = element "expr" . text . prettyPrinter ex
+   xes = XMLEncoderState ex False (element "expr" . text . prettyPrinter ex)
    g = do
       xml0 <- gets snd
       xml  <- findChild "expr" xml0 -- quick fix
@@ -150,9 +150,9 @@ htmlConverter dr cgiBin ex = Evaluator
 
 openMathConverter :: Bool -> Exercise a -> Evaluator (Const a) EvalXML XMLBuilder
 openMathConverter withMF ex =
-   Evaluator (return . xmlEncoder True f ex) (xmlDecoder True g ex)
+   Evaluator (runEncoderStateM xmlEncoder xes) (xmlDecoder True g ex)
  where
-   f a = toOpenMath ex a >>= builder . toXML . handleMixedFractions
+   xes = XMLEncoderState ex True (\a -> toOpenMath ex a >>= builder . toXML . handleMixedFractions)
    g = do
       xml   <- gets snd
       xob   <- findChild "OMOBJ" xml
@@ -165,8 +165,8 @@ openMathConverter withMF ex =
    -- Remove special mixed-fraction symbol (depending on boolean argument)
    handleMixedFractions = if withMF then id else noMixedFractions
 
-xmlDecoder :: Bool -> EvalXML a -> Exercise a -> Decoder (Type a) EvalXML
-xmlDecoder b f ex = Decoder (xmlDecodeType b ex f)
+xmlDecoder :: Bool -> EvalXML a -> Exercise a -> Type a t -> EvalXML t
+xmlDecoder b f ex = xmlDecodeType b ex f
 
 xmlDecodeType :: Bool -> Exercise a -> EvalXML a -> Type a t -> EvalXML t
 xmlDecodeType b ex getTerm serviceType =
@@ -179,7 +179,7 @@ xmlDecodeType b ex getTerm serviceType =
               a <- xmlDecodeType b ex getTerm t
               put (dr, xml)
               return a
-         | s == "difficulty" -> keep $ \xml -> do
+         | s == "Difficulty" -> keep $ \xml -> do
               g <- equalM typed serviceType
               a <- findAttribute "difficulty" xml
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)

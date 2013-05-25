@@ -97,8 +97,8 @@ runEval dr m json = evalStateT m (dr, json)
 jsonConverter :: Exercise a -> Evaluator (Const a) EvalJSON JSON
 jsonConverter ex = Evaluator (jsonEncoder ex) (jsonDecoder ex)
 
-jsonDecoder :: Exercise a -> Decoder (Type a) EvalJSON
-jsonDecoder ex = Decoder (decode ex)
+jsonDecoder :: Exercise a -> Type a t -> EvalJSON t
+jsonDecoder ex = decode ex
  where
    reader :: Exercise a -> EvalJSON a
    reader ex = do

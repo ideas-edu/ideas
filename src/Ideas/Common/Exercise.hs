@@ -116,7 +116,7 @@ makeExercise = emptyExercise
 emptyExercise :: Exercise a
 emptyExercise = Exercise
    { -- identification and meta-information
-     exerciseId     = error "no exercise code"
+     exerciseId     = mempty
    , status         = Experimental
      -- parsing and pretty-printing
    , parser         = const (Left "<<no parser>>")

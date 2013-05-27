@@ -27,42 +27,32 @@ import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
 import qualified Ideas.Service.Types as Tp
 
-jsonEncoder :: MonadPlus m => Exercise a -> TypedValue (Type a) -> m JSON
-jsonEncoder ex = jsonEncode (String . prettyPrinter ex)
+type JSONEncoder a t = EncoderState (a -> JSON) t JSON
 
-jsonEncode :: MonadPlus m => (a -> JSON) -> TypedValue (Type a) -> m JSON
-jsonEncode enc tv@(val ::: tp)
-   | length (tupleList tv) > 1 =
-        liftM jsonTuple (mapM (jsonEncode enc) (tupleList tv))
-   | otherwise =
-        case tp of
-           Iso p t   -> jsonEncode enc (to p val ::: t)
-           t1 :|: t2 -> case val of
-              Left  x -> jsonEncode enc (x ::: t1)
-              Right y -> jsonEncode enc (y ::: t2)
-           
-           Pair t1 t2 -> do
-              x <- jsonEncode enc (fst val ::: t1)
-              y <- jsonEncode enc (snd val ::: t2)
-              return (jsonTuple [x, y])
-           List (Const Rule) -> do
-              return $ Array $ map ruleShortInfo val
-           Tp.Tag s t
-              | s == "Result" -> do
-                   conv <- equalM tp typed
-                   encodeResult enc (conv val)
-              | s == "Derivation" -> do
-                   f <- equalM tp typed
-                   encodeDerivation enc (f val)
-                 `mplus` do
-                   f <- equalM tp typed
-                   encodeDerivationText enc (f val)
-              | otherwise -> liftM (\b -> Object [(s, b)]) (jsonEncode enc (val ::: t))
-
-           Tp.Unit   -> return Null
-           Tp.List t -> liftM Array (mapM (jsonEncode enc . (::: t)) val)
-           Tp.Tree t -> liftM treeToJSON (T.mapM (jsonEncode enc . (::: t)) val)
-           Const ctp -> jsonEncodeConst enc (val ::: ctp)
+jsonEncoder :: JSONEncoder a (TypedValue (Type a))
+jsonEncoder = encoderStateFor $ \enc tv@(val ::: tp) -> 
+   case tp of
+      _ | length (tupleList tv) > 1 ->
+         jsonTuple <$> sequence [ jsonEncoder // x | x <- tupleList tv ]
+      Iso p t   -> jsonEncoder // (to p val ::: t)
+      t1 :|: t2 -> case val of
+         Left  x -> jsonEncoder // (x ::: t1)
+         Right y -> jsonEncoder // (y ::: t2)
+      Pair t1 t2 -> 
+         let f x y = jsonTuple [x, y]
+         in liftA2 f (jsonEncoder // (fst val ::: t1))
+                     (jsonEncoder // (snd val ::: t2))
+      List (Const Rule) ->
+         pure $ Array $ map ruleShortInfo val
+      Tp.Tag s t
+         | s == "Result" -> encodeTyped encodeResult
+         | s == "Derivation" -> encodeTyped encodeDerivation <+> 
+                                encodeTyped encodeDerivationText
+         | otherwise -> (\b -> Object [(s, b)]) <$> jsonEncoder // (val ::: t)
+      Tp.Unit   -> pure Null
+      Tp.List t -> Array <$> sequence [ jsonEncoder // (x ::: t) | x <- val ]
+      -- Tp.Tree t -> -- liftM treeToJSON (T.mapM ((jsonEncoder //) . (::: t)) val)
+      Const ctp -> jsonEncodeConst // (val ::: ctp)
  where
    tupleList :: TypedValue (TypeRep f) -> [TypedValue (TypeRep f)]
    tupleList (x ::: Tp.Iso p t)   = tupleList (to p x ::: t)
@@ -75,78 +65,95 @@ jsonEncode enc tv@(val ::: tp)
              (\x -> tupleList (x ::: t2)) ev
    tupleList tv = [tv]
 
-   treeToJSON :: Tree JSON -> JSON
-   treeToJSON (Node r ts) =
-     case r of
-       (Array [x, t]) -> Object [ ("rootLabel", x)
-                                , ("type", t)
-                                , ("subForest", Array $ map treeToJSON ts) ]
-       _ -> error "ModeJSON: malformed tree!"
-
-jsonEncodeConst :: MonadPlus m => (a -> JSON) -> TypedValue (Const a) -> m JSON
-jsonEncodeConst enc (val ::: tp) =
+jsonEncodeConst :: JSONEncoder a (TypedValue (Const a))
+jsonEncodeConst = encoderStateFor $ \encTerm (val ::: tp) ->
    case tp of
       SomeExercise -> case val of
-                         Some ex -> return (exerciseInfo ex)
-      State     -> return (encodeState enc val)
-      Rule      -> return (toJSON (showId val))
-      Context   -> liftM enc (fromContext val)
-      Location  -> return (toJSON (show val))
-      Environment -> return (encodeEnvironment val)
-      Text      -> return (toJSON (show val))
-      Int       -> return (toJSON val)
-      Bool      -> return (toJSON val)
-      Tp.String -> return (toJSON val)
-      _         -> fail $ "Type " ++ show tp ++ " not supported in JSON"
+                         Some ex -> pure (exerciseInfo ex)
+      State        -> encodeState // val
+      Rule         -> pure (toJSON (showId val))
+      Context      -> maybe zeroArrow (pure . encTerm) (fromContext val)
+      Location     -> pure (toJSON (show val))
+      Environment  -> encodeEnvironment // val
+      Text         -> pure (toJSON (show val))
+      Int          -> pure (toJSON val)
+      Bool         -> pure (toJSON val)
+      Tp.String    -> pure (toJSON val)
+      _ -> fail $ "Type " ++ show tp ++ " not supported in JSON"
 
 --------------------------
 
 -- legacy representation
-encodeEnvironment :: Environment -> JSON
-encodeEnvironment = 
+encodeEnvironment :: JSONEncoder a Environment
+encodeEnvironment = encoderFor $ \env -> 
    let f a = Object [(showId a, String (showValue a))]
-   in Array . map f . bindings
+   in pure $ Array [ f a | a <- bindings env ]
 
-encodeState :: (a -> JSON) -> State a -> JSON
-encodeState f st = Array
-   [ String (showId (exercise st))
-   , String $ case statePrefixes st of
-                 [] -> "NoPrefix"
-                 ps -> intercalate ";" $ map show ps
-   , f (stateTerm st)
-   , encodeContext (stateContext st)
-   ]
+encodeState :: JSONEncoder a (State a)
+encodeState = encoderStateFor $ \encTerm st -> 
+   let f x = [ String (showId (exercise st))
+             , String $ case statePrefixes st of
+                           [] -> "NoPrefix"
+                           ps -> intercalate ";" $ map show ps
+             , encTerm (stateTerm st)
+             , x
+             ]
+   in Array . f <$> encodeContext // stateContext st
 
-encodeContext :: Context a -> JSON
-encodeContext = Object . map f . bindings
- where
-   f a = (showId a, String $ showValue a)
+encodeContext :: JSONEncoder a (Context a)
+encodeContext = encoderFor $ \ctx -> 
+   pure $ Object [ (showId a, String $ showValue a) | a <- bindings ctx ]
 
-encodeDerivation :: MonadPlus m => (a -> JSON) -> Derivation (Rule (Context a), Environment) (Context a) -> m JSON
-encodeDerivation enc d = 
+encodeDerivation :: JSONEncoder a (Derivation (Rule (Context a), Environment) (Context a))
+encodeDerivation = encoderFor $ \d ->
    let xs = [ (s, a) | (_, s, a) <- triples d ]
-   in jsonEncode enc (xs ::: typed)
+   in jsonEncoder // (xs ::: typed)
 
-encodeDerivationText :: MonadPlus m => (a -> JSON) -> Derivation String (Context a) -> m JSON
-encodeDerivationText enc d = 
+encodeDerivationText :: JSONEncoder a (Derivation String (Context a))
+encodeDerivationText = encoderFor $ \d ->  
    let xs = [ (s, a) | (_, s, a) <- triples d ]
-   in jsonEncode enc (xs ::: typed)
+   in jsonEncoder // (xs ::: typed)
 
-encodeResult :: MonadPlus m => (a -> JSON) -> Result a -> m JSON
-encodeResult enc result =
+encodeResult :: JSONEncoder a (Result a)
+encodeResult = encoderFor $ \result -> Object <$>
    case result of
       -- SyntaxError _ -> [("result", String "SyntaxError")]
-      Buggy rs      -> return $ Object [("result", String "Buggy"), ("rules", Array $ map (String . showId) rs)]
-      NotEquivalent -> return $ Object [("result", String "NotEquivalent")]
-      Ok rs st      -> do
-         json <- jsonEncode enc (st ::: typed)
-         return $ Object [("result", String "Ok"), ("rules", Array $ map (String . showId) rs), ("state", json)]
-      Detour rs st  -> do
-         json <- jsonEncode enc (st ::: typed)
-         return $ Object [("result", String "Detour"), ("rules", Array $ map (String . showId) rs), ("state", json)]
-      Unknown st    -> do
-         json <- jsonEncode enc (st ::: typed)
-         return $ Object [("result", String "Unknown"), ("state", json)]
+      Buggy rs -> pure 
+         [ ("result", String "Buggy")
+         , ("rules", Array $ map (String . showId) rs)
+         ]
+      NotEquivalent -> pure
+         [ ("result", String "NotEquivalent") ]
+      Ok rs st ->
+         let f x =
+                [ ("result", String "Ok")
+                , ("rules", Array $ map (String . showId) rs)
+                , ("state", x)
+                ]
+         in f <$> jsonEncoder // (st ::: typed)
+      Detour rs st ->
+         let f x = 
+                [ ("result", String "Detour")
+                , ("rules", Array $ map (String . showId) rs)
+                , ("state", x)
+                ]
+         in f <$> jsonEncoder // (st ::: typed)
+      Unknown st ->
+         let f x = 
+                [ ("result", String "Unknown")
+                , ("state", x)
+                ]
+         in f <$> jsonEncoder // (st ::: typed)
+
+encodeTree :: Tree JSON -> JSON
+encodeTree (Node r ts) =
+  case r of
+    Array [x, t] -> Object 
+       [ ("rootLabel", x)
+       , ("type", t)
+       , ("subForest", Array $ map encodeTree ts) 
+       ]
+    _ -> error "ModeJSON: malformed tree!"
 
 jsonTuple :: [JSON] -> JSON
 jsonTuple xs =

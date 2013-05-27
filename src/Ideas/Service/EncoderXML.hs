@@ -51,7 +51,7 @@ attr :: String -> String -> XMLEncoder a t
 attr s a = pure (s .=. a)
 
 xmlEncoder :: XMLEncoder a (TypedValue (Type a))
-xmlEncoder = choice
+xmlEncoder = msum
    [ encodeTyped (encodeDiagnosis)
    , encodeTyped (encodeDecompositionReply)
    , encodeTyped (encodeDerivation)
@@ -64,7 +64,7 @@ xmlEncoder = choice
            Tag "RuleShortInfo" t ->
               case equal t (Const Rule) of
                  Just f  -> ruleShortInfo // f val
-                 Nothing -> encoderError "rule short info"
+                 Nothing -> fail "rule short info"
            Tag "RulesInfo" _ -> 
               pure (rulesInfoXML (getExercise xp) (encodeTerm xp))
            Tag "elem" t -> 
@@ -75,7 +75,7 @@ xmlEncoder = choice
            -- special case for exceptions
            Const String :|: t -> 
               case val of
-                 Left s  -> encoderError s
+                 Left s  -> fail s
                  Right a -> xmlEncoder // (a ::: t)
            -- special cases for lists
            List (Const Rule) -> 

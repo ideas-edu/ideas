@@ -95,7 +95,7 @@ runEval :: DomainReasoner -> EvalJSON a -> JSON -> IO a
 runEval dr m json = evalStateT m (dr, json)
 
 jsonConverter :: Exercise a -> Evaluator (Const a) EvalJSON JSON
-jsonConverter ex = Evaluator (jsonEncoder ex) (jsonDecoder ex)
+jsonConverter ex = Evaluator (runEncoderStateM jsonEncoder (String . prettyPrinter ex)) (jsonDecoder ex)
 
 jsonDecoder :: Exercise a -> Type a t -> EvalJSON t
 jsonDecoder ex = decode ex

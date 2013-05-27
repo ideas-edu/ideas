@@ -12,11 +12,12 @@
 -----------------------------------------------------------------------------
 module Ideas.Service.Evaluator 
    ( EncoderState, simpleEncoder, maybeEncoder, eitherEncoder
-   , failArrow, encoderError, encoderFor, encoderStateFor, encodeTyped
+   , encoderFor, encoderStateFor, encodeTyped
    , runEncoderState, runEncoderStateM, (//)
-   , choice
+   , getState, withState
      -- re-export
-   , pure, (<$>)
+   , pure, (<$>), (<**>)
+   , module Data.Monoid, liftA2
      -- old
    , encodeWith, Evaluator(..), evalService
    ) where
@@ -27,6 +28,7 @@ import Data.List
 import Ideas.Common.View
 import Control.Arrow
 import Control.Applicative hiding (Const)
+import Control.Monad
 import Data.Monoid
 import Ideas.Service.Types
 
@@ -67,11 +69,23 @@ instance Monoid b => Monoid (EncoderState st a b) where
    mempty  = pure mempty
    mappend = liftA2 (<>)
 
-failArrow :: EncoderState st String a
-failArrow = Enc $ \_ err -> Left [ err | not (null err) ]
+instance Monad (EncoderState st a) where
+   return = pure
+   fail s = Enc $ \_ _ -> Left [ s | not (null s) ]
+   Enc f >>= g = Enc $ \st a -> 
+      case f st a of
+         Left err -> Left err
+         Right b  -> let Enc h = g b in h st a
 
-stateArrow :: EncoderState st a (st, a)
-stateArrow = Enc $ \st a -> Right (st, a)
+instance MonadPlus (EncoderState st a) where
+   mzero = zeroArrow
+   mplus = (<+>)
+
+getState :: EncoderState st a st
+getState = Enc $ const . Right
+
+withState :: (st -> b) -> EncoderState st a b
+withState f = liftM f getState
 
 runEncoderState :: EncoderState st a b -> st -> a -> Either String b
 runEncoderState (Enc f) st = mapFirst (concat . intersperse ", ") . f st
@@ -82,19 +96,19 @@ simpleEncoder :: (a -> b) -> EncoderState st a b
 simpleEncoder = arr
 
 maybeEncoder :: (a -> Maybe b) -> EncoderState st a b
-maybeEncoder f = eitherEncoder (maybe (Left []) Right . f)
+maybeEncoder f = C.id >>= maybe mzero return . f
 
 eitherEncoder :: (a -> Either String b) -> EncoderState st a b
-eitherEncoder f = arr f >>> failArrow ||| C.id
-
-encoderError :: String -> EncoderState st a b
-encoderError err = arr (const err) >>> failArrow
+eitherEncoder f = C.id >>= either fail return . f
 
 encoderFor :: (a -> EncoderState st a b) -> EncoderState st a b
 encoderFor = encoderStateFor . const
 
 encoderStateFor :: (st -> a -> EncoderState st a b) -> EncoderState st a b
-encoderStateFor f = (stateArrow >>> arr (uncurry f)) &&& C.id >>> app
+encoderStateFor f = do
+   st <- getState
+   a  <- C.id
+   f st a
       
 runEncoderStateM :: Monad m => EncoderState st a b -> st -> a -> m b
 runEncoderStateM f st = either fail return . runEncoderState f st
@@ -109,9 +123,6 @@ f // a = arr (const a) >>> f
 
 
 ----
-
-choice :: ArrowPlus f => [f a b] -> f a b
-choice = foldr (<+>) zeroArrow
 
 fromTyped :: Typed a t => EncoderState st (TypedValue (Type a)) t
 fromTyped = maybeEncoder $ \(val ::: tp) -> fmap ($ val) (equal tp typed)

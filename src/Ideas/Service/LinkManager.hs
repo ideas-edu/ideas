@@ -25,7 +25,7 @@ module Ideas.Service.LinkManager
    , linkToState, linkToFirsts, linkToApplications, linkToDerivation
    ) where
 
-import Control.Monad
+import Data.Maybe
 import Ideas.Common.Library
 import Ideas.Service.Types
 import Ideas.Service.State
@@ -129,7 +129,7 @@ dynamicLinks cgiBinary = LinkManager
    , urlForServices  = url $ simpleRequest "servicelist"
    , urlForService = \srv ->
         url $ makeRequest "serviceinfo" $ 
-           element "location" $ text $ showId srv
+           tag "location" $ text srv
    , urlForExercise    = url . exerciseRequest "exerciseinfo"
    , urlForStrategy    = url . exerciseRequest "strategyinfo"
    , urlForRules       = url . exerciseRequest "rulelist"
@@ -137,7 +137,7 @@ dynamicLinks cgiBinary = LinkManager
    , urlForDerivations = url . exerciseRequest "examplederivations"
    , urlForRule = \ex r -> 
         url $ exerciseRequestWith "ruleinfo" ex $
-           element "ruleid" $ text $ show r
+           tag "ruleid" $ text r
    , urlForRandomExample = \ex d ->
         url $ exerciseRequestWith "generate" ex $
            "difficulty" .=. show d
@@ -154,26 +154,27 @@ simpleRequest :: String -> XML
 simpleRequest s = makeRequest s mempty
    
 makeRequest :: String -> XMLBuilder -> XML
-makeRequest s rest = makeXML "request" $ do
-   "service"  .=. s
-   "encoding" .=. "html"
+makeRequest s rest = makeXML "request" $
+   ("service"  .=. s) <>
+   ("encoding" .=. "html") <>
    rest
-
+  
 exerciseRequest :: String -> Exercise a -> XML
 exerciseRequest s ex = makeRequest s ("exerciseid" .=. showId ex)
 
 exerciseRequestWith :: String -> Exercise a -> XMLBuilder -> XML
 exerciseRequestWith s ex rest = 
-   makeRequest s ("exerciseid" .=. showId ex >> rest)
+   makeRequest s (("exerciseid" .=. showId ex) <> rest)
 
 stateRequest :: String -> State a -> XML
 stateRequest s state = 
    exerciseRequestWith s (exercise state) (stateToXML state)
 
+-- assume nothing goest wrong
 stateToXML :: State a -> XMLBuilder
-stateToXML st = join (runEncoderStateM encodeState xes st)
+stateToXML st = fromMaybe mempty (runEncoderStateM encodeState xes st)
  where
-   enc = element "expr" . text . prettyPrinter (exercise st)
+   enc = tag "expr" . string . prettyPrinter (exercise st)
    xes = XMLEncoderState (exercise st) False enc
 
 linkWith :: (a -> String) -> a -> HTMLBuilder -> HTMLBuilder

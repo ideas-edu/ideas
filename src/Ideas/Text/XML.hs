@@ -15,13 +15,13 @@
 -----------------------------------------------------------------------------
 module Ideas.Text.XML
    ( XML, Attr, AttrList, InXML(..), Element(..)
-   , XMLBuilder, XMLBuilderM, makeXML, buildXML, text, unescaped, element, tag, attribute
-   , parseXML, showXML, compactXML, (.=.), findAttribute, updateLast
-   , children, Attribute(..), builder, fromBuilder, findChild, getData
+   , XMLBuilder, makeXML
+   , parseXML, showXML, compactXML, findAttribute, updateLast
+   , children, Attribute(..), fromBuilder, findChild, getData
+   , BuildXML(..)
+   , module Data.Monoid, munless, mwhen
    ) where
 
-import Control.Arrow
-import Control.Monad
 import Data.Char
 import Data.Foldable (toList)
 import Data.Monoid
@@ -80,101 +80,58 @@ compactXML :: XML -> String
 compactXML = show . ignoreLayout
 
 ----------------------------------------------------------------
--- Monadic XML builder
+-- XML builders
 
-data BuilderState = BS (Seq.Seq Attr) (Seq.Seq (Either String Element))
+infix 3 .=.
 
-instance Monoid BuilderState where
+class Monoid a => BuildXML a where
+   (.=.)     :: String -> String -> a   -- attribute
+   unescaped :: String -> a             -- parsed character data (unescaped!)            
+   builder   :: Element -> a            -- (named) xml element
+   tag       :: String -> a -> a        -- tag (with content)
+   -- functions with a default
+   string   :: String -> a -- escaped text
+   text     :: Show s => s -> a -- escaped text with Show class
+   element  :: String -> [a] -> a
+   emptyTag :: String -> a
+   -- implementations
+   string     = unescaped . escape
+   text       = string . show
+   element s  = tag s . mconcat
+   emptyTag s = tag s mempty
+
+data XMLBuilder = BS (Seq.Seq Attr) (Seq.Seq (Either String Element))
+
+-- local helper
+fromBS :: XMLBuilder -> (AttrList, Content)
+fromBS (BS as elts) = (toList as, toList elts)
+
+instance Monoid XMLBuilder where
    mempty = BS mempty mempty
    mappend (BS as1 elts1) (BS as2 elts2) =
       BS (as1 <> as2) (elts1 <> elts2)
 
-attrBS :: Attr -> BuilderState
-attrBS a = BS (Seq.singleton a) mempty
-
-elementBS :: Element -> BuilderState
-elementBS e = BS mempty (Seq.singleton (Right e))
-
-textBS :: String -> BuilderState
-textBS s = BS mempty (Seq.singleton (Left s))
-
-fromBS :: BuilderState -> (AttrList, Content)
-fromBS (BS as elts) = (toList as, toList elts)
-
-type XMLBuilder = XMLBuilderM ()
-
-newtype XMLBuilderM a = XB 
-   { fromXB :: BuilderState -> Either String (BuilderState, a) 
-   }
-
-instance Monoid a => Monoid (XMLBuilderM a) where
-   mempty  = return mempty
-   mappend = (>>)
-
-instance Monad XMLBuilderM where
-   return a = XB $ \bs -> Right (bs, a)
-   fail s   = XB $ \_  -> Left s
-   m >>= f  = XB $ \bs -> 
-      case fromXB m bs of
-         Left s       -> Left s
-         Right (b, a) -> fromXB (f a) b
-
-instance MonadPlus XMLBuilderM where
-   mzero = fail "XMLBuilderM: mzero"
-   mplus m1 m2 = XB $ \bs -> 
-      case fromXB m1 bs of
-         Left _   -> fromXB m2 bs
-         Right ok -> Right ok
-
-runXMLBuilder :: XMLBuilder -> Either String (AttrList, Content)
-runXMLBuilder m = 
-   fmap (fromBS . fst) (fromXB m mempty)
-
-modify :: (BuilderState -> BuilderState) -> XMLBuilder
-modify f = XB (\bs -> Right (f bs, ()))
-
-append :: BuilderState -> XMLBuilder
-append bs = modify (<> bs)
+instance BuildXML XMLBuilder where
+   n .=. s   = BS (Seq.singleton (n := escapeAttr s)) mempty
+   unescaped = BS mempty . Seq.singleton . Left
+   builder   = BS mempty . Seq.singleton . Right
+   tag s     = builder . uncurry (Element s) . fromBS
 
 makeXML :: String -> XMLBuilder -> XML
-makeXML s m = either error id (buildXML s m)
-
-buildXML :: String -> XMLBuilder -> Either String XML
-buildXML s m =
-   case runXMLBuilder m of
-      Left msg         -> Left msg
-      Right (as, elts) -> Right (Element s as elts)
+makeXML s = uncurry (Element s) . fromBS
 
 updateLast :: (Element -> Element) -> XMLBuilder -> XMLBuilder
-updateLast f m = XB $ \bs -> fmap (first change) (fromXB m bs)
- where
-   change (BS as elts) =
-      case Seq.viewr elts of 
-         rest Seq.:> b -> BS as (rest Seq.|> fmap f b)
-         Seq.EmptyR    -> BS as elts
+updateLast f (BS as elts) =
+   case Seq.viewr elts of 
+      rest Seq.:> b -> BS as (rest Seq.|> fmap f b)
+      Seq.EmptyR    -> BS as elts
 
-text :: String -> XMLBuilder
-text = unescaped . escape
+mwhen :: Monoid a => Bool -> a -> a
+mwhen True  a = a
+mwhen False _ = mempty
 
--- Should be used with care: the argument String is not escaped, and
--- therefore may contain xml tags or xml entities
-unescaped :: String -> XMLBuilder
-unescaped = append . textBS
-
-element :: String -> XMLBuilder -> XMLBuilder
-element s = either fail builder . buildXML s
-
-tag :: String -> XMLBuilder
-tag s = element s (return ())
-
-builder :: Element -> XMLBuilder
-builder = append . elementBS
-
-attribute :: Attr -> XMLBuilder
-attribute = append . attrBS
-
-(.=.) :: String -> String -> XMLBuilder
-n .=. s = attribute (n := escapeAttr s)
+munless :: Monoid a => Bool -> a -> a
+munless = mwhen . not
 
 escapeAttr :: String -> String
 escapeAttr = concatMap f
@@ -186,9 +143,9 @@ escapeAttr = concatMap f
 
 fromBuilder :: XMLBuilder -> Maybe Element
 fromBuilder m = 
-   case runXMLBuilder m of
-      Right ([], [Right a]) -> Just a
-      _                     -> Nothing
+   case fromBS m of
+      ([], [Right a]) -> Just a
+      _               -> Nothing
 
 escape :: String -> String
 escape = concatMap f

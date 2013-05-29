@@ -29,16 +29,17 @@ strategyToXML :: IsStrategy f => f a -> XML
 strategyToXML = coreToXML . toCore . toStrategy
 
 infoToXML :: LabelInfo -> XMLBuilder
-infoToXML info = do
-   "name" .=. showId info
-   when (removed   info) ("removed"   .=. "true")
-   when (collapsed info) ("collapsed" .=. "true")
-   when (hidden    info) ("hidden"    .=. "true")
+infoToXML info = mconcat
+   [ "name" .=. showId info
+   , mwhen (removed   info) ("removed"   .=. "true")
+   , mwhen (collapsed info) ("collapsed" .=. "true")
+   , mwhen (hidden    info) ("hidden"    .=. "true")
+   ]
 
 coreToXML :: Core LabelInfo a -> XML
 coreToXML core = makeXML "label" $
    case core of
-      Label l a -> infoToXML l >> coreBuilder infoToXML a
+      Label l a -> infoToXML l <> coreBuilder infoToXML a
       _         -> coreBuilder infoToXML core
 
 coreBuilder :: HasId l => (l -> XMLBuilder) -> Core l a -> XMLBuilder
@@ -46,26 +47,26 @@ coreBuilder f = rec
  where
    rec core =
       case core of
-         _ :*:  _  -> asList  "sequence"   isSequence
-         _ :|:  _  -> asList  "choice"     isChoice
-         _ :|>: _  -> asList  "orelse"     isOrElse
-         _ :%: _   -> asList  "interleave" isInterleave
-         a :!%: b  -> element "interleft"  (rec a >> rec b)
-         Many a    -> element "many"       (rec a)
-         Repeat a  -> element "repeat"     (rec a)
+         _ :*:  _  -> asList "sequence"   isSequence
+         _ :|:  _  -> asList "choice"     isChoice
+         _ :|>: _  -> asList "orelse"     isOrElse
+         _ :%: _   -> asList "interleave" isInterleave
+         a :!%: b  -> tag "interleft"  (rec a <> rec b)
+         Many a    -> tag "many"       (rec a)
+         Repeat a  -> tag "repeat"     (rec a)
          Label l (Rule r) | getId l == getId r 
-                   -> element "rule"       (f l)
-         Label l a -> element "label"      (f l >> rec a)
-         Atomic a  -> element "atomic"     (rec a)
-         Rec n a   -> element "rec"        (("var" .=. show n) >> rec a)
-         Not a     -> element "not"        (recNot a)
-         Rule r    -> element "rule"       ("name" .=. show r)
-         Var n     -> element "var"        ("var" .=. show n)
-         Succeed   -> tag     "succeed"
-         Fail      -> tag     "fail"
+                   -> tag "rule"       (f l)
+         Label l a -> tag "label"      (f l <> rec a)
+         Atomic a  -> tag "atomic"     (rec a)
+         Rec n a   -> tag "rec"        (("var" .=. show n) <> rec a)
+         Not a     -> tag "not"        (recNot a)
+         Rule r    -> tag "rule"       ("name" .=. show r)
+         Var n     -> tag "var"        ("var" .=. show n)
+         Succeed   -> emptyTag "succeed"
+         Fail      -> emptyTag "fail"
     where
-      asList s g = element s (mapM_ rec (collect g core))
-      recNot = coreBuilder (const (return ()))
+      asList s g = element s (map rec (collect g core))
+      recNot = coreBuilder (const mempty)
 
 collect :: (a -> Maybe (a, a)) -> a -> [a]
 collect f = ($ []) . rec

@@ -47,9 +47,6 @@ data XMLEncoderState a = XMLEncoderState
    , encodeTerm  :: a -> XMLBuilder
    }
 
-attr :: String -> String -> XMLEncoder a t
-attr s a = pure (s .=. a)
-
 xmlEncoder :: XMLEncoder a (TypedValue (Type a))
 xmlEncoder = msum
    [ encodeTyped (encodeDiagnosis)
@@ -58,7 +55,7 @@ xmlEncoder = msum
    , encodeTyped (encodeDerivationText)
    , encodeTyped (encodeDifficulty)
    , encodeTyped (encodeMessage)
-   , encoderStateFor $ \xp tv@(val ::: tp) -> 
+   , encoderStateFor $ \xp (val ::: tp) -> 
         case tp of
            -- meta-information
            Tag "RuleShortInfo" t ->
@@ -66,9 +63,9 @@ xmlEncoder = msum
                  Just f  -> ruleShortInfo // f val
                  Nothing -> fail "rule short info"
            Tag "RulesInfo" _ -> 
-              pure (rulesInfoXML (getExercise xp) (encodeTerm xp))
+              return (rulesInfoXML (getExercise xp) (encodeTerm xp))
            Tag "elem" t -> 
-              element "elem" <$> xmlEncoder // (val ::: t)
+              tag "elem" (xmlEncoder // (val ::: t))
            -- special case for onefirst service; insert elem Tag
            Const String :|: Pair t (Const State) | isJust (equal stepInfoType t) ->
               xmlEncoder // (val ::: (Const String :|: Tag "elem" (Pair t (Const State))))
@@ -92,7 +89,7 @@ xmlEncoder = msum
                             Right b -> xmlEncoder // (b ::: t2)
            Unit       -> mempty
            Const t    -> xmlEncoderConst // (val ::: t)
-           _ -> error $ show tp
+           _ -> fail $ show tp
    ]
  where
    stepInfoType :: Type a (StepInfo a)
@@ -103,49 +100,50 @@ xmlEncoderConst = encoderFor $ \tv@(val ::: tp) ->
    case tp of
       SomeExercise -> case val of
                          Some a -> exerciseInfo // a
-      Strategy  -> pure (builder (strategyToXML val))
-      Rule      -> attr "ruleid" (show val)
-      State     -> encodeState // val
-      Context   -> encodeContext // val
-      Location  -> encodeLocation // val
-      Environment -> encodeEnvironment // val
-      Text      -> encodeText // val
-      Bool      -> pure (text (showBool val))
-      _         -> pure (text (show tv))
+      Strategy     -> builder (strategyToXML val)
+      Rule         -> "ruleid" .=. show val
+      State        -> encodeState // val
+      Context      -> encodeContext // val
+      Location     -> encodeLocation // val
+      Environment  -> encodeEnvironment // val
+      Text         -> encodeText // val
+      Bool         -> string (showBool val)
+      _            -> text tv
 
 encodeState :: XMLEncoder a (State a)
-encodeState = encoderFor $ \st ->
-   element "state" <$>
-      encodePrefixes // statePrefixes st
-      <> encodeContext // stateContext st
-
+encodeState = encoderFor $ \st -> element "state" 
+   [ encodePrefixes // statePrefixes st
+   , encodeContext // stateContext st
+   ]
+   
 encodePrefixes :: XMLEncoder a [Prefix (Context a)]
 encodePrefixes = encoderFor $ \ps -> 
    case ps of
       [] -> mempty
-      _  -> element "prefix" <$> mconcat [ pure (text (show p)) | p <- ps ]
+      _  -> element "prefix" [ text p | p <- ps ]
 
 encodeContext :: XMLEncoder a (Context a)
-encodeContext = encoderStateFor $ \xp ctx -> pure $ do
-   let loc    = fromLocation (location ctx)
-       values = bindings (withLoc ctx)
+encodeContext = encoderStateFor $ \xp ctx ->
+   liftM (encodeTerm xp) (fromContext ctx)
+   <>
+   let values = bindings (withLoc ctx)
+       loc    = fromLocation (location ctx)
        withLoc
           | null loc  = id
           | otherwise = insertRef (makeRef "location") loc
-      
-   a <- fromContext ctx
-   encodeTerm xp a
-   unless (null values) $ element "context" $
-      forM_ values $ \tb ->
-         element "item" $ do
-            "name"  .=. showId tb
-            case getTermValue tb of
-               term | isOpenMath xp -> 
-                  builder (omobj2xml (toOMOBJ term))
-               _ -> "value" .=. showValue tb
+   in return $ munless (null values) $ element "context"
+         [  element "item"
+               [ "name"  .=. showId tb
+               , case getTermValue tb of
+                    term | isOpenMath xp -> 
+                       builder (omobj2xml (toOMOBJ term))
+                    _ -> "value" .=. showValue tb
+               ]
+         | tb <- values
+         ]
 
 encodeLocation :: XMLEncoder a Location
-encodeLocation = encoderFor $ \loc -> pure ("location" .=. show loc)
+encodeLocation = encoderFor $ \loc -> return ("location" .=. show loc)
 
 encodeEnvironment :: HasEnvironment env => XMLEncoder a env
 encodeEnvironment = encoderFor $ \env -> 
@@ -153,12 +151,12 @@ encodeEnvironment = encoderFor $ \env ->
 
 encodeTypedBinding :: XMLEncoder a Binding
 encodeTypedBinding = encoderStateFor $ \xp tb -> 
-   element "argument" <$>
-      attr "description" (showId tb)
-      <> case getTermValue tb of
-            term | isOpenMath xp -> pure $ builder $ 
-               omobj2xml $ toOMOBJ term
-            _ -> pure (text (showValue tb))
+   tag "argument" $
+      ("description" .=. showId tb) <>
+      case getTermValue tb of
+         term | isOpenMath xp -> builder $ 
+            omobj2xml $ toOMOBJ term
+         _ -> string (showValue tb)
 
 encodeDerivation :: XMLEncoder a (Derivation (Rule (Context a), Environment) (Context a))
 encodeDerivation = encoderFor $ \d ->
@@ -167,16 +165,17 @@ encodeDerivation = encoderFor $ \d ->
 
 encodeDerivationText :: XMLEncoder a (Derivation String (Context a))
 encodeDerivationText = encoderFor $ \d -> encodeAsList $ 
-   [ attr "ruletext" s <> encodeContext // a
+   [ ("ruletext" .=. s) <> encodeContext // a
    | (_, s, a) <- triples d
    ]
 
 ruleShortInfo :: XMLEncoder a (Rule (Context a))
-ruleShortInfo = simpleEncoder $ \r -> do 
-   "name"        .=. showId r
-   "buggy"       .=. showBool (isBuggy r)
-   "arguments"   .=. show (length (getRefs r))
-   "rewriterule" .=. showBool (isRewriteRule r)
+ruleShortInfo = simpleEncoder $ \r -> mconcat 
+   [ "name"        .=. showId r
+   , "buggy"       .=. showBool (isBuggy r)
+   , "arguments"   .=. show (length (getRefs r))
+   , "rewriterule" .=. showBool (isRewriteRule r)
+   ]
 
 encodeDifficulty :: XMLEncoder a Difficulty
 encodeDifficulty = simpleEncoder $ \d -> 
@@ -186,79 +185,68 @@ encodeText :: XMLEncoder a Text
 encodeText = encoderFor $ \txt -> 
    mconcat [ encodeItem // item | item <- textItems txt ] 
  where
-   encodeItem = encoderStateFor $ \xp item -> pure $ 
+   encodeItem = encoderStateFor $ \xp item -> return $ 
       case item of
-         TextTerm a -> fromMaybe (text (show item)) $ do
+         TextTerm a -> fromMaybe (text item) $ do
             v <- hasTermView (getExercise xp)
             b <- match v a
             return (encodeTerm xp b)
-         _ -> text (show item)
+         _ -> text item
 
 encodeMessage :: XMLEncoder a FeedbackText.Message
 encodeMessage = encoderFor $ \msg ->
-   element "message" <$>
-      case FeedbackText.accept msg of
-         Just b  -> attr "accept" (showBool b)
-         Nothing -> mempty
-      <> encodeText // FeedbackText.text msg
+   element "message"
+      [ case FeedbackText.accept msg of
+           Just b  -> "accept" .=. showBool b
+           Nothing -> mempty
+      , encodeText // FeedbackText.text msg
+      ]
 
 encodeDiagnosis :: XMLEncoder a (Diagnosis a)
 encodeDiagnosis = encoderFor $ \diagnosis ->
    case diagnosis of
-      Buggy env r -> 
-         element "buggy" <$> 
-            encodeEnvironment // env 
-            <> attr "ruleid" (showId r)
+      Buggy env r -> element "buggy"  
+         [encodeEnvironment // env, "ruleid" .=. showId r]
       NotEquivalent -> 
-         pure (tag "notequiv")
-      Similar b st -> 
-         element "similar" <$>  
-            attr "ready" (showBool b) 
-            <> encodeState // st
-      Expected b st r -> 
-         element "expected" <$>
-            attr "ready" (showBool b) 
-            <> encodeState // st 
-            <> attr "ruleid" (showId r)
-      Detour b st env r -> 
-         element "detour" <$>
-            attr "ready" (showBool b) 
-            <> encodeState // st 
-            <> encodeEnvironment // env 
-            <> attr "ruleid" (showId r)
-      Correct b st -> 
-         element "correct" <$>
-            attr "ready" (showBool b) 
-            <> encodeState // st
+         return (emptyTag "notequiv")
+      Similar b st -> element "similar" 
+         ["ready" .=. showBool b, encodeState // st]
+      Expected b st r -> element "expected" 
+         ["ready" .=. showBool b, encodeState // st, "ruleid" .=. showId r]
+      Detour b st env r -> element "detour"
+         [ "ready" .=. showBool b, encodeState // st 
+         , encodeEnvironment // env, "ruleid" .=. showId r
+         ]
+      Correct b st -> element "correct" 
+         ["ready" .=. showBool b, encodeState // st]
    
 encodeDecompositionReply :: XMLEncoder a (PD.Reply a)
 encodeDecompositionReply = encoderFor $ \reply ->
    case reply of
       PD.Ok loc st -> 
-         element "correct" <$> 
-            encLoc loc
-            <> encodeState // st
+         element "correct" [encLoc loc, encodeState // st]
       PD.Incorrect eq loc st env -> 
-         element "incorrect" <$>
-            attr "equivalent" (showBool eq)
-            <> encLoc loc
-            <> encodeState // st
-            <> encodeEnvironment // env
+         element "incorrect"
+            [ "equivalent" .=. showBool eq
+            , encLoc loc
+            , encodeState // st
+            , encodeEnvironment // env
+            ]
  where
-    encLoc loc = element "location" <$> pure (text (show loc))
+    encLoc = tag "location" . text
 
 exerciseInfo :: XMLEncoder a (Exercise b)
-exerciseInfo = simpleEncoder $ \ex -> do
-   "exerciseid"  .=. showId ex
-   "description" .=. description ex
-   "status"      .=. show (status ex)
+exerciseInfo = encoderFor $ \ex -> mconcat
+   [ "exerciseid"  .=. showId ex
+   , "description" .=. description ex
+   , "status"      .=. show (status ex)
+   ]
 
 ------------------------------------------------
 -- helpers
 
 encodeAsList :: [XMLEncoder a t] -> XMLEncoder a t
-encodeAsList xs = element "list" <$> mconcat 
-   [ element "elem" <$> x | x <- xs ]
+encodeAsList = element "list" . map (tag "elem")
 
 showBool :: Bool -> String
 showBool = map toLower . show

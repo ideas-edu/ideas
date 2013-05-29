@@ -39,6 +39,9 @@ data Service = S
    , serviceFunction   :: forall a . TypedValue (Type a)
    }
 
+instance Show Service where
+   show = showId
+
 instance HasId Service where
    getId = serviceId
    changeId f a = a { serviceId = f (serviceId a) }

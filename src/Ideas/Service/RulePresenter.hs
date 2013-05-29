@@ -13,31 +13,29 @@ module Ideas.Service.RulePresenter (ruleToHTML) where
 
 import Ideas.Common.Library
 import Ideas.Common.Utils (Some(..))
-import Control.Monad
 import Data.List
 import Data.Maybe
 import Ideas.Text.HTML
 
 ruleToHTML :: Some Exercise -> Rule a -> HTMLBuilder
-ruleToHTML ex r =
-   forM_ (getRewriteRules (transformation r)) $ \(Some rr) ->
-      rewriteRuleToHTML (not $ isBuggy r) ex rr
+ruleToHTML ex r = mconcat
+   [ rewriteRuleToHTML (not $ isBuggy r) ex rr  
+   | Some rr <- getRewriteRules (transformation r)
+   ]  
 
 rewriteRuleToHTML :: Bool -> Some Exercise -> RewriteRule a -> HTMLBuilder
-rewriteRuleToHTML sound ex r = do
-   let lhs :~> rhs = ruleSpecTerm r
-   showTerm ex lhs
-   spaces 3
-   showLeadsTo sound
-   spaces 3
-   showTerm ex rhs
-   br
-
+rewriteRuleToHTML sound ex r =
+   showTerm ex lhs <> spaces 3 <>
+   showLeadsTo sound <> spaces 3 <>
+   showTerm ex rhs <> br
+ where
+   lhs :~> rhs = ruleSpecTerm r 
+ 
 showLeadsTo :: Bool -> HTMLBuilder
-showLeadsTo sound = text (if sound then "\x21D2" else "\x21CF")
+showLeadsTo sound = string (if sound then "\x21D2" else "\x21CF")
 
 showTerm :: Some Exercise -> Term -> HTMLBuilder
-showTerm (Some ex) = text . rec
+showTerm (Some ex) = string . rec
  where
    rec term =
       case term of

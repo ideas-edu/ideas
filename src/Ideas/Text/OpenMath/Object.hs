@@ -98,25 +98,29 @@ xml2omobj xmlTop =
            fail ("expected tag OMVAR, but found " ++ show (name xml))
 
 omobj2xml :: OMOBJ -> XML
-omobj2xml object = makeXML "OMOBJ" $ do
-   "xmlns"   .=. "http://www.openmath.org/OpenMath"
-   "version" .=. "2.0"
-   "cdbase"  .=. "http://www.openmath.org/cd"
-   rec object
+omobj2xml object = makeXML "OMOBJ" $ mconcat
+   [ "xmlns"   .=. "http://www.openmath.org/OpenMath"
+   , "version" .=. "2.0"
+   , "cdbase"  .=. "http://www.openmath.org/cd"
+   , rec object
+   ]
  where
+   rec :: OMOBJ -> XMLBuilder
    rec omobj =
       case omobj of
-         OMI i  -> element "OMI" (text (show i))
-         OMF f  -> element "OMF" ("dec" .=. show f)
-         OMV v  -> element "OMV" ("name" .=. v)
-         OMA xs -> element "OMA" (mapM_ rec xs)
-         OMS s  -> element "OMS" $ do
-            "cd"   .=. fromMaybe "unknown" (dictionary s)
-            "name" .=. symbolName s
-         OMBIND x ys z -> element "OMBIND" $ do
-            rec x
-            element "OMBVAR" (mapM_ (rec . OMV) ys)
-            rec z
+         OMI i  -> element "OMI" [text i]
+         OMF f  -> element "OMF" ["dec" .=. show f]
+         OMV v  -> element "OMV" ["name" .=. v]
+         OMA xs -> element "OMA" (map rec xs)
+         OMS s  -> element "OMS"
+            [ "cd"   .=. fromMaybe "unknown" (dictionary s)
+            , "name" .=. symbolName s
+            ]
+         OMBIND x ys z -> element "OMBIND"
+            [ rec x
+            , element "OMBVAR" (map (rec . OMV) ys)
+            , rec z
+            ]
 
 readInt :: String -> Maybe Integer
 readInt s = case reads s of

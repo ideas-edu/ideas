@@ -92,7 +92,7 @@ xmlReply dr cgiBin request xml = do
    stdgen <- newStdGen
    case encoding request of
       Just StringEncoding -> do
-         res <- evalService (stringFormatConverter dr script ex stdgen xml) srv
+         res <- evalService (stringFormatConverter script ex stdgen xml) srv
          return (resultOk res) 
 
       Just HTMLEncoding -> do
@@ -100,67 +100,63 @@ xmlReply dr cgiBin request xml = do
          return res 
 
       _ -> do
-         res <- evalService (openMathConverter dr True script ex stdgen xml) srv
+         res <- evalService (openMathConverter True script ex stdgen xml) srv
          return (resultOk res)  
 
 extractExerciseId :: Monad m => XML -> m Id
 extractExerciseId = liftM newId . findAttribute "exerciseid"
 
 resultOk :: XMLBuilder -> XML
-resultOk body = either resultError id $ 
-   buildXML "reply" $ do
-      "result" .=. "ok"
-      body
+resultOk body = makeXML "reply" $
+   ("result" .=. "ok")
+   <> body
 
 resultError :: String -> XML
-resultError txt = makeXML "reply" $ do
-   "result" .=. "error"
-   element "message" (text txt)
+resultError txt = makeXML "reply" $
+   ("result" .=. "error")
+   <> tag "message" (string txt)
 
 ------------------------------------------------------------
 -- Mixing abstract syntax (OpenMath format) and concrete syntax (string)
 
-type XMLDecoder a t = EncoderState (XMLDecoderState a) XML t
+type XMLDecoder a = EncoderState (XMLDecoderState a) XML
 
 data XMLDecoderState a = XMLDecoderState
-   { getDomainReasoner :: DomainReasoner
-   , getExercise       :: Exercise a
+   { getExercise       :: Exercise a
    , getScript         :: Script
    , getStdGen         :: StdGen
    , isOpenMath        :: Bool
    , decodeTerm        :: XML -> Either String a
    }
 
-stringFormatConverter :: DomainReasoner -> Script -> Exercise a -> StdGen -> XML -> Evaluator (Const a) IO XMLBuilder
-stringFormatConverter dr script ex stdgen xml =
+stringFormatConverter :: Script -> Exercise a -> StdGen -> XML -> Evaluator a IO XMLBuilder
+stringFormatConverter script ex stdgen xml =
    Evaluator (runEncoderStateM xmlEncoder xes) 
              (\tp -> runEncoderStateM (xmlDecoder tp) xds xml)
  where
-   xes = XMLEncoderState ex False (element "expr" . text . prettyPrinter ex)
-   xds = XMLDecoderState dr ex script stdgen False g
-   g xml0 = do
-      xml <- findChild "expr" xml0
-      let input = getData xml
-      either (fail . show) return (parser ex input)
+   xes = XMLEncoderState ex False (tag "expr" . string . prettyPrinter ex)
+   xds = XMLDecoderState ex script stdgen False g
+   g xml = liftM getData (findChild "expr" xml) >>= parser ex
 
-htmlConverter :: DomainReasoner -> Maybe String -> Script -> Exercise a -> StdGen -> XML -> Evaluator (Const a) IO HTML
-htmlConverter dr cgiBin script ex stdgen xml = Evaluator 
-   { decoder = decoder (stringFormatConverter dr script ex stdgen xml)
-     -- perhaps move link manager to html converter?
-   , encoder = return . htmlEncoder lm dr ex
-   }
+htmlConverter :: DomainReasoner -> Maybe String -> Script -> Exercise a -> StdGen -> XML -> Evaluator a IO HTML
+htmlConverter dr cgiBin script ex stdgen xml = 
+   Evaluator (return . htmlEncoder lm dr ex) d
  where
    lm = maybe staticLinks dynamicLinks cgiBin
+   Evaluator _ d = stringFormatConverter script ex stdgen xml
 
-openMathConverter :: DomainReasoner -> Bool -> Script -> Exercise a -> StdGen -> XML -> Evaluator (Const a) IO XMLBuilder
-openMathConverter dr withMF script ex stdgen xml =
+openMathConverter :: Bool -> Script -> Exercise a -> StdGen -> XML -> Evaluator a IO XMLBuilder
+openMathConverter withMF script ex stdgen xml =
    Evaluator (runEncoderStateM xmlEncoder xes)
              (\tp -> runEncoderStateM (xmlDecoder tp) xds xml)
  where
-   xes = XMLEncoderState ex True (\a -> toOpenMath ex a >>= builder . toXML . handleMixedFractions)
-   xds = XMLDecoderState dr ex script stdgen True g
+   xes = XMLEncoderState ex True h
+   xds = XMLDecoderState ex script stdgen True g
+   h a = case toOpenMath ex a of
+            Left err    -> error "Error encoding term in OpenMath" -- fix me!
+            Right omobj -> builder (toXML (handleMixedFractions omobj))
    g xml = do
-      xob   <- findChild "OMOBJ" xml
+      xob <- findChild "OMOBJ" xml
       case xml2omobj xob of
          Left  msg   -> Left msg
          Right omobj -> 
@@ -195,18 +191,18 @@ xmlDecoder tp =
       Unit -> return ()
       Const ctp -> 
          case ctp of
-            State    -> decodeState
-            Context  -> decodeContext
-            Rule     -> decodeRule
+            State       -> decodeState
+            Context     -> decodeContext
+            Rule        -> decodeRule
             Environment -> decodeArgEnvironment
-            Location -> decodeLocation
-            StratCfg -> decodeConfiguration
-            StdGen   -> withState getStdGen
-            Script   -> withState getScript
-            Exercise -> withState getExercise
-            Id       -> do -- improve!
-                           a <- encoderFor (findChild "location")
-                           return (newId (getData a))
+            Location    -> decodeLocation
+            StratCfg    -> decodeConfiguration
+            StdGen      -> withState getStdGen
+            Script      -> withState getScript
+            Exercise    -> withState getExercise
+            Id          -> do -- improve!
+                              a <- encoderFor (findChild "location")
+                              return (newId (getData a))
             _ -> fail $ "No support for argument type in XML: " ++ show tp
       _ -> fail $ "No support for argument type in XML: " ++ show tp
 

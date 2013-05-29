@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, Rank2Types #-}
+{-# LANGUAGE GADTs, RankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -19,7 +19,7 @@ module Ideas.Service.Evaluator
    , pure, (<$>), (<**>)
    , module Data.Monoid, liftA2
      -- old
-   , encodeWith, Evaluator(..), evalService
+   , Evaluator(..), evalService
    ) where
 
 import qualified Control.Category as C
@@ -31,6 +31,7 @@ import Control.Applicative hiding (Const)
 import Control.Monad
 import Data.Monoid
 import Ideas.Service.Types
+import Ideas.Text.XML
 
 newtype EncoderState st a b = Enc (st -> a -> Either [String] b)
 
@@ -40,7 +41,13 @@ instance C.Category (EncoderState st) where
 
 instance Arrow (EncoderState st) where
    arr f = Enc $ \_ -> Right . f
-   first (Enc f) = Enc $ \st (a, c) -> fmap (\b -> (b, c)) (f st a)
+   first  (Enc f) = Enc $ \st (a, c) -> fmap (\b -> (b, c)) (f st a)
+   second (Enc f) = Enc $ \st (a, b) -> fmap (\c -> (a, c)) (f st b)
+   Enc f *** Enc g = Enc $ \st (a, b) ->
+      case (f st a, g st b) of
+         (Right c, Right d) -> Right (c, d)
+         (Left err, _)      -> Left err
+         (_, Left err)      -> Left err
 
 instance ArrowZero (EncoderState st) where
    zeroArrow = Enc $ \_ _ -> Left []
@@ -53,7 +60,9 @@ instance ArrowPlus (EncoderState st) where
          (Left e1, Left e2) -> Left (e1 ++ e2)
 
 instance ArrowChoice (EncoderState st) where
-   left (Enc f) = Enc $ \st -> either (fmap Left . f st) (Right . Right)
+   left  (Enc f) = Enc $ \st -> either (fmap Left . f st) (Right . Right)
+   right (Enc f) = Enc $ \st -> either (Right . Left) (fmap Right . f st)
+   Enc f +++ Enc g = Enc $ \st -> either (fmap Left . f st) (fmap Right . g st)
 
 instance ArrowApply (EncoderState st) where
    app = Enc $ \st (Enc f, a) -> f st a
@@ -80,6 +89,12 @@ instance Monad (EncoderState st a) where
 instance MonadPlus (EncoderState st a) where
    mzero = zeroArrow
    mplus = (<+>)
+
+instance BuildXML b => BuildXML (EncoderState st a b) where
+   n .=. s   = return (n .=. s)
+   unescaped = return . unescaped
+   builder   = return . builder
+   tag       = liftM . tag  
 
 getState :: EncoderState st a st
 getState = Enc $ const . Right
@@ -121,7 +136,6 @@ infixl 8 //
 (//) :: EncoderState st a c -> a -> EncoderState st b c
 f // a = arr (const a) >>> f
 
-
 ----
 
 fromTyped :: Typed a t => EncoderState st (TypedValue (Type a)) t
@@ -129,13 +143,13 @@ fromTyped = maybeEncoder $ \(val ::: tp) -> fmap ($ val) (equal tp typed)
 
 -------------------------------------------------------------------
 
-evalService :: Monad m => Evaluator (Const b) m a -> Service -> m a
+evalService :: Monad m => Evaluator a m b -> Service -> m b
 evalService f = eval f . serviceFunction
 
-data Evaluator f m a = Evaluator
-   { encoder :: TypedValue (TypeRep f) -> m a
-   , decoder :: forall t . TypeRep f t -> m t
-   }
+data Evaluator a m b where
+   Evaluator :: (TypedValue (Type a) -> m b)  -- encoder 
+             -> (forall t . Type a t -> m t)  -- decoder
+             -> Evaluator a m b
 
 {-
 type Fix a = a -> a
@@ -156,19 +170,22 @@ encodeTypeRepFix enc rec (val ::: tp) =
       Unit       -> mempty
       Tag _ t    -> rec (val ::: t)
       Iso v t    -> rec (to v val ::: t)
-      Const ctp  -> enc (val ::: ctp) -}
+      Const ctp  -> enc (val ::: ctp)
       
 encodeWith :: (Monad m, Typed a t) => (t -> m b) -> TypedValue (Type a) -> m b
 encodeWith enc (val ::: tp) =
    case equal tp typed of 
       Just f  -> enc (f val)
-      Nothing -> fail "encoding failed"
+      Nothing -> fail "encoding failed" -}
 
-eval :: Monad m => Evaluator f m a -> TypedValue (TypeRep f) -> m a
-eval f tv@(val ::: tp) =
+eval :: Monad m => Evaluator a m b -> TypedValue (Type a) -> m b
+eval f@(Evaluator enc dec) tv@(val ::: tp) =
    case tp of
+      -- uncurry function if possible
+      t1 :-> t2 :-> t3 -> 
+         eval f (uncurry val ::: Pair t1 t2 :-> t3)
       t1 :-> t2 -> do
-         a <- decoder f t1
-         eval f (val a ::: t2)
+         a <- dec t1
+         enc (val a ::: t2)
       _ ->
-         encoder f tv
+         enc tv

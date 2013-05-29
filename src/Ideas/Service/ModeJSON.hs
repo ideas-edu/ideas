@@ -16,8 +16,7 @@ module Ideas.Service.ModeJSON (processJSON) where
 
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (Some(..), readM)
-import Control.Monad.Error
-import Control.Monad.State (StateT, evalStateT, get, put)
+import Control.Monad
 import Data.Char
 import Ideas.Service.DomainReasoner
 import Ideas.Service.Evaluator
@@ -26,10 +25,9 @@ import Ideas.Service.EncoderJSON
 import Ideas.Service.State
 import Ideas.Service.FeedbackScript.Syntax (Script)
 import Ideas.Service.Types hiding (String)
-import System.Random
+import System.Random hiding (getStdGen)
 import Ideas.Text.JSON
 import qualified Ideas.Service.Types as Tp
-import System.IO.Unsafe (unsafePerformIO)
 
 -- TODO: Clean-up code
 extractExerciseId :: Monad m => JSON -> m Id
@@ -84,55 +82,53 @@ jsonRequest json = do
 
 myHandler :: DomainReasoner -> JSON_RPC_Handler IO
 myHandler dr fun arg = do
+   srv <- findService dr (newId fun)
    Some ex <- 
       if fun == "exerciselist"
       then return (Some emptyExercise)
       else extractExerciseId arg >>= findExercise dr
-   srv <- findService dr (newId fun)
-   runEval (evalService (jsonConverter dr ex) srv) arg
+   script <- defaultScript dr (getId ex)
+   stdgen <- newStdGen
+   let jds = JSONDecoderState ex script stdgen
+   runEncoderStateM (evalService (jsonConverter ex) srv) jds arg
 
-type EvalJSON = StateT JSON (EncoderState () ())
+type JSONDecoder a = EncoderState (JSONDecoderState a) JSON
 
 data JSONDecoderState a = JSONDecoderState
-   { getDomainReasoner :: DomainReasoner
-   , getExercise       :: Exercise a
-   , getScript         :: Script
-   , getStdGen         :: StdGen
+   { getExercise :: Exercise a
+   , getScript   :: Script
+   , getStdGen   :: StdGen
    }
 
-runEval :: EvalJSON a -> JSON -> IO a
-runEval m json = runEncoderStateM (evalStateT m json) () ()
-
-jsonConverter :: DomainReasoner -> Exercise a -> Evaluator (Const a) EvalJSON JSON
-jsonConverter dr ex = Evaluator 
+jsonConverter :: Exercise a -> Evaluator a (JSONDecoder a) JSON
+jsonConverter ex = Evaluator
    (runEncoderStateM jsonEncoder (String . prettyPrinter ex)) 
-   (\tp -> do xs <- get; (a, ys) <- runEncoderStateM (jsonDecoder dr ex tp) () xs; put (Array ys); return a) 
+   jsonDecoder
 
-jsonDecoder :: DomainReasoner -> Exercise a -> Type a t -> EncoderState () JSON (t, [JSON])
-jsonDecoder dr ex tp = encoderFor $ \json ->
+jsonDecoder :: Type a t -> JSONDecoder a t
+jsonDecoder tp = encoderFor $ \json ->
    case json of
-      Array xs -> do (a, rest) <- decode dr ex tp // xs
-                     return (a, rest)
+      Array xs -> liftM fst (decodeType tp // xs)
       _ -> fail "expecting an array"
 
-decode :: DomainReasoner -> Exercise a -> Type a t -> EncoderState () [JSON] (t, [JSON])
-decode dr ex tp =
+decodeType :: Type a t -> EncoderState (JSONDecoderState a) [JSON] (t, [JSON])
+decodeType tp =
    case tp of
-      Tp.Tag _ t -> decode dr ex t         
-      Tp.Iso p t -> change (from p) (decode dr ex t)
+      Tp.Tag _ t -> decodeType t         
+      Tp.Iso p t -> change (from p) (decodeType t)
       Pair t1 t2 -> do
-         (a, xs) <- decode dr ex t1
-         (b, ys) <- decode dr ex t2 // xs
+         (a, xs) <- decodeType t1
+         (b, ys) <- decodeType t2 // xs
          return ((a, b), ys)
       t1 :|: t2 ->
-         change Left  (decode dr ex t1) `mplus`
-         change Right (decode dr ex t2)
+         change Left  (decodeType t1) `mplus`
+         change Right (decodeType t2)
       Unit         -> result ()
-      Const StdGen -> result $ unsafePerformIO newStdGen
-      Const Script -> result $ unsafePerformIO (defaultScript dr (getId ex))
+      Const StdGen -> withState getStdGen >>= result
+      Const Script -> withState getScript >>= result
       Const t      -> encoderFor $ \xs -> 
                          case xs of
-                            hd:tl -> do a <- decodeConst ex t // hd
+                            hd:tl -> do a <- decodeConst t // hd
                                         return (a, tl)
                             _     -> fail "no more elements"
       _ -> fail $ "No support for argument type: " ++ show tp
@@ -140,50 +136,56 @@ decode dr ex tp =
    result a = simpleEncoder (\xs -> (a, xs))
    change f = liftM (first f)
 
-decodeConst :: Exercise a -> Const a t -> EncoderState () JSON t
-decodeConst ex tp =
+decodeConst :: Const a t -> JSONDecoder a t
+decodeConst tp =
    case tp of
-      State       -> decodeState ex
-      Context     -> decodeContext ex
-      Exercise    -> return ex
+      State       -> decodeState
+      Context     -> decodeContext
+      Exercise    -> withState getExercise
       Environment -> decodeEnvironment
       Location    -> decodeLocation
       Int         -> maybeEncoder fromJSON
       Tp.String   -> maybeEncoder fromJSON
-      Rule        -> decodeRule ex
+      Rule        -> decodeRule
       _           -> fail $ "No support for argument type: " ++ show tp
 
-decodeRule :: Exercise a -> EncoderState () JSON (Rule (Context a))
-decodeRule ex = encoderFor $ \json -> 
-   case json of
-      String s -> getRule ex (newId s)
-      _        -> fail "expecting a string for rule"
+decodeRule :: JSONDecoder a (Rule (Context a))
+decodeRule = do
+   ex <- withState getExercise 
+   encoderFor $ \json -> 
+      case json of
+         String s -> getRule ex (newId s)
+         _        -> fail "expecting a string for rule"
 
-decodeLocation :: EncoderState () JSON Location
+decodeLocation :: JSONDecoder a Location
 decodeLocation = encoderFor $ \json -> 
    case json of
       String s -> liftM toLocation (readM s)
       _        -> fail "expecting a string for a location"
 
-decodeState :: Exercise a -> EncoderState () JSON (State a)
-decodeState ex = encoderFor $ \json ->
-   case json of
-      Array [a] -> decodeState ex // a
-      Array [String _code, pref, term, jsonContext] -> do
-         ps   <- decodePrefixes ex // pref
-         a    <- decodeTerm ex     // term
-         env  <- decodeEnvironment // jsonContext
-         return $ makeState ex ps (makeContext ex env a)
-      _ -> fail $ "invalid state" ++ show json
+decodeState :: JSONDecoder a (State a)
+decodeState = do
+   ex <- withState getExercise 
+   encoderFor $ \json ->
+      case json of
+         Array [a] -> decodeState // a
+         Array [String _code, pref, term, jsonContext] -> do
+            ps   <- decodePrefixes    // pref
+            a    <- decodeTerm        // term
+            env  <- decodeEnvironment // jsonContext
+            return $ makeState ex ps (makeContext ex env a)
+         _ -> fail $ "invalid state" ++ show json
  
-decodePrefixes :: Exercise a -> EncoderState () JSON [Prefix (Context a)]
-decodePrefixes ex = encoderFor $ \json -> 
-   case json of
-      String p -> forM (deintercalate p) $ do
-                     (readM >>= liftM (`makePrefix` strategy ex))
-      _ -> fail "invalid prefixes"
+decodePrefixes :: JSONDecoder a [Prefix (Context a)]
+decodePrefixes = do
+   ex <- withState getExercise
+   encoderFor $ \json -> 
+      case json of
+         String p -> forM (deintercalate p) $ do
+                        (readM >>= liftM (`makePrefix` strategy ex))
+         _ -> fail "invalid prefixes"
 
-decodeEnvironment :: EncoderState () JSON Environment
+decodeEnvironment :: JSONDecoder a Environment
 decodeEnvironment = encoderFor $ \json -> 
    case json of 
       String "" -> decodeEnvironment // Object []
@@ -193,14 +195,18 @@ decodeEnvironment = encoderFor $ \json ->
    add (k, String s) = return . insertRef (makeRef k) s
    add _             = fail "invalid item in context"
 
-decodeContext :: Exercise a -> EncoderState () JSON (Context a) 
-decodeContext ex = liftM (inContext ex) (decodeTerm ex)
+decodeContext :: JSONDecoder a (Context a) 
+decodeContext = do
+   ex <- withState getExercise
+   liftM (inContext ex) decodeTerm
 
-decodeTerm :: Exercise a -> EncoderState () JSON a
-decodeTerm ex = eitherEncoder $ \json ->
-   case json of
-      String s -> parser ex s
-      _        -> Left $ "Expecting a string when reading a term"
+decodeTerm :: JSONDecoder a a
+decodeTerm = do
+   ex <- withState getExercise
+   eitherEncoder $ \json ->
+      case json of
+         String s -> parser ex s
+         _        -> Left $ "Expecting a string when reading a term"
 
 -- local helper
 deintercalate :: String -> [String]

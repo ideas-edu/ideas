@@ -18,11 +18,10 @@ import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (Some(..), distinct)
 import Data.List (intercalate)
 import Control.Monad
-import qualified Data.Traversable as T
-import Data.Tree
 import Ideas.Service.Evaluator
 import Ideas.Service.State
-import Ideas.Service.Submit
+import qualified Ideas.Service.Submit as Submit
+import qualified Ideas.Service.Diagnose as Diagnose
 import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
 import qualified Ideas.Service.Types as Tp
@@ -30,7 +29,7 @@ import qualified Ideas.Service.Types as Tp
 type JSONEncoder a t = EncoderState (a -> JSON) t JSON
 
 jsonEncoder :: JSONEncoder a (TypedValue (Type a))
-jsonEncoder = encoderStateFor $ \enc tv@(val ::: tp) -> 
+jsonEncoder = encoderFor $ \tv@(val ::: tp) -> 
    case tp of
       _ | length (tupleList tv) > 1 ->
          jsonTuple <$> sequence [ jsonEncoder // x | x <- tupleList tv ]
@@ -45,7 +44,8 @@ jsonEncoder = encoderStateFor $ \enc tv@(val ::: tp) ->
       List (Const Rule) ->
          pure $ Array $ map ruleShortInfo val
       Tp.Tag s t
-         | s == "Result" -> encodeTyped encodeResult
+         | s == "Result"     -> encodeTyped encodeResult
+         | s == "Diagnosis"  -> encodeTyped encodeDiagnosis
          | s == "Derivation" -> encodeTyped encodeDerivation <+> 
                                 encodeTyped encodeDerivationText
          | otherwise -> (\b -> Object [(s, b)]) <$> jsonEncoder // (val ::: t)
@@ -53,6 +53,7 @@ jsonEncoder = encoderStateFor $ \enc tv@(val ::: tp) ->
       Tp.List t -> Array <$> sequence [ jsonEncoder // (x ::: t) | x <- val ]
       -- Tp.Tree t -> -- liftM treeToJSON (T.mapM ((jsonEncoder //) . (::: t)) val)
       Const ctp -> jsonEncodeConst // (val ::: ctp)
+      _ -> fail $ "Cannot encode type: " ++ show tp
  where
    tupleList :: TypedValue (TypeRep f) -> [TypedValue (TypeRep f)]
    tupleList (x ::: Tp.Iso p t)   = tupleList (to p x ::: t)
@@ -114,37 +115,59 @@ encodeDerivationText = encoderFor $ \d ->
    let xs = [ (s, a) | (_, s, a) <- triples d ]
    in jsonEncoder // (xs ::: typed)
 
-encodeResult :: JSONEncoder a (Result a)
+encodeResult :: JSONEncoder a (Submit.Result a)
 encodeResult = encoderFor $ \result -> Object <$>
    case result of
-      -- SyntaxError _ -> [("result", String "SyntaxError")]
-      Buggy rs -> pure 
+      Submit.Buggy rs -> pure 
          [ ("result", String "Buggy")
          , ("rules", Array $ map (String . showId) rs)
          ]
-      NotEquivalent -> pure
+      Submit.NotEquivalent -> pure
          [ ("result", String "NotEquivalent") ]
-      Ok rs st ->
+      Submit.Ok rs st ->
          let f x =
                 [ ("result", String "Ok")
                 , ("rules", Array $ map (String . showId) rs)
                 , ("state", x)
                 ]
          in f <$> jsonEncoder // (st ::: typed)
-      Detour rs st ->
+      Submit.Detour rs st ->
          let f x = 
                 [ ("result", String "Detour")
                 , ("rules", Array $ map (String . showId) rs)
                 , ("state", x)
                 ]
          in f <$> jsonEncoder // (st ::: typed)
-      Unknown st ->
+      Submit.Unknown st ->
          let f x = 
                 [ ("result", String "Unknown")
                 , ("state", x)
                 ]
          in f <$> jsonEncoder // (st ::: typed)
 
+encodeDiagnosis :: JSONEncoder a (Diagnose.Diagnosis a)
+encodeDiagnosis = encoderFor $ \diagnosis -> 
+   case diagnosis of
+      Diagnose.NotEquivalent -> 
+         pure $ Object [("notequiv", Null)]
+      Diagnose.Buggy env r ->
+         make "buggy" [fromEnv env, fromRule r]
+      Diagnose.Similar b st -> 
+         make "similar" [fromReady b, fromState st]
+      Diagnose.Expected b st r -> 
+         make "expected" [fromReady b, fromState st, fromRule r]
+      Diagnose.Detour b st env r -> 
+         make "detour" [fromReady b, fromState st, fromEnv env, fromRule r]
+      Diagnose.Correct b st ->
+         make "correct" [fromReady b, fromState st]
+ where
+   make s = liftM (\xs -> Object [(s, Array xs)]) . sequence
+   fromEnv env  = jsonEncoder // (env ::: typed)
+   fromRule r   = return (toJSON (showId r))
+   fromReady b  = return (Object [("ready", toJSON b)])
+   fromState st = jsonEncoder // (st ::: typed)
+
+{-
 encodeTree :: Tree JSON -> JSON
 encodeTree (Node r ts) =
   case r of
@@ -153,7 +176,7 @@ encodeTree (Node r ts) =
        , ("type", t)
        , ("subForest", Array $ map encodeTree ts) 
        ]
-    _ -> error "ModeJSON: malformed tree!"
+    _ -> error "ModeJSON: malformed tree!" -}
 
 jsonTuple :: [JSON] -> JSON
 jsonTuple xs =

@@ -41,7 +41,7 @@ import System.IO
 import qualified Data.Foldable as F
 import qualified Data.Sequence as S
 import Control.Exception (catch, IOException)
-
+import Prelude hiding (catch)
 ----------------------------------------------------------------
 -- Test Suite Monad
 

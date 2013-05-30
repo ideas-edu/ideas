@@ -98,6 +98,8 @@ instance WithFunctions Expr where
    function s [a, b]
       | s == minusSymbol  = a :-: b
       | s == divideSymbol = a :/: b
+      | s == rationalSymbol = a :/: b
+      | s == mixedFractionBinarySymbol = a :+: b
       | isRootSymbol s && b == Nat 2 = Sqrt a
    function s [a]
       | s == negateSymbol = Negate a
@@ -113,6 +115,10 @@ instance WithFunctions Expr where
          Sqrt a   -> return (rootSymbol,   [a, Nat 2])
          Sym s as -> return (s, as)
          _ -> fail "Expr.getFunction"
+
+-- Special symbol in Math-Bridge/ActiveMath
+mixedFractionBinarySymbol :: Symbol
+mixedFractionBinarySymbol = newSymbol "elementary.mixed_fraction"
 
 instance WithVars Expr where
    variable = Var

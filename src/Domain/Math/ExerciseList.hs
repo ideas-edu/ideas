@@ -36,6 +36,7 @@ import Domain.Math.Power.Exercises
 import qualified Domain.Math.Numeric.Tests as MathNum
 import qualified Domain.Math.Polynomial.Tests as MathPoly
 import qualified Domain.Math.SquareRoot.Tests as MathSqrt
+import Domain.Math.Fraction.Exercises
 
 exerciseList :: [Some Exercise]
 exerciseList =
@@ -45,6 +46,7 @@ exerciseList =
    -- , Some rationalExercise
      Some fractionExercise
    , Some fractionLiberalExercise
+   , Some simpleFractionAddition
    , Some coverUpExercise
    , Some linearExercise
    , Some linearMixedExercise

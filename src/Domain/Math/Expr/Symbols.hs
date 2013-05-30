@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Symbols
    ( -- OpenMath dictionary symbols
-     plusSymbol, timesSymbol, minusSymbol, divideSymbol, rootSymbol
+     plusSymbol, timesSymbol, minusSymbol, divideSymbol, rationalSymbol, rootSymbol, gcdSymbol, lcmSymbol
    , powerSymbol, negateSymbol, sinSymbol, cosSymbol, lnSymbol
    , diffSymbol, piSymbol, lambdaSymbol, listSymbol
    , absSymbol, signumSymbol, logSymbol, expSymbol, tanSymbol, asinSymbol
@@ -40,16 +40,19 @@ import qualified Text.OpenMath.Dictionary.Transc1 as OM
 -- Arith1 dictionary
 
 plusSymbol, timesSymbol, minusSymbol, divideSymbol, rootSymbol,
-   powerSymbol, negateSymbol, absSymbol :: Symbol
+   powerSymbol, negateSymbol, absSymbol, rationalSymbol, gcdSymbol, lcmSymbol :: Symbol
 
 plusSymbol   = newSymbol OM.plusSymbol
 timesSymbol  = newSymbol OM.timesSymbol
 minusSymbol  = newSymbol OM.minusSymbol
 divideSymbol = newSymbol OM.divideSymbol
+rationalSymbol = newSymbol OM.rationalSymbol
 rootSymbol   = newSymbol OM.rootSymbol
 powerSymbol  = newSymbol OM.powerSymbol
 negateSymbol = newSymbol OM.unaryMinusSymbol
 absSymbol    = newSymbol OM.absSymbol
+gcdSymbol    = newSymbol OM.gcdSymbol
+lcmSymbol    = newSymbol OM.lcmSymbol
 
 -------------------------------------------------------------
 -- Transc1 dictionary

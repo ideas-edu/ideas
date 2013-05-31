@@ -361,13 +361,16 @@ htmlDerivation lm ex = encoderFor $ \d ->
    arr derivationDiffEnv 
    >>> htmlDerivationWith (before d) forStep forTerm
  where
-   before d = do
+   before d =
       stateLink lm (emptyStateContext ex (firstTerm d))
+      <> case fmap (isReady ex) (fromContext (lastTerm d)) of
+            Just True -> mempty
+            _ -> spanClass "error" (string "Final term is not finished")
    forStep ((r, env1), env2) = 
       let showEnv e = munless (noBindings e) $ string $ ", " ++ show e in
       spanClass "derivation-step" $ mconcat
          [ unescaped "&#8658; "
-         , string $ unqualified r
+         , string $ showId r
          , showEnv env1 -- local environment
          , showEnv env2 -- global environment (diff)
          ]

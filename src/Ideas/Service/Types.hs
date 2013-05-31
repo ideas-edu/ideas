@@ -67,7 +67,6 @@ instance Equal f => Equal (TypeRep f) where
                                     return $ \(x, y) -> (f x, g y)
    equal (a :|: b)  (c :|: d)  = liftM2 biMap (equal a c) (equal b d)
    equal (List a)   (List b)   = fmap map (equal a b)
-   equal (Tree a)   (Tree b)   = fmap fmap (equal a b)
    equal (Tag s1 a) (Tag s2 b) | s1 == s2 = equal a b
    equal Unit       Unit       = Just id
    equal (Const a)  (Const b)  = equal a b
@@ -115,7 +114,6 @@ data TypeRep f t where
    Tag   :: String -> TypeRep f t1 -> TypeRep f t1
    -- Type constructors
    List  :: TypeRep f t  -> TypeRep f [t]
-   Tree  :: TypeRep f t  -> TypeRep f (Tree t)
    Pair  :: TypeRep f t1 -> TypeRep f t2 -> TypeRep f (t1, t2)
    (:|:) :: TypeRep f t1 -> TypeRep f t2 -> TypeRep f (Either t1 t2)
    Unit  :: TypeRep f ()
@@ -157,7 +155,6 @@ instance ShowF f => Show (TypeRep f t) where
    show (t1 :|: t2)    = show t1 ++ " | " ++ show t2
    show (Tag s _)      = s
    show (List t)       = "[" ++ show t ++ "]"
-   show (Tree t)       = "Tree " ++ show t
    show Unit           = "()"
    show (Const c)      = showF c
 
@@ -168,7 +165,6 @@ instance Show (TypedValue f) => Show (TypedValue (TypeRep f)) where
          _ :-> _    -> "<<function>>"
          Tag _ t    -> show (val ::: t)
          List t     -> showAsList (map (show . (::: t)) val)
-         Tree t     -> showAsTree (fmap (show . (::: t)) val)
          Pair t1 t2 -> "(" ++ show (fst val ::: t1) ++
                        "," ++ show (snd val ::: t2) ++ ")"
          t1 :|: t2  -> either (show . (::: t1)) (show . (::: t2)) val
@@ -177,11 +173,6 @@ instance Show (TypedValue f) => Show (TypedValue (TypeRep f)) where
 
 showAsList :: [String] -> String
 showAsList xs = "[" ++ intercalate "," xs ++ "]"
-
-showAsTree :: Tree String -> String
-showAsTree (Node a ts)
-   | null ts   = a
-   | otherwise = a ++ "{" ++ intercalate "," (fmap showAsTree ts) ++ "}"
 
 instance Show (TypedValue (Const a)) where
    show (val ::: tp) =
@@ -336,6 +327,12 @@ instance (Typed a t1, Typed a t2) => Typed a (Derivation t1 t2) where
 
 instance Typed a t => Typed a [t] where
    typed = typedList
+   
+instance Typed a t => Typed a (Tree t) where
+   typed = Tag "Tree" $ Iso (f <-> g) typed
+    where
+      f = uncurry Node
+      g (Node a xs) = (a, xs)
    
 instance Typed a (Some Exercise) where
    typed = Const SomeExercise

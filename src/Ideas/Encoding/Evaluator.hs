@@ -10,7 +10,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.Evaluator 
+module Ideas.Encoding.Evaluator 
    ( EncoderState, simpleEncoder, maybeEncoder, eitherEncoder
    , encoderFor, encoderStateFor, encodeTyped
    , runEncoderState, runEncoderStateM, (//)

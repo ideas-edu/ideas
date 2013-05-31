@@ -17,7 +17,6 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackText
 import Ideas.Service.State
 import Ideas.Service.ProblemDecomposition (problemDecomposition)
-import Ideas.Service.RulesInfo
 import Ideas.Service.Types
 import qualified Ideas.Service.Diagnose as Diagnose
 import qualified Ideas.Service.Submit as Submit
@@ -228,7 +227,7 @@ rulesinfoS :: Service
 rulesinfoS = makeService "meta.rulesinfo"
    "Returns a list of all rules of a particular exercise, with many details \
    \including Formal Mathematical Properties (FMPs) and example applications." $
-   () ::: rulesInfoType
+   () ::: Tag "RulesInfo" Unit
 
 strategyinfoS :: Service
 strategyinfoS = makeService "meta.strategyinfo"

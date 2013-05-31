@@ -12,7 +12,7 @@
 -- Encoding in HTML
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.EncoderHTML (htmlEncoder) where
+module Ideas.Encoding.EncoderHTML (htmlEncoder) where
 
 import Ideas.Common.Utils
 import Control.Monad
@@ -23,19 +23,19 @@ import Data.Ord
 import Ideas.Common.Library hiding (ready)
 import Ideas.Text.XML
 import Ideas.Text.HTML
-import Ideas.Service.RulePresenter
+import Ideas.Encoding.RulePresenter
 import Ideas.Service.Diagnose
 import Ideas.Service.DomainReasoner
-import Ideas.Service.Evaluator
-import Ideas.Service.LinkManager
+import Ideas.Encoding.Evaluator
+import Ideas.Encoding.LinkManager
 import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Service.BasicServices
-import Ideas.Service.StrategyInfo
+import Ideas.Encoding.StrategyInfo
 import Ideas.Common.Strategy.Prefix
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.OpenMath.FMP
-import Ideas.Service.RulesInfo
+import Ideas.Encoding.RulesInfo
 
 htmlEncoder :: LinkManager -> DomainReasoner -> Exercise a -> TypedValue (Type a) -> HTML
 htmlEncoder lm dr ex tv = 

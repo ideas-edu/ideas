@@ -12,7 +12,7 @@
 -- Services using XML notation
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.DecoderXML 
+module Ideas.Encoding.DecoderXML 
    ( XMLDecoder, XMLDecoderState(..), xmlDecoder
    ) where
 
@@ -21,8 +21,8 @@ import Ideas.Common.Utils (readM)
 import Control.Monad
 import Data.Char
 import Data.List
-import Ideas.Service.Evaluator
-import Ideas.Service.OpenMathSupport
+import Ideas.Encoding.Evaluator
+import Ideas.Encoding.OpenMathSupport
 import Ideas.Service.State
 import Ideas.Service.FeedbackScript.Syntax (Script)
 import Ideas.Service.Types

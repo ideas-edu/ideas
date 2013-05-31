@@ -17,8 +17,8 @@ import Control.Monad
 import Control.Monad.Error
 import Data.List
 import Ideas.Service.DomainReasoner
-import Ideas.Service.ModeJSON
-import Ideas.Service.ModeXML
+import Ideas.Encoding.ModeJSON
+import Ideas.Encoding.ModeXML
 import Ideas.Service.Request
 import System.Directory
 import System.IO

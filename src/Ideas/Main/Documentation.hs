@@ -18,9 +18,9 @@ import Ideas.Common.Library
 import System.Directory
 import System.FilePath (takeDirectory)
 import Ideas.Common.Utils
-import Ideas.Service.EncoderHTML
+import Ideas.Encoding.EncoderHTML
 import Ideas.Service.DomainReasoner
-import Ideas.Service.LinkManager
+import Ideas.Encoding.LinkManager
 import Ideas.Service.BasicServices
 import Ideas.Service.Types
 

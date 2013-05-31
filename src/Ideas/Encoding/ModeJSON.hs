@@ -11,17 +11,17 @@
 -- Services using JSON notation
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.ModeJSON (processJSON) where
+module Ideas.Encoding.ModeJSON (processJSON) where
 
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (Some(..))
 import Control.Monad
 import Data.Char
 import Ideas.Service.DomainReasoner
-import Ideas.Service.Evaluator
+import Ideas.Encoding.Evaluator
 import Ideas.Service.Request
-import Ideas.Service.DecoderJSON 
-import Ideas.Service.EncoderJSON
+import Ideas.Encoding.DecoderJSON 
+import Ideas.Encoding.EncoderJSON
 import System.Random hiding (getStdGen)
 import Ideas.Text.JSON
 

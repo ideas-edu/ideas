@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.RulePresenter (ruleToHTML) where
+module Ideas.Encoding.RulePresenter (ruleToHTML) where
 
 import Ideas.Common.Library
 import Ideas.Common.Utils (Some(..))

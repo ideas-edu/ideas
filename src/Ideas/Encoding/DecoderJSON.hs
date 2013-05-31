@@ -12,14 +12,14 @@
 -- Services using JSON notation
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.DecoderJSON
+module Ideas.Encoding.DecoderJSON
    ( JSONDecoder, JSONDecoderState(..), jsonDecoder
    ) where
 
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (readM)
 import Control.Monad
-import Ideas.Service.Evaluator
+import Ideas.Encoding.Evaluator
 import Ideas.Service.State
 import Ideas.Service.FeedbackScript.Syntax (Script)
 import Ideas.Service.Types hiding (String)

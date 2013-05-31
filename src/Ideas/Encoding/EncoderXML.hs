@@ -12,7 +12,7 @@
 -- Services using XML notation
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.EncoderXML
+module Ideas.Encoding.EncoderXML
    ( XMLEncoder, XMLEncoderState(..)
    , xmlEncoder, encodeState
    ) where
@@ -24,12 +24,12 @@ import Data.Monoid
 import Ideas.Common.Library hiding (exerciseId, (:=), (<|>))
 import Ideas.Common.Utils (Some(..))
 import Ideas.Service.Diagnose
-import Ideas.Service.Evaluator
+import Ideas.Encoding.Evaluator
 import Ideas.Service.FeedbackScript.Syntax
-import Ideas.Service.OpenMathSupport
-import Ideas.Service.RulesInfo (rulesInfoXML)
+import Ideas.Encoding.OpenMathSupport
+import Ideas.Encoding.RulesInfo (rulesInfoXML)
 import Ideas.Service.State
-import Ideas.Service.StrategyInfo
+import Ideas.Encoding.StrategyInfo
 import Ideas.Service.BasicServices (StepInfo)
 import Ideas.Service.Types
 import qualified Ideas.Service.ProblemDecomposition as PD

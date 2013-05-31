@@ -9,15 +9,14 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.RulesInfo
-   ( rulesInfoXML, rewriteRuleToFMP, collectExamples, ExampleMap, rulesInfoType
+module Ideas.Encoding.RulesInfo
+   ( rulesInfoXML, rewriteRuleToFMP, collectExamples, ExampleMap
    ) where
 
 import Ideas.Common.Library
 import Ideas.Common.Utils (Some(..))
 import Data.Char
-import Ideas.Service.OpenMathSupport (toOMOBJ)
-import Ideas.Service.Types
+import Ideas.Encoding.OpenMathSupport (toOMOBJ)
 import Ideas.Text.OpenMath.FMP
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML hiding (name)
@@ -75,6 +74,3 @@ collectExamples ex = foldr (add . snd) M.empty (examples ex)
                        Just p  -> M.insertWith (++) (getId r) [p]
                        Nothing -> id
              in f (derivation tree)
-
-rulesInfoType :: Type a ()
-rulesInfoType = Tag "RulesInfo" Unit

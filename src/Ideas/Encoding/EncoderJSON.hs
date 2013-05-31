@@ -12,13 +12,13 @@
 -- Services using JSON notation
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.EncoderJSON (jsonEncoder) where
+module Ideas.Encoding.EncoderJSON (jsonEncoder) where
 
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (Some(..), distinct)
 import Data.List (intercalate)
 import Control.Monad
-import Ideas.Service.Evaluator
+import Ideas.Encoding.Evaluator
 import Ideas.Service.State
 import qualified Ideas.Service.Submit as Submit
 import qualified Ideas.Service.Diagnose as Diagnose

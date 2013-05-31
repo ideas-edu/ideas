@@ -11,7 +11,7 @@
 -- Converting a strategy to XML, and the other way around.
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.StrategyInfo (strategyToXML, xmlToStrategy) where
+module Ideas.Encoding.StrategyInfo (strategyToXML, xmlToStrategy) where
 
 import Ideas.Common.Library
 import Ideas.Common.Strategy.Abstract

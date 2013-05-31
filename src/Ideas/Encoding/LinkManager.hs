@@ -12,7 +12,7 @@
 -- Manages links to information
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.LinkManager
+module Ideas.Encoding.LinkManager
    ( LinkManager(..)
    , dynamicLinks, stateToXML
    , staticLinks, linksUp, pathLevel, (</>)
@@ -31,8 +31,8 @@ import Ideas.Service.Types
 import Ideas.Service.State
 import Ideas.Text.HTML
 import Ideas.Text.XML
-import Ideas.Service.Evaluator
-import Ideas.Service.EncoderXML
+import Ideas.Encoding.Evaluator
+import Ideas.Encoding.EncoderXML
 
 data LinkManager = LinkManager
    { urlForResource      :: String -> String

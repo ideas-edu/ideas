@@ -27,8 +27,8 @@ import qualified Ideas.Main.Options as Options
 import Network.CGI
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Analysis
-import Ideas.Service.ModeJSON (processJSON)
-import Ideas.Service.ModeXML (processXML)
+import Ideas.Encoding.ModeJSON (processJSON)
+import Ideas.Encoding.ModeXML (processXML)
 import Ideas.Main.Documentation
 import Ideas.Service.Request
 import System.IO

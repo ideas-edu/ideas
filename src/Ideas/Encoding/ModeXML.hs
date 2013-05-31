@@ -11,21 +11,21 @@
 -- Services using XML notation
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.ModeXML (processXML) where
+module Ideas.Encoding.ModeXML (processXML) where
 
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Common.Utils (Some(..))
 import Control.Monad
 import Control.Monad.Error
 import Ideas.Service.DomainReasoner
-import Ideas.Service.Evaluator
-import Ideas.Service.OpenMathSupport
+import Ideas.Encoding.Evaluator
+import Ideas.Encoding.OpenMathSupport
 import Ideas.Service.Request
-import Ideas.Service.EncoderXML
-import Ideas.Service.DecoderXML
-import Ideas.Service.LinkManager
+import Ideas.Encoding.EncoderXML
+import Ideas.Encoding.DecoderXML
+import Ideas.Encoding.LinkManager
 import Ideas.Service.FeedbackScript.Syntax (Script)
-import Ideas.Service.EncoderHTML
+import Ideas.Encoding.EncoderHTML
 import Ideas.Service.FeedbackScript.Parser (parseScriptSafe)
 import System.Random (StdGen, newStdGen)
 import System.IO.Error

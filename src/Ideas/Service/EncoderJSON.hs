@@ -34,6 +34,9 @@ jsonEncoder = encoderFor $ \tv@(val ::: tp) ->
       _ | length (tupleList tv) > 1 ->
          jsonTuple <$> sequence [ jsonEncoder // x | x <- tupleList tv ]
       Iso p t   -> jsonEncoder // (to p val ::: t)
+      Const Tp.String :|: t2 -> case val of
+         Left msg -> fail msg
+         Right y  -> jsonEncoder // (y ::: t2)
       t1 :|: t2 -> case val of
          Left  x -> jsonEncoder // (x ::: t1)
          Right y -> jsonEncoder // (y ::: t2)

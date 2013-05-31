@@ -69,8 +69,8 @@ defaultCGI dr startTime = do
 defaultCommandLine :: DomainReasoner -> [Flag] -> IO ()
 defaultCommandLine dr flags = do
    hSetBinaryMode stdout True
-   when (FixRNG `elem` flags)
-      useFixedStdGen -- use a predictable "random" number generator
+   -- when (FixRNG `elem` flags)
+   useFixedStdGen -- always use a predictable "random" number generator
    mapM_ doAction flags
  where
    doAction flag =

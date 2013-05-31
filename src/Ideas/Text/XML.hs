@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2011, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -14,9 +13,9 @@
 --
 -----------------------------------------------------------------------------
 module Ideas.Text.XML
-   ( XML, Attr, AttrList, InXML(..), Element(..)
+   ( XML, Attr, AttrList, Element(..), InXML(..)
    , XMLBuilder, makeXML
-   , parseXML, showXML, compactXML, findAttribute, updateLast
+   , parseXML, showXML, compactXML, findAttribute
    , children, Attribute(..), fromBuilder, findChild, getData
    , BuildXML(..)
    , module Data.Monoid, munless, mwhen
@@ -119,12 +118,6 @@ instance BuildXML XMLBuilder where
 
 makeXML :: String -> XMLBuilder -> XML
 makeXML s = uncurry (Element s) . fromBS
-
-updateLast :: (Element -> Element) -> XMLBuilder -> XMLBuilder
-updateLast f (BS as elts) =
-   case Seq.viewr elts of 
-      rest Seq.:> b -> BS as (rest Seq.|> fmap f b)
-      Seq.EmptyR    -> BS as elts
 
 mwhen :: Monoid a => Bool -> a -> a
 mwhen True  a = a

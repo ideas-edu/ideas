@@ -59,11 +59,11 @@ htmlPage title css body = makeXML "html" $
    <> tag "body" body
    
 
-link :: String -> HTMLBuilder -> HTMLBuilder
+link :: BuildXML a => String -> a -> a
 link url body = tag "a" $
    ("href" .=. url) <> body
 
-h1, h2, h3, h4, h5, h6 :: String -> HTMLBuilder
+h1, h2, h3, h4, h5, h6 :: BuildXML a => String -> a
 h1 = tag "h1" . string
 h2 = tag "h2" . string
 h3 = tag "h3" . string
@@ -71,35 +71,35 @@ h4 = tag "h4" . string
 h5 = tag "h5" . string
 h6 = tag "h6" . string
 
-para :: HTMLBuilder -> HTMLBuilder
+para :: BuildXML a => a -> a
 para = tag "p"
 
-preText :: String -> HTMLBuilder
+preText :: BuildXML a => String -> a
 preText = pre . string
 
-pre :: HTMLBuilder -> HTMLBuilder
+pre :: BuildXML a => a -> a
 pre = tag "pre"
 
-hr :: HTMLBuilder
+hr :: BuildXML a => a
 hr = emptyTag "hr"
 
-br :: HTMLBuilder
+br :: BuildXML a => a
 br = emptyTag "br"
 
-ttText :: String -> HTMLBuilder
+ttText :: BuildXML a => String -> a
 ttText = tt . string
 
-ul :: [HTMLBuilder] -> HTMLBuilder
+ul :: BuildXML a => [a] -> a
 ul = element "ul" . map (tag "li")
 
 -- | First argument indicates whether the table has a header or not
-table :: Bool -> [[HTMLBuilder]] -> HTMLBuilder
+table :: BuildXML a => Bool -> [[a]] -> a
 table b rows = element "table" $
    ("border" .=. "1") :
    [ element "tr" $
         ("class" .=. getClass i) :
-        map ((if i==0 then classA "topCell" else id) . tag "td") r
-   | (i, r) <- zip [0::Int ..] rows
+        [ tag "td" c | c <- row ]
+   | (i, row) <- zip [0::Int ..] rows
    ]   
  where
    getClass i
@@ -107,21 +107,21 @@ table b rows = element "table" $
       | even i      = "evenRow"
       | otherwise   = "oddRow"
 
-spaces :: Int -> HTMLBuilder
+spaces :: BuildXML a => Int -> a
 spaces n = mconcat (replicate n space)
 
-space, bullet :: HTMLBuilder
+space, bullet :: BuildXML a => a
 space  = XML.unescaped "&nbsp;"
 bullet = XML.unescaped "&#8226;"
 
-image :: String -> HTMLBuilder
+image :: BuildXML a => String -> a
 image n = tag "img" ("src" .=. n)
 
-divClass :: String -> HTMLBuilder -> HTMLBuilder
-divClass n = classA n . tag "div"
+divClass :: BuildXML a =>  String -> a -> a
+divClass n a = tag "div" (classA n <> a)
 
-spanClass :: String -> HTMLBuilder -> HTMLBuilder
-spanClass n = classA n . tag "span"
+spanClass :: BuildXML a =>  String -> a -> a
+spanClass n a = tag "span" (classA n <> a)
 
 -- A simple XML highlighter
 highlightXML :: Bool -> XML -> HTMLBuilder
@@ -156,35 +156,31 @@ highlightXML nice
 -----------------------------------------------------------
 -- * HTML generic attributes
 
-idA, classA, styleA, titleA :: String -> HTMLBuilder -> HTMLBuilder
-idA    = setA "id"     -- document-wide unique id
-classA = setA "class"  -- space-separated list of classes
-styleA = setA "style"  -- associated style info
-titleA = setA "title"  -- advisory title
-
-setA :: String -> String -> HTMLBuilder -> HTMLBuilder
-setA attr value = updateLast $ \e ->
-   e { attributes = (attr := value) : attributes e }
+idA, classA, styleA, titleA :: BuildXML a => String -> a
+idA    = ("id"     .=.)  -- document-wide unique id
+classA = ("class"  .=.)  -- space-separated list of classes
+styleA = ("style"  .=.)  -- associated style info
+titleA = ("title"  .=.)  -- advisory title
 
 -----------------------------------------------------------
 -- * Font style elements
 
 -- | Renders as teletype or monospaced Ideas.Text.
-tt :: HTMLBuilder -> HTMLBuilder
+tt :: BuildXML a => a -> a
 tt = tag "tt"
 
 -- | Renders as italic text style.
-italic :: HTMLBuilder -> HTMLBuilder
+italic :: BuildXML a => a -> a
 italic = tag "i"
 
 -- | Renders as bold text style.
-bold :: HTMLBuilder -> HTMLBuilder
+bold :: BuildXML a => a -> a
 bold = tag "b"
 
 -- BIG: Renders text in a "large" font.
-big :: HTMLBuilder -> HTMLBuilder
+big :: BuildXML a => a -> a
 big = tag "big"
 
 -- SMALL: Renders text in a "small" font.
-small :: HTMLBuilder -> HTMLBuilder
+small :: BuildXML a => a -> a
 small = tag "small"

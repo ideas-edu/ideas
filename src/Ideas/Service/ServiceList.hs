@@ -69,7 +69,8 @@ onefirstS = makeService "basic.onefirst"
    \service to get all possible steps that are allowed by the strategy. In \
    \addition to a new state, the rule used and the location where to apply \
    \this rule are returned." $
-   onefirst ::: typed
+   onefirst ::: typed :-> Const String :|: Tag "elem" typed
+   -- special tag for (legacy) xml encoding
 
 readyS :: Service
 readyS = makeService "basic.ready"

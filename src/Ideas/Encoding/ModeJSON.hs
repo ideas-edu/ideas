@@ -14,7 +14,7 @@
 module Ideas.Encoding.ModeJSON (processJSON) where
 
 import Ideas.Common.Library hiding (exerciseId)
-import Ideas.Common.Utils (Some(..))
+import Ideas.Common.Utils (Some(..), timedSeconds)
 import Control.Monad
 import Data.Char
 import Ideas.Service.DomainReasoner
@@ -24,6 +24,14 @@ import Ideas.Encoding.DecoderJSON
 import Ideas.Encoding.EncoderJSON
 import System.Random hiding (getStdGen)
 import Ideas.Text.JSON
+
+processJSON :: DomainReasoner -> String -> IO (Request, String, String)
+processJSON dr input = do
+   json <- either fail return (parseJSON input)
+   req  <- jsonRequest json
+   resp <- jsonRPC json (myHandler dr)
+   let out = show $ addVersion (version dr) (toJSON resp)
+   return (req, out, "application/json")
 
 -- TODO: Clean-up code
 extractExerciseId :: Monad m => JSON -> m Id
@@ -37,14 +45,6 @@ extractExerciseId json =
       _ -> fail "no code"
  where
    p c = not (isAlphaNum c || isSpace c || c `elem` ".-")
-
-processJSON :: DomainReasoner -> String -> IO (Request, String, String)
-processJSON dr input = do
-   json <- either fail return (parseJSON input)
-   req  <- jsonRequest json
-   resp <- jsonRPC json (myHandler dr)
-   let out = show $ addVersion (version dr) (toJSON resp)
-   return (req, out, "application/json")
 
 addVersion :: String -> JSON -> JSON
 addVersion str json =
@@ -77,7 +77,7 @@ jsonRequest json = do
       }
 
 myHandler :: DomainReasoner -> JSON_RPC_Handler IO
-myHandler dr fun arg = do
+myHandler dr fun arg = timedSeconds 2 $ do
    srv <- findService dr (newId fun)
    Some ex <- 
       if fun == "exerciselist"

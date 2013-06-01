@@ -14,7 +14,7 @@
 module Ideas.Encoding.ModeXML (processXML) where
 
 import Ideas.Common.Library hiding (exerciseId, (:=))
-import Ideas.Common.Utils (Some(..))
+import Ideas.Common.Utils (Some(..), timedSeconds)
 import Control.Monad
 import Control.Monad.Error
 import Ideas.Service.DomainReasoner
@@ -37,12 +37,11 @@ processXML :: DomainReasoner -> Maybe String -> String -> IO (Request, String, S
 processXML dr cgiBin input = do
    xml  <- either fail return (parseXML input)
    req  <- either fail return (xmlRequest xml)
-   resp <- xmlReply dr cgiBin req xml
-              `catchError` (return . resultError . ioeGetErrorString)
+   resp <- timedSeconds 2 (xmlReply dr cgiBin req xml)
+    `catchError` (return . resultError . ioeGetErrorString)
    case encoding req of
       Just HTMLEncoding -> 
-           let out = show resp
-           in return (req, out, "text/html") 
+         return (req, show resp, "text/html") 
       _ -> let out = showXML (addVersion (version dr) resp)
            in return (req, out, "application/xml")
 

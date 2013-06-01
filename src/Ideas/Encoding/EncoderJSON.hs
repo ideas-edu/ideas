@@ -34,9 +34,6 @@ jsonEncoder = encoderFor $ \tv@(val ::: tp) ->
       _ | length (tupleList tv) > 1 ->
          jsonTuple <$> sequence [ jsonEncoder // x | x <- tupleList tv ]
       Iso p t   -> jsonEncoder // (to p val ::: t)
-      Const Tp.String :|: t2 -> case val of
-         Left msg -> fail msg
-         Right y  -> jsonEncoder // (y ::: t2)
       t1 :|: t2 -> case val of
          Left  x -> jsonEncoder // (x ::: t1)
          Right y -> jsonEncoder // (y ::: t2)
@@ -51,10 +48,10 @@ jsonEncoder = encoderFor $ \tv@(val ::: tp) ->
          | s == "Diagnosis"  -> encodeTyped encodeDiagnosis
          | s == "Derivation" -> encodeTyped encodeDerivation <+> 
                                 encodeTyped encodeDerivationText
+         | s == "elem"       -> jsonEncoder // (val ::: t)
          | otherwise -> (\b -> Object [(s, b)]) <$> jsonEncoder // (val ::: t)
       Tp.Unit   -> pure Null
       Tp.List t -> Array <$> sequence [ jsonEncoder // (x ::: t) | x <- val ]
-      -- Tp.Tree t -> -- liftM treeToJSON (T.mapM ((jsonEncoder //) . (::: t)) val)
       Const ctp -> jsonEncodeConst // (val ::: ctp)
       _ -> fail $ "Cannot encode type: " ++ show tp
  where

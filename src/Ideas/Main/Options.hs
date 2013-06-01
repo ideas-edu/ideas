@@ -26,7 +26,7 @@ import System.Environment
 import System.Exit
 
 data Flag = Version | Help | InputFile String
-          | FixRNG | MakePages FilePath | Test FilePath
+          | MakePages FilePath | Test FilePath
           | MakeScriptFor String | AnalyzeScript FilePath
    deriving Eq
 
@@ -57,7 +57,6 @@ options :: [OptDescr Flag]
 options =
    [ Option []  ["version"]        (NoArg Version) "show version number"
    , Option "?" ["help"]           (NoArg Help)    "show options"
-   , Option ""  ["fixed-rng"]      (NoArg FixRNG)  "use a fixed random-number generator"
    , Option "f" ["file"]           fileArg         "use input FILE as request"
    , Option ""  ["make-pages"]     pagesArg        "generate pages for exercises and services"
    , Option ""  ["test"]           testArg         "run tests on directory (default: 'test')"

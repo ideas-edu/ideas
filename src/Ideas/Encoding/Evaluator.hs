@@ -181,11 +181,14 @@ encodeWith enc (val ::: tp) =
 eval :: Monad m => Evaluator a m b -> TypedValue (Type a) -> m b
 eval f@(Evaluator enc dec) tv@(val ::: tp) =
    case tp of
+      -- handle exceptions
+      Const String :|: t -> 
+         either fail (\a -> eval f (a ::: t)) val
       -- uncurry function if possible
       t1 :-> t2 :-> t3 -> 
          eval f (uncurry val ::: Pair t1 t2 :-> t3)
       t1 :-> t2 -> do
          a <- dec t1
-         enc (val a ::: t2)
+         eval f (val a ::: t2)
       _ ->
          enc tv

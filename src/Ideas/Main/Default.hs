@@ -69,7 +69,6 @@ defaultCGI dr startTime = do
 defaultCommandLine :: DomainReasoner -> [Flag] -> IO ()
 defaultCommandLine dr flags = do
    hSetBinaryMode stdout True
-   -- when (FixRNG `elem` flags)
    useFixedStdGen -- always use a predictable "random" number generator
    mapM_ doAction flags
  where
@@ -94,8 +93,6 @@ defaultCommandLine dr flags = do
          -- feedback scripts
          MakeScriptFor s    -> makeScriptFor dr s
          AnalyzeScript file -> parseAndAnalyzeScript dr file
-         -- flags without an action
-         _ -> return ()
 
 process :: DomainReasoner -> Maybe String -> String -> IO (Request, String, String)
 process dr cgiBin input = do

@@ -18,7 +18,8 @@ module Ideas.Common.Utils
    , cartesian, distinct, allsame
    , fixpoint
    , splitAtElem, splitsWithElem
-   , useFixedStdGen, fst3, snd3, thd3
+   , useFixedStdGen, timedSeconds
+   , fst3, snd3, thd3
    , headM, findIndexM
    , elementAt, changeAt, replaceAt
    , list
@@ -27,6 +28,7 @@ module Ideas.Common.Utils
 import Data.Char
 import Data.List
 import System.Random
+import System.Timeout
 
 data Some f = forall a . Some (f a)
 
@@ -89,6 +91,10 @@ splitsWithElem c s =
 -- accessible by calling System.Random.getStdGen
 useFixedStdGen :: IO ()
 useFixedStdGen = setStdGen (mkStdGen 280578) {- magic number -}
+
+timedSeconds :: Int -> IO a -> IO a
+timedSeconds n m = timeout (n * 10^6) m >>= 
+   maybe (fail ("Timeout after " ++ show n ++ " seconds")) return
 
 fst3 :: (a, b, c) -> a
 fst3 (x, _, _) = x

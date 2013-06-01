@@ -30,7 +30,6 @@ import Ideas.Encoding.OpenMathSupport
 import Ideas.Encoding.RulesInfo (rulesInfoXML)
 import Ideas.Service.State
 import Ideas.Encoding.StrategyInfo
-import Ideas.Service.BasicServices (StepInfo)
 import Ideas.Service.Types
 import qualified Ideas.Service.ProblemDecomposition as PD
 import Ideas.Text.OpenMath.Object
@@ -66,14 +65,6 @@ xmlEncoder = msum
               return (rulesInfoXML (getExercise xp) (encodeTerm xp))
            Tag "elem" t -> 
               tag "elem" (xmlEncoder // (val ::: t))
-           -- special case for onefirst service; insert elem Tag
-           Const String :|: Pair t (Const State) | isJust (equal stepInfoType t) ->
-              xmlEncoder // (val ::: (Const String :|: Tag "elem" (Pair t (Const State))))
-           -- special case for exceptions
-           Const String :|: t -> 
-              case val of
-                 Left s  -> fail s
-                 Right a -> xmlEncoder // (a ::: t)
            -- special cases for lists
            List (Const Rule) -> 
               encodeAsList [ ruleShortInfo // r | r <- val ]
@@ -91,9 +82,6 @@ xmlEncoder = msum
            Const t    -> xmlEncoderConst // (val ::: t)
            _ -> fail $ show tp
    ]
- where
-   stepInfoType :: Type a (StepInfo a)
-   stepInfoType = typed
 
 xmlEncoderConst :: XMLEncoder a (TypedValue (Const a))
 xmlEncoderConst = encoderFor $ \tv@(val ::: tp) ->

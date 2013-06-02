@@ -25,13 +25,14 @@ import Ideas.Encoding.EncoderJSON
 import System.Random hiding (getStdGen)
 import Ideas.Text.JSON
 
-processJSON :: DomainReasoner -> String -> IO (Request, String, String)
-processJSON dr input = do
+processJSON :: Bool -> DomainReasoner -> String -> IO (Request, String, String)
+processJSON cgiMode dr input = do
    json <- either fail return (parseJSON input)
    req  <- jsonRequest json
    resp <- jsonRPC json (myHandler dr)
-   let out = show $ addVersion (version dr) (toJSON resp)
-   return (req, out, "application/json")
+   let f   = if cgiMode then showCompact else showPretty
+       out = addVersion (version dr) (toJSON resp)
+   return (req, f out, "application/json")
 
 -- TODO: Clean-up code
 extractExerciseId :: Monad m => JSON -> m Id
@@ -77,7 +78,7 @@ jsonRequest json = do
       }
 
 myHandler :: DomainReasoner -> JSON_RPC_Handler IO
-myHandler dr fun arg = timedSeconds 2 $ do
+myHandler dr fun arg = timedSeconds 5 $ do
    srv <- findService dr (newId fun)
    Some ex <- 
       if fun == "exerciselist"

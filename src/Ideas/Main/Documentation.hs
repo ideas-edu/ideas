@@ -23,6 +23,7 @@ import Ideas.Service.DomainReasoner
 import Ideas.Encoding.LinkManager
 import Ideas.Service.BasicServices
 import Ideas.Service.Types
+import Ideas.Text.HTML
 
 makeDocumentation :: DomainReasoner -> String -> IO ()
 makeDocumentation dr dir = do
@@ -47,7 +48,7 @@ makeDocumentation dr dir = do
    makeIndex f = make emptyExercise (f lm)
    makeEx ex f = make ex (f lm ex)
    make ex url tv = safeWrite (dir </> url) $ 
-      show $ htmlEncoder (linksUp (pathLevel $ url) lm) dr ex tv
+      showHTML $ htmlEncoder (linksUp (pathLevel $ url) lm) dr ex tv
   
 safeWrite :: FilePath -> String -> IO ()
 safeWrite filename txt = do

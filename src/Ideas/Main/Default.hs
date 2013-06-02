@@ -17,6 +17,7 @@ module Ideas.Main.Default (defaultMain, newDomainReasoner) where
 import Ideas.Common.Utils (useFixedStdGen)
 import Control.Monad
 import Ideas.Main.BlackBoxTests
+import Data.Maybe
 import Data.IORef
 import Data.Time
 import Ideas.Common.Id
@@ -32,6 +33,9 @@ import Ideas.Encoding.ModeXML (processXML)
 import Ideas.Main.Documentation
 import Ideas.Service.Request
 import System.IO
+import System.IO.Error (ioeGetErrorString)
+import Control.Exception
+import Prelude hiding (catch)
 
 defaultMain :: DomainReasoner -> IO ()
 defaultMain dr = do
@@ -61,9 +65,14 @@ defaultCGI dr startTime = do
       -- Cross-Origin Resource Sharing (CORS) prevents browser warnings
       -- about cross-site scripting
       setHeader "Access-Control-Allow-Origin" "*"
-      output txt
+      output txt 
    -- log request to database
    join (readIORef logRef)
+   -- if something goes wrong
+ `catch` \ioe -> runCGI $ do
+   setHeader "Content-type" "text/plain"
+   setHeader "Access-Control-Allow-Origin" "*"
+   output ("Invalid request\n" ++ ioeGetErrorString ioe)
    
 -- Invoked from command-line with flags
 defaultCommandLine :: DomainReasoner -> [Flag] -> IO ()
@@ -98,7 +107,7 @@ process :: DomainReasoner -> Maybe String -> String -> IO (Request, String, Stri
 process dr cgiBin input = do
    case discoverDataFormat input of
       Just XML  -> processXML dr cgiBin input
-      Just JSON -> processJSON dr input
+      Just JSON -> processJSON (isJust cgiBin) dr input
       _ -> fail "Invalid input"
         
 newDomainReasoner :: IsId a => a -> DomainReasoner      

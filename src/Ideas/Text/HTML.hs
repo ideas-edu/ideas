@@ -13,11 +13,12 @@
 --
 -----------------------------------------------------------------------------
 module Ideas.Text.HTML
-   ( HTML, HTMLBuilder, showHTML
+   ( HTMLPage, HTMLBuilder
+   , addCSS, addScript, showHTML
    , string, text
    , htmlPage, link
    , h1, h2, h3, h4, h5, h6
-   , preText, ul, table
+   , preText, ul, table, keyValueTable
    , image, space, spaces, highlightXML
    , para, ttText, hr, br, pre, bullet
    , divClass, spanClass
@@ -35,29 +36,56 @@ import Prelude hiding (div)
 import Ideas.Text.XML
 import qualified Ideas.Text.XML as XML
 
-type HTML = XML
-
 type HTMLBuilder = XMLBuilder
 
-showHTML :: HTML -> String
-showHTML = compactXML
+data HTMLPage = HTMLPage 
+   { title       :: String
+   , styleSheets :: [FilePath]
+   , scripts     :: [FilePath]
+   , htmlContent :: HTMLBuilder
+   }
 
--- html helper functions
-htmlPage :: String -> Maybe String -> HTMLBuilder -> HTML
+instance InXML HTMLPage where
+   toXML page = makeXML "html" $
+      element "head" 
+         [ tag "title" (string (title page))
+         , mconcat 
+              [ element "link" 
+                   [ "rel"  .=. "STYLESHEET"
+                   , "href" .=. css
+                   , "type" .=. "text/css"
+                   ]
+              | css <- styleSheets page 
+              ]
+         , mconcat 
+              [ tag "script" ("src" .=. js)
+              | js <- scripts page 
+              ]
+         ]
+      <> tag "body" (htmlContent page)
+
+showHTML :: HTMLPage -> String
+showHTML = compactXML . toXML {-
 htmlPage title css body = makeXML "html" $
    element "head"
       [ munless (null title) $
            tag "title" (string title)
       , case css of
            Nothing -> mempty
-           Just n  -> element "link"
-              [ "rel"  .=. "STYLESHEET"
-              , "href" .=. n
-              , "type" .=. "text/css"
-              ]
+           Just n  -> 
       ]
    <> tag "body" body
-   
+-}
+
+addCSS :: FilePath -> HTMLPage -> HTMLPage
+addCSS css page = page { styleSheets = css : styleSheets page }
+
+addScript :: FilePath -> HTMLPage -> HTMLPage
+addScript js page = page { scripts = js : scripts page }
+
+-- html helper functions
+htmlPage :: String -> HTMLBuilder -> HTMLPage
+htmlPage s = HTMLPage s [] []
 
 link :: BuildXML a => String -> a -> a
 link url body = tag "a" $
@@ -103,10 +131,15 @@ table b rows = element "table" $
    ]   
  where
    getClass i
-      | i == 0 && b = "topRow"
-      | even i      = "evenRow"
-      | otherwise   = "oddRow"
+      | i == 0 && b = "top-row"
+      | even i      = "even-row"
+      | otherwise   = "odd-row"
 
+keyValueTable :: BuildXML a => [(String, a)] -> a
+keyValueTable = 
+   let f (s, a) = [spanClass "table-key" (string s), a]
+   in para . table False . map f 
+   
 spaces :: BuildXML a => Int -> a
 spaces n = mconcat (replicate n space)
 
@@ -129,7 +162,7 @@ highlightXML nice
    | nice      = builder . highlight . makeXML "pre" . string . showXML
    | otherwise = builder . highlight . makeXML "tt"  . string . compactXML
  where
-   highlight :: HTML -> HTML
+   highlight :: XML -> XML
    highlight html = html {content = map (either (Left . f) Right) (content html)}
 
    -- find <

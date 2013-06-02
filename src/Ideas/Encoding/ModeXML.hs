@@ -37,13 +37,14 @@ processXML :: DomainReasoner -> Maybe String -> String -> IO (Request, String, S
 processXML dr cgiBin input = do
    xml  <- either fail return (parseXML input)
    req  <- either fail return (xmlRequest xml)
-   resp <- timedSeconds 2 (xmlReply dr cgiBin req xml)
+   resp <- timedSeconds 5 (xmlReply dr cgiBin req xml)
     `catchError` (return . resultError . ioeGetErrorString)
    case encoding req of
       Just HTMLEncoding -> 
          return (req, show resp, "text/html") 
-      _ -> let out = showXML (addVersion (version dr) resp)
-           in return (req, out, "application/xml")
+      _ -> let out = addVersion (version dr) resp
+               f   = if cgiBin == Nothing then showXML else show
+           in return (req, f out, "application/xml")
 
 addVersion :: String -> XML -> XML
 addVersion s xml =
@@ -91,7 +92,7 @@ xmlReply dr cgiBin request xml = do
 
       Just HTMLEncoding -> do
          res <- evalService (htmlConverter dr cgiBin script ex stdgen xml) srv
-         return res 
+         return (toXML res) 
 
       _ -> do
          res <- evalService (openMathConverter True script ex stdgen xml) srv
@@ -122,7 +123,7 @@ stringFormatConverter script ex stdgen xml =
    xds = XMLDecoderState ex script stdgen False g
    g = (liftM getData . findChild "expr") >=> parser ex
 
-htmlConverter :: DomainReasoner -> Maybe String -> Script -> Exercise a -> StdGen -> XML -> Evaluator a IO HTML
+htmlConverter :: DomainReasoner -> Maybe String -> Script -> Exercise a -> StdGen -> XML -> Evaluator a IO HTMLPage
 htmlConverter dr cgiBin script ex stdgen xml = 
    Evaluator (return . htmlEncoder lm dr ex) d
  where

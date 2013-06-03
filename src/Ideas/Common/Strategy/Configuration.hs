@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -20,11 +20,11 @@ module Ideas.Common.Strategy.Configuration
    , remove, reinsert, collapse, expand, hide, reveal
    ) where
 
+import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Id
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Core
-import Data.Maybe
 
 ---------------------------------------------------------------------
 -- Types and constructors

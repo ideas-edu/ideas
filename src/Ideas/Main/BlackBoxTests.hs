@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -11,14 +11,14 @@
 -----------------------------------------------------------------------------
 module Ideas.Main.BlackBoxTests (blackBoxTests) where
 
-import Ideas.Common.Utils (useFixedStdGen, snd3)
-import Ideas.Common.Utils.TestSuite
 import Control.Monad
 import Control.Monad.Error
 import Data.List
-import Ideas.Service.DomainReasoner
+import Ideas.Common.Utils (useFixedStdGen, snd3)
+import Ideas.Common.Utils.TestSuite
 import Ideas.Encoding.ModeJSON
 import Ideas.Encoding.ModeXML
+import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import System.Directory
 import System.IO
@@ -67,8 +67,8 @@ doBlackBoxTest dr format path = do
                     XML  -> liftM snd3 (processXML dr Nothing txt)
          -- Conditional forces evaluation of the result, to make sure that
          -- all file handles are closed afterwards.
-         if out ~= expt 
-            then liftIO (hClose h1 >> hClose h2) >> return True 
+         if out ~= expt
+            then liftIO (hClose h1 >> hClose h2) >> return True
             else liftIO (hClose h1 >> hClose h2) >> return False
        `catchError`
          \_ -> return False

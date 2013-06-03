@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -11,17 +11,17 @@
 -----------------------------------------------------------------------------
 module Ideas.Encoding.RulePresenter (ruleToHTML) where
 
-import Ideas.Common.Library
-import Ideas.Common.Utils (Some(..))
 import Data.List
 import Data.Maybe
+import Ideas.Common.Library
+import Ideas.Common.Utils (Some(..))
 import Ideas.Text.HTML
 
 ruleToHTML :: Some Exercise -> Rule a -> HTMLBuilder
 ruleToHTML ex r = mconcat
-   [ rewriteRuleToHTML (not $ isBuggy r) ex rr  
+   [ rewriteRuleToHTML (not $ isBuggy r) ex rr
    | Some rr <- getRewriteRules (transformation r)
-   ]  
+   ]
 
 rewriteRuleToHTML :: Bool -> Some Exercise -> RewriteRule a -> HTMLBuilder
 rewriteRuleToHTML sound ex r =
@@ -29,8 +29,8 @@ rewriteRuleToHTML sound ex r =
    showLeadsTo sound <> spaces 3 <>
    showTerm ex rhs <> br
  where
-   lhs :~> rhs = ruleSpecTerm r 
- 
+   lhs :~> rhs = ruleSpecTerm r
+
 showLeadsTo :: Bool -> HTMLBuilder
 showLeadsTo sound = string (if sound then "\x21D2" else "\x21CF")
 

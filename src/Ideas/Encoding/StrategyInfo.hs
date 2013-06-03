@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -13,13 +13,13 @@
 -----------------------------------------------------------------------------
 module Ideas.Encoding.StrategyInfo (strategyToXML, xmlToStrategy) where
 
+import Control.Monad
+import Data.Char
+import Data.Maybe
 import Ideas.Common.Library
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Core
 import Ideas.Common.Utils (readInt)
-import Control.Monad
-import Data.Char
-import Data.Maybe
 import Ideas.Text.XML
 
 -----------------------------------------------------------------------
@@ -54,7 +54,7 @@ coreBuilder f = rec
          a :!%: b  -> tag "interleft"  (rec a <> rec b)
          Many a    -> tag "many"       (rec a)
          Repeat a  -> tag "repeat"     (rec a)
-         Label l (Rule r) | getId l == getId r 
+         Label l (Rule r) | getId l == getId r
                    -> tag "rule"       (f l)
          Label l a -> tag "label"      (f l <> rec a)
          Atomic a  -> tag "atomic"     (rec a)

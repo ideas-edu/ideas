@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -15,12 +15,12 @@ module Ideas.Common.Rewriting.Unification
    , unificationTests
    ) where
 
+import Control.Monad
+import Data.Maybe
 import Ideas.Common.Rewriting.AC (pairingsMatchA)
 import Ideas.Common.Rewriting.Substitution
 import Ideas.Common.Rewriting.Term
 import Ideas.Common.Utils.TestSuite
-import Control.Monad
-import Data.Maybe
 import qualified Data.Map as M
 
 -----------------------------------------------------------
@@ -35,9 +35,9 @@ unify term1 term2 =
          return (singletonSubst i term2)
       (_, TMeta j) | not (j `hasMetaVar` term1) ->
          return (singletonSubst j term1)
-      (TCon s xs, TCon t ys) | s == t -> 
+      (TCon s xs, TCon t ys) | s == t ->
          rec xs ys
-      (TList xs, TList ys) -> 
+      (TList xs, TList ys) ->
          rec xs ys
       _ | term1 == term2 ->
          return emptySubst
@@ -48,7 +48,7 @@ unify term1 term2 =
       s1 <- unify x y
       s2 <- rec (map (s1 |->) xs) (map (s1 |->) ys)
       return (s2 @@ s1)
-   rec _ _ = fail "match: no unifier" 
+   rec _ _ = fail "match: no unifier"
 
 match :: MonadPlus m => Term -> Term -> m Substitution
 match term1 term2 =
@@ -74,7 +74,6 @@ match term1 term2 =
       guard (composable s1 s2)
       return (s1 @@ s2)
    rec _ _ = fail "match: no unifier"
-   
 
 -----------------------------------------------------------
 -- Matching (or: one-way unification)
@@ -82,20 +81,20 @@ match term1 term2 =
 type Match a = a -> a -> [Substitution]
 type SymbolMatch = Match Term -> [Term] -> Term -> [Substitution]
 
--- If the top-level symbol (of the left-hand side) is an associative binary 
+-- If the top-level symbol (of the left-hand side) is an associative binary
 -- operator, extend both sides optionally with a meta-variable.
 matchExtended :: M.Map Symbol SymbolMatch -> Term -> Term -> [(Substitution, Maybe Term, Maybe Term)]
-matchExtended sm x y = 
-   [ (sub, lookupVar mvLeft sub, lookupVar mvRight sub) 
+matchExtended sm x y =
+   [ (sub, lookupVar mvLeft sub, lookupVar mvRight sub)
    | f   <- extensions
-   , sub <- matchA sm (f x) y 
+   , sub <- matchA sm (f x) y
    ]
  where
    mvLeft     = nextMetaVar x
    mvRight    = mvLeft + 1
-   extensions = 
+   extensions =
       case x of
-         TCon s [_, _] | isAssociative s -> 
+         TCon s [_, _] | isAssociative s ->
             let extLeft  = binary s (TMeta mvLeft)
                 extRight = flip (binary s) (TMeta mvRight)
             in [ f . g | f <- [id, extLeft], g <- [id, extRight] ]
@@ -103,7 +102,7 @@ matchExtended sm x y =
 
 -- second term should not have meta variables
 matchA :: M.Map Symbol SymbolMatch -> Match Term
-matchA sm = rec 
+matchA sm = rec
  where
    rec (TMeta i) y =
       return (singletonSubst i y)
@@ -111,16 +110,16 @@ matchA sm = rec
       matchList rec xs ys
    rec x y =
       case getFunction x of
-         Just (s, as) -> 
-            case M.lookup s sm of 
+         Just (s, as) ->
+            case M.lookup s sm of
                Just f -> f rec as y
-               Nothing 
+               Nothing
                   | isAssociative s -> associativeMatch s rec as y
                   | otherwise       -> defaultMatch rec x y
          _ -> defaultMatch rec x y
 
 defaultMatch :: Match Term -> Match Term
-defaultMatch f x y = 
+defaultMatch f x y =
    case (x, y) of
       (TCon s xs, TCon t ys) -> do
          guard (s == t)
@@ -132,7 +131,7 @@ defaultMatch f x y =
          return emptySubst
 
 matchList :: Match Term -> Match [Term]
-matchList f as bs = 
+matchList f as bs =
    case safeZipWith f as bs of
       Just ms -> products ms
       Nothing -> fail "matchList: lengths differ"
@@ -146,7 +145,7 @@ safeZipWith f = rec
 
 products :: [[Substitution]] -> [Substitution]
 products = foldr op [emptySubst]
- where  
+ where
    op xs ys = catMaybes [ x @+@ y | x <- xs, y <- ys ]
 
 associativeMatch :: Symbol -> SymbolMatch

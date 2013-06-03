@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -18,11 +18,11 @@ module Ideas.Service.State
    , exercise, statePrefixes, stateContext, stateTerm, stateLabels
    ) where
 
+import Data.List
+import Data.Maybe
 import Ideas.Common.Library
 import Ideas.Common.Strategy.Abstract (LabelInfo)
 import Ideas.Common.Strategy.Prefix (activeLabels)
-import Data.List
-import Data.Maybe
 
 data State a = State
    { exercise      :: Exercise a
@@ -45,7 +45,7 @@ instance HasId (State a) where
 
 instance HasEnvironment (State a) where
    environment = environment . stateContext
-   setEnvironment env s = 
+   setEnvironment env s =
       s { stateContext = setEnvironment env (stateContext s) }
 
 stateTerm :: State a -> a
@@ -66,7 +66,7 @@ makeState = State
 
 -- State without a prefix
 makeNoState :: Exercise a -> Context a -> State a
-makeNoState = flip makeState [] 
+makeNoState = flip makeState []
 
 emptyStateContext :: Exercise a -> Context a -> State a
 emptyStateContext ex = makeState ex [pr]

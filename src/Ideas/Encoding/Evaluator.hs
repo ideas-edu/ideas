@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs, RankNTypes #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -10,7 +10,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Ideas.Encoding.Evaluator 
+module Ideas.Encoding.Evaluator
    ( EncoderState, simpleEncoder, maybeEncoder, eitherEncoder
    , encoderFor, encoderStateFor, encodeTyped
    , runEncoderState, runEncoderStateM, (//)
@@ -22,16 +22,15 @@ module Ideas.Encoding.Evaluator
    , Evaluator(..), evalService
    ) where
 
-import qualified Control.Category as C
-import Ideas.Common.Classes
-import Data.List
-import Ideas.Common.View
-import Control.Arrow
 import Control.Applicative hiding (Const)
+import Control.Arrow
 import Control.Monad
+import Data.List
 import Data.Monoid
+import Ideas.Common.Classes
 import Ideas.Service.Types
 import Ideas.Text.XML
+import qualified Control.Category as C
 
 newtype EncoderState st a b = Enc (st -> a -> Either [String] b)
 
@@ -53,7 +52,7 @@ instance ArrowZero (EncoderState st) where
    zeroArrow = Enc $ \_ _ -> Left []
 
 instance ArrowPlus (EncoderState st) where
-   Enc f <+> Enc g = Enc $ \st a -> 
+   Enc f <+> Enc g = Enc $ \st a ->
       case (f st a, g st a) of
          (Right b, _      ) -> Right b
          (_,       Right b) -> Right b
@@ -73,7 +72,7 @@ instance Functor (EncoderState st a) where
 instance Applicative (EncoderState st a) where
    pure    = arr . const
    f <*> g = f &&& g >>> arr (uncurry ($))
-   
+
 instance Monoid b => Monoid (EncoderState st a b) where
    mempty  = pure mempty
    mappend = liftA2 (<>)
@@ -81,7 +80,7 @@ instance Monoid b => Monoid (EncoderState st a b) where
 instance Monad (EncoderState st a) where
    return = pure
    fail s = Enc $ \_ _ -> Left [ s | not (null s) ]
-   Enc f >>= g = Enc $ \st a -> 
+   Enc f >>= g = Enc $ \st a ->
       case f st a of
          Left err -> Left err
          Right b  -> let Enc h = g b in h st a
@@ -94,7 +93,7 @@ instance BuildXML b => BuildXML (EncoderState st a b) where
    n .=. s   = return (n .=. s)
    unescaped = return . unescaped
    builder   = return . builder
-   tag       = liftM . tag  
+   tag       = liftM . tag
 
 getState :: EncoderState st a st
 getState = Enc $ const . Right
@@ -124,7 +123,7 @@ encoderStateFor f = do
    st <- getState
    a  <- C.id
    f st a
-      
+
 runEncoderStateM :: Monad m => EncoderState st a b -> st -> a -> m b
 runEncoderStateM f st = either fail return . runEncoderState f st
 
@@ -147,7 +146,7 @@ evalService :: Monad m => Evaluator a m b -> Service -> m b
 evalService f = eval f . serviceFunction
 
 data Evaluator a m b where
-   Evaluator :: (TypedValue (Type a) -> m b)  -- encoder 
+   Evaluator :: (TypedValue (Type a) -> m b)  -- encoder
              -> (forall t . Type a t -> m t)  -- decoder
              -> Evaluator a m b
 
@@ -158,23 +157,23 @@ encodeTypeRep :: Monoid a => (TypedValue f -> a) -> TypedValue (TypeRep f) -> a
 encodeTypeRep = fix . encodeTypeRepFix
 
 encodeTypeRepFix :: Monoid a => (TypedValue f -> a) -> Fix (TypedValue (TypeRep f) -> a)
-encodeTypeRepFix enc rec (val ::: tp) = 
+encodeTypeRepFix enc rec (val ::: tp) =
    case tp of
       _ :-> _    -> mempty
       t1 :|: t2  -> case val of
                        Left a  -> rec (a ::: t1)
                        Right a -> rec (a ::: t2)
       Pair t1 t2 -> rec (fst val ::: t1) <> rec (snd val ::: t2)
-      List t     -> mconcat (map (rec . (::: t)) val)  
+      List t     -> mconcat (map (rec . (::: t)) val)
       Tree t     -> F.fold (fmap (rec . (::: t)) val)
       Unit       -> mempty
       Tag _ t    -> rec (val ::: t)
       Iso v t    -> rec (to v val ::: t)
       Const ctp  -> enc (val ::: ctp)
-      
+
 encodeWith :: (Monad m, Typed a t) => (t -> m b) -> TypedValue (Type a) -> m b
 encodeWith enc (val ::: tp) =
-   case equal tp typed of 
+   case equal tp typed of
       Just f  -> enc (f val)
       Nothing -> fail "encoding failed" -}
 
@@ -182,10 +181,10 @@ eval :: Monad m => Evaluator a m b -> TypedValue (Type a) -> m b
 eval f@(Evaluator enc dec) tv@(val ::: tp) =
    case tp of
       -- handle exceptions
-      Const String :|: t -> 
+      Const String :|: t ->
          either fail (\a -> eval f (a ::: t)) val
       -- uncurry function if possible
-      t1 :-> t2 :-> t3 -> 
+      t1 :-> t2 :-> t3 ->
          eval f (uncurry val ::: Pair t1 t2 :-> t3)
       t1 :-> t2 -> do
          a <- dec t1

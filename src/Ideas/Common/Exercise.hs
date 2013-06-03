@@ -1,6 +1,6 @@
 {-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -40,20 +40,6 @@ module Ideas.Common.Exercise
    , checkExamples, exerciseTestSuite
    ) where
 
-import Ideas.Common.Environment
-import Ideas.Common.Classes
-import Ideas.Common.Context
-import Ideas.Common.Derivation
-import Ideas.Common.DerivationTree
-import Ideas.Common.Id
-import Ideas.Common.Traversal.Navigator (top, downs)
-import Ideas.Common.Predicate
-import Ideas.Common.Rewriting
-import Ideas.Common.Strategy hiding (not, fail, repeat, replicate)
-import Ideas.Common.Rule
-import Ideas.Common.Utils (ShowString(..))
-import Ideas.Common.Utils.TestSuite
-import Ideas.Common.View
 import Control.Monad.Error
 import Data.Char
 import Data.Function
@@ -61,6 +47,20 @@ import Data.List
 import Data.Maybe
 import Data.Ord
 import Data.Typeable
+import Ideas.Common.Classes
+import Ideas.Common.Context
+import Ideas.Common.Derivation
+import Ideas.Common.DerivationTree
+import Ideas.Common.Environment
+import Ideas.Common.Id
+import Ideas.Common.Predicate
+import Ideas.Common.Rewriting
+import Ideas.Common.Rule
+import Ideas.Common.Strategy hiding (not, fail, repeat, replicate)
+import Ideas.Common.Traversal.Navigator (top, downs)
+import Ideas.Common.Utils (ShowString(..))
+import Ideas.Common.Utils.TestSuite
+import Ideas.Common.View
 import System.Random
 import Test.QuickCheck hiding (label)
 import Test.QuickCheck.Gen
@@ -219,7 +219,7 @@ randomTermWith rng ex mdif =
          | null xs   -> Nothing
          | otherwise -> Just $
               snd $ xs !! fst (randomR (0, length xs - 1) rng)
-       where 
+       where
          xs = filter p (examples ex)
          p (d, _) = maybe True (==d) mdif
 
@@ -430,9 +430,9 @@ checkParserPrettyEx ex ca =
 propRule :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
 propRule eq r gen =
    forAll gen $ \a ->
-   let xs = applyAll r a in 
-   not (null xs) ==> 
-   forAll (elements xs) $ \b -> 
+   let xs = applyAll r a in
+   not (null xs) ==>
+   forAll (elements xs) $ \b ->
    a `eq` b -}
 
 checkExamples :: Exercise a -> TestSuite
@@ -505,12 +505,12 @@ checksForDerivation ex d = do
       ++ "  with  " ++ prettyPrinterContext ex y
       ++ "  using  " ++ show r
 
-   assertNull "self similarity" $ take 1 $ do 
+   assertNull "self similarity" $ take 1 $ do
       x <- terms d
       guard (not (similarity ex x x))
       return $ "term not similar to itself: " ++ prettyPrinterContext ex x
-      
-   -- Parameters 
+
+   -- Parameters
    assertNull "parameters" $ take 1 $ do
       (r, env) <- steps d
       maybeToList (checkReferences r env)

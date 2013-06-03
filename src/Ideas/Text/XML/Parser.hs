@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -19,10 +19,10 @@ import Control.Monad
 import Data.Char (toUpper, ord, isSpace)
 import Data.List (foldl') -- '
 import Data.Maybe (catMaybes)
-import Prelude hiding (seq)
 import Ideas.Text.Parsing hiding (digit, letter, space)
 import Ideas.Text.XML.Document hiding (versionInfo, name, content)
 import Ideas.Text.XML.Unicode
+import Prelude hiding (seq)
 import qualified Ideas.Text.XML.Document as D
 
 letter, digit, combiningChar, extender :: Parser Char

@@ -1,6 +1,6 @@
 {-# LANGUAGE ExistentialQuantification #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 module Ideas.Common.Environment
-   ( -- * Reference 
+   ( -- * Reference
      Ref, Reference(..)
      -- * Binding
    , Binding, makeBinding
@@ -24,15 +24,15 @@ module Ideas.Common.Environment
    , bindings, noBindings, (?)
    ) where
 
-import Ideas.Common.Id
-import Ideas.Common.Rewriting.Term
-import Ideas.Common.Utils
-import Ideas.Common.View
 import Control.Monad
 import Data.Function
 import Data.List
 import Data.Monoid
 import Data.Typeable
+import Ideas.Common.Id
+import Ideas.Common.Rewriting.Term
+import Ideas.Common.Utils
+import Ideas.Common.View
 import qualified Data.Map as M
 
 -----------------------------------------------------------
@@ -81,13 +81,13 @@ instance (Reference a, Reference b) => Reference (a, b)
 
 data Binding = forall a . Typeable a => Binding (Ref a) a
 
-instance Show Binding where 
+instance Show Binding where
    show a = showId a ++ "=" ++ showValue a
-   
+
 instance Eq Binding where
    (==) = let f (Binding ref a) = (getId ref, build (refView ref) a)
           in (==) `on` f
-          
+
 instance HasId Binding where
    getId (Binding ref _ ) = getId ref
    changeId f (Binding ref a) = Binding (changeId f ref) a
@@ -126,8 +126,8 @@ makeEnvironment xs = Env $ M.fromList [ (getId a, a) | a <- xs ]
 singleBinding :: Typeable a => Ref a -> a -> Environment
 singleBinding ref = makeEnvironment . return . Binding ref
 
-class HasEnvironment env where 
-   environment    :: env -> Environment 
+class HasEnvironment env where
+   environment    :: env -> Environment
    setEnvironment :: Environment -> env -> env
    deleteRef      :: Ref a -> env -> env
    insertRef      :: Typeable a => Ref a -> a -> env -> env
@@ -159,7 +159,7 @@ class HasRefs a where
 instance HasEnvironment Environment where
    environment    = id
    setEnvironment = const
-      
+
 bindings :: HasEnvironment env => env -> [Binding]
 bindings = sortBy compareId . M.elems . envMap . environment
 

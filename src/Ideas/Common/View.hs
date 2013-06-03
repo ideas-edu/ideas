@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs, GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -37,11 +37,11 @@ module Ideas.Common.View
    , propIdempotence, propSoundness, propNormalForm
    ) where
 
-import Ideas.Common.Classes
-import Ideas.Common.Id
 import Control.Arrow
 import Control.Monad
 import Data.Maybe
+import Ideas.Common.Classes
+import Ideas.Common.Id
 import Test.QuickCheck
 import qualified Control.Category as C
 import qualified Data.Traversable as T

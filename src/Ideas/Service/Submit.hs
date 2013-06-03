@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 module Ideas.Service.Submit
-   ( submit, Result(..) 
+   ( submit, Result(..)
    ) where
 
 import Ideas.Common.Library
@@ -52,7 +52,7 @@ instance Typed a (Result a) where
       f (Right (Right (Left (rs, s)))) = Ok rs s
       f (Right (Right (Right (Left (rs, s))))) = Detour rs s
       f (Right (Right (Right (Right s)))) = Unknown s
-    
+
       g (Buggy rs)      = Left rs
       g (NotEquivalent) = Right (Left ())
       g (Ok rs s)       = Right (Right (Left (rs, s)))

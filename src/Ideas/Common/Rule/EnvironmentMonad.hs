@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -22,11 +22,11 @@ module Ideas.Common.Rule.EnvironmentMonad
    , envMonadRefs, envMonadFunctionRefs
    ) where
 
-import Ideas.Common.Environment
-import Ideas.Common.Utils
+import Control.Monad.State
 import Data.Maybe
 import Data.Typeable
-import Control.Monad.State
+import Ideas.Common.Environment
+import Ideas.Common.Utils
 import System.IO.Unsafe
 import qualified Control.Exception as C
 
@@ -35,7 +35,7 @@ import qualified Control.Exception as C
 
 infix 2 :=, :~, :?
 
-data EnvMonad a where 
+data EnvMonad a where
    -- Monad operations
    Return :: a -> EnvMonad a
    Bind   :: EnvMonad a -> (a -> EnvMonad b) -> EnvMonad b
@@ -99,7 +99,7 @@ envMonadRefs = unsafePerformIO . safeIO . envMonadRefsIO
 
 envMonadFunctionRefs :: (a -> EnvMonad b) -> [Some Ref]
 envMonadFunctionRefs = unsafePerformIO . safeIO . envMonadFunctionRefsIO
-   
+
 envMonadRefsIO :: EnvMonad a -> IO [Some Ref]
 envMonadRefsIO monad =
    case monad of
@@ -115,6 +115,6 @@ envMonadRefsIO monad =
 
 envMonadFunctionRefsIO :: (a -> EnvMonad b) -> IO [Some Ref]
 envMonadFunctionRefsIO = safeIO . envMonadRefsIO . ($ error "catch me")
-   
+
 safeIO :: IO [a] -> IO [a]
 safeIO m = m `C.catch` \(C.SomeException _) -> return []

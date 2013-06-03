@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -13,17 +13,17 @@
 -----------------------------------------------------------------------------
 module Ideas.Encoding.ModeJSON (processJSON) where
 
-import Ideas.Common.Library hiding (exerciseId)
-import Ideas.Common.Utils (Some(..), timedSeconds)
 import Control.Monad
 import Data.Char
-import Ideas.Service.DomainReasoner
-import Ideas.Encoding.Evaluator
-import Ideas.Service.Request
-import Ideas.Encoding.DecoderJSON 
+import Ideas.Common.Library hiding (exerciseId)
+import Ideas.Common.Utils (Some(..), timedSeconds)
+import Ideas.Encoding.DecoderJSON
 import Ideas.Encoding.EncoderJSON
-import System.Random hiding (getStdGen)
+import Ideas.Encoding.Evaluator
+import Ideas.Service.DomainReasoner
+import Ideas.Service.Request
 import Ideas.Text.JSON
+import System.Random hiding (getStdGen)
 
 processJSON :: Bool -> DomainReasoner -> String -> IO (Request, String, String)
 processJSON cgiMode dr input = do
@@ -80,7 +80,7 @@ jsonRequest json = do
 myHandler :: DomainReasoner -> JSON_RPC_Handler IO
 myHandler dr fun arg = timedSeconds 5 $ do
    srv <- findService dr (newId fun)
-   Some ex <- 
+   Some ex <-
       if fun == "exerciselist"
       then return (Some emptyExercise)
       else extractExerciseId arg >>= findExercise dr
@@ -91,5 +91,5 @@ myHandler dr fun arg = timedSeconds 5 $ do
 
 jsonConverter :: Exercise a -> Evaluator a (JSONDecoder a) JSON
 jsonConverter ex = Evaluator
-   (runEncoderStateM jsonEncoder (String . prettyPrinter ex)) 
+   (runEncoderStateM jsonEncoder (String . prettyPrinter ex))
    jsonDecoder

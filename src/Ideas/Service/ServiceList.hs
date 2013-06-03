@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -15,8 +15,8 @@ import Ideas.Common.Library hiding (apply, applicable, derivation, ready)
 import Ideas.Service.BasicServices
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackText
-import Ideas.Service.State
 import Ideas.Service.ProblemDecomposition (problemDecomposition)
+import Ideas.Service.State
 import Ideas.Service.Types
 import qualified Ideas.Service.Diagnose as Diagnose
 import qualified Ideas.Service.Submit as Submit
@@ -36,9 +36,9 @@ serviceList =
    , onefirsttextS, submittextS
    , derivationtextS, feedbacktextS
    ]
-   
+
 metaServiceList :: DomainReasoner -> [Service]
-metaServiceList dr = 
+metaServiceList dr =
    [ indexS dr, servicelistS dr, serviceinfoS dr, exerciselistS dr
    , rulelistS, ruleinfoS, rulesinfoS, strategyinfoS, exerciseinfoS
    , stateinfoS, examplederivationsS
@@ -155,7 +155,7 @@ problemdecompositionS = makeService "basic.problemdecomposition"
    \binding with the MathDox system on linear algebra exercises. This is a \
    \composite service, and available for backwards compatibility." $
    problemDecomposition ::: typed
-   
+
 ------------------------------------------------------
 -- Services with a feedback component
 
@@ -191,7 +191,7 @@ feedbacktextS = makeService "textual.feedbacktext"
 -- Reflective services
 
 indexS :: DomainReasoner -> Service
-indexS dr = makeService "meta.index" 
+indexS dr = makeService "meta.index"
    "Index of the domain reasoner" $
    dr ::: typed
 

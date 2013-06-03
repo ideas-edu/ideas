@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -19,12 +19,12 @@ module Ideas.Service.FeedbackScript.Run
    , eval
    ) where
 
-import Ideas.Common.Library hiding (ready, Environment)
-import Ideas.Common.Strategy.Abstract (LabelInfo)
 import Control.Monad
 import Data.List
 import Data.Maybe
 import Data.Monoid
+import Ideas.Common.Library hiding (ready, Environment)
+import Ideas.Common.Strategy.Abstract (LabelInfo)
 import Ideas.Service.BasicServices
 import Ideas.Service.Diagnose
 import Ideas.Service.FeedbackScript.Syntax
@@ -137,7 +137,7 @@ feedbackHint feedbackId env script =
 
 feedbackHints :: Id -> [((Rule (Context a), b, c), State a)] -> State a -> Script -> [Text]
 feedbackHints feedbackId nexts state script =
-   map (\env -> fromMaybe (defaultHint env script) $ 
+   map (\env -> fromMaybe (defaultHint env script) $
      make feedbackId env script) envs
   where
     envs = map (newEnvironmentFor state . Just) nexts

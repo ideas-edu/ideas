@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS -fno-warn-orphans #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -32,15 +32,15 @@ module Ideas.Common.Rewriting.Term
    , metaVars, metaVarSet, hasMetaVar, nextMetaVar
    ) where
 
+import Control.Monad
+import Data.Data
+import Data.Function
+import Data.Maybe
 import Ideas.Common.Id
 import Ideas.Common.Utils (ShowString(..))
 import Ideas.Common.Utils.QuickCheck
 import Ideas.Common.Utils.Uniplate
 import Ideas.Common.View
-import Control.Monad
-import Data.Data
-import Data.Function
-import Data.Maybe
 import qualified Data.IntSet as IS
 import qualified Data.Set as S
 
@@ -57,7 +57,7 @@ instance Ord Symbol where
 
 instance Show Symbol where
    show = showId
-   
+
 instance Read Symbol where
    readsPrec n = map f . readsPrec n
     where

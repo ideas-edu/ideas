@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -16,15 +16,15 @@ module Ideas.Encoding.DecoderJSON
    ( JSONDecoder, JSONDecoderState(..), jsonDecoder
    ) where
 
+import Control.Monad
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (readM)
-import Control.Monad
 import Ideas.Encoding.Evaluator
-import Ideas.Service.State
 import Ideas.Service.FeedbackScript.Syntax (Script)
+import Ideas.Service.State
 import Ideas.Service.Types hiding (String)
-import System.Random hiding (getStdGen)
 import Ideas.Text.JSON
+import System.Random hiding (getStdGen)
 import qualified Ideas.Service.Types as Tp
 
 type JSONDecoder a = EncoderState (JSONDecoderState a) JSON
@@ -44,7 +44,7 @@ jsonDecoder tp = encoderFor $ \json ->
 decodeType :: Type a t -> EncoderState (JSONDecoderState a) [JSON] (t, [JSON])
 decodeType tp =
    case tp of
-      Tag _ t -> decodeType t         
+      Tag _ t -> decodeType t
       Iso p t -> change (from p) (decodeType t)
       Pair t1 t2 -> do
          (a, xs) <- decodeType t1
@@ -56,7 +56,7 @@ decodeType tp =
       Unit         -> result ()
       Const StdGen -> withState getStdGen >>= result
       Const Script -> withState getScript >>= result
-      Const t      -> encoderFor $ \xs -> 
+      Const t      -> encoderFor $ \xs ->
                          case xs of
                             hd:tl -> do a <- decodeConst t // hd
                                         return (a, tl)
@@ -81,21 +81,21 @@ decodeConst tp =
 
 decodeRule :: JSONDecoder a (Rule (Context a))
 decodeRule = do
-   ex <- withState getExercise 
-   encoderFor $ \json -> 
+   ex <- withState getExercise
+   encoderFor $ \json ->
       case json of
          String s -> getRule ex (newId s)
          _        -> fail "expecting a string for rule"
 
 decodeLocation :: JSONDecoder a Location
-decodeLocation = encoderFor $ \json -> 
+decodeLocation = encoderFor $ \json ->
    case json of
       String s -> liftM toLocation (readM s)
       _        -> fail "expecting a string for a location"
 
 decodeState :: JSONDecoder a (State a)
 decodeState = do
-   ex <- withState getExercise 
+   ex <- withState getExercise
    encoderFor $ \json ->
       case json of
          Array [a] -> decodeState // a
@@ -105,19 +105,19 @@ decodeState = do
             env  <- decodeEnvironment // jsonContext
             return $ makeState ex ps (makeContext ex env a)
          _ -> fail $ "invalid state" ++ show json
- 
+
 decodePrefixes :: JSONDecoder a [Prefix (Context a)]
 decodePrefixes = do
    ex <- withState getExercise
-   encoderFor $ \json -> 
+   encoderFor $ \json ->
       case json of
          String p -> forM (deintercalate p) $ do
                         (readM >>= liftM (`makePrefix` strategy ex))
          _ -> fail "invalid prefixes"
 
 decodeEnvironment :: JSONDecoder a Environment
-decodeEnvironment = encoderFor $ \json -> 
-   case json of 
+decodeEnvironment = encoderFor $ \json ->
+   case json of
       String "" -> decodeEnvironment // Object []
       Object xs -> foldM (flip add) mempty xs
       _         -> fail $ "invalid context: " ++ show json
@@ -125,7 +125,7 @@ decodeEnvironment = encoderFor $ \json ->
    add (k, String s) = return . insertRef (makeRef k) s
    add _             = fail "invalid item in context"
 
-decodeContext :: JSONDecoder a (Context a) 
+decodeContext :: JSONDecoder a (Context a)
 decodeContext = do
    ex <- withState getExercise
    liftM (inContext ex) decodeTerm

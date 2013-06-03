@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, PatternGuards #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -16,11 +16,11 @@ module Ideas.Common.Algebra.CoField
    , (.+.), (.-.), neg, (.*.), (./.)
    ) where
 
+import Control.Arrow ((***))
 import Ideas.Common.Algebra.CoGroup
 import Ideas.Common.Algebra.Field
 import Ideas.Common.Algebra.Group
 import Ideas.Common.Algebra.SmartGroup
-import Control.Arrow ((***))
 import qualified Control.Applicative as A
 
 class CoSemiRing a where

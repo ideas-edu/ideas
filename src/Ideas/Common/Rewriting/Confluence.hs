@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -15,15 +15,15 @@ module Ideas.Common.Rewriting.Confluence
    , Config, defaultConfig, showTerm, complexity, termEquality
    ) where
 
+import Data.Maybe
 import Ideas.Common.Id
-import Ideas.Common.Traversal.Navigator
-import Ideas.Common.Traversal.Utils
 import Ideas.Common.Rewriting.RewriteRule
 import Ideas.Common.Rewriting.Substitution
 import Ideas.Common.Rewriting.Term
 import Ideas.Common.Rewriting.Unification
+import Ideas.Common.Traversal.Navigator
+import Ideas.Common.Traversal.Utils
 import Ideas.Common.Utils.Uniplate hiding (rewriteM)
-import Data.Maybe
 
 normalForm :: [RewriteRule a] -> Term -> Term
 normalForm rs = run []
@@ -64,7 +64,7 @@ superImpose r1 r2 = rec (uniplateNav lhs1)
 
     rec ca = case current ca of
                 TMeta _ -> []
-                a       -> maybe [] (return . (`subTop` ca)) (unify a lhs2) ++ 
+                a       -> maybe [] (return . (`subTop` ca)) (unify a lhs2) ++
                            concatMap rec (downs ca)
 
     subTop :: Substitution -> UniplateNavigator Term -> UniplateNavigator Term

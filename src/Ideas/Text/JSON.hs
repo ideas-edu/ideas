@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -24,11 +24,11 @@ import Control.Exception
 import Control.Monad.Error
 import Data.List (intercalate)
 import Data.Maybe
-import Test.QuickCheck
 import Ideas.Text.Parsing
-import qualified Text.ParserCombinators.Parsec.Token as P
-import qualified Ideas.Text.UTF8 as UTF8
 import System.IO.Error
+import Test.QuickCheck
+import qualified Ideas.Text.UTF8 as UTF8
+import qualified Text.ParserCombinators.Parsec.Token as P
 
 data JSON
    = Number  Number        -- integer, real, or floating point
@@ -145,7 +145,7 @@ instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
 instance InJSON IOException where
    toJSON     = toJSON . ioeGetErrorString
    fromJSON (String s) = return (userError s)
-   fromJSON _ = fail "excepting a string" 
+   fromJSON _ = fail "excepting a string"
 
 --------------------------------------------------------
 -- Parser

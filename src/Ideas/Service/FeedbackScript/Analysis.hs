@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -11,20 +11,20 @@
 -- Analysis of a feedbackscript
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.FeedbackScript.Analysis 
+module Ideas.Service.FeedbackScript.Analysis
    ( -- Analysis functions
      makeScriptFor, parseAndAnalyzeScript, analyzeScript
      -- Message type
    , Message(..)
    ) where
 
-import Ideas.Common.Library
-import Ideas.Common.Utils (Some(..))
-import Ideas.Common.Utils.Uniplate
 import Control.Monad
 import Control.Monad.Error
 import Data.Either
 import Data.List
+import Ideas.Common.Library
+import Ideas.Common.Utils (Some(..))
+import Ideas.Common.Utils.Uniplate
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Parser
 import Ideas.Service.FeedbackScript.Run
@@ -39,7 +39,7 @@ makeScriptFor dr exId = do
       [ feedbackDecl s mempty | s <- feedbackIds ] ++
       [ textForIdDecl r (makeText (description r)) | r <- nrs ] ++
       [ textForIdDecl r (makeText (description r)) | r <- brs ]
-      
+
 parseAndAnalyzeScript :: DomainReasoner -> FilePath -> IO ()
 parseAndAnalyzeScript dr file = do
    putStrLn $ "Parsing " ++ show file
@@ -80,7 +80,7 @@ analyzeScript exs script =
 
    conditions  = [ c | Guarded _ _ xs <- decls , (c, _) <- xs ]
    condRefs = [ a | c <- conditions, CondRef a <- universe c ]
-      
+
 data Message = UnknownExercise   Id
              | UnknownFeedback   Id
              | FeedbackUndefined Id

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -9,48 +9,48 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Ideas.Common.Traversal.Tests 
+module Ideas.Common.Traversal.Tests
    ( testIterator, testNavigator, tests
    , uniGen, listGen
    ) where
 
 import Control.Monad
 import Data.Maybe
-import Ideas.Common.Utils.TestSuite
-import Ideas.Common.Utils.Uniplate
 import Ideas.Common.Traversal.Iterator
 import Ideas.Common.Traversal.Navigator
 import Ideas.Common.Traversal.Utils
+import Ideas.Common.Utils.TestSuite
+import Ideas.Common.Utils.Uniplate
 import Test.QuickCheck
 
 testIterator :: (Show a, Eq a, Iterator a) => String -> Gen a -> TestSuite
 testIterator s gen = suite (s ++ " Iterator") $ do
-   
+
    suite "previous/next" $ do
       prop gen "previous; next" $  hasPrevious ==>>  previous >=> next ==! id
       prop gen "next; previous" $  hasNext     ==>>  next >=> previous ==! id
-      
+
    suite "next/final" $ do
       prop gen "isFinal"       $  isFinal . final
       prop gen "next to final" $  fixp next === final
-   
+
    suite "previous/first" $ do
       prop gen "isFirst"           $  isFirst . first
       prop gen "previous to first" $  fixp previous === first
-      
+
    suite "position" $ do
-      prop gen "pos previous" $ 
+      prop gen "pos previous" $
          hasPrevious ==>> fmap position . previous ==! pred . position
-      prop gen "pos next" $ 
+      prop gen "pos next" $
          hasNext ==>> fmap position . next ==! succ . position
-      prop gen "pos first" $ 
+      prop gen "pos first" $
          (==0) . position . first
       prop gen "pos final" $
          position . final === position . fixp next
-      
+
 testNavigator :: (Show a, Eq a, Navigator a) => String -> Gen a -> TestSuite
-testNavigator s gen = suite (s ++ " Navigator") $ do       
-   
+testNavigator s gen = suite (s ++ " Navigator") $ do
+
    suite "up/down" $ do
       prop gen "down; up"     $  hasDown ==>>      down >=> up ==! id
       prop gen "up; down"     $  hasUp   ==>>      up >=> down ==! leftMost
@@ -59,29 +59,29 @@ testNavigator s gen = suite (s ++ " Navigator") $ do
    suite "left/right" $ do
       prop gen "right; left" $  hasRight ==>>  right >=> left ==! id
       prop gen "left; right" $  hasLeft  ==>>  left >=> right ==! id
-   
+
    suite "up/left+right" $ do
       prop gen "left; up"  $  hasLeft  ==>>   left >=> up === up
       prop gen "right; up" $  hasRight ==>>  right >=> up === up
-   
+
    suite "down/downLast" $ do
       prop gen "down; rightMost"       $  liftM rightMost . down === downLast
       prop gen "downLast; leftMost"    $  liftM leftMost . downLast === down
       prop gen "down is leftMost"      $  isNothing . (down >=> left)
       prop gen "downLast is rightMost" $  isNothing . (downLast >=> right)
-   
+
    suite "location" $ do
-      prop gen "loc up" $ hasUp    ==>> 
+      prop gen "loc up" $ hasUp    ==>>
          fmap locationList . up ==! init . locationList
-      prop gen "loc down" $ hasDown  ==>> 
+      prop gen "loc down" $ hasDown  ==>>
          fmap locationList . down ==! (++[0]) . locationList
-      prop gen "loc downLast" $ hasDown  ==>> 
-         fmap locationList . downLast ==! (\a -> locationList a ++ [arity a-1])  
-      prop gen "loc left" $ hasLeft  ==>> 
+      prop gen "loc downLast" $ hasDown  ==>>
+         fmap locationList . downLast ==! (\a -> locationList a ++ [arity a-1])
+      prop gen "loc left" $ hasLeft  ==>>
          fmap locationList . left ==! changeLast pred . locationList
-      prop gen "loc right" $ hasRight ==>> 
+      prop gen "loc right" $ hasRight ==>>
          fmap locationList . right ==! changeLast succ . locationList
-      prop gen "childnr" $ 
+      prop gen "childnr" $
          childnr === fromMaybe 0 . listToMaybe . reverse . locationList
 
 locationList :: Navigator a => a -> [Int]
@@ -91,7 +91,7 @@ locationList = fromLocation . location
 -- tests
 
 tests :: TestSuite
-tests = do 
+tests = do
 
    suite "Iterators" $ do
       testIterator "List" listGen
@@ -101,7 +101,7 @@ tests = do
       testIterator "PostOrder"  $ liftM makePostOrder  uniGen
       testIterator "Horizontal" $ liftM makeHorizontal uniGen
       testIterator "LevelOrder" $ liftM makeLevelOrder uniGen
-      
+
    suite "Navigators" $ do
       testNavigator "Uniplate" uniGen
       testNavigator "Mirror" $ liftM makeMirror uniGen
@@ -111,7 +111,7 @@ _go = runTestSuiteResult tests >>= print
 
 -------------------------------------------------------------------------
 -- test utils
-   
+
 infixr 0 ===, ==!
 
 (===) :: Eq b => (a -> b) -> (a -> b) -> a -> Bool
@@ -146,14 +146,6 @@ instance Arbitrary a => Arbitrary (T a) where
          i  <- if n==0 then return 0 else choose (0, 5)
          xs <- vectorOf i (genT (n `div` 2))
          return (T a xs)
-
-instance (Arbitrary a, Uniplate a) => Arbitrary (UniplateNavigator a) where
-   arbitrary = liftM focus arbitrary >>= genNav
-    where
-      genNav a = 
-         case map genNav (downs a) of
-            [] -> return a
-            xs -> frequency [(1, return a), (4, oneof xs)]
 
 listGen :: Gen (ListIterator Int)
 listGen = arbitrary

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -15,15 +15,15 @@ module Ideas.Main.Documentation (makeDocumentation) where
 
 import Control.Monad
 import Ideas.Common.Library
-import System.Directory
-import System.FilePath (takeDirectory)
 import Ideas.Common.Utils
 import Ideas.Encoding.EncoderHTML
-import Ideas.Service.DomainReasoner
 import Ideas.Encoding.LinkManager
 import Ideas.Service.BasicServices
+import Ideas.Service.DomainReasoner
 import Ideas.Service.Types
 import Ideas.Text.HTML
+import System.Directory
+import System.FilePath (takeDirectory)
 
 makeDocumentation :: DomainReasoner -> String -> IO ()
 makeDocumentation dr dir = do
@@ -32,7 +32,7 @@ makeDocumentation dr dir = do
    makeIndex urlForExercises (exercises dr ::: typed)
    makeIndex urlForServices  (services dr ::: typed)
    putStrLn "Generating service pages"
-   forM_ (services dr) $ \srv -> 
+   forM_ (services dr) $ \srv ->
       makeIndex (`urlForService` srv) (srv ::: typed)
    putStrLn "Generating exercise pages"
    forM_ (exercises dr) $ \(Some ex) -> do
@@ -47,9 +47,9 @@ makeDocumentation dr dir = do
    lm = staticLinks
    makeIndex f = make emptyExercise (f lm)
    makeEx ex f = make ex (f lm ex)
-   make ex url tv = safeWrite (dir </> url) $ 
+   make ex url tv = safeWrite (dir </> url) $
       showHTML $ htmlEncoder (linksUp (pathLevel $ url) lm) dr ex tv
-  
+
 safeWrite :: FilePath -> String -> IO ()
 safeWrite filename txt = do
    let dirpart = takeDirectory filename

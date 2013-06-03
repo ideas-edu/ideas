@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -20,11 +20,11 @@ module Ideas.Common.Strategy.Core
    , noLabels, substCoreVar
    ) where
 
+import Control.Applicative
 import Ideas.Common.Classes
 import Ideas.Common.Rule
 import Ideas.Common.Utils.QuickCheck
 import Ideas.Common.Utils.Uniplate
-import Control.Applicative
 import qualified Data.Foldable as F
 import qualified Data.Traversable as T
 

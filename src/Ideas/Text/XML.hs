@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -24,8 +24,8 @@ module Ideas.Text.XML
 import Data.Char
 import Data.Foldable (toList)
 import Data.Monoid
-import qualified Data.Sequence as Seq
 import Ideas.Text.XML.Interface hiding (parseXML)
+import qualified Data.Sequence as Seq
 import qualified Ideas.Text.XML.Interface as I
 
 ----------------------------------------------------------------
@@ -85,7 +85,7 @@ infix 3 .=.
 
 class Monoid a => BuildXML a where
    (.=.)     :: String -> String -> a   -- attribute
-   unescaped :: String -> a             -- parsed character data (unescaped!)            
+   unescaped :: String -> a             -- parsed character data (unescaped!)
    builder   :: Element -> a            -- (named) xml element
    tag       :: String -> a -> a        -- tag (with content)
    -- functions with a default
@@ -128,14 +128,14 @@ munless = mwhen . not
 
 escapeAttr :: String -> String
 escapeAttr = concatMap f
- where 
+ where
    f '<' = "&lt;"
    f '&' = "&amp;"
    f '"' = "&quot;"
    f c   = [c]
 
 fromBuilder :: XMLBuilder -> Maybe Element
-fromBuilder m = 
+fromBuilder m =
    case fromBS m of
       ([], [Right a]) -> Just a
       _               -> Nothing

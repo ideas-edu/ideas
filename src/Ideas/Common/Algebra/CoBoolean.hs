@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -15,12 +15,12 @@ module Ideas.Common.Algebra.CoBoolean
    , (.||.), (.&&.)
    ) where
 
+import Control.Arrow
+import Data.Maybe
 import Ideas.Common.Algebra.Boolean
 import Ideas.Common.Algebra.CoGroup
 import Ideas.Common.Algebra.Group
 import Ideas.Common.Algebra.SmartGroup
-import Control.Arrow
-import Data.Maybe
 
 class BoolValue a => CoBoolean a where
    isAnd        :: a -> Maybe (a, a)

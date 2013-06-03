@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, UndecidableInstances #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -23,19 +23,19 @@ module Ideas.Common.Strategy.Abstract
    , removed, collapsed, hidden, IsLabeled(..), noInterleaving
    ) where
 
-import Ideas.Common.Environment
+import Control.Monad
+import Data.List
 import Ideas.Common.Classes
 import Ideas.Common.DerivationTree
+import Ideas.Common.Environment
 import Ideas.Common.Id
 import Ideas.Common.Rewriting (RewriteRule)
+import Ideas.Common.Rule
 import Ideas.Common.Strategy.Core
 import Ideas.Common.Strategy.Parsing
-import Ideas.Common.Rule
 import Ideas.Common.Utils.Uniplate hiding (rewriteM)
 import Ideas.Common.View
-import Control.Monad
 import Test.QuickCheck hiding (label)
-import Data.List
 
 -----------------------------------------------------------
 --- Strategy data-type

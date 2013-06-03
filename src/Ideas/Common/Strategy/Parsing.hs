@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -18,20 +18,20 @@ module Ideas.Common.Strategy.Parsing
    , firsts, Result(..), isReady
    ) where
 
-import Ideas.Common.Environment
-import Ideas.Common.Classes
-import Ideas.Common.DerivationTree
-import Ideas.Common.Strategy.Core
-import Ideas.Common.Rule
-import Ideas.Common.Utils.Uniplate
 import Control.Arrow
 import Control.Monad
 import Data.Monoid
+import Ideas.Common.Classes
+import Ideas.Common.DerivationTree
+import Ideas.Common.Environment
+import Ideas.Common.Rule
+import Ideas.Common.Strategy.Core
+import Ideas.Common.Utils.Uniplate
 
 ----------------------------------------------------------------------
 -- Step data type
 
-data Step l a = Enter l | Exit l | RuleStep Environment (Rule a) 
+data Step l a = Enter l | Exit l | RuleStep Environment (Rule a)
    deriving (Show, Eq)
 
 -- A core expression where the symbols are steps instead of "only" rules
@@ -40,14 +40,14 @@ type StepCore l a = GCore l (Step l a)
 instance Apply (Step l) where
    applyAll (RuleStep _ r) = applyAll r
    applyAll _              = return
-   
+
 instance Minor (Step l a) where
    setMinor b (RuleStep env r) = RuleStep env (setMinor b r)
    setMinor _ step = step
-   
+
    isMinor (RuleStep _ r) = isMinor r
-   isMinor _ = True 
-   
+   isMinor _ = True
+
 ----------------------------------------------------------------------
 -- State data type
 
@@ -214,8 +214,8 @@ coreInterleave search a b = (a :!%: b) :|: (b :!%: a') :|: emptyOnly (a :*: b)
          Repeat x -> emptyOnly (coreRepeat x)
          x :|: y  -> emptyOnly x .|. emptyOnly y
          x :*: y  -> emptyOnly x .*. emptyOnly y
-         x :%: y  -> emptyOnly x .*. emptyOnly y -- no more interleaving                                                
-         x :!%: y -> emptyOnly x .*. emptyOnly y -- no more interleaving                                                
+         x :%: y  -> emptyOnly x .*. emptyOnly y -- no more interleaving
+         x :!%: y -> emptyOnly x .*. emptyOnly y -- no more interleaving
          _        -> descend emptyOnly core
 
 ----------------------------------------------------------------------

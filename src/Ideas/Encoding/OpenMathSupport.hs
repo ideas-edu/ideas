@@ -1,6 +1,6 @@
 {-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -16,16 +16,16 @@ module Ideas.Encoding.OpenMathSupport
    , toOMOBJ, fromOMOBJ
    ) where
 
-import Ideas.Common.Library
-import Ideas.Common.Utils.Uniplate
 import Control.Monad
 import Data.Char
 import Data.List
+import Ideas.Common.Library
+import Ideas.Common.Utils.Uniplate
 import Ideas.Text.OpenMath.Dictionary.Arith1
 import Ideas.Text.OpenMath.Dictionary.Fns1
 import Ideas.Text.OpenMath.Object
-import qualified Ideas.Text.OpenMath.Symbol as OM
 import qualified Ideas.Text.OpenMath.Dictionary.List1 as OM
+import qualified Ideas.Text.OpenMath.Symbol as OM
 
 -----------------------------------------------------------------------------
 -- Utility functions for conversion to/from OpenMath
@@ -47,7 +47,7 @@ toOMOBJ = rec . toTerm
    rec term =
       case term of
          TVar s    -> OMV s
-         TCon s xs 
+         TCon s xs
             | null xs   -> OMS (idToSymbol (getId s))
             | otherwise -> make (OMS (idToSymbol (getId s)):map rec xs)
          TMeta i   -> OMV ('$' : show i)
@@ -81,7 +81,7 @@ fromOMOBJ = (>>= fromTerm) . rec
    isMeta _        = Nothing
 
 noMixedFractions :: OMOBJ -> OMOBJ
-noMixedFractions = transform f 
+noMixedFractions = transform f
  where
    f (OMA [OMS s, a, b, c]) | s == mfSymbol =
       OMA [OMS plusSymbol, a, OMA [OMS divideSymbol, b, c]]

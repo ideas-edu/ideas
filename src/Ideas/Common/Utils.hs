@@ -1,6 +1,6 @@
 {-# LANGUAGE ExistentialQuantification #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -51,7 +51,7 @@ readM s = case reads s of
 
 subsets :: [a] -> [[a]]
 subsets = foldr op [[]]
- where op a list = list ++ map (a:) list
+ where op a xs = xs ++ map (a:) xs
 
 isSubsetOf :: Eq a => [a] -> [a] -> Bool
 isSubsetOf xs ys = all (`elem` ys) xs
@@ -93,7 +93,7 @@ useFixedStdGen :: IO ()
 useFixedStdGen = setStdGen (mkStdGen 280578) {- magic number -}
 
 timedSeconds :: Int -> IO a -> IO a
-timedSeconds n m = timeout (n * 10^6) m >>= 
+timedSeconds n m = timeout (n * 10^(6 :: Int)) m >>=
    maybe (fail ("Timeout after " ++ show n ++ " seconds")) return
 
 fst3 :: (a, b, c) -> a

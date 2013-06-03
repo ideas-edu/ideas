@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -9,7 +9,7 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A rule is just a transformation with some meta-information, such as a name 
+-- A rule is just a transformation with some meta-information, such as a name
 -- (which should be unique) and properties such as "buggy" or "minor". Rules
 -- can be lifted with a view using the LiftView type class.
 --
@@ -21,7 +21,7 @@ module Ideas.Common.Rule.Abstract
    , makeRule, ruleMaybe, ruleList, ruleTrans, ruleRewrite
    , buggyRule, minorRule, rewriteRule, rewriteRules
      -- * Special minor rules
-   , idRule, checkRule, emptyRule 
+   , idRule, checkRule, emptyRule
      -- * Rule properties
    , ruleSiblings, siblingOf
    , isRewriteRule, isRecognizer, doAfter
@@ -30,17 +30,17 @@ module Ideas.Common.Rule.Abstract
    , addTransRecognizer, addRecognizerEnvMonad
    ) where
 
-import Ideas.Common.Environment
+import Control.Arrow
+import Control.Monad
+import Data.Monoid
 import Ideas.Common.Classes
+import Ideas.Common.Environment
 import Ideas.Common.Id
 import Ideas.Common.Rewriting
 import Ideas.Common.Rule.EnvironmentMonad
-import Ideas.Common.Rule.Transformation
 import Ideas.Common.Rule.Recognizer
+import Ideas.Common.Rule.Transformation
 import Ideas.Common.View
-import Data.Monoid
-import Control.Arrow
-import Control.Monad
 import Test.QuickCheck
 
 -----------------------------------------------------------
@@ -130,10 +130,10 @@ rewriteRule :: (IsId n, RuleBuilder f a) => n -> f -> Rule a
 rewriteRule n = rewriteRules n . return
 
 rewriteRules :: (IsId n, RuleBuilder f a) => n -> [f] -> Rule a
-rewriteRules n = 
+rewriteRules n =
    let a = newId n
    in ruleTrans a . mconcat . map (transRewrite . makeRewriteRule a)
-   
+
 buggyRule :: (IsId n, MakeTrans f) => n -> (a -> f a) -> Rule a
 buggyRule n = buggy . makeRule n
 
@@ -174,8 +174,8 @@ doAfter f r = r {getTrans = getTrans r >>^ f }
 
 -----------------------------------------------------------
 --- Recognizer
-   
-addRecognizer :: Recognizer a -> Rule a -> Rule a 
+
+addRecognizer :: Recognizer a -> Rule a -> Rule a
 addRecognizer a r = r {getRecognizer = a `mappend` getRecognizer r}
 
 addRecognizerBool :: (a -> a -> Bool) -> Rule a -> Rule a
@@ -185,7 +185,7 @@ addRecognizerEnvMonad :: (a -> a -> EnvMonad ()) -> Rule a -> Rule a
 addRecognizerEnvMonad = addRecognizer . makeRecognizerEnvMonad
 
 addTransRecognizer :: (a -> a -> Bool) -> Rule a -> Rule a
-addTransRecognizer eq r = flip addRecognizer r $ 
+addTransRecognizer eq r = flip addRecognizer r $
    let t = first (transformation r) >>> transList (uncurry p)
-       p x y = [ () | eq x y ] 
+       p x y = [ () | eq x y ]
    in makeRecognizerTrans t

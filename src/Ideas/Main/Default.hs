@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -14,28 +14,28 @@
 -----------------------------------------------------------------------------
 module Ideas.Main.Default (defaultMain, newDomainReasoner) where
 
-import Ideas.Common.Utils (useFixedStdGen)
+import Control.Exception
 import Control.Monad
-import Ideas.Main.BlackBoxTests
-import Data.Maybe
 import Data.IORef
+import Data.Maybe
 import Data.Time
 import Ideas.Common.Id
+import Ideas.Common.Utils (useFixedStdGen)
 import Ideas.Common.Utils.TestSuite
-import Ideas.Main.LoggingDatabase
-import Ideas.Main.Options hiding (fullVersion)
-import qualified Ideas.Main.Options as Options
-import Network.CGI
-import Ideas.Service.DomainReasoner
-import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
+import Ideas.Main.BlackBoxTests
 import Ideas.Main.Documentation
+import Ideas.Main.LoggingDatabase
+import Ideas.Main.Options hiding (fullVersion)
+import Ideas.Service.DomainReasoner
+import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.Request
+import Network.CGI
+import Prelude hiding (catch)
 import System.IO
 import System.IO.Error (ioeGetErrorString)
-import Control.Exception
-import Prelude hiding (catch)
+import qualified Ideas.Main.Options as Options
 
 defaultMain :: DomainReasoner -> IO ()
 defaultMain dr = do
@@ -58,14 +58,14 @@ defaultCGI dr startTime = do
                    Just s  -> return s
       (req, txt, ctp) <- liftIO $ process dr (Just cgiBin) input
       -- save logging action for later
-      unless (encoding req == Just HTMLEncoding) $ 
+      unless (encoding req == Just HTMLEncoding) $
          liftIO $ writeIORef logRef $
             logMessage req input txt addr startTime
       setHeader "Content-type" ctp
       -- Cross-Origin Resource Sharing (CORS) prevents browser warnings
       -- about cross-site scripting
       setHeader "Access-Control-Allow-Origin" "*"
-      output txt 
+      output txt
    -- log request to database
    join (readIORef logRef)
    -- if something goes wrong
@@ -73,7 +73,7 @@ defaultCGI dr startTime = do
    setHeader "Content-type" "text/plain"
    setHeader "Access-Control-Allow-Origin" "*"
    output ("Invalid request\n" ++ ioeGetErrorString ioe)
-   
+
 -- Invoked from command-line with flags
 defaultCommandLine :: DomainReasoner -> [Flag] -> IO ()
 defaultCommandLine dr flags = do
@@ -97,7 +97,7 @@ defaultCommandLine dr flags = do
             result <- runTestSuiteResult tests
             printSummary result
          -- generate documentation pages
-         MakePages dir -> 
+         MakePages dir ->
             makeDocumentation dr dir
          -- feedback scripts
          MakeScriptFor s    -> makeScriptFor dr s
@@ -109,10 +109,10 @@ process dr cgiBin input = do
       Just XML  -> processXML dr cgiBin input
       Just JSON -> processJSON (isJust cgiBin) dr input
       _ -> fail "Invalid input"
-        
-newDomainReasoner :: IsId a => a -> DomainReasoner      
-newDomainReasoner a = mempty 
-   { reasonerId  = newId a 
+
+newDomainReasoner :: IsId a => a -> DomainReasoner
+newDomainReasoner a = mempty
+   { reasonerId  = newId a
    , version     = shortVersion
    , fullVersion = Options.fullVersion
    }

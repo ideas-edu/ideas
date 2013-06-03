@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -119,11 +119,11 @@ class Buggy a where
    isBuggy  :: a -> Bool
    -- default definition
    buggy = setBuggy True
-   
+
 class Minor a where
    minor    :: a -> a
    setMinor :: Bool -> a -> a
-   isMinor  :: a -> Bool 
+   isMinor  :: a -> Bool
    isMajor  :: a -> Bool
    -- default definition
    minor   = setMinor True

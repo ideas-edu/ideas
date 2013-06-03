@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -62,7 +62,6 @@ normalize doc = toElement (D.root doc)
    refToString :: D.Reference -> String
    refToString (D.CharRef i)   = [chr i]
    refToString (D.EntityRef s) = maybe "" return (lookup s general)
-      
 
    refToContent :: D.Reference -> Content
    refToContent (D.CharRef i)   = [Left [chr i]]

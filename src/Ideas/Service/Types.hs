@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs, Rank2Types, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, UndecidableInstances #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -19,13 +19,13 @@ module Ideas.Service.Types
    , Equal(..), ShowF(..), equalM
    ) where
 
-import Ideas.Common.Library
-import Ideas.Common.Utils
 import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Tree
+import Ideas.Common.Library
+import Ideas.Common.Utils
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
 import System.Random
@@ -85,11 +85,11 @@ instance Equal (Const a) where
    equal Id          Id          = Just id
    equal Location    Location    = Just id
    equal Script      Script      = Just id
-   equal StratCfg    StratCfg    = Just id     
-   equal Environment Environment = Just id   
+   equal StratCfg    StratCfg    = Just id
+   equal Environment Environment = Just id
    equal SomeExercise SomeExercise = Just id
-   equal Text        Text        = Just id     
-   equal StdGen      StdGen      = Just id     
+   equal Text        Text        = Just id
+   equal StdGen      StdGen      = Just id
    equal _           _           = Nothing
 
 infixr 5 :|:
@@ -159,7 +159,7 @@ instance ShowF f => Show (TypeRep f t) where
    show (Const c)      = showF c
 
 instance Show (TypedValue f) => Show (TypedValue (TypeRep f)) where
-   show (val ::: tp) = 
+   show (val ::: tp) =
       case tp of
          Iso iso t  -> show (to iso val ::: t)
          _ :-> _    -> "<<function>>"
@@ -214,7 +214,7 @@ instance ShowF (Const a) where
    showF StdGen       = "StdGen"
    showF SomeExercise = "Exercise"
    showF Bool         = "Bool"
-   showF Int          = "Int" 
+   showF Int          = "Int"
    showF String       = "String"
 
 showTuple :: ShowF f => TypeRep f t -> String
@@ -224,7 +224,7 @@ showTuple tp = "(" ++ intercalate ", " (collect tp) ++ ")"
    collect (Pair t1 t2) = collect t1 ++ collect t2
    collect (Iso _ t)    = collect t
    collect t            = [showF t]
-   
+
 ---------------------------------------------------------------
 
 class Typed a t | t -> a where
@@ -237,7 +237,7 @@ class Typed a t | t -> a where
 
 instance Typed a Int where
    typed = Const Int
-   
+
 instance Typed a Bool where
    typed = Const Bool
 
@@ -265,7 +265,7 @@ instance Typed a Environment where
 
 instance Typed a StdGen where
    typed = Const StdGen
-   
+
 instance Typed a Difficulty where
    typed = Tag "Difficulty" (Iso (f <-> show) typed)
     where
@@ -279,34 +279,34 @@ instance Typed a (State a) where
 
 instance Typed a (Exercise a) where
    typed = Const Exercise
-   
+
 instance Typed a (Context a) where
    typed = Const Context
-   
+
 instance Typed a StrategyConfiguration where
    typed = Const StratCfg
-   
+
 instance Typed a Script where
    typed = Const Script
 
 instance Typed a Text where
    typed = Const Text
-   
+
 instance (Typed a t1, Typed a t2) => Typed a (t1, t2) where
    typed = Pair typed typed
-   
+
 instance (Typed a t1, Typed a t2, Typed a t3) => Typed a (t1, t2, t3) where
    typed = Iso (f <-> g) (Pair typed (Pair typed typed))
     where
       f (a, (b, c)) = (a, b, c)
       g (a, b, c)   = (a, (b, c))
-   
+
 instance (Typed a t1, Typed a t2, Typed a t3, Typed a t4) => Typed a (t1, t2, t3, t4) where
    typed = Iso (f <-> g) (Pair typed (Pair typed (Pair typed typed)))
     where
       f (a, (b, (c, d))) = (a, b, c, d)
       g (a, b, c, d)     = (a, (b, (c, d)))
-   
+
 instance (Typed a t1, Typed a t2) => Typed a (t1 -> t2) where
    typed = typed :-> typed
 
@@ -320,19 +320,19 @@ instance (Typed a t1, Typed a t2) => Typed a (Either t1 t2) where
    typed = typed :|: typed
 
 instance (Typed a t1, Typed a t2) => Typed a (Derivation t1 t2) where
-   typed = Tag "Derivation" $ Iso (f <-> g) typed 
+   typed = Tag "Derivation" $ Iso (f <-> g) typed
     where
       f (a, xs) = foldl extend (emptyDerivation a) xs
       g d = (firstTerm d, [ (s, a) | (_, s, a) <- triples d ])
 
 instance Typed a t => Typed a [t] where
    typed = typedList
-   
+
 instance Typed a t => Typed a (Tree t) where
    typed = Tag "Tree" $ Iso (f <-> g) typed
     where
       f = uncurry Node
       g (Node a xs) = (a, xs)
-   
+
 instance Typed a (Some Exercise) where
    typed = Const SomeExercise

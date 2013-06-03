@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -8,9 +8,9 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- This module defines transformations. Given a term, a transformation returns 
--- a list of results (often a singleton list or the empty list). A 
--- transformation can be parameterized with one or more Bindables. 
+-- This module defines transformations. Given a term, a transformation returns
+-- a list of results (often a singleton list or the empty list). A
+-- transformation can be parameterized with one or more Bindables.
 -- Transformations rules can be lifted to work on more complex domains with
 -- the LiftView type class.
 --
@@ -21,13 +21,13 @@ module Ideas.Common.Rule.Parameter
    , parameter1, parameter2, parameter3
    ) where
 
-import Ideas.Common.Environment
+import Control.Arrow
 import Ideas.Common.Context
+import Ideas.Common.Environment
 import Ideas.Common.Id
 import Ideas.Common.Rule.EnvironmentMonad
 import Ideas.Common.Rule.Transformation
 import Ideas.Common.View
-import Control.Arrow
 
 -----------------------------------------------------------
 --- Bindables
@@ -44,15 +44,15 @@ supplyContextParameters f g = transLiftContextIn $
 parameter1 :: (IsId n1, Reference a) => n1 -> (a -> Transformation b) -> ParamTrans a b
 parameter1 n1 f = first (bindValue n1 >>> arr f) >>> app
 
-parameter2 :: (IsId n1, IsId n2, Reference a, Reference b) 
+parameter2 :: (IsId n1, IsId n2, Reference a, Reference b)
            => n1 -> n2 -> (a -> b -> Transformation c) -> ParamTrans (a, b) c
 parameter2 n1 n2 f = first (bindValue n1 *** bindValue n2 >>> arr (uncurry f)) >>> app
 
 parameter3 :: (IsId n1, IsId n2, IsId n3, Reference a, Reference b, Reference c)
            => n1 -> n2 -> n3 -> (a -> b -> c -> Transformation d) -> ParamTrans (a, b, c) d
-parameter3 n1 n2 n3 f = first ((\(a, b, c) -> (a, (b, c))) ^>> 
+parameter3 n1 n2 n3 f = first ((\(a, b, c) -> (a, (b, c))) ^>>
    bindValue n1 *** (bindValue n2 *** bindValue n3) >>^
-   (\(a, (b, c)) -> f a b c)) 
+   (\(a, (b, c)) -> f a b c))
            >>> app
 
 bindValue :: (IsId n, Reference a) => n -> Trans a a

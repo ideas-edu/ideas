@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -17,13 +17,13 @@ module Ideas.Common.Strategy.Prefix
    , prefixToSteps, prefixTree, stepsToRules, lastStepInPrefix, activeLabels
    ) where
 
-import Ideas.Common.DerivationTree
-import Ideas.Common.Strategy.Abstract
-import Ideas.Common.Strategy.Parsing
-import Ideas.Common.Rule
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Ideas.Common.DerivationTree
+import Ideas.Common.Rule
+import Ideas.Common.Strategy.Abstract
+import Ideas.Common.Strategy.Parsing
 
 -----------------------------------------------------------
 --- Prefixes
@@ -77,9 +77,8 @@ stepsToRules xs = [ r | RuleStep _ r <- xs ]
 lastStepInPrefix :: Prefix a -> Maybe (Step LabelInfo a)
 lastStepInPrefix (P t) = listToMaybe (trace t)
 
--- | Calculate the active labels                                                                                        
+-- | Calculate the active labels
 activeLabels :: Prefix a -> [LabelInfo]
 activeLabels p = nub [l | Enter l <- steps] \\ [l | Exit l <- steps]
    where
       steps = prefixToSteps p
-

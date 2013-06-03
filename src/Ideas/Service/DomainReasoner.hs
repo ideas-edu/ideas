@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -16,16 +16,16 @@ module Ideas.Service.DomainReasoner
    , findExercise, findService
    , defaultScript -- , readScript
    ) where
-   
+
+import Data.List
+import Data.Maybe
+import Data.Monoid
+import Data.Ord
+import Ideas.Common.Library
 import Ideas.Common.Utils
 import Ideas.Common.Utils.TestSuite
 import Ideas.Service.FeedbackScript.Parser
 import Ideas.Service.Types
-import Ideas.Common.Library
-import Data.Ord
-import Data.List
-import Data.Maybe
-import Data.Monoid
 
 -----------------------------------------------------------------------
 -- Domain Reasoner data type
@@ -43,14 +43,14 @@ data DomainReasoner = DR
    }
 
 instance Monoid DomainReasoner where
-   mempty = DR mempty mempty mempty mempty mempty mempty mempty mempty mempty 
+   mempty = DR mempty mempty mempty mempty mempty mempty mempty mempty mempty
    mappend c1 c2 = DR
       { reasonerId  = reasonerId c1  <> reasonerId c2
       , exercises   = exercises c1   <> exercises c2
       , services    = services c1    <> services c2
-      , views       = views c1       <> views c2 
+      , views       = views c1       <> views c2
       , aliases     = aliases c1     <> aliases c2
-      , scripts     = scripts c1     <> scripts c2 
+      , scripts     = scripts c1     <> scripts c2
       , testSuite   = testSuite c1   <> testSuite c2
       , version     = version c1     <> version c2
       , fullVersion = fullVersion c1 <> fullVersion c2
@@ -92,18 +92,18 @@ findExercise dr i =
    realName = fromMaybe i (lookup i (aliases dr))
 
 findService :: Monad m => DomainReasoner -> Id -> m Service
-findService dr a 
+findService dr a
    | null (qualifiers a) = -- search for unqualified string
-        findWith (\s -> unqualified s == unqualified a) 
-   | otherwise = 
+        findWith (\s -> unqualified s == unqualified a)
+   | otherwise =
         findWith (\s -> getId s == a)
  where
    findWith p  = single $ filter p $ services dr
- 
+
    single []   = fail $ "No service " ++ showId a
    single [hd] = return hd
    single _    = fail $ "Ambiguous service " ++ showId a
 
 defaultScript :: DomainReasoner -> Id -> IO Script
-defaultScript dr = 
+defaultScript dr =
    maybe (return mempty) parseScriptSafe . (`lookup` scripts dr)

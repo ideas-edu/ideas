@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs, RankNTypes #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -26,16 +26,15 @@ module Ideas.Common.Context
    , currentTerm, changeTerm, replaceInContext, currentInContext, changeInContext
    ) where
 
-import Ideas.Common.Environment
-import Ideas.Common.Id
-import Ideas.Common.Traversal.Utils
-import Ideas.Common.Traversal.Navigator
-import Ideas.Common.Rewriting
-import Ideas.Common.Utils.Uniplate
-import Ideas.Common.View hiding (left, right)
 import Control.Monad
 import Data.Maybe
-
+import Ideas.Common.Environment
+import Ideas.Common.Id
+import Ideas.Common.Rewriting
+import Ideas.Common.Traversal.Navigator
+import Ideas.Common.Traversal.Utils
+import Ideas.Common.Utils.Uniplate
+import Ideas.Common.View hiding (left, right)
 
 ----------------------------------------------------------
 -- Abstract data type
@@ -64,7 +63,7 @@ instance Show a => Show (Context a) where
    show c@(C env a) =
       let rest | noBindings env = ""
                | otherwise      = "  {" ++ show env ++ "}"
-      in maybe "??" show (currentNavigator a) ++ 
+      in maybe "??" show (currentNavigator a) ++
          " @ " ++ show (location c) ++ rest
 
 instance Navigator (Context a) where
@@ -99,8 +98,8 @@ data ContextNavigator a where
    TermNav :: IsTerm a   => UniplateNavigator Term -> ContextNavigator a
    Simple  :: Uniplate a => UniplateNavigator a -> ContextNavigator a
    NoNav   :: a -> ContextNavigator a
-   
-liftCN :: Monad m => (forall b . Navigator b => b -> m b) 
+
+liftCN :: Monad m => (forall b . Navigator b => b -> m b)
                   -> Context a -> m (Context a)
 liftCN f (C env (TermNav a)) = liftM (C env . TermNav) (f a)
 liftCN f (C env (Simple a))  = liftM (C env . Simple)  (f a)
@@ -145,7 +144,7 @@ contextView = "views.contextView" @> makeView f g
 -- | Lift a rule to operate on a term in a context
 liftToContext :: LiftView f => f a -> f (Context a)
 liftToContext = liftViewIn contextView
-   
+
 -- | Apply a function at top-level. Afterwards, try to return the focus
 -- to the old position
 applyTop :: (a -> a) -> Context a -> Context a
@@ -160,7 +159,7 @@ useC = liftViewIn (makeView f g)
  where
    f old@(C env a) = castT a >>= \b -> return (C env b, old)
    g (C env a, old) = fromMaybe old (liftM (C env) (castT a))
-   
+
 currentTerm :: Context a -> Maybe Term
 currentTerm = currentT . getNavigator
 
@@ -177,4 +176,3 @@ changeInContext f (C env a) = C env (changeNavigator f a)
 
 replaceInContext :: a -> Context a -> Context a
 replaceInContext = changeInContext . const
-

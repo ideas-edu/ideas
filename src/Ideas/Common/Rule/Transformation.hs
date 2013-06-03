@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs, Rank2Types #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -9,7 +9,7 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- This module defines transformations. Given a term, a transformation returns 
+-- This module defines transformations. Given a term, a transformation returns
 -- a list of results (often a singleton list or the empty list).
 --
 -----------------------------------------------------------------------------
@@ -30,18 +30,17 @@ module Ideas.Common.Rule.Transformation
    , getRewriteRules, isZeroTrans
    ) where
 
-import Ideas.Common.Environment
-import Ideas.Common.Classes
-import Ideas.Common.Context
-import Ideas.Common.Id
-import Ideas.Common.Rewriting
-import Ideas.Common.Utils
-import Ideas.Common.Rule.EnvironmentMonad
-import Ideas.Common.View
 import Control.Arrow
 import Data.Maybe
 import Data.Monoid
 import Data.Typeable
+import Ideas.Common.Classes
+import Ideas.Common.Context
+import Ideas.Common.Environment
+import Ideas.Common.Rewriting
+import Ideas.Common.Rule.EnvironmentMonad
+import Ideas.Common.Utils
+import Ideas.Common.View
 import qualified Control.Category as C
 
 -----------------------------------------------------------
@@ -60,22 +59,22 @@ data Trans a b where
    Apply    :: Trans (Trans a b, a) b
    Append   :: Trans a b -> Trans a b -> Trans a b
 
-instance C.Category Trans where 
+instance C.Category Trans where
    id  = arr id
    (.) = flip (:>>:)
-   
+
 instance Arrow Trans where
    arr      = transPure
    (***)    = (:**:)
    first  f = f :**: identity
    second f = identity :**: f
-   
+
 instance ArrowZero Trans where
    zeroArrow = Zero
-   
+
 instance ArrowPlus Trans where
    (<+>) = Append
-   
+
 instance ArrowChoice Trans where
    (+++)   = (:++:)
    left f  = f :++: identity
@@ -100,10 +99,10 @@ class MakeTrans f where
 
 instance MakeTrans Maybe where
    makeTrans = transMaybe
-   
+
 instance MakeTrans [] where
    makeTrans = transList
-   
+
 instance MakeTrans EnvMonad where
    makeTrans = transEnvMonad
 
@@ -152,7 +151,7 @@ makeTransLiftContext = transLiftContext . makeTrans
 
 -- | Overloaded variant of @transLiftContext@; ignores result
 makeTransLiftContext_ :: MakeTrans f => (a -> f ()) -> Transformation (Context a)
-makeTransLiftContext_ f = transLiftContext (identity &&& makeTrans f >>> arr fst) 
+makeTransLiftContext_ f = transLiftContext (identity &&& makeTrans f >>> arr fst)
 
 -----------------------------------------------------------
 --- Using transformations
@@ -161,7 +160,7 @@ transApply :: Trans a b -> a -> [(b, Environment)]
 transApply = transApplyWith mempty
 
 transApplyWith :: Environment -> Trans a b -> a -> [(b, Environment)]
-transApplyWith env trans a = 
+transApplyWith env trans a =
    case trans of
       Zero       -> []
       List f     -> [ (b, env) | b <- f a ]
@@ -170,7 +169,7 @@ transApplyWith env trans a =
       Ref ref    -> case ref ? env of
                        Just b  -> [(b, env)]
                        Nothing -> [(a, insertRef ref a env)]
-      UseEnv f   -> do (b, envb) <- transApplyWith (snd a) f (fst a) 
+      UseEnv f   -> do (b, envb) <- transApplyWith (snd a) f (fst a)
                        return ((b, envb), env)
       f :>>: g   -> do (b, env1) <- transApplyWith env  f a
                        (c, env2) <- transApplyWith env1 g b
@@ -190,9 +189,9 @@ getRewriteRules trans =
    case trans of
       Rewrite r -> [Some r]
       _         -> descendTrans getRewriteRules trans
-      
+
 instance HasRefs (Trans a b) where
-   allRefs trans = 
+   allRefs trans =
       case trans of
          Ref r      -> [Some r]
          EnvMonad f -> envMonadFunctionRefs f
@@ -202,7 +201,7 @@ isZeroTrans :: Trans a b -> Bool
 isZeroTrans = or . rec
  where
    rec :: Trans a b -> [Bool]
-   rec trans = 
+   rec trans =
       case trans of
          Zero       -> [True]
          Append f g -> [isZeroTrans f && isZeroTrans g]
@@ -210,7 +209,7 @@ isZeroTrans = or . rec
 
 -- General recursion function (existentially quantified)
 descendTrans :: Monoid m => (forall x y . Trans x y -> m) -> Trans a b -> m
-descendTrans make trans = 
+descendTrans make trans =
    case trans of
       UseEnv f   -> make f
       f :>>: g   -> make f `mappend` make g

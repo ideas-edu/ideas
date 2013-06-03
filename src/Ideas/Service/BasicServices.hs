@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -16,21 +16,21 @@ module Ideas.Service.BasicServices
    , StepInfo, exampleDerivations
    ) where
 
+import Control.Monad
+import Data.List
+import Data.Maybe
 import Ideas.Common.Library hiding (derivation, applicable, apply, ready)
 import Ideas.Common.Traversal.Navigator (downs, navigateTo)
 import Ideas.Common.Utils (fst3)
-import Data.List
-import Data.Maybe
 import Ideas.Service.State
 import System.Random
-import Control.Monad
 import qualified Ideas.Common.Classes as Apply
 
 generate :: Exercise a -> Maybe Difficulty -> IO (State a)
 generate ex = liftM (emptyState ex) . randomTerm ex
 
 generateWith :: StdGen -> Exercise a -> Maybe Difficulty -> Either String (State a)
-generateWith rng ex md = 
+generateWith rng ex md =
    case randomTermWith rng ex md of
       Just a  -> return (emptyState ex a)
       Nothing -> fail "No random term"
@@ -58,9 +58,9 @@ derivation mcfg state =
    rec i acc st =
       case onefirst st of
          Left _         -> Right acc
-         Right ((r, l, as), next)
+         Right ((r, l, as), newState)
             | i <= 0    -> Left msg
-            | otherwise -> rec (i-1) (acc `extend` ((r, l, as), next)) next
+            | otherwise -> rec (i-1) (acc `extend` ((r, l, as), newState)) newState
     where
       msg = "Time out after " ++ show timeout ++ " steps. " ++
             show (biMap fst3 (prettyPrinterContext ex . stateContext) acc)
@@ -74,13 +74,14 @@ allfirsts state
    | null ps   = Left "Prefix is required"
    | otherwise =
         let trees  = map tree ps
-            tree p = cutOnStep (stop . lastStepInPrefix) (prefixTree False p (stateContext state))
+            tree p = cutOnStep (justMajor . lastStepInPrefix)
+                               (prefixTree False p (stateContext state))
             f ((r1, _, _), _) ((r2, _, _), _) =
                ruleOrdering (exercise state) r1 r2
+            justMajor = maybe False isMajor
         in Right $ noDuplicates $ sortBy f $ mapMaybe make $ concatMap derivations trees
  where
-   ps   = statePrefixes state
-   stop = maybe False isMajor
+   ps = statePrefixes state
 
    make d = do
       prefixEnd <- lastStep d
@@ -140,7 +141,7 @@ setLocation loc c0 = fromMaybe c0 (navigateTo loc c0)
 -- strategy), or I return a new term without a prefix. A final scenario is that the rule cannot be applied
 -- to the current term at the given location, in which case the request is invalid.
 apply :: Rule (Context a) -> Location -> Environment -> State a -> Either String (State a)
-apply r loc env state 
+apply r loc env state
    | null (statePrefixes state) = applyOff
    | otherwise                  = applyOn
  where
@@ -168,6 +169,6 @@ findbuggyrules state a =
    ]
  where
    ex = exercise state
-   
+
 exampleDerivations :: Exercise a -> Either String [Derivation (Rule (Context a), Environment) (Context a)]
 exampleDerivations ex = mapM (derivation Nothing . emptyState ex . snd) (examples ex)

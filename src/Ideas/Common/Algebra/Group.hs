@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -30,12 +30,12 @@ module Ideas.Common.Algebra.Group
    , leftDistributiveFor, rightDistributiveFor
    ) where
 
-import Ideas.Common.Algebra.Law
 import Control.Applicative (Applicative)
 import Control.Monad (liftM2)
-import Data.Monoid
 import Data.Foldable (Foldable)
+import Data.Monoid
 import Data.Traversable (Traversable)
+import Ideas.Common.Algebra.Law
 
 --------------------------------------------------------
 -- Monoids

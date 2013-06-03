@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -27,12 +27,12 @@ module Ideas.Common.DerivationTree
    , derivation, randomDerivation, derivations
    ) where
 
-import Ideas.Common.Classes
-import Ideas.Common.Derivation
 import Control.Arrow
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Ideas.Common.Classes
+import Ideas.Common.Derivation
 import System.Random
 
 -----------------------------------------------------------------------------
@@ -154,7 +154,7 @@ cutOnStep p = rec
       | otherwise = (s, rec t)
 
 cutOnTerm :: (a -> Bool) -> DerivationTree s a -> DerivationTree s a
-cutOnTerm p (DT r e bs) = 
+cutOnTerm p (DT r e bs) =
     DT r e (map (second (cutOnTerm p)) $ filter (not . p . root . snd) bs)
 
 -----------------------------------------------------------------------------

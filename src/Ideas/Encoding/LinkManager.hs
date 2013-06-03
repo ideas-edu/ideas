@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -19,7 +19,7 @@ module Ideas.Encoding.LinkManager
      -- links to services and exercises
    , linkToIndex, linkToExercises, linkToServices, linkToService
      -- links to exercise information
-   , linkToExercise, linkToStrategy, linkToRules, linkToExamples 
+   , linkToExercise, linkToStrategy, linkToRules, linkToExamples
    , linkToDerivations, linkToRule, linkToRandomExample
      -- links to state information (dynamic)
    , linkToState, linkToFirsts, linkToApplications, linkToDerivation
@@ -27,12 +27,12 @@ module Ideas.Encoding.LinkManager
 
 import Data.Maybe
 import Ideas.Common.Library
-import Ideas.Service.Types
+import Ideas.Encoding.EncoderXML
+import Ideas.Encoding.Evaluator
 import Ideas.Service.State
+import Ideas.Service.Types
 import Ideas.Text.HTML
 import Ideas.Text.XML
-import Ideas.Encoding.Evaluator
-import Ideas.Encoding.EncoderXML
 
 data LinkManager = LinkManager
    { urlForResource      :: String -> String
@@ -103,10 +103,10 @@ linkToRandomExample lm = linkWith . urlForRandomExample lm
 
 ---------------------------------------------------------------------
 -- links to state information (dynamic)
-   
+
 linkToState :: LinkManager -> State a -> HTMLBuilder -> HTMLBuilder
 linkToState = linkWith . urlForState
-   
+
 linkToFirsts :: LinkManager -> State a -> HTMLBuilder -> HTMLBuilder
 linkToFirsts = linkWith . urlForFirsts
 
@@ -120,7 +120,7 @@ linkToDerivation = linkWith . urlForDerivation
 -- Dynamic links
 
 dynamicLinks :: String -> LinkManager
-dynamicLinks cgiBinary = LinkManager 
+dynamicLinks cgiBinary = LinkManager
    { isStatic        = False
    , urlForRequest   = prefix
    , urlForResource  = id
@@ -128,14 +128,14 @@ dynamicLinks cgiBinary = LinkManager
    , urlForExercises = url $ simpleRequest "exerciselist"
    , urlForServices  = url $ simpleRequest "servicelist"
    , urlForService = \srv ->
-        url $ makeRequest "serviceinfo" $ 
+        url $ makeRequest "serviceinfo" $
            tag "location" $ text srv
    , urlForExercise    = url . exerciseRequest "exerciseinfo"
    , urlForStrategy    = url . exerciseRequest "strategyinfo"
    , urlForRules       = url . exerciseRequest "rulelist"
    , urlForExamples    = url . exerciseRequest "examples"
    , urlForDerivations = url . exerciseRequest "examplederivations"
-   , urlForRule = \ex r -> 
+   , urlForRule = \ex r ->
         url $ exerciseRequestWith "ruleinfo" ex $
            tag "ruleid" $ text r
    , urlForRandomExample = \ex d ->
@@ -152,22 +152,22 @@ dynamicLinks cgiBinary = LinkManager
 
 simpleRequest :: String -> XML
 simpleRequest s = makeRequest s mempty
-   
+
 makeRequest :: String -> XMLBuilder -> XML
 makeRequest s rest = makeXML "request" $
    ("service"  .=. s) <>
    ("encoding" .=. "html") <>
    rest
-  
+
 exerciseRequest :: String -> Exercise a -> XML
 exerciseRequest s ex = makeRequest s ("exerciseid" .=. showId ex)
 
 exerciseRequestWith :: String -> Exercise a -> XMLBuilder -> XML
-exerciseRequestWith s ex rest = 
+exerciseRequestWith s ex rest =
    makeRequest s (("exerciseid" .=. showId ex) <> rest)
 
 stateRequest :: String -> State a -> XML
-stateRequest s state = 
+stateRequest s state =
    exerciseRequestWith s (exercise state) (stateToXML state)
 
 -- assume nothing goest wrong
@@ -190,7 +190,7 @@ escapeInURL = concatMap f
    f '#' = "%23"
    f ';' = "%3B"
    f c   = [c]
-   
+
 ---------------------------------------------------------------------
 -- Static links
 
@@ -248,10 +248,10 @@ linksUp n lm = lm
    f0 g   = pathUp n $ g lm
    f1 g   = pathUp n . g lm
    f2 g x = pathUp n . g lm x
-   
+
 pathUp :: Int -> FilePath -> FilePath
 pathUp n file = concat (replicate n "../") ++ file
-  
+
 pathLevel :: FilePath -> Int
 pathLevel = length . filter (=='/')
 
@@ -263,4 +263,3 @@ idToFilePathWith suffix a = foldr (</>) (unqualified a ++ suffix) (qualifiers a)
 
 (</>) :: String -> FilePath -> FilePath
 x </> y = x ++ "/" ++ y
-

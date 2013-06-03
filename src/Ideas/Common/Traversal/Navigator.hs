@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies, GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -30,28 +30,29 @@ module Ideas.Common.Traversal.Navigator
    , UniplateNavigator
    ) where
 
-import Ideas.Common.Algebra.Group
-import Ideas.Common.Traversal.Utils
-import Ideas.Common.Traversal.Iterator
-import Ideas.Common.Utils.Uniplate
 import Control.Monad
 import Data.Function
 import Data.Generics.Str
 import Data.Maybe
+import Ideas.Common.Algebra.Group
+import Ideas.Common.Traversal.Iterator
+import Ideas.Common.Traversal.Utils
+import Ideas.Common.Utils.Uniplate
+import Test.QuickCheck hiding (Str)
 
 ---------------------------------------------------------------
 -- Navigator type class
 
 newtype Location = L { fromLocation :: [Int] }
  deriving (Eq, Ord)
- 
+
 instance Show Location where
    show = show . fromLocation
 
 instance Monoid Location where
    mempty = L []
    L xs `mappend` L ys = L (xs ++ ys)
-   
+
 toLocation :: [Int] -> Location
 toLocation = L
 
@@ -112,10 +113,10 @@ arity = length . downs
 depth :: Navigator a => a -> Int
 depth a | null xs   = 0
         | otherwise = maximum (map depth xs) + 1
- where 
+ where
    xs = downs a
 
-level :: Navigator a => a -> Int 
+level :: Navigator a => a -> Int
 level = pred . length . fixpl up
 
 levelNext :: Navigator a => a -> Maybe a
@@ -123,7 +124,7 @@ levelNext = right >|< f 1
  where
    f n = up >=> (g n >|< f (n+1))
    g n = right >=> (leftMostAt n >|< g n)
-      
+
 levelPrevious :: Navigator a => a -> Maybe a
 levelPrevious = fmap unwrap . levelNext . makeMirror
 
@@ -135,15 +136,15 @@ leftMostAt n
 
 rightMostAt :: Navigator a => Int -> a -> Maybe a
 rightMostAt n = fmap unwrap . leftMostAt n . makeMirror
-   
+
 navigateTo :: Navigator a => Location -> a -> Maybe a
-navigateTo is a = go (navigation (location a) is) a 
- where 
-   go = foldr (>=>) Just 
+navigateTo is a = go (navigation (location a) is) a
+ where
+   go = foldr (>=>) Just
 
 navigateTowards :: Navigator a => Location -> a -> a
-navigateTowards is a = go (navigation (location a) is) a 
- where 
+navigateTowards is a = go (navigation (location a) is) a
+ where
    go = foldr (\f g -> safe (fmap g . f)) id
 
 navigation :: Navigator a => Location -> Location -> [a -> Maybe a]
@@ -178,7 +179,7 @@ instance Navigator a => Iterator (PreOrder a) where
    first    = mapWrapper top
    final    = mapWrapper (rightMostLeaf . top)
 
-newtype PostOrder a = Post { fromPost :: Mirror (PreOrder (Mirror a))} 
+newtype PostOrder a = Post { fromPost :: Mirror (PreOrder (Mirror a))}
    deriving (Show, Eq, Iterator)
 
 instance Wrapper PostOrder where
@@ -193,14 +194,14 @@ makePostOrder = wrap
 
 newtype LevelOrder a = Level { fromLevel :: a } -- breadth-first
    deriving (Show, Eq)
-   
+
 instance Wrapper LevelOrder where
    wrap   = Level
    unwrap = fromLevel
-   
+
 instance Update LevelOrder where
    update a = (unwrap a, wrap)
-   
+
 instance Navigator a => Iterator (LevelOrder a) where
    previous = let f a = rightMostAt (level a-1) (top a)
               in liftWrapper (levelPrevious >|< f)
@@ -208,7 +209,7 @@ instance Navigator a => Iterator (LevelOrder a) where
               in liftWrapper (levelNext >|< f)
    first    = mapWrapper top
    final    = mapWrapper $ \a -> safe (rightMostAt (depth (top a))) (top a)
-   
+
 makeLevelOrder :: a -> LevelOrder a
 makeLevelOrder = wrap
 
@@ -218,7 +219,7 @@ newtype Horizontal a = Hor { fromHor :: a }
 instance Wrapper Horizontal where
    wrap   = Hor
    unwrap = fromHor
-   
+
 instance Update Horizontal where
    update a = (unwrap a, wrap)
 
@@ -232,7 +233,7 @@ instance Navigator a => Iterator (Horizontal a) where
 makeHorizontal :: a -> Horizontal a
 makeHorizontal = wrap
 
-newtype Leafs a = Leafs { fromLeafs :: a } 
+newtype Leafs a = Leafs { fromLeafs :: a }
    deriving (Show, Eq)
 
 makeLeafs :: Navigator a => a -> Leafs a
@@ -241,15 +242,15 @@ makeLeafs = first . wrap
 instance Wrapper Leafs where
    wrap   = Leafs
    unwrap = fromLeafs
-   
+
 instance Update Leafs where
    update a = (unwrap a, wrap)
 
 instance Navigator a => Iterator (Leafs a) where
-   previous = liftWrapper $ 
+   previous = liftWrapper $
       let rec = left >|< (up >=> rec)
       in liftM rightMostLeaf . rec
-   next = liftWrapper $ 
+   next = liftWrapper $
       let rec = right >|< (up >=> rec)
       in liftM leftMostLeaf . rec
    first = mapWrapper (leftMostLeaf . top)
@@ -258,9 +259,9 @@ instance Navigator a => Iterator (Leafs a) where
 ---------------------------------------------------------------
 -- Str navigator (private)
 
-data StrNavigator a = SN 
+data StrNavigator a = SN
    { currentStr :: Str a
-   , strContext :: [Either (Str a) (Str a)] 
+   , strContext :: [Either (Str a) (Str a)]
    }
 
 instance Navigator (StrNavigator a) where
@@ -282,7 +283,7 @@ instance Focus (StrNavigator a) where
    unfocus = currentStr . top
 
 sizeStrNavigator :: StrNavigator a -> Int
-sizeStrNavigator (SN a xs) = 
+sizeStrNavigator (SN a xs) =
    sum (countStr a : map (either countStr countStr) xs)
 
 countStr :: Str a -> Int
@@ -293,7 +294,7 @@ countStr (Two a b) = countStr a + countStr b
 ---------------------------------------------------------------
 -- Str iterator (private)
 
-data StrIterator a = SI 
+data StrIterator a = SI
    { posSI  :: !Int
    , fromSI :: Leafs (StrNavigator a)
    }
@@ -345,13 +346,13 @@ instance (Eq a, Uniplate a) => Eq (UniplateNavigator a) where
 instance Uniplate a => Navigator (UniplateNavigator a) where
    up (U [] _)     = Nothing
    up (U (f:fs) a) = Just (U fs (f a))
-  
+
    down     = downWith focusM
    downLast = downWith lastStrIterator
-      
+
    left  (U fs a) = liftM (U fs) (previous a)
    right (U fs a) = liftM (U fs) (next a)
-      
+
    childnr (U _ a) = position a
 
 instance Update UniplateNavigator where
@@ -362,7 +363,15 @@ instance Uniplate a => Focus (UniplateNavigator a) where
    focus   = U [] . focus . One
    unfocus = current . top
 
-downWith :: Uniplate a => (Str a -> Maybe (StrIterator a)) 
+instance (Arbitrary a, Uniplate a) => Arbitrary (UniplateNavigator a) where
+   arbitrary = liftM focus arbitrary >>= genNav
+    where
+      genNav a =
+         case map genNav (downs a) of
+            [] -> return a
+            xs -> frequency [(1, return a), (4, oneof xs)]
+
+downWith :: Uniplate a => (Str a -> Maybe (StrIterator a))
                        -> UniplateNavigator a -> Maybe (UniplateNavigator a)
 downWith make (U fs a) = liftM (U (f:fs)) (make cs)
  where

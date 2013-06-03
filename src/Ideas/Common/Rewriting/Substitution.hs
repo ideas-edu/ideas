@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -17,13 +17,13 @@ module Ideas.Common.Rewriting.Substitution
    , tests
    ) where
 
-import Ideas.Common.Rewriting.Term
-import Ideas.Common.Utils.TestSuite
-import Ideas.Common.Utils.Uniplate
 import Control.Monad
 import Data.List
 import Data.Maybe
 import Data.Monoid
+import Ideas.Common.Rewriting.Term
+import Ideas.Common.Utils.TestSuite
+import Ideas.Common.Utils.Uniplate
 import Test.QuickCheck
 import qualified Data.IntMap as IM
 import qualified Data.IntSet as IS
@@ -94,8 +94,8 @@ infix 6 @+@
 s1 @+@ s2 = liftM S $ foldM op (unS s1) $ IM.toList $ unS s2
  where
    op m (i, a) =
-      case IM.lookup i m of 
-         Just b 
+      case IM.lookup i m of
+         Just b
             | a == b    -> Just m
             | otherwise -> Nothing
          Nothing        -> Just (IM.insert i a m)

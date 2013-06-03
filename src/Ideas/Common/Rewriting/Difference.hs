@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -17,11 +17,11 @@ module Ideas.Common.Rewriting.Difference
    , differenceWith, differenceEqualWith
    ) where
 
-import Ideas.Common.Rewriting.Term
-import Ideas.Common.View
 import Control.Monad
 import Data.Function
 import Data.Maybe
+import Ideas.Common.Rewriting.Term
+import Ideas.Common.View
 
 differenceWith :: View Term a -> a -> a -> Maybe (a, a)
 differenceWith = diff (\_ _ -> True)

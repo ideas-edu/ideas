@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -12,23 +12,23 @@
 -- Services using XML notation
 --
 -----------------------------------------------------------------------------
-module Ideas.Encoding.DecoderXML 
+module Ideas.Encoding.DecoderXML
    ( XMLDecoder, XMLDecoderState(..), xmlDecoder
    ) where
 
-import Ideas.Common.Library hiding (exerciseId, (:=))
-import Ideas.Common.Utils (readM)
 import Control.Monad
 import Data.Char
 import Data.List
+import Ideas.Common.Library hiding (exerciseId, (:=))
+import Ideas.Common.Utils (readM)
 import Ideas.Encoding.Evaluator
 import Ideas.Encoding.OpenMathSupport
-import Ideas.Service.State
 import Ideas.Service.FeedbackScript.Syntax (Script)
+import Ideas.Service.State
 import Ideas.Service.Types
-import System.Random (StdGen)
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
+import System.Random (StdGen)
 
 type XMLDecoder a = EncoderState (XMLDecoderState a) XML
 
@@ -46,7 +46,7 @@ xmlDecoder tp =
       Tag s t
          | s == "answer" -> do
               c <- encoderFor (findChild "answer")
-              xmlDecoder t // c 
+              xmlDecoder t // c
          | s == "Difficulty" -> do
               g <- equalM typed tp
               a <- encoderFor (findAttribute "difficulty")
@@ -54,16 +54,16 @@ xmlDecoder tp =
          | otherwise -> do
               cx <- encoderFor (findChild s)
               xmlDecoder t // cx
-      Iso p t  -> liftM (from p) (xmlDecoder t) 
+      Iso p t  -> liftM (from p) (xmlDecoder t)
       Pair t1 t2 -> do
          x <- xmlDecoder t1
          y <- xmlDecoder t2
-         return (x, y) 
+         return (x, y)
       t1 :|: t2 ->
          liftM Left  (xmlDecoder t1) `mplus`
          liftM Right (xmlDecoder t2)
       Unit -> return ()
-      Const ctp -> 
+      Const ctp ->
          case ctp of
             State       -> decodeState
             Context     -> decodeContext
@@ -113,7 +113,7 @@ decodePrefix = do
          return [pr]
  where
    a ~= b = g a == g b
-   g = map toLower . filter (not . isSpace) 
+   g = map toLower . filter (not . isSpace)
 
 decodeContext :: XMLDecoder a (Context a)
 decodeContext = do
@@ -149,7 +149,7 @@ decodeEnvironment = encoderFor $ \xml ->
 decodeConfiguration :: XMLDecoder a StrategyConfiguration
 decodeConfiguration = do
    xml <- encoderFor (findChild "configuration")
-   liftM makeStrategyConfiguration $ 
+   liftM makeStrategyConfiguration $
       mapM decodeAction (children xml)
  where
    decodeAction item = do
@@ -168,14 +168,14 @@ decodeArgEnvironment = encoderFor $ \xml ->
       | x <- children xml
       , name x == "argument"
       ]
- 
+
 decodeBinding :: XMLDecoder a Binding
 decodeBinding = encoderFor $ \xml -> do
    a <- findAttribute "description" xml
    isOM <- withState isOpenMath
    case findChild "OMOBJ" xml of
       -- OpenMath object found inside tag
-      Just this | isOM -> 
+      Just this | isOM ->
          case xml2omobj this >>= fromOMOBJ of
             Left err   -> fail err
             Right term -> return (termBinding a term)

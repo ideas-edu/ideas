@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -17,12 +17,12 @@ module Ideas.Service.FeedbackScript.Syntax
    , feedbackDecl, textForIdDecl
    ) where
 
-import Ideas.Common.Library
-import Ideas.Common.Utils.Uniplate
 import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Monoid
+import Ideas.Common.Library
+import Ideas.Common.Utils.Uniplate
 
 newtype Script = S { scriptDecls :: [Decl] }
 
@@ -62,7 +62,7 @@ textForIdDecl a = Simple TextForId [getId a]
 
 includes :: Script -> [FilePath]
 includes script = [ file | Include xs <- scriptDecls script, file <- xs ]
- 
+
 instance Show Script where
    show = unlines . map show . scriptDecls
 

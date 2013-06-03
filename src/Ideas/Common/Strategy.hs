@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -50,5 +50,5 @@ import Ideas.Common.Strategy.Configuration
 import Ideas.Common.Strategy.Location
 import Ideas.Common.Strategy.Parsing
 import Ideas.Common.Strategy.Prefix
-import Ideas.Common.Strategy.Traversal
+import Ideas.Common.Strategy.Traversal hiding (full, spine, stop, once)
 import Prelude ()

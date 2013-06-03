@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -19,15 +19,15 @@ module Ideas.Common.Id
    , mempty, isEmptyId, listQualify
    ) where
 
-import Ideas.Common.Classes
-import Ideas.Common.Utils (splitsWithElem)
-import Ideas.Common.Utils.StringRef
 import Control.Monad
 import Data.Char
 import Data.Data
 import Data.List
 import Data.Monoid
 import Data.Ord
+import Ideas.Common.Classes
+import Ideas.Common.Utils (splitsWithElem)
+import Ideas.Common.Utils.StringRef
 import Test.QuickCheck
 
 ---------------------------------------------------------------------
@@ -191,6 +191,6 @@ describe = changeId . describeId
            a {idDescription = s}
       | otherwise =
            a {idDescription = s ++ " " ++ idDescription a}
-           
+
 listQualify :: (IsId a, IsId b) => [a] -> b -> Id -- TODO: clean me up
 listQualify ls h = foldr appendId (newId h) (map newId ls)

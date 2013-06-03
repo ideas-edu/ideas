@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -16,18 +16,18 @@ module Ideas.Common.Library
    , failS, notS, repeatS, replicateS, sequenceS, untilS
    ) where
 
-import Ideas.Common.Environment as Export
 import Ideas.Common.Classes as Export
 import Ideas.Common.Context as Export
 import Ideas.Common.Derivation as Export
 import Ideas.Common.DerivationTree as Export
+import Ideas.Common.Environment as Export
 import Ideas.Common.Exercise as Export
 import Ideas.Common.Id as Export
-import Ideas.Common.Traversal.Navigator as Export (Location, toLocation, fromLocation, arity, top)
 import Ideas.Common.Predicate as Export
 import Ideas.Common.Rewriting as Export
-import Ideas.Common.Strategy as Export hiding (fail, not, repeat, replicate, sequence, until)
 import Ideas.Common.Rule as Export
+import Ideas.Common.Strategy as Export hiding (fail, not, repeat, replicate, sequence, until)
+import Ideas.Common.Traversal.Navigator as Export (Location, toLocation, fromLocation, arity, top)
 import Ideas.Common.View as Export
 
 import qualified Ideas.Common.Strategy as S

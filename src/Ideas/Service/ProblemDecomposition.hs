@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -14,8 +14,8 @@ module Ideas.Service.ProblemDecomposition
    ( problemDecomposition, Reply(..)
    ) where
 
-import Ideas.Common.Library
 import Data.Maybe
+import Ideas.Common.Library
 import Ideas.Service.State
 import Ideas.Service.Types
 
@@ -23,7 +23,7 @@ problemDecomposition :: Maybe Id -> State a -> Maybe (Answer a) -> Either String
 problemDecomposition msloc state maybeAnswer
    | isNothing $ subStrategy sloc (strategy ex) =
         Left "request error: invalid location for strategy"
-   | null answers = 
+   | null answers =
         Left "strategy error: not able to compute an expected answer"
    | otherwise =
          case maybeAnswer of
@@ -76,13 +76,12 @@ firstMajorInPrefix :: Prefix a -> Prefix a -> Maybe (Id, Environment)
 firstMajorInPrefix p0 = rec . drop len . prefixToSteps
  where
    len = length (prefixToSteps p0)
-   rec xs = 
+   rec xs =
       case xs of
-         Enter info:RuleStep env r:_ | isMajor r -> 
+         Enter info:RuleStep env r:_ | isMajor r ->
             Just (getId info, env)
          _:rest -> rec rest
          []     -> Nothing
-         
 
 nextMajorForPrefix :: Prefix a -> a -> Maybe Id
 nextMajorForPrefix p0 a = do
@@ -113,7 +112,7 @@ data Reply a = Ok Id (State a)
 ------------------------------------------------------------------------
 -- Type definition
 
-instance Typed a (Answer a) where 
+instance Typed a (Answer a) where
    typed = Tag "answer" $ Iso (Answer <-> fromAnswer) (Const Context)
 
 instance Typed a (Reply a) where
@@ -121,6 +120,6 @@ instance Typed a (Reply a) where
     where
       f (Left (a, b))        = Ok a b
       f (Right (a, b, c, d)) = Incorrect a b c d
-   
+
       g (Ok a b)            = Left (a, b)
       g (Incorrect a b c d) = Right (a, b, c, d)

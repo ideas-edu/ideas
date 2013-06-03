@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -14,28 +14,28 @@
 -----------------------------------------------------------------------------
 module Ideas.Encoding.EncoderHTML (htmlEncoder) where
 
-import Ideas.Common.Utils
 import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Ord
 import Ideas.Common.Library hiding (ready)
-import Ideas.Text.XML
-import Ideas.Text.HTML
-import Ideas.Encoding.RulePresenter
-import Ideas.Service.Diagnose
-import Ideas.Service.DomainReasoner
+import Ideas.Common.Strategy.Prefix
+import Ideas.Common.Utils
 import Ideas.Encoding.Evaluator
 import Ideas.Encoding.LinkManager
+import Ideas.Encoding.RulePresenter
+import Ideas.Encoding.RulesInfo
+import Ideas.Encoding.StrategyInfo
+import Ideas.Service.BasicServices
+import Ideas.Service.Diagnose
+import Ideas.Service.DomainReasoner
 import Ideas.Service.State
 import Ideas.Service.Types
-import Ideas.Service.BasicServices
-import Ideas.Encoding.StrategyInfo
-import Ideas.Common.Strategy.Prefix
-import Ideas.Text.OpenMath.Object
+import Ideas.Text.HTML
 import Ideas.Text.OpenMath.FMP
-import Ideas.Encoding.RulesInfo
+import Ideas.Text.OpenMath.Object
+import Ideas.Text.XML
 
 type HTMLEncoder a t = EncoderState (HTMLEncoderState a) t HTMLBuilder
 
@@ -45,7 +45,7 @@ data HTMLEncoderState a = HTMLEncoderState
    }
 
 htmlEncoder :: LinkManager -> DomainReasoner -> Exercise a -> TypedValue (Type a) -> HTMLPage
-htmlEncoder lm dr ex tv = 
+htmlEncoder lm dr ex tv =
    addCSS (resource "ideas.css") $
    htmlPage "Ideas: documentation pages" $ mconcat
       [ divClass "page-header" $ mconcat
@@ -75,9 +75,9 @@ encodeType lm ex = msum
    , encodeTyped (exerciseHeader // () <> htmlAllApplications)
    , encodeTyped (exerciseHeader // () <> encodeDerivation lm ex)
    , encodeTyped (exerciseHeader // () <> encodeDerivationList lm ex)
-   , encoderFor $ \(val ::: tp) -> 
-        case tp of 
-           Iso iso t  -> encodeType lm ex // (to iso val ::: t)           
+   , encoderFor $ \(val ::: tp) ->
+        case tp of
+           Iso iso t  -> encodeType lm ex // (to iso val ::: t)
            Tag _ t    -> encodeType lm ex // (val ::: t)
            Pair t1 t2 -> encodeType lm ex // (fst val ::: t1) <>
                          encodeType lm ex // (snd val ::: t2)
@@ -94,7 +94,7 @@ encodeType lm ex = msum
 
 encodeConst :: LinkManager -> Exercise a -> HTMLEncoder a (TypedValue (Const a))
 encodeConst lm ex = encoderFor $ \tv@(val ::: tp) ->
-   case tp of 
+   case tp of
       Service     -> encodeService // val
       Exercise    -> (exerciseHeader // ()) <> encodeExercise lm // val
       Strategy    -> (exerciseHeader // ()) <> encodeStrategy ex // val
@@ -115,14 +115,14 @@ encodeIndex = simpleEncoder $ \dr -> mconcat
         , ("exercises", text $ length $ exercises dr)
         , ("services", text $ length $ services dr)
         ]
-   , munless (null $ aliases dr) $ 
+   , munless (null $ aliases dr) $
         h2 "Exercise aliases" <>
         table True (
            [ string "alias", string "exercise"] :
            [ [string (showId a), string (showId b)]
            | (a, b) <- aliases dr
            ])
-   , munless (null $ scripts dr) 
+   , munless (null $ scripts dr)
         h2 "Feedback scripts" <>
         table True (
            [ string "exercise", string "script"] :
@@ -130,14 +130,14 @@ encodeIndex = simpleEncoder $ \dr -> mconcat
            | (a, file) <- scripts dr
            ])
    ]
-   
+
 encodeServiceList :: LinkManager -> HTMLEncoder a [Service]
 encodeServiceList lm = simpleEncoder $ \srvs ->
    h1 "Services" <>
    mconcat
       [ h2 (show i ++ ". " ++ s) <> table False (map make xs)
       | (i, s, xs) <- groupById srvs
-      ]  
+      ]
  where
    make s = [ linkToService lm s (string (showId s)) <>
               mwhen (serviceDeprecated s) (italic (string " (deprecated)"))
@@ -150,13 +150,13 @@ encodeExerciseList lm = simpleEncoder $ \exs ->
    mconcat
       [ h2 (show i ++ ". " ++ dom) <> table False (map make xs)
       | (i, dom, xs) <- groupsWith f exs
-      ]  
+      ]
  where
    f :: Some Exercise -> String
    f (Some ex) = fromMaybe "" (listToMaybe (qualifiers (getId ex)))
- 
+
    make :: Some Exercise -> [HTMLBuilder]
-   make (Some ex) = 
+   make (Some ex) =
       [ linkToExercise lm ex $ string $ showId ex
       , string $ map toLower $ show $ status ex
       , string $ description ex
@@ -166,10 +166,10 @@ groupById :: HasId a => [a] -> [(Int, String, [a])]
 groupById = groupsWith (fromMaybe "" . listToMaybe . qualifiers . getId)
 
 groupsWith :: (a -> String) -> [a] -> [(Int, String, [a])]
-groupsWith = orderedGroupsWith id 
+groupsWith = orderedGroupsWith id
 
 orderedGroupsWith :: Ord b => (b -> String) -> (a -> b) -> [a] -> [(Int, String, [a])]
-orderedGroupsWith showf get = 
+orderedGroupsWith showf get =
    zipWith f [1..] . groupBy eq . sortBy (comparing get)
  where
    eq x y = get x == get y
@@ -178,7 +178,7 @@ orderedGroupsWith showf get =
 encodeService :: HTMLEncoder a Service
 encodeService = simpleEncoder $ \srv -> mconcat
    [ h1 $ "Service " ++ showId srv
-   , mwhen (serviceDeprecated srv) $ 
+   , mwhen (serviceDeprecated srv) $
         para $ spanClass "warning" $ string "Warning: this service is deprecated"
    , htmlDescription srv
    , case serviceFunction srv of
@@ -187,25 +187,25 @@ encodeService = simpleEncoder $ \srv -> mconcat
                f :: Some (Type a) -> HTMLBuilder
                f (Some (t :|: Unit)) = text t <> italic (string " (optional)")
                f (Some t) = text t
-           in  
-              munless (null xs) (para $ 
+           in
+              munless (null xs) (para $
                  bold (string "Input") <> ul (map f xs))
               <>
               munless (null ys) (para $
-                 bold (string "Output") <> ul (map f ys))    
+                 bold (string "Output") <> ul (map f ys))
    ]
 
 inputOutputTypes :: Type a t -> ([Some (Type a)], [Some (Type a)])
 inputOutputTypes tp =
    case tp of
       Iso _ t   -> inputOutputTypes t
-      t1 :-> t2 -> let (xs, ys) = inputOutputTypes t2 
+      t1 :-> t2 -> let (xs, ys) = inputOutputTypes t2
                    in (productType t1 ++ xs, ys)
       Const String :|: t -> ([], productType t)
       _         -> ([], productType tp)
 
 productType :: Type a t -> [Some (Type a)]
-productType tp = 
+productType tp =
    case tp of
       Iso _ t    -> productType t
       Pair t1 t2 -> productType t1 ++ productType t2
@@ -244,7 +244,7 @@ encodeExercise lm = simpleEncoder $ \ex -> mconcat
       , ("Examples", text $ length $ examples ex)
       ]
     where
-      (nrOfBuggyRules, nrOfSoundRules) = 
+      (nrOfBuggyRules, nrOfSoundRules) =
          mapBoth length (partition isBuggy (ruleset ex))
 
 exerciseHeader :: HTMLEncoder a ()
@@ -291,7 +291,7 @@ bool b = string (if b then "yes" else "no")
 encodeRuleList :: LinkManager -> Exercise a -> HTMLEncoder a [Rule (Context a)]
 encodeRuleList lm ex = simpleEncoder $ \rs ->
    let (rs1, rs2) = partition isBuggy rs
-   in mconcat 
+   in mconcat
          [ h2 $ "Rules for " ++ showId ex
          , table True (header:map f rs2)
          , h2 $ "Buggy rules for " ++ showId ex
@@ -335,19 +335,19 @@ encodeRule ex = simpleEncoder $ \r -> mconcat
            | Some rr <- xs
            ]
    ]
-   
+
 encodeExampleList :: LinkManager -> Exercise a -> HTMLEncoder a [(Difficulty, Context a)]
 encodeExampleList lm ex = simpleEncoder $ \pairs -> mconcat $
    h2 "Examples" :
    [ h3 (s ++ " (" ++ show (length xs) ++ ")")
        <> (if isStatic lm then ul else mconcat) (map make xs)
    | (_, s, xs) <- orderedGroupsWith show fst pairs
-   ]  
+   ]
  where
    make (_, x) = para $
       munless (isStatic lm) $
          let st = emptyStateContext ex x
-         in spanClass "statelink" $ linkToState lm st $ 
+         in spanClass "statelink" $ linkToState lm st $
                element "img" ["src" .=. "external.png", "width" .=. "15"]
       <> spanClass "term" (string (prettyPrinterContext ex x))
 
@@ -356,16 +356,16 @@ encodeDerivation lm ex =
    h2 "Derivation" <> htmlDerivation lm ex
 
 encodeDerivationList :: LinkManager -> Exercise a -> HTMLEncoder a ([Derivation (Rule (Context a), Environment) (Context a)])
-encodeDerivationList lm ex = encoderFor $ \ds ->  
+encodeDerivationList lm ex = encoderFor $ \ds ->
    h2 "Derivations"
-   <> mconcat 
+   <> mconcat
       [ h3 (show i ++ ".") <> htmlDerivation lm ex // d
       | (i, d) <- zip [1::Int ..] ds
       ]
-      
+
 htmlDerivation :: LinkManager -> Exercise a -> HTMLEncoder a (Derivation (Rule (Context a), Environment) (Context a))
 htmlDerivation lm ex = encoderFor $ \d ->
-   arr derivationDiffEnv 
+   arr derivationDiffEnv
    >>> htmlDerivationWith (before d) forStep forTerm
  where
    before d =
@@ -373,7 +373,7 @@ htmlDerivation lm ex = encoderFor $ \d ->
       <> case fmap (isReady ex) (fromContext (lastTerm d)) of
             Just True -> mempty
             _ -> spanClass "error" (string "Final term is not finished")
-   forStep ((r, env1), env2) = 
+   forStep ((r, env1), env2) =
       let showEnv e = munless (noBindings e) $ string $ ", " ++ show e in
       spanClass "derivation-step" $ mconcat
          [ unescaped "&#8658; "
@@ -381,12 +381,12 @@ htmlDerivation lm ex = encoderFor $ \d ->
          , showEnv env1 -- local environment
          , showEnv env2 -- global environment (diff)
          ]
-   forTerm a = do 
+   forTerm a = do
       divClass "term" $ string $ prettyPrinterContext ex a
 
 htmlState :: HTMLEncoder a (State a)
 htmlState = do
-   lm <- withState getLinkManager 
+   lm <- withState getLinkManager
    simpleEncoder $ \state ->
       para $ divClass "state" $
          stateLink lm state
@@ -395,7 +395,7 @@ htmlState = do
 
 stateLink :: LinkManager -> State a -> HTMLBuilder
 stateLink lm st = munless (isStatic lm) $
-   spanClass "derivation-statelink" $ linkToState lm st $ 
+   spanClass "derivation-statelink" $ linkToState lm st $
       element "img"
          [ "src" .=. urlForResource lm "external.png"
          , "width" .=. "15"
@@ -403,7 +403,7 @@ stateLink lm st = munless (isStatic lm) $
 
 encodeState :: HTMLEncoder a (State a)
 encodeState = do
-   lm <- withState getLinkManager   
+   lm <- withState getLinkManager
    htmlState <> simpleEncoder (\state -> mconcat
       [ h2 "Feedback"
       , submitDiagnose lm state
@@ -419,11 +419,11 @@ encodeState = do
 encodePrefixes :: [Prefix (Context a)] -> HTMLBuilder
 encodePrefixes = mconcat . zipWith make [1::Int ..]
  where
-   make i pr = mconcat 
+   make i pr = mconcat
       [ h2 $ "Prefix " ++ show i
       , let count p = text $ length $ filter p prSteps
             enter   = spanClass "step-enter" . text
-        in keyValueTable 
+        in keyValueTable
               [ ("steps", count (const True))
               , ("rules", count isRuleStep)
               , ("major rules", count isMajor)
@@ -437,7 +437,7 @@ encodePrefixes = mconcat . zipWith make [1::Int ..]
 isRuleStep :: Step l a -> Bool
 isRuleStep (RuleStep _ _) = True
 isRuleStep _ = False
-   
+
 htmlStep :: Show l => Step l a -> HTMLBuilder
 htmlStep (Enter l)      = spanClass "step-enter" $ string $ "enter " ++ show l
 htmlStep (Exit  l)      = spanClass "step-exit"  $ string $ "exit " ++ show l
@@ -447,13 +447,13 @@ htmlStep (RuleStep _ r) = let s = if isMinor r then "minor" else "major"
 htmlDerivationWith :: HTMLBuilder -> (s -> HTMLBuilder) -> (t -> HTMLBuilder) -> HTMLEncoder a (Derivation s t)
 htmlDerivationWith before forStep forTerm = simpleEncoder $ \d ->
    divClass "derivation" $ mconcat $
-      before : forTerm (firstTerm d) : 
-         [ forStep s <> forTerm a | (_, s, a) <- triples d ] 
+      before : forTerm (firstTerm d) :
+         [ forStep s <> forTerm a | (_, s, a) <- triples d ]
 
-htmlAllFirsts :: HTMLEncoder a [(StepInfo a, State a)] 
-htmlAllFirsts = encoderFor $ \xs -> 
+htmlAllFirsts :: HTMLEncoder a [(StepInfo a, State a)]
+htmlAllFirsts = encoderFor $ \xs ->
    h2 "All firsts" <>
-   ul [ keyValueTable 
+   ul [ keyValueTable
            [ ("Rule", string $ showId r)
            , ("Location", text loc)
            , ("Environment", text env)
@@ -464,7 +464,7 @@ htmlAllFirsts = encoderFor $ \xs ->
 htmlAllApplications :: HTMLEncoder a [(Rule (Context a), Location, State a)]
 htmlAllApplications = encoderFor $ \xs ->
    h2 "All applications" <>
-   ul [ keyValueTable 
+   ul [ keyValueTable
            [ ("Rule", string $ showId r)
            , ("Location", text loc)
            ] <> (if isBuggy r then mempty else htmlState // s)
@@ -473,8 +473,8 @@ htmlAllApplications = encoderFor $ \xs ->
 
 htmlDiagnosis :: HTMLEncoder a (Diagnosis a)
 htmlDiagnosis = encoderFor $ \diagnosis -> do
-   case diagnosis of 
-      Buggy _ r -> 
+   case diagnosis of
+      Buggy _ r ->
          spanClass "error" $ string $ "Not equivalent: buggy rule " ++ show r
       NotEquivalent ->
          spanClass "error" $ string "Not equivalent"
@@ -490,15 +490,15 @@ htmlDiagnosis = encoderFor $ \diagnosis -> do
          h2 "Correct" <> encodeState // s
 
 htmlDescription :: HasId a => a -> HTMLBuilder
-htmlDescription a = munless (null (description a)) $ 
+htmlDescription a = munless (null (description a)) $
    para $
       bold (string "Description") <> br
       <> (spanClass "description" $ string $ description a)
 
 submitForm :: HTMLBuilder -> HTMLBuilder
 submitForm this = element "form"
-   [ "name"     .=. "myform" 
-   , "onsubmit" .=. "return submitTerm()" 
+   [ "name"     .=. "myform"
+   , "onsubmit" .=. "return submitTerm()"
    , "method"   .=. "post"
    , this
    , element "input" ["type" .=. "text", "name" .=. "myterm"]
@@ -507,11 +507,11 @@ submitForm this = element "form"
 
 -- stateinfo service
 submitStateInfo :: LinkManager -> Exercise a -> HTMLBuilder
-submitStateInfo lm ex = 
+submitStateInfo lm ex =
    submitForm (string "other exercise: ")
    <> submitRequest lm request
  where
-   request = "<request service='stateinfo' exerciseid='" ++ showId ex 
+   request = "<request service='stateinfo' exerciseid='" ++ showId ex
           ++ "' encoding='html'><state><expr>\" + getTerm() + \"</expr></state></request>"
 
 -- diagnose service
@@ -520,19 +520,19 @@ submitDiagnose lm st = submitForm mempty <> submitRequest lm request
  where
    request = "<request service='diagnose' exerciseid='" ++ showId (exercise st)
           ++ "' encoding='html'>" ++ ststr ++ "<expr>\"  + getTerm() + \"</expr></request>"
-          
+
    ststr   = case fromBuilder (stateToXML st) of
                 Just el -> concatMap f (show el)
                 Nothing -> ""
-                
+
    f '\\' = "\\\\"
    f c = [c]
- 
+
 submitRequest :: LinkManager -> String -> HTMLBuilder
-submitRequest lm request = submitURL $ 
+submitRequest lm request = submitURL $
    quote (urlForRequest lm) ++ "+encodeURIComponent(" ++ quote request ++ ")"
 
-quote :: String -> String 
+quote :: String -> String
 quote s = '"' : s ++ ['"']
 
 -- Inject two JavaScript functions for handling the input form

@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -33,7 +33,7 @@ class Update f where
    update  :: f a -> (a, a -> f a)
 
 current :: Update f => f a -> a
-current  = fst . update 
+current  = fst . update
 
 change  :: Update f => (a -> a) -> f a -> f a
 change f = (\(x, g) -> g (f x)) . update
@@ -86,7 +86,7 @@ mapWrapper f = wrap . f . unwrap
 
 newtype Mirror a = Mirror { fromMirror :: a }
    deriving (Show, Eq)
-   
+
 instance Wrapper Mirror where
    wrap   = Mirror
    unwrap = fromMirror
@@ -102,7 +102,7 @@ infixr 0 >|<
 (>|<) :: (a -> Maybe a) -> (a -> Maybe a) -> a -> Maybe a
 (f >|< g) a = f a `mplus` g a
 
-safe :: (a -> Maybe a) -> a -> a 
+safe :: (a -> Maybe a) -> a -> a
 safe f a = fromMaybe a (f a)
 
 fixp :: (a -> Maybe a) -> a -> a

@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -16,9 +16,9 @@ module Ideas.Service.Diagnose
    ( Diagnosis(..), diagnose, restartIfNeeded, newState
    ) where
 
-import Ideas.Common.Library hiding (ready)
 import Data.List (sortBy)
 import Data.Maybe
+import Ideas.Common.Library hiding (ready)
 import Ideas.Service.BasicServices hiding (apply)
 import Ideas.Service.State
 import Ideas.Service.Types
@@ -49,7 +49,7 @@ instance Show (Diagnosis a) where
          Correct _ _      -> "Unknown step"
     where
       showArgs as
-         | noBindings as = "" 
+         | noBindings as = ""
          | otherwise     = " (" ++ show as ++ ")"
 
 newState :: Diagnosis a -> Maybe (State a)
@@ -138,7 +138,7 @@ instance Typed a (Diagnosis a) where
       f (Right (Right (Left (b, s, r)))) = Expected b s r
       f (Right (Right (Right (Left (b, s, as, r))))) = Detour b s as r
       f (Right (Right (Right (Right (b, s))))) = Correct b s
-   
+
       g (Buggy as r)       = Left (Left (as, r))
    --   g Missing            = Left (Right (Left ()))
    --   g (IncorrectPart xs) = Left (Right (Right (Left xs)))

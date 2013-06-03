@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -30,9 +30,9 @@ module Ideas.Common.Algebra.Boolean
    , propsBoolean
    ) where
 
+import Control.Applicative
 import Ideas.Common.Algebra.Group
 import Ideas.Common.Algebra.Law
-import Control.Applicative
 import Test.QuickCheck hiding ((><))
 
 --------------------------------------------------------
@@ -64,7 +64,7 @@ instance BoolValue b => BoolValue (a -> b) where
    fromBool x = const (fromBool x)
    isTrue  = error "not implemented"
    isFalse = error "not implemented"
-   
+
 instance Boolean Bool where
    (<&&>)     = (&&)
    (<||>)     = (||)

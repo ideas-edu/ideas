@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -12,7 +12,6 @@
 module Ideas.Text.OpenMath.Tests (propEncoding) where
 
 import Control.Monad
-import Test.QuickCheck
 import Ideas.Text.OpenMath.Dictionary.Arith1
 import Ideas.Text.OpenMath.Dictionary.Calculus1
 import Ideas.Text.OpenMath.Dictionary.Fns1
@@ -24,6 +23,7 @@ import Ideas.Text.OpenMath.Dictionary.Quant1
 import Ideas.Text.OpenMath.Dictionary.Relation1
 import Ideas.Text.OpenMath.Dictionary.Transc1
 import Ideas.Text.OpenMath.Object
+import Test.QuickCheck
 
 arbOMOBJ :: Gen OMOBJ
 arbOMOBJ = sized rec

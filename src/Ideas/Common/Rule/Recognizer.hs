@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -16,15 +16,14 @@ module Ideas.Common.Rule.Recognizer
    , makeRecognizer, makeRecognizerEnvMonad, makeRecognizerTrans
    ) where
 
-import Ideas.Common.Environment
-import Ideas.Common.Rule.EnvironmentMonad
-import Ideas.Common.Rule.Transformation
-import Ideas.Common.Id
-import Ideas.Common.View
 import Control.Monad
 import Data.Maybe
 import Data.Monoid
-               
+import Ideas.Common.Environment
+import Ideas.Common.Rule.EnvironmentMonad
+import Ideas.Common.Rule.Transformation
+import Ideas.Common.View
+
 -----------------------------------------------------------
 --- Data type and type class
 
@@ -32,7 +31,7 @@ class Recognizable f where
    recognizer     :: f a -> Recognizer a
    recognizeAll   :: f a -> a -> a -> [Environment]
    recognize      :: f a -> a -> a -> Maybe Environment
-   recognizeTrans :: f a -> Trans (a, a) () 
+   recognizeTrans :: f a -> Trans (a, a) ()
    -- default definitions
    recognizeAll r a b = map snd $ transApply (recognizeTrans r) (a, b)
    recognize    r a b = listToMaybe $ recognizeAll r a b
@@ -41,8 +40,8 @@ class Recognizable f where
 newtype Recognizer a = R { unR :: Trans (a, a) () }
 
 instance LiftView Recognizer where
-   liftViewIn v r = 
-      let f = fmap fst . match v 
+   liftViewIn v r =
+      let f = fmap fst . match v
       in R $ makeTrans f *** makeTrans f >>> unR r
 
 instance Monoid (Recognizer a) where

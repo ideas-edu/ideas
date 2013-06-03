@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -26,7 +26,7 @@ import Ideas.Service.Types
 data Message = M { accept :: Maybe Bool, text :: Text }
 
 instance Typed a Message where
-   typed = Tag "Message" $ Iso (f <-> g) typed 
+   typed = Tag "Message" $ Iso (f <-> g) typed
     where
       f   = either (\(b, t) -> M (Just b) t) (M Nothing)
       g m = maybe (Right (text m)) (\b -> Left (b, text m)) (accept m)
@@ -45,8 +45,8 @@ onefirsttext script old event =
    , fmap snd next
    )
  where
-   feedbackId = newId $ if event == Just "hint button" 
-                        then "hint" 
+   feedbackId = newId $ if event == Just "hint button"
+                        then "hint"
                         else "step"
    ex   = exercise old
    next = either (const Nothing) Just (onefirst old)

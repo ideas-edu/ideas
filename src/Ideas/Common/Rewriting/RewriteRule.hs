@@ -1,7 +1,7 @@
 {-# LANGUAGE ExistentialQuantification, MultiParamTypeClasses,
        FunctionalDependencies, FlexibleInstances, UndecidableInstances #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -24,16 +24,16 @@ module Ideas.Common.Rewriting.RewriteRule
    , symbolMatcher, symbolBuilder
    ) where
 
-import Ideas.Common.Environment
+import Data.Maybe
+import Data.Monoid
 import Ideas.Common.Classes
+import Ideas.Common.Environment
 import Ideas.Common.Id
 import Ideas.Common.Rewriting.Substitution
 import Ideas.Common.Rewriting.Term
 import Ideas.Common.Rewriting.Unification
 import Ideas.Common.Utils.Uniplate (descend)
 import Ideas.Common.View hiding (match)
-import Data.Maybe
-import Data.Monoid
 import qualified Data.IntSet as IS
 import qualified Data.Map as M
 
@@ -92,7 +92,7 @@ buildFunction n f = fzip (fill n) ((f *** f) different)
 fill :: Int -> Term -> Term -> Term
 fill i = rec
  where
-   rec (TCon s xs) (TCon t ys) | s == t && length xs == length ys = 
+   rec (TCon s xs) (TCon t ys) | s == t && length xs == length ys =
       TCon s (zipWith rec xs ys)
    rec (TList xs) (TList ys) | length xs == length ys =
       TList (zipWith rec xs ys)
@@ -100,7 +100,7 @@ fill i = rec
       | a == b    = a
       | otherwise = TMeta i
 
-buildSpec :: M.Map Symbol SymbolMatch 
+buildSpec :: M.Map Symbol SymbolMatch
           -> M.Map Symbol ([Term] -> Term)
           -> RuleSpec Term -> Term -> [(Term, [Term])]
 buildSpec sm sb (lhs :~> rhs) a = do
@@ -116,12 +116,12 @@ buildSpec sm sb (lhs :~> rhs) a = do
       | M.null sb = id
       | otherwise = rec
     where
-      rec (TCon s xs) = 
+      rec (TCon s xs) =
          fromMaybe (TCon s) (M.lookup s sb) (map rec xs)
       rec term = term
 
 makeRewriteRule :: (IsId n, RuleBuilder f a) => n -> f -> RewriteRule a
-makeRewriteRule s f = 
+makeRewriteRule s f =
    R (newId s) (buildRuleSpec 0 f) show termView M.empty M.empty
 
 symbolMatcher :: Symbol -> SymbolMatch -> RewriteRule a -> RewriteRule a

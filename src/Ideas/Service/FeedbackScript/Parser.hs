@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -11,21 +11,20 @@
 -- Simple parser for feedback scripts
 --
 -----------------------------------------------------------------------------
-module Ideas.Service.FeedbackScript.Parser 
+module Ideas.Service.FeedbackScript.Parser
    ( parseScript, parseScriptSafe, Script
    ) where
 
-import Ideas.Common.Id
-import Control.Monad.Error
 import Control.Exception hiding (try)
-import Prelude hiding (catch)
+import Control.Monad.Error
 import Data.Char
 import Data.List
 import Data.Monoid
-import System.Directory
+import Ideas.Common.Id
 import Ideas.Service.FeedbackScript.Syntax
-import Text.ParserCombinators.Parsec
 import Ideas.Text.Parsing
+import Prelude hiding (catch)
+import System.Directory
 import System.FilePath
 
 -- returns the empty script if something goes wrong
@@ -47,14 +46,14 @@ parseScript file = rec [] [file]
 
 parseOneScriptFile :: FilePath -> IO Script
 parseOneScriptFile file = do
-   result <- parseFromFile script file `catch` handler 
+   result <- parseFromFile script file `catch` handler
    case result of
       Left e   -> print e >> return mempty
       Right xs -> return xs
  where
    -- on failure, visit scripts directory (if this directory exists)
    handler :: IOException -> IO (Either ParseError Script)
-   handler io = do 
+   handler io = do
       b <- doesDirectoryExist "scripts"
       if b && not ("scripts" `isPrefixOf` file)
          then parseFromFile script ("scripts/" ++ file)

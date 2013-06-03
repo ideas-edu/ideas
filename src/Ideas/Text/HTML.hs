@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -25,20 +25,20 @@ module Ideas.Text.HTML
      -- HTML generic attributes
    , idA, classA, styleA, titleA
      -- Font style elements
-   , tt, italic, bold, big, small                  
+   , tt, italic, bold, big, small
    , module Data.Monoid
    ) where
 
 import Data.Char
 import Data.List
 import Data.Monoid
-import Prelude hiding (div)
 import Ideas.Text.XML
+import Prelude hiding (div)
 import qualified Ideas.Text.XML as XML
 
 type HTMLBuilder = XMLBuilder
 
-data HTMLPage = HTMLPage 
+data HTMLPage = HTMLPage
    { title       :: String
    , styleSheets :: [FilePath]
    , scripts     :: [FilePath]
@@ -47,35 +47,26 @@ data HTMLPage = HTMLPage
 
 instance InXML HTMLPage where
    toXML page = makeXML "html" $
-      element "head" 
+      element "head"
          [ tag "title" (string (title page))
-         , mconcat 
-              [ element "link" 
+         , mconcat
+              [ element "link"
                    [ "rel"  .=. "STYLESHEET"
                    , "href" .=. css
                    , "type" .=. "text/css"
                    ]
-              | css <- styleSheets page 
+              | css <- styleSheets page
               ]
-         , mconcat 
+         , mconcat
               [ tag "script" ("src" .=. js)
-              | js <- scripts page 
+              | js <- scripts page
               ]
          ]
       <> tag "body" (htmlContent page)
+   fromXML _ = fail "HTMLPage.fromXML"
 
 showHTML :: HTMLPage -> String
-showHTML = compactXML . toXML {-
-htmlPage title css body = makeXML "html" $
-   element "head"
-      [ munless (null title) $
-           tag "title" (string title)
-      , case css of
-           Nothing -> mempty
-           Just n  -> 
-      ]
-   <> tag "body" body
--}
+showHTML = compactXML . toXML
 
 addCSS :: FilePath -> HTMLPage -> HTMLPage
 addCSS css page = page { styleSheets = css : styleSheets page }
@@ -128,7 +119,7 @@ table b rows = element "table" $
         ("class" .=. getClass i) :
         [ tag "td" c | c <- row ]
    | (i, row) <- zip [0::Int ..] rows
-   ]   
+   ]
  where
    getClass i
       | i == 0 && b = "top-row"
@@ -136,10 +127,10 @@ table b rows = element "table" $
       | otherwise   = "odd-row"
 
 keyValueTable :: BuildXML a => [(String, a)] -> a
-keyValueTable = 
+keyValueTable =
    let f (s, a) = [spanClass "table-key" (string s), a]
-   in para . table False . map f 
-   
+   in para . table False . map f
+
 spaces :: BuildXML a => Int -> a
 spaces n = mconcat (replicate n space)
 

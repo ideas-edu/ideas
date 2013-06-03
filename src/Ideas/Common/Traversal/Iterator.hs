@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
--- Copyright 2011, Open Universiteit Nederland. This file is distributed
+-- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -18,10 +18,10 @@ module Ideas.Common.Traversal.Iterator
    , ListIterator
    ) where
 
-import Ideas.Common.Traversal.Utils
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Ideas.Common.Traversal.Utils
 import Test.QuickCheck
 
 ---------------------------------------------------------------
@@ -77,35 +77,35 @@ searchWith f p = rec
 ---------------------------------------------------------------
 -- List iterator
 
-data ListIterator a = LI [a] a [a] 
+data ListIterator a = LI [a] a [a]
    deriving Eq
-   
+
 instance Show a => Show (ListIterator a) where
-   show (LI xs y ys) = 
+   show (LI xs y ys) =
       let listLike   = brackets . intercalate ","
           brackets s = "[" ++ s ++ "]"
           focusOn  s = "<<" ++ s ++ ">>"
       in listLike (map show (reverse xs) ++ focusOn (show y) : map show ys)
-      
+
 instance Iterator (ListIterator a) where
    previous (LI (x:xs) y ys) = Just (LI xs x (y:ys))
    previous _                = Nothing
-      
+
    next     (LI xs x (y:ys)) = Just (LI (x:xs) y ys)
    next     _                = Nothing
-   
+
    position (LI xs _ _) = length xs
 
 instance Focus (ListIterator a) where
    type Unfocus (ListIterator a) = [a]
-   
+
    focusM []     = Nothing
    focusM (x:xs) = Just (LI [] x xs)
-   
+
    unfocus (LI xs y ys) = reverse xs ++ y : ys
 
 instance Update ListIterator where
    update (LI xs a ys) = (a, \b -> LI xs b ys)
-   
+
 instance Arbitrary a => Arbitrary (ListIterator a) where
    arbitrary = liftM3 LI arbitrary arbitrary arbitrary

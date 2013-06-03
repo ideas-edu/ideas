@@ -32,11 +32,11 @@ Library
   hs-source-dirs:    src
   Exposed-modules:
    Ideas.Common.Algebra.Boolean
-   Ideas.Common.Algebra.CoBoolean
-   Ideas.Common.Algebra.CoField
-   Ideas.Common.Algebra.CoGroup
+   Ideas.Common.Algebra.BooleanLaws
    Ideas.Common.Algebra.Field
+   Ideas.Common.Algebra.FieldLaws
    Ideas.Common.Algebra.Group
+   Ideas.Common.Algebra.GroupLaws
    Ideas.Common.Algebra.Law
    Ideas.Common.Algebra.SmartGroup
    Ideas.Common.Classes

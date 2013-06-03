@@ -14,26 +14,16 @@ module Ideas.Common.Algebra.Boolean
    ( -- * Boolean algebra
      BoolValue(..), Boolean(..)
    , ands, ors, implies, equivalent
-   , andOverOrLaws, orOverAndLaws
-   , complementAndLaws, complementOrLaws
-   , absorptionAndLaws, absorptionOrLaws
-   , deMorganAnd, deMorganOr
-   , doubleComplement, complementTrue, complementFalse
-   , booleanLaws
-     -- * Dual monoid
-   , DualMonoid(..)
-     -- * And monoid
-   , And(..), fromAndLaw
-     -- * Or monoid
-   , Or(..), fromOrLaw
-     -- * Properties
-   , propsBoolean
+     -- * CoBoolean (matching)
+   , CoBoolean(..), conjunctions, disjunctions
+     -- * Monoids monoid
+   , DualMonoid(..), And(..), Or(..)
    ) where
 
 import Control.Applicative
 import Ideas.Common.Algebra.Group
-import Ideas.Common.Algebra.Law
-import Test.QuickCheck hiding ((><))
+import Ideas.Common.Classes
+import Test.QuickCheck
 
 --------------------------------------------------------
 -- Boolean algebra
@@ -89,37 +79,33 @@ implies a b = complement a <||> b
 equivalent :: Boolean a => a -> a -> a
 equivalent a b = (a <&&> b) <||> (complement a <&&> complement b)
 
-andOverOrLaws, orOverAndLaws :: Boolean a => [Law a]
-andOverOrLaws = map fromAndLaw dualDistributive
-orOverAndLaws = map fromOrLaw  dualDistributive
+--------------------------------------------------------
+-- CoBoolean (matching)
 
-complementAndLaws, complementOrLaws :: Boolean a => [Law a]
-complementAndLaws = map fromAndLaw dualComplement
-complementOrLaws  = map fromOrLaw  dualComplement
+class BoolValue a => CoBoolean a where
+   isAnd        :: a -> Maybe (a, a)
+   isOr         :: a -> Maybe (a, a)
+   isComplement :: a -> Maybe a
 
-absorptionAndLaws, absorptionOrLaws :: Boolean a => [Law a]
-absorptionAndLaws = map fromAndLaw dualAbsorption
-absorptionOrLaws  = map fromOrLaw  dualAbsorption
+instance CoBoolean a => CoMonoid (And a) where
+   isEmpty  = isTrue . fromAnd
+   isAppend = fmap (mapBoth And) . isAnd . fromAnd
 
-deMorganAnd, deMorganOr :: Boolean a => Law a
-deMorganAnd = fromAndLaw deMorgan
-deMorganOr  = fromOrLaw  deMorgan
+instance CoBoolean a => CoMonoidZero (And a) where
+   isMonoidZero = isFalse . fromAnd
 
-doubleComplement :: Boolean a => Law a
-doubleComplement = law "double-complement" $ \a ->
-   complement (complement a) :==: a
+instance CoBoolean a => CoMonoid (Or a) where
+   isEmpty  = isFalse . fromOr
+   isAppend = fmap (mapBoth Or) . isOr . fromOr
 
-complementTrue, complementFalse :: Boolean a => Law a
-complementTrue  = fromAndLaw dualTrueFalse
-complementFalse = fromOrLaw  dualTrueFalse
+instance CoBoolean a => CoMonoidZero (Or a) where
+   isMonoidZero = isTrue . fromOr
 
-booleanLaws :: Boolean a => [Law a]
-booleanLaws =
-   map fromAndLaw (idempotent : zeroLaws ++ commutativeMonoidLaws) ++
-   map fromOrLaw  (idempotent : zeroLaws ++ commutativeMonoidLaws) ++
-   andOverOrLaws ++ orOverAndLaws ++ complementAndLaws ++ complementOrLaws ++
-   absorptionAndLaws ++ absorptionOrLaws ++
-   [deMorganAnd, deMorganOr, doubleComplement, complementTrue, complementFalse]
+conjunctions :: CoBoolean a => a -> [a]
+conjunctions = map fromAnd . associativeList . And
+
+disjunctions :: CoBoolean a => a -> [a]
+disjunctions = map fromOr . associativeList . Or
 
 --------------------------------------------------------
 -- Dual monoid for a monoid (and for or, and vice versa)
@@ -127,30 +113,6 @@ booleanLaws =
 class MonoidZero a => DualMonoid a where
    (><)      :: a -> a -> a
    dualCompl :: a -> a
-
-dualDistributive :: DualMonoid a => [Law a]
-dualDistributive =
-   [leftDistributiveFor (<>) (><), rightDistributiveFor (<>) (><)]
-
-dualAbsorption :: DualMonoid a => [Law a]
-dualAbsorption =
-   [ law "absorption" $ \a b -> a `f` (a `g` b) :==: a
-   | f <- [(<>), flip (<>)]
-   , g <- [(><), flip (><)]
-   ]
-
-dualComplement :: DualMonoid a => [Law a]
-dualComplement =
-   [ law "complement" $ \a -> dualCompl a <> a :==: mzero
-   , law "complement" $ \a -> a <> dualCompl a :==: mzero
-   ]
-
-dualTrueFalse :: DualMonoid a => Law a
-dualTrueFalse = law "true-false" $ dualCompl mempty :==: mzero
-
-deMorgan :: DualMonoid a => Law a
-deMorgan = law "demorgan" $ \a b ->
-   dualCompl (a <> b) :==: dualCompl a >< dualCompl b
 
 --------------------------------------------------------
 -- And monoid
@@ -176,9 +138,6 @@ instance Boolean a => DualMonoid (And a) where
    (><)      = liftA2 (<||>)
    dualCompl = liftA complement
 
-fromAndLaw :: Law (And a) -> Law a
-fromAndLaw = mapLaw And fromAnd
-
 --------------------------------------------------------
 -- Or monoid
 
@@ -202,12 +161,3 @@ instance Boolean a => MonoidZero (Or a) where
 instance Boolean a => DualMonoid (Or a) where
    (><)      = liftA2 (<&&>)
    dualCompl = liftA complement
-
-fromOrLaw :: Law (Or a) -> Law a
-fromOrLaw = mapLaw Or fromOr
-
---------------------------------------------------------
--- Tests for Bool instance
-
-propsBoolean :: [Property]
-propsBoolean = map property (booleanLaws :: [Law Bool])

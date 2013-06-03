@@ -10,13 +10,22 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Ideas.Common.Algebra.SmartGroup where
+module Ideas.Common.Algebra.SmartGroup 
+   ( -- * Smart datatypes
+     Smart(..), SmartZero(..), SmartGroup(..)
+     --- * Smart field
+   , SmartField(..), (.+.), (.-.), neg, (.*.), (./.)
+     -- * Smart booleans 
+   , (.&&.), (.||.)
+   ) where
 
 import Control.Applicative
 import Control.Monad (mplus)
 import Data.Maybe
-import Ideas.Common.Algebra.CoGroup
 import Ideas.Common.Algebra.Group
+import qualified Ideas.Common.Algebra.Field as Field
+import Ideas.Common.Algebra.Field hiding ((<*>))
+import Ideas.Common.Algebra.Boolean
 
 newtype Smart a = Smart {fromSmart :: a}
    deriving (Show, Eq, Ord, CoMonoid, MonoidZero, CoMonoidZero)
@@ -93,3 +102,97 @@ matchGroup (emp, app, inv, appinv) a =
    fmap (uncurry app) (isAppend a)  `mplus`
    fmap inv (isInverse a) `mplus`
    fmap (uncurry appinv) (isAppendInv a)
+
+--------------------------------------------------------------
+-- Smart Field
+
+newtype SmartField a = SmartField {fromSmartField :: a}
+   deriving (CoSemiRing, CoRing, CoField)
+
+instance Functor SmartField where -- could be derived
+   fmap f = SmartField . f . fromSmartField
+
+instance Applicative SmartField where
+   pure = SmartField
+   SmartField f <*> SmartField a = SmartField (f a)
+
+instance (CoField a, Field a) => SemiRing (SmartField a) where
+   zero = SmartField zero
+   one  = SmartField one
+   SmartField a <+> SmartField b = SmartField $ fromAdditive $ fromSmartGroup $
+      SmartGroup (Additive a) <> SmartGroup (Additive b)
+   a <*> b
+      | Just x <- isNegate a = plusInverse (x Field.<*> b)
+      | Just x <- isNegate b = plusInverse (a Field.<*> x)
+      | isZero a || isZero b = zero
+      | isOne a = b
+      | isOne b = a
+      | Just (x, y) <- isTimes b = (a Field.<*> x) Field.<*> y
+      | Just (x, y) <- isDivision b = (a Field.<*> x) </> y
+      | otherwise = liftA2 (Field.<*>) a b
+
+instance (CoField a, Field a) => Ring (SmartField a) where
+   plusInverse = SmartField . fromAdditive . fromSmartGroup . inverse
+               . SmartGroup . Additive . fromSmartField
+   SmartField a <-> SmartField b = SmartField $ fromAdditive $ fromSmartGroup $
+      SmartGroup (Additive a) <>- SmartGroup (Additive b)
+
+instance (CoField a, Field a) => Field (SmartField a) where
+   timesInverse a
+      | Just x <- isNegate a = plusInverse (timesInverse x)
+      | Just (x, y) <- isDivision a, isOne y = x
+      | otherwise = liftA timesInverse a
+   a </> b
+      | Just x <- isNegate a = plusInverse (x </> b)
+      | Just x <- isNegate b = plusInverse (a </> x)
+      | isOne b = a
+      | Just (x, y) <- isDivision a = x </> (y Field.<*> b)
+      | otherwise = liftA2 (</>) a b
+
+------------------------------------------------------------------
+
+infixl 7 .*., ./.
+infixl 6 .-., .+.
+
+(.+.) :: (CoField a, Field a) => a -> a -> a
+a .+. b = fromSmartField $ SmartField a <+> SmartField b
+
+(.-.) :: (CoField a, Field a) => a -> a -> a
+a .-. b = fromSmartField $ SmartField a <-> SmartField b
+
+neg :: (CoField a, Field a) => a -> a
+neg = fromSmartField . plusInverse . SmartField
+
+(.*.) :: (CoField a, Field a) => a -> a -> a
+a .*. b = fromSmartField $ SmartField a Field.<*> SmartField b
+
+(./.) :: (CoField a, Field a) => a -> a -> a
+a ./. b = fromSmartField $ SmartField a </> SmartField b
+
+-- myrecip :: (CoField a, Field a) => a -> a
+-- myrecip = fromSmartField . timesInverse . SmartField
+
+--------------------------------------------------------------
+-- Smart booleans 
+  
+instance BoolValue a => BoolValue (Smart a) where
+   fromBool = Smart   . fromBool
+   isTrue   = isTrue  . fromSmart
+   isFalse  = isFalse . fromSmart
+
+instance (Boolean a, CoBoolean a) => Boolean (Smart a) where
+   a <&&> b = fmap fromAnd $ fromSmartZero $
+      SmartZero (fmap And a) <> SmartZero (fmap And b)
+   a <||> b = fmap fromOr $ fromSmartZero $
+      SmartZero (fmap Or a) <> SmartZero (fmap Or b)
+   complement (Smart a)
+      | isTrue  a = false
+      | isFalse a = true
+      | otherwise = Smart $ fromMaybe (complement a) (isComplement a)
+
+infixr 4 .||.
+infixr 5 .&&.
+
+(.&&.), (.||.) :: (Boolean a, CoBoolean a) => a -> a -> a
+a .&&. b = fromSmart $ Smart a <&&> Smart b
+a .||. b = fromSmart $ Smart a <||> Smart b

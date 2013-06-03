@@ -13,26 +13,23 @@
 module Ideas.Common.Algebra.Field
    ( -- * Semi-ring
      SemiRing(..)
-   , leftDistributive, rightDistributive
-   , distributiveLaws, semiRingLaws
      -- * Ring
-   , Ring(..), leftNegateTimes, rightNegateTimes
-   , negateTimesLaws, ringLaws, commutativeRingLaws
-   , distributiveSubtractionLaws
+   , Ring(..)
      -- * Field
-   , Field(..), exchangeInverses, fieldLaws
+   , Field(..)
      -- * Additive monoid
-   , Additive(..), fromAdditiveLaw
+   , Additive(..)
      -- * Multiplicative monoid
-   , Multiplicative(..), fromMultiplicativeLaw
+   , Multiplicative(..)
      -- * Datatype for safe numeric operators
    , SafeNum, safeNum
-   , propsField
+     -- * CoSemiRing, CoRing, and CoField (for matching)
+   , CoSemiRing(..), CoRing(..), CoField(..)
    ) where
 
 import Control.Monad
 import Ideas.Common.Algebra.Group
-import Ideas.Common.Algebra.Law
+import Ideas.Common.Classes (mapBoth)
 import Test.QuickCheck
 import qualified Control.Applicative as A
 
@@ -57,21 +54,6 @@ class SemiRing a where
    product [] = one
    product xs = foldl1 (<*>) xs
 
-leftDistributive :: SemiRing a => Law a
-leftDistributive = leftDistributiveFor (<*>) (<+>)
-
-rightDistributive :: SemiRing a => Law a
-rightDistributive = rightDistributiveFor (<*>) (<+>)
-
-distributiveLaws :: SemiRing a => [Law a]
-distributiveLaws = [leftDistributive, rightDistributive]
-
-semiRingLaws :: SemiRing a => [Law a]
-semiRingLaws =
-   map fromAdditiveLaw commutativeMonoidLaws ++
-   map fromMultiplicativeLaw monoidZeroLaws ++
-   distributiveLaws
-
 --------------------------------------------------------
 -- Ring
 
@@ -85,31 +67,6 @@ class SemiRing a => Ring a where
    plusInverse = (zero <->)
    a <-> b     = a <+> plusInverse b
 
-leftNegateTimes :: Ring a => Law a
-leftNegateTimes = law "left-negate-times" $ \a b ->
-   plusInverse a <*> b :==: plusInverse (a <*> b)
-
-rightNegateTimes :: Ring a => Law a
-rightNegateTimes = law "right-negate-times" $ \a b ->
-   a <*> plusInverse b :==: plusInverse (a <*> b)
-
-negateTimesLaws :: Ring a => [Law a]
-negateTimesLaws = [leftNegateTimes, rightNegateTimes]
-
-ringLaws :: Ring a => [Law a]
-ringLaws =
-   map fromAdditiveLaw abelianGroupLaws ++
-   map fromMultiplicativeLaw monoidZeroLaws ++
-   distributiveLaws ++ negateTimesLaws
-
-commutativeRingLaws :: Ring a => [Law a]
-commutativeRingLaws =
-   fromMultiplicativeLaw commutative : ringLaws
-
-distributiveSubtractionLaws :: Ring a => [Law a]
-distributiveSubtractionLaws =
-   [leftDistributiveFor (<*>) (<->), rightDistributiveFor (<*>) (<->)]
-
 --------------------------------------------------------
 -- Field
 
@@ -122,16 +79,6 @@ class Ring a => Field a where
    -- default definitions
    timesInverse = (one </>)
    a </> b      = a <*> timesInverse b
-
-exchangeInverses :: Field a => Law a
-exchangeInverses = law "exchange-inverses" $ \a ->
-   timesInverse (plusInverse a) :==: plusInverse (timesInverse a)
-
-fieldLaws :: Field a => [Law a]
-fieldLaws =
-   map fromAdditiveLaw abelianGroupLaws ++
-   map fromMultiplicativeLaw abelianGroupLaws ++
-   distributiveLaws ++ negateTimesLaws ++ [exchangeInverses]
 
 --------------------------------------------------------
 -- Additive monoid
@@ -153,9 +100,6 @@ instance SemiRing a => Monoid (Additive a) where
 instance Ring a => Group (Additive a) where
    inverse   = A.liftA plusInverse
    appendInv = A.liftA2 (<->)
-
-fromAdditiveLaw :: Law (Additive a) -> Law a
-fromAdditiveLaw = mapLaw Additive fromAdditive
 
 --------------------------------------------------------
 -- Multiplicative monoid
@@ -180,9 +124,6 @@ instance Field a => Group (Multiplicative a) where
 
 instance SemiRing a => MonoidZero (Multiplicative a) where
    mzero = Multiplicative zero
-
-fromMultiplicativeLaw :: Law (Multiplicative a) -> Law a
-fromMultiplicativeLaw = mapLaw Multiplicative fromMultiplicative
 
 --------------------------------------------------------
 -- Datatype for safe numeric operators
@@ -246,6 +187,45 @@ instance (Eq a, Fractional a) => Field (SafeNum a) where
 safeDivisor :: (Eq a, Num a) => SafeNum a -> SafeNum a
 safeDivisor m = m >>= \a ->
    if a == 0 then fail "division by zero" else return a
+   
+------------------------------------------------------------
 
-propsField :: [Property]
-propsField = map property (fieldLaws :: [Law (SafeNum Rational)])
+class CoSemiRing a where
+   -- additive
+   isPlus  :: a -> Maybe (a, a)
+   isZero  :: a -> Bool
+   -- multiplicative
+   isTimes :: a -> Maybe (a, a)
+   isOne   :: a -> Bool
+
+-- Minimal complete definition: plusInverse or <->
+class CoSemiRing a => CoRing a where
+   isNegate :: a -> Maybe a
+   isMinus  :: a -> Maybe (a, a)
+   -- default definition
+   isMinus _ = Nothing
+
+class CoRing a => CoField a where
+   isRecip    :: a -> Maybe a
+   isDivision :: a -> Maybe (a, a)
+   -- default definition
+   isDivision _ = Nothing
+
+instance CoSemiRing a => CoMonoid (Additive a) where
+   isEmpty  = isZero . fromAdditive
+   isAppend = fmap (mapBoth Additive) . isPlus . fromAdditive
+
+instance CoRing a => CoGroup (Additive a) where
+   isInverse   = fmap Additive . isNegate . fromAdditive
+   isAppendInv = fmap (mapBoth Additive) . isMinus . fromAdditive
+
+instance CoSemiRing a => CoMonoid (Multiplicative a) where
+   isEmpty  = isOne . fromMultiplicative
+   isAppend = fmap (mapBoth Multiplicative) . isTimes . fromMultiplicative
+
+instance CoField a => CoGroup (Multiplicative a) where
+   isInverse   = fmap Multiplicative . isRecip . fromMultiplicative
+   isAppendInv = fmap (mapBoth Multiplicative) . isDivision . fromMultiplicative
+
+instance CoSemiRing a => CoMonoidZero (Multiplicative a) where
+   isMonoidZero = isZero . fromMultiplicative

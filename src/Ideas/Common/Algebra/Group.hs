@@ -13,54 +13,23 @@
 module Ideas.Common.Algebra.Group
    ( -- * Monoids
      Monoid(..), (<>)
-   , associative, leftIdentity
-   , rightIdentity, identityLaws, monoidLaws, commutativeMonoidLaws
-   , idempotent
      -- * Groups
-   , Group(..), (<>-), leftInverse, rightInverse, doubleInverse
-   , inverseIdentity, inverseDistrFlipped, inverseLaws, groupLaws
-   , appendInverseLaws
-     -- * Abelian groups
-   , commutative, inverseDistr, abelianGroupLaws
+   , Group(..), (<>-)
      -- * Monoids with a zero element
-   , MonoidZero(..), leftZero, rightZero, zeroLaws, monoidZeroLaws
-   , WithZero, fromWithZero
-     -- * Generalized laws
-   , associativeFor, commutativeFor, idempotentFor
-   , leftDistributiveFor, rightDistributiveFor
+   , MonoidZero(..), WithZero, fromWithZero
+     -- * CoMonoid, CoGroup, and CoMonoidZero (for matching)
+   , CoMonoid(..), CoGroup(..), CoMonoidZero(..)
+   , associativeList
    ) where
 
-import Control.Applicative (Applicative)
+import Control.Applicative
 import Control.Monad (liftM2)
 import Data.Foldable (Foldable)
 import Data.Monoid
+import Data.Maybe
+import Ideas.Common.Classes
+import qualified Data.Set as S
 import Data.Traversable (Traversable)
-import Ideas.Common.Algebra.Law
-
---------------------------------------------------------
--- Monoids
-
-associative :: Monoid a => Law a
-associative = associativeFor (<>)
-
-leftIdentity :: Monoid a => Law a
-leftIdentity = law "left-identity" $ \a -> mempty <> a :==: a
-
-rightIdentity :: Monoid a => Law a
-rightIdentity = law "right-identity" $ \a -> a <> mempty :==: a
-
-identityLaws :: Monoid a => [Law a]
-identityLaws = [leftIdentity, rightIdentity]
-
-monoidLaws :: Monoid a => [Law a]
-monoidLaws = associative : identityLaws
-
-commutativeMonoidLaws :: Monoid a => [Law a]
-commutativeMonoidLaws = monoidLaws ++ [commutative]
-
--- | Not all monoids are idempotent (see: idempotentFor)
-idempotent :: Monoid a => Law a
-idempotent = idempotentFor (<>)
 
 --------------------------------------------------------
 -- Groups
@@ -78,57 +47,6 @@ infixl 6 <>-
 (<>-) :: Group a => a -> a -> a
 (<>-) = appendInv
 
-leftInverse :: Group a => Law a
-leftInverse = law "left-inverse" $ \a -> inverse a <> a :==: mempty
-
-rightInverse :: Group a => Law a
-rightInverse = law "right-inverse" $ \a -> a <> inverse a :==: mempty
-
-doubleInverse :: Group a => Law a
-doubleInverse = law "double-inverse" $ \a -> inverse (inverse a) :==: a
-
-inverseIdentity :: Group a => Law a
-inverseIdentity = law "inverse-identity" $ inverse mempty :==: mempty
-
-inverseDistrFlipped :: Group a => Law a
-inverseDistrFlipped = law "inverse-distr-flipped" $ \a b ->
-   inverse (a <> b) :==: inverse b <> inverse a
-
-inverseLaws :: Group a => [Law a]
-inverseLaws = [leftInverse, rightInverse]
-
-groupLaws :: Group a => [Law a]
-groupLaws = monoidLaws ++ inverseLaws ++
-   [doubleInverse, inverseIdentity, inverseDistrFlipped]
-
-appendInverseLaws :: Group a => [Law a]
-appendInverseLaws =
-   [ make 1 $ \a b   ->           a <>- b :==: a <> inverse b
-   , make 2 $ \a     ->           a <>- a :==: mempty
-   , make 3 $ \a     ->      a <>- mempty :==: a
-   , make 4 $ \a     ->      mempty <>- a :==: inverse a
-   , make 5 $ \a b c ->    a <>- (b <> c) :==: (a <>- b) <>- c
-   , make 6 $ \a b c ->   a <>- (b <>- c) :==: (a <>- b) <> c
-   , make 7 $ \a b c ->    a <> (b <>- c) :==: (a <> b) <>- c
-   , make 8 $ \a b   ->   a <>- inverse b :==: a <> b
-   , make 9 $ \a b   -> inverse (a <>- b) :==: inverse a <> b
-   ]
- where
-    make n = law ("append-inverse-law" ++ show (n :: Int))
-
---------------------------------------------------------
--- Abelian groups
-
-commutative :: Monoid a => Law a
-commutative = commutativeFor (<>)
-
-inverseDistr :: Group a => Law a
-inverseDistr = law "inverse-distr" $ \a b ->
-    inverse (a <> b) :==: (inverse a <> inverse b)
-
-abelianGroupLaws :: Group a => [Law a]
-abelianGroupLaws = groupLaws ++ [commutative, inverseDistr]
-
 --------------------------------------------------------
 -- Monoids with a zero element
 -- This element could be the additive identity from a (semi-)ring for
@@ -136,18 +54,6 @@ abelianGroupLaws = groupLaws ++ [commutative, inverseDistr]
 
 class Monoid a => MonoidZero a where
    mzero :: a
-
-leftZero :: MonoidZero a => Law a
-leftZero = law "left-zero" $ \a -> mzero <> a :==: mzero
-
-rightZero:: MonoidZero a => Law a
-rightZero = law "right-zero" $ \a -> a <> mzero :==: mzero
-
-zeroLaws :: MonoidZero a => [Law a]
-zeroLaws = [leftZero, rightZero]
-
-monoidZeroLaws :: MonoidZero a => [Law a]
-monoidZeroLaws = monoidLaws ++ zeroLaws
 
 -- Type that adds a zero element
 newtype WithZero a = WZ { fromWithZero :: Maybe a }
@@ -161,22 +67,128 @@ instance Monoid a => MonoidZero (WithZero a) where
    mzero = WZ Nothing
 
 --------------------------------------------------------
--- Generalized laws
+-- Groups
 
-associativeFor :: (a -> a -> a) -> Law a
-associativeFor (?) = law "associative" $ \a b c ->
-   a ? (b ? c) :==: (a ? b) ? c
+class CoMonoid a where
+   isEmpty  :: a -> Bool
+   isAppend :: a -> Maybe (a, a)
 
-commutativeFor :: (a -> a -> a) -> Law a
-commutativeFor (?) = law "commutative" $ \a b -> a ? b :==: b ? a
+class CoMonoid a => CoGroup a where
+   isInverse   :: a -> Maybe a
+   isAppendInv :: a -> Maybe (a, a)
+   -- default definition
+   isAppendInv = const Nothing
 
-idempotentFor :: (a -> a -> a) -> Law a
-idempotentFor (?) = law "idempotent" $ \a -> a ? a :==: a
+class CoMonoid a => CoMonoidZero a where
+   isMonoidZero :: a -> Bool
 
-leftDistributiveFor :: (a -> a -> a) -> (a -> a -> a) -> Law a
-leftDistributiveFor (<*>) (<+>) = law "left-distributive" $ \a b c ->
-   a <*> (b <+> c) :==: (a <*> b) <+> (a <*> c)
+fromSemiGroup :: (CoMonoid a, Monoid b) => (a -> b) -> a -> b
+fromSemiGroup f = rec
+ where
+   rec a = maybe (f a) make (isAppend a)
+   make (x, y) = rec x <> rec y
+{-
+fromMonoid :: (CoMonoid a, Monoid b) => (a -> b) -> a -> b
+fromMonoid f = fromSemiGroup $ \a ->
+   if isEmpty a then mempty else f a
 
-rightDistributiveFor :: (a -> a -> a) -> (a -> a -> a) -> Law a
-rightDistributiveFor (<*>) (<+>) = law "right-distributive" $ \a b c ->
-   (a <+> b) <*> c :==: (a <*> c) <+> (b <*> c)
+fromGroup :: (CoGroup a, Group b) => (a -> b) -> a -> b
+fromGroup f = rec
+ where
+   rec = fromMonoid $ \a ->
+      case isInverse a of
+         Just x  -> inverse (rec x)
+         Nothing ->
+            case isAppendInverse a of
+               Just (x, y) -> rec x <>- rec y
+               Nothing     -> f a
+
+fromMonoidZero :: (CoMonoidZero a, MonoidZero b) => (a -> b) -> a -> b
+fromMonoidZero f = fromMonoid $ \a ->
+   if isZero a then zero else f a
+
+----------------------
+-}
+associativeList :: CoMonoid a => a -> [a]
+associativeList = fromSemiGroup singleton
+{-
+monoidList :: CoMonoid a => a -> [a]
+monoidList = fromMonoid singleton
+
+-- For commutative (and associative) monoids
+monoidMultiSet :: (CoMonoid a, Ord a) => a -> MultiSet a
+monoidMultiSet = fromMonoid singleton
+
+-- For associative, commutative, idempotent (ACI) monoids
+monoidSet :: (CoMonoid a, Ord a) => a -> S.Set a
+monoidSet = fromMonoid singleton
+
+groupSequence :: (CoGroup a, Eq a) => a -> GroupSequence a
+groupSequence = fromGroup singleton
+
+abelianMultiSet :: (CoGroup a, Ord a) => a -> MultiSet a
+abelianMultiSet = fromGroup singleton
+
+monoidZeroList :: CoMonoidZero a => a -> WithZero [a]
+monoidZeroList = fromMonoidZero (pure . singleton)
+
+----------------------
+
+newtype MultiSet a = MS (M.Map a Int)
+
+instance Collection MultiSet where
+   singleton a = MS (M.singleton a 1)
+
+instance Ord a => Monoid (MultiSet a) where
+   mempty  = MS mempty
+   mappend (MS m1) (MS m2) = MS (M.unionWith (+) m1 m2)
+
+instance Ord a => Group (MultiSet a) where
+   inverse (MS m) = MS (fmap negate m)
+
+----------------------
+
+newtype GroupSequence a = GS (Q.Seq (a, Bool))
+
+instance Collection GroupSequence where
+   singleton a = GS (Q.singleton (a, False))
+
+instance Eq a => Monoid (GroupSequence a) where
+   mempty = GS mempty
+   mappend (GS xs) (GS ys) =
+      case (Q.viewr xs, Q.viewl ys) of
+         (as Q.:> (a, ai), (b, bi) Q.:< bs) | a == b && ai /= bi ->
+            mappend (GS as) (GS bs)
+         _ -> GS (xs <> ys)
+
+instance Eq a => Group (GroupSequence a) where
+   inverse (GS xs) = GS (fmap (second not) xs) -- actually: reverse order!!
+-}
+----------------------
+
+instance CoMonoid [a] where
+   isEmpty = null
+   isAppend (x:xs@(_:_)) = Just ([x], xs)
+   isAppend _            = Nothing
+
+instance CoMonoid (S.Set a) where
+   isEmpty = S.null
+   isAppend s
+      | S.size s > 1 = Just (mapFirst S.singleton (S.deleteFindMin s))
+      | otherwise    = Nothing
+
+{-
+instance CoMonoid (Q.Seq a) where
+   isEmpty = Q.null
+   isAppend xs
+      | n > 1     = Just (Q.splitAt (n `div` 2) xs)
+      | otherwise = Nothing
+    where
+      n = Q.length xs
+-}
+instance CoMonoid a => CoMonoid (WithZero a) where
+   isEmpty    = maybe False isEmpty . fromWithZero
+   isAppend a = fromWithZero a >>= fmap (mapBoth pure) . isAppend
+
+instance CoMonoid a => CoMonoidZero (WithZero a) where
+   isMonoidZero = isNothing . fromWithZero

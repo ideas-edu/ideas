@@ -19,6 +19,7 @@ module Ideas.Text.XML.Interface
 
 import Control.Arrow
 import Data.Char (chr, ord)
+import Data.Maybe
 import Ideas.Text.Parsing (parseSimple)
 import Ideas.Text.XML.Document (Name)
 import Ideas.Text.XML.Parser (document)
@@ -65,7 +66,7 @@ normalize doc = toElement (D.root doc)
 
    refToContent :: D.Reference -> Content
    refToContent (D.CharRef i)   = [Left [chr i]]
-   refToContent (D.EntityRef s) = maybe [] id (lookup s entities)
+   refToContent (D.EntityRef s) = fromMaybe [] (lookup s entities)
 
    entities :: [(String, Content)]
    entities =

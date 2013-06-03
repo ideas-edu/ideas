@@ -104,8 +104,8 @@ downs = maybe [] (fixpl right) . down
 
 downTo :: Navigator a => Int -> a -> Maybe a
 downTo n
-   | n < 0 = const Nothing
-   | True  = listToMaybe . drop n . downs
+   | n < 0     = const Nothing
+   | otherwise = listToMaybe . drop n . downs
 
 arity :: Navigator a => a -> Int
 arity = length . downs

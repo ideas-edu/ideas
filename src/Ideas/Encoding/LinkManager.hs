@@ -127,9 +127,8 @@ dynamicLinks cgiBinary = LinkManager
    , urlForIndex     = url $ simpleRequest "index"
    , urlForExercises = url $ simpleRequest "exerciselist"
    , urlForServices  = url $ simpleRequest "servicelist"
-   , urlForService = \srv ->
-        url $ makeRequest "serviceinfo" $
-           tag "location" $ text srv
+   , urlForService   =
+        url . makeRequest "serviceinfo" . tag "location" . text
    , urlForExercise    = url . exerciseRequest "exerciseinfo"
    , urlForStrategy    = url . exerciseRequest "strategyinfo"
    , urlForRules       = url . exerciseRequest "rulelist"
@@ -214,10 +213,10 @@ staticLinks = LinkManager
      -- dynamic exercise information
    , urlForRandomExample = \_ _ -> ""
      -- dynamic state information
-   , urlForState        = \_ -> ""
-   , urlForFirsts       = \_ -> ""
-   , urlForApplications = \_ -> ""
-   , urlForDerivation   = \_ -> ""
+   , urlForState        = const ""
+   , urlForFirsts       = const ""
+   , urlForApplications = const ""
+   , urlForDerivation   = const ""
    }
 
 linksUp :: Int -> LinkManager -> LinkManager

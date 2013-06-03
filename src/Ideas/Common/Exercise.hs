@@ -251,7 +251,7 @@ ruleOrderingWith = ruleOrderingWithId . map getId
 ruleOrderingWithId :: HasId b => [b] -> Rule a -> Rule a -> Ordering
 ruleOrderingWithId bs r1 r2 =
    let xs = map getId bs in
-   case (findIndex (==getId r1) xs, findIndex (==getId r2) xs) of
+   case (elemIndex (getId r1) xs, elemIndex (getId r2) xs) of
       (Just i,  Just j ) -> i `compare` j
       (Just _,  Nothing) -> LT
       (Nothing, Just _ ) -> GT

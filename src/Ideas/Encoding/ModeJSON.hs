@@ -77,7 +77,7 @@ jsonRequest json = do
       , encoding   = enc
       }
 
-myHandler :: DomainReasoner -> JSON_RPC_Handler IO
+myHandler :: DomainReasoner -> RPCHandler IO
 myHandler dr fun arg = timedSeconds 5 $ do
    srv <- findService dr (newId fun)
    Some ex <-

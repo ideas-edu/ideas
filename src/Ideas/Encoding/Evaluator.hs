@@ -35,7 +35,7 @@ import qualified Control.Category as C
 newtype EncoderState st a b = Enc (st -> a -> Either [String] b)
 
 instance C.Category (EncoderState st) where
-   id = Enc $ \_ -> Right
+   id = Enc $ const Right
    Enc f . Enc g = Enc $ \st -> either Left (f st) . g st
 
 instance Arrow (EncoderState st) where
@@ -102,7 +102,7 @@ withState :: (st -> b) -> EncoderState st a b
 withState f = liftM f getState
 
 runEncoderState :: EncoderState st a b -> st -> a -> Either String b
-runEncoderState (Enc f) st = mapFirst (concat . intersperse ", ") . f st
+runEncoderState (Enc f) st = mapFirst (intercalate ", ") . f st
 
 ---
 

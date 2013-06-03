@@ -65,11 +65,10 @@ doBlackBoxTest dr format path = do
          out  <- case format of
                     JSON -> liftM snd3 (processJSON False dr txt)
                     XML  -> liftM snd3 (processXML dr Nothing txt)
-         -- Conditional forces evaluation of the result, to make sure that
+         -- Force evaluation of the result, to make sure that
          -- all file handles are closed afterwards.
-         if out ~= expt
-            then liftIO (hClose h1 >> hClose h2) >> return True
-            else liftIO (hClose h1 >> hClose h2) >> return False
+         let result = out ~= expt
+         liftIO $ result `seq` (hClose h1 >> hClose h2 >> return result)
        `catchError`
          \_ -> return False
  where

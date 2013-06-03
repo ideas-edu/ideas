@@ -355,7 +355,7 @@ encodeDerivation :: LinkManager -> Exercise a -> HTMLEncoder a (Derivation (Rule
 encodeDerivation lm ex =
    h2 "Derivation" <> htmlDerivation lm ex
 
-encodeDerivationList :: LinkManager -> Exercise a -> HTMLEncoder a ([Derivation (Rule (Context a), Environment) (Context a)])
+encodeDerivationList :: LinkManager -> Exercise a -> HTMLEncoder a [Derivation (Rule (Context a), Environment) (Context a)]
 encodeDerivationList lm ex = encoderFor $ \ds ->
    h2 "Derivations"
    <> mconcat
@@ -381,7 +381,7 @@ htmlDerivation lm ex = encoderFor $ \d ->
          , showEnv env1 -- local environment
          , showEnv env2 -- global environment (diff)
          ]
-   forTerm a = do
+   forTerm a =
       divClass "term" $ string $ prettyPrinterContext ex a
 
 htmlState :: HTMLEncoder a (State a)
@@ -472,7 +472,7 @@ htmlAllApplications = encoderFor $ \xs ->
       ]
 
 htmlDiagnosis :: HTMLEncoder a (Diagnosis a)
-htmlDiagnosis = encoderFor $ \diagnosis -> do
+htmlDiagnosis = encoderFor $ \diagnosis ->
    case diagnosis of
       Buggy _ r ->
          spanClass "error" $ string $ "Not equivalent: buggy rule " ++ show r
@@ -493,7 +493,7 @@ htmlDescription :: HasId a => a -> HTMLBuilder
 htmlDescription a = munless (null (description a)) $
    para $
       bold (string "Description") <> br
-      <> (spanClass "description" $ string $ description a)
+      <> spanClass "description" (string (description a))
 
 submitForm :: HTMLBuilder -> HTMLBuilder
 submitForm this = element "form"
@@ -533,7 +533,7 @@ submitRequest lm request = submitURL $
    quote (urlForRequest lm) ++ "+encodeURIComponent(" ++ quote request ++ ")"
 
 quote :: String -> String
-quote s = '"' : s ++ ['"']
+quote s = '"' : s ++ "\""
 
 -- Inject two JavaScript functions for handling the input form
 submitURL :: String -> HTMLBuilder

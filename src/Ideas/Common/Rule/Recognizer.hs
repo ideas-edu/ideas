@@ -45,7 +45,7 @@ instance LiftView Recognizer where
       in R $ makeTrans f *** makeTrans f >>> unR r
 
 instance Monoid (Recognizer a) where
-   mempty      = R $ mempty
+   mempty      = R mempty
    mappend f g = R $ unR f `mappend` unR g
 
 instance Recognizable Recognizer where

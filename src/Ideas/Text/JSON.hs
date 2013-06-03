@@ -17,7 +17,7 @@ module Ideas.Text.JSON
    , InJSON(..)                           -- type class"
    , lookupM
    , parseJSON, showCompact, showPretty   -- parser and pretty-printers
-   , jsonRPC, JSON_RPC_Handler, propEncoding
+   , jsonRPC, RPCHandler, propEncoding
    ) where
 
 import Control.Exception
@@ -174,25 +174,25 @@ parseJSON = parseSimple json
 --------------------------------------------------------
 -- JSON-RPC
 
-data JSON_RPC_Request = Request
+data RPCRequest = Request
    { requestMethod :: String
    , requestParams :: JSON
    , requestId     :: JSON
    }
 
-data JSON_RPC_Response = Response
+data RPCResponse = Response
    { responseResult :: JSON
    , responseError  :: JSON
    , responseId     :: JSON
    }
 
-instance Show JSON_RPC_Request where
+instance Show RPCRequest where
    show = show . toJSON
 
-instance Show JSON_RPC_Response where
+instance Show RPCResponse where
    show = show . toJSON
 
-instance InJSON JSON_RPC_Request where
+instance InJSON RPCRequest where
    toJSON req = Object
       [ ("method", String $ requestMethod req)
       , ("params", requestParams req)
@@ -206,7 +206,7 @@ instance InJSON JSON_RPC_Request where
          String s -> return (Request s pj ij)
          _        -> fail "expecting a string"
 
-instance InJSON JSON_RPC_Response where
+instance InJSON RPCResponse where
    toJSON resp = Object
       [ ("result", responseResult resp)
       , ("error" , responseError resp)
@@ -218,14 +218,14 @@ instance InJSON JSON_RPC_Response where
       ij <- lookupM "id"     obj
       return (Response rj ej ij)
 
-okResponse :: JSON -> JSON -> JSON_RPC_Response
+okResponse :: JSON -> JSON -> RPCResponse
 okResponse x y = Response
    { responseResult = x
    , responseError  = Null
    , responseId     = y
    }
 
-errorResponse :: JSON -> JSON -> JSON_RPC_Response
+errorResponse :: JSON -> JSON -> RPCResponse
 errorResponse x y = Response
    { responseResult = Null
    , responseError  = x
@@ -242,10 +242,10 @@ indent n = unlines . map (replicate n ' ' ++) . lines
 --------------------------------------------------------
 -- JSON-RPC over HTTP
 
-type JSON_RPC_Handler m = String -> JSON -> m JSON
+type RPCHandler m = String -> JSON -> m JSON
 
 jsonRPC :: (MonadError a m, InJSON a)
-        => JSON -> JSON_RPC_Handler m -> m JSON_RPC_Response
+        => JSON -> RPCHandler m -> m RPCResponse
 jsonRPC input handler =
    case fromJSON input of
       Nothing  -> return (errorResponse (String "Invalid request") Null)

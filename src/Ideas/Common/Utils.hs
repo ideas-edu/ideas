@@ -61,7 +61,7 @@ cartesian as bs = [ (a, b) | a <- as, b <- bs ]
 
 distinct :: Eq a => [a] -> Bool
 distinct []     = True
-distinct (x:xs) = all (/=x) xs && distinct xs
+distinct (x:xs) = notElem x xs && distinct xs
 
 allsame :: Eq a => [a] -> Bool
 allsame []     = True

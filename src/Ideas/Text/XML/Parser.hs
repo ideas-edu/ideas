@@ -78,10 +78,10 @@ char = ranges xs <|> oneOf "\x9\xA\xD"
 
 -- [3]   	S	   ::=   	(#x20 | #x9 | #xD | #xA)+
 space :: Parser ()
-space = many1 (oneOf "\x20\x9\xA\xD") >> return ()
+space = void (many1 (oneOf "\x20\x9\xA\xD"))
 
 mspace :: Parser () -- for S?
-mspace = many (oneOf "\x20\x9\xA\xD") >> return ()
+mspace = void (many (oneOf "\x20\x9\xA\xD"))
 
 -- [4]   	NameChar	   ::=   	 Letter | Digit | '.' | '-' | '_' | ':' | CombiningChar | Extender
 nameChar :: Parser Char
@@ -93,6 +93,9 @@ name = do
    c  <- letter <|> oneOf "_:"
    cs <- many nameChar
    return (c:cs)
+
+spacedName :: Parser String
+spacedName = space *> name <* space 
 
 {-
 -- [6]   	Names	   ::=   	 Name (#x20 Name)*
@@ -355,9 +358,7 @@ content = chainr1 (fmap g charData) (fmap f ps)
 elementdecl :: Parser DocTypeDecl
 elementdecl = do
    skip (string "<!ELEMENT")
-   space
-   n <- name
-   space
+   n <- spacedName
    cs <- contentspec
    mspace
    skip (char '>')
@@ -439,9 +440,7 @@ attlistDecl = do
 -- [53]   	AttDef	   ::=   	 S Name S AttType S DefaultDecl
 attDef :: Parser AttDef
 attDef = do
-   space
-   n  <- name
-   space
+   n  <- spacedName
    tp <- attType
    space
    dd <- defaultDecl
@@ -594,9 +593,7 @@ entityDecl = try geDecl <|> peDecl
 geDecl :: Parser DocTypeDecl
 geDecl = do
    skip (string "<!ENTITY")
-   space
-   n <- name
-   space
+   n  <- spacedName
    ed <- entityDef
    mspace
    skip (char '>')
@@ -608,9 +605,7 @@ peDecl = do
    skip (string "<!ENTITY")
    space
    skip (char '%')
-   space
-   n <- name
-   space
+   n <- spacedName
    e <- peDef
    mspace
    skip (char '>')
@@ -681,9 +676,7 @@ encName = do
 notationDecl :: Parser DocTypeDecl
 notationDecl = do
    skip (string "<!NOTATION")
-   space
-   n <- name
-   space
+   n <- spacedName
    e <- fmap Left (try externalID) <|> fmap Right publicID
    mspace
    skip (char '>')

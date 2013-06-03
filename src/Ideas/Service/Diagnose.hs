@@ -100,7 +100,7 @@ diagnose state new
           p (_, ns) = similarity ex new (stateContext ns) -- use rule recognizer?
       listToMaybe (filter p xs)
 
-   discovered searchForBuggy = listToMaybe $
+   discovered searchForBuggy = listToMaybe
       [ (r, env)
       | r <- sortBy (ruleOrdering ex) (ruleset ex)
       , isBuggy r == searchForBuggy

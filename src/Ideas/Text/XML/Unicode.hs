@@ -18,6 +18,7 @@ module Ideas.Text.XML.Unicode
    ) where
 
 import Data.Char (chr, ord)
+import Data.List
 import qualified Ideas.Text.UTF8 as UTF8
 
 data Tree a = Node (Tree a) a (Tree a) | Leaf
@@ -173,21 +174,21 @@ extenderMap = [f '\x00B7' , f '\x02D0' ,
 
 decoding :: Monad m => String -> m String
 decoding xs
-   | take 2 xs == "\255\254" =
+   | "\255\254" `isPrefixOf` xs =
         return (decode16 $ drop 2 xs)
-   | take 2 xs == "\254\255" =
+   | "\254\255" `isPrefixOf` xs =
         return (decode16X $ drop 2 xs)
-   | take 3 xs == "\239\187\191" =
+   | "\239\187\191" `isPrefixOf` xs =
         UTF8.decodeM (drop 3 xs)
    | otherwise =
         UTF8.decodeM xs
 
-decode16 :: [Char] -> [Char]
+decode16 :: String -> String
 decode16 []  = []
 decode16 [x] = [x]
 decode16 (a:b:rest) = chr (ord b * 256 + ord a) : decode16 rest
 
-decode16X :: [Char] -> [Char]
+decode16X :: String -> String
 decode16X []  = []
 decode16X [x] = [x]
 decode16X (a:b:rest) = chr (ord b + ord a * 256) : decode16X rest

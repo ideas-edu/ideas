@@ -104,7 +104,7 @@ defaultCommandLine dr flags = do
          AnalyzeScript file -> parseAndAnalyzeScript dr file
 
 process :: DomainReasoner -> Maybe String -> String -> IO (Request, String, String)
-process dr cgiBin input = do
+process dr cgiBin input =
    case discoverDataFormat input of
       Just XML  -> processXML dr cgiBin input
       Just JSON -> processJSON (isJust cgiBin) dr input

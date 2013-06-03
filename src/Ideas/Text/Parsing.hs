@@ -21,6 +21,7 @@ module Ideas.Text.Parsing
 
 import Control.Applicative hiding ((<|>))
 import Control.Arrow
+import Control.Monad
 import Data.Char
 import Data.List
 import Text.ParserCombinators.Parsec as Export
@@ -35,7 +36,7 @@ complete :: Parser a -> Parser a
 complete p = spaces *> (p <* eof)
 
 skip :: Parser a -> Parser ()
-skip p = p >> return ()
+skip = void
 
 -- Like the combinator from parser, except that for doubles
 -- the read instance is used. This is a more precies representation

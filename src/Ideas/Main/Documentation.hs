@@ -41,14 +41,14 @@ makeDocumentation dr dir = do
       makeEx ex urlForRules       (ruleset ex ::: typed)
       makeEx ex urlForExamples    (map (second (inContext ex)) (examples ex) ::: typed)
       makeEx ex urlForDerivations (exampleDerivations ex ::: typed)
-      forM_ (ruleset ex) $ \r -> do
-          make ex (urlForRule lm ex r) (r ::: typed)
+      forM_ (ruleset ex) $ \r ->
+         make ex (urlForRule lm ex r) (r ::: typed)
  where
    lm = staticLinks
    makeIndex f = make emptyExercise (f lm)
    makeEx ex f = make ex (f lm ex)
    make ex url tv = safeWrite (dir </> url) $
-      showHTML $ htmlEncoder (linksUp (pathLevel $ url) lm) dr ex tv
+      showHTML $ htmlEncoder (linksUp (pathLevel url) lm) dr ex tv
 
 safeWrite :: FilePath -> String -> IO ()
 safeWrite filename txt = do

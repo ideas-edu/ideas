@@ -48,12 +48,12 @@ data XMLEncoderState a = XMLEncoderState
 
 xmlEncoder :: XMLEncoder a (TypedValue (Type a))
 xmlEncoder = msum
-   [ encodeTyped (encodeDiagnosis)
-   , encodeTyped (encodeDecompositionReply)
-   , encodeTyped (encodeDerivation)
-   , encodeTyped (encodeDerivationText)
-   , encodeTyped (encodeDifficulty)
-   , encodeTyped (encodeMessage)
+   [ encodeTyped encodeDiagnosis
+   , encodeTyped encodeDecompositionReply
+   , encodeTyped encodeDerivation
+   , encodeTyped encodeDerivationText
+   , encodeTyped encodeDifficulty
+   , encodeTyped encodeMessage
    , encoderStateFor $ \xp (val ::: tp) ->
         case tp of
            -- meta-information
@@ -152,7 +152,7 @@ encodeDerivation = encoderFor $ \d ->
    in xmlEncoder // (xs ::: typed)
 
 encodeDerivationText :: XMLEncoder a (Derivation String (Context a))
-encodeDerivationText = encoderFor $ \d -> encodeAsList $
+encodeDerivationText = encoderFor $ \d -> encodeAsList
    [ ("ruletext" .=. s) <> encodeContext // a
    | (_, s, a) <- triples d
    ]

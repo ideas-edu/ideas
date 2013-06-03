@@ -111,8 +111,8 @@ decodePrefixes = do
    ex <- withState getExercise
    encoderFor $ \json ->
       case json of
-         String p -> forM (deintercalate p) $ do
-                        (readM >>= liftM (`makePrefix` strategy ex))
+         String p -> forM (deintercalate p) $
+                        readM >>= liftM (`makePrefix` strategy ex)
          _ -> fail "invalid prefixes"
 
 decodeEnvironment :: JSONDecoder a Environment
@@ -136,7 +136,7 @@ decodeTerm = do
    eitherEncoder $ \json ->
       case json of
          String s -> parser ex s
-         _        -> Left $ "Expecting a string when reading a term"
+         _        -> Left "Expecting a string when reading a term"
 
 -- local helper
 deintercalate :: String -> [String]

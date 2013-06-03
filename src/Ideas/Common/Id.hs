@@ -193,4 +193,4 @@ describe = changeId . describeId
            a {idDescription = s ++ " " ++ idDescription a}
 
 listQualify :: (IsId a, IsId b) => [a] -> b -> Id -- TODO: clean me up
-listQualify ls h = foldr appendId (newId h) (map newId ls)
+listQualify ls h = foldr (appendId . newId) (newId h) ls

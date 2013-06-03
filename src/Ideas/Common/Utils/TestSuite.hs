@@ -281,11 +281,11 @@ toTestResult :: Result -> Maybe Message
 toTestResult res =
    let make = Just . newMessage
    in case res of
-         Success _ _ _           -> Nothing
-         Failure _ _ _ _ msg _ _ -> make msg
-         NoExpectedFailure _ _ _ -> make "no expected failure"
-         GaveUp i _  _           -> fmap warning $ make $
-                                    "passed only " ++ show i ++ " tests"
+         Success {}             -> Nothing
+         Failure {reason = msg} -> make msg
+         NoExpectedFailure {}   -> make "no expected failure"
+         GaveUp {numTests = i}  -> fmap warning $ make $
+                                   "passed only " ++ show i ++ " tests"
 
 updateDiffTime :: MonadIO m => m TestSuiteResult -> m TestSuiteResult
 updateDiffTime m = do

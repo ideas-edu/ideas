@@ -47,12 +47,12 @@ stringRef :: String -> StringRef
 stringRef s = unsafePerformIO $ do
    let hash = hashString s
    m <- readIORef tableRef
-   case IM.insertLookupWithKey (\_ -> combine) hash [s] m of
+   case IM.insertLookupWithKey (const combine) hash [s] m of
       (Nothing, new) -> do
          writeIORef tableRef new
          return (S (encodeIndexZero hash))
       (Just old, new) ->
-         case findIndex (==s) old of
+         case elemIndex s old of
             Just index ->
                return (S (encode hash index))
             Nothing -> do

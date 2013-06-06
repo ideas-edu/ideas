@@ -18,6 +18,7 @@ import Data.Function
 import Data.List
 import Data.Ord
 import Ideas.Common.Algebra.Group
+import Ideas.Common.Algebra.GroupLaws
 import Ideas.Common.Algebra.Law
 import Ideas.Common.Classes
 import Ideas.Common.Strategy
@@ -26,9 +27,8 @@ import Ideas.Common.Strategy.Parsing
 import Ideas.Common.Utils.QuickCheck hiding (label, Result)
 import Ideas.Common.Utils.TestSuite
 import Prelude hiding (fail)
-import qualified Ideas.Common.Algebra.FieldLaws as F
 import qualified Ideas.Common.Algebra.Field as F
-import Ideas.Common.Algebra.GroupLaws
+import qualified Ideas.Common.Algebra.FieldLaws as F
 
 ---------------------------------------------------------
 -- Properties

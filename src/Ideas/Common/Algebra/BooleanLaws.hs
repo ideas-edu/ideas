@@ -23,10 +23,10 @@ module Ideas.Common.Algebra.BooleanLaws
    , propsBoolean
    ) where
 
-import Ideas.Common.Algebra.Group
-import Ideas.Common.Algebra.Law
 import Ideas.Common.Algebra.Boolean
+import Ideas.Common.Algebra.Group
 import Ideas.Common.Algebra.GroupLaws
+import Ideas.Common.Algebra.Law
 import Test.QuickCheck hiding ((><))
 
 --------------------------------------------------------

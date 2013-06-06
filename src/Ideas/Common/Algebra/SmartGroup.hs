@@ -10,22 +10,22 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Ideas.Common.Algebra.SmartGroup 
+module Ideas.Common.Algebra.SmartGroup
    ( -- * Smart datatypes
      Smart(..), SmartZero(..), SmartGroup(..)
      --- * Smart field
    , SmartField(..), (.+.), (.-.), neg, (.*.), (./.)
-     -- * Smart booleans 
+     -- * Smart booleans
    , (.&&.), (.||.)
    ) where
 
 import Control.Applicative
 import Control.Monad (mplus)
 import Data.Maybe
+import Ideas.Common.Algebra.Boolean
+import Ideas.Common.Algebra.Field hiding ((<*>))
 import Ideas.Common.Algebra.Group
 import qualified Ideas.Common.Algebra.Field as Field
-import Ideas.Common.Algebra.Field hiding ((<*>))
-import Ideas.Common.Algebra.Boolean
 
 newtype Smart a = Smart {fromSmart :: a}
    deriving (Show, Eq, Ord, CoMonoid, MonoidZero, CoMonoidZero)
@@ -173,8 +173,8 @@ a ./. b = fromSmartField $ SmartField a </> SmartField b
 -- myrecip = fromSmartField . timesInverse . SmartField
 
 --------------------------------------------------------------
--- Smart booleans 
-  
+-- Smart booleans
+
 instance BoolValue a => BoolValue (Smart a) where
    fromBool = Smart   . fromBool
    isTrue   = isTrue  . fromSmart

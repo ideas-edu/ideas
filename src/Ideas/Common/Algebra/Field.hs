@@ -187,7 +187,7 @@ instance (Eq a, Fractional a) => Field (SafeNum a) where
 safeDivisor :: (Eq a, Num a) => SafeNum a -> SafeNum a
 safeDivisor m = m >>= \a ->
    if a == 0 then fail "division by zero" else return a
-   
+
 ------------------------------------------------------------
 
 class CoSemiRing a where

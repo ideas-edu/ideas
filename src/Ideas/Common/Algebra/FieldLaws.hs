@@ -28,8 +28,8 @@ module Ideas.Common.Algebra.FieldLaws
    ) where
 
 import Ideas.Common.Algebra.Field
-import Ideas.Common.Algebra.Law
 import Ideas.Common.Algebra.GroupLaws
+import Ideas.Common.Algebra.Law
 import Test.QuickCheck
 
 --------------------------------------------------------

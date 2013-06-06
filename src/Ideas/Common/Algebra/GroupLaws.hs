@@ -28,8 +28,8 @@ module Ideas.Common.Algebra.GroupLaws
    ) where
 
 import Data.Monoid
-import Ideas.Common.Algebra.Law
 import Ideas.Common.Algebra.Group
+import Ideas.Common.Algebra.Law
 
 --------------------------------------------------------
 -- Monoids

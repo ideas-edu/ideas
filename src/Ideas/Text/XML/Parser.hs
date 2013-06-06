@@ -95,7 +95,7 @@ name = do
    return (c:cs)
 
 spacedName :: Parser String
-spacedName = space *> name <* space 
+spacedName = space *> name <* space
 
 {-
 -- [6]   	Names	   ::=   	 Name (#x20 Name)*

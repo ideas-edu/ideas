@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      64*x^7 == x^5
-    </expr>
-  </state>
-</request>

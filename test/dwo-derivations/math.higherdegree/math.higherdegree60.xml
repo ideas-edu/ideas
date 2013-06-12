@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      x^3 == 4*x^2+12*x
-    </expr>
-  </state>
-</request>

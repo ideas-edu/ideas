@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifyrational" encoding="string">
-  <state>
-    <expr>
-      (-p^2+5*p)/(p^2-10*p+25)
-    </expr>
-  </state>
-</request>

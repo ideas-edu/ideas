@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="calculus.differentiation.polynomial" encoding="string">
-  <state>
-    <expr>
-      D(p) (-2*(p+1)*(p-12))
-    </expr>
-  </state>
-</request>

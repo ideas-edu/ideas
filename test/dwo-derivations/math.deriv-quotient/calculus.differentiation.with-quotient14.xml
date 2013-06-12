@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="calculus.differentiation.quotient" encoding="string">
-  <state>
-    <expr>
-      D(x) ((3*x-1)/(2*x+1))
-    </expr>
-  </state>
-</request>

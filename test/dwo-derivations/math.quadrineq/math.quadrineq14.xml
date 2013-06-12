@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadrineq" encoding="string">
-  <state>
-    <expr>
-      x^2-x &gt; 12
-    </expr>
-  </state>
-</request>

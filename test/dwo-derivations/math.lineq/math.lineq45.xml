@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.lineq" encoding="string">
-  <state>
-    <expr>
-      -5/4*(x-7) == 3/4*(x+2)-(4+1/2)
-    </expr>
-  </state>
-</request>

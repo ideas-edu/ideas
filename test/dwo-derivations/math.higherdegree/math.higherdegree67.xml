@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      29*x^2 == x^4+100
-    </expr>
-  </state>
-</request>

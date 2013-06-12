@@ -1,7 +1,0 @@
-<request service="onefirst" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-      <expr>
-        0 == 0
-      </expr>
-  </state>
-</request>

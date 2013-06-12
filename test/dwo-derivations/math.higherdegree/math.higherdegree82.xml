@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      5*x^6 == 39*x^3+8
-    </expr>
-  </state>
-</request>

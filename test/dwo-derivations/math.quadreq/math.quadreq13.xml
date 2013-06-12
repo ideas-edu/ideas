@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadreq" encoding="string">
-  <state>
-    <expr>
-      1/2*(x+9)^2 == 4
-    </expr>
-  </state>
-</request>

@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.factor" encoding="string">
-  <state>
-    <expr>
-      -6*x^2-18*x
-    </expr>
-  </state>
-</request>

@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      32*x^3+18 == 22
-    </expr>
-  </state>
-</request>

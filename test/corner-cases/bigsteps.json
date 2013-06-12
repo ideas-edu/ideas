@@ -1,4 +1,0 @@
-{ "method" : "stepsremaining"
-, "params" : [["logic.dnf", "[]", "((r <-> p) || (q -> s)) /\\ (~s <-> (p || r))", ""]]
-, "id"     : 2805
-}

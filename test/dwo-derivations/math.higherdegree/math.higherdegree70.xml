@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      16*x^4+225 == 136*x^2
-    </expr>
-  </state>
-</request>

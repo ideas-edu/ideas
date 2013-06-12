@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.exponents.equation" encoding="string">
-  <state>
-    <expr>
-      8*x^(-46/5) == 1000
-    </expr>
-  </state>
-</request>

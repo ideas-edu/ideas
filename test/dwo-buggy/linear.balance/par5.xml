@@ -1,6 +1,0 @@
-<request service="diagnose" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-    <expr>6*(2-5*x) == 1</expr>
-  </state>
-  <expr>12-6*x == 1</expr>
-</request>

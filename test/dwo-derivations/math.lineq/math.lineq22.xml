@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.lineq" encoding="string">
-  <state>
-    <expr>
-      4*(x-4) == 5*(2*x+1)
-    </expr>
-  </state>
-</request>

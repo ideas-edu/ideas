@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="calculus.differentiation.polynomial" encoding="string">
-  <state>
-    <expr>
-      D(x) (-8*x^2+7)
-    </expr>
-  </state>
-</request>

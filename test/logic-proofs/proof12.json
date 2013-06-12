@@ -1,4 +1,0 @@
-{ "method" : "derivation"
-, "params" : [["logic.proof", "[]", "~((p -> q) -> (p /\\ q)) == (p -> q) /\\ (~p || ~q)", ""]]
-, "id"     : 42
-}

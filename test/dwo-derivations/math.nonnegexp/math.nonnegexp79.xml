@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.nonnegexp" encoding="string">
-  <state>
-    <expr>
-      1/5*a^(-6)
-    </expr>
-  </state>
-</request>

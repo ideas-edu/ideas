@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      (x-1)*(x^3-6*x) == 3*x^3-3*x^2
-    </expr>
-  </state>
-</request>

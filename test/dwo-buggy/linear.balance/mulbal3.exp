@@ -1,8 +1,0 @@
-<reply result="ok" version="0.7.7 (0)">
-  <buggy ruleid="algebra.equations.linear.balance.buggy.mulbal3">
-    <argument description="factor">
-      2
-    </argument>
-  </buggy>
-</reply>
-

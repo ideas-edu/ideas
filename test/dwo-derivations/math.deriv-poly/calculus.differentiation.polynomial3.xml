@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="calculus.differentiation.polynomial" encoding="string">
-  <state>
-    <expr>
-      D(x) (1/2*x^6-5*x^2+4)
-    </expr>
-  </state>
-</request>

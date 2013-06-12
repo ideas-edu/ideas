@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifypower" encoding="string">
-  <state>
-    <expr>
-      (6*a^3)^2
-    </expr>
-  </state>
-</request>

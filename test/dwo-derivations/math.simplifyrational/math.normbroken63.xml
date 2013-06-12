@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifyrational" encoding="string">
-  <state>
-    <expr>
-      (x^2+5*x+6)/(x^3-x^2-6*x)
-    </expr>
-  </state>
-</request>

@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.nonnegexp" encoding="string">
-  <state>
-    <expr>
-      1/7*a^(-1/4)*b^(2/3)
-    </expr>
-  </state>
-</request>

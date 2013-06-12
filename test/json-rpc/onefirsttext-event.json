@@ -1,4 +1,0 @@
-{ "method" : "onefirsttext"
-, "params" : [["logic.dnf", "[]", "~(~x || ~y)", ""], "hint button"]
-, "id"     : 421
-}

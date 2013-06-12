@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifypower" encoding="string">
-  <state>
-    <expr>
-      a^14/(a^2)^4
-    </expr>
-  </state>
-</request>

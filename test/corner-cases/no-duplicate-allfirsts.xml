@@ -1,5 +1,0 @@
-<request service="allfirsts" exerciseid="math.lineq" encoding="string" source="test">
-<state>
-<expr> -2*(x+1) == 0 </expr>
-</state>
-</request>

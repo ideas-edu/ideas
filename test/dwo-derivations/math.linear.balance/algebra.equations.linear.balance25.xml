@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-    <expr>
-      -3*(x-2) == 3*(x+4)-7
-    </expr>
-  </state>
-</request>

@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadreq" encoding="string">
-  <state>
-    <expr>
-      x*(x+12) == 2*x^2
-    </expr>
-  </state>
-</request>

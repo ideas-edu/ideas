@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="calculus.differentiation.polynomial" encoding="string">
-  <state>
-    <expr>
-      D(x) ((5*x^3+7*x)^2)
-    </expr>
-  </state>
-</request>

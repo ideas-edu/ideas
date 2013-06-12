@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.rationaleq" encoding="string">
-  <state>
-    <expr>
-      (2*x+3)/(x-1) == (2*x-1)/(x-2)
-    </expr>
-  </state>
-</request>

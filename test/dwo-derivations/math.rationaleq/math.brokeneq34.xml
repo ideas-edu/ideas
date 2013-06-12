@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.rationaleq" encoding="string">
-  <state>
-    <expr>
-      (x+9)/(x-5) == 2/x
-    </expr>
-  </state>
-</request>

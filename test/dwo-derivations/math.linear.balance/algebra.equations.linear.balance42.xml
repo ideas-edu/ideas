@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-    <expr>
-      (x+3)/2 == 5*(1/2*x+1[1/2])
-    </expr>
-  </state>
-</request>

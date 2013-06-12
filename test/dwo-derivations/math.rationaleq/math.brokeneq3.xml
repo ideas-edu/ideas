@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.rationaleq" encoding="string">
-  <state>
-    <expr>
-      (3*x^2-6)/(4*x^2+1) == 0
-    </expr>
-  </state>
-</request>

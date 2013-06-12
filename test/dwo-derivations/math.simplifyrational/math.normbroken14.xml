@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifyrational" encoding="string">
-  <state>
-    <expr>
-      4/(3*a)-2/(5*b)
-    </expr>
-  </state>
-</request>

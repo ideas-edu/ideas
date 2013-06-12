@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifypower" encoding="string">
-  <state>
-    <expr>
-      5*a^4*(1/a)
-    </expr>
-  </state>
-</request>

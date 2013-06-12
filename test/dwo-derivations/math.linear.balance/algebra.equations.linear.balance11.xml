@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-    <expr>
-      6*x-2 == 2*x+14
-    </expr>
-  </state>
-</request>

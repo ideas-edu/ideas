@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="calculus.differentiation.polynomial" encoding="string">
-  <state>
-    <expr>
-      D(x) ((x^2+2*x)*(x^3-4*x^2+3))
-    </expr>
-  </state>
-</request>

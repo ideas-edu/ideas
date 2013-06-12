@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.exponents.equation" encoding="string">
-  <state>
-    <expr>
-      7*x^(51/10)+16 == 100
-    </expr>
-  </state>
-</request>

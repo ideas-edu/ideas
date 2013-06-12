@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.exponential.equation" encoding="string">
-  <state>
-    <expr>
-      3^(2*x) == 1/9
-    </expr>
-  </state>
-</request>

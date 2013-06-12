@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.exponential.equation" encoding="string">
-  <state>
-    <expr>
-      3^(1-3*x) == 81
-    </expr>
-  </state>
-</request>

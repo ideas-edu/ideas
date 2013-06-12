@@ -1,8 +1,0 @@
-<request service="apply" exerciseid="algebra.equations.linear.balance" encoding="string">
-<ruleid>algebra.equations.linear.balance.smart-div</ruleid>
-<location>[]</location>
-<argument description="factor">4</argument>
-<state>
-<expr>2*(x-1) - 4 == 12</expr>
-</state>
-</request>

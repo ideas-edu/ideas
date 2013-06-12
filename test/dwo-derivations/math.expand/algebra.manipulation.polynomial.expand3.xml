@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.polynomial.expand" encoding="string">
-  <state>
-    <expr>
-      (x-1)*7
-    </expr>
-  </state>
-</request>

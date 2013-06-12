@@ -1,4 +1,0 @@
-{ "method" : "apply"
-, "params" : ["logic.propositional.DeMorganOr", "[]", "", ["logic.dnf", "[]", "~(~x || ~y)", ""]]
-, "id"     : 421
-}

@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadreq" encoding="string">
-  <state>
-    <expr>
-      (1-x)^2 == x+2
-    </expr>
-  </state>
-</request>

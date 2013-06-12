@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.lineq" encoding="string">
-  <state>
-    <expr>
-      4*x+18 == 0
-    </expr>
-  </state>
-</request>

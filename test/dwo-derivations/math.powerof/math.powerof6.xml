@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.powerof" encoding="string">
-  <state>
-    <expr>
-      (a^(-3))^4
-    </expr>
-  </state>
-</request>

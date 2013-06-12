@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.calcpower" encoding="string">
-  <state>
-    <expr>
-      (6/7)^(-1)
-    </expr>
-  </state>
-</request>

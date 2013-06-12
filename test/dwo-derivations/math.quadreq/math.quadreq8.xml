@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadreq" encoding="string">
-  <state>
-    <expr>
-      (x-1)^2 == 100
-    </expr>
-  </state>
-</request>

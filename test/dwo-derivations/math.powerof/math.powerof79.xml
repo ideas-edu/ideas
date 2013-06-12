@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.powerof" encoding="string">
-  <state>
-    <expr>
-      1/(a^3*sqrt a)
-    </expr>
-  </state>
-</request>

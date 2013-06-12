@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.exponents.equation" encoding="string">
-  <state>
-    <expr>
-      4/5*x^(7/10)+7 == 25/2
-    </expr>
-  </state>
-</request>

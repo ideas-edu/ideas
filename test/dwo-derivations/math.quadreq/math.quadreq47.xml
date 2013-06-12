@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadreq" encoding="string">
-  <state>
-    <expr>
-      2*x*(x-3)-3 == (x+2)*(x+6)
-    </expr>
-  </state>
-</request>

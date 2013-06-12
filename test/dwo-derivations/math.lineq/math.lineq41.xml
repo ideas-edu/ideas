@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.lineq" encoding="string">
-  <state>
-    <expr>
-      1/4*(x-3) == 1/2*x-4
-    </expr>
-  </state>
-</request>

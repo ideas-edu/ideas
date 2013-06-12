@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadrineq" encoding="string">
-  <state>
-    <expr>
-      1/2*x^2-3*x-8 &lt; 0
-    </expr>
-  </state>
-</request>

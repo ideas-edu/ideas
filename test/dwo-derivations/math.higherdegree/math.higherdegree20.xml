@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      5*x^3-1 == 9
-    </expr>
-  </state>
-</request>

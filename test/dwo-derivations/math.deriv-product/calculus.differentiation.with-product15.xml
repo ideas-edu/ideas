@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="calculus.differentiation.product" encoding="string">
-  <state>
-    <expr>
-      D(x) (2*x^3-3*x^2)
-    </expr>
-  </state>
-</request>

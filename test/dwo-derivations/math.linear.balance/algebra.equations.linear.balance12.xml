@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.equations.linear.balance" encoding="string">
-  <state>
-    <expr>
-      3+6*x == 3*x+24
-    </expr>
-  </state>
-</request>

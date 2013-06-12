@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadreq" encoding="string">
-  <state>
-    <expr>
-      (3*x-1)*(x+3) == 0
-    </expr>
-  </state>
-</request>

@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      x^4+36 == 13*x^2
-    </expr>
-  </state>
-</request>

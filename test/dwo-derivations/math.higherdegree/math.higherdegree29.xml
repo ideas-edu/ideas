@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      18-7*x^4 == -38
-    </expr>
-  </state>
-</request>

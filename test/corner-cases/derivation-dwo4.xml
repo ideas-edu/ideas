@@ -1,5 +1,0 @@
-<request service="derivation" exerciseid="math.quadreq" encoding="string">
-<state>
-<expr>x^2 == 0</expr>
-</state>
-</request>

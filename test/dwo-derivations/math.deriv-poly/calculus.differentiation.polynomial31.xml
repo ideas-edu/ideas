@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="calculus.differentiation.polynomial" encoding="string">
-  <state>
-    <expr>
-      D(x) ((x^2+2*x)*(3*x+5))
-    </expr>
-  </state>
-</request>

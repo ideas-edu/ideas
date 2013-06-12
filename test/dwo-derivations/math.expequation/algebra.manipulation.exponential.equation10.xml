@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="algebra.manipulation.exponential.equation" encoding="string">
-  <state>
-    <expr>
-      6*5^(2-x) == 150
-    </expr>
-  </state>
-</request>

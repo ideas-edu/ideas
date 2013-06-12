@@ -1,6 +1,0 @@
-<reply result="ok" version="0.7.7 (0)">
-  <list>
-    <elem ruleid="logic.propositional.buggy.demorgan4" location="[]"/>
-  </list>
-</reply>
-

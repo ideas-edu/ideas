@@ -1,6 +1,0 @@
-<request service="diagnose" exerciseid="math.quadreq" encoding="string">
-  <state>
-    <expr> x^2 + 3*x + 9/4 == 0 </expr>
-  </state>
-    <expr> x == -3/2 </expr>
-</request>

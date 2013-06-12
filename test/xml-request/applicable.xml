@@ -1,6 +1,0 @@
-<request service="applicable" exerciseid="math.lineq" encoding="string">
-<location>[]</location>
-<state>
-<expr>5*(x-1) == x/2</expr>
-</state>
-</request>

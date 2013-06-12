@@ -1,4 +1,0 @@
-{ "method" : "applicable"
-, "params" : ["[]", ["logic.dnf", "[]", "(p || q) || (p || q)", ""]]
-, "id"     : 421
-}

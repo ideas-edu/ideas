@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.higherdegree" encoding="string">
-  <state>
-    <expr>
-      4*x^4-29*x^2-24 == 0
-    </expr>
-  </state>
-</request>

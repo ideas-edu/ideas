@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.simplifypower" encoding="string">
-  <state>
-    <expr>
-      8*a^4*(1/(2*a^2))
-    </expr>
-  </state>
-</request>

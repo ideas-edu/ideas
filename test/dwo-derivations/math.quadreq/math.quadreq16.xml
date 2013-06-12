@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadreq" encoding="string">
-  <state>
-    <expr>
-      11-(2*x+1)^2 == 5
-    </expr>
-  </state>
-</request>

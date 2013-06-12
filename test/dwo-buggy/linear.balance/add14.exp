@@ -1,8 +1,0 @@
-<reply result="ok" version="1.0.1 (0)">
-  <buggy ruleid="algebra.equations.linear.balance.buggy.addbal14">
-    <argument description="term">
-      2*x
-    </argument>
-  </buggy>
-</reply>
-

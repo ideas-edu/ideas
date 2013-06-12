@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.quadreq" encoding="string">
-  <state>
-    <expr>
-      (6*x-3)^2+6 == 12
-    </expr>
-  </state>
-</request>

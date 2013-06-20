@@ -28,6 +28,7 @@ module Ideas.Common.Exercise
    , Examples, mapExamples, examplesContext
    , Difficulty(..), readDifficulty, level
    , hasTypeable, useTypeable, castFrom, castTo
+   , properties, setProperty, getProperty
      -- * Exercise status
    , Status(..), isPublic, isPrivate
      -- * Miscellaneous
@@ -42,11 +43,11 @@ module Ideas.Common.Exercise
 
 import Control.Monad.Error
 import Data.Char
+import Data.Dynamic
 import Data.Function
 import Data.List
 import Data.Maybe
 import Data.Ord
-import Data.Typeable
 import Ideas.Common.Classes
 import Ideas.Common.Context
 import Ideas.Common.Derivation
@@ -66,6 +67,7 @@ import Test.QuickCheck hiding (label)
 import Test.QuickCheck.Gen
 import qualified Ideas.Common.Rewriting.Difference as Diff
 import qualified Ideas.Common.Strategy as S
+import qualified Data.Map as M
 
 data Exercise a = Exercise
    { -- identification and meta-information
@@ -81,6 +83,7 @@ data Exercise a = Exercise
    , suitable       :: Predicate a
    , hasTermView    :: Maybe (View Term a)
    , hasTypeable    :: Maybe (IsTypeable a)
+   , properties     :: M.Map String Dynamic -- extra, domain-specific properties
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
    , navigation     :: a -> ContextNavigator a
@@ -128,6 +131,7 @@ emptyExercise = Exercise
    , suitable       = true
    , hasTermView    = Nothing
    , hasTypeable    = Nothing
+   , properties     = M.empty
      -- strategies and rules
    , strategy       = label "Fail" S.fail
    , navigation     = noNavigator
@@ -275,6 +279,16 @@ castTo :: Typeable b => Exercise a -> b -> Maybe a
 castTo ex a = do
    IT _ g <- hasTypeable ex
    g a
+
+---------------------------------------------------------------
+-- Extra properties with a dynamic type
+
+setProperty :: Typeable val => String -> val -> Exercise a -> Exercise a
+setProperty key a ex = 
+   ex { properties = M.insert key (toDyn a) (properties ex) }
+
+getProperty :: Typeable val => String -> Exercise a -> Maybe val
+getProperty key ex = M.lookup key (properties ex) >>= fromDynamic
 
 ---------------------------------------------------------------
 -- Exercise status

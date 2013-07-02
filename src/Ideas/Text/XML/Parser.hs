@@ -26,10 +26,10 @@ import Prelude hiding (seq)
 import qualified Ideas.Text.XML.Document as D
 
 letter, digit, combiningChar, extender :: Parser Char
-letter        = ranges letterMap
-digit         = ranges digitMap
-combiningChar = ranges combiningCharMap
-extender      = ranges extenderMap
+letter        = satisfy isLetter
+digit         = satisfy isDigit
+combiningChar = satisfy isCombiningChar
+extender      = satisfy isExtender
 
 -- combinators without lexing (no spaces are consumed)
 parens, brackets, singleQuoted, doubleQuoted :: Parser a -> Parser a

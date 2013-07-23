@@ -15,6 +15,7 @@
 module Ideas.Common.Strategy.Combinators where
 
 import Ideas.Common.Id
+import Ideas.Common.Classes
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Configuration
@@ -34,15 +35,15 @@ infixr 5 <*>
 
 -- | Put two strategies in sequence (first do this, then do that)
 (<*>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<*>) = liftCore2 (.*.)
+(<*>) = liftCore2 (:*:)
 
 -- | Choose between the two strategies (either do this or do that)
 (<|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<|>) = liftCore2 (.|.)
+(<|>) = liftCore2 (:|:)
 
 -- | Interleave two strategies
 (<%>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<%>) = liftCore2 (.%.)
+(<%>) = liftCore2 (:%:)
 
 -- | The strategy that always succeeds (without doing anything)
 succeed :: Strategy a
@@ -76,7 +77,7 @@ permute = foldr ((<%>) . atomic) succeed
 
 -- | Repeat a strategy zero or more times (non-greedy)
 many :: IsStrategy f => f a -> Strategy a
-many = liftCore Many
+many a = fix $ \x -> succeed <|> (a <*> x)
 
 -- | Apply a certain strategy at least once (non-greedy)
 many1 :: IsStrategy f => f a -> Strategy a
@@ -100,11 +101,13 @@ check = toStrategy . checkRule "check"
 -- | Check whether or not the argument strategy cannot be applied: the result
 --   strategy only succeeds if this is not the case (otherwise it fails).
 not :: IsStrategy f => f a -> Strategy a
-not = liftCore (Not . noLabels)
+not s = check (Prelude.not . applicable (toStrategy s))
+
+-- liftCore (Not . noLabels)
 
 -- | Repeat a strategy zero or more times (greedy version of 'many')
 repeat :: IsStrategy f => f a -> Strategy a
-repeat = liftCore Repeat
+repeat a = fix $ \x -> (a <*> x) |> succeed
 
 -- | Apply a certain strategy at least once (greedy version of 'many1')
 repeat1 :: IsStrategy f => f a -> Strategy a

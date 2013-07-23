@@ -35,7 +35,7 @@ import Ideas.Common.Strategy.Parsing
 data Prefix a = P (State LabelInfo a)
 
 prefixPair :: Prefix a -> (Int, [Bool])
-prefixPair (P s) = (length (trace s), reverse (choices s))
+prefixPair (P s) = choices s -- (length (trace s), reverse (choices s))
 
 prefixIntList :: Prefix a -> [Int]
 prefixIntList = f . prefixPair

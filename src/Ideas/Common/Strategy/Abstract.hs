@@ -215,7 +215,7 @@ mapRulesM f = liftM S . T.mapM f . toCore
 cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
 cleanUpStrategy f (LS n s) = cleanUpStrategyAfter f (LS n (make s))
  where
-   make = liftCore2 (.*.) (doAfter f (idRule ()))
+   make = liftCore2 (:*:) (doAfter f (idRule ()))
 
 -- | Use a function as do-after hook for all rules in a labeled strategy
 cleanUpStrategyAfter :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
@@ -226,7 +226,6 @@ noInterleaving :: IsStrategy f => f a -> Strategy a
 noInterleaving = liftCore $ transform f
    where
       f (a :%:  b) = a :*: b
-      f (a :!%: b) = a :*: b
       f (Atomic a) = a
       f s          = s
 

@@ -212,7 +212,7 @@ restrictGenerator p g = do
 
 randomTerm :: Exercise a -> Maybe Difficulty -> IO a
 randomTerm ex mdif = do
-   rng <- newStdGen
+   rng <- getStdGen
    maybe (fail "no random term") return $ randomTermWith rng ex mdif
 
 randomTermWith :: StdGen -> Exercise a -> Maybe Difficulty -> Maybe a

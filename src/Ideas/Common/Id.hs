@@ -9,14 +9,37 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Identification of entities
+-- Many entities of the Ideas framework carry an 'Id' for identification.
+-- Identifiers have a hierarchical structure of an arbitrary depth (e.g. 
+-- @algebra.equation@ or @a.b.c@). Valid symbols for identifiers are the
+-- alpha-numerical characters, together with @-@ and @_@. Each identifier
+-- carries a description and a hash value for fast comparison.
+--
+-- Functionality for identifiers is provided by means of three type classes:
+-- 
+-- * Type class 'IsId' for constructing identifiers
+--
+-- * Type class 'HasId' for accessing (and changing) the identifier of an 
+--   entity. Instances of this type class must always have exactly one
+--   identifier (although this identifier can be empty).
+--
+-- * Type class 'Identify' for labeling entities with an identifier. Instances
+-- of this type class typically allow labels to appear at multiple locations 
+-- within their structure.
+--
+-- The 'Id' datatype implements and re-exports the Monoid interface.
 --
 -----------------------------------------------------------------------------
 module Ideas.Common.Id
-   ( Id, IsId(..), HasId(..), Identify(..), ( # ), sameId
-   , unqualified, qualifiers, qualification
+   ( -- * Constructing identifiers
+     Id, IsId(..), ( # )
+     -- * Accessing (and changing) identifiers
+   , HasId(..), unqualified, qualifiers, qualification
    , describe, description, showId, compareId
-   , mempty, isEmptyId, listQualify
+     -- * Labeling with identifiers
+   , Identify(..)
+     -- re-export
+   , module Data.Monoid
    ) where
 
 import Control.Monad
@@ -33,6 +56,8 @@ import Test.QuickCheck
 ---------------------------------------------------------------------
 -- Abstract data type and its instances
 
+-- | Abstract data type for identifiers with a hierarchical name, carrying 
+-- a description. The data type provides a fast comparison implementation.
 data Id = Id
    { idList        :: [String]
    , idDescription :: String
@@ -65,9 +90,9 @@ instance Arbitrary Id where
       , (1, liftM2 mappend arbitrary arbitrary)
       ]
 
----------------------------------------------------------------------
--- Type class for constructing identifiers
-
+-- | Type class 'IsId' for constructing identifiers. Examples are 
+-- @newId \"algebra.equation\"@, @newId (\"a\", \"b\", \"c\")@, and @newId ()@
+-- for the empty identifier.
 class IsId a where
    newId    :: a   -> Id
    concatId :: [a] -> Id -- for String instance
@@ -100,9 +125,20 @@ instance IsId a => IsId (Maybe a) where
 instance (IsId a, IsId b) => IsId (Either a b) where
    newId = either newId newId
 
+infixr 8 #
+
+-- | Appends two identifiers. Both parameters are overloaded.
+( # ) :: (IsId a, IsId b) => a -> b -> Id
+a # b = appendId (newId a) (newId b)
+
 -----------------------------------------------------
 -- Type class for structures containing an identifier
 
+-- | Type class for labeling entities with an identifier
+class HasId a => Identify a where
+   (@>) :: IsId n => n -> a -> a
+
+-- | Type classfor accessing (and changing) the identifier of an entity.
 class HasId a where
    getId    :: a -> Id
    changeId :: (Id -> Id) -> a -> a
@@ -114,10 +150,7 @@ instance HasId Id where
 instance (HasId a, HasId b) => HasId (Either a b) where
    getId      = either getId getId
    changeId f = biMap (changeId f) (changeId f)
-
-class HasId a => Identify a where
-   (@>) :: IsId n => n -> a -> a
-
+   
 ---------------------------------------------------------------------
 -- Private constructors
 
@@ -146,14 +179,7 @@ emptyId = Id [] "" (stringRef "")
 ---------------------------------------------------------------------
 -- Additional functionality (overloaded)
 
-infixr 8 #
-
-( # ) :: (IsId a, IsId b) => a -> b -> Id
-a # b = appendId (newId a) (newId b)
-
-sameId :: (IsId a, IsId b) => a -> b -> Bool
-sameId a b = newId a == newId b
-
+-- | Get the unqualified part of the identifier (i.e., last string).
 unqualified :: HasId a => a -> String
 unqualified a
    | null xs   = ""
@@ -161,6 +187,8 @@ unqualified a
  where
    xs = idList (getId a)
 
+-- | Get the list of qualifiers of the identifier (i.e., everything but the
+-- last string).
 qualifiers :: HasId a => a -> [String]
 qualifiers a
    | null xs   = []
@@ -168,21 +196,17 @@ qualifiers a
  where
    xs = idList (getId a)
 
+-- | Get the qualified part of the identifier. If the identifier consists of 
+-- more than one part, the parts are separated by a period (@'.'@).
 qualification :: HasId a => a -> String
 qualification = intercalate "." . qualifiers
 
+-- | Get the current description.
 description :: HasId a => a -> String
 description = idDescription . getId
 
-showId :: HasId a => a -> String
-showId = show . getId
-
-compareId :: HasId a => a -> a -> Ordering
-compareId = comparing showId
-
-isEmptyId :: Id -> Bool
-isEmptyId = (== emptyId)
-
+-- | Give a description for the current entity. If there already is a 
+-- description, both strings are combined.
 describe :: HasId a => String -> a -> a
 describe = changeId . describeId
  where
@@ -192,5 +216,11 @@ describe = changeId . describeId
       | otherwise =
            a {idDescription = s ++ " " ++ idDescription a}
 
-listQualify :: (IsId a, IsId b) => [a] -> b -> Id -- TODO: clean me up
-listQualify ls h = foldr (appendId . newId) (newId h) ls
+-- | Show the identifier.
+showId :: HasId a => a -> String
+showId = show . getId
+
+-- | Compare two identifiers based on their names. Use @compare@ for a fast 
+-- ordering based on hash values.
+compareId :: HasId a => a -> a -> Ordering
+compareId = comparing showId

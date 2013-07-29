@@ -14,14 +14,17 @@
 -----------------------------------------------------------------------------
 module Ideas.Service.Diagnose
    ( Diagnosis(..), diagnose, restartIfNeeded, newState
+   , difference
    ) where
 
+import Data.Function
 import Data.List (sortBy)
 import Data.Maybe
 import Ideas.Common.Library hiding (ready)
 import Ideas.Service.BasicServices hiding (apply)
 import Ideas.Service.State
 import Ideas.Service.Types
+import qualified Ideas.Common.Rewriting.Difference as Diff
 
 ----------------------------------------------------------------
 -- Result types for diagnose service
@@ -147,6 +150,17 @@ instance Typed a (Diagnosis a) where
       g (Expected b s r)   = Right (Right (Left (b, s, r)))
       g (Detour b s as r)  = Right (Right (Right (Left (b, s, as, r))))
       g (Correct b s)      = Right (Right (Right (Right (b, s))))
+
+difference :: Exercise a -> a -> a -> Maybe (a, a)
+difference ex a b = do
+   v <- hasTermView ex
+   Diff.differenceWith v a b
+
+differenceEqual :: Exercise a -> a -> a -> Maybe (a, a)
+differenceEqual ex a b = do
+   v <- hasTermView ex
+   let simpleEq = equivalence ex `on` inContext ex
+   Diff.differenceEqualWith v simpleEq a b
 
 ----------------------------------------------------------------
 -- Compare answer sets (and search for missing parts/incorrect parts)

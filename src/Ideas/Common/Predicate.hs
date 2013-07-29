@@ -59,7 +59,7 @@ instance HasId (Predicate a) where
    changeId f a        = f mempty :@ a
 
 instance Identify (Predicate a) where
-   n @> v | isEmptyId a = v
+   n @> v | a == mempty = v
           | otherwise   = a :@ v
     where
       a = newId n

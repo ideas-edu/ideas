@@ -110,7 +110,7 @@ generateS :: Service
 generateS = makeService "basic.generate"
    "Given an exercise code and a difficulty level (optional), this service \
    \returns an initial state with a freshly generated expression." $
-   generateWith ::: typed
+   generate ::: typed
 
 examplesS :: Service
 examplesS = makeService "basic.examples"

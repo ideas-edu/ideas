@@ -177,7 +177,7 @@ instance HasId (View a b) where
    changeId f a        = f mempty :@ a
 
 instance Identify (View a b) where
-   n @> v | isEmptyId a = v
+   n @> v | a == mempty = v
           | otherwise   = a :@ v
     where
       a = newId n

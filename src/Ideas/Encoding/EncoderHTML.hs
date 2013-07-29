@@ -365,7 +365,7 @@ encodeDerivationList lm ex = encoderFor $ \ds ->
 
 htmlDerivation :: LinkManager -> Exercise a -> HTMLEncoder a (Derivation (Rule (Context a), Environment) (Context a))
 htmlDerivation lm ex = encoderFor $ \d ->
-   arr derivationDiffEnv
+   arr diffEnvironment
    >>> htmlDerivationWith (before d) forStep forTerm
  where
    before d =

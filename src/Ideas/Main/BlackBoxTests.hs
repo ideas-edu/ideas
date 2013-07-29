@@ -22,6 +22,7 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import System.Directory
 import System.IO hiding (readFile)
+import Data.Char
 
 -- Returns the number of tests performed
 blackBoxTests :: DomainReasoner -> String -> TestSuite
@@ -48,23 +49,26 @@ doBlackBoxTest dr format path =
    assertIO (stripDirectoryPart path) $ do
       -- Comparing output with expected output
       useFixedStdGen -- fix the random number generator
-      txt  <- readFileStrict path
-      expt <- readFileStrict expPath
-      out  <- case format of
-                 JSON -> liftM snd3 (processJSON False dr txt)
-                 XML  -> liftM snd3 (processXML dr Nothing txt)
-      -- Force evaluation of the result, to make sure that
-      -- all file handles are closed afterwards.
-      let result = out ~= expt
-      result `seq` return (out ~= expt)
+      withFile path ReadMode $ \h1 -> do
+         txt <- hGetContents h1
+         out  <- case format of
+                    JSON -> liftM snd3 (processJSON False dr txt)
+                    XML  -> liftM snd3 (processXML dr Nothing txt)
+         withFile expPath ReadMode $ \h2 -> do
+            expt <- hGetContents h2
+            -- Force evaluation of the result, to make sure that
+            -- all file handles are closed afterwards.
+            let result = out ~= expt
+            result `seq` return result
  where
    expPath = baseOf path ++ ".exp"
    baseOf  = reverse . drop 1 . dropWhile (/= '.') . reverse
    x ~= y  = filterVersion x == filterVersion y -- compare line-based
 
-   filterVersion =
-      let p s = not (null s || "version" `isInfixOf` s)
-      in filter p . lines . filter (/= '\r')
+filterVersion :: String -> [String]
+filterVersion =
+   let p s = not (null s || "version" `isInfixOf` s)
+   in filter p . lines . filter (/= '\r')
 
 simplerDirectory :: String -> String
 simplerDirectory s
@@ -85,8 +89,3 @@ logicConfluence = reportTest "logic rules" (isConfluent f rs)
    rs   = [ r | RewriteRule r <- concatMap transformations rwrs ]
    -- eqs  = bothWays [ r | RewriteRule r <- concatMap transformations Logic.logicRules ]
 -}
-
--- strict version
-readFileStrict :: FilePath -> IO String
-readFileStrict name = openBinaryFile name ReadMode >>= \h -> 
-   hGetContents h >>= \s -> length s `seq` return s

@@ -51,22 +51,17 @@ coreBuilder f = rec
          _ :|:  _  -> asList "choice"     isChoice
          _ :|>: _  -> asList "orelse"     isOrElse
          _ :%: _   -> asList "interleave" isInterleave
-         a :!%: b  -> tag "interleft"  (rec a <> rec b)
-         Many a    -> tag "many"       (rec a)
-         Repeat a  -> tag "repeat"     (rec a)
          Label l (Rule r) | getId l == getId r
                    -> tag "rule"       (f l)
          Label l a -> tag "label"      (f l <> rec a)
          Atomic a  -> tag "atomic"     (rec a)
          Rec n a   -> tag "rec"        (("var" .=. show n) <> rec a)
-         Not a     -> tag "not"        (recNot a)
          Rule r    -> tag "rule"       ("name" .=. show r)
          Var n     -> tag "var"        ("var" .=. show n)
          Succeed   -> emptyTag "succeed"
          Fail      -> emptyTag "fail"
     where
       asList s g = element s (map rec (collect g core))
-      recNot = coreBuilder (const mempty)
 
 collect :: (a -> Maybe (a, a)) -> a -> [a]
 collect f = ($ []) . rec
@@ -166,12 +161,9 @@ readStrategy toLabel findRule xml = do
       , ("choice",     buildChoice)
       , ("orelse",     buildOrElse)
       , ("interleave", buildInterleave)
-      , ("many",       comb1 Many)
-      , ("repeat",     comb1 Repeat)
       , ("label",      join2 comb1 buildLabel)
       , ("atomic",     comb1 Atomic)
       , ("rec",        join2 comb1 buildRec)
-      , ("not",        comb1 (Not . noLabels))
       , ("rule",       join2 comb0 buildRule)
       , ("var",        join2 comb0 buildVar)
       , ("succeed",    comb0 Succeed)

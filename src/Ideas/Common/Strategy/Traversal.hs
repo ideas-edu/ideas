@@ -18,6 +18,7 @@ module Ideas.Common.Strategy.Traversal
    , fulltd, fullbu, oncetd, oncebu, somewhere
      -- * Fixpoint traversals
    , innermost, outermost
+   , ruleDown, ruleDownLast, ruleUp
    ) where
 
 import Data.Monoid

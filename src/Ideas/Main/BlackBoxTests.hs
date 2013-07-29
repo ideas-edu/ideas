@@ -22,7 +22,6 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import System.Directory
 import System.IO hiding (readFile)
-import Data.Char
 
 -- Returns the number of tests performed
 blackBoxTests :: DomainReasoner -> String -> TestSuite

@@ -28,7 +28,7 @@ import qualified Prelude
 
 -- Basic combinators --------------------------------------
 
-infixr 2 <%>
+infixr 2 <%>, <@>
 infixr 3 <|>
 infixr 4  |>
 infixr 5 <*>
@@ -44,6 +44,10 @@ infixr 5 <*>
 -- | Interleave two strategies
 (<%>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
 (<%>) = liftCore2 (:%:)
+
+-- | Alternate two strategies
+(<@>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+(<@>) = liftCore2 (:@:)
 
 -- | The strategy that always succeeds (without doing anything)
 succeed :: Strategy a

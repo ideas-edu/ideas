@@ -5,8 +5,8 @@ module Ideas.Common.Strategy.Sequential
    , empty, firsts, scanChoice, prune
    , fromAtoms
    , Sym(..)
-   , atomic, concurrent
-   , emptyPath, Path, path, replay
+   , atomic, concurrent, (<@>)
+   , emptyPath, Path, withPath, replay
    , independent
    ) where
 
@@ -186,15 +186,20 @@ concurrent switch = normal
    stepRight p = useFirst op stop
     where
       op a = (a ~>) . (if switch a then normal else stepRight) p
-   
+
+-- Alternate combinator
+(<@>) :: Sequential f => Process a -> Process a -> f a
+p <@> q = useFirst (\a r -> a ~> (q <@> r)) bothOk p
+ where
+   bothOk = useFirst (\_ _ -> stop) ok q
 
 --------------------------------
+
+abc, de :: Process  Char
+abc = 'a' :~> 'b' :~> 'c' :~> ok
+de  = 'd' :~> 'e' :~> ok
+
 {-
-abc, de :: P (Sym Char)
-abc = Single 'a' :~> Single 'b' :~> Single 'c' :~> ok
-de  = Single 'd' :~> Single 'e' :~> ok
-
-
 go = run (concurrent undefined undefined abc de) -}
 
 type Path = (Int, [Bool]) -- depth, choices
@@ -202,8 +207,8 @@ type Path = (Int, [Bool]) -- depth, choices
 emptyPath :: Path
 emptyPath = (0, [])
 
-path :: Process a -> Process (a, Path)
-path = rec 0 [] 
+withPath :: Process a -> Process (a, Path)
+withPath = rec 0 [] 
  where
    rec n bs (p :|: q) = rec (n+1) (True:bs) p :|: rec (n+1) (False:bs) q
    rec n bs (p :?: q) = rec (n+1) (True:bs) p :?: rec (n+1) (False:bs) q

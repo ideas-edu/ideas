@@ -17,15 +17,12 @@ module Ideas.Common.Strategy.Parsing
    , parseDerivationTree, replay, runCore
    ) where
 
-import Control.Monad
-import Data.List
 import Data.Monoid
 import Ideas.Common.Classes
 import Ideas.Common.DerivationTree
 import Ideas.Common.Environment
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Core
-import Ideas.Common.Utils.Uniplate
 import qualified Ideas.Common.Strategy.Sequential as Sequential
 import Ideas.Common.Strategy.Sequential hiding (replay)
 
@@ -41,7 +38,7 @@ instance Show (Step l a) where
    show (RuleStep _ r) = show r
 
 -- A core expression where the symbols are steps instead of "only" rules
-type StepCore l a = GCore l (Step l a)
+-- type StepCore l a = GCore l (Step l a)
 
 instance Apply (Step l) where
    applyAll (RuleStep _ r) = applyAll r
@@ -66,7 +63,7 @@ data State l a = S
    }
 
 makeState :: Core l a -> a -> State l a
-makeState core a = S (path (toProcess core)) a [] emptyPath Nothing
+makeState core a = S (withPath (toProcess core)) a [] emptyPath Nothing
 
 ----------------------------------------------------------------------
 -- Parse derivation tree
@@ -76,9 +73,9 @@ parseDerivationTree _ = tree
  where
    tree = makeTree $ \state ->
       let this = getProcess state
-      in (empty this, firsts state this)
+      in (empty this, stateFirsts state this)
    
-   firsts st p = 
+   stateFirsts st p = 
       [ ( step
         , st {trace = step:trace st, value = a, myProcess = Just q, choices = path}
         )
@@ -107,8 +104,9 @@ toProcess = fromAtoms . build . rec . coreSubstAll
          Label l a -> Single (Enter l) ~> rec a 
                       <*> single (Single (Exit l))
          a :%: b   -> concurrent switch (build (rec a)) (build (rec b))
+         a :@: b   -> build (rec a) <@> build (rec b)
          Atomic a  -> atomic (build (rec a))
-         Rec i a   -> error "toMin: rec"
+         Rec _ _   -> error "toMin: rec"
          Var _     -> error "toMin: var"
 
    switch (Single (Enter _)) = False
@@ -151,7 +149,7 @@ filterMin = prune (\(st, _, _) -> isMajor st)
 
 replay :: Monad m => Int -> [Bool] -> Core l a -> m (State l a)
 replay n bs core = do 
-   c <- Sequential.replay (n, bs) $ path $ toProcess core
+   c <- Sequential.replay (n, bs) $ withPath $ toProcess core
    return (S c (error "no value") [] (n, bs) Nothing)
       
 getProcess :: State l a -> Process (Step l a, a, Path)

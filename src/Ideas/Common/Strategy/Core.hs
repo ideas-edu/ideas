@@ -29,7 +29,7 @@ import Ideas.Common.Strategy.Sequential
 -- Strategy (internal) data structure, containing a selection
 -- of combinators
 
-infixr 2 :%:
+infixr 2 :%:, :@:
 infixr 3 :|:, :|>:
 infixr 5 :*:
 
@@ -43,6 +43,7 @@ data GCore l a
    | GCore l a :|:  GCore l a
    | GCore l a :|>: GCore l a
    | GCore l a :%:  GCore l a -- interleave
+   | GCore l a :@:  GCore l a -- alternate
    | Label l (GCore l a)
    | Atomic  (GCore l a)
    | Succeed
@@ -73,6 +74,7 @@ instance Uniplate (GCore l a) where
          a :|: b   -> plate (:|:)  |* a |* b
          a :|>: b  -> plate (:|>:) |* a |* b
          a :%: b   -> plate (:%:)  |* a |* b
+         a :@: b   -> plate (:@:)  |* a |* b
          Label l a -> plate Label  |- l |* a
          Atomic a  -> plate Atomic |* a
          Rec n a   -> plate Rec    |- n |* a
@@ -87,6 +89,7 @@ instance BiFunctor GCore where
             a :|: b   -> rec a :|:  rec b
             a :|>: b  -> rec a :|>: rec b
             a :%: b   -> rec a :%:  rec b
+            a :@: b   -> rec a :@:  rec b
             Atomic a  -> Atomic (rec a)
             Rec n a   -> Rec n  (rec a)
             Label l a -> Label (f l) (rec a)

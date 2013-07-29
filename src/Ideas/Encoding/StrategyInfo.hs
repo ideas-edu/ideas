@@ -51,6 +51,7 @@ coreBuilder f = rec
          _ :|:  _  -> asList "choice"     isChoice
          _ :|>: _  -> asList "orelse"     isOrElse
          _ :%: _   -> asList "interleave" isInterleave
+         a :@: b   -> tag "alternate" (rec a <> rec b)
          Label l (Rule r) | getId l == getId r
                    -> tag "rule"       (f l)
          Label l a -> tag "label"      (f l <> rec a)

@@ -34,6 +34,7 @@ module Ideas.Common.Utils.TestSuite
 
 import Control.Exception
 import Control.Monad.State.Strict
+import Data.Foldable (toList)
 import Data.List
 import Data.Maybe
 import Data.Monoid
@@ -45,33 +46,27 @@ import qualified Test.QuickCheck as QC
 import qualified Data.Foldable as F
 import qualified Data.Sequence as S
 
-type Tests = [Test]
+----------------------------------------------------------------
+-- Test Suite Monad
+
+newtype TestSuite = Tests { getTests :: Tests }
+
+instance Monoid TestSuite where
+   mempty = Tests mempty
+   mappend (Tests xs) (Tests ys) = Tests (xs <> ys)
+
+type Tests = S.Seq Test
 
 data Test = TestSuite String Tests
           | TestCase Message (IO Bool)
           | TestQC String Args Property
 
 ----------------------------------------------------------------
--- Test Suite Monad
-
-newtype TestSuiteM a = TSM { unTSM :: Tests }
-
-type TestSuite = TestSuiteM ()
-
-instance Monad TestSuiteM where
-   return _ = mempty
-   TSM xs >>= f = TSM xs <> f (error "TestSuite.fail: do not bind result")
-
-instance Monoid (TestSuiteM a) where
-   mempty  = TSM []
-   mappend (TSM xs) (TSM ys) = TSM (xs ++ ys)
-
-----------------------------------------------------------------
 -- Test suite constructors
 
--- | Construct a (named) test suite containing tests and other suites
-suite :: String -> TestSuite -> TestSuite
-suite s m = TSM [TestSuite s (unTSM m)]
+-- | Construct a (named) test suite containing test cases and other suites
+suite :: String -> [TestSuite] -> TestSuite
+suite s m = Tests $ S.singleton $ TestSuite s $ getTests $ mconcat m
 
 -- | Add a QuickCheck property to the test suite. The first argument is
 -- a label for the property
@@ -81,7 +76,7 @@ addProperty = flip addPropertyWith stdArgs
 -- | Add a QuickCheck property to the test suite, also providing a test
 -- configuration (Args)
 addPropertyWith :: Testable prop => String -> Args -> prop -> TestSuite
-addPropertyWith s args p = TSM [TestQC s args (property p)]
+addPropertyWith s args p = Tests $ S.singleton $ TestQC s args (property p)
 
 assertTrue :: String -> Bool -> TestSuite
 assertTrue msg = assertIO msg . return
@@ -102,7 +97,7 @@ warn = (`addAssertion` return False) . warning . newMessage
 
 -- local helpers
 addAssertion :: Message -> IO Bool -> TestSuite
-addAssertion msg io = TSM [TestCase msg io]
+addAssertion msg io = Tests $ S.singleton $ TestCase msg io
 
 ----------------------------------------------------------------
 -- Running a test suite
@@ -114,12 +109,12 @@ runTestSuiteResult :: TestSuite -> IO Result
 runTestSuiteResult s = do
    hSetBuffering stdout NoBuffering
    updateDiffTime $ runWriteIO $ do
-      a <- runTests (unTSM s)
+      a <- runTests (getTests s)
       newline
       return a
 
 runTests :: Tests -> WriteIO Result
-runTests = liftM mconcat . mapM runTest
+runTests = liftM mconcat . mapM runTest . toList
 
 runTest :: Test -> WriteIO Result
 runTest (TestSuite s xs)  = runSuite s xs

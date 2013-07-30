@@ -33,7 +33,7 @@ blackBoxTests dr path = do
    -- recursively visit subdirectories
    subs <- filterM doesDirectoryExist xs3
    rest <- mapM (blackBoxTests dr) subs
-   return $ suite ("Directory " ++ simplerDirectory path) $ mconcat $ 
+   return $ suite ("Directory " ++ simplerDirectory path) $
       [ doBlackBoxTest dr JSON (path </> x)
       | x <- json
       ] ++

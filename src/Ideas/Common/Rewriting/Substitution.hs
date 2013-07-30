@@ -111,19 +111,20 @@ instance Arbitrary Substitution where
       return (listToSubst (zip is ts))
 
 tests :: TestSuite
-tests = suite "Substitution" $ do
-   addProperty "left unit" $ \s ->
-      mempty @@ s == s
-   addProperty "right unit" $ \s ->
-      s @@ mempty == s
-   addProperty "associative" $ \s1 s2 s3 ->
-      composable s1 s2 && composable (s1 @@ s2) s3
-      && composable s2 s3 && composable s1 (s2 @@ s3)
-      ==> (s1 @@ s2) @@ s3 == s1 @@ (s2 @@ s3)
-   addProperty "idempotence" $ \s ->
-      s @@ s == s
-   addProperty "idempotence/application" $ \s a ->
-      s |-> a == s |-> (s |-> a)
-   addProperty "composition" $ \s1 s2 a ->
-      composable s1 s2
-      ==> s1 |-> (s2 |-> a) == (s1 @@ s2) |-> a
+tests = suite "Substitution"
+   [ addProperty "left unit" $ \s ->
+        mempty @@ s == s
+   , addProperty "right unit" $ \s ->
+        s @@ mempty == s
+   , addProperty "associative" $ \s1 s2 s3 ->
+        composable s1 s2 && composable (s1 @@ s2) s3
+        && composable s2 s3 && composable s1 (s2 @@ s3)
+        ==> (s1 @@ s2) @@ s3 == s1 @@ (s2 @@ s3)
+   , addProperty "idempotence" $ \s ->
+        s @@ s == s
+   , addProperty "idempotence/application" $ \s a ->
+        s |-> a == s |-> (s |-> a)
+   , addProperty "composition" $ \s1 s2 a ->
+        composable s1 s2
+        ==> s1 |-> (s2 |-> a) == (s1 @@ s2) |-> a
+   ]

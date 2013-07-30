@@ -9,15 +9,17 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A context for a term that maintains an environment of
--- key-value pairs. A context is both showable and parsable.
+-- 
+-- The 'Context' datatype places a value in a context consisting of an 
+-- environment with bindings and a point of focus. The datatype is an instance
+-- of the 'HasEnvironment' type class (for accessing the environment) and
+-- the 'Navigator' type class (for traversing the term). 
 --
 -----------------------------------------------------------------------------
 module Ideas.Common.Context
    ( -- * Abstract data type
      Context, newContext
    , fromContext, fromContextWith, fromContextWith2
-   , Location, location
      -- * Context navigator
    , ContextNavigator, noNavigator, navigator, termNavigator
      -- * Lifting
@@ -39,11 +41,10 @@ import Ideas.Common.View hiding (left, right)
 ----------------------------------------------------------
 -- Abstract data type
 
--- | Abstract data type for a context: a context stores an envrionent
--- (key-value pairs) and a value
+-- | Abstract data type for a context: a context stores an envrionent.
 data Context a = C
-   { getEnvironment :: Environment        -- ^ Returns the environment
-   , getNavigator   :: ContextNavigator a -- ^ Value with focus
+   { getEnvironment :: Environment
+   , getNavigator   :: ContextNavigator a
    }
 
 fromContext :: Monad m => Context a -> m a

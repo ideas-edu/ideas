@@ -29,6 +29,7 @@ module Ideas.Common.Utils.TestSuite
      -- * Messages
    , Message, newMessage
    , isError, warning, messageLabel
+   , module Data.Monoid
    ) where
 
 import Control.Exception
@@ -60,9 +61,6 @@ instance Monad TestSuiteM where
    m >>= f = TSM (unTSM m >>= unTSM . f)
    fail s  = do assertTrue s False
                 return (error "TestSuite.fail: do not bind result")
-
-instance MonadIO TestSuiteM where
-   liftIO =  TSM . liftIO
 
 instance Monoid a => Monoid (TestSuiteM a) where
    mempty  = return mempty

@@ -12,7 +12,6 @@
 module Ideas.Main.BlackBoxTests (blackBoxTests) where
 
 import Control.Monad
-import Control.Monad.Error
 import Data.List
 import Ideas.Common.Utils (useFixedStdGen, snd3)
 import Ideas.Common.Utils.TestSuite
@@ -24,24 +23,24 @@ import System.Directory
 import System.IO hiding (readFile)
 
 -- Returns the number of tests performed
-blackBoxTests :: DomainReasoner -> String -> TestSuite
+blackBoxTests :: DomainReasoner -> String -> IO TestSuite
 blackBoxTests dr path = do
    -- analyse content
-   xs0 <- liftIO (getDirectoryContents path)
+   xs0 <- getDirectoryContents path
    let (xml,  xs1) = partition (".xml"  `isSuffixOf`) xs0
        (json, xs2) = partition (".json" `isSuffixOf`) xs1
-   -- perform tests
-   forM_ json $ \x ->
-      doBlackBoxTest dr JSON (path ++ "/" ++ x)
-   forM_ xml $ \x ->
-      doBlackBoxTest dr XML (path ++ "/" ++ x)
+       xs3         = map (path </>) (filter ((/= ".") . take 1) xs2)
    -- recursively visit subdirectories
-   forM_ (filter ((/= ".") . take 1) xs2) $ \x -> do
-      let p = path ++ "/" ++ x
-      valid <- liftIO (doesDirectoryExist p)
-      when valid $
-         suite ("Directory " ++ simplerDirectory p) 
-               (blackBoxTests dr p)
+   subs <- filterM doesDirectoryExist xs3
+   rest <- mapM (blackBoxTests dr) subs
+   return $ suite ("Directory " ++ simplerDirectory path) $ mconcat $ 
+      [ doBlackBoxTest dr JSON (path </> x)
+      | x <- json
+      ] ++
+      [ doBlackBoxTest dr XML (path </> x)
+      | x <- xml
+      ] ++
+      rest
 
 doBlackBoxTest :: DomainReasoner -> DataFormat -> FilePath -> TestSuite
 doBlackBoxTest dr format path =
@@ -77,6 +76,9 @@ simplerDirectory s
 
 stripDirectoryPart :: String -> String
 stripDirectoryPart = reverse . takeWhile (/= '/') . reverse
+
+(</>) :: FilePath -> FilePath -> FilePath
+x </> y = x ++ "/" ++ y
 
 {-
 logicConfluence :: IO ()

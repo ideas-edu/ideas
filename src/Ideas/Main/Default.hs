@@ -93,7 +93,8 @@ defaultCommandLine dr flags = do
             putStrLn txt
          -- blackbox tests
          Test dir -> do
-            result <- runTestSuiteResult (blackBoxTests dr dir)
+            tests  <- blackBoxTests dr dir
+            result <- runTestSuiteResult tests
             printSummary result
          -- generate documentation pages
          MakePages dir ->

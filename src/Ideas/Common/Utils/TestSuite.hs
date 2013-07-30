@@ -23,7 +23,7 @@ module Ideas.Common.Utils.TestSuite
      -- * Running a test suite
    , runTestSuite, runTestSuiteResult
      -- * Test Suite Result
-   , TestSuiteResult, subResults, findSubResult
+   , Result, subResults, findSubResult
    , messages, topMessages, numberOfTests
    , makeSummary, printSummary
      -- * Messages
@@ -33,50 +33,45 @@ module Ideas.Common.Utils.TestSuite
    ) where
 
 import Control.Exception
-import Control.Monad.State
+import Control.Monad.State.Strict
 import Data.List
 import Data.Maybe
 import Data.Monoid
 import Data.Time
 import Prelude hiding (catch)
 import System.IO
-import Test.QuickCheck
+import Test.QuickCheck hiding (Result)
+import qualified Test.QuickCheck as QC
 import qualified Data.Foldable as F
 import qualified Data.Sequence as S
+
+type Tests = [Test]
+
+data Test = TestSuite String Tests
+          | TestCase Message (IO Bool)
+          | TestQC String Args Property
 
 ----------------------------------------------------------------
 -- Test Suite Monad
 
-newtype TestSuiteM a = TSM { unTSM :: StateT Content IO a }
-
-data Content = C
-   { column :: !Int -- Number of characters on the current line, for formatting
-   , result :: !TestSuiteResult
-   }
+newtype TestSuiteM a = TSM { unTSM :: Tests }
 
 type TestSuite = TestSuiteM ()
 
 instance Monad TestSuiteM where
-   return  = TSM . return
-   m >>= f = TSM (unTSM m >>= unTSM . f)
-   fail s  = do assertTrue s False
-                return (error "TestSuite.fail: do not bind result")
+   return _ = mempty
+   TSM xs >>= f = TSM xs <> f (error "TestSuite.fail: do not bind result")
 
-instance Monoid a => Monoid (TestSuiteM a) where
-   mempty  = return mempty
-   mappend = (>>)
+instance Monoid (TestSuiteM a) where
+   mempty  = TSM []
+   mappend (TSM xs) (TSM ys) = TSM (xs ++ ys)
 
 ----------------------------------------------------------------
 -- Test suite constructors
 
 -- | Construct a (named) test suite containing tests and other suites
 suite :: String -> TestSuite -> TestSuite
-suite s m = TSM $ do
-   newline
-   liftIO $ putStrLn s
-   reset
-   t <- updateDiffTime (withEmptyTree (unTSM m))
-   addResult (suiteResult s t)
+suite s m = TSM [TestSuite s (unTSM m)]
 
 -- | Add a QuickCheck property to the test suite. The first argument is
 -- a label for the property
@@ -86,12 +81,7 @@ addProperty = flip addPropertyWith stdArgs
 -- | Add a QuickCheck property to the test suite, also providing a test
 -- configuration (Args)
 addPropertyWith :: Testable prop => String -> Args -> prop -> TestSuite
-addPropertyWith s args p = TSM $ do
-   newlineIndent
-   r <- liftIO $ quickCheckWithResult args p
-   reset
-   let f = addResult . messageResult . setLabel s
-   maybe (addResult okResult) f (toTestResult r)
+addPropertyWith s args p = TSM [TestQC s args (property p)]
 
 assertTrue :: String -> Bool -> TestSuite
 assertTrue msg = assertIO msg . return
@@ -112,54 +102,7 @@ warn = (`addAssertion` return False) . warning . newMessage
 
 -- local helpers
 addAssertion :: Message -> IO Bool -> TestSuite
-addAssertion msg io = TSM $ do
-   b <- liftIO (io `catch` handler)
-   if b then do
-      dot
-      addResult okResult
-    else do
-      newlineIndent
-      liftIO (print msg)
-      reset
-      addResult (messageResult msg)
- where
-   handler :: SomeException -> IO Bool
-   handler _ = return False
-
-withEmptyTree :: StateT Content IO () -> StateT Content IO TestSuiteResult
-withEmptyTree m = do
-   t0 <- gets result
-   modify $ \c -> c {result = mempty}
-   m
-   tr <- gets result
-   modify $ \c -> c {result = t0}
-   return tr
-
--- formatting helpers
-newline :: StateT Content IO ()
-newline = do
-   i <- gets column
-   when (i>0) (liftIO $ putChar '\n')
-   reset
-
-newlineIndent :: StateT Content IO ()
-newlineIndent = do
-   newline
-   liftIO $ putStr "   "
-   modify $ \c -> c {column = 3}
-
-dot :: StateT Content IO ()
-dot = do
-   i <- gets column
-   unless (i>0 && i<60) newlineIndent
-   liftIO $ putChar '.'
-   modify $ \c -> c {column = column c+1}
-
-addResult :: TestSuiteResult -> StateT Content IO ()
-addResult r = modify $ \c -> c {result = result c `mappend` r}
-
-reset :: StateT Content IO ()
-reset = modify $ \c -> c {column = 0}
+addAssertion msg io = TSM [TestCase msg io]
 
 ----------------------------------------------------------------
 -- Running a test suite
@@ -167,23 +110,102 @@ reset = modify $ \c -> c {column = 0}
 runTestSuite :: TestSuite -> IO ()
 runTestSuite = void . runTestSuiteResult
 
-runTestSuiteResult :: TestSuite -> IO TestSuiteResult
+runTestSuiteResult :: TestSuite -> IO Result
 runTestSuiteResult s = do
    hSetBuffering stdout NoBuffering
-   updateDiffTime $ liftM result $
-      execStateT (unTSM s >> newline) (C 0 mempty)
+   updateDiffTime $ runWriteIO $ do
+      a <- runTests (unTSM s)
+      newline
+      return a
+
+runTests :: Tests -> WriteIO Result
+runTests = liftM mconcat . mapM runTest
+
+runTest :: Test -> WriteIO Result
+runTest (TestSuite s xs)  = runSuite s xs
+runTest (TestCase msg io) = runTestCase msg io
+runTest (TestQC s args p) = runQC s args p
+
+runSuite :: String -> Tests -> WriteIO Result
+runSuite s m = do
+   newline
+   liftIO $ putStrLn s
+   reset
+   t <- updateDiffTime (runTests m)
+   return (suiteResult s t)
+
+runQC :: String -> Args -> Property -> WriteIO Result
+runQC s args p = do
+   newlineIndent
+   r <- liftIO $ quickCheckWithResult args p
+   reset
+   let f = return . messageResult . setLabel s
+   maybe (return okResult) f (toTestResult r)
+
+runTestCase :: Message -> IO Bool -> WriteIO Result
+runTestCase msg io = do
+   b <- liftIO (io `catch` handler)
+   if b then do
+      dot
+      return okResult
+    else do
+      newlineIndent
+      liftIO (print msg)
+      reset
+      return (messageResult msg)
+ where
+   handler :: SomeException -> IO Bool
+   handler _ = return False
+
+-- formatting helpers
+newtype WriteIO a = WriteIO { fromWriteIO :: StateT Int IO a }
+
+runWriteIO :: WriteIO a -> IO a
+runWriteIO = (`evalStateT` 0) . fromWriteIO
+
+instance Monad WriteIO where
+   return  = WriteIO . return
+   fail    = WriteIO . fail
+   m >>= f = WriteIO (fromWriteIO m >>= fromWriteIO . f)
+
+instance MonadIO WriteIO where
+   liftIO = WriteIO . liftIO
+
+newline :: WriteIO ()
+newline = do
+   WriteIO $ do
+      i <- get
+      when (i>0) (liftIO $ putChar '\n')
+   reset
+
+newlineIndent :: WriteIO ()
+newlineIndent = do
+   newline
+   WriteIO $ do
+      liftIO $ putStr "   "
+      put 3
+
+dot :: WriteIO ()
+dot = WriteIO $ do
+   i <- get
+   unless (i>0 && i<60) (fromWriteIO newlineIndent)
+   liftIO $ putChar '.'
+   modify succ
+   
+reset :: WriteIO ()
+reset = WriteIO $ put 0
 
 ----------------------------------------------------------------
 -- Test Suite Result
 
-data TestSuiteResult = TSR
+data Result = TSR
    { messageSeq     :: S.Seq Message
-   , suiteSeq       :: S.Seq (String, TestSuiteResult)
+   , suiteSeq       :: S.Seq (String, Result)
    , numberOfTests  :: !Int
    , diffTime       :: !NominalDiffTime
    }
 
-instance Monoid TestSuiteResult where
+instance Monoid Result where
    mempty = TSR mempty mempty 0 0
    mappend x y = TSR
       { messageSeq    = messageSeq x `mappend` messageSeq y
@@ -192,20 +214,20 @@ instance Monoid TestSuiteResult where
       , diffTime      = diffTime x + diffTime y
       }
 
-okResult :: TestSuiteResult
+okResult :: Result
 okResult = mempty {numberOfTests = 1}
 
-messageResult :: Message -> TestSuiteResult
+messageResult :: Message -> Result
 messageResult m = okResult {messageSeq = S.singleton m}
 
-suiteResult :: String -> TestSuiteResult -> TestSuiteResult
+suiteResult :: String -> Result -> Result
 suiteResult s a = mempty
    { suiteSeq = S.singleton (s, a)
    , numberOfTests = numberOfTests a
    }
 
 -- one-line summary
-instance Show TestSuiteResult where
+instance Show Result where
    show res =
       let (xs, ys) = partition isError (messages res)
       in "(tests: " ++ show (numberOfTests res) ++
@@ -213,13 +235,13 @@ instance Show TestSuiteResult where
          ", warnings: " ++ show (length ys) ++
          ", " ++ show (diffTime res) ++ ")"
 
-subResults :: TestSuiteResult -> [(String, TestSuiteResult)]
+subResults :: Result -> [(String, Result)]
 subResults = F.toList . suiteSeq
 
-topMessages :: TestSuiteResult -> [Message]
+topMessages :: Result -> [Message]
 topMessages = F.toList . messageSeq
 
-messages :: TestSuiteResult -> [Message]
+messages :: Result -> [Message]
 messages res =
    topMessages res ++ concatMap (messages . snd) (subResults res)
 
@@ -246,7 +268,7 @@ warning m = m {isError = False}
 setLabel :: String -> Message -> Message
 setLabel s m = m {messageLabel = Just s}
 
-findSubResult :: String -> TestSuiteResult -> Maybe TestSuiteResult
+findSubResult :: String -> Result -> Maybe Result
 findSubResult name = listToMaybe . recs
  where
    recs = concatMap rec . subResults
@@ -254,10 +276,10 @@ findSubResult name = listToMaybe . recs
       | n == name = [t]
       | otherwise = recs t
 
-printSummary :: TestSuiteResult -> IO ()
+printSummary :: Result -> IO ()
 printSummary = putStrLn . makeSummary
 
-makeSummary :: TestSuiteResult -> String
+makeSummary :: Result -> String
 makeSummary res = unlines $
    [ line
    , "Tests    : " ++ show (numberOfTests res)
@@ -275,7 +297,7 @@ makeSummary res = unlines $
 -----------------------------------------------------
 -- Utility functions
 
-toTestResult :: Result -> Maybe Message
+toTestResult :: QC.Result -> Maybe Message
 toTestResult res =
    let make = Just . newMessage
    in case res of
@@ -285,7 +307,7 @@ toTestResult res =
          GaveUp {numTests = i}  -> fmap warning $ make $
                                    "passed only " ++ show i ++ " tests"
 
-updateDiffTime :: MonadIO m => m TestSuiteResult -> m TestSuiteResult
+updateDiffTime :: MonadIO m => m Result -> m Result
 updateDiffTime m = do
    (res, d) <- getDiffTime m
    return res {diffTime = d}

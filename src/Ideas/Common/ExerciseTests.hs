@@ -1,7 +1,7 @@
 module Ideas.Common.ExerciseTests
-   ( checkExercise, checkParserPretty
+   {- ( checkExercise, checkParserPretty
    , checkExamples, exerciseTestSuite
-   ) where
+   ) -} where {-
    
 import Control.Monad
 import Data.Function
@@ -169,4 +169,4 @@ checksForDerivation ex d = do
    -- Parameters
    assertNull "parameters" $ take 1 $ do
       (r, env) <- steps d
-      maybeToList (checkReferences r env)
+      maybeToList (checkReferences r env) -}

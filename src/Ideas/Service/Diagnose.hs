@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Ideas.Service.Diagnose
    ( Diagnosis(..), diagnose, restartIfNeeded, newState
-   , difference
+   , difference, differenceEqual
    ) where
 
 import Data.Function
@@ -156,6 +156,7 @@ difference ex a b = do
    v <- hasTermView ex
    Diff.differenceWith v a b
 
+-- Used by the FP tutor
 differenceEqual :: Exercise a -> a -> a -> Maybe (a, a)
 differenceEqual ex a b = do
    v <- hasTermView ex

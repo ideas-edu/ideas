@@ -239,13 +239,11 @@ filterP p = fold Alg
    , forStop   = stop
    }
 
-independent :: Eq a => (a -> a -> Bool) -> Process a -> Process a 
-independent f p0 = rec p0
+independent :: (a -> a -> Bool) -> Process a -> Process a 
+independent eq p0 = rec p0
  where
-   xs = map fst (firsts p0)
-   
    rec (p :|: q) = rec p <|> rec q
    rec (p :?: q) = rec p :?: rec q
-   rec (a :~> p) = a :~> independent f (filterP (`notElem` [ x | x <- xs, f x a ]) p)
+   rec (a :~> p) = a :~> rec (filterP (not . eq a) p)
    rec Ok        = Ok
    rec Stop      = Stop

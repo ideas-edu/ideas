@@ -15,6 +15,7 @@
 module Ideas.Common.Strategy.Prefix
    ( Prefix, emptyPrefix, makePrefix
    , prefixToSteps, prefixTree, stepsToRules, lastStepInPrefix, activeLabels
+   , indepPrefix
    ) where
 
 import Control.Monad
@@ -65,6 +66,9 @@ makePrefix (i:is) ls = liftM P $
 prefixTree :: Bool -> Prefix a -> a -> DerivationTree (Prefix a) a
 prefixTree search (P s) a = fmap value $ updateAnnotations (\_ _ -> P) $
    parseDerivationTree search s {value = a}
+
+indepPrefix :: (Step LabelInfo a -> Step LabelInfo a -> Bool) -> Prefix a -> Prefix a
+indepPrefix f (P s) = P (indepState f s)
 
 prefixToSteps :: Prefix a -> [Step LabelInfo a]
 prefixToSteps (P t) = reverse (trace t)

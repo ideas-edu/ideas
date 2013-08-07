@@ -14,9 +14,10 @@
 module Ideas.Common.Strategy.Parsing
    ( Step(..)
    , State, makeState, choices, trace, value
-   , parseDerivationTree, replay, runCore
+   , parseDerivationTree, replay, runCore, indepState
    ) where
 
+import Data.Function (on)
 import Data.Monoid
 import Ideas.Common.Classes
 import Ideas.Common.DerivationTree
@@ -81,6 +82,13 @@ parseDerivationTree _ = tree
         )
       | ((step, a, path), q) <- Sequential.firsts p
       ]
+
+indepState :: (Step l a -> Step l a -> Bool) -> State l a -> State l a
+indepState eq state = 
+    state { myProcess = Just (independent (lift eq) p) }
+  where
+    p = getProcess state
+    lift f = on f (\(x, _, _) -> x)
 
 ----------------------------------------------------------------------
 -- Running the parser

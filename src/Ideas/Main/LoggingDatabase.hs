@@ -55,7 +55,7 @@ logMessage req input output ipaddress begin = do
 
      -- close the connection to the database
      disconnect conn
-  `catch` \err -> do putStrLn $ "Error in logging to database: " ++ show err
+  `catchSql` \err -> do putStrLn $ "Error in logging to database: " ++ show err
 
 {-
 -- | Log table schema

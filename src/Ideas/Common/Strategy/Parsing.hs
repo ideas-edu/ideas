@@ -85,10 +85,10 @@ parseDerivationTree _ = tree
 
 indepState :: (Step l a -> Step l a -> Bool) -> State l a -> State l a
 indepState eq state = 
-    state { myProcess = Just (independent (lift eq) p) }
+    state { getCore = independent (lift eq) p }
   where
-    p = getProcess state
-    lift f = on f (\(x, _, _) -> x)
+    p = getCore state
+    lift f = on f (\(x, _) -> x)
 
 ----------------------------------------------------------------------
 -- Running the parser

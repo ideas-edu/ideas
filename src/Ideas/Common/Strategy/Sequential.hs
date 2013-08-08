@@ -10,8 +10,6 @@ module Ideas.Common.Strategy.Sequential
    , independent
    ) where
 
-import Data.Monoid
-
 -- always functor?
 class Sequential f where
    ok, stop :: f a
@@ -132,6 +130,11 @@ firsts = ($ []) . rec
    rec Ok        = id
    rec Stop      = id
 
+run :: Process a -> [[a]]
+run p = 
+   [ [] | empty p ] ++
+   [ a:as | (a, q) <- firsts p, as <- run q ]
+
 scanChoice :: (a -> b -> [(a, c)]) -> a -> Process b -> Process c
 scanChoice f = rec
  where
@@ -216,17 +219,19 @@ withPath = rec 0 []
    rec n bs Ok        = Ok
    rec n bs Stop      = Stop
    
-replay :: Monad m => Path -> Process a -> m (Process a)
-replay (0, []) p         = return p
-replay path    (p :|: q) = choose path p q
-replay path    (p :?: q) = choose path p q
-replay (n, bs) (a :~> p)
-   | n > 0               = replay (n-1, bs) p
-replay _       _         = error "replay: invalid path"
-
-choose :: Monad m => Path -> Process a -> Process a -> m (Process a)
-choose (n, b:bs) p q | n > 0 = replay (n-1, bs) (if b then p else q)
-choose _ _ _ = error "replay: invalid path"
+replay :: Monad m => Path -> Process a -> m ([a], Process a)
+replay = rec []
+ where
+   rec acc (0, []) p         = return (acc, p)
+   rec acc path    (p :|: q) = choose acc path p q
+   rec acc path    (p :?: q) = choose acc path p q
+   rec acc (n, bs) (a :~> p)
+      | n > 0                = rec (a:acc) (n-1, bs) p
+   rec _  _        _         = error "replay: invalid path"
+   
+   choose acc (n, b:bs) p q 
+      | n > 0 = rec acc (n-1, bs) (if b then p else q)
+   choose _ _ _ _ = error "replay: invalid path"
 
 --------------------------------
 

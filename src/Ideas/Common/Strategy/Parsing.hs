@@ -157,8 +157,8 @@ filterMin = prune (\(st, _, _) -> isMajor st)
 
 replay :: Monad m => Int -> [Bool] -> Core l a -> m (State l a)
 replay n bs core = do 
-   c <- Sequential.replay (n, bs) $ withPath $ toProcess core
-   return (S c (error "no value") [] (n, bs) Nothing)
+   (as, p) <- Sequential.replay (n, bs) $ withPath $ toProcess core
+   return (S p (error "no value") (map fst as) (n, bs) Nothing)
       
 getProcess :: State l a -> Process (Step l a, a, Path)
 getProcess st =  

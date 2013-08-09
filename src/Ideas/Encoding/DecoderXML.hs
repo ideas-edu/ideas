@@ -96,17 +96,17 @@ decodeState :: XMLDecoder a (State a)
 decodeState = do
    ex  <- withState getExercise
    xml <- encoderFor (findChild "state")
-   mis <- decodePrefix  // xml
+   mp  <- decodePrefix  // xml
    ctx <- decodeContext // xml
-   prs <- forM (maybeToList mis) $ \is -> 
-             makePrefix is (strategy ex) ctx
+   prs <- forM (maybeToList mp) $ \path -> 
+             makePrefix path (strategy ex) ctx
    return (makeState ex prs ctx)
 
-decodePrefix :: XMLDecoder a (Maybe [Int])
+decodePrefix :: XMLDecoder a (Maybe Path)
 decodePrefix = do
    prefixText <- simpleEncoder (maybe "" getData . findChild "prefix")
    if all isSpace prefixText
-      then return (Just [])
+      then return (Just emptyPath)
       else if prefixText ~= "no prefix"
       then return Nothing
       else liftM Just (readM prefixText)

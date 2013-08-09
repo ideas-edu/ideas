@@ -6,11 +6,12 @@ module Ideas.Common.Strategy.Sequential
    , fromAtoms
    , Sym(..)
    , atomic, concurrent, (<@>)
-   , emptyPath, Path, withPath, replay
+   , withPath, replay
    , uniquePath
    ) where
+   
+import Ideas.Common.Strategy.Path
 
--- always functor?
 class Sequential f where
    ok, stop :: f a
    single   :: a -> f a
@@ -211,33 +212,29 @@ indep x y = x `elem` "abc" && y `elem` "def"
 (%) :: Sequential f => Process a -> Process a -> f a
 (%) = concurrent (const True)
 
-type Path = (Int, [Bool]) -- depth, choices
-
-emptyPath :: Path
-emptyPath = (0, [])
-
 withPath :: Process a -> Process (a, Path)
-withPath = rec 0 [] 
+withPath = rec emptyPath
  where
-   rec n bs (p :|: q) = rec (n+1) (True:bs) p :|: rec (n+1) (False:bs) q
-   rec n bs (p :?: q) = rec (n+1) (True:bs) p :?: rec (n+1) (False:bs) q
-   rec n bs (a :~> p) = ((a, (n+1, reverse bs)) :~> rec (n+1) bs p)
-   rec n bs Ok        = Ok
-   rec n bs Stop      = Stop
+   rec path (p :|: q) = rec (toLeft path) p :|: rec (toRight path) q
+   rec path (p :?: q) = rec (toLeft path) p :?: rec (toRight path) q
+   rec path (a :~> p) = let next = tick path 
+                        in (a, next) :~> rec next p
+   rec _    Ok        = Ok
+   rec _    Stop      = Stop
    
 replay :: Monad m => Path -> Process a -> m ([a], Process a)
-replay = rec []
+replay = flip (rec [])
  where
-   rec acc (0, []) p         = return (acc, p)
-   rec acc path    (p :|: q) = choose acc path p q
-   rec acc path    (p :?: q) = choose acc path p q
-   rec acc (n, bs) (a :~> p)
-      | n > 0                = rec (a:acc) (n-1, bs) p
-   rec _  _        _         = error "replay: invalid path"
-   
-   choose acc (n, b:bs) p q 
-      | n > 0 = rec acc (n-1, bs) (if b then p else q)
-   choose _ _ _ _ = error "replay: invalid path"
+   rec acc process path
+      | path == emptyPath = return (acc, process)
+      | otherwise = 
+           case process of
+              p :|: q -> choose p q
+              p :?: q -> choose p q
+              a :~> p -> untick path >>= rec (a:acc) p
+              _       -> fail "replay: invalid path"
+    where      
+      choose p q = leftOrRight path >>= either (rec acc p) (rec acc q)
 
 --------------------------------
 

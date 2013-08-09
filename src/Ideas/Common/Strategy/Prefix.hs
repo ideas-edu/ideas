@@ -24,6 +24,7 @@ import Ideas.Common.DerivationTree
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Parsing
+import Ideas.Common.Strategy.Path
 
 -----------------------------------------------------------
 --- Prefixes
@@ -34,23 +35,16 @@ import Ideas.Common.Strategy.Parsing
 -- from such a list: see @makePrefix@). The list is stored in reversed order.
 type Prefix = ParseState LabelInfo
 
-prefixIntList :: Prefix a -> [Int]
-prefixIntList = f . choices
- where
-   f (0, []) = []
-   f (n, bs) = n : map (\b -> if b then 0 else 1) bs
-
 showPrefix :: Prefix a -> String
-showPrefix = show . prefixIntList
+showPrefix = show . choices
 
 -- | Construct the empty prefix for a labeled strategy
 emptyPrefix :: LabeledStrategy a -> a -> Prefix a
-emptyPrefix a = fromMaybe (error "emptyPrefix") . makePrefix [] a
+emptyPrefix a = fromMaybe (error "emptyPrefix") . makePrefix emptyPath a
 
 -- | Construct a prefix for a given list of integers and a labeled strategy.
-makePrefix :: Monad m => [Int] -> LabeledStrategy a -> a -> m (Prefix a)
-makePrefix []     = makePrefix [0]
-makePrefix (i:is) = flip (replay (i, map (==0) is)) . mkCore
+makePrefix :: Monad m => Path -> LabeledStrategy a -> a -> m (Prefix a)
+makePrefix path = flip (replay path) . mkCore
  where
    mkCore = processLabelInfo id . toCore . toStrategy
 

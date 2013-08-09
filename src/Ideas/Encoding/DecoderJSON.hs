@@ -108,7 +108,7 @@ decodeState = do
             return $ makeState ex ps ctx
          _ -> fail $ "invalid state" ++ show json
 
-decodePrefixes :: JSONDecoder a [[Int]]
+decodePrefixes :: JSONDecoder a [Path]
 decodePrefixes = do
    encoderFor $ \json ->
       case json of

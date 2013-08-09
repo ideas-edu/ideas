@@ -25,6 +25,7 @@ import Ideas.Common.DerivationTree
 import Ideas.Common.Environment
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Core
+import Ideas.Common.Strategy.Path
 import qualified Ideas.Common.Strategy.Sequential as Sequential
 import Ideas.Common.Strategy.Sequential hiding (replay)
 
@@ -63,7 +64,7 @@ data ParseState l a = S
    }
 
 makeState :: a -> Core l a -> ParseState l a
-makeState a = S [] emptyPath . newProcess a . withPath . toProcess
+makeState a = S [] emptyPath . applyMin a . withPath . toProcess
 
 ----------------------------------------------------------------------
 -- Parse derivation tree
@@ -90,7 +91,7 @@ indepState p eq state =
 runCore :: Core l a -> a -> [a]
 runCore = runProcess . toProcess . noLabels 
  where
-   runProcess p a = rec a (filterMin2 (applyMin2 a p))
+   runProcess p a = rec a (applyMin2 a p)
 
    rec a p = 
       (if empty p then (a:) else id)
@@ -124,7 +125,7 @@ toProcess = fromAtoms . build . rec . coreSubstAll
    switch _ = True
    
 applyMin2 :: a -> Process (Step l a) -> Process (Step l a, a)
-applyMin2 = scanChoice step
+applyMin2 a0 = prune (isMajor . fst) . scanChoice step a0
  where
    step a (RuleStep _ r) =
       [ (b, (RuleStep env r, b))
@@ -133,25 +134,15 @@ applyMin2 = scanChoice step
    step a st = [(a, (st, a))]
 
 applyMin :: a -> Process (Step l a, Path) -> Process (Step l a, a, Path)
-applyMin = scanChoice step
+applyMin a0 = prune (isMajor . fst3) . scanChoice step a0
  where
    step a (RuleStep _ r, bs) =
       [ (b, (RuleStep env r, b, bs))
       | (b, env) <- transApply (transformation r) a
       ]
    step a (st, bs) = [(a, (st, a, bs))]
- 
-filterMin2 :: Process (Step l a, a) -> Process (Step l a, a)
-filterMin2 = prune (isMajor . fst)
- 
--- remove left-biased choice
-filterMin :: Process (Step l a, a, Path) -> Process (Step l a, a, Path)
-filterMin = prune (\(st, _, _) -> isMajor st)
 
 replay :: Monad m => Path -> a -> Core l a -> m (ParseState l a)
 replay path a core = do 
    (as, p) <- Sequential.replay path $ withPath $ toProcess core
-   return (S (map fst as) path (newProcess a p))
-      
-newProcess :: a -> Process (Step l a, Path) -> Process (Step l a, a, Path)
-newProcess a core = filterMin (applyMin a core)
+   return (S (map fst as) path (applyMin a p))

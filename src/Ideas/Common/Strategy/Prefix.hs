@@ -44,20 +44,19 @@ showPrefix :: Prefix a -> String
 showPrefix = show . prefixIntList
 
 -- | Construct the empty prefix for a labeled strategy
-emptyPrefix :: LabeledStrategy a -> Prefix a
-emptyPrefix = fromMaybe (error "emptyPrefix") . makePrefix []
+emptyPrefix :: LabeledStrategy a -> a -> Prefix a
+emptyPrefix a = fromMaybe (error "emptyPrefix") . makePrefix [] a
 
 -- | Construct a prefix for a given list of integers and a labeled strategy.
-makePrefix :: Monad m => [Int] -> LabeledStrategy a -> m (Prefix a)
-makePrefix []     ls = makePrefix [0] ls
-makePrefix (i:is) ls = replay i (map (==0) is) (mkCore ls)
+makePrefix :: Monad m => [Int] -> LabeledStrategy a -> a -> m (Prefix a)
+makePrefix []     = makePrefix [0]
+makePrefix (i:is) = flip (replay (i, map (==0) is)) . mkCore
  where
    mkCore = processLabelInfo id . toCore . toStrategy
 
 -- | Create a derivation tree with a "prefix" as annotation.
-prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
-prefixTree s a = fmap value $ updateAnnotations (\_ _ -> id) $
-   parseDerivationTree s {value = a}
+prefixTree :: a -> Prefix a -> DerivationTree (Prefix a) a
+prefixTree a = fmap fst . updateAnnotations (\_ _ -> snd) . parseDerivationTree a
 
 indepPrefix :: (Step LabelInfo a -> Bool) -> (Step LabelInfo a -> Step LabelInfo a -> Bool) -> Prefix a -> Prefix a
 indepPrefix = indepState

@@ -20,7 +20,6 @@ import Data.List
 import Data.Maybe
 import Data.Ord
 import Ideas.Common.Library hiding (ready)
-import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Utils
 import Ideas.Encoding.Evaluator
 import Ideas.Encoding.LinkManager

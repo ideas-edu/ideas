@@ -22,7 +22,6 @@ import Data.Char
 import Data.Maybe
 import Data.Monoid
 import Ideas.Common.Library hiding (exerciseId, (:=), (<|>))
-import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Utils (Some(..))
 import Ideas.Encoding.Evaluator
 import Ideas.Encoding.OpenMathSupport

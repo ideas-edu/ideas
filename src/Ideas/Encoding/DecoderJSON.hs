@@ -100,19 +100,19 @@ decodeState = do
       case json of
          Array [a] -> decodeState // a
          Array [String _code, pref, term, jsonContext] -> do
-            ps   <- decodePrefixes    // pref
+            iss  <- decodePrefixes    // pref
             a    <- decodeTerm        // term
             env  <- decodeEnvironment // jsonContext
-            return $ makeState ex ps (makeContext ex env a)
+            let ctx = makeContext ex env a
+            ps   <- mapM (\is -> makePrefix is (strategy ex) ctx) iss
+            return $ makeState ex ps ctx
          _ -> fail $ "invalid state" ++ show json
 
-decodePrefixes :: JSONDecoder a [Prefix (Context a)]
+decodePrefixes :: JSONDecoder a [[Int]]
 decodePrefixes = do
-   ex <- withState getExercise
    encoderFor $ \json ->
       case json of
-         String p -> forM (deintercalate p) $
-                        readM >>= liftM (`makePrefix` strategy ex)
+         String p -> mapM readM (deintercalate p)
          _ -> fail "invalid prefixes"
 
 decodeEnvironment :: JSONDecoder a Environment

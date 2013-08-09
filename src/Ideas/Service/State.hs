@@ -22,7 +22,6 @@ import Data.List
 import Data.Maybe
 import Ideas.Common.Library
 import Ideas.Common.Strategy.Abstract (LabelInfo)
-import Ideas.Common.Strategy.Prefix (activeLabels, showPrefix)
 
 data State a = State
    { exercise      :: Exercise a
@@ -69,9 +68,9 @@ makeNoState :: Exercise a -> Context a -> State a
 makeNoState = flip makeState []
 
 emptyStateContext :: Exercise a -> Context a -> State a
-emptyStateContext ex = makeState ex [pr]
- where
-   pr = emptyPrefix (strategy ex)
+emptyStateContext ex ca = 
+   let pr = emptyPrefix (strategy ex) ca
+   in makeState ex [pr] ca
 
 emptyState :: Exercise a -> a -> State a
 emptyState ex = emptyStateContext ex . inContext ex

@@ -17,7 +17,6 @@ module Ideas.Encoding.EncoderJSON (jsonEncoder) where
 import Control.Monad
 import Data.List (intercalate)
 import Ideas.Common.Library hiding (exerciseId)
-import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Utils (Some(..), distinct)
 import Ideas.Encoding.Evaluator
 import Ideas.Service.State

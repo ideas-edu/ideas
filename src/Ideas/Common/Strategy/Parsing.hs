@@ -13,12 +13,13 @@
 -----------------------------------------------------------------------------
 module Ideas.Common.Strategy.Parsing
    ( Step(..)
-   , ParseState, makeState, choices, trace, value
+   , ParseState, makeState, choices, trace
    , parseDerivationTree, replay, runCore, indepState, toProcess
    ) where
 
 import Data.Function (on)
 import Data.Monoid
+import Ideas.Common.Utils (fst3)
 import Ideas.Common.Classes
 import Ideas.Common.DerivationTree
 import Ideas.Common.Environment
@@ -56,43 +57,48 @@ instance Minor (Step l a) where
 -- State data type
 
 data ParseState l a = S
-   { getCore   :: Process (Step l a, Path)
-   , value     :: a
-   , trace     :: [Step l a]
+   { trace     :: [Step l a]
    , choices   :: Path
-   , myProcess :: Maybe (Process (Step l a, a, Path))
+   , remainder :: Process (Step l a, a, Path)
    }
 
-makeState :: Core l a -> a -> ParseState l a
-makeState core a = S (withPath (toProcess core)) a [] emptyPath Nothing
+makeState :: a -> Core l a -> ParseState l a
+makeState a = S [] emptyPath . newProcess a . withPath . toProcess
 
 ----------------------------------------------------------------------
 -- Parse derivation tree
 
-parseDerivationTree :: ParseState l a -> DerivationTree (Step l a) (ParseState l a)
-parseDerivationTree = tree
+parseDerivationTree :: a -> ParseState l a -> DerivationTree (Step l a) (a, ParseState l a)
+parseDerivationTree = curry (makeTree next)
  where
-   tree = makeTree $ \state ->
-      let this = getProcess state
-      in (empty this, stateFirsts state this)
+   next (_, st) = (empty (remainder st), stateFirsts st (remainder st))
    
    stateFirsts st p = 
       [ ( step
-        , st {trace = step:trace st, value = a, myProcess = Just q, choices = path}
+        , (a, st {trace = step:trace st, remainder = q, choices = path})
         )
       | ((step, a, path), q) <- Sequential.firsts p
       ]
 
 indepState :: (Step l a -> Bool) -> (Step l a -> Step l a -> Bool) -> ParseState l a -> ParseState l a
-indepState pred eq state = 
-    state { getCore = uniquePath (pred . fst) (on eq fst) $ getCore state }
+indepState p eq state = 
+    state { remainder = uniquePath (p . fst3) (eq `on` fst3) (remainder state) }
 
 ----------------------------------------------------------------------
 -- Running the parser
 
 runCore :: Core l a -> a -> [a]
 runCore = runProcess . toProcess . noLabels 
+ where
+   runProcess p a = rec a (filterMin2 (applyMin2 a p))
 
+   rec a p = 
+      (if empty p then (a:) else id)
+      [ c
+      | ((_, b), q) <- firsts p
+      , c <- rec b q
+      ]
+      
 -----------------------------
 
 toProcess :: Core l a -> Process (Step l a)
@@ -117,16 +123,6 @@ toProcess = fromAtoms . build . rec . coreSubstAll
    switch (Single (Enter _)) = False
    switch _ = True
    
-runProcess :: Process (Step l a) -> a -> [a]
-runProcess p0 a0 = rec a0 (filterMin2 (applyMin2 a0 p0))
- where
-   rec a p = 
-      (if empty p then (a:) else id)
-      [ c
-      | ((_, b), q) <- firsts p
-      , c <- rec b q
-      ]
-
 applyMin2 :: a -> Process (Step l a) -> Process (Step l a, a)
 applyMin2 = scanChoice step
  where
@@ -152,14 +148,10 @@ filterMin2 = prune (isMajor . fst)
 filterMin :: Process (Step l a, a, Path) -> Process (Step l a, a, Path)
 filterMin = prune (\(st, _, _) -> isMajor st)
 
-replay :: Monad m => Int -> [Bool] -> Core l a -> m (ParseState l a)
-replay n bs core = do 
-   (as, p) <- Sequential.replay (n, bs) $ withPath $ toProcess core
-   return (S p (error "no value") (map fst as) (n, bs) Nothing)
+replay :: Monad m => Path -> a -> Core l a -> m (ParseState l a)
+replay path a core = do 
+   (as, p) <- Sequential.replay path $ withPath $ toProcess core
+   return (S (map fst as) path (newProcess a p))
       
-getProcess :: ParseState l a -> Process (Step l a, a, Path)
-getProcess st =  
-   case myProcess st of
-      Just m  -> m
-      Nothing -> filterMin (applyMin (value st) (getCore st))
-   
+newProcess :: a -> Process (Step l a, Path) -> Process (Step l a, a, Path)
+newProcess a core = filterMin (applyMin a core)

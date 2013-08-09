@@ -33,7 +33,7 @@ problemDecomposition msloc state maybeAnswer
                     witnesses   = filter (similarity ex answeredTerm . fst) $ take 1 answers
                     (newCtx, newPrefix) = head witnesses
                     newLocation = nextTaskLocation (strategy ex) sloc $
-                                     fromMaybe topId $ nextMajorForPrefix newPrefix newCtx
+                                     fromMaybe topId $ nextMajorForPrefix newCtx newPrefix
                     newState    = makeState ex [newPrefix] newCtx
             _ -> Right $
                     Incorrect isEquiv newLocation expState arguments
@@ -45,21 +45,20 @@ problemDecomposition msloc state maybeAnswer
                (loc, arguments) = fromMaybe (topId, mempty) $
                                      firstMajorInPrefix prefix pref
  where
-   ex    = exercise state
-   topId = getId (strategy ex)
-   sloc  = fromMaybe topId msloc
-   answers       = runPrefixLocation sloc prefix requestedTerm
-   requestedTerm = stateContext state
-   prefix = case statePrefixes state of
-               []   -> emptyPrefix (strategy ex)
-               hd:_ -> hd
+   ex      = exercise state
+   topId   = getId (strategy ex)
+   sloc    = fromMaybe topId msloc
+   answers = runPrefixLocation sloc (stateContext state) prefix
+   prefix  = case statePrefixes state of
+                []   -> emptyPrefix (strategy ex) (stateContext state)
+                hd:_ -> hd
 
 -- | Continue with a prefix until a certain strategy location is reached. At least one
 -- major rule should have been executed
-runPrefixLocation :: Id -> Prefix a -> a -> [(a, Prefix a)]
-runPrefixLocation loc p0 =
-   concatMap (checkPair . f) . derivations .
-   cutOnStep (stop . lastStepInPrefix) . prefixTree p0
+runPrefixLocation :: Id -> a -> Prefix a -> [(a, Prefix a)]
+runPrefixLocation loc a0 p0 =
+   concatMap (checkPair . f) $ derivations $
+   cutOnStep (stop . lastStepInPrefix) $ prefixTree a0 p0
  where
    f d = (lastTerm d, fromMaybe p0 (lastStep d))
    stop (Just (Exit info)) = getId info == loc
@@ -67,7 +66,7 @@ runPrefixLocation loc p0 =
 
    checkPair result@(a, p)
       | null rules        = [result]
-      | all isMinor rules = runPrefixLocation loc p a
+      | all isMinor rules = runPrefixLocation loc a p
       | otherwise         = [result]
     where
       rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
@@ -83,9 +82,9 @@ firstMajorInPrefix p0 = rec . drop len . prefixToSteps
          _:rest -> rec rest
          []     -> Nothing
 
-nextMajorForPrefix :: Prefix a -> a -> Maybe Id
-nextMajorForPrefix p0 a = do
-   (_, p1)  <- listToMaybe $ runPrefixMajor p0 a
+nextMajorForPrefix :: a -> Prefix a -> Maybe Id
+nextMajorForPrefix a p0 = do
+   (_, p1)  <- listToMaybe $ runPrefixMajor a p0
    rec (reverse (prefixToSteps p1))
  where
    rec [] = Nothing
@@ -94,9 +93,9 @@ nextMajorForPrefix p0 a = do
    rec (_:rest)       = rec rest
 
 -- Copied from TypedAbstractService: clean me up
-runPrefixMajor :: Prefix a -> a -> [(a, Prefix a)]
-runPrefixMajor p0 =
-   map f . derivations . cutOnStep (stop . lastStepInPrefix) . prefixTree p0
+runPrefixMajor :: a -> Prefix a -> [(a, Prefix a)]
+runPrefixMajor a p0 =
+   map f $ derivations $ cutOnStep (stop . lastStepInPrefix) $ prefixTree a p0
  where
    f d = (lastTerm d, fromMaybe p0 (lastStep d))
    stop = maybe False isMajor

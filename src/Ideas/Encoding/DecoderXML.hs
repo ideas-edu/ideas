@@ -19,6 +19,7 @@ module Ideas.Encoding.DecoderXML
 import Control.Monad
 import Data.Char
 import Data.List
+import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Common.Utils (readM)
 import Ideas.Encoding.Evaluator
@@ -93,24 +94,22 @@ decodeLocation = do
 
 decodeState :: XMLDecoder a (State a)
 decodeState = do
-   ex   <- withState getExercise
-   xml  <- encoderFor (findChild "state")
-   mpr  <- decodePrefix  // xml
-   term <- decodeContext // xml
-   return (makeState ex mpr term)
+   ex  <- withState getExercise
+   xml <- encoderFor (findChild "state")
+   mis <- decodePrefix  // xml
+   ctx <- decodeContext // xml
+   prs <- forM (maybeToList mis) $ \is -> 
+             makePrefix is (strategy ex) ctx
+   return (makeState ex prs ctx)
 
-decodePrefix :: XMLDecoder a [Prefix (Context a)]
+decodePrefix :: XMLDecoder a (Maybe [Int])
 decodePrefix = do
-   str <- liftM strategy (withState getExercise)
    prefixText <- simpleEncoder (maybe "" getData . findChild "prefix")
    if all isSpace prefixText
-      then return [emptyPrefix str]
+      then return (Just [])
       else if prefixText ~= "no prefix"
-      then return []
-      else do
-         a  <- readM prefixText
-         pr <- makePrefix a str
-         return [pr]
+      then return Nothing
+      else liftM Just (readM prefixText)
  where
    a ~= b = g a == g b
    g = map toLower . filter (not . isSpace)

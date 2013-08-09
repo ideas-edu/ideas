@@ -37,8 +37,8 @@ module Ideas.Common.Strategy
    , strategyLocations, subStrategy
    , subTaskLocation, nextTaskLocation
      -- * Prefixes
-   , Prefix, emptyPrefix, makePrefix, prefixTree, Step(..)
-   , prefixToSteps, stepsToRules, lastStepInPrefix
+   , Prefix, showPrefix, emptyPrefix, makePrefix, prefixTree, Step(..)
+   , prefixToSteps, stepsToRules, lastStepInPrefix, activeLabels
      -- * Misc
    , cleanUpStrategy, cleanUpStrategyAfter
    , rulesInStrategy

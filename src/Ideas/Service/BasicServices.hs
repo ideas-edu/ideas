@@ -72,7 +72,7 @@ allfirsts state
    | otherwise =
         let trees  = map tree ps
             tree p = cutOnStep (justMajor . lastStepInPrefix)
-                               (prefixTree p (stateContext state))
+                               (prefixTree (stateContext state) p)
             f ((r1, _, _), _) ((r2, _, _), _) =
                ruleOrdering (exercise state) r1 r2
             justMajor = maybe False isMajor

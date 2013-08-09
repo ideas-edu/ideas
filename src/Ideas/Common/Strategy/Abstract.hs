@@ -181,7 +181,7 @@ processLabelInfo getInfo = rec []
 fullDerivationTree :: IsStrategy f => f a -> a -> DerivationTree (Step LabelInfo a) a
 fullDerivationTree = make . processLabelInfo id . toCore . toStrategy
  where
-   make core = fmap value . parseDerivationTree . makeState core
+   make core a = fmap fst (parseDerivationTree a (makeState a core))
 
 -- | Returns the derivation tree for a strategy and a term with only major rules
 derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a, Environment) a

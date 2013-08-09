@@ -7,7 +7,7 @@ module Ideas.Common.Strategy.Sequential
    , Sym(..)
    , atomic, concurrent, (<@>)
    , emptyPath, Path, withPath, replay
-   , independent, uniquePath, clean
+   , uniquePath
    ) where
 
 -- always functor?
@@ -250,37 +250,9 @@ filterP p = fold Alg
    , forStop   = stop
    }
 
-independent :: (a -> a -> Bool) -> Process a -> Process a
-independent f p0 = rec p0
-    where
-      xs = map fst (firsts p0)     
-      rec (p :|: q) = rec p <|> rec q
-      rec (p :?: q) = rec p :?: rec q
-      rec (a :~> p) = a :~> undefined -- independent f (filterP (\y -> all ((==) y) [ x | x <- xs, f x a ]) p)
-      rec Ok        = Ok
-      rec Stop      = Stop
-
-
--- Alex' stuff -----------------------------------------------------------------
-
--- translating the interleave combinator to a process introduces many choices with
--- a stop (which is the unit of a choice)
-clean :: Process a -> Process a 
-clean = fold Alg
-   { forChoice = \x y -> 
-                 case (x, y) of
-                   (Stop, _) -> y
-                   (_, Stop) -> x 
-                   _         -> x <|> y
-   , forEither = (<?>)
-   , forPrefix = (~>)
-   , forOk     = ok
-   , forStop   = stop
-   }
-
--- The uniquePath transformation changes the process in such a way that all 
--- intermediate states can only be reached by one path. A prerequisite is that
--- symbols are unique (or only used once).
+-- | The uniquePath transformation changes the process in such a way that all 
+--   intermediate states can only be reached by one path. A prerequisite is that
+--   symbols are unique (or only used once).
 uniquePath :: (a -> Bool) -> (a -> a -> Bool) -> Process a -> Process a
 uniquePath pred eq = rec
     where
@@ -291,120 +263,9 @@ uniquePath pred eq = rec
       rec Ok        = Ok
       rec Stop      = Stop
 
+-- | This functions returns the first symbols that hold for predicate p
 firstsWith :: (a -> Bool) -> Process a -> [(a, Process a)]
 firstsWith p = concatMap f . firsts
   where
     f (r, q) | p r       = [(r, q)]
              | otherwise = firstsWith p q
-
-isMajor :: String -> Bool
-isMajor r = r /= "Enter" && r /= "Exit" 
-
--- derived from a <%> b
-sp :: Process String
-sp = 
-  stop <|> (("Enter" ~> ("a" ~> stop <|> (("Enter" ~> ("b" ~> stop <|> (("Exit" ~> stop <|> (("Exit" ~> ok <|> (stop <|> stop)) <|> stop)) <|> ("Exit" ~> stop <|> (("Exit" ~> ok <|> (stop <|> stop)) <|> stop))))) <|> ("Exit" ~> stop <|> (("Enter" ~> ("b" ~> stop <|> (stop <|> ("Exit" ~> ok <|> (stop <|> stop))))) <|> stop))))) <|> ("Enter" ~> ("b" ~> stop <|> (("Enter" ~> ("a" ~> stop <|> (("Exit" ~> stop <|> (("Exit" ~> ok <|> (stop <|> stop)) <|> stop)) <|> ("Exit" ~> stop <|> (("Exit" ~> ok <|> (stop <|> stop)) <|> stop))))) <|> ("Exit" ~> stop <|> (("Enter" ~> ("a" ~> stop <|> (stop <|> ("Exit" ~> ok <|> (stop <|> stop))))) <|> stop))))))
-
--- cleaned_sp = clean sp
-cleaned_sp = 
-    ("Enter" :~> ("a" :~> ("Enter" :~> ("b" :~> ("Exit" :~> ("Exit" :~> Ok)) 
-                                                :|: 
-                                                ("Exit" :~> ("Exit" :~> Ok)))) 
-                          :|: 
-                          ("Exit" :~> ("Enter" :~> ("b" :~> ("Exit" :~> Ok)))))) 
-    :|: 
-    ("Enter" :~> ("b" :~> ("Enter" :~> ("a" :~> ("Exit" :~> ("Exit" :~> Ok)) 
-                                                :|: 
-                                                ("Exit" :~> ("Exit" :~> Ok)))) 
-                          :|: 
-                          ("Exit" :~> ("Enter" :~> ("a" :~> ("Exit" :~> Ok))))))
-
-{-
--- filtered_sp = unique_path cleaned_sp
-filtered_sp = 
-    ("Enter" :~> ("a" :~> ("Enter" :~> ("b" :~> ("Exit" :~> ("Exit" :~> Ok)) 
-                                                :|: 
-                                                ("Exit" :~> ("Exit" :~> Ok)))) 
-                          :|: 
-                          ("Exit" :~> ("Enter" :~> Ok)))) 
-    :|: 
-    ("Enter" :~> ("b" :~> ("Enter" :~> Ok) 
-                          :|: 
-                          ("Exit" :~> ("Enter" :~> Ok))))
-
-
-csp2 = 
-    (Enter :~> (a :~> (Enter :~> (c :~> (Exit :~> (Exit :~> (Enter :~> (b :~> (Enter :~> (d :~> (Exit :~> (Exit :~> Ok)) 
-                                                                                                :|: 
-                                                                                                (Exit :~> (Exit :~> Ok)))) 
-                                                                              :|: 
-                                                                              (Exit :~> (Enter :~> (d :~> (Exit :~> Ok)))))) 
-                                                            :|: 
-                                                            (Enter :~> (d :~> (Enter :~> (b :~> (Exit :~> (Exit :~> Ok)) 
-                                                                                                :|: 
-                                                                                                (Exit :~> (Exit :~> Ok)))) 
-                                                                              :|: 
-                                                                              (Exit :~> (Enter :~> (b :~> (Exit :~> Ok))))))) 
-                                                   :|: 
-                                                   (Enter :~> (b :~> (Exit :~> (Exit :~> (Enter :~> (d :~> (Exit :~> Ok)))) 
-                                                                               :|: 
-                                                                               (Enter :~> (d :~> (Exit :~> (Exit :~> Ok)) 
-                                                                                                 :|: 
-                                                                                                 (Exit :~> (Exit :~> Ok))))) 
-                                                                     :|: 
-                                                                     (Exit :~> (Exit :~> (Enter :~> (d :~> (Exit :~> Ok)))))))) 
-                                        :|: 
-                                        (Exit :~> (Exit :~> (Enter :~> (d :~> (Enter :~> (b :~> (Exit :~> (Exit :~> Ok)) 
-                                                                                                :|: 
-                                                                                                (Exit :~> (Exit :~> Ok)))) 
-                                                                              :|: 
-                                                                              (Exit :~> (Enter :~> (b :~> (Exit :~> Ok)))))) 
-                                                            :|: 
-                                                            (Enter :~> (b :~> (Enter :~> (d :~> (Exit :~> (Exit :~> Ok)) 
-                                                                                                :|: 
-                                                                                                (Exit :~> (Exit :~> Ok)))) 
-                                                                              :|: 
-                                                                              (Exit :~> (Enter :~> (d :~> (Exit :~> Ok))))))) 
-                                                  :|: 
-                                                  (Enter :~> (d :~> (Exit :~> (Exit :~> (Enter :~> (b :~> (Exit :~> Ok)))) 
-                                                                              :|: 
-                                                                              (Enter :~> (b :~> (Exit :~> (Exit :~> Ok)) 
-                                                                                                :|: 
-                                                                                                (Exit :~> (Exit :~> Ok))))) 
-                                                                    :|: 
-                                                                    (Exit :~> (Exit :~> (Enter :~> (b :~> (Exit :~> Ok)))))))))) 
-                :|: 
-                (Exit :~> (Enter :~> (c :~> (Enter :~> (b :~> (Exit :~> (Exit :~> (Enter :~> (d :~> (Exit :~> Ok)))) :|: (Enter :~> (d :~> (Exit :~> (Exit :~> Ok)) :|: (Exit :~> (Exit :~> Ok))))) :|: (Exit :~> (Exit :~> (Enter :~> (d :~> (Exit :~> Ok))))))) :|: (Exit :~> (Enter :~> (b :~> (Enter :~> (d :~> (Exit :~> (Exit :~> Ok)) :|: (Exit :~> (Exit :~> Ok)))) :|: (Exit :~> (Enter :~> (d :~> (Exit :~> Ok)))))) :|: (Enter :~> (d :~> (Enter :~> (b :~> (Exit :~> (Exit :~> Ok)) :|: (Exit :~> (Exit :~> Ok)))) :|: (Exit :~> (Enter :~> (b :~> (Exit :~> Ok))))))))) :|: (Enter :~> (b :~> (Enter :~> (c :~> (Exit :~> (Exit :~> (Enter :~> (d :~> (Exit :~> Ok))))) :|: (Exit :~> (Exit :~> (Enter :~> (d :~> (Exit :~> Ok)))) :|: (Enter :~> (d :~> (Exit :~> (Exit :~> Ok)) :|: (Exit :~> (Exit :~> Ok))))))) :|: (Exit :~> (Enter :~> (c :~> (Exit :~> (Enter :~> (d :~> (Exit :~> Ok)))))))))))) :|: (Enter :~> (c :~> (Enter :~> (a :~> (Exit :~> (Exit :~> (Enter :~> (d :~> (Enter :~> (b :~> (Exit :~> (Exit :~> Ok)) :|: (Exit :~> (Exit :~> Ok)))) :|: (Exit :~> (Enter :~> (b :~> (Exit :~> Ok)))))) :|: (Enter :~> (b :~> (Enter :~> (d :~> (Exit :~> (Exit :~> Ok)) :|: (Exit :~> (Exit :~> Ok)))) :|: (Exit :~> (Enter :~> (d :~> (Exit :~> Ok))))))) :|: (Enter :~> (d :~> (Exit :~> (Exit :~> (Enter :~> (b :~> (Exit :~> Ok)))) :|: (Enter :~> (b :~> (Exit :~> (Exit :~> Ok)) :|: (Exit :~> (Exit :~> Ok))))) :|: (Exit :~> (Exit :~> (Enter :~> (b :~> (Exit :~> Ok)))))))) :|: (Exit :~> (Exit :~> (Enter :~> (b :~> (Enter :~> (d :~> (Exit :~> (Exit :~> Ok)) :|: (Exit :~> (Exit :~> Ok)))) :|: (Exit :~> (Enter :~> (d :~> (Exit :~> Ok)))))) :|: (Enter :~> (d :~> (Enter :~> (b :~> (Exit :~> (Exit :~> Ok)) :|: (Exit :~> (Exit :~> Ok)))) :|: (Exit :~> (Enter :~> (b :~> (Exit :~> Ok))))))) :|: (Enter :~> (b :~> (Exit :~> (Exit :~> (Enter :~> (d :~> (Exit :~> Ok)))) :|: (Enter :~> (d :~> (Exit :~> (Exit :~> Ok)) :|: (Exit :~> (Exit :~> Ok))))) :|: (Exit :~> (Exit :~> (Enter :~> (d :~> (Exit :~> Ok)))))))))) :|: (Exit :~> (Enter :~> (a :~> (Enter :~> (d :~> (Exit :~> (Exit :~> (Enter :~> (b :~> (Exit :~> Ok)))) :|: (Enter :~> (b :~> (Exit :~> (Exit :~> Ok)) :|: (Exit :~> (Exit :~> Ok))))) :|: (Exit :~> (Exit :~> (Enter :~> (b :~> (Exit :~> Ok))))))) :|: (Exit :~> (Enter :~> (d :~> (Enter :~> (b :~> (Exit :~> (Exit :~> Ok)) :|: (Exit :~> (Exit :~> Ok)))) :|: (Exit :~> (Enter :~> (b :~> (Exit :~> Ok)))))) :|: (Enter :~> (b :~> (Enter :~> (d :~> (Exit :~> (Exit :~> Ok)) :|: (Exit :~> (Exit :~> Ok)))) :|: (Exit :~> (Enter :~> (d :~> (Exit :~> Ok))))))))) :|: (Enter :~> (d :~> (Enter :~> (a :~> (Exit :~> (Exit :~> (Enter :~> (b :~> (Exit :~> Ok))))) :|: (Exit :~> (Exit :~> (Enter :~> (b :~> (Exit :~> Ok)))) :|: (Enter :~> (b :~> (Exit :~> (Exit :~> Ok)) :|: (Exit :~> (Exit :~> Ok))))))) :|: (Exit :~> (Enter :~> (a :~> (Exit :~> (Enter :~> (b :~> (Exit :~> Ok))))))))))))
-
-fsp2 = 
-    (Enter :~> (a :~> (Enter :~> (c :~> (Exit :~> (Exit :~> (Enter :~> (b :~> (Enter :~> (d :~> (Exit :~> (Exit :~> Ok)) 
-                                                                                                :|: (Exit :~> (Exit :~> Ok)))) 
-                                                                              :|: 
-                                                                              (Exit :~> (Enter :~> Stop)))) 
-                                                            :|: 
-                                                            (Enter :~> (d :~> (Enter :~> Stop) 
-                                                                              :|: 
-                                                                              (Exit :~> (Enter :~> Stop))))) 
-                                                   :|: 
-                                                   (Enter :~> Stop)) 
-                                        :|: 
-                                        (Exit :~> (Exit :~> (Enter :~> Stop) 
-                                                            :|: 
-                                                            (Enter :~> Stop)) 
-                                                  :|: 
-                                                  (Enter :~> Stop)))) 
-                      :|: 
-                      (Exit :~> (Enter :~> Stop) 
-                                :|: 
-                                (Enter :~> (b :~> (Enter :~> Stop) 
-                                                  :|: 
-                                                  (Exit :~> (Enter :~> Stop))))))) 
-    :|: 
-    (Enter :~> (c :~> (Enter :~> Stop) 
-                      :|: 
-                      (Exit :~> (Enter :~> Stop) 
-                                :|: 
-                                (Enter :~> (d :~> (Enter :~> Stop) 
-                                                  :|: 
-                                                  (Exit :~> (Enter :~> Stop)))))))
--}

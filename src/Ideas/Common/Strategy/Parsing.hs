@@ -14,7 +14,7 @@
 module Ideas.Common.Strategy.Parsing
    ( Step(..)
    , ParseState, makeState, choices, trace
-   , parseDerivationTree, replay, runCore, indepState, toProcess
+   , parseDerivationTree, replay, runCore, indepState
    ) where
 
 import Data.Function (on)

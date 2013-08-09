@@ -14,7 +14,7 @@
 module Ideas.Common.Strategy.Parsing
    ( Step(..)
    , ParseState, makeState, choices, trace, value
-   , parseDerivationTree, replay, runCore, indepState
+   , parseDerivationTree, replay, runCore, indepState, toProcess
    ) where
 
 import Data.Function (on)
@@ -83,12 +83,9 @@ parseDerivationTree = tree
       | ((step, a, path), q) <- Sequential.firsts p
       ]
 
-indepState :: (Step l a -> Step l a -> Bool) -> ParseState l a -> ParseState l a
-indepState eq state = 
-    state { getCore = independent (lift eq) p }
-  where
-    p = getCore state
-    lift f = on f (\(x, _) -> x)
+indepState :: (Step l a -> Bool) -> (Step l a -> Step l a -> Bool) -> ParseState l a -> ParseState l a
+indepState pred eq state = 
+    state { getCore = uniquePath (pred . fst) (on eq fst) $ getCore state }
 
 ----------------------------------------------------------------------
 -- Running the parser

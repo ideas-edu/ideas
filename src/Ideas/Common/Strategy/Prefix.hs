@@ -59,7 +59,7 @@ prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
 prefixTree s a = fmap value $ updateAnnotations (\_ _ -> id) $
    parseDerivationTree s {value = a}
 
-indepPrefix :: (Step LabelInfo a -> Step LabelInfo a -> Bool) -> Prefix a -> Prefix a
+indepPrefix :: (Step LabelInfo a -> Bool) -> (Step LabelInfo a -> Step LabelInfo a -> Bool) -> Prefix a -> Prefix a
 indepPrefix = indepState
 
 prefixToSteps :: Prefix a -> [Step LabelInfo a]

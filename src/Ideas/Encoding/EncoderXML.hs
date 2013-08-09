@@ -22,6 +22,7 @@ import Data.Char
 import Data.Maybe
 import Data.Monoid
 import Ideas.Common.Library hiding (exerciseId, (:=), (<|>))
+import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Utils (Some(..))
 import Ideas.Encoding.Evaluator
 import Ideas.Encoding.OpenMathSupport
@@ -108,7 +109,7 @@ encodePrefixes :: XMLEncoder a [Prefix (Context a)]
 encodePrefixes = encoderFor $ \ps ->
    case ps of
       [] -> mempty
-      _  -> element "prefix" [ text p | p <- ps ]
+      _  -> element "prefix" $ map (string . showPrefix) ps
 
 encodeContext :: XMLEncoder a (Context a)
 encodeContext = encoderStateFor $ \xp ctx ->

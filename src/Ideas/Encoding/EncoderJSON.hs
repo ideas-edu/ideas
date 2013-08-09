@@ -17,6 +17,7 @@ module Ideas.Encoding.EncoderJSON (jsonEncoder) where
 import Control.Monad
 import Data.List (intercalate)
 import Ideas.Common.Library hiding (exerciseId)
+import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Utils (Some(..), distinct)
 import Ideas.Encoding.Evaluator
 import Ideas.Service.State
@@ -95,7 +96,7 @@ encodeState = encoderStateFor $ \encTerm st ->
    let f x = [ String (showId (exercise st))
              , String $ case statePrefixes st of
                            [] -> "NoPrefix"
-                           ps -> intercalate ";" $ map show ps
+                           ps -> intercalate ";" $ map showPrefix ps
              , encTerm (stateTerm st)
              , x
              ]

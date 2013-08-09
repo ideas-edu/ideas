@@ -178,14 +178,14 @@ processLabelInfo getInfo = rec []
 
 -- | Returns the derivation tree for a strategy and a term, including all
 -- minor rules
-fullDerivationTree :: IsStrategy f => Bool -> f a -> a -> DerivationTree (Step LabelInfo a) a
-fullDerivationTree search = make . processLabelInfo id . toCore . toStrategy
+fullDerivationTree :: IsStrategy f => f a -> a -> DerivationTree (Step LabelInfo a) a
+fullDerivationTree = make . processLabelInfo id . toCore . toStrategy
  where
-   make core = fmap value . parseDerivationTree search . makeState core
+   make core = fmap value . parseDerivationTree . makeState core
 
 -- | Returns the derivation tree for a strategy and a term with only major rules
-derivationTree :: IsStrategy f => Bool -> f a -> a -> DerivationTree (Rule a, Environment) a
-derivationTree search s = mergeMaybeSteps . mapFirst f . fullDerivationTree search s
+derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a, Environment) a
+derivationTree s = mergeMaybeSteps . mapFirst f . fullDerivationTree s
  where
    f (RuleStep env r) | isMajor r = Just (r, env)
    f _ = Nothing

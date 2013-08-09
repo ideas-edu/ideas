@@ -22,7 +22,7 @@ import Data.List
 import Data.Maybe
 import Ideas.Common.Library
 import Ideas.Common.Strategy.Abstract (LabelInfo)
-import Ideas.Common.Strategy.Prefix (activeLabels)
+import Ideas.Common.Strategy.Prefix (activeLabels, showPrefix)
 
 data State a = State
    { exercise      :: Exercise a
@@ -34,7 +34,7 @@ instance Show (State a) where
    show s = unlines $ "State {" : map ("   "++) xs ++ ["}"]
     where
       xs = [ "exercise = " ++ showId s
-           , "prefix   = " ++ intercalate ";" (map show (statePrefixes s))
+           , "prefix   = " ++ intercalate ";" (map showPrefix (statePrefixes s))
            , "steps    = " ++ intercalate ";" (map (show . prefixToSteps) (statePrefixes s))
            , "term     = " ++ prettyPrinterContext (exercise s) (stateContext s)
            ]

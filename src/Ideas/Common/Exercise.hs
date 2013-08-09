@@ -394,7 +394,7 @@ showDerivation ex a = show (present der) ++ extra
 
    defaultDerivation =
       let ca     = inContext ex a
-          tree   = sortTree (ruleOrdering ex `on` fst) (derivationTree False (strategy ex) ca)
+          tree   = sortTree (ruleOrdering ex `on` fst) (derivationTree (strategy ex) ca)
           single = emptyDerivation ca
       in fromMaybe single (derivation tree)
 

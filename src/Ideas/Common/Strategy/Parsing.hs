@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Ideas.Common.Strategy.Parsing
    ( Step(..)
-   , State, makeState, choices, trace, value
+   , ParseState, makeState, choices, trace, value
    , parseDerivationTree, replay, runCore, indepState
    ) where
 
@@ -55,7 +55,7 @@ instance Minor (Step l a) where
 ----------------------------------------------------------------------
 -- State data type
 
-data State l a = S
+data ParseState l a = S
    { getCore   :: Process (Step l a, Path)
    , value     :: a
    , trace     :: [Step l a]
@@ -63,14 +63,14 @@ data State l a = S
    , myProcess :: Maybe (Process (Step l a, a, Path))
    }
 
-makeState :: Core l a -> a -> State l a
+makeState :: Core l a -> a -> ParseState l a
 makeState core a = S (withPath (toProcess core)) a [] emptyPath Nothing
 
 ----------------------------------------------------------------------
 -- Parse derivation tree
 
-parseDerivationTree :: Bool -> State l a -> DerivationTree (Step l a) (State l a)
-parseDerivationTree _ = tree
+parseDerivationTree :: ParseState l a -> DerivationTree (Step l a) (ParseState l a)
+parseDerivationTree = tree
  where
    tree = makeTree $ \state ->
       let this = getProcess state
@@ -83,7 +83,7 @@ parseDerivationTree _ = tree
       | ((step, a, path), q) <- Sequential.firsts p
       ]
 
-indepState :: (Step l a -> Step l a -> Bool) -> State l a -> State l a
+indepState :: (Step l a -> Step l a -> Bool) -> ParseState l a -> ParseState l a
 indepState eq state = 
     state { getCore = independent (lift eq) p }
   where
@@ -155,12 +155,12 @@ filterMin2 = prune (isMajor . fst)
 filterMin :: Process (Step l a, a, Path) -> Process (Step l a, a, Path)
 filterMin = prune (\(st, _, _) -> isMajor st)
 
-replay :: Monad m => Int -> [Bool] -> Core l a -> m (State l a)
+replay :: Monad m => Int -> [Bool] -> Core l a -> m (ParseState l a)
 replay n bs core = do 
    (as, p) <- Sequential.replay (n, bs) $ withPath $ toProcess core
    return (S p (error "no value") (map fst as) (n, bs) Nothing)
       
-getProcess :: State l a -> Process (Step l a, a, Path)
+getProcess :: ParseState l a -> Process (Step l a, a, Path)
 getProcess st =  
    case myProcess st of
       Just m  -> m

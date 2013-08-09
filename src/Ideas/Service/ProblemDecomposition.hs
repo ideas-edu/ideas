@@ -59,7 +59,7 @@ problemDecomposition msloc state maybeAnswer
 runPrefixLocation :: Id -> Prefix a -> a -> [(a, Prefix a)]
 runPrefixLocation loc p0 =
    concatMap (checkPair . f) . derivations .
-   cutOnStep (stop . lastStepInPrefix) . prefixTree False p0
+   cutOnStep (stop . lastStepInPrefix) . prefixTree p0
  where
    f d = (lastTerm d, fromMaybe p0 (lastStep d))
    stop (Just (Exit info)) = getId info == loc
@@ -96,7 +96,7 @@ nextMajorForPrefix p0 a = do
 -- Copied from TypedAbstractService: clean me up
 runPrefixMajor :: Prefix a -> a -> [(a, Prefix a)]
 runPrefixMajor p0 =
-   map f . derivations . cutOnStep (stop . lastStepInPrefix) . prefixTree False p0
+   map f . derivations . cutOnStep (stop . lastStepInPrefix) . prefixTree p0
  where
    f d = (lastTerm d, fromMaybe p0 (lastStep d))
    stop = maybe False isMajor

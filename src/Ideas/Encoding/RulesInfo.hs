@@ -66,7 +66,7 @@ type ExampleMap a = M.Map Id [(a, a)]
 collectExamples :: Exercise a -> ExampleMap a
 collectExamples ex = foldr (add . snd) M.empty (examples ex)
  where
-   add a m = let tree = derivationTree False (strategy ex) (inContext ex a)
+   add a m = let tree = derivationTree (strategy ex) (inContext ex a)
                  f Nothing = m
                  f (Just d) = foldr g m (triples d)
                  g (x, (r, _), y) =

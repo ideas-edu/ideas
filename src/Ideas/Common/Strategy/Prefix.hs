@@ -15,7 +15,7 @@
 module Ideas.Common.Strategy.Prefix
    ( Prefix, emptyPrefix, makePrefix, showPrefix
    , prefixToSteps, prefixTree, stepsToRules, lastStepInPrefix, activeLabels
-   , indepPrefix
+   , searchModePrefix
    ) where
 
 import Data.List
@@ -52,8 +52,8 @@ makePrefix path = flip (replay path) . mkCore
 prefixTree :: a -> Prefix a -> DerivationTree (Prefix a) a
 prefixTree a = fmap fst . updateAnnotations (\_ _ -> snd) . parseDerivationTree a
 
-indepPrefix :: (Step LabelInfo a -> Bool) -> (Step LabelInfo a -> Step LabelInfo a -> Bool) -> Prefix a -> Prefix a
-indepPrefix = indepState
+searchModePrefix :: (Step LabelInfo a -> Bool) -> (Step LabelInfo a -> Step LabelInfo a -> Bool) -> Prefix a -> Prefix a
+searchModePrefix = searchModeState
 
 prefixToSteps :: Prefix a -> [Step LabelInfo a]
 prefixToSteps = reverse . trace

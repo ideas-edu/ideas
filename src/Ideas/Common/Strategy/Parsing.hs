@@ -14,7 +14,7 @@
 module Ideas.Common.Strategy.Parsing
    ( Step(..)
    , ParseState, makeState, choices, trace
-   , parseDerivationTree, replay, runCore, indepState
+   , parseDerivationTree, replay, runCore, searchModeState, toProcess
    ) where
 
 import Data.Function (on)
@@ -81,9 +81,13 @@ parseDerivationTree = curry (makeTree next)
       | ((step, a, path), q) <- Sequential.firsts p
       ]
 
-indepState :: (Step l a -> Bool) -> (Step l a -> Step l a -> Bool) -> ParseState l a -> ParseState l a
-indepState p eq state = 
-    state { remainder = uniquePath (p . fst3) (eq `on` fst3) (remainder state) }
+searchModeState :: (Step l a -> Bool) -> (Step l a -> Step l a -> Bool) -> ParseState l a -> ParseState l a
+searchModeState p eq state = 
+    state { remainder = tidyProcess eq' (not . p') $ 
+                        uniquePath p' eq' (remainder state) }
+  where
+    eq' = eq `on` fst3
+    p'  = p . fst3
 
 ----------------------------------------------------------------------
 -- Running the parser

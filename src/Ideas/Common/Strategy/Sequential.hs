@@ -7,10 +7,12 @@ module Ideas.Common.Strategy.Sequential
    , Sym(..)
    , atomic, concurrent, (<@>)
    , withPath, replay
-   , uniquePath
+   , uniquePath, tidyProcess
    ) where
    
+import Data.List
 import Ideas.Common.Strategy.Path
+import Test.QuickCheck hiding (replay)
 
 class Sequential f where
    ok, stop :: f a
@@ -53,6 +55,7 @@ instance Sequential Builder where
    stop        = B (const Stop)
    single a    = B (a ~>)
    a ~> B f    = B ((a ~>) . f)
+
    B f <|> B g = B (\p -> f p <|> g p)
    B f <?> B g = B (\p -> f p <?> g p)
    B f <*> B g = B (f . g)
@@ -239,13 +242,52 @@ replay = flip (rec [])
 --------------------------------
 
 filterP :: (a -> Bool) -> Process a -> Process a 
-filterP p = fold Alg
+filterP p = fold idAlg
+   { forPrefix = \a q -> if p a then a ~> q else stop }
+
+idAlg :: Sequential f => Alg a (f a)
+idAlg = Alg
    { forChoice = (<|>)
    , forEither = (<?>)
-   , forPrefix = \a q -> if p a then a ~> q else stop
+   , forPrefix = (~>)
    , forOk     = ok
    , forStop   = stop
    }
+
+tidyProcess :: (a -> a -> Bool) -> (a -> Bool) -> Process a -> Process a
+tidyProcess eq pred = step2 . step1
+  where
+    step1 = fold idAlg { forChoice = rmChoiceUnitZero
+                       , forPrefix = rmPrefix
+                       }
+
+    step2 = fold idAlg { forChoice = rmSameChoice }
+
+    rmChoiceUnitZero p q = 
+        case (p, q) of
+          (Stop, _) -> q
+          (_, Stop) -> p
+          (Ok, _)   -> ok
+          (_, Ok)   -> ok
+          _         -> p <|> q
+
+    rmPrefix a p | pred a    = p
+                 | otherwise = a ~> p
+
+    rmSameChoice p q = if cmpProcesses eq p q 
+                       then p
+                       else p <|> q
+
+-- | Structural comparison of processes
+cmpProcesses :: (a -> b -> Bool) -> Process a -> Process b -> Bool
+cmpProcesses f = rec
+  where
+    rec (p :|: q) (r :|: s) = rec p r && rec q s
+    rec (p :?: q) (r :?: s) = rec p r && rec q s
+    rec (a :~> p) (b :~> q) = f a b   && rec p q
+    rec Ok        Ok        = True
+    rec Stop      Stop      = True
+    rec _         _         = False 
 
 -- | The uniquePath transformation changes the process in such a way that all 
 --   intermediate states can only be reached by one path. A prerequisite is that
@@ -259,6 +301,14 @@ uniquePath pred eq = rec
       rec (a :~> p) = a :~> rec p
       rec Ok        = Ok
       rec Stop      = Stop
+
+prefixes :: Process a -> [[a]]
+prefixes p = concatMap (\(a, q) -> [a] : (map (a:) $ prefixes q)) $ firsts p
+
+--uniquePath_prop :: Eq a => Process a -> Property
+uniquePath_prop pred eq = unique_prop . prefixes . uniquePath pred eq
+  where
+    unique_prop xs = forAll (elements xs) $ \x -> filter (== x) xs == [x]
 
 -- | This functions returns the first symbols that hold for predicate p
 firstsWith :: (a -> Bool) -> Process a -> [(a, Process a)]

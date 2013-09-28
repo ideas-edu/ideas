@@ -80,7 +80,9 @@ Library
    Ideas.Common.Strategy.Core
    Ideas.Common.Strategy.Location
    Ideas.Common.Strategy.Parsing
+   Ideas.Common.Strategy.Path
    Ideas.Common.Strategy.Prefix
+   Ideas.Common.Strategy.Sequential
    Ideas.Common.Strategy.Tests
    Ideas.Common.Strategy.Traversal
    Ideas.Common.Traversal.Iterator

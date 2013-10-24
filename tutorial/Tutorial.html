@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+</head>
+<body>
+<h1 id="ideas-tutorial-part-1">Ideas tutorial (part 1)</h1>
+<p>This tutorial shows how to make a simple domain reasoner with the Ideas framework. We start by defining a minimal exercise and show how this can be compiled into an application that can handle feedback requests. Make sure you have installed a Haskell compiler and the cabal package manager (see Haskell Platform). Get the latest version of the ideas package from Hackage and install the library with the following command:</p>
+<pre><code>   cabal install ideas</code></pre>
+<p>We can now start writing a new Haskell module and import two modules from the Ideas package.</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Main</span> <span class="kw">where</span>
+
+<span class="kw">import</span> Ideas.Common.Library
+<span class="kw">import</span> Ideas.Main.Default</code></pre>
+<p>This will import basic functionality (<code>Ideas.Common.Library</code>) for defining your own exercise. Module <code>Ideas.Main.Default</code> is needed for step 4 of this tutorial.</p>
+<p>In this tutorial we will develop a domain reasoner for a simple arithmetic expression language. The goal of the domain reasoner is to evaluate expressions. We define a data type for expressions with addition, (unary) negation, and integer constants.</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Expr</span> <span class="fu">=</span> <span class="dt">Add</span> <span class="dt">Expr</span> <span class="dt">Expr</span> <span class="fu">|</span> <span class="dt">Negate</span> <span class="dt">Expr</span> <span class="fu">|</span> <span class="dt">Con</span> <span class="dt">Int</span>
+   <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>, <span class="dt">Read</span>)</code></pre>
+<p>For now we will use derived instances for testing equality, showing, and reading expressions. We define two examples of expressions in this datatype.</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="co">-- expression 5+(-2)</span>
+<span class="ot">expr1 ::</span> <span class="dt">Expr</span>
+expr1 <span class="fu">=</span> <span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>))
+
+<span class="co">-- expression -(3+(-5))</span>
+<span class="ot">expr2 ::</span> <span class="dt">Expr</span>
+expr2 <span class="fu">=</span> <span class="dt">Negate</span> (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">5</span>)))</code></pre>
+<h2 id="step-1-defining-an-exercise">Step 1: defining an exercise</h2>
+<p>We define rules to calculate the addition of two constants and to negate a constant. The <code>Rule</code> datatype is parameterized over the values that are transformed (which is in our case the <code>Expr</code> datatype). The function <code>makeRule</code> takes a name for the rule (an identifier) and a function of type <code>a -&gt; Maybe a</code> as its arguments. Constructor <code>Nothing</code> of the <code>Maybe</code> datatype is used to indicate that the rule cannot be applied.</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">addRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span>
+addRule <span class="fu">=</span> describe <span class="st">&quot;Add two numbers&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;eval.add&quot;</span> f
+ <span class="kw">where</span>
+<span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span>
+   f (<span class="dt">Add</span> (<span class="dt">Con</span> x) (<span class="dt">Con</span> y)) <span class="fu">=</span> <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Con</span> (x<span class="fu">+</span>y)
+   f _ <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="ot">negateRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span>
+negateRule <span class="fu">=</span> describe <span class="st">&quot;Negate number&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;eval.negate&quot;</span> f
+ <span class="kw">where</span>
+<span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span>
+   f (<span class="dt">Negate</span> (<span class="dt">Con</span> x)) <span class="fu">=</span> <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Con</span> (<span class="fu">-</span>x)
+   f _ <span class="fu">=</span> <span class="dt">Nothing</span></code></pre>
+<p>Have a look at the type of the <code>makeRule</code> function and observe that the function is overloaded in both arguments. The first argument is the rule's identifier, which has to be part of the <code>IsId</code> type class. The <code>String</code> type is an instance of this class as can be seen from the example. This type class helps in creating identifiers for concepts. The <code>Rule</code> data type carries an identifier of type <code>Id</code>; later we will see that many other concepts also have an identifier (including <code>Strategy</code> and <code>Exercise</code>). Identifiers should have a unique name, and this name can be hierarchicial. Hierarchical names can be created with the <code>'.'</code> character in the name, or by using the <code>(#)</code> combinator. Values that carry an identifier can be given a more elaborate description with the <code>describe</code> function.</p>
+<p>The transformations in the rules above use a function of type <code>a -&gt; Maybe a</code>, but sometimes you want a rule to return multiple results. In these situations you can use a function of type <code>a -&gt; [a]</code>. The <code>MakeTrans</code> type class that is part of <code>makeRule</code>'s type generalizes over the type of a transformation function, and has <code>Maybe</code> and <code>[]</code> as instances.</p>
+<p>We first test the rules we defined in a Haskell interpreter by applying the rules to some expressions. For this, we use function <code>apply</code> from the <code>Apply</code> type class.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span><span class="fu">&gt;</span> apply addRule (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>))
+<span class="dt">Just</span> (<span class="dt">Con</span> <span class="dv">8</span>)
+
+<span class="dt">Main</span><span class="fu">&gt;</span> apply negateRule (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">5</span>))
+<span class="dt">Just</span> (<span class="dt">Con</span> (<span class="fu">-</span><span class="dv">5</span>))
+
+<span class="dt">Main</span><span class="fu">&gt;</span> apply addRule expr1
+<span class="dt">Nothing</span>
+
+<span class="dt">Main</span><span class="fu">&gt;</span> apply negateRule expr2
+<span class="dt">Nothing</span></code></pre>
+<p>The last example shows that rules are only applied at top-level, and not automatically to some arbitrary sub-expression. The rules can be combined into a strategy: the strategy combinator <code>&lt;|&gt;</code> denotes choice. We <code>label</code> the strategy with an identifier.</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">addOrNegate ::</span> <span class="dt">LabeledStrategy</span> <span class="dt">Expr</span>
+addOrNegate <span class="fu">=</span> label <span class="st">&quot;one-step&quot;</span> <span class="fu">$</span>
+   addRule <span class="fu">&lt;|&gt;</span> negateRule</code></pre>
+<p>Also strategies can be applied to a term.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span><span class="fu">&gt;</span> apply addOrNegate (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>))
+<span class="dt">Just</span> (<span class="dt">Con</span> <span class="dv">8</span>)
+
+<span class="dt">Main</span><span class="fu">&gt;</span> apply addOrNegate expr1
+<span class="dt">Nothing</span></code></pre>
+<p>We can now make a minimal exercise that uses the <code>addOrNegate</code> strategy for solving: why we need to lift the strategy to a <code>Context</code> is explained in step 2 of this tutorial. Exercises should have a unique identifier for identification. We use <code>show</code> for pretty-printing expressions. See the documentation of the <code>Exercise</code> datatype for the other components of an exercise: <code>emptyExercise</code> provides sensible defaults so we do not have to worry about these fields yet.</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">minimalExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Expr</span>
+minimalExercise <span class="fu">=</span> emptyExercise
+   { exerciseId    <span class="fu">=</span> describe <span class="st">&quot;Evaluate an expression (minimal)&quot;</span> <span class="fu">$</span>
+                        newId <span class="st">&quot;eval.minimal&quot;</span>
+   , strategy      <span class="fu">=</span> liftToContext addOrNegate
+   , prettyPrinter <span class="fu">=</span> show
+   }</code></pre>
+<p>Again, we can apply an exercise to a given expression:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span><span class="fu">&gt;</span> apply minimalExercise (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>))
+<span class="dt">Just</span> (<span class="dt">Con</span> <span class="dv">8</span>)</code></pre>
+<p>For an <code>Exercise</code>, however, function <code>printDerivation</code> is more interesting because it shows a worked-out example and not just the final answer.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span><span class="fu">&gt;</span> printDerivation minimalExercise (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>))
+<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>)
+   <span class="ot">=&gt;</span> eval<span class="fu">.</span>add
+<span class="dt">Con</span> <span class="dv">8</span></code></pre>
+<h2 id="step-2-adding-traverals">Step 2: adding traverals</h2>
+<p>Eerst symbolen definieren voor de constructoren</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell">addSymbol,<span class="ot"> negateSymbol ::</span> <span class="dt">Symbol</span>
+addSymbol    <span class="fu">=</span> newSymbol <span class="st">&quot;add&quot;</span>
+negateSymbol <span class="fu">=</span> newSymbol <span class="st">&quot;negate&quot;</span></code></pre>
+<p>Een instantie maken van de klasse IsTerm</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">IsTerm</span> <span class="dt">Expr</span> <span class="kw">where</span>
+   toTerm (<span class="dt">Add</span> x y)  <span class="fu">=</span> binary addSymbol (toTerm x) (toTerm y)
+   toTerm (<span class="dt">Negate</span> x) <span class="fu">=</span> unary negateSymbol (toTerm x)
+   toTerm (<span class="dt">Con</span> x)    <span class="fu">=</span> <span class="dt">TNum</span> (toInteger x)
+   
+   fromTerm (<span class="dt">TNum</span> x) <span class="fu">=</span> return (<span class="dt">Con</span> (fromInteger x))
+   fromTerm term     <span class="fu">=</span> fromTermWith f term
+    <span class="kw">where</span>
+      f s [x]    <span class="fu">|</span> s <span class="fu">==</span> negateSymbol <span class="fu">=</span> return (<span class="dt">Negate</span> x)
+      f s [x, y] <span class="fu">|</span> s <span class="fu">==</span> addSymbol    <span class="fu">=</span> return (<span class="dt">Add</span> x y)
+      f _ _ <span class="fu">=</span> fail <span class="st">&quot;invalid expression&quot;</span></code></pre>
+<p>Een strategie met de traversal combinator somewhere.</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">evalStrategy ::</span> <span class="dt">LabeledStrategy</span> (<span class="dt">Context</span> <span class="dt">Expr</span>)
+evalStrategy <span class="fu">=</span> label <span class="st">&quot;eval&quot;</span> <span class="fu">$</span>
+   repeatS (somewhere (liftToContext addOrNegate))
+   
+<span class="co">--test4 = applyAll evalStrategy $ newContext mempty $ termNavigator $ </span>
+<span class="co">--   Mul (Add (Con 5) (Con 3)) (Square (Con 2))</span></code></pre>
+<p>Een voorbeeld om te testen</p>
+<p>Een vernieuwde exercise</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">evalExerciseTraversal ::</span> <span class="dt">Exercise</span> <span class="dt">Expr</span>
+evalExerciseTraversal <span class="fu">=</span> emptyExercise
+   { exerciseId    <span class="fu">=</span> describe <span class="st">&quot;Evaluate an expression&quot;</span> <span class="fu">$</span>
+                        newId <span class="st">&quot;eval&quot;</span>
+   , strategy      <span class="fu">=</span> evalStrategy
+   , navigation    <span class="fu">=</span> termNavigator
+   , prettyPrinter <span class="fu">=</span> show
+   }
+   
+<span class="co">--test5 = printDerivation evalExercise $ </span>
+<span class="co">--   Mul (Add (Con 5) (Con 3)) (Square (Con 2)) -- !! meerdere antwoorden</span></code></pre>
+<p>Een voorbeeldaanroep</p>
+<h2 id="step-3-equivalence-similarity-and-ready">Step 3: equivalence, similarity, and ready</h2>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">eqExpr ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+eqExpr x y <span class="fu">=</span> eval x <span class="fu">==</span> eval y
+
+<span class="ot">eval ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>
+eval (<span class="dt">Add</span> x y)  <span class="fu">=</span> eval x <span class="fu">+</span> eval y
+eval (<span class="dt">Negate</span> x) <span class="fu">=</span> <span class="fu">-</span>eval x
+eval (<span class="dt">Con</span> x)    <span class="fu">=</span> x 
+
+<span class="ot">simExpr ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span> <span class="co">-- ???? voorbeeld</span>
+simExpr x y <span class="fu">=</span> normalize x <span class="fu">==</span> normalize y
+
+<span class="ot">normalize ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span>
+normalize (<span class="dt">Add</span> x y)  <span class="fu">=</span> <span class="dt">Add</span> (normalize x) (normalize y)
+normalize (<span class="dt">Negate</span> (<span class="dt">Con</span> x)) <span class="fu">|</span> x <span class="fu">==</span> <span class="dv">0</span> <span class="fu">=</span> <span class="dt">Con</span> <span class="dv">0</span>
+normalize (<span class="dt">Negate</span> x) <span class="fu">=</span> <span class="dt">Negate</span> (normalize x)
+normalize (<span class="dt">Con</span> x)    <span class="fu">=</span> <span class="dt">Con</span> x
+
+<span class="ot">isCon ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+isCon (<span class="dt">Con</span> _) <span class="fu">=</span> <span class="dt">True</span>
+isCon _       <span class="fu">=</span> <span class="dt">False</span>
+
+<span class="ot">parserRead ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Either</span> <span class="dt">String</span> <span class="dt">Expr</span>
+parserRead s <span class="fu">=</span> 
+   <span class="kw">case</span> reads s <span class="kw">of</span>
+      [(a, xs)] <span class="fu">|</span> all (<span class="fu">==</span><span class="ch">&#39; &#39;</span>) xs <span class="ot">-&gt;</span> return a
+      _ <span class="ot">-&gt;</span> fail (<span class="st">&quot;no read: &quot;</span> <span class="fu">++</span> s)
+
+<span class="ot">evalExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Expr</span>
+evalExercise <span class="fu">=</span> emptyExercise
+   { exerciseId    <span class="fu">=</span> describe <span class="st">&quot;Evaluate an expression&quot;</span> <span class="fu">$</span>
+                        newId <span class="st">&quot;eval&quot;</span>
+   , status        <span class="fu">=</span> <span class="dt">Experimental</span>
+   , strategy      <span class="fu">=</span> evalStrategy
+   , prettyPrinter <span class="fu">=</span> show
+   , navigation    <span class="fu">=</span> termNavigator
+   , parser        <span class="fu">=</span> parserRead
+   , equivalence   <span class="fu">=</span> withoutContext eqExpr
+   , similarity    <span class="fu">=</span> withoutContext simExpr
+   , ready         <span class="fu">=</span> predicate isCon
+   , examples      <span class="fu">=</span> level <span class="dt">Easy</span> [expr1] <span class="fu">++</span> level <span class="dt">Medium</span> [expr2]
+   }</code></pre>
+<h2 id="step-4-making-a-cgi-webservice">Step 4: making a CGI-webservice</h2>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">dr ::</span> <span class="dt">DomainReasoner</span>
+dr <span class="fu">=</span> describe <span class="st">&quot;Domain reasoner for tutorial&quot;</span> (newDomainReasoner <span class="st">&quot;eval&quot;</span>) 
+   { exercises <span class="fu">=</span> [<span class="dt">Some</span> evalExercise]
+   , services  <span class="fu">=</span> myServices
+   }
+
+<span class="ot">myServices ::</span> [<span class="dt">Service</span>]
+myServices <span class="fu">=</span> metaServiceList dr <span class="fu">++</span> serviceList
+
+<span class="ot">main ::</span> <span class="dt">IO</span> ()
+main <span class="fu">=</span> defaultMain dr</code></pre>
+<p>$ ghc -i../src --make Tutorial.lhs</p>
+<p>$ ./Tutorial.exe --help IDEAS: Intelligent Domain-specific Exercise Assistants Copyright 2013, Open Universiteit Nederland version 1.1, revision 5899, logging disabled</p>
+<p>Usage: ideas [OPTION] (by default, CGI protocol)</p>
+<p>Options: --version show version number -? --help show options -f FILE --file=FILE use input FILE as request --make-pages[=DIR] generate pages for exercises and services --test[=DIR] run tests on directory (default: 'test') --make-script=ID generate feedback script for exercise --analyze-script=FILE analyze feedback script and report errors</p>
+</body>
+</html>

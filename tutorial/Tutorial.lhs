@@ -365,9 +365,9 @@ The result of this request is:
 $ Tutorial.exe --file=exerciselist.xml                                          
 <reply result="ok" version="1.1 (5900)">                                        
   <list>                                                                        
-    <elem exerciseid="eval.basic" description="Evaluate an expression (basic)" status="Experimental"/>                                                          
-    <elem exerciseid="eval.full" description="Evaluate an expression (full)" status="Experimental"/>                                                            
-    <elem exerciseid="eval.minimal" description="Evaluate an expression (minimal)" status="Experimental"/>                                                      
+    <elem exerciseid="eval.basic" description="Evaluate an expression (basic)" status="Experimental"/>
+    <elem exerciseid="eval.full" description="Evaluate an expression (full)" status="Experimental"/>
+    <elem exerciseid="eval.minimal" description="Evaluate an expression (minimal)" status="Experimental"/>
   </list>                                                                       
 </reply>                                               
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

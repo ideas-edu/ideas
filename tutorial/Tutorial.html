@@ -9,28 +9,38 @@
   <style type="text/css">
 table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
   margin: 0; padding: 0; vertical-align: baseline; border: none; }
-table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
+table.sourceCode { width: 100%; line-height: 100%; }
 td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
 td.sourceCode { padding-left: 5px; }
-pre, code { background-color: #f8f8f8; }
-code > span.kw { color: #204a87; font-weight: bold; }
-code > span.dt { color: #204a87; }
-code > span.dv { color: #0000cf; }
-code > span.bn { color: #0000cf; }
-code > span.fl { color: #0000cf; }
-code > span.ch { color: #4e9a06; }
-code > span.st { color: #4e9a06; }
-code > span.co { color: #8f5902; font-style: italic; }
-code > span.ot { color: #8f5902; }
-code > span.al { color: #ef2929; }
-code > span.fu { color: #000000; }
-code > span.er { font-weight: bold; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
   </style>
+  <link rel="stylesheet" href="Tutorial.css" type="text/css" />
 </head>
 <body>
-<h1 id="ideas-tutorial-part-1">Ideas tutorial (part 1)</h1>
+<div class="page-header">
+<div class="ideas-logo">
+<img src="ideas.png"/>
+</div>
+<div class="ounl-logo">
+<img src="ounl.png"/>
+</div>
+ 
+</div>
+<div class="page-content">
+<h1>Ideas tutorial (part 1)</h1>
 <p>This tutorial shows how to make a simple domain reasoner with the Ideas framework. We start by defining a minimal exercise and show how this can be compiled into an application that can handle feedback requests. Make sure you have installed a Haskell compiler and the cabal package manager (see Haskell Platform). Get the latest version of the ideas package from Hackage and install the library with the following command:</p>
-<pre><code>   cabal install ideas</code></pre>
+<pre><code>cabal install ideas</code></pre>
 <p>We can now start writing a new Haskell module and import two modules from the Ideas package.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Main</span> <span class="kw">where</span>
 
@@ -48,7 +58,7 @@ expr1 <span class="fu">=</span> <span class="dt">Add</span> (<span class="dt">Co
 <span class="co">-- expression (-2)+(3+5)</span>
 <span class="ot">expr2 ::</span> <span class="dt">Expr</span>
 expr2 <span class="fu">=</span> <span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))</code></pre>
-<h2 id="step-1-defining-an-exercise">Step 1: defining an exercise</h2>
+<h2>Step 1: defining an exercise</h2>
 <p>We define rules to calculate the addition of two constants and to negate a constant. The <code>Rule</code> data type is parameterized over the values that are transformed (which is in our case the <code>Expr</code> data type). The function <code>makeRule</code> takes a name for the rule (an identifier) and a function of type <code>a -&gt; Maybe a</code> as its arguments. Constructor <code>Nothing</code> of the <code>Maybe</code> data type is used to indicate that the rule cannot be applied.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">addRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span>
 addRule <span class="fu">=</span> describe <span class="st">&quot;Add two numbers&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;eval.add&quot;</span> f
@@ -103,7 +113,7 @@ minimalExercise <span class="fu">=</span> emptyExercise
 <span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>)
    <span class="ot">=&gt;</span> eval<span class="fu">.</span>add
 <span class="dt">Con</span> <span class="dv">8</span></code></pre>
-<h2 id="step-2-adding-traverals">Step 2: adding traverals</h2>
+<h2>Step 2: adding traverals</h2>
 <p>For arithmetic expressions we want to apply the rules <code>somewhere</code>, i.e., possibly also to the sub-expressions. We want to use traversal functions such as <code>somewhere</code> in our strategy definitions, but this is only possible if we know the structure of the terms we want to traverse. We use a zipper data structure for keeping a point of focus. Instead of defining a zipper on the <code>Expr</code> data type, we define a translation to the <code>Term</code> data type in the Ideas library and use a zipper on <code>Term</code>s. Besides the zipper, some more untyped, generic functions are offered for the <code>Term</code> data type.</p>
 <p>Two symbols are defined for the two constructors of <code>Expr</code>.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell">addSymbol,<span class="ot"> negateSymbol ::</span> <span class="dt">Symbol</span>
@@ -156,7 +166,7 @@ basicExercise <span class="fu">=</span> emptyExercise
 <span class="dt">Add</span> (<span class="dt">Con</span> (<span class="fu">-</span><span class="dv">2</span>)) (<span class="dt">Con</span> <span class="dv">8</span>)
    <span class="ot">=&gt;</span> eval<span class="fu">.</span>add
 <span class="dt">Con</span> <span class="dv">6</span></code></pre>
-<h2 id="step-3-equivalence-and-ready">Step 3: equivalence and ready</h2>
+<h2>Step 3: equivalence and ready</h2>
 <p>For diagnosing a student step, we have to define which expressions are semantically equivalent. When left undefined in an exercise, all expressions are equivalent, which is not very helpful. For the <code>Expr</code> data type, we specify that two values are equivalent when they evaluate to the same <code>Int</code> value.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">eqExpr ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span>
 eqExpr x y <span class="fu">=</span> eval x <span class="fu">==</span> eval y
@@ -190,7 +200,7 @@ evalExercise <span class="fu">=</span> emptyExercise
    , examples      <span class="fu">=</span> level <span class="dt">Easy</span> [expr1] <span class="fu">++</span> level <span class="dt">Medium</span> [expr2]
    }</code></pre>
 <p>We now have a somewhat simple, but fully functional exercise for evaluating expressions.</p>
-<h2 id="step-4-making-a-cgi-webservice">Step 4: making a CGI-webservice</h2>
+<h2>Step 4: making a CGI-webservice</h2>
 <p>An exercise can be used by external tools by turning it into a domain reasoner: such a reasoner supports some exercises, and provides a number of (standard) feedback services. We use the three exercises we have defined so far, together with the standard set of services.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">dr ::</span> <span class="dt">DomainReasoner</span>
 dr <span class="fu">=</span> describe <span class="st">&quot;Domain reasoner for tutorial&quot;</span> (newDomainReasoner <span class="st">&quot;eval&quot;</span>) 
@@ -204,68 +214,71 @@ myServices <span class="fu">=</span> metaServiceList dr <span class="fu">++</spa
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">main ::</span> <span class="dt">IO</span> ()
 main <span class="fu">=</span> defaultMain dr</code></pre>
 <p>Compile the module to get an executable. In this tutorial we assume that the code is placed in a file called <code>Tutorial.hs</code>, and the result of compilation is an executable <code>Tutorial.exe</code>.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">$</span> ghc <span class="co">--make Tutorial.hs</span></code></pre>
+<pre><code>$ ghc --make Tutorial.hs</code></pre>
 <p>Running the executable with the <code>--help</code> flag gives the options.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">$</span> Tutorial.exe <span class="co">--help</span>
-<span class="dt">IDEAS</span><span class="fu">:</span> <span class="dt">Intelligent</span> <span class="dt">Domain</span><span class="fu">-</span>specific <span class="dt">Exercise</span> <span class="dt">Assistants</span>
-<span class="dt">Copyright</span> <span class="dv">2013</span>, <span class="dt">Open</span> <span class="dt">Universiteit</span> <span class="dt">Nederland</span>
-version <span class="dv">1</span><span class="fu">.</span><span class="dv">1</span>, revision <span class="dv">5900</span>, logging disabled
+<pre><code>$ Tutorial.exe --help
+IDEAS: Intelligent Domain-specific Exercise Assistants
+Copyright 2013, Open Universiteit Nederland
+version 1.1, revision 5900, logging disabled
 
-<span class="dt">Usage</span><span class="fu">:</span> ideas [<span class="dt">OPTION</span>]     (by default, <span class="dt">CGI</span> protocol)
+Usage: ideas [OPTION]     (by default, CGI protocol)
 
-<span class="dt">Options</span><span class="fu">:</span>
-           <span class="co">--version              show version number</span>
-  <span class="fu">-?</span>       <span class="co">--help                 show options</span>
-  <span class="fu">-</span>f <span class="dt">FILE</span>  <span class="co">--file=FILE            use input FILE as request</span>
-           <span class="co">--make-pages[=DIR]     generate pages for exercises and services</span>
-           <span class="co">--test[=DIR]           run tests on directory (default: &#39;test&#39;)</span>
-           <span class="co">--make-script=ID       generate feedback script for exercise</span>
-           <span class="co">--analyze-script=FILE  analyze feedback script and report errors</span></code></pre>
+Options:
+           --version              show version number
+  -?       --help                 show options
+  -f FILE  --file=FILE            use input FILE as request
+           --make-pages[=DIR]     generate pages for exercises and services
+           --test[=DIR]           run tests on directory (default: &#39;test&#39;)
+           --make-script=ID       generate feedback script for exercise
+           --analyze-script=FILE  analyze feedback script and report errors</code></pre>
 <p>The application handles requests: one way is to place the request in a file and to pass the file name to the application. In the example requests we use XML, but also other encodings are supported. If we want to know the list of supported exercises, we place the following request in a file <code>exerciselist.xml</code></p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">&lt;</span>request service<span class="fu">=</span><span class="st">&quot;exerciselist&quot;</span> source<span class="fu">=</span><span class="st">&quot;tutorial&quot;</span><span class="fu">/&gt;</span></code></pre>
+<pre class="sourceCode xml" id="mycode"><code class="sourceCode xml"><span class="kw">&lt;request</span><span class="ot"> service=</span><span class="st">&quot;exerciselist&quot;</span><span class="ot"> source=</span><span class="st">&quot;tutorial&quot;</span><span class="kw">/&gt;</span></code></pre>
 <p>It is a good custom to always include the source of the request to let the domain reasoner know where the request came from. The result of this request is:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">$</span> Tutorial.exe <span class="co">--file=exerciselist.xml                                          </span>
-<span class="fu">&lt;</span>reply result<span class="fu">=</span><span class="st">&quot;ok&quot;</span> version<span class="fu">=</span><span class="st">&quot;1.1 (5900)&quot;</span><span class="fu">&gt;</span>                                        
-  <span class="fu">&lt;</span>list<span class="fu">&gt;</span>                                                                        
-    <span class="fu">&lt;</span>elem exerciseid<span class="fu">=</span><span class="st">&quot;eval.basic&quot;</span> description<span class="fu">=</span><span class="st">&quot;Evaluate an expression (basic)&quot;</span> status<span class="fu">=</span><span class="st">&quot;Experimental&quot;</span><span class="fu">/&gt;</span>                                                          
-    <span class="fu">&lt;</span>elem exerciseid<span class="fu">=</span><span class="st">&quot;eval.full&quot;</span> description<span class="fu">=</span><span class="st">&quot;Evaluate an expression (full)&quot;</span> status<span class="fu">=</span><span class="st">&quot;Experimental&quot;</span><span class="fu">/&gt;</span>                                                            
-    <span class="fu">&lt;</span>elem exerciseid<span class="fu">=</span><span class="st">&quot;eval.minimal&quot;</span> description<span class="fu">=</span><span class="st">&quot;Evaluate an expression (minimal)&quot;</span> status<span class="fu">=</span><span class="st">&quot;Experimental&quot;</span><span class="fu">/&gt;</span>                                                      
-  <span class="fu">&lt;/</span>list<span class="fu">&gt;</span>                                                                       
-<span class="fu">&lt;/</span>reply<span class="fu">&gt;</span>                                               </code></pre>
+<pre class="sourceCode xml" id="mycode"><code class="sourceCode xml">$ Tutorial.exe --file=exerciselist.xml                                          
+<span class="kw">&lt;reply</span><span class="ot"> result=</span><span class="st">&quot;ok&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.1 (5900)&quot;</span><span class="kw">&gt;</span>                                        
+  <span class="kw">&lt;list&gt;</span>                                                                        
+    <span class="kw">&lt;elem</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.basic&quot;</span><span class="ot"> description=</span><span class="st">&quot;Evaluate an expression (basic)&quot;</span><span class="ot"> status=</span><span class="st">&quot;Experimental&quot;</span><span class="kw">/&gt;</span>                                                          
+    <span class="kw">&lt;elem</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.full&quot;</span><span class="ot"> description=</span><span class="st">&quot;Evaluate an expression (full)&quot;</span><span class="ot"> status=</span><span class="st">&quot;Experimental&quot;</span><span class="kw">/&gt;</span>                                                            
+    <span class="kw">&lt;elem</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.minimal&quot;</span><span class="ot"> description=</span><span class="st">&quot;Evaluate an expression (minimal)&quot;</span><span class="ot"> status=</span><span class="st">&quot;Experimental&quot;</span><span class="kw">/&gt;</span>                                                      
+  <span class="kw">&lt;/list&gt;</span>                                                                       
+<span class="kw">&lt;/reply&gt;</span>                                               </code></pre>
 <p>Or we request a worked-out solution for <code>Add (Con 5) (Negate (Con 2))</code>.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">&lt;</span>request exerciseid<span class="fu">=</span><span class="st">&quot;eval.full&quot;</span> service<span class="fu">=</span><span class="st">&quot;derivation&quot;</span> encoding<span class="fu">=</span><span class="st">&quot;string&quot;</span> source<span class="fu">=</span><span class="st">&quot;tutorial&quot;</span><span class="fu">&gt;</span>
-  <span class="fu">&lt;</span>state<span class="fu">&gt;</span>                
-      <span class="fu">&lt;</span>expr<span class="fu">&gt;</span><span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>))<span class="fu">&lt;/</span>expr<span class="fu">&gt;</span>
-  <span class="fu">&lt;/</span>state<span class="fu">&gt;</span>
-<span class="fu">&lt;/</span>request<span class="fu">&gt;</span></code></pre>
+<pre class="sourceCode xml" id="mycode"><code class="sourceCode xml"><span class="kw">&lt;request</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.full&quot;</span><span class="ot"> service=</span><span class="st">&quot;derivation&quot;</span><span class="ot"> encoding=</span><span class="st">&quot;string&quot;</span><span class="ot"> source=</span><span class="st">&quot;tutorial&quot;</span><span class="kw">&gt;</span>
+    <span class="kw">&lt;state&gt;</span>                
+        <span class="kw">&lt;expr&gt;</span>Add (Con 5) (Negate (Con 2))<span class="kw">&lt;/expr&gt;</span>
+    <span class="kw">&lt;/state&gt;</span>
+<span class="kw">&lt;/request&gt;</span></code></pre>
 <p>In this request we have to specify that the encoding of expressions is a plain string and that we want to use the parser/pretty-printer defined for the exercise. The default encoding follows the OpenMath standard for representing mathematical objects. The result of this request is:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">$</span> Tutorial.exe <span class="co">--file=solution.xml</span>
-<span class="fu">&lt;</span>reply result<span class="fu">=</span><span class="st">&quot;ok&quot;</span> version<span class="fu">=</span><span class="st">&quot;1.1 (5900)&quot;</span><span class="fu">&gt;</span>
-  <span class="fu">&lt;</span>list<span class="fu">&gt;</span>
-    <span class="fu">&lt;</span>elem ruleid<span class="fu">=</span><span class="st">&quot;eval.negate&quot;</span><span class="fu">&gt;</span>
-      <span class="fu">&lt;</span>expr<span class="fu">&gt;</span>
-        <span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> (<span class="fu">-</span><span class="dv">2</span>))
-      <span class="fu">&lt;/</span>expr<span class="fu">&gt;</span>
-      <span class="fu">&lt;</span>context<span class="fu">&gt;</span>
-        <span class="fu">&lt;</span>item name<span class="fu">=</span><span class="st">&quot;location&quot;</span> value<span class="fu">=</span><span class="st">&quot;[1]&quot;</span><span class="fu">/&gt;</span>
-      <span class="fu">&lt;/</span>context<span class="fu">&gt;</span>
-    <span class="fu">&lt;/</span>elem<span class="fu">&gt;</span>
-    <span class="fu">&lt;</span>elem ruleid<span class="fu">=</span><span class="st">&quot;eval.add&quot;</span><span class="fu">&gt;</span>
-      <span class="fu">&lt;</span>expr<span class="fu">&gt;</span>
-        <span class="dt">Con</span> <span class="dv">3</span>
-      <span class="fu">&lt;/</span>expr<span class="fu">&gt;</span>
-    <span class="fu">&lt;/</span>elem<span class="fu">&gt;</span>
-  <span class="fu">&lt;/</span>list<span class="fu">&gt;</span>
-<span class="fu">&lt;/</span>reply<span class="fu">&gt;</span></code></pre>
+<pre class="sourceCode xml" id="mycode"><code class="sourceCode xml">$ Tutorial.exe --file=solution.xml
+<span class="kw">&lt;reply</span><span class="ot"> result=</span><span class="st">&quot;ok&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.1 (5900)&quot;</span><span class="kw">&gt;</span>
+  <span class="kw">&lt;list&gt;</span>
+    <span class="kw">&lt;elem</span><span class="ot"> ruleid=</span><span class="st">&quot;eval.negate&quot;</span><span class="kw">&gt;</span>
+      <span class="kw">&lt;expr&gt;</span>
+        Add (Con 5) (Con (-2))
+      <span class="kw">&lt;/expr&gt;</span>
+      <span class="kw">&lt;context&gt;</span>
+        <span class="kw">&lt;item</span><span class="ot"> name=</span><span class="st">&quot;location&quot;</span><span class="ot"> value=</span><span class="st">&quot;[1]&quot;</span><span class="kw">/&gt;</span>
+      <span class="kw">&lt;/context&gt;</span>
+    <span class="kw">&lt;/elem&gt;</span>
+    <span class="kw">&lt;elem</span><span class="ot"> ruleid=</span><span class="st">&quot;eval.add&quot;</span><span class="kw">&gt;</span>
+      <span class="kw">&lt;expr&gt;</span>
+        Con 3
+      <span class="kw">&lt;/expr&gt;</span>
+    <span class="kw">&lt;/elem&gt;</span>
+  <span class="kw">&lt;/list&gt;</span>
+<span class="kw">&lt;/reply&gt;</span></code></pre>
 <p>The executable <code>Tutorial.exe</code> is also a cgi-binary that can be deployed on a web-server. Because there is support for generating HTML as output, it is possible to interactively explore the domain reasoner with a browser and a local server.</p>
-<pre><code>- Install a webserver, such as WampServer for Windows.
-- Make sure you enable the execution of CGI scripts (in httpd.conf)
-- Rename the executable to Tutorial.cgi and place it in the directory
-  for cgi scripts
-- Add the following resources to the directory
-- Start a browser and type in the URL
-  http://localhost/Tutorial.cgi?input=&lt;request service=&quot;index&quot; encoding=&quot;html&quot;/&gt;
-  </code></pre>
+<ul>
+<li>Install a webserver, such as WampServer for Windows.</li>
+<li>Make sure you enable the execution of CGI scripts (in httpd.conf)</li>
+<li>Rename the executable to Tutorial.cgi and place it in the directory for cgi scripts</li>
+<li>Add the following resources to the directory</li>
+<li>Start a browser and type in the URL <code>http://localhost/Tutorial.cgi?input=&lt;request service=&quot;index&quot; encoding=&quot;html&quot;/&gt;</code></li>
+</ul>
 <p>You can now start exploring the supported exercises and feedback services. For instance, go to <code>eval.full</code> and click on <code>derivation</code> in the yellow box to see the worked-out solutions for two examples.</p>
+</div>
+<div class="page-footer">
+Based on ideas-1.1, October 2013
+</div>
 </body>
 </html>

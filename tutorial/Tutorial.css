@@ -1,0 +1,159 @@
+/* http://www.colorschemedesigner.com/#3u11Tw0w0w0w0 */
+
+/* ---------------------------------------------------------------
+   General 
+*/
+
+body {
+   margin: 10px;
+   background-color: #64A8D1;
+   color:            black;
+   font-family:      sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+   color: #0969A2;
+}
+
+a:link, a:visited
+  { color:            #03436A;
+    text-decoration:  none;
+  }
+  
+a:hover 
+  { text-decoration: underline;
+  }
+
+ul {
+   list-style-type: square;
+   padding-left: 20;
+   margin-top: 5;
+   margin-bottom: 5;
+}
+
+/* ---------------------------------------------------------------
+   Header with menu, content, footer
+*/
+
+div.page-header, div.page-footer, div.page-content {
+   background-color: #FFFFFF;
+   border-width: 1px;
+   border-style: solid;
+   border-color: #03436A;
+}
+
+div.page-content {
+   padding: 10px;
+}
+
+div.page-header {
+   text-align: center; 
+   padding-top:      20px;
+   padding-bottom:   20px;
+   margin-bottom:    10px;
+}
+
+div.page-footer {
+   text-align: center;
+   padding-top:      5px;
+   padding-bottom:   5px;
+   margin-top:       10px;
+   font-style:       italic;
+}
+
+span.menuitem {
+   background-color: #03436A;
+   padding-left: 15px;
+   padding-right: 15px;
+   padding-top: 5px;
+   padding-bottom: 5px;
+   margin: 15px;
+}
+
+div.ideas-logo {
+   float: left;
+   margin-left: 20px;
+   margin-top: -12px;
+}
+
+div.ounl-logo {
+   float: right;
+   margin-right: 20px;
+   margin-top: -15px;
+}
+
+.menuitem a:link, .menuitem a:visited, .menuitem a:hover {
+   color: white;
+   font-weight: bold;
+}
+
+/* ---------------------------------------------------------------
+   Tables
+*/
+
+table {
+   border-collapse:collapse;
+}
+
+table, th, td {
+   border: 1px solid #03436A;
+}
+
+td {
+   vertical-align:top;
+   padding-top: 2px;
+   padding-bottom: 2px;
+   padding-left: 5px;
+   padding-right: 5px;
+}
+
+tr.top-row {
+   background-color: #03436A;
+   color: white;
+   font-weight: bold;
+}
+
+tr.even-row {
+   background-color: rgb(216, 233, 244);
+}
+
+tr.odd-row {
+   background-color: rgb(255, 255, 255);
+}
+
+span.table-key {
+	font-weight: bold;
+}
+
+/* ---------------------------------------------------------------
+   Errors and warnings
+*/
+
+div.error, span.error {
+   color: rgb(255,0,0);
+   font-weight: bold;
+}
+
+div.warning, span.warning {
+   color: rgb(255,64,0);
+   font-weight: bold;
+}
+
+pre, code { background-color: #f8f8f8; }
+pre { margin-left: 30px; margin-right: 30px; padding: 5px; }
+
+code > span.kw { color: #0000FF; font-weight: bold; } /* keywords */
+code > span.co { color: #A0A0A0; font-style: italic; } /* comment */
+code > span.st { color: #29C21D; font-style: italic; } /* string */
+code > span.ch { color: #29C21D; } /* char */
+code > span.dv { color: #29C21D; } /* num */
+code > span.dt { color: #902000; } /* upper-case */
+code > span.ot { color: #000000; } /* type signature */
+code > span.fu { color: #0000FF; } /* = */
+
+
+code > span.bn { color: #ff0000; }
+code > span.fl { color: #ff0000; }
+code > span.al { color: #ff0000; font-weight: bold; }
+
+code > span.er { color: #ff0000; font-weight: bold; }

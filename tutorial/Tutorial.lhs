@@ -1,3 +1,10 @@
+<div class="page-header"> 
+<div class="ideas-logo"><img src="ideas.png"/></div>
+<div class="ounl-logo"><img src="ounl.png"/></div>
+&nbsp;
+</div>
+<div class="page-content">
+
 Ideas tutorial (part 1)
 =======================
 
@@ -8,7 +15,9 @@ Haskell compiler and the cabal package manager (see Haskell Platform). Get the
 latest version of the ideas package from Hackage and install the library with the 
 following command:
 
-       cabal install ideas
+~~~~~~~~
+cabal install ideas
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We can now start writing a new Haskell module and import two modules from the 
 Ideas package.
@@ -315,93 +324,106 @@ Compile the module to get an executable. In this tutorial we assume that the
 code is placed in a file called `Tutorial.hs`, and the result of compilation
 is an executable `Tutorial.exe`. 
 
-< $ ghc --make Tutorial.hs
+~~~~
+$ ghc --make Tutorial.hs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Running the executable with the `--help` flag gives the options.
 
-< $ Tutorial.exe --help
-< IDEAS: Intelligent Domain-specific Exercise Assistants
-< Copyright 2013, Open Universiteit Nederland
-< version 1.1, revision 5900, logging disabled
-< 
-< Usage: ideas [OPTION]     (by default, CGI protocol)
-< 
-< Options:
-<            --version              show version number
-<   -?       --help                 show options
-<   -f FILE  --file=FILE            use input FILE as request
-<            --make-pages[=DIR]     generate pages for exercises and services
-<            --test[=DIR]           run tests on directory (default: 'test')
-<            --make-script=ID       generate feedback script for exercise
-<            --analyze-script=FILE  analyze feedback script and report errors
+~~~~
+$ Tutorial.exe --help
+IDEAS: Intelligent Domain-specific Exercise Assistants
+Copyright 2013, Open Universiteit Nederland
+version 1.1, revision 5900, logging disabled
+
+Usage: ideas [OPTION]     (by default, CGI protocol)
+
+Options:
+           --version              show version number
+  -?       --help                 show options
+  -f FILE  --file=FILE            use input FILE as request
+           --make-pages[=DIR]     generate pages for exercises and services
+           --test[=DIR]           run tests on directory (default: 'test')
+           --make-script=ID       generate feedback script for exercise
+           --analyze-script=FILE  analyze feedback script and report errors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The application handles requests: one way is to place the request in a file and 
 to pass the file name to the application. In the example requests we use XML,
 but also other encodings are supported. If we want to know the list of 
 supported exercises, we place the following request in a file `exerciselist.xml`
-           
-< <request service="exerciselist" source="tutorial"/>
 
+~~~~ {#mycode .xml}   
+<request service="exerciselist" source="tutorial"/>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                              
 It is a good custom to always include the source of the request to let the 
 domain reasoner know where the request came from.
 The result of this request is:
 
-< $ Tutorial.exe --file=exerciselist.xml                                          
-< <reply result="ok" version="1.1 (5900)">                                        
-<   <list>                                                                        
-<     <elem exerciseid="eval.basic" description="Evaluate an expression (basic)" status="Experimental"/>                                                          
-<     <elem exerciseid="eval.full" description="Evaluate an expression (full)" status="Experimental"/>                                                            
-<     <elem exerciseid="eval.minimal" description="Evaluate an expression (minimal)" status="Experimental"/>                                                      
-<   </list>                                                                       
-< </reply>                                               
+~~~~ {#mycode .xml}
+$ Tutorial.exe --file=exerciselist.xml                                          
+<reply result="ok" version="1.1 (5900)">                                        
+  <list>                                                                        
+    <elem exerciseid="eval.basic" description="Evaluate an expression (basic)" status="Experimental"/>                                                          
+    <elem exerciseid="eval.full" description="Evaluate an expression (full)" status="Experimental"/>                                                            
+    <elem exerciseid="eval.minimal" description="Evaluate an expression (minimal)" status="Experimental"/>                                                      
+  </list>                                                                       
+</reply>                                               
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Or we request a worked-out solution for `Add (Con 5) (Negate (Con 2))`. 
 
-< <request exerciseid="eval.full" service="derivation" encoding="string" source="tutorial">
-< 	<state>                
-< 		<expr>Add (Con 5) (Negate (Con 2))</expr>
-< 	</state>
-< </request>
+~~~~ {#mycode .xml}
+<request exerciseid="eval.full" service="derivation" encoding="string" source="tutorial">
+	<state>                
+		<expr>Add (Con 5) (Negate (Con 2))</expr>
+	</state>
+</request>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In this request we have to specify that the encoding of expressions is a plain 
 string and that we want to use the parser/pretty-printer defined for the 
 exercise. The default encoding follows the OpenMath standard for representing 
 mathematical objects. The result of this request is:
 
-< $ Tutorial.exe --file=solution.xml
-< <reply result="ok" version="1.1 (5900)">
-<   <list>
-<     <elem ruleid="eval.negate">
-<       <expr>
-<         Add (Con 5) (Con (-2))
-<       </expr>
-<       <context>
-<         <item name="location" value="[1]"/>
-<       </context>
-<     </elem>
-<     <elem ruleid="eval.add">
-<       <expr>
-<         Con 3
-<       </expr>
-<     </elem>
-<   </list>
-< </reply>
+~~~~ {#mycode .xml}   
+$ Tutorial.exe --file=solution.xml
+<reply result="ok" version="1.1 (5900)">
+  <list>
+    <elem ruleid="eval.negate">
+      <expr>
+        Add (Con 5) (Con (-2))
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="eval.add">
+      <expr>
+        Con 3
+      </expr>
+    </elem>
+  </list>
+</reply>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The executable `Tutorial.exe` is also a cgi-binary that can be deployed on a 
 web-server. Because there is support for generating HTML as output, it is 
 possible to interactively explore the domain reasoner with a browser and a
 local server. 
 
-    - Install a webserver, such as WampServer for Windows.
-    - Make sure you enable the execution of CGI scripts (in httpd.conf)
-    - Rename the executable to Tutorial.cgi and place it in the directory
-      for cgi scripts
-    - Add the following resources to the directory
-    - Start a browser and type in the URL
-      http://localhost/Tutorial.cgi?input=<request service="index" encoding="html"/>
+* Install a webserver, such as WampServer for Windows.
+* Make sure you enable the execution of CGI scripts (in httpd.conf)
+* Rename the executable to Tutorial.cgi and place it in the directory for cgi scripts
+* Add the following resources to the directory
+* Start a browser and type in the URL `http://localhost/Tutorial.cgi?input=<request service="index" encoding="html"/>`
       
 You can now start exploring the supported exercises and feedback services. 
 For instance, go to `eval.full` and click on `derivation` in the yellow box
 to see the worked-out solutions for two examples.
 
-    
+</div>
+<div class="page-footer">
+Based on ideas-1.1, October 2013
+</div>

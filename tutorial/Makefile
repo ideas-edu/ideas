@@ -1,7 +1,11 @@
 default: Tutorial.html
 
+IDEASDIR = ../../tags/ideas-1.1
+SRCDIR   = $(IDEASDIR)/src
+OUTDIR   = $(IDEASDIR)/out
+
 ghci:
-	ghci -i../src -odir../out -hidir../out -Wall -fwarn-tabs
+	ghci -i$(SRCDIR) -odir$(OUTDIR) -hidir$(OUTDIR) -Wall -fwarn-tabs
 
 %.html: %.lhs
 	pandoc --from markdown+lhs --to html --css=Tutorial.css -o $@ $<

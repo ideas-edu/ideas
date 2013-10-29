@@ -35,18 +35,22 @@ code > span.er { color: #ff0000; font-weight: bold; }
 <div class="ounl-logo">
 <img src="ounl.png"/>
 </div>
- 
+  Ideas tutorial
 </div>
 <div class="page-content">
-<h1>Ideas tutorial (part 1)</h1>
-<p>This tutorial shows how to make a simple domain reasoner with the Ideas framework. We start by defining a minimal exercise and show how this can be compiled into an application that can handle feedback requests. Make sure you have installed a Haskell compiler and the cabal package manager (see Haskell Platform). Get the latest version of the ideas package from Hackage and install the library with the following command:</p>
+<h1>Making a domain reasoner</h1>
+<p>This tutorial shows how to make a simple domain reasoner with the Ideas framework. We start by defining a minimal exercise and show how this can be compiled into an application that can handle feedback requests. Make sure you have installed a Haskell compiler and the cabal package manager (see <a href="http://www.haskell.org/platform/">Haskell Platform</a>). Get the latest version of the <a href="http://hackage.haskell.org/package/ideas">ideas package</a> from Hackage and install the library with the following command:</p>
 <pre><code>cabal install ideas</code></pre>
-<p>We can now start writing a new Haskell module and import two modules from the Ideas package.</p>
+<p>We can now start writing a new Haskell module and import some modules from the Ideas package.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Main</span> <span class="kw">where</span>
 
 <span class="kw">import</span> Ideas.Common.Library
-<span class="kw">import</span> Ideas.Main.Default</code></pre>
-<p>This will import basic functionality (<code>Ideas.Common.Library</code>) for defining your own exercise. Module <code>Ideas.Main.Default</code> is needed for step 4 of this tutorial.</p>
+<span class="kw">import</span> Ideas.Main.Default
+<span class="kw">import</span> Ideas.Service.DomainReasoner
+<span class="kw">import</span> Ideas.Common.Utils (Some(..))
+<span class="kw">import</span> Ideas.Service.Types
+<span class="kw">import</span> Ideas.Service.ServiceList</code></pre>
+<p>This will import basic functionality (<code>Ideas.Common.Library</code>) for defining your own exercise. The other imports are needed for step 4 of this tutorial.</p>
 <p>In this tutorial we will develop a domain reasoner for a simple arithmetic expression language. The goal of the domain reasoner is to evaluate expressions. We define a data type for expressions with addition, (unary) negation, and integer constants.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Expr</span> <span class="fu">=</span> <span class="dt">Add</span> <span class="dt">Expr</span> <span class="dt">Expr</span> <span class="fu">|</span> <span class="dt">Negate</span> <span class="dt">Expr</span> <span class="fu">|</span> <span class="dt">Con</span> <span class="dt">Int</span>
    <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>, <span class="dt">Read</span>)</code></pre>
@@ -73,7 +77,7 @@ negateRule <span class="fu">=</span> describe <span class="st">&quot;Negate numb
 <span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span>
    f (<span class="dt">Negate</span> (<span class="dt">Con</span> x)) <span class="fu">=</span> <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Con</span> (<span class="fu">-</span>x)
    f _ <span class="fu">=</span> <span class="dt">Nothing</span></code></pre>
-<p>Have a look at the type of the <code>makeRule</code> function and observe that the function is overloaded in both arguments. The first argument is the rule's identifier, which has to be part of the <code>IsId</code> type class. The <code>String</code> type is an instance of this class as can be seen from the example. This type class helps in creating identifiers for concepts. The <code>Rule</code> data type carries an identifier of type <code>Id</code>; later we will see that many other concepts also have an identifier (including <code>Strategy</code> and <code>Exercise</code>). Identifiers should have a unique name, and this name can be hierarchical. Hierarchical names can be created with the <code>'.'</code> character in the name, or by using the <code>(#)</code> combinator. Values that carry an identifier can be given a more elaborate description with the <code>describe</code> function.</p>
+<p>Have a look at the type of the <code>makeRule</code> function in the <a href="http://ideas.cs.uu.nl/docs/latest/api/Common-Rule-Abstract.html#v:makeRule">documentation</a>, and observe that the function is overloaded in both arguments. The first argument is the rule's identifier, which has to be part of the <code>IsId</code> type class. The <code>String</code> type is an instance of this class as can be seen from the example. This type class helps in creating identifiers for concepts. The <code>Rule</code> data type carries an identifier of type <code>Id</code>; later we will see that many other concepts also have an identifier (including <code>Strategy</code> and <code>Exercise</code>). Identifiers should have a unique name, and this name can be hierarchical. Hierarchical names can be created with the <code>'.'</code> character in the name, or by using the <code>(#)</code> combinator. Values that carry an identifier can be given a more elaborate description with the <code>describe</code> function.</p>
 <p>The transformations in the rules above use a function of type <code>a -&gt; Maybe a</code>, but sometimes you want a rule to return multiple results. In these situations you can use a function of type <code>a -&gt; [a]</code>. The <code>MakeTrans</code> type class that is part of <code>makeRule</code>'s type generalizes over the type of a transformation function, and has <code>Maybe</code> and <code>[]</code> as instances.</p>
 <p>We first test the rules we defined in a Haskell interpreter by applying the rules to some expressions. For this, we use function <code>apply</code> from the <code>Apply</code> type class.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span><span class="fu">&gt;</span> apply addRule (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>))
@@ -97,7 +101,7 @@ addOrNegate <span class="fu">=</span> label <span class="st">&quot;add-or-negate
 
 <span class="dt">Main</span><span class="fu">&gt;</span> apply addOrNegate expr1
 <span class="dt">Nothing</span></code></pre>
-<p>We can now make a minimal exercise that uses the <code>addOrNegate</code> strategy for solving: why we need to lift the strategy to a <code>Context</code> is explained in step 2 of this tutorial. Exercises should have a unique identifier for identification. We use <code>show</code> for pretty-printing expressions. See the documentation of the <code>Exercise</code> data type for the other components of an exercise: <code>emptyExercise</code> provides sensible defaults so we do not have to worry about these fields yet.</p>
+<p>We can now make a minimal exercise that uses the <code>addOrNegate</code> strategy for solving: why we need to lift the strategy to a <code>Context</code> is explained in step 2 of this tutorial. Exercises should have a unique identifier for identification. We use <code>show</code> for pretty-printing expressions. See the <a href="http://ideas.cs.uu.nl/docs/latest/api/Common-Exercise.html">documentation</a> of the <code>Exercise</code> data type for the other components of an exercise: <code>emptyExercise</code> provides sensible defaults so we do not have to worry about these fields yet.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">minimalExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Expr</span>
 minimalExercise <span class="fu">=</span> emptyExercise
    { exerciseId    <span class="fu">=</span> describe <span class="st">&quot;Evaluate an expression (minimal)&quot;</span> <span class="fu">$</span>
@@ -151,14 +155,14 @@ basicExercise <span class="fu">=</span> emptyExercise
    , prettyPrinter <span class="fu">=</span> show
    }</code></pre>
 <p>We can now print worked-out solutions for <code>expr1</code> and <code>expr2</code>. Note that <code>printDerivation</code> only prints one solution, not all.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span><span class="fu">&gt;</span> printDerivation evalExercise expr1
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span><span class="fu">&gt;</span> printDerivation basicExercise expr1
 <span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>))
    <span class="ot">=&gt;</span> eval<span class="fu">.</span>negate
 <span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> (<span class="fu">-</span><span class="dv">2</span>))
    <span class="ot">=&gt;</span> eval<span class="fu">.</span>add
 <span class="dt">Con</span> <span class="dv">3</span>
 
-<span class="dt">Main</span><span class="fu">&gt;</span> printDerivation evalExercise expr2
+<span class="dt">Main</span><span class="fu">&gt;</span> printDerivation basicExercise expr2
 <span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))
    <span class="ot">=&gt;</span> eval<span class="fu">.</span>add
 <span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Con</span> <span class="dv">8</span>)
@@ -213,7 +217,7 @@ myServices <span class="fu">=</span> metaServiceList dr <span class="fu">++</spa
 <p>A default main function is provided by the Ideas framework.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">main ::</span> <span class="dt">IO</span> ()
 main <span class="fu">=</span> defaultMain dr</code></pre>
-<p>Compile the module to get an executable. In this tutorial we assume that the code is placed in a file called <code>Tutorial.hs</code>, and the result of compilation is an executable <code>Tutorial.exe</code>.</p>
+<p>Compile the module to get an executable. In this tutorial we assume that the code is placed in a file called <code>Tutorial.hs</code>, and the result of compilation is an executable <code>Tutorial.exe</code> (on Windows). The software, however, is portable and can also be compiled for other platforms (including Mac OS and Linux).</p>
 <pre><code>$ ghc --make Tutorial.hs</code></pre>
 <p>Running the executable with the <code>--help</code> flag gives the options.</p>
 <pre><code>$ Tutorial.exe --help
@@ -248,7 +252,7 @@ Options:
         <span class="kw">&lt;expr&gt;</span>Add (Con 5) (Negate (Con 2))<span class="kw">&lt;/expr&gt;</span>
     <span class="kw">&lt;/state&gt;</span>
 <span class="kw">&lt;/request&gt;</span></code></pre>
-<p>In this request we have to specify that the encoding of expressions is a plain string and that we want to use the parser/pretty-printer defined for the exercise. The default encoding follows the OpenMath standard for representing mathematical objects. The result of this request is:</p>
+<p>In this request we have to specify that the encoding of expressions is a plain string and that we want to use the parser/pretty-printer defined for the exercise. The default encoding follows the <a href="http://www.openmath.org/standard/">OpenMath standard</a> for representing mathematical objects. The result of this request is:</p>
 <pre class="sourceCode xml" id="mycode"><code class="sourceCode xml">$ Tutorial.exe --file=solution.xml
 <span class="kw">&lt;reply</span><span class="ot"> result=</span><span class="st">&quot;ok&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.1 (5900)&quot;</span><span class="kw">&gt;</span>
   <span class="kw">&lt;list&gt;</span>
@@ -269,16 +273,16 @@ Options:
 <span class="kw">&lt;/reply&gt;</span></code></pre>
 <p>The executable <code>Tutorial.exe</code> is also a cgi-binary that can be deployed on a web-server. Because there is support for generating HTML as output, it is possible to interactively explore the domain reasoner with a browser and a local server.</p>
 <ul>
-<li>Install a webserver, such as WampServer for Windows.</li>
-<li>Make sure you enable the execution of CGI scripts (in httpd.conf)</li>
-<li>Rename the executable to Tutorial.cgi and place it in the directory for cgi scripts</li>
-<li>Add the following resources to the directory</li>
+<li>Install a webserver, such as <a href="http://www.wampserver.com/">WampServer</a> for Windows.</li>
+<li>Make sure you enable the execution of CGI scripts (in <code>httpd.conf</code>)</li>
+<li>Rename the executable to <code>Tutorial.cgi</code> and place it in the directory for cgi scripts</li>
+<li>Add the following <a href="resources.zip">resources</a> to the directory</li>
 <li>Start a browser and type in the URL <code>http://localhost/Tutorial.cgi?input=&lt;request service=&quot;index&quot; encoding=&quot;html&quot;/&gt;</code></li>
 </ul>
 <p>You can now start exploring the supported exercises and feedback services. For instance, go to <code>eval.full</code> and click on <code>derivation</code> in the yellow box to see the worked-out solutions for two examples.</p>
 </div>
 <div class="page-footer">
-Based on ideas-1.1, October 2013
+This tutorial is based on ideas-1.1. Last changed: October 2013
 </div>
 </body>
 </html>

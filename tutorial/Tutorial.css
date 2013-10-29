@@ -17,11 +17,11 @@ h1, h2, h3, h4, h5, h6 {
 
 a:link, a:visited
   { color:            #03436A;
-    text-decoration:  none;
+    text-decoration:  underline;
   }
   
 a:hover 
-  { text-decoration: underline;
+  { color: #FF0000;
   }
 
 ul {
@@ -51,6 +51,8 @@ div.page-header {
    padding-top:      20px;
    padding-bottom:   20px;
    margin-bottom:    10px;
+   font-size:        x-large;
+   color: #0969A2;
 }
 
 div.page-footer {
@@ -140,7 +142,8 @@ div.warning, span.warning {
 }
 
 pre, code { background-color: #f8f8f8; }
-pre { margin-left: 30px; margin-right: 30px; padding: 5px; }
+pre { margin-left: 30px; margin-right: 30px; padding: 5px; 
+	    border-width: 1px; border-style: solid; border-color: #e8e8e8; }
 
 code > span.kw { color: #0000FF; font-weight: bold; } /* keywords */
 code > span.co { color: #A0A0A0; font-style: italic; } /* comment */

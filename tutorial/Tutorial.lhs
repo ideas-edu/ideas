@@ -1,34 +1,39 @@
 <div class="page-header"> 
 <div class="ideas-logo"><img src="ideas.png"/></div>
 <div class="ounl-logo"><img src="ounl.png"/></div>
-&nbsp;
+&nbsp; Ideas tutorial
 </div>
 <div class="page-content">
 
-Ideas tutorial (part 1)
-=======================
+Making a domain reasoner
+========================
 
 This tutorial shows how to make a simple domain reasoner with the Ideas framework.
 We start by defining a minimal exercise and show how this can be compiled into an 
 application that can handle feedback requests. Make sure you have installed a 
-Haskell compiler and the cabal package manager (see Haskell Platform). Get the 
-latest version of the ideas package from Hackage and install the library with the 
-following command:
+Haskell compiler and the cabal package manager 
+(see [Haskell Platform](http://www.haskell.org/platform/)). Get the 
+latest version of the [ideas package](http://hackage.haskell.org/package/ideas) 
+from Hackage and install the library with the following command:
 
 ~~~~~~~~
 cabal install ideas
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We can now start writing a new Haskell module and import two modules from the 
+We can now start writing a new Haskell module and import some modules from the 
 Ideas package.
 
 > module Main where
 > 
 > import Ideas.Common.Library
 > import Ideas.Main.Default
+> import Ideas.Service.DomainReasoner
+> import Ideas.Common.Utils (Some(..))
+> import Ideas.Service.Types
+> import Ideas.Service.ServiceList
 
 This will import basic functionality (`Ideas.Common.Library`) for defining
-your own exercise. Module `Ideas.Main.Default` is needed for step 4 of this 
+your own exercise. The other imports are needed for step 4 of this 
 tutorial.
 
 In this tutorial we will develop a domain reasoner for a simple arithmetic
@@ -74,7 +79,9 @@ data type is used to indicate that the rule cannot be applied.
 >    f (Negate (Con x)) = Just $ Con (-x)
 >    f _ = Nothing
 
-Have a look at the type of the `makeRule` function and observe that the function
+Have a look at the type of the `makeRule` function in the 
+[documentation](http://ideas.cs.uu.nl/docs/latest/api/Common-Rule-Abstract.html#v:makeRule),
+and observe that the function
 is overloaded in both arguments. The first argument is the rule's identifier,
 which has to be part of the `IsId` type class. The `String` type is an instance
 of this class as can be seen from the example. This type class helps in creating
@@ -128,7 +135,8 @@ We can now make a minimal exercise that uses the `addOrNegate` strategy
 for solving: why we need to lift the strategy to a `Context` is explained in 
 step 2 of this tutorial. Exercises should have a unique identifier for 
 identification. We use `show` for pretty-printing expressions. See the 
-documentation of the `Exercise` data type for the other components of an 
+[documentation](http://ideas.cs.uu.nl/docs/latest/api/Common-Exercise.html) 
+of the `Exercise` data type for the other components of an 
 exercise: `emptyExercise` provides sensible defaults so we do not have to 
 worry about these fields yet.
 
@@ -230,14 +238,14 @@ exercise definition, we have to declare that navigation is based on the
 We can now print worked-out solutions for `expr1` and `expr2`. Note that 
 `printDerivation` only prints one solution, not all.
 
-< Main> printDerivation evalExercise expr1
+< Main> printDerivation basicExercise expr1
 < Add (Con 5) (Negate (Con 2))
 <    => eval.negate
 < Add (Con 5) (Con (-2))
 <    => eval.add
 < Con 3
 < 
-< Main> printDerivation evalExercise expr2
+< Main> printDerivation basicExercise expr2
 < Add (Negate (Con 2)) (Add (Con 3) (Con 5))
 <    => eval.add
 < Add (Negate (Con 2)) (Con 8)
@@ -322,7 +330,8 @@ A default main function is provided by the Ideas framework.
 
 Compile the module to get an executable. In this tutorial we assume that the 
 code is placed in a file called `Tutorial.hs`, and the result of compilation
-is an executable `Tutorial.exe`. 
+is an executable `Tutorial.exe` (on Windows). The software, however, is portable
+and can also be compiled for other platforms (including Mac OS and Linux).
 
 ~~~~
 $ ghc --make Tutorial.hs
@@ -384,7 +393,8 @@ Or we request a worked-out solution for `Add (Con 5) (Negate (Con 2))`.
 
 In this request we have to specify that the encoding of expressions is a plain 
 string and that we want to use the parser/pretty-printer defined for the 
-exercise. The default encoding follows the OpenMath standard for representing 
+exercise. The default encoding follows the 
+[OpenMath standard](http://www.openmath.org/standard/) for representing 
 mathematical objects. The result of this request is:
 
 ~~~~ {#mycode .xml}   
@@ -413,10 +423,10 @@ web-server. Because there is support for generating HTML as output, it is
 possible to interactively explore the domain reasoner with a browser and a
 local server. 
 
-* Install a webserver, such as WampServer for Windows.
-* Make sure you enable the execution of CGI scripts (in httpd.conf)
-* Rename the executable to Tutorial.cgi and place it in the directory for cgi scripts
-* Add the following resources to the directory
+* Install a webserver, such as [WampServer](http://www.wampserver.com/) for Windows.
+* Make sure you enable the execution of CGI scripts (in `httpd.conf`)
+* Rename the executable to `Tutorial.cgi` and place it in the directory for cgi scripts
+* Add the following [resources](resources.zip) to the directory
 * Start a browser and type in the URL `http://localhost/Tutorial.cgi?input=<request service="index" encoding="html"/>`
       
 You can now start exploring the supported exercises and feedback services. 
@@ -425,5 +435,5 @@ to see the worked-out solutions for two examples.
 
 </div>
 <div class="page-footer">
-Based on ideas-1.1, October 2013
+This tutorial is based on ideas-1.1. Last changed: October 2013
 </div>

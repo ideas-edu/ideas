@@ -82,9 +82,6 @@ diagnose state new ruleUsed
            Just (r, as) -> Buggy as r -- report the buggy rule
            Nothing      -> NotEquivalent -- compareParts state new
 
-   -- Is the submitted term (very) similar to the previous one?
-   | similar = Similar (ready state) state
-
    -- Is the used rule that is submitted applied correctly?
    | isJust ruleUsed && isNothing (discovered False ruleUsed) =
         let mr = fmap fst $ discovered False Nothing
@@ -96,6 +93,11 @@ diagnose state new ruleUsed
         -- If yes, return new state and rule
         let ((r, _, _), ns) = fromJust expected
         in Expected (ready ns) ns r
+
+   -- Is the submitted term (very) similar to the previous one?
+   -- (this check is performed after "expected by strategy". TODO: fix
+   -- granularity of some math rules)
+   | similar = Similar (ready state) state
 
    -- Is the rule used discoverable by trying all known rules?
    | otherwise =

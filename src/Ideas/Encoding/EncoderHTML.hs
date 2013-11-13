@@ -45,11 +45,11 @@ data HTMLEncoderState a = HTMLEncoderState
 
 htmlEncoder :: LinkManager -> DomainReasoner -> Exercise a -> TypedValue (Type a) -> HTMLPage
 htmlEncoder lm dr ex tv =
-   addCSS (resource "ideas.css") $
+   addCSS (urlForCSS lm "ideas.css") $
    htmlPage "Ideas: documentation pages" $ mconcat
       [ divClass "page-header" $ mconcat
-           [ divClass  "ideas-logo" $ image $ resource "ideas.png"
-           , divClass  "ounl-logo"  $ image $ resource "ounl.png"
+           [ divClass  "ideas-logo" space
+           , divClass  "ounl-logo"  space
            , spanClass "menuitem"   $ linkToIndex lm $ string "Index"
            , spanClass "menuitem"   $ linkToExercises lm $ string "Exercises"
            , spanClass "menuitem"   $ linkToServices lm $ string "Services"
@@ -62,8 +62,6 @@ htmlEncoder lm dr ex tv =
       , divClass "page-footer" $
            string (fullVersion dr)
       ]
- where
-   resource = urlForResource lm
 
 encodeType :: LinkManager -> Exercise a -> HTMLEncoder a (TypedValue (Type a))
 encodeType lm ex = msum
@@ -344,11 +342,14 @@ encodeExampleList lm ex = simpleEncoder $ \pairs -> mconcat $
    ]
  where
    make (_, x) = para $
-      munless (isStatic lm) $
+      munless (isStatic lm) (
          let st = emptyStateContext ex x
-         in spanClass "statelink" $ linkToState lm st $
-               element "img" ["src" .=. "external.png", "width" .=. "15"]
+         in spanClass "statelink" $ linkToState lm st $ external lm)
       <> spanClass "term" (string (prettyPrinterContext ex x))
+
+external :: BuildXML a => LinkManager -> a
+external lm = element "img"
+   ["src" .=. urlForImage lm "external.png", "width" .=. "15"]
 
 encodeDerivation :: LinkManager -> Exercise a -> HTMLEncoder a (Derivation (Rule (Context a), Environment) (Context a))
 encodeDerivation lm ex =
@@ -394,11 +395,7 @@ htmlState = do
 
 stateLink :: LinkManager -> State a -> HTMLBuilder
 stateLink lm st = munless (isStatic lm) $
-   spanClass "derivation-statelink" $ linkToState lm st $
-      element "img"
-         [ "src" .=. urlForResource lm "external.png"
-         , "width" .=. "15"
-         ]
+   spanClass "derivation-statelink" $ linkToState lm st $ external lm
 
 encodeState :: HTMLEncoder a (State a)
 encodeState = do

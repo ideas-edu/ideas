@@ -35,7 +35,8 @@ import Ideas.Text.HTML
 import Ideas.Text.XML
 
 data LinkManager = LinkManager
-   { urlForResource      :: String -> String
+   { urlForCSS           :: String -> String
+   , urlForImage         :: String -> String
    , urlForRequest       :: String
    , isStatic            :: Bool
      -- links to services and exercises
@@ -123,7 +124,8 @@ dynamicLinks :: String -> LinkManager
 dynamicLinks cgiBinary = LinkManager
    { isStatic        = False
    , urlForRequest   = prefix
-   , urlForResource  = id
+   , urlForCSS       = ("http://ideas.cs.uu.nl/css/" ++)
+   , urlForImage     = ("http://ideas.cs.uu.nl/images/" ++)
    , urlForIndex     = url $ simpleRequest "index"
    , urlForExercises = url $ simpleRequest "exerciselist"
    , urlForServices  = url $ simpleRequest "servicelist"
@@ -196,7 +198,8 @@ escapeInURL = concatMap f
 staticLinks :: LinkManager
 staticLinks = LinkManager
    { isStatic        = True
-   , urlForResource  = id
+   , urlForCSS       = id
+   , urlForImage     = id
    , urlForRequest   = ""
    , -- links to services and exercises
      urlForIndex     = "index.html"
@@ -222,7 +225,6 @@ staticLinks = LinkManager
 linksUp :: Int -> LinkManager -> LinkManager
 linksUp n lm = lm
    { isStatic        = isStatic lm
-   , urlForResource  = f1 urlForResource
      -- links to services and exercises
    , urlForIndex     = f0 urlForIndex
    , urlForExercises = f0 urlForExercises

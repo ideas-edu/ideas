@@ -66,21 +66,22 @@ submittext :: Script -> State a -> String -> (Message, State a)
 submittext script old input =
    case parser ex input of
       Left msg -> (M (Just False) (TextString msg), old)
-      Right a  -> feedbacktext script old (inContext ex a)
+      Right a  -> feedbacktext script old (inContext ex a) Nothing
  where
    ex = exercise old
 
-feedbacktext :: Script -> State a -> Context a -> (Message, State a)
-feedbacktext script old new =
+feedbacktext :: Script -> State a -> Context a -> Maybe Id -> (Message, State a)
+feedbacktext script old new ruleUsed =
    case diagnosis of
-      Buggy _ _      -> (msg False, old)
-      NotEquivalent  -> (msg False, old)
-      Expected _ s _ -> (msg True, s)
-      Similar _ s    -> (msg True, s)
-      Detour _ s _ _ -> (msg True, s)
-      Correct _ s    -> (msg False, s)
+      Buggy _ _       -> (msg False, old)
+      NotEquivalent   -> (msg False, old)
+      Expected _ s _  -> (msg True, s)
+      WrongRule _ s _ -> (msg True, s)
+      Similar _ s     -> (msg True, s)
+      Detour _ s _ _  -> (msg True, s)
+      Correct _ s     -> (msg False, s)
  where
-   diagnosis = diagnose old new Nothing
+   diagnosis = diagnose old new ruleUsed
    output    = feedbackDiagnosis diagnosis env script
    msg b     = M (Just b) output
    ex  = exercise old

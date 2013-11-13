@@ -479,6 +479,9 @@ htmlDiagnosis = encoderFor $ \diagnosis ->
          spanClass "error" $ string "Not equivalent"
       Similar _ s ->
          h2 "Similar term" <> encodeState // s
+      WrongRule _ s mr -> 
+         h2 ("WrongRule " ++ maybe "" showId mr)
+         <> encodeState // s
       Expected _ s r ->
          h2 ("Expected (" ++ show r ++ ")")
          <> encodeState // s

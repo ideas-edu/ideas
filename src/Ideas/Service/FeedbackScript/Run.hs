@@ -91,9 +91,11 @@ eval env script = either (return . findIdRef) evalText
    evalBool (CondNot c)      = not (evalBool c)
    evalBool (CondConst b)    = b
    evalBool (CondRef a)
-      | a == oldreadyId    = oldReady env
-      | a == hasexpectedId = isJust (expected env)
-      | otherwise          = False
+      | a == oldreadyId        = oldReady env
+      | a == hasexpectedId     = isJust (expected env)
+      | a == hasrecognizedId   = isJust (recognized env)
+      | a == recognizedbuggyId = maybe False isBuggy (recognized env)
+      | otherwise              = False
 
    namespaces = nub $ mempty : [ a | NameSpace as <- scriptDecls script, a <- as ]
 
@@ -120,12 +122,13 @@ eval env script = either (return . findIdRef) evalText
 feedbackDiagnosis :: Diagnosis a -> Environment a -> Script -> Text
 feedbackDiagnosis diagnosis env =
    case diagnosis of
-      Buggy _ r      -> makeWrong "buggy"   env {recognized = Just r}
-      NotEquivalent  -> makeWrong "noteq"   env
-      Expected _ _ r -> makeOk    "ok"      env {recognized = Just r}
-      Similar _ _    -> makeOk    "same"    env
-      Detour _ _ _ r -> makeOk    "detour"  env {recognized = Just r}
-      Correct _ _    -> makeOk    "unknown" env
+      Buggy _ r        -> makeWrong "buggy"     env {recognized = Just r}
+      NotEquivalent    -> makeWrong "noteq"     env
+      Expected _ _ r   -> makeOk    "ok"        env {recognized = Just r}
+      WrongRule _ _ mr -> makeWrong "wrongrule" env {recognized = mr}
+      Similar _ _      -> makeOk    "same"      env
+      Detour _ _ _ r   -> makeOk    "detour"    env {recognized = Just r}
+      Correct _ _      -> makeOk    "unknown"   env
  where
    makeOk    = makeDefault "Well done!"
    makeWrong = makeDefault "This is incorrect."
@@ -153,14 +156,14 @@ make feedbackId env script = toText env script (TextRef feedbackId)
 
 feedbackIds :: [Id]
 feedbackIds = map newId
-   ["same", "noteq", "unknown", "ok", "buggy", "detour", "hint", "step", "label"]
+   ["same", "noteq", "unknown", "ok", "buggy", "detour", "wrongrule", "hint", "step", "label"]
 
 attributeIds :: [Id]
 attributeIds =
    [expectedId, recognizedId, diffbeforeId, diffafterId, beforeId, afterId, afterTextId]
 
 conditionIds :: [Id]
-conditionIds = [oldreadyId, hasexpectedId]
+conditionIds = [oldreadyId, hasexpectedId, hasrecognizedId, recognizedbuggyId]
 
 expectedId, recognizedId, diffbeforeId, diffafterId, beforeId, afterId, afterTextId :: Id
 expectedId   = newId "expected"
@@ -171,6 +174,8 @@ beforeId     = newId "before"
 afterId      = newId "after"
 afterTextId  = newId "aftertext"
 
-oldreadyId, hasexpectedId :: Id
-oldreadyId    = newId "oldready"
-hasexpectedId = newId "hasexpected"
+oldreadyId, hasexpectedId, hasrecognizedId, recognizedbuggyId :: Id
+oldreadyId        = newId "oldready"
+hasexpectedId     = newId "hasexpected"
+hasrecognizedId   = newId "hasrecognized"
+recognizedbuggyId = newId "recognizedbuggy"

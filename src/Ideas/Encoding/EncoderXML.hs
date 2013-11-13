@@ -199,6 +199,9 @@ encodeDiagnosis = encoderFor $ \diagnosis ->
          return (emptyTag "notequiv")
       Similar b st -> element "similar"
          ["ready" .=. showBool b, encodeState // st]
+      WrongRule b st mr -> element "wrongrule" $
+         [ "ready" .=. showBool b, encodeState // st ] ++
+         maybe [] (\r -> ["ruleid" .=. showId r]) mr
       Expected b st r -> element "expected"
          ["ready" .=. showBool b, encodeState // st, "ruleid" .=. showId r]
       Detour b st env r -> element "detour"

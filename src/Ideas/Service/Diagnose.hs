@@ -118,7 +118,7 @@ diagnose state new ruleUsed
       [ (r, env)
       | r <- sortBy (ruleOrdering ex) (ruleset ex)
       , isBuggy r == searchForBuggy
-      , maybe True (getId r ==) searchForRule
+      , maybe True (`elem` getId r:ruleSiblings r) searchForRule
       , (_, env) <- recognizeRule ex r sub1 sub2
       ]
     where

@@ -12,7 +12,12 @@
 -- Main module for feedback services
 --
 -----------------------------------------------------------------------------
-module Ideas.Main.Default (defaultMain, newDomainReasoner) where
+module Ideas.Main.Default 
+   ( defaultMain, newDomainReasoner
+     -- extra exports
+   , Some(..), serviceList, metaServiceList, Service
+   , module Ideas.Service.DomainReasoner
+   ) where
 
 import Control.Exception
 import Control.Monad
@@ -20,7 +25,7 @@ import Data.IORef
 import Data.Maybe
 import Data.Time
 import Ideas.Common.Id
-import Ideas.Common.Utils (useFixedStdGen)
+import Ideas.Common.Utils (useFixedStdGen, Some(..))
 import Ideas.Common.Utils.TestSuite
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
@@ -29,6 +34,8 @@ import Ideas.Main.Documentation
 import Ideas.Main.LoggingDatabase
 import Ideas.Main.Options hiding (fullVersion)
 import Ideas.Service.DomainReasoner
+import Ideas.Service.ServiceList
+import Ideas.Service.Types (Service)
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.Request
 import Network.CGI

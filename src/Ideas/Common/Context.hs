@@ -80,8 +80,8 @@ instance HasEnvironment (Context a) where
    setEnvironment e c = c {getEnvironment = e}
 
 -- | Construct a context
-newContext :: Environment -> ContextNavigator a -> Context a
-newContext = C
+newContext :: ContextNavigator a -> Context a
+newContext = C mempty
 
 ----------------------------------------------------------
 -- Context navigator

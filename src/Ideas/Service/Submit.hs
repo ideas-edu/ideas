@@ -42,7 +42,7 @@ fromDiagnose diagnosis =
 --      Diagnose.IncorrectPart _ -> NotEquivalent
 
 submit :: State a -> Context a -> Result a
-submit state = fromDiagnose . diagnose state
+submit state ctx = fromDiagnose (diagnose state ctx Nothing)
 
 instance Typed a (Result a) where
    typed = Tag "Result" (Iso (f <-> g) typed)

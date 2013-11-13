@@ -79,7 +79,7 @@ checkParserPretty eq p pretty a =
 checkParserPrettyEx :: Exercise a -> Context a -> Bool
 checkParserPrettyEx ex ca =
    let f    = mapSecond make . parser ex
-       make = newContext (environment ca) . navigation ex
+       make = setEnvironment (environment cat) . newContext . navigation ex
    in checkParserPretty (similarity ex) f (prettyPrinterContext ex) ca
 
 {-

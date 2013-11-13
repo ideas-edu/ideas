@@ -120,7 +120,7 @@ decodeContext = do
    f    <- withState decodeTerm
    expr <- encoderFor (either fail return . f)
    env  <- decodeEnvironment
-   return (makeContext ex env expr)
+   return (setEnvironment env (inContext ex expr))
 
 decodeEnvironment :: XMLDecoder a Environment
 decodeEnvironment = encoderFor $ \xml ->

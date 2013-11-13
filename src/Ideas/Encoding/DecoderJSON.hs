@@ -18,7 +18,6 @@ module Ideas.Encoding.DecoderJSON
 
 import Control.Monad
 import Ideas.Common.Library hiding (exerciseId)
-import Ideas.Common.Utils (readM)
 import Ideas.Encoding.Evaluator
 import Ideas.Service.FeedbackScript.Syntax (Script)
 import Ideas.Service.State
@@ -76,6 +75,7 @@ decodeConst tp =
       Location    -> decodeLocation
       Int         -> maybeEncoder fromJSON
       Tp.String   -> maybeEncoder fromJSON
+      Id          -> decodeId
       Rule        -> decodeRule
       _           -> fail $ "No support for argument type: " ++ show tp
 
@@ -86,6 +86,12 @@ decodeRule = do
       case json of
          String s -> getRule ex (newId s)
          _        -> fail "expecting a string for rule"
+
+decodeId :: JSONDecoder a Id
+decodeId = encoderFor $ \json ->
+   case json of
+      String s -> return (newId s)
+      _        -> fail "expecting a string for id"
 
 decodeLocation :: JSONDecoder a Location
 decodeLocation = encoderFor $ \json ->
@@ -103,7 +109,7 @@ decodeState = do
             iss  <- decodePrefixes    // pref
             a    <- decodeTerm        // term
             env  <- decodeEnvironment // jsonContext
-            let ctx = makeContext ex env a
+            let ctx = setEnvironment env (inContext ex a)
             ps   <- mapM (\is -> makePrefix is (strategy ex) ctx) iss
             return $ makeState ex ps ctx
          _ -> fail $ "invalid state" ++ show json

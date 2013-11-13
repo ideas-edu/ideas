@@ -154,6 +154,8 @@ encodeDiagnosis = encoderFor $ \diagnosis ->
          make "buggy" [fromEnv env, fromRule r]
       Diagnose.Similar b st ->
          make "similar" [fromReady b, fromState st]
+      Diagnose.WrongRule b st mr -> 
+         make "wrongrule" [fromReady b, fromState st, fromMaybeRule mr]
       Diagnose.Expected b st r ->
          make "expected" [fromReady b, fromState st, fromRule r]
       Diagnose.Detour b st env r ->
@@ -162,10 +164,11 @@ encodeDiagnosis = encoderFor $ \diagnosis ->
          make "correct" [fromReady b, fromState st]
  where
    make s = liftM (\xs -> Object [(s, Array xs)]) . sequence
-   fromEnv env  = jsonEncoder // (env ::: typed)
-   fromRule r   = return (toJSON (showId r))
-   fromReady b  = return (Object [("ready", toJSON b)])
-   fromState st = jsonEncoder // (st ::: typed)
+   fromEnv env      = jsonEncoder // (env ::: typed)
+   fromRule r       = return (toJSON (showId r))
+   fromMaybeRule mr = return (maybe Null (toJSON . showId) mr)
+   fromReady b      = return (Object [("ready", toJSON b)])
+   fromState st     = jsonEncoder // (st ::: typed)
 
 {-
 encodeTree :: Tree JSON -> JSON

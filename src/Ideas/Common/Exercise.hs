@@ -27,7 +27,7 @@ module Ideas.Common.Exercise
    , Examples, Difficulty(..), readDifficulty
    , level, mapExamples, examplesContext
      -- * Context
-   , makeContext, inContext, withoutContext
+   , inContext, withoutContext
      -- * Type casting
    , useTypeable, castFrom, castTo
      -- * Exercise properties
@@ -35,7 +35,8 @@ module Ideas.Common.Exercise
      -- * Random generators
    , simpleGenerator, useGenerator, randomTerm, randomTerms
      -- * Derivations
-   , showDerivation, printDerivation, diffEnvironment
+   , showDerivation, showDerivations, printDerivation, printDerivations
+   , diffEnvironment
    ) where
 
 import Data.Char
@@ -82,7 +83,7 @@ data Exercise a =
    , prettyPrinter :: a -> String
      -- | Tests wether two expressions (with their contexts) are semantically 
      -- equivalent. Use 'withoutContext' for defining the equivalence check 
-     -- when the context is not relevant. Us
+     -- when the context is not relevant.
    , equivalence :: Context a -> Context a -> Bool
      -- | Tests wether two expressions (with their contexts) are syntactically 
      -- the same, or nearly so. Expressions that are similar must also be 
@@ -282,13 +283,9 @@ examplesContext ex = mapExamples (inContext ex) (examples ex)
 -----------------------------------------------------------------------------
 -- Context
 
--- | Puts a value into a context with a navigator and an environment.
-makeContext :: Exercise a -> Environment -> a -> Context a
-makeContext ex env = newContext env . navigation ex
-
 -- | Puts a value into a context with an empty environment.
 inContext :: Exercise a -> a -> Context a
-inContext = flip makeContext mempty
+inContext ex = newContext . navigation ex
    
 -- | Function for defining equivalence or similarity without taking
 -- the context into account.
@@ -373,35 +370,45 @@ randomTerms rng ex mdif = rec rng
 ---------------------------------------------------------------
 -- Derivations
 
--- | Shows a derivation for a given start term. The specified rule ordering
+-- | Shows the default derivation for a given start term. The specified rule ordering
 -- is used for selection.
 showDerivation :: Exercise a -> a -> String
-showDerivation ex a = show (present der) ++ extra
+showDerivation ex a = showThisDerivation (defaultDerivation ex a) ex
+
+-- | Shows all derivations for a given start term. Warning: there can be many
+-- derivations.
+showDerivations :: Exercise a -> a -> String
+showDerivations ex a = unlines 
+   [ "Derivation #" ++ show i ++ "\n" ++ showThisDerivation d ex
+   | (i, d) <- zip [1::Int ..] (allDerivations ex a)
+   ]
+
+-- | Prints the default derivation for a given start term. The specified rule ordering
+-- is used for selection.
+printDerivation :: Exercise a -> a -> IO ()
+printDerivation ex = putStrLn . showDerivation ex
+
+-- | Prints all derivations for a given start term. Warning: there can be many
+-- derivations.
+printDerivations :: Exercise a -> a -> IO ()
+printDerivations ex = putStrLn . showDerivations ex
+
+-- also pass derivation as an argument
+showThisDerivation :: Derivation (Rule b, Environment) (Context a) -> Exercise a -> String
+showThisDerivation d ex = show (present der) ++ extra
  where
-   der   = diffEnvironment defaultDerivation
+   der   = diffEnvironment d
    extra =
       case fromContext (lastTerm der) of
          Nothing               -> "<<invalid term>>"
          Just b | isReady ex b -> ""
                 | otherwise    -> "<<not ready>>"
    present = biMap (ShowString . f) (ShowString . prettyPrinterContext ex)
-   f ((r, local), global) = showId r ++ part1 ++ part2
+   f ((r, local), global) = showId r ++ part local ++ part global
     where
-      newl  = "\n      "
-      part1 = newl ++ show local
-      part2 | noBindings global = ""
-            | otherwise         = newl ++ show global
-
-   defaultDerivation =
-      let ca     = inContext ex a
-          tree   = sortTree (ruleOrdering ex `on` fst) (derivationTree (strategy ex) ca)
-          single = emptyDerivation ca
-      in fromMaybe single (derivation tree)
-
--- | Prints a derivation for a given start term. The specified rule ordering
--- is used for selection.
-printDerivation :: Exercise a -> a -> IO ()
-printDerivation ex = putStrLn . showDerivation ex
+      newl = "\n      "
+      part env | noBindings env = "" 
+               | otherwise      = newl ++ show env
 
 -- | Adds the difference of the environments in a derivation to the steps. 
 -- Bindings with identifier @location@ are ignored. This utility function is
@@ -411,3 +418,14 @@ diffEnvironment = updateSteps $ \old a new ->
    let keep x = not (getId x == newId "location" || x `elem` list)
        list = bindings old
    in (a, makeEnvironment $ filter keep $ bindings new)
+
+defaultDerivation :: Exercise a -> a -> Derivation (Rule (Context a), Environment) (Context a)
+defaultDerivation ex a =
+   case allDerivations ex a of
+      []  -> emptyDerivation (inContext ex a)
+      d:_ -> d
+   
+allDerivations :: Exercise a -> a -> [Derivation (Rule (Context a), Environment) (Context a)]
+allDerivations ex =
+   derivations . sortTree (ruleOrdering ex `on` fst) 
+   . derivationTree (strategy ex) . inContext ex

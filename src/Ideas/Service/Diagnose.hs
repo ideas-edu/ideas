@@ -17,6 +17,7 @@ module Ideas.Service.Diagnose
    , difference, differenceEqual
    ) where
 
+import Control.Monad
 import Data.Function
 import Data.List (sortBy)
 import Data.Maybe
@@ -35,6 +36,7 @@ data Diagnosis a
 --   | IncorrectPart  [a]
    | NotEquivalent
    | Similar        Bool (State a)
+   | WrongRule      Bool (State a) (Maybe (Rule (Context a)))
    | Expected       Bool (State a) (Rule (Context a))
    | Detour         Bool (State a) Environment (Rule (Context a))
    | Correct        Bool (State a)
@@ -47,6 +49,8 @@ instance Show (Diagnosis a) where
 --         IncorrectPart xs -> "Incorrect parts (" ++ show (length xs) ++ " items)"
          NotEquivalent    -> "Unknown mistake"
          Similar _ _      -> "Very similar"
+         WrongRule _ _ mr -> "Wrong rule selected"  ++
+                             maybe "" (\r -> ", " ++ showId r ++ "recognized") mr
          Expected _ _ r   -> "Rule " ++ show (show r) ++ ", expected by strategy"
          Detour _ _ _ r   -> "Rule " ++ show (show r) ++ ", not following strategy"
          Correct _ _      -> "Unknown step"
@@ -61,6 +65,7 @@ newState diagnosis =
       Buggy _ _        -> Nothing
       NotEquivalent    -> Nothing
       Similar  _ s     -> Just s
+      WrongRule _ s _  -> Just s
       Expected _ s _   -> Just s
       Detour   _ s _ _ -> Just s
       Correct  _ s     -> Just s
@@ -68,14 +73,23 @@ newState diagnosis =
 ----------------------------------------------------------------
 -- The diagnose service
 
-diagnose :: State a -> Context a -> Diagnosis a
-diagnose state new
+diagnose :: State a -> Context a -> Maybe Id -> Diagnosis a
+diagnose state new ruleUsed
    -- Is the submitted term equivalent?
    | not (equivalence ex (stateContext state) new) =
         -- Is the rule used discoverable by trying all known buggy rules?
-        case discovered True of
+        case discovered True Nothing of
            Just (r, as) -> Buggy as r -- report the buggy rule
            Nothing      -> NotEquivalent -- compareParts state new
+
+   -- Is the submitted term (very) similar to the previous one?
+   | similar = Similar (ready state) state
+
+   -- Is the used rule that is submitted applied correctly?
+   | isJust ruleUsed && isNothing (discovered False ruleUsed) =
+        let mr = fmap fst $ discovered False Nothing
+                  `mplus`   discovered True  Nothing
+        in WrongRule (ready state) state mr
 
    -- Was the submitted term expected by the strategy?
    | isJust expected =
@@ -83,12 +97,9 @@ diagnose state new
         let ((r, _, _), ns) = fromJust expected
         in Expected (ready ns) ns r
 
-   -- Is the submitted term (very) similar to the previous one?
-   | similar = Similar (ready state) state
-
    -- Is the rule used discoverable by trying all known rules?
    | otherwise =
-        case discovered False of
+        case discovered False Nothing of
            Just (r, as) ->  -- If yes, report the found rule as a detour
               Detour (ready restarted) restarted as r
            Nothing -> -- If not, we give up
@@ -103,10 +114,11 @@ diagnose state new
           p (_, ns) = similarity ex new (stateContext ns) -- use rule recognizer?
       listToMaybe (filter p xs)
 
-   discovered searchForBuggy = listToMaybe
+   discovered searchForBuggy searchForRule = listToMaybe
       [ (r, env)
       | r <- sortBy (ruleOrdering ex) (ruleset ex)
       , isBuggy r == searchForBuggy
+      , maybe True (getId r ==) searchForRule
       , (_, env) <- recognizeRule ex r sub1 sub2
       ]
     where
@@ -136,7 +148,8 @@ instance Typed a (Diagnosis a) where
       f (Left (Left (as, r))) = Buggy as r
    --   f (Left (Right (Left ()))) = Missing
    --   f (Left (Right (Right (Left xs)))) = IncorrectPart xs
-      f (Left (Right ())) = NotEquivalent
+      f (Left (Right (Left ()))) = NotEquivalent
+      f (Left (Right (Right (b, s, mr)))) = WrongRule b s mr
       f (Right (Left (b, s))) = Similar b s
       f (Right (Right (Left (b, s, r)))) = Expected b s r
       f (Right (Right (Right (Left (b, s, as, r))))) = Detour b s as r
@@ -145,7 +158,8 @@ instance Typed a (Diagnosis a) where
       g (Buggy as r)       = Left (Left (as, r))
    --   g Missing            = Left (Right (Left ()))
    --   g (IncorrectPart xs) = Left (Right (Right (Left xs)))
-      g NotEquivalent      = Left (Right ())
+      g NotEquivalent      = Left (Right (Left ()))
+      g (WrongRule b s mr) = Left (Right (Right (b, s, mr)))
       g (Similar b s)      = Right (Left (b, s))
       g (Expected b s r)   = Right (Right (Left (b, s, r)))
       g (Detour b s as r)  = Right (Right (Right (Left (b, s, as, r))))

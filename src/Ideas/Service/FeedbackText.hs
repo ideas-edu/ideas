@@ -80,7 +80,7 @@ feedbacktext script old new =
       Detour _ s _ _ -> (msg True, s)
       Correct _ s    -> (msg False, s)
  where
-   diagnosis = diagnose old new
+   diagnosis = diagnose old new Nothing
    output    = feedbackDiagnosis diagnosis env script
    msg b     = M (Just b) output
    ex  = exercise old

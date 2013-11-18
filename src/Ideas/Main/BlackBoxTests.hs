@@ -48,11 +48,13 @@ doBlackBoxTest dr format path =
       -- Comparing output with expected output
       useFixedStdGen -- fix the random number generator
       withFile path ReadMode $ \h1 -> do
+         hSetBinaryMode h1 True
          txt <- hGetContents h1
          out  <- case format of
                     JSON -> liftM snd3 (processJSON False dr txt)
                     XML  -> liftM snd3 (processXML dr Nothing txt)
          withFile expPath ReadMode $ \h2 -> do
+            hSetBinaryMode h2 True
             expt <- hGetContents h2
             -- Force evaluation of the result, to make sure that
             -- all file handles are closed afterwards.

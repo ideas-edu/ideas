@@ -21,7 +21,6 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, (:=))
-import Ideas.Common.Utils (readM)
 import Ideas.Encoding.Evaluator
 import Ideas.Encoding.OpenMathSupport
 import Ideas.Service.FeedbackScript.Syntax (Script)

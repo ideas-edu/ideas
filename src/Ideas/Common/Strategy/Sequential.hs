@@ -10,9 +10,7 @@ module Ideas.Common.Strategy.Sequential
    , uniquePath, tidyProcess
    ) where
    
-import Data.List
 import Ideas.Common.Strategy.Path
-import Test.QuickCheck hiding (replay)
 
 class Sequential f where
    ok, stop :: f a
@@ -134,10 +132,11 @@ firsts = ($ []) . rec
    rec Ok        = id
    rec Stop      = id
 
+{-
 run :: Process a -> [[a]]
 run p = 
    [ [] | empty p ] ++
-   [ a:as | (a, q) <- firsts p, as <- run q ]
+   [ a:as | (a, q) <- firsts p, as <- run q ] -}
 
 scanChoice :: (a -> b -> [(a, c)]) -> a -> Process b -> Process c
 scanChoice f = rec
@@ -201,20 +200,19 @@ p <@> q = useFirst (\a r -> a ~> (q <@> r)) bothOk p
    bothOk = useFirst (\_ _ -> stop) ok q
 
 --------------------------------
-
+{-
 abc, de :: Process  Char
 abc = 'a' :~> 'b' :~> 'c' :~> ok
 de  = 'd' :~> 'e' :~> ok
 
-{-
-go = run (concurrent undefined undefined abc de) -}
+go = run (concurrent undefined undefined abc de)
 
 indep :: Char -> Char -> Bool
 indep x y = x `elem` "abc" && y `elem` "def"
 
 (%) :: Sequential f => Process a -> Process a -> f a
 (%) = concurrent (const True)
-
+-}
 withPath :: Process a -> Process (a, Path)
 withPath = rec emptyPath
  where
@@ -255,7 +253,7 @@ idAlg = Alg
    }
 
 tidyProcess :: (a -> a -> Bool) -> (a -> Bool) -> Process a -> Process a
-tidyProcess eq pred = step2 . step1
+tidyProcess eq cond = step2 . step1
   where
     step1 = fold idAlg { forChoice = rmChoiceUnitZero
                        , forPrefix = rmPrefix
@@ -271,7 +269,7 @@ tidyProcess eq pred = step2 . step1
           (_, Ok)   -> ok
           _         -> p <|> q
 
-    rmPrefix a p | pred a    = p
+    rmPrefix a p | cond a    = p
                  | otherwise = a ~> p
 
     rmSameChoice p q = if cmpProcesses eq p q 
@@ -293,22 +291,23 @@ cmpProcesses f = rec
 --   intermediate states can only be reached by one path. A prerequisite is that
 --   symbols are unique (or only used once).
 uniquePath :: (a -> Bool) -> (a -> a -> Bool) -> Process a -> Process a
-uniquePath pred eq = rec
+uniquePath cond eq = rec
     where
-      rec (p :|: q) = let f x = not $ any (eq x) (map fst $ firstsWith pred p)
+      rec (p :|: q) = let f x = not $ any (eq x) (map fst $ firstsWith cond p)
                       in  rec p <|> rec (filterP f q)
       rec (p :?: q) = rec p :?: rec q
       rec (a :~> p) = a :~> rec p
       rec Ok        = Ok
       rec Stop      = Stop
 
+{-
 prefixes :: Process a -> [[a]]
 prefixes p = concatMap (\(a, q) -> [a] : (map (a:) $ prefixes q)) $ firsts p
 
 --uniquePath_prop :: Eq a => Process a -> Property
 uniquePath_prop pred eq = unique_prop . prefixes . uniquePath pred eq
   where
-    unique_prop xs = forAll (elements xs) $ \x -> filter (== x) xs == [x]
+    unique_prop xs = forAll (elements xs) $ \x -> filter (== x) xs == [x] -}
 
 -- | This functions returns the first symbols that hold for predicate p
 firstsWith :: (a -> Bool) -> Process a -> [(a, Process a)]

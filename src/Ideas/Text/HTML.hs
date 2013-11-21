@@ -150,7 +150,7 @@ spanClass n a = tag "span" (classA n <> a)
 -- A simple XML highlighter
 highlightXML :: Bool -> XML -> HTMLBuilder
 highlightXML nice
-   | nice      = builder . highlight . makeXML "pre" . string . showXML
+   | nice      = builder . highlight . makeXML "pre" . string . show
    | otherwise = builder . highlight . makeXML "tt"  . string . compactXML
  where
    highlight :: XML -> XML

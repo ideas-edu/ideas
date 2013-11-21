@@ -17,7 +17,10 @@ module Ideas.Text.XML.Document
    , ContentSpec(..), CP(..), AttType(..), DefaultDecl(..), AttDef
    , EntityDef, AttValue, EntityValue, ExternalID(..), PublicID
    , Conditional(..), TextDecl, External
+   , prettyXML, prettyElement
    ) where
+
+import Text.PrettyPrint.Leijen
 
 type Name = String
 
@@ -84,36 +87,58 @@ type TextDecl = (Maybe String, String)
 
 type External = (Maybe TextDecl, Content)
 
----
+------------------------------------------------------------------
+-- Showing
+
+instance Show Attribute where show = show . pretty
+instance Show Reference where show = show . pretty
+instance Show Parameter where show = show . pretty
+instance Show XML       where show = show . pretty
+instance Show Element   where show = show . pretty
+
+------------------------------------------------------------------
+-- Pretty printing
+
+instance Pretty Attribute  where
+   pretty (n := v) = text n <> char '=' <> prettyAttValue v
+
+instance Pretty Reference where
+   pretty ref =
+      case ref of
+         CharRef n   -> text "&#" <> int n <> char ';'
+         EntityRef s -> char '&' <> text s <> char ';'
+
+instance Pretty Parameter where
+   pretty (Parameter s) = text "%" <> text s <> text ";"
+
+instance Pretty XML where
+   pretty = prettyXML False
+
+instance Pretty Element where
+   pretty = prettyElement False
+
+prettyXML :: Bool -> XML -> Doc
+prettyXML compact xml =
+   case xml of
+      Tagged e    -> prettyElement compact e
+      CharData s  -> text s
+      CDATA s     -> text "<![CDATA[" <> text s <> text "]]>"
+      Reference r -> pretty r
+
+prettyElement :: Bool -> Element -> Doc
+prettyElement compact (Element n as c)
+   | null c    = openCloseTag n as
+   | compact   = make (<>)
+   | otherwise = make (<$>)
+ where
+   make op = let body = foldr1 op (map (prettyXML compact) c)
+             in openTag n as `op` indent 2 body `op` closeTag n
+
+
 {-
 instance Show XMLDoc where
    show doc = showXMLDecl doc ++ maybe "" show (dtd doc) ++ show (root doc)
--}
-instance Show Attribute where
-   show (n := v) = n ++ "=" ++ showAttValue v
 
-instance Show Element where
-   show (Element n as c)
-      | null c    = showOpenTag True n as
-      | otherwise = showOpenTag False n as ++ concatMap show c ++ showCloseTag n
-
-instance Show XML where
-   show xml =
-      case xml of
-         Tagged e    -> show e
-         CharData s  -> s
-         CDATA s     -> "<![CDATA[" ++ s ++ "]]>"
-         Reference r -> show r
-
-instance Show Reference where
-   show ref =
-      case ref of
-         CharRef n   -> "&#" ++ show n ++ ";"
-         EntityRef s -> "&" ++ s ++ ";"
-
-instance Show Parameter where
-   show (Parameter s) = "%" ++ s ++ ";"
-{-
 instance Show DTD where
    show (DTD n mid ds) = "<!DOCTYPE " ++ unwords list ++ ">"
     where
@@ -199,18 +224,23 @@ showXMLDecl doc
    s2 = fmap (\s -> "encoding=" ++ doubleQuote s) (encoding doc)
    s3 = fmap (\b -> "standalone=" ++ doubleQuote (if b then "yes" else "no")) (standalone doc)
 -}
-showOpenTag :: Bool -> Name -> Attributes -> String
-showOpenTag close n as = "<" ++ unwords (n:map show as) ++
-   (if close then "/>" else ">")
+openTag :: Name -> Attributes -> Doc
+openTag = prettyTag (char '<') (char '>')
 
-showCloseTag :: Name -> String
-showCloseTag n = "</" ++ n ++ ">"
+openCloseTag :: Name -> Attributes -> Doc
+openCloseTag = prettyTag (char '<') (text "/>")
 
-showAttValue :: AttValue -> String -- TODO: no double quotes allowed (should be escaped)
-showAttValue = doubleQuote . concatMap (either f show)
+closeTag :: Name -> Doc
+closeTag n = prettyTag (text "</") (char '>') n []
+
+prettyTag :: Doc -> Doc -> Name -> Attributes -> Doc
+prettyTag open close n as = open <> hsep (text n:map pretty as) <> close
+
+prettyAttValue :: AttValue -> Doc -- TODO: no double quotes allowed (should be escaped)
+prettyAttValue = dquotes . hcat . map (either f pretty)
  where
-   f '"' = []
-   f c   = [c]
+   f '"' = empty
+   f c   = char c
 {-
 showEntityValue :: EntityValue -> String
 showEntityValue = doubleQuote . concatMap (either f (either show show))
@@ -226,9 +256,6 @@ showEntityDef entityDef =
    case entityDef of
       Left ev -> showEntityValue ev
       Right (eid, ms) -> show eid ++ maybe "" (" NDATA "++) ms
--}
-doubleQuote :: String -> String
-doubleQuote s = "\"" ++ s ++ "\""
-{-
+
 parenthesize :: String -> String
 parenthesize s = "(" ++ s ++ ")" -}

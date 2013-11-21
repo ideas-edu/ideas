@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Ideas.Text.XML.Interface
    ( Element(..), Content, Attribute(..), Attributes
-   , normalize, parseXML
+   , normalize, parseXML, compactXML
    , children, findAttribute, findChild, getData
    ) where
 
@@ -21,7 +21,7 @@ import Control.Arrow
 import Data.Char (chr, ord)
 import Data.Maybe
 import Ideas.Text.Parsing (parseSimple)
-import Ideas.Text.XML.Document (Name)
+import Ideas.Text.XML.Document (Name, prettyElement)
 import Ideas.Text.XML.Parser (document)
 import Ideas.Text.XML.Unicode (decoding)
 import qualified Ideas.Text.XML.Document as D
@@ -34,6 +34,9 @@ data Element = Element
 
 instance Show Element where
    show = show . extend
+
+compactXML :: Element -> String
+compactXML = show . prettyElement True . extend
 
 type Content = [Either String Element]
 

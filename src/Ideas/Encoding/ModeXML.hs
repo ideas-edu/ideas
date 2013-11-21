@@ -15,7 +15,6 @@ module Ideas.Encoding.ModeXML (processXML) where
 
 import Control.Monad
 import Control.Monad.Error
-import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Common.Utils (Some(..), timedSeconds)
 import Ideas.Encoding.DecoderXML
@@ -44,8 +43,7 @@ processXML dr cgiBin input = do
       Just HTMLEncoding ->
          return (req, show resp, "text/html")
       _ -> let out = addVersion (version dr) resp
-               f   = if isNothing cgiBin then showXML else show
-           in return (req, f out, "application/xml")
+           in return (req, show out, "application/xml")
 
 addVersion :: String -> XML -> XML
 addVersion s xml =

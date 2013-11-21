@@ -15,7 +15,7 @@
 module Ideas.Text.XML
    ( XML, Attr, AttrList, Element(..), InXML(..)
    , XMLBuilder, makeXML
-   , parseXML, showXML, compactXML, findAttribute
+   , parseXML, compactXML, findAttribute
    , children, Attribute(..), fromBuilder, findChild, getData
    , BuildXML(..)
    , module Data.Monoid, munless, mwhen
@@ -60,23 +60,6 @@ ignoreLayout :: XML -> XML
 ignoreLayout (Element n as xs) =
    let f = either (Left . trim) (Right . ignoreLayout)
    in Element n as (map f xs)
-
-indentXML :: XML -> XML
-indentXML = rec 0
- where
-   rec i (Element n as xs) =
-      let ipl  = i+2
-          cd j = Left ('\n' : replicate j ' ')
-          f    = either (\x -> [cd ipl, Left x]) (\x -> [cd ipl, Right (rec ipl x)])
-          body | null xs   = xs
-               | otherwise = concatMap f xs ++ [cd i]
-      in Element n as body
-
-showXML :: XML -> String
-showXML = (++"\n") . show . indentXML . ignoreLayout
-
-compactXML :: XML -> String
-compactXML = show . ignoreLayout
 
 ----------------------------------------------------------------
 -- XML builders

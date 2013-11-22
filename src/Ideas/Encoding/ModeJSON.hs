@@ -31,7 +31,7 @@ processJSON maxTime cgiMode dr input = do
    req  <- jsonRequest json
    resp <- jsonRPC json $ \fun arg -> 
               maybe id timedSeconds maxTime (myHandler dr fun arg)
-   let f   = if cgiMode then showCompact else showPretty
+   let f   = if cgiMode then compactJSON else show
        out = addVersion (version dr) (toJSON resp)
    return (req, f out, "application/json")
 

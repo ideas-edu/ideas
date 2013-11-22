@@ -16,17 +16,18 @@ module Ideas.Text.JSON
    ( JSON(..), Key, Number(..)            -- types
    , InJSON(..)                           -- type class"
    , lookupM
-   , parseJSON, showCompact, showPretty   -- parser and pretty-printers
+   , parseJSON, compactJSON               -- parser and pretty-printers
    , jsonRPC, RPCHandler, propEncoding
    ) where
 
 import Control.Exception
 import Control.Monad.Error
-import Data.List (intercalate)
+import Data.List (intersperse)
 import Data.Maybe
-import Ideas.Text.Parsing
+import Ideas.Text.Parsing hiding (string, char)
 import System.IO.Error
 import Test.QuickCheck
+import Text.PrettyPrint.Leijen hiding ((<$>))
 import qualified Ideas.Text.UTF8 as UTF8
 import qualified Text.ParserCombinators.Parsec.Token as P
 
@@ -43,19 +44,41 @@ type Key = String
 
 data Number = I Integer | D Double deriving Eq
 
+instance Show Number where
+   show (I n) = show n
+   show (D d) = show d
+   
 instance Show JSON where
-   show = showPretty
+   show = show . prettyJSON False
 
-showCompact :: JSON -> String
-showCompact json =
-   case json of
-      Number n  -> show n
-      String s  -> "\"" ++ escape s ++ "\""
-      Boolean b -> if b then "true" else "false"
-      Array xs  -> squareBrackets $ intercalate ", " $ map showCompact xs
-      Object xs -> let f (k, v) = show k ++ ": " ++ showCompact v
-                   in curlyBrackets  $ intercalate ", " $ map f xs
-      Null      -> "null"
+compactJSON :: JSON -> String
+compactJSON = show . prettyJSON True
+
+prettyJSON :: Bool -> JSON -> Doc
+prettyJSON compact = rec 
+ where
+   rec json = 
+      case json of
+         Number n  -> text (show n)
+         String s  -> dquotes (text (escape s))
+         Boolean b -> text (if b then "true" else "false")
+         Null      -> text "null"
+         Array xs  -> make lbracket rbracket (map rec xs)
+         Object xs -> make lbrace rbrace (map (uncurry (<:>)) xs)
+
+   x <:> y | compact    = text x <> char ':' <> rec y
+           | isSimple y = text x <> string ": " <> rec y
+           | otherwise  = align (text x <> char ':' <> line <> indent 2 (rec y))
+
+   make open close xs
+      | compact || length xs < 2 = 
+           brackets (hcat (intersperse comma xs))
+      | otherwise = 
+           align (vsep (zipWith (<+>) (open:repeat comma) xs ++ [close]))
+
+   isSimple (Array xs)  = null xs
+   isSimple (Object xs) = null xs
+   isSimple _           = True
 
 -- Escape double quote and backslash, and convert to UTF8 encoding
 escape :: String -> String
@@ -65,26 +88,6 @@ escape = concatMap f . fromMaybe "invalid UTF8 string" . UTF8.encodeM
    f '"'  = "\\\""
    f '\\' = "\\\\"
    f c    = [c]
-
-showPretty :: JSON -> String
-showPretty json =
-   case json of
-      Array xs  -> squareBrackets $ '\n' : indent 3 (commas (map showPretty xs))
-      Object xs -> let f (k, v) = show k ++ ": " ++ showPretty v
-                   in curlyBrackets $ '\n' : indent 3 (commas (map f xs))
-      _         -> showCompact json
- where
-   commas []     = []
-   commas [x]    = x
-   commas (x:xs) = x ++ ",\n" ++ commas xs
-
-squareBrackets, curlyBrackets :: String -> String
-squareBrackets s = "[" ++ s ++ "]"
-curlyBrackets  s = "{" ++ s ++ "}"
-
-instance Show Number where
-   show (I n) = show n
-   show (D d) = show d
 
 class InJSON a where
    toJSON       :: a -> JSON
@@ -235,9 +238,6 @@ errorResponse x y = Response
 lookupM :: Monad m => String -> JSON -> m JSON
 lookupM x (Object xs) = maybe (fail $ "field " ++ x ++ " not found") return (lookup x xs)
 lookupM _ _ = fail "expecting a JSON object"
-
-indent :: Int -> String -> String
-indent n = unlines . map (replicate n ' ' ++) . lines
 
 --------------------------------------------------------
 -- JSON-RPC over HTTP

@@ -33,11 +33,11 @@ import Ideas.Text.XML
 import System.IO.Error
 import System.Random (StdGen, newStdGen)
 
-processXML :: DomainReasoner -> Maybe String -> String -> IO (Request, String, String)
-processXML dr cgiBin input = do
+processXML :: Maybe Int -> DomainReasoner -> Maybe String -> String -> IO (Request, String, String)
+processXML maxTime dr cgiBin input = do
    xml  <- either fail return (parseXML input)
    req  <- either fail return (xmlRequest xml)
-   resp <- timedSeconds 5 (xmlReply dr cgiBin req xml)
+   resp <- maybe id timedSeconds maxTime (xmlReply dr cgiBin req xml)
     `catchError` (return . resultError . ioeGetErrorString)
    case encoding req of
       Just HTMLEncoding ->

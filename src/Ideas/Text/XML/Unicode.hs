@@ -16,6 +16,7 @@ module Ideas.Text.XML.Unicode
    , decoding
    ) where
 
+import Control.Arrow
 import Data.Char (chr, ord)
 import Data.List
 import qualified Ideas.Text.UTF8 as UTF8
@@ -40,7 +41,7 @@ f :: Char -> (Char, Char)
 f c = (c, c)
 
 intpairs :: [(Char, Char)] -> [(Int, Int)]
-intpairs = map (\(x, y) -> (ord x, ord y))
+intpairs = map (ord *** ord)
 
 letterMap :: [(Int, Int)]
 letterMap = baseCharMap `merge` ideographicMap -- `merge` controlMap `merge` extraMap

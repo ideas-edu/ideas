@@ -19,6 +19,7 @@ module Ideas.Common.Strategy.Core
    , noLabels, substCoreVar
    ) where
 
+import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Rule
 import Ideas.Common.Utils.QuickCheck
@@ -135,7 +136,7 @@ coreFix f = -- disadvantage: function f is applied twice
 coreSubstAll :: GCore l a -> GCore l a
 coreSubstAll = rec []
  where
-   rec xs (Var i)   = maybe (error "coreInf") id (lookup i xs)
+   rec xs (Var i)   = fromMaybe (error "coreInf") (lookup i xs)
    rec xs (Rec i a) = let this = rec ((i, this) : xs) a
                       in this
    rec xs core      = descend (rec xs) core 

@@ -115,7 +115,7 @@ decodeState = do
          _ -> fail $ "invalid state" ++ show json
 
 decodePrefixes :: JSONDecoder a [Path]
-decodePrefixes = do
+decodePrefixes =
    encoderFor $ \json ->
       case json of
          String p -> mapM readM (deintercalate p)

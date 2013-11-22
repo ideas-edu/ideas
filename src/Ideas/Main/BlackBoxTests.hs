@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Ideas.Main.BlackBoxTests (blackBoxTests) where
 
+import Control.Exception
 import Control.Monad
 import Data.List
 import Ideas.Common.Utils (useFixedStdGen, snd3)
@@ -51,15 +52,14 @@ doBlackBoxTest dr format path =
          hSetBinaryMode h1 True
          txt <- hGetContents h1
          out  <- case format of
-                    JSON -> liftM snd3 (processJSON False dr txt)
-                    XML  -> liftM snd3 (processXML dr Nothing txt)
+                    JSON -> liftM snd3 (processJSON Nothing False dr txt)
+                    XML  -> liftM snd3 (processXML Nothing dr Nothing txt)
          withFile expPath ReadMode $ \h2 -> do
             hSetBinaryMode h2 True
             expt <- hGetContents h2
             -- Force evaluation of the result, to make sure that
             -- all file handles are closed afterwards.
-            let result = out ~= expt
-            result `seq` return result
+            evaluate (out ~= expt)
  where
    expPath = baseOf path ++ ".exp"
    baseOf  = reverse . drop 1 . dropWhile (/= '.') . reverse

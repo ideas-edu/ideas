@@ -25,11 +25,12 @@ import Ideas.Service.Request
 import Ideas.Text.JSON
 import System.Random hiding (getStdGen)
 
-processJSON :: Bool -> DomainReasoner -> String -> IO (Request, String, String)
-processJSON cgiMode dr input = do
+processJSON :: Maybe Int -> Bool -> DomainReasoner -> String -> IO (Request, String, String)
+processJSON maxTime cgiMode dr input = do
    json <- either fail return (parseJSON input)
    req  <- jsonRequest json
-   resp <- jsonRPC json (myHandler dr)
+   resp <- jsonRPC json $ \fun arg -> 
+              maybe id timedSeconds maxTime (myHandler dr fun arg)
    let f   = if cgiMode then showCompact else showPretty
        out = addVersion (version dr) (toJSON resp)
    return (req, f out, "application/json")
@@ -78,7 +79,7 @@ jsonRequest json = do
       }
 
 myHandler :: DomainReasoner -> RPCHandler IO
-myHandler dr fun arg = timedSeconds 5 $ do
+myHandler dr fun arg = do
    srv <- findService dr (newId fun)
    Some ex <-
       if fun == "exerciselist"

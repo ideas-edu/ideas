@@ -39,7 +39,7 @@ import Ideas.Service.Types (Service)
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.Request
 import Network.CGI
-import Prelude
+import Prelude hiding (catch)
 import System.IO
 import System.IO.Error (ioeGetErrorString)
 import qualified Ideas.Main.Options as Options

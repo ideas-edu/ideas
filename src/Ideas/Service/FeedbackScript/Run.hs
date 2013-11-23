@@ -123,15 +123,17 @@ feedbackDiagnosis :: Diagnosis a -> Environment a -> Script -> Text
 feedbackDiagnosis diagnosis env =
    case diagnosis of
       Buggy _ r        -> makeWrong "buggy"     env {recognized = Just r}
-      NotEquivalent    -> makeWrong "noteq"     env
+      NotEquivalent s  -> makeNotEq s "noteq" env
       Expected _ _ r   -> makeOk    "ok"        env {recognized = Just r}
       WrongRule _ _ mr -> makeWrong "wrongrule" env {recognized = mr}
       Similar _ _      -> makeOk    "same"      env
       Detour _ _ _ r   -> makeOk    "detour"    env {recognized = Just r}
       Correct _ _      -> makeOk    "unknown"   env
+      Unknown _ _      -> makeOk    "unknown"   env
  where
    makeOk    = makeDefault "Well done!"
    makeWrong = makeDefault "This is incorrect."
+   makeNotEq s = if null s then makeWrong else makeDefault s
    makeDefault dt s e = fromMaybe (TextString dt) . make (newId s) e
 
 feedbackHint :: Id -> Environment a -> Script -> Text

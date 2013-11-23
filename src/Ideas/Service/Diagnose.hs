@@ -34,20 +34,23 @@ data Diagnosis a
    = Buggy          Environment (Rule (Context a))
 --   | Missing
 --   | IncorrectPart  [a]
-   | NotEquivalent
+   | NotEquivalent  String
    | Similar        Bool (State a)
    | WrongRule      Bool (State a) (Maybe (Rule (Context a)))
    | Expected       Bool (State a) (Rule (Context a))
    | Detour         Bool (State a) Environment (Rule (Context a))
    | Correct        Bool (State a)
+   | Unknown        Bool (State a)  -- Added for the FP domain, to indicate that no
+                                    -- diagnose is possible (i.e., QC gave up)
 
 instance Show (Diagnosis a) where
    show diagnosis =
       case diagnosis of
-         Buggy as r        -> "Buggy rule " ++ show (show r) ++ showArgs as
+         Buggy as r       -> "Buggy rule " ++ show (show r) ++ showArgs as
+         Unknown _ _      -> "Unknown step"
 --         Missing          -> "Missing solutions"
 --         IncorrectPart xs -> "Incorrect parts (" ++ show (length xs) ++ " items)"
-         NotEquivalent    -> "Unknown mistake"
+         NotEquivalent s  -> if null s then "Unknown mistake" else s
          Similar _ _      -> "Very similar"
          WrongRule _ _ mr -> "Wrong rule selected"  ++
                              maybe "" (\r -> ", " ++ showId r ++ "recognized") mr
@@ -63,12 +66,13 @@ newState :: Diagnosis a -> Maybe (State a)
 newState diagnosis =
    case diagnosis of
       Buggy _ _        -> Nothing
-      NotEquivalent    -> Nothing
+      NotEquivalent _  -> Nothing
       Similar  _ s     -> Just s
       WrongRule _ s _  -> Just s
       Expected _ s _   -> Just s
       Detour   _ s _ _ -> Just s
       Correct  _ s     -> Just s
+      Unknown  _ s     -> Just s
 
 ----------------------------------------------------------------
 -- The diagnose service
@@ -80,7 +84,7 @@ diagnose state new ruleUsed
         -- Is the rule used discoverable by trying all known buggy rules?
         case discovered True Nothing of
            Just (r, as) -> Buggy as r -- report the buggy rule
-           Nothing      -> NotEquivalent -- compareParts state new
+           Nothing      -> NotEquivalent "" -- compareParts state new
 
    -- Is the used rule that is submitted applied correctly?
    | isJust ruleUsed && isNothing (discovered False ruleUsed) =
@@ -150,22 +154,24 @@ instance Typed a (Diagnosis a) where
       f (Left (Left (as, r))) = Buggy as r
    --   f (Left (Right (Left ()))) = Missing
    --   f (Left (Right (Right (Left xs)))) = IncorrectPart xs
-      f (Left (Right (Left ()))) = NotEquivalent
+      f (Left (Right (Left s))) = NotEquivalent s
       f (Left (Right (Right (b, s, mr)))) = WrongRule b s mr
       f (Right (Left (b, s))) = Similar b s
       f (Right (Right (Left (b, s, r)))) = Expected b s r
       f (Right (Right (Right (Left (b, s, as, r))))) = Detour b s as r
-      f (Right (Right (Right (Right (b, s))))) = Correct b s
-
+      f (Right (Right (Right (Right (Left (b, s)))))) = Correct b s
+      f (Right (Right (Right (Right (Right (b, s)))))) = Unknown b s
+                         
       g (Buggy as r)       = Left (Left (as, r))
    --   g Missing            = Left (Right (Left ()))
    --   g (IncorrectPart xs) = Left (Right (Right (Left xs)))
-      g NotEquivalent      = Left (Right (Left ()))
+      g (NotEquivalent s)  = Left (Right (Left s))
       g (WrongRule b s mr) = Left (Right (Right (b, s, mr)))
       g (Similar b s)      = Right (Left (b, s))
       g (Expected b s r)   = Right (Right (Left (b, s, r)))
       g (Detour b s as r)  = Right (Right (Right (Left (b, s, as, r))))
-      g (Correct b s)      = Right (Right (Right (Right (b, s))))
+      g (Correct b s)      = Right (Right (Right (Right (Left (b, s)))))
+      g (Unknown b s)      = Right (Right (Right (Right (Right (b, s)))))
 
 difference :: Exercise a -> a -> a -> Maybe (a, a)
 difference ex a b = do

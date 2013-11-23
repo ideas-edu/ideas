@@ -195,8 +195,9 @@ encodeDiagnosis = encoderFor $ \diagnosis ->
    case diagnosis of
       Buggy env r -> element "buggy"
          [encodeEnvironment // env, "ruleid" .=. showId r]
-      NotEquivalent ->
-         return (emptyTag "notequiv")
+      NotEquivalent s ->
+          if null s then return (emptyTag "notequiv")
+                    else element "notequiv" [ "reason" .=.  s ]
       Similar b st -> element "similar"
          ["ready" .=. showBool b, encodeState // st]
       WrongRule b st mr -> element "wrongrule" $
@@ -209,6 +210,8 @@ encodeDiagnosis = encoderFor $ \diagnosis ->
          , encodeEnvironment // env, "ruleid" .=. showId r
          ]
       Correct b st -> element "correct"
+         ["ready" .=. showBool b, encodeState // st]
+      Unknown b st -> element "unknown"
          ["ready" .=. showBool b, encodeState // st]
 
 encodeDecompositionReply :: XMLEncoder a (PD.Reply a)

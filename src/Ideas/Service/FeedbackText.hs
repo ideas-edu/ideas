@@ -74,12 +74,13 @@ feedbacktext :: Script -> State a -> Context a -> Maybe Id -> (Message, State a)
 feedbacktext script old new ruleUsed =
    case diagnosis of
       Buggy _ _       -> (msg False, old)
-      NotEquivalent   -> (msg False, old)
+      NotEquivalent _ -> (msg False, old)
       Expected _ s _  -> (msg True, s)
       WrongRule _ s _ -> (msg True, s)
       Similar _ s     -> (msg True, s)
       Detour _ s _ _  -> (msg True, s)
       Correct _ s     -> (msg False, s)
+      Unknown _ s     -> (msg False, s)
  where
    diagnosis = diagnose old new ruleUsed
    output    = feedbackDiagnosis diagnosis env script

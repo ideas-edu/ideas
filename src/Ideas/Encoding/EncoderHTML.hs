@@ -472,8 +472,8 @@ htmlDiagnosis = encoderFor $ \diagnosis ->
    case diagnosis of
       Buggy _ r ->
          spanClass "error" $ string $ "Not equivalent: buggy rule " ++ show r
-      NotEquivalent ->
-         spanClass "error" $ string "Not equivalent"
+      NotEquivalent s ->
+         spanClass "error" $ string $ if null s then "Not equivalent" else s
       Similar _ s ->
          h2 "Similar term" <> encodeState // s
       WrongRule _ s mr -> 
@@ -487,6 +487,8 @@ htmlDiagnosis = encoderFor $ \diagnosis ->
          <> encodeState // s
       Correct _ s ->
          h2 "Correct" <> encodeState // s
+      Unknown _ s ->
+         h2 "Unknown" <> encodeState // s
 
 htmlDescription :: HasId a => a -> HTMLBuilder
 htmlDescription a = munless (null (description a)) $

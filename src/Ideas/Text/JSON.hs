@@ -60,19 +60,21 @@ prettyJSON compact = rec
    rec json = 
       case json of
          Number n  -> text (show n)
-         String s  -> dquotes (text (escape s))
+         String s  -> str (escape s)
          Boolean b -> text (if b then "true" else "false")
          Null      -> text "null"
          Array xs  -> make lbracket rbracket (map rec xs)
          Object xs -> make lbrace rbrace (map (uncurry (<:>)) xs)
 
-   x <:> y | compact    = text x <> char ':' <> rec y
-           | isSimple y = text x <> string ": " <> rec y
-           | otherwise  = align (text x <> char ':' <> line <> indent 2 (rec y))
+   x <:> y | compact    = str x <> char ':' <> rec y
+           | isSimple y = str x <> string ": " <> rec y
+           | otherwise  = align (str x <> char ':' <> line <> indent 2 (rec y))
+
+   str = dquotes . text 
 
    make open close xs
       | compact || length xs < 2 = 
-           brackets (hcat (intersperse comma xs))
+           enclose open close (hcat (intersperse comma xs))
       | otherwise = 
            align (vsep (zipWith (<+>) (open:repeat comma) xs ++ [close]))
 

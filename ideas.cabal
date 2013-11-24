@@ -39,7 +39,8 @@ Library
                      filepath, 
                      directory, 
                      cgi, 
-                     parsec
+                     parsec,
+                     wl-pprint
 
   Exposed-modules:
    Ideas.Common.Algebra.Boolean

@@ -240,25 +240,34 @@ messages :: Result -> [Message]
 messages res =
    topMessages res ++ concatMap (messages . snd) (subResults res)
 
+data Status = Ok | Warning | Error
+   deriving Eq
+
 data Message = Message
-   { message      :: String
-   , isError      :: Bool
-   , messageLabel :: Maybe String
+   { messageLabel  :: Maybe String
+   , messageStatus :: Status
+   , messageInfo   :: [String]
    }
 
+isOk, isWarning, isError :: Message -> Bool
+isOk      = (== Ok)      . messageStatus
+isWarning = (== Warning) . messageStatus
+isError   = (== Error)   . messageStatus
+ 
 instance Show Message where
-   show a = (if null pre then "" else pre ++ ": ") ++ message a
+   show a = (if null pre then "" else pre ++ ": ") ++ 
+            intercalate "\n" (messageInfo a)
     where
        parens s = "(" ++ s ++ ")"
        pre = unwords $
-                [ "Warning" | not (isError a) ] ++
+                [ "Warning" | isWarning a ] ++
                 maybe [] (return . parens) (messageLabel a)
 
 newMessage :: String -> Message
-newMessage s = Message s True Nothing
+newMessage s = Message Nothing Error [s]
 
 warning :: Message -> Message
-warning m = m {isError = False}
+warning m = m {messageStatus = Warning}
 
 setLabel :: String -> Message -> Message
 setLabel s m = m {messageLabel = Just s}

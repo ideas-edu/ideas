@@ -122,7 +122,7 @@ toProcess = fromAtoms . build . rec . coreSubstAll
          a :%: b   -> concurrent switch (build (rec a)) (build (rec b))
          a :@: b   -> build (rec a) <@> build (rec b)
          Atomic a  -> atomic (build (rec a))
-         Rec _ _   -> error "toMin: rec"
+         Let _ _   -> error "toMin: let"
          Var _     -> error "toMin: var"
 
    switch (Single (Enter _)) = False

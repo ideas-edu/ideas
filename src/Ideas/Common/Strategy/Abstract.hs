@@ -158,7 +158,8 @@ processLabelInfo getInfo = rec []
  where
    rec env core =
       case core of
-         Rec n a   -> Rec n (rec ((n, core):env) a)
+         -- Rec n a   -> Rec n (rec ((n, core):env) a) 
+         -- Let ??
          Label l a -> forLabel env l (rec env a)
          _ -> descend (rec env) core
 

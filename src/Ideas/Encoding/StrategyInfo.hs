@@ -56,13 +56,16 @@ coreBuilder f = rec
                    -> tag "rule"       (f l)
          Label l a -> tag "label"      (f l <> rec a)
          Atomic a  -> tag "atomic"     (rec a)
-         Rec n a   -> tag "rec"        (("var" .=. show n) <> rec a)
+         Let ds a  -> tag "let"        (decls ds <> rec a)
          Rule r    -> tag "rule"       ("name" .=. show r)
          Var n     -> tag "var"        ("var" .=. show n)
          Succeed   -> emptyTag "succeed"
          Fail      -> emptyTag "fail"
     where
       asList s g = element s (map rec (collect g core))
+      decls ds   = mconcat [ tag "decl" (("var" .=. show n) <> rec a) 
+                           | (n, a) <- ds 
+                           ]
 
 collect :: (a -> Maybe (a, a)) -> a -> [a]
 collect f = ($ []) . rec
@@ -140,10 +143,6 @@ readStrategy toLabel findRule xml = do
       info <- toLabel xml
       r    <- findRule info
       return (Label info (Rule r))
-   buildRec x = do
-      s <- findAttribute "var" xml
-      i <- maybe (fail "var: not an int") return (readInt s)
-      return (Rec i x)
    buildVar = do
       s <- findAttribute "var" xml
       i <- maybe (fail "var: not an int") return (readInt s)
@@ -164,7 +163,6 @@ readStrategy toLabel findRule xml = do
       , ("interleave", buildInterleave)
       , ("label",      join2 comb1 buildLabel)
       , ("atomic",     comb1 Atomic)
-      , ("rec",        join2 comb1 buildRec)
       , ("rule",       join2 comb0 buildRule)
       , ("var",        join2 comb0 buildVar)
       , ("succeed",    comb0 Succeed)

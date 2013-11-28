@@ -131,8 +131,9 @@ prettyElement compact (Element n as c)
    | compact   = make (<>)
    | otherwise = make (<$>)
  where
-   make op = let body = foldr1 op (map (prettyXML compact) c)
-             in openTag n as `op` indent 2 body `op` closeTag n
+   make op = let body  = foldr1 op (map (prettyXML compact) c)
+                 ibody = (if compact then id else indent 2) body
+             in openTag n as `op` ibody `op` closeTag n
 
 
 {-

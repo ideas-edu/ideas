@@ -37,6 +37,9 @@ infixr 5 :*:
 -- | Core expression, with rules
 type Core l a = GCore l (Rule a)
 
+-- | An environment with generalized Core expressions
+type CoreEnv l a = [(Int, GCore l a)]
+
 -- | A generalized Core expression, not restricted to rules. This makes GCore
 -- a (traversable and foldable) functor.
 data GCore l a
@@ -51,7 +54,7 @@ data GCore l a
    | Fail
    | Rule a -- ^ Generalized constructor (not restricted to rules)
    | Var Int
-   | Rec Int (GCore l a)
+   | Let (CoreEnv l a) (GCore l a)
  deriving Show
 
 instance Sequential (GCore l) where
@@ -78,7 +81,9 @@ instance Uniplate (GCore l a) where
          a :@: b   -> plate (:@:)  |* a |* b
          Label l a -> plate Label  |- l |* a
          Atomic a  -> plate Atomic |* a
-         Rec n a   -> plate Rec    |- n |* a
+         Let ds a  -> let (ns, bs) = unzip ds
+                          make     = Let . zip ns 
+                      in plate make ||* bs |* a
          _         -> plate core
 
 instance BiFunctor GCore where
@@ -92,31 +97,12 @@ instance BiFunctor GCore where
             a :%: b   -> rec a :%:  rec b
             a :@: b   -> rec a :@:  rec b
             Atomic a  -> Atomic (rec a)
-            Rec n a   -> Rec n  (rec a)
+            Let ds a  -> Let (map (mapSecond rec) ds) (rec a)
             Label l a -> Label (f l) (rec a)
             Rule a    -> Rule (g a)
             Var n     -> Var n
             Succeed   -> Succeed
             Fail      -> Fail
-
-{-
-instance T.Traversable (GCore l) where
-   traverse f core =
-      case core of
-         a :*: b   -> (:*:)   <$> T.traverse f a <*> T.traverse f b
-         a :|: b   -> (:|:)   <$> T.traverse f a <*> T.traverse f b
-         a :|>: b  -> (:|>:)  <$> T.traverse f a <*> T.traverse f b
-         a :%: b   -> (:%:)   <$> T.traverse f a <*> T.traverse f b
-         Label l a -> Label l <$> T.traverse f a
-         Atomic a  -> Atomic  <$> T.traverse f a
-         Rec n a   -> Rec n   <$> T.traverse f a
-         Rule r    -> Rule    <$> f r
-         Succeed   -> pure Succeed
-         Fail      -> pure Fail
-         Var n     -> pure $ Var n -}
-
---instance F.Foldable (GCore l) where
-   --foldMap = T.foldMapDefault
 
 instance (Arbitrary l, Arbitrary a) => Arbitrary (GCore l a) where
    arbitrary = generators
@@ -131,15 +117,18 @@ instance (Arbitrary l, Arbitrary a) => Arbitrary (GCore l a) where
 coreFix :: (GCore l a -> GCore l a) -> GCore l a
 coreFix f = -- disadvantage: function f is applied twice
    let i = nextVar (f (Var (-1)))
-   in Rec i (f (Var i))
+   in coreRec i (f (Var i))
+
+coreRec :: Int -> GCore l a -> GCore l a 
+coreRec n a = Let [(n, a)] (Var n)
 
 coreSubstAll :: GCore l a -> GCore l a
 coreSubstAll = rec []
  where
-   rec xs (Var i)   = fromMaybe (error "coreInf") (lookup i xs)
-   rec xs (Rec i a) = let this = rec ((i, this) : xs) a
-                      in this
-   rec xs core      = descend (rec xs) core 
+   rec xs (Var i)    = fromMaybe (error "coreInf") (lookup i xs)
+   rec xs (Let ds a) = let this = [ (n, rec this b) | (n, b) <- ds ] ++ xs
+                       in rec this a
+   rec xs core       = descend (rec xs) core 
 
 -----------------------------------------------------------------
 -- Utility functions
@@ -147,9 +136,9 @@ coreSubstAll = rec []
 substCoreVar :: Int -> GCore l a -> GCore l a -> GCore l a
 substCoreVar i a core =
    case core of
-      Var j   | i==j -> a
-      Rec j _ | i==j -> core
-      _              -> descend (substCoreVar i a) core
+      Var j    | i==j -> a
+      Let ds _ | i `elem` map fst ds -> core
+      _               -> descend (substCoreVar i a) core
 
 nextVar :: GCore l a -> Int
 nextVar p
@@ -160,9 +149,10 @@ nextVar p
 coreVars :: GCore l a -> [Int]
 coreVars core =
    case core of
-      Var n   -> [n]
-      Rec n a -> n : coreVars a
-      _       -> concatMap coreVars (children core)
+      Var n    -> [n]
+      Let ds a -> let (ns, bs) = unzip ds
+                  in ns ++ concatMap coreVars (bs ++ [a])
+      _        -> concatMap coreVars (children core)
 
 noLabels :: GCore l a -> GCore l a
 noLabels (Label _ a) = noLabels a

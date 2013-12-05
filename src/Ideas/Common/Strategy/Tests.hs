@@ -43,17 +43,17 @@ tests = suite "Strategy combinator properties"
    , fs (F.distributiveLaws :: [Law Interleave])
 
    -- properties of atomic
-   , addProperty "atomic-twice" $ \a ->
+   , useProperty "atomic-twice" $ \a ->
         atomic (atomic a) === atomic (idS a)
    , assertTrue  "atomic-succeed" $
         atomic succeed === succeed
    , assertTrue  "atomic-fail" $
         atomic fail === fail
-   , addProperty "atomic-choice" $ \a b ->
+   , useProperty "atomic-choice" $ \a b ->
         atomic (idS a <|> idS b) === atomic a <|> atomic b
 
    -- splits theorm parallel/atomic
-   , addProperty "atomic-split"  $ \x y a b ->
+   , useProperty "atomic-split"  $ \x y a b ->
         (atomic x <*> a) <%> (atomic y <*> b)
         ===
         (idS x <*> (a <%> (atomic y <*> b)))
@@ -62,7 +62,7 @@ tests = suite "Strategy combinator properties"
    ]
  where
    fs :: (Arbitrary a, Show a, Eq a) => [Law a] -> TestSuite
-   fs ps = mconcat [ addProperty (show p) p | p <- ps ]
+   fs ps = mconcat [ useProperty (show p) p | p <- ps ]
 
 ---------------------------------------------------------
 -- Algebraic instances

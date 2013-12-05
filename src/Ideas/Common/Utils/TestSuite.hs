@@ -8,28 +8,32 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A lightweight wrapper around the QuickCheck library. It introduces the
--- notion of a test suite, and it stores the test results for later inspection
--- (e.g., for the generation of a test report). A test suite has a monadic
--- interface.
+-- A lightweight wrapper for organizing tests (including QuickCheck tests). It 
+-- introduces the notion of a test suite, and it stores the test results for 
+-- later inspection (e.g., for the generation of a test report). A TestSuite 
+-- is a monoid.
 --
 -----------------------------------------------------------------------------
 module Ideas.Common.Utils.TestSuite
-   ( -- * Test Suite Monad
-     TestSuite, MonadIO(..)
-     -- * Test suite constructors
-   , suite, addProperty, addPropertyWith, warn
+   ( -- * TestSuite
+     TestSuite, module Data.Monoid
+   , suite, useProperty, usePropertyWith
    , assertTrue, assertNull, assertEquals, assertIO
+   , assertMessage, onlyWarnings, rateOnError
      -- * Running a test suite
    , runTestSuite, runTestSuiteResult
      -- * Test Suite Result
    , Result, subResults, findSubResult
-   , messages, topMessages, numberOfTests
-   , makeSummary, printSummary
-     -- * Messages
-   , Message, newMessage
-   , isError, warning, messageLabel
-   , module Data.Monoid
+   , justOneSuite, allMessages, topMessages
+   , nrOfTests, nrOfErrors, nrOfWarnings
+   , timeInterval, makeSummary, printSummary
+     -- * Message
+   , Message, message, warning, messageLines
+     -- * Status
+   , Status, HasStatus(..)
+   , isError, isWarning, isOk
+     -- * Rating
+   , Rating, HasRating(..)
    ) where
 
 import Control.Exception
@@ -40,64 +44,96 @@ import Data.Maybe
 import Data.Monoid
 import Data.Time
 import Prelude hiding (catch)
-import System.IO
+import System.IO 
 import Test.QuickCheck hiding (Result)
-import qualified Test.QuickCheck as QC
-import qualified Data.Foldable as F
 import qualified Data.Sequence as S
 
 ----------------------------------------------------------------
--- Test Suite Monad
+-- Test Suite
 
-newtype TestSuite = Tests { getTests :: Tests }
+newtype TestSuite = TS (S.Seq Test)
+
+data Test = Case  String (IO Message)
+          | Suite String TestSuite
 
 instance Monoid TestSuite where
-   mempty = Tests mempty
-   mappend (Tests xs) (Tests ys) = Tests (xs <> ys)
+   mempty = TS mempty
+   TS xs `mappend` TS ys = TS (xs <> ys)
 
-type Tests = S.Seq Test
+tests :: TestSuite -> [Test]
+tests (TS xs) = toList xs
 
-data Test = TestSuite String Tests
-          | TestCase Message (IO Bool)
-          | TestQC String Args Property
+makeTestSuite :: Test -> TestSuite
+makeTestSuite = TS . S.singleton
 
 ----------------------------------------------------------------
 -- Test suite constructors
 
 -- | Construct a (named) test suite containing test cases and other suites
 suite :: String -> [TestSuite] -> TestSuite
-suite s m = Tests $ S.singleton $ TestSuite s $ getTests $ mconcat m
+suite s = makeTestSuite . Suite s . mconcat
 
--- | Add a QuickCheck property to the test suite. The first argument is
+-- | Turn a QuickCheck property into the test suite. The first argument is
 -- a label for the property
-addProperty :: Testable prop => String -> prop -> TestSuite
-addProperty = flip addPropertyWith stdArgs
+useProperty :: Testable prop => String -> prop -> TestSuite
+useProperty = flip usePropertyWith stdArgs
 
--- | Add a QuickCheck property to the test suite, also providing a test
+-- | Turn a QuickCheck property into the test suite, also providing a test
 -- configuration (Args)
-addPropertyWith :: Testable prop => String -> Args -> prop -> TestSuite
-addPropertyWith s args p = Tests $ S.singleton $ TestQC s args (property p)
+usePropertyWith :: Testable prop => String -> Args -> prop -> TestSuite
+usePropertyWith s args = 
+   makeTestSuite . Case s . liftM make . quickCheckWithResult args
+ where
+   make qc =
+      case qc of
+         Success {} -> 
+            mempty
+         Failure {reason = msg} -> 
+            message msg
+         NoExpectedFailure {} -> 
+            message "no expected failure"
+         GaveUp {numTests = i} -> 
+            warning ("passed only " ++ show i ++ " tests")
 
 assertTrue :: String -> Bool -> TestSuite
-assertTrue msg = assertIO msg . return
+assertTrue s = assertIO s . return
 
 assertNull :: Show a => String -> [a] -> TestSuite
-assertNull s xs = addAssertion (f xs) (return (null xs))
- where f = setLabel s . newMessage . intercalate "\n" . map show
+assertNull s xs = assertMessages s (null xs) (map show xs)
 
 assertEquals :: (Eq a, Show a) => String -> a -> a -> TestSuite
-assertEquals s x y = addAssertion (setLabel s msg) (return (x==y))
- where msg = newMessage ("Not equal: " ++ show x ++ " and " ++ show y)
+assertEquals s x y = assertMessage s (x==y) $ 
+   "not equal " ++ show x ++ " and " ++ show y
+
+assertMessage :: String -> Bool -> String -> TestSuite
+assertMessage s b = assertMessages s b . return
+
+assertMessages :: String -> Bool -> [String] -> TestSuite
+assertMessages s b xs = makeTestSuite . Case s $ return $ 
+   if b then mempty else mconcat (map message xs)
 
 assertIO :: String -> IO Bool -> TestSuite
-assertIO s = addAssertion (setLabel s $ newMessage "Assertion failed")
+assertIO s = makeTestSuite . Case s . liftM f
+ where
+   f b = if b then mempty else message "assertion failed"
 
-warn :: String -> TestSuite
-warn = (`addAssertion` return False) . warning . newMessage
+-- | All errors are turned into warnings
+onlyWarnings :: TestSuite -> TestSuite
+onlyWarnings = changeMessages $ \m -> 
+   m { messageStatus = messageStatus m  `min` Warning
+     , messageRating = mempty
+     }
 
--- local helpers
-addAssertion :: Message -> IO Bool -> TestSuite
-addAssertion msg io = Tests $ S.singleton $ TestCase msg io
+rateOnError :: Int -> TestSuite -> TestSuite
+rateOnError n = changeMessages $ \m -> 
+   if isError m then m { messageRating = Rating n } else m
+
+changeMessages :: (Message -> Message) -> TestSuite -> TestSuite
+changeMessages f = changeTS
+ where
+   changeTS   (TS xs)     = TS (fmap changeTest xs)
+   changeTest (Case s io) = Case s (liftM f io)
+   changeTest (Suite s t) = Suite s (changeTS t)
 
 ----------------------------------------------------------------
 -- Running a test suite
@@ -106,51 +142,48 @@ runTestSuite :: TestSuite -> IO ()
 runTestSuite = void . runTestSuiteResult
 
 runTestSuiteResult :: TestSuite -> IO Result
-runTestSuiteResult s = do
+runTestSuiteResult ts = do
    hSetBuffering stdout NoBuffering
-   updateDiffTime $ runWriteIO $ do
-      a <- runTests (getTests s)
+   runWriteIO $ do
+      result <- runTS ts
       newline
-      return a
+      return result
 
-runTests :: Tests -> WriteIO Result
-runTests = liftM mconcat . mapM runTest . toList
+runTS :: TestSuite -> WriteIO Result
+runTS t = do 
+   (res, dt) <- getDiffTime (foldM addTest mempty (tests t))
+   returnStrict res { diffTime = dt }
+ 
+addTest :: Result -> Test -> WriteIO Result
+addTest res = liftM (res <>) . runTest
 
 runTest :: Test -> WriteIO Result
-runTest (TestSuite s xs)  = runSuite s xs
-runTest (TestCase msg io) = runTestCase msg io
-runTest (TestQC s args p) = runQC s args p
+runTest t =
+   case t of
+      Suite s xs -> runSuite s xs
+      Case s io  -> runTestCase s io
 
-runSuite :: String -> Tests -> WriteIO Result
-runSuite s m = do
+runSuite :: String -> TestSuite -> WriteIO Result
+runSuite s ts = do
    newline
    liftIO $ putStrLn s
    reset
-   t <- updateDiffTime (runTests m)
-   return (suiteResult s t)
+   result <- runTS ts
+   returnStrict (suiteResult s result)
 
-runQC :: String -> Args -> Property -> WriteIO Result
-runQC s args p = do
-   newlineIndent
-   r <- liftIO $ quickCheckWithResult args p
-   reset
-   let f = return . messageResult . setLabel s
-   maybe (return okResult) f (toTestResult r)
-
-runTestCase :: Message -> IO Bool -> WriteIO Result
-runTestCase msg io = do
-   b <- liftIO (io `catch` handler)
-   if b then do
-      dot
-      return okResult
-    else do
-      newlineIndent
-      liftIO (print msg)
-      reset
-      return (messageResult msg)
+runTestCase :: String -> IO Message -> WriteIO Result
+runTestCase s io = do
+   msg <- liftIO (io `catch` handler)
+   case messageStatus msg of
+      Ok -> dot
+      _  -> do
+         newlineIndent
+         liftIO (print msg)
+         reset
+   returnStrict (caseResult (s, msg))
  where
-   handler :: SomeException -> IO Bool
-   handler _ = return False
+   handler :: SomeException -> IO Message
+   handler = return . message . show
 
 -- formatting helpers
 newtype WriteIO a = WriteIO { fromWriteIO :: StateT Int IO a }
@@ -193,84 +226,76 @@ reset = WriteIO $ put 0
 ----------------------------------------------------------------
 -- Test Suite Result
 
-data Result = TSR
-   { messageSeq     :: S.Seq Message
-   , suiteSeq       :: S.Seq (String, Result)
-   , numberOfTests  :: !Int
-   , diffTime       :: !NominalDiffTime
-   }
-
-instance Monoid Result where
-   mempty = TSR mempty mempty 0 0
-   mappend x y = TSR
-      { messageSeq    = messageSeq x `mappend` messageSeq y
-      , suiteSeq      = suiteSeq x `mappend` suiteSeq y
-      , numberOfTests = numberOfTests x + numberOfTests y
-      , diffTime      = diffTime x + diffTime y
-      }
-
-okResult :: Result
-okResult = mempty {numberOfTests = 1}
-
-messageResult :: Message -> Result
-messageResult m = okResult {messageSeq = S.singleton m}
-
-suiteResult :: String -> Result -> Result
-suiteResult s a = mempty
-   { suiteSeq = S.singleton (s, a)
-   , numberOfTests = numberOfTests a
+data Result = Result
+   { suites       :: S.Seq (String, Result)
+   , cases        :: S.Seq (String, Message)
+   , diffTime     :: !NominalDiffTime
+   , nrOfTests    :: !Int
+   , nrOfWarnings :: !Int
+   , nrOfErrors   :: !Int
+   , resultRating :: !Rating
    }
 
 -- one-line summary
 instance Show Result where
-   show res =
-      let (xs, ys) = partition isError (messages res)
-      in "(tests: " ++ show (numberOfTests res) ++
-         ", errors: " ++ show (length xs) ++
-         ", warnings: " ++ show (length ys) ++
-         ", " ++ show (diffTime res) ++ ")"
+   show result =
+      "(tests: "     ++ show (nrOfTests result)    ++
+      ", errors: "   ++ show (nrOfErrors result)   ++
+      ", warnings: " ++ show (nrOfWarnings result) ++
+      ", "           ++ show (diffTime result)     ++ ")"
+         
+instance Monoid Result where
+   mempty = Result mempty mempty 0 0 0 0 mempty
+   x `mappend` y = Result 
+      { suites       = suites x <> suites y 
+      , cases        = cases x  <> cases y
+      , diffTime     = diffTime x     + diffTime y
+      , nrOfTests    = nrOfTests x    + nrOfTests y
+      , nrOfWarnings = nrOfWarnings x + nrOfWarnings y
+      , nrOfErrors   = nrOfErrors x   + nrOfErrors y
+      , resultRating = resultRating x <> resultRating y
+      }
 
-subResults :: Result -> [(String, Result)]
-subResults = F.toList . suiteSeq
+instance HasStatus Result where
+   getStatus r | nrOfErrors r   > 0 = Error
+               | nrOfWarnings r > 0 = Warning
+               | otherwise          = Ok
 
-topMessages :: Result -> [Message]
-topMessages = F.toList . messageSeq
+instance HasRating Result where
+   rating   = rating . resultRating
+   rate n a = a {resultRating = Rating n}
 
-messages :: Result -> [Message]
-messages res =
-   topMessages res ++ concatMap (messages . snd) (subResults res)
-
-data Status = Ok | Warning | Error
-   deriving Eq
-
-data Message = Message
-   { messageLabel  :: Maybe String
-   , messageStatus :: Status
-   , messageInfo   :: [String]
+suiteResult :: String -> Result -> Result
+suiteResult s res = mempty 
+   { suites       = S.singleton (s, res)
+   , nrOfTests    = nrOfTests res
+   , nrOfWarnings = nrOfWarnings res
+   , nrOfErrors   = nrOfErrors res 
+   , resultRating = resultRating res
    }
 
-isOk, isWarning, isError :: Message -> Bool
-isOk      = (== Ok)      . messageStatus
-isWarning = (== Warning) . messageStatus
-isError   = (== Error)   . messageStatus
- 
-instance Show Message where
-   show a = (if null pre then "" else pre ++ ": ") ++ 
-            intercalate "\n" (messageInfo a)
-    where
-       parens s = "(" ++ s ++ ")"
-       pre = unwords $
-                [ "Warning" | isWarning a ] ++
-                maybe [] (return . parens) (messageLabel a)
+caseResult :: (String, Message) -> Result
+caseResult x@(_, msg) = 
+   case getStatus msg of
+      Ok      -> new
+      Warning -> new { nrOfWarnings = 1 }
+      Error   -> new { nrOfErrors   = 1 }
+ where
+   new = mempty 
+      { cases        = S.singleton x
+      , nrOfTests    = 1
+      , resultRating = messageRating msg 
+      }
 
-newMessage :: String -> Message
-newMessage s = Message Nothing Error [s]
+subResults :: Result -> [(String, Result)]
+subResults = toList . suites
 
-warning :: Message -> Message
-warning m = m {messageStatus = Warning}
+topMessages :: Result -> [(String, Message)]
+topMessages = toList . cases
 
-setLabel :: String -> Message -> Message
-setLabel s m = m {messageLabel = Just s}
+allMessages :: Result -> [(String, Message)]
+allMessages res =
+   topMessages res ++ concatMap (allMessages . snd) (subResults res)
 
 findSubResult :: String -> Result -> Maybe Result
 findSubResult name = listToMaybe . recs
@@ -280,41 +305,110 @@ findSubResult name = listToMaybe . recs
       | n == name = [t]
       | otherwise = recs t
 
+justOneSuite :: Result -> Maybe (String, Result)
+justOneSuite res =
+   case subResults res of
+      [x] | S.null (cases res) -> Just x
+      _ -> Nothing
+
+timeInterval :: Result -> Double
+timeInterval = fromRational . toRational . diffTime
+
 printSummary :: Result -> IO ()
 printSummary = putStrLn . makeSummary
 
 makeSummary :: Result -> String
-makeSummary res = unlines $
+makeSummary result = unlines $
    [ line
-   , "Tests    : " ++ show (numberOfTests res)
-   , "Failures : " ++ show (length xs)
-   , "Warnings : " ++ show (length ys)
-   , "\nTime     : " ++ show (diffTime res)
-   , "\nSuites: "
-   ] ++ map f (subResults res)
+   , "Tests    : " ++ show (nrOfTests result)
+   , "Errors   : " ++ show (nrOfErrors result)
+   , "Warnings : " ++ show (nrOfWarnings result)
+   , "" 
+   , "Time     : " ++ show (diffTime result)
+   , "" 
+   , "Suites: "
+   ] ++ map f (subResults result)
      ++ [line]
  where
-   line        = replicate 75 '-'
-   (xs, ys)    = partition isError (messages res)
+   line = replicate 75 '-'
    f (name, r) = "   " ++ name ++ "   " ++ show r
 
 -----------------------------------------------------
--- Utility functions
+-- Message
 
-toTestResult :: QC.Result -> Maybe Message
-toTestResult res =
-   let make = Just . newMessage
-   in case res of
-         Success {}             -> Nothing
-         Failure {reason = msg} -> make msg
-         NoExpectedFailure {}   -> make "no expected failure"
-         GaveUp {numTests = i}  -> fmap warning $ make $
-                                   "passed only " ++ show i ++ " tests"
+data Message = M 
+   { messageStatus :: !Status
+   , messageRating :: !Rating
+   , messageLines  :: [String]
+   }
+ deriving Eq
 
-updateDiffTime :: MonadIO m => m Result -> m Result
-updateDiffTime m = do
-   (res, d) <- getDiffTime m
-   return res {diffTime = d}
+instance Show Message where
+   show a = st ++ sep ++ msg
+    where
+      msg = intercalate ", " (messageLines a)
+      sep = if null st || null msg then "" else ": " 
+      st | isError a             = "error"
+         | isWarning a           = "warning"
+         | null (messageLines a) = "ok"
+         | otherwise             = ""
+
+instance Monoid Message where
+   mempty = M mempty mempty mempty
+   M s r xs `mappend` M t q ys = M (s <> t) (r <> q) (xs <> ys)
+
+instance HasStatus Message where
+   getStatus = messageStatus
+
+instance HasRating Message where
+   rating   = rating . messageRating
+   rate n a = a {messageRating = Rating n}
+
+message :: String -> Message
+message = M Error (Rating 0) . return
+
+warning :: String -> Message
+warning = M Warning mempty . return
+
+-----------------------------------------------------
+-- Status
+
+data Status = Ok | Warning | Error
+   deriving (Eq, Ord)
+
+instance Monoid Status where
+   mempty  = Ok
+   mappend = max
+
+class HasStatus a where
+   getStatus :: a -> Status
+
+isOk, isWarning, isError :: HasStatus a => a -> Bool
+isOk      = (== Ok)      . getStatus
+isWarning = (== Warning) . getStatus
+isError   = (== Error)   . getStatus
+
+-----------------------------------------------------
+-- Rating
+
+data Rating = Rating !Int | MaxRating
+   deriving (Eq, Ord)
+   
+instance Monoid Rating where
+   mempty  = MaxRating
+   mappend = min
+   
+class HasRating a where
+   rating :: a -> Maybe Int
+   rate   :: Int -> a -> a
+
+instance HasRating Rating where
+   rating (Rating n) = Just n
+   rating MaxRating  = Nothing
+   rate = const . Rating
+
+-----------------------------------------------------
+-- Utility function
 
 getDiffTime :: MonadIO m => m a -> m (a, NominalDiffTime)
 getDiffTime action = do
@@ -322,3 +416,6 @@ getDiffTime action = do
    a  <- action
    t1 <- liftIO getCurrentTime
    return (a, diffUTCTime t1 t0)
+   
+returnStrict :: Monad m => a -> m a
+returnStrict a = a `seq` return a

@@ -135,7 +135,7 @@ infixr 0 ==>>
 (p ==>> f) a = p a ==> f a
 
 prop :: (Testable prop, Show a) => Gen a -> String -> (a -> prop) -> TestSuite
-prop gen s = addProperty s . forAll gen
+prop gen s = useProperty s . forAll gen
 
 changeLast :: (a -> a) -> [a] -> [a]
 changeLast _ []     = []

@@ -28,11 +28,11 @@ checkExercise ex = do
 
 exerciseTestSuite :: StdGen -> Exercise a -> TestSuite
 exerciseTestSuite stdgen ex = suite ("Exercise " ++ show (exerciseId ex)) $
-   [ assertTrue "Exercise terms defined" (not (null xs))
-   , assertTrue "Equivalence implemented" $
+   [ assertTrue "exercise terms defined" (not (null xs))
+   , assertTrue "equivalence implemented" $
         let eq a b = equivalence ex (inContext ex a) (inContext ex b)
         in length (nubBy eq xs) > 1
-   , assertTrue "Similarity implemented" $
+   , assertTrue "similarity implemented" $
         let sim a b = similarity ex (inContext ex a) (inContext ex b)
         in length (nubBy sim xs) > 1 
    , checkExamples stdgen ex
@@ -40,20 +40,20 @@ exerciseTestSuite stdgen ex = suite ("Exercise " ++ show (exerciseId ex)) $
    case testGenerator ex of
       Nothing  -> []
       Just gen -> 
-         [ addProperty "parser/pretty printer" $ forAll showAsGen $
+         [ useProperty "parser/pretty printer" $ forAll showAsGen $
               checkParserPrettyEx ex . inContext ex . fromS
          , suite "Soundness non-buggy rules" $
                  let eq a b = equivalence ex (fromS a) (fromS b)
                      myGen  = showAs (prettyPrinterContext ex) (liftM (inContext ex) gen)
                      myView = makeView (Just . fromS) (S (prettyPrinterContext ex))
                      args   = stdArgs {maxSize = 10, maxSuccess = 10}
-                 in [ addPropertyWith (showId r) args $ 
+                 in [ usePropertyWith (showId r) args $ 
                          propRule eq (liftView myView r) myGen
                     | r <- ruleset ex
                     , not (isBuggy r)
                     ] {-
                         -}
-         , addProperty "soundness strategy/generator" $
+         , useProperty "soundness strategy/generator" $
               forAll showAsGen $
                  maybe False (isReady ex) . fromContext
                  . applyD (strategy ex) . inContext ex . fromS 
@@ -119,21 +119,20 @@ checksForTerm leftMost stdgen ex a =
 checksForDerivation :: Exercise a -> Derivation (Rule (Context a), Environment) (Context a) -> [TestSuite]
 checksForDerivation ex d = 
    [ -- Conditions on starting term
-     assertTrue
-        ("start term not suitable: " ++ prettyPrinterContext ex start) $
-        maybe False (isSuitable ex) (fromContext start)
-   , assertTrue
-        ("start term is ready: " ++ prettyPrinterContext ex start) $
-        maybe True (not . isReady ex) (fromContext start)
+     assertMessage "start term is suitable"
+        (maybe False (isSuitable ex) (fromContext start))
+        (prettyPrinterContext ex start)
+   , assertMessage "start term is not ready"
+        (maybe True (not . isReady ex) (fromContext start))
+        (prettyPrinterContext ex start)
      -- Conditions on final term
-   , assertTrue
-        ("final term is suitable: " ++ prettyPrinterContext ex start) $
-        maybe True (isSuitable ex) (fromContext final)
-   , assertTrue
-        ("final term not ready: " ++ prettyPrinterContext ex start
-               ++ "  =>  " ++ prettyPrinterContext ex final) $
-        maybe False (isReady ex) (fromContext final)      
-
+   , assertMessage "final term is suitable"
+        (maybe True (isSuitable ex) (fromContext final))
+        (prettyPrinterContext ex start)
+   , assertMessage "final term is ready"
+        (maybe False (isReady ex) (fromContext final))
+        (prettyPrinterContext ex start ++ "  =>  " ++ 
+         prettyPrinterContext ex final)    
      -- Parser/pretty printer on terms
    , assertNull "parser/pretty-printer" $ take 1 $ flip map (filter p1 ts) $ \hd ->
         let s = prettyPrinterContext ex hd
@@ -144,10 +143,13 @@ checksForDerivation ex d =
         "not equivalent: " ++ prettyPrinterContext ex x
         ++ "  with  " ++ prettyPrinterContext ex y
      -- Similarity of terms 
-   , assertNull  "similars" $ take 1 $ flip map (filter p3 (triples d)) $ \(x, r, y) ->
-        "similar subsequent terms: " ++ prettyPrinterContext ex x
-        ++ "  with  " ++ prettyPrinterContext ex y
-        ++ "  using  " ++ show r
+   , let xs = filter p3 (triples d) in
+     let (x, (r, _), y) = head xs in
+     rateOnError 5 $ assertMessage "no similar steps" 
+        (null xs) 
+        ( prettyPrinterContext ex x ++ 
+          "  with  " ++ prettyPrinterContext ex y ++
+          "  using  " ++ show r)
    , assertNull "self similarity" $ take 1 $ do
         x <- terms d
         guard (not (similarity ex x x))

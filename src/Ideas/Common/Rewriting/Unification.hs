@@ -169,20 +169,20 @@ associativeMatch s f as b =
 
 unificationTests :: TestSuite
 unificationTests = suite "Unification"
-   [ addProperty "unify" $ \a b ->
+   [ useProperty "unify" $ \a b ->
         case unify a b of
            Just s  -> (s |-> a) == (s |-> b)
            Nothing -> True
-   , addProperty "unify-succeed" $ \a s ->
+   , useProperty "unify-succeed" $ \a s ->
         let b = s |-> a in
         case unify a b of
            Just s2 -> (s2 |-> a) == (s2 |-> b)
            Nothing -> False
-   , addProperty "match" $ \a b ->
+   , useProperty "match" $ \a b ->
         case match a b of
            Just s  -> (s |-> a) == b
            Nothing -> True
-   , addProperty "match-succeed" $ \a s ->
+   , useProperty "match-succeed" $ \a s ->
         let b = s |-> a in
         case match a (s |-> a) of
            Just s2 -> (s2 |-> a) == b

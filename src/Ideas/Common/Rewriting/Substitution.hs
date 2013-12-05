@@ -112,19 +112,19 @@ instance Arbitrary Substitution where
 
 tests :: TestSuite
 tests = suite "Substitution"
-   [ addProperty "left unit" $ \s ->
+   [ useProperty "left unit" $ \s ->
         mempty @@ s == s
-   , addProperty "right unit" $ \s ->
+   , useProperty "right unit" $ \s ->
         s @@ mempty == s
-   , addProperty "associative" $ \s1 s2 s3 ->
+   , useProperty "associative" $ \s1 s2 s3 ->
         composable s1 s2 && composable (s1 @@ s2) s3
         && composable s2 s3 && composable s1 (s2 @@ s3)
         ==> (s1 @@ s2) @@ s3 == s1 @@ (s2 @@ s3)
-   , addProperty "idempotence" $ \s ->
+   , useProperty "idempotence" $ \s ->
         s @@ s == s
-   , addProperty "idempotence/application" $ \s a ->
+   , useProperty "idempotence/application" $ \s a ->
         s |-> a == s |-> (s |-> a)
-   , addProperty "composition" $ \s1 s2 a ->
+   , useProperty "composition" $ \s1 s2 a ->
         composable s1 s2
         ==> s1 |-> (s2 |-> a) == (s1 @@ s2) |-> a
    ]

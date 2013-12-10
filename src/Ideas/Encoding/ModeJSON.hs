@@ -13,7 +13,6 @@
 -----------------------------------------------------------------------------
 module Ideas.Encoding.ModeJSON (processJSON) where
 
-import Control.Monad
 import Data.Char
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (Some(..), timedSeconds)
@@ -32,7 +31,7 @@ processJSON maxTime cgiMode dr input = do
    req  <- jsonRequest json
    resp <- jsonRPC json $ \fun arg -> 
               maybe id timedSeconds maxTime (myHandler dr fun arg)
-   let f   = if cgiMode then compactJSON else show
+   let f   = if compactOutputDefault cgiMode req then compactJSON else show
        out = addVersion (version dr) (toJSON resp)
    return (req, f out, "application/json")
 
@@ -64,8 +63,8 @@ jsonRequest json = do
               _               -> fail "Invalid method"
    let a = lookupM "params" json >>= extractExerciseId
    enc  <- case lookupM "encoding" json of
-              Nothing         -> return Nothing
-              Just (String s) -> liftM Just (readEncoding s)
+              Nothing         -> return []
+              Just (String s) -> readEncoding s
               _               -> fail "Invalid encoding"
    src  <- case lookupM "source" json of
               Nothing         -> return Nothing

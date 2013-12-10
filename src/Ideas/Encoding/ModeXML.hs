@@ -15,6 +15,7 @@ module Ideas.Encoding.ModeXML (processXML) where
 
 import Control.Monad
 import Control.Monad.Error
+import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Common.Utils (Some(..), timedSeconds)
 import Ideas.Encoding.DecoderXML
@@ -39,11 +40,12 @@ processXML maxTime dr cgiBin input = do
    req  <- either fail return (xmlRequest xml)
    resp <- maybe id timedSeconds maxTime (xmlReply dr cgiBin req xml)
     `catchError` (return . resultError . ioeGetErrorString)
-   case encoding req of
-      Just HTMLEncoding ->
-         return (req, show resp, "text/html")
-      _ -> let out = addVersion (version dr) resp
-           in return (req, show out, "application/xml")
+   let showXML | compactOutputDefault (isJust cgiBin) req = compactXML 
+               | otherwise = show
+   if htmlOutput req 
+   then return (req, showXML resp, "text/html")
+   else let out = addVersion (version dr) resp
+        in return (req, showXML out, "application/xml")
 
 addVersion :: String -> XML -> XML
 addVersion s xml =
@@ -57,8 +59,8 @@ xmlRequest xml = do
    srv  <- findAttribute "service" xml
    let a = extractExerciseId xml
    enc  <- case findAttribute "encoding" xml of
-              Just s  -> liftM Just (readEncoding s)
-              Nothing -> return Nothing
+              Just s  -> readEncoding s
+              Nothing -> return []
    return Request
       { service    = srv
       , exerciseId = a
@@ -84,18 +86,21 @@ xmlReply dr cgiBin request xml = do
                    | getId ex == mempty -> return mempty
                    | otherwise          -> defaultScript dr (getId ex)
    stdgen <- newStdGen
-   case encoding request of
-      Just StringEncoding -> do
-         res <- evalService (stringFormatConverter script ex stdgen xml) srv
-         return (resultOk res)
-
-      Just HTMLEncoding -> do
-         res <- evalService (htmlConverter dr cgiBin script ex stdgen xml) srv
-         return (toXML res)
-
-      _ -> do
-         res <- evalService (openMathConverter True script ex stdgen xml) srv
-         return (resultOk res)
+   
+   -- HTML encoder 
+   if htmlOutput request
+   then do
+      res <- evalService (htmlConverter dr cgiBin script ex stdgen xml) srv
+      return (toXML res) 
+   -- OpenMath encoder
+   else if useOpenMath request 
+   then do
+      res <- evalService (openMathConverter True script ex stdgen xml) srv
+      return (resultOk res)
+   -- String encoder
+   else do
+      res <- evalService (stringFormatConverter script ex stdgen xml) srv
+      return (resultOk res)
 
 extractExerciseId :: Monad m => XML -> m Id
 extractExerciseId = liftM newId . findAttribute "exerciseid"

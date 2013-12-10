@@ -65,7 +65,7 @@ defaultCGI dr startTime = do
                    Just s  -> return s
       (req, txt, ctp) <- liftIO $ process dr (Just cgiBin) input
       -- save logging action for later
-      unless (encoding req == Just HTMLEncoding) $
+      when (useLogging req) $
          liftIO $ writeIORef logRef $
             logMessage req input txt addr startTime
       setHeader "Content-type" ctp

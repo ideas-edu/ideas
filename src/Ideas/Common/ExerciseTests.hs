@@ -24,7 +24,7 @@ import Test.QuickCheck
 checkExercise :: Exercise a -> IO ()
 checkExercise ex = do 
    stdgen <- getStdGen
-   runTestSuite (exerciseTestSuite stdgen ex)
+   runTestSuite True (exerciseTestSuite stdgen ex)
 
 exerciseTestSuite :: StdGen -> Exercise a -> TestSuite
 exerciseTestSuite stdgen ex = suite ("Exercise " ++ show (exerciseId ex)) $

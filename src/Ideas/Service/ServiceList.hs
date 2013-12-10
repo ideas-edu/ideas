@@ -12,6 +12,8 @@
 module Ideas.Service.ServiceList (serviceList, metaServiceList) where
 
 import Ideas.Common.Library hiding (apply, applicable, derivation, ready)
+import Ideas.Common.ExerciseTests
+import Ideas.Common.Utils.TestSuite
 import Ideas.Service.BasicServices
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackText
@@ -20,6 +22,7 @@ import Ideas.Service.State
 import Ideas.Service.Types
 import qualified Ideas.Service.Diagnose as Diagnose
 import qualified Ideas.Service.Submit as Submit
+import System.IO.Unsafe
 
 ------------------------------------------------------
 -- Querying a service
@@ -41,7 +44,7 @@ metaServiceList :: DomainReasoner -> [Service]
 metaServiceList dr =
    [ indexS dr, servicelistS dr, serviceinfoS dr, exerciselistS dr
    , rulelistS, ruleinfoS, rulesinfoS, strategyinfoS, exerciseinfoS
-   , stateinfoS, examplederivationsS
+   , stateinfoS, examplederivationsS, testreportS
    ]
 
 ------------------------------------------------------
@@ -248,3 +251,9 @@ stateinfoS = makeService "meta.stateinfo"
 examplederivationsS :: Service
 examplederivationsS = makeService "meta.examplederivations"
    "Show example derivations" $ exampleDerivations ::: typed
+   
+testreportS :: Service
+testreportS = makeService "meta.testreport"
+   "Show test report for an exercise." $ 
+   (\stdgen -> unsafePerformIO . runTestSuiteResult False 
+   . exerciseTestSuite stdgen) ::: typed 

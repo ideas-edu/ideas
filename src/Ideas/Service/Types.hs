@@ -26,6 +26,7 @@ import Data.Maybe
 import Data.Tree
 import Ideas.Common.Library
 import Ideas.Common.Utils
+import qualified Ideas.Common.Utils.TestSuite as TestSuite
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
 import System.Random
@@ -90,6 +91,7 @@ instance Equal (Const a) where
    equal SomeExercise SomeExercise = Just id
    equal Text        Text        = Just id
    equal StdGen      StdGen      = Just id
+   equal Result      Result      = Just id
    equal _           _           = Nothing
 
 infixr 5 :|:
@@ -136,6 +138,7 @@ data Const a t where
    Environment  :: Const a Environment
    Text         :: Const a Text
    StdGen       :: Const a StdGen
+   Result       :: Const a TestSuite.Result
    SomeExercise :: Const a (Some Exercise)
    -- basic types
    Bool         :: Const a Bool
@@ -191,6 +194,7 @@ instance Show (TypedValue (Const a)) where
          Environment      -> show val
          Text             -> show val
          StdGen           -> show val
+         Result           -> show val
          Bool             -> map toLower (show val)
          Int              -> show val
          String           -> val
@@ -212,6 +216,7 @@ instance ShowF (Const a) where
    showF Environment  = "Environment"
    showF Text         = "TextMessage"
    showF StdGen       = "StdGen"
+   showF Result       = "TestSuiteResult"
    showF SomeExercise = "Exercise"
    showF Bool         = "Bool"
    showF Int          = "Int"
@@ -265,6 +270,9 @@ instance Typed a Environment where
 
 instance Typed a StdGen where
    typed = Const StdGen
+
+instance Typed a TestSuite.Result where
+   typed = Const Result
 
 instance Typed a Difficulty where
    typed = Tag "Difficulty" (Iso (f <-> show) typed)

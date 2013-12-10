@@ -101,7 +101,7 @@ defaultCommandLine dr flags = do
          -- blackbox tests
          Test dir -> do
             tests  <- blackBoxTests dr dir
-            result <- runTestSuiteResult tests
+            result <- runTestSuiteResult True tests
             printSummary result
          -- generate documentation pages
          MakePages dir ->

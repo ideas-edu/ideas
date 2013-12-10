@@ -20,7 +20,7 @@ module Ideas.Encoding.LinkManager
    , linkToIndex, linkToExercises, linkToServices, linkToService
      -- links to exercise information
    , linkToExercise, linkToStrategy, linkToRules, linkToExamples
-   , linkToDerivations, linkToRule, linkToRandomExample
+   , linkToDerivations, linkToRule, linkToRandomExample, linkToTestReport
      -- links to state information (dynamic)
    , linkToState, linkToFirsts, linkToApplications, linkToDerivation
    ) where
@@ -51,6 +51,7 @@ data LinkManager = LinkManager
    , urlForExamples      :: forall a . Exercise a -> String
    , urlForDerivations   :: forall a . Exercise a -> String
    , urlForRule          :: forall a . Exercise a -> Rule (Context a) -> String
+   , urlForTestReport    :: forall a . Exercise a -> String
      -- dynamic exercise information
    , urlForRandomExample :: forall a . Exercise a -> Difficulty -> String
      -- dynamic state information
@@ -96,6 +97,9 @@ linkToDerivations = linkWith . urlForDerivations
 linkToRule :: LinkManager -> Exercise a -> Rule (Context a) -> HTMLBuilder -> HTMLBuilder
 linkToRule lm = linkWith . urlForRule lm
 
+linkToTestReport :: LinkManager -> Exercise a -> HTMLBuilder -> HTMLBuilder
+linkToTestReport = linkWith . urlForTestReport
+
 ---------------------------------------------------------------------
 -- dynamic exercise information
 
@@ -134,6 +138,7 @@ dynamicLinks cgiBinary = LinkManager
    , urlForExercise    = url . exerciseRequest "exerciseinfo"
    , urlForStrategy    = url . exerciseRequest "strategyinfo"
    , urlForRules       = url . exerciseRequest "rulelist"
+   , urlForTestReport  = url . exerciseRequest "testreport" 
    , urlForExamples    = url . exerciseRequest "examples"
    , urlForDerivations = url . exerciseRequest "examplederivations"
    , urlForRule = \ex r ->
@@ -213,6 +218,7 @@ staticLinks = LinkManager
    , urlForExamples    = idToFilePathWith "-examples.html"
    , urlForDerivations = idToFilePathWith "-derivations.html"
    , urlForRule        = \ex r -> idToFilePathWith ("/" ++ showId r ++ ".html") ex
+   , urlForTestReport  = idToFilePathWith "-testreport.html"
      -- dynamic exercise information
    , urlForRandomExample = \_ _ -> ""
      -- dynamic state information

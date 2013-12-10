@@ -82,7 +82,7 @@ useProperty = flip usePropertyWith stdArgs
 -- configuration (Args)
 usePropertyWith :: Testable prop => String -> Args -> prop -> TestSuite
 usePropertyWith s args = 
-   makeTestSuite . Case s . liftM make . quickCheckWithResult args
+   makeTestSuite . Case s . liftM make . quickCheckWithResult args {chatty=False}
  where
    make qc =
       case qc of
@@ -138,52 +138,54 @@ changeMessages f = changeTS
 ----------------------------------------------------------------
 -- Running a test suite
 
-runTestSuite :: TestSuite -> IO ()
-runTestSuite = void . runTestSuiteResult
+runTestSuite :: Bool -> TestSuite -> IO ()
+runTestSuite chattyIO = void . runTestSuiteResult chattyIO
 
-runTestSuiteResult :: TestSuite -> IO Result
-runTestSuiteResult ts = do
+runTestSuiteResult :: Bool -> TestSuite -> IO Result
+runTestSuiteResult chattyIO ts = do
    hSetBuffering stdout NoBuffering
    runWriteIO $ do
       result <- runTS ts
       newline
       return result
-
-runTS :: TestSuite -> WriteIO Result
-runTS t = do 
-   (res, dt) <- getDiffTime (foldM addTest mempty (tests t))
-   returnStrict res { diffTime = dt }
- 
-addTest :: Result -> Test -> WriteIO Result
-addTest res = liftM (res <>) . runTest
-
-runTest :: Test -> WriteIO Result
-runTest t =
-   case t of
-      Suite s xs -> runSuite s xs
-      Case s io  -> runTestCase s io
-
-runSuite :: String -> TestSuite -> WriteIO Result
-runSuite s ts = do
-   newline
-   liftIO $ putStrLn s
-   reset
-   result <- runTS ts
-   returnStrict (suiteResult s result)
-
-runTestCase :: String -> IO Message -> WriteIO Result
-runTestCase s io = do
-   msg <- liftIO (io `catch` handler)
-   case messageStatus msg of
-      Ok -> dot
-      _  -> do
-         newlineIndent
-         liftIO (print msg)
-         reset
-   returnStrict (caseResult (s, msg))
  where
-   handler :: SomeException -> IO Message
-   handler = return . message . show
+   runTS :: TestSuite -> WriteIO Result
+   runTS t = do 
+      (res, dt) <- getDiffTime (foldM addTest mempty (tests t))
+      returnStrict res { diffTime = dt }
+    
+   runTest :: Test -> WriteIO Result
+   runTest t =
+      case t of
+         Suite s xs -> runSuite s xs
+         Case s io  -> runTestCase s io
+   
+   runSuite :: String -> TestSuite -> WriteIO Result
+   runSuite s ts = do
+      when chattyIO $ do
+         newline
+         liftIO $ putStrLn s
+         reset
+      result <- runTS ts
+      returnStrict (suiteResult s result)
+   
+   runTestCase :: String -> IO Message -> WriteIO Result
+   runTestCase s io = do
+      msg <- liftIO (io `catch` handler)
+      case messageStatus msg of
+         _ | not chattyIO -> return () 
+         Ok -> dot
+         _  -> do
+            newlineIndent
+            liftIO (print msg)
+            reset
+      returnStrict (caseResult (s, msg))
+    where
+      handler :: SomeException -> IO Message
+      handler = return . message . show
+
+   addTest :: Result -> Test -> WriteIO Result
+   addTest res = liftM (res <>) . runTest
 
 -- formatting helpers
 newtype WriteIO a = WriteIO { fromWriteIO :: StateT Int IO a }

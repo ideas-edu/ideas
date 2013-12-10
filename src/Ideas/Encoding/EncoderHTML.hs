@@ -21,6 +21,7 @@ import Data.Maybe
 import Data.Ord
 import Ideas.Common.Library hiding (ready)
 import Ideas.Common.Utils
+import Ideas.Common.Utils.TestSuite
 import Ideas.Encoding.Evaluator
 import Ideas.Encoding.LinkManager
 import Ideas.Encoding.RulePresenter
@@ -101,6 +102,7 @@ encodeConst lm ex = encoderFor $ \tv@(val ::: tp) ->
       Environment -> text val
       Context     -> string $ prettyPrinterContext ex val
       String      -> string val
+      Result      -> (exerciseHeader // ()) <> encodeResult lm val
       _           -> text tv
 
 encodeIndex :: HTMLEncoder a DomainReasoner
@@ -261,6 +263,7 @@ exerciseMenu = divClass "menubox" $
       , with linkToRules       "rules"
       , with linkToExamples    "examples"
       , with linkToDerivations "derivations"
+      , with linkToTestReport  "test report"
       ]
  where
    with f s = do
@@ -284,6 +287,76 @@ encodeStrategy ex = simpleEncoder $ \s -> mconcat
 
 bool :: Bool -> HTMLBuilder
 bool b = string (if b then "yes" else "no")
+
+encodeResult :: BuildXML b => LinkManager -> Result -> b
+encodeResult lm tests = mconcat 
+   [ h2 "Test report"
+   , divClass "test-summary" $ mconcat 
+        [ divClass "test-status" (statusImg lm tests 32)
+        , keyValueTable
+             [ ("Tests",    text (nrOfTests tests))
+             , ("Errors",   text (nrOfErrors tests))
+             , ("Warnings", text (nrOfWarnings tests))
+             , ("Time",     string (show (timeInterval tests) ++ "s"))
+             , ("Rating",   showRating lm $ fromMaybe 10 $ rating tests)
+             ]
+        , h3 "Suites"
+        , ul [ string s <> space <> text t
+             | (s, t) <- subResults tests
+             ]
+        ]
+   , mwhen (isError tests) $ 
+        mconcat (h2 "Errors" : map makeItem errors)
+   , mwhen (isWarning tests) $ 
+        mconcat (h2 "Warnings" : map makeItem warnings)
+   , h2 "Tests"
+   , make tests
+   ]
+ where
+   msgs     = allMessages tests
+   errors   = filter (isError . snd) msgs
+   warnings = filter (isWarning . snd) msgs
+ 
+   make t = mconcat $ 
+      map makeGroup (subResults t) ++
+      map makeItem (topMessages t)
+      
+   makeGroup (s, t) = divClass "test-group" $ 
+      divClass "test-title" (string (s ++ " " ++ show t)) 
+      <> make t
+      
+   makeItem (s, m) = divClass "test-item" $ 
+      statusImg lm m 16 <> spaces 3 <> string s <> msg
+    where
+      msg | isOk m      = mempty
+          | otherwise   = string ": " <> string (intercalate "," (messageLines m))
+
+statusImg :: (HasStatus a, BuildXML b) => LinkManager -> a -> Int -> b
+statusImg lm a n = element "img" 
+   [ "src"    .=. urlForImage lm (statusSrc a)
+   , "height" .=. show n 
+   , "width"  .=. show n
+   ]
+
+statusSrc :: HasStatus a => a -> String
+statusSrc a
+   | isError a   = "stop.png"  
+   | isWarning a = "flagblue.png" 
+   | otherwise   = "ok.png"
+
+showRating :: BuildXML a => LinkManager -> Int -> a
+showRating lm = rec (5::Int) 
+ where
+   rec 0 _ = mempty
+   rec n a = element "img" 
+      [ "src"    .=. urlForImage lm png
+      , "height" .=. "16" 
+      , "width"  .=. "16"
+      ] <> rec (n-1) (a-2)
+    where
+      png | a >= 2    = "star.png"
+          | a == 1    = "star_2.png"
+          | otherwise = "star_3.png"
 
 encodeRuleList :: LinkManager -> Exercise a -> HTMLEncoder a [Rule (Context a)]
 encodeRuleList lm ex = simpleEncoder $ \rs ->

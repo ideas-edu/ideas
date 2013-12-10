@@ -116,7 +116,7 @@ tests =
       ]
 
 _go :: IO ()
-_go = runTestSuiteResult tests >>= print
+_go = runTestSuiteResult True tests >>= print
 
 -------------------------------------------------------------------------
 -- test utils

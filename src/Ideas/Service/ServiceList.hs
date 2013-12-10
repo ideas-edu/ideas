@@ -22,7 +22,6 @@ import Ideas.Service.State
 import Ideas.Service.Types
 import qualified Ideas.Service.Diagnose as Diagnose
 import qualified Ideas.Service.Submit as Submit
-import System.IO.Unsafe
 
 ------------------------------------------------------
 -- Querying a service
@@ -255,5 +254,4 @@ examplederivationsS = makeService "meta.examplederivations"
 testreportS :: Service
 testreportS = makeService "meta.testreport"
    "Show test report for an exercise." $ 
-   (\stdgen -> unsafePerformIO . runTestSuiteResult False 
-   . exerciseTestSuite stdgen) ::: typed 
+   (\stdgen -> runTestSuiteResult False . exerciseTestSuite stdgen) ::: typed 

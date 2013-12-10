@@ -113,7 +113,7 @@ resultError txt = makeXML "reply" $
 ------------------------------------------------------------
 -- Mixing abstract syntax (OpenMath format) and concrete syntax (string)
 
-stringFormatConverter :: Script -> Exercise a -> StdGen -> XML -> Evaluator a IO XMLBuilder
+stringFormatConverter :: Script -> Exercise a -> StdGen -> XML -> Evaluator a XMLBuilder
 stringFormatConverter script ex stdgen xml =
    Evaluator (runEncoderStateM xmlEncoder xes)
              (\tp -> runEncoderStateM (xmlDecoder tp) xds xml)
@@ -122,14 +122,14 @@ stringFormatConverter script ex stdgen xml =
    xds = XMLDecoderState ex script stdgen False g
    g = (liftM getData . findChild "expr") >=> parser ex
 
-htmlConverter :: DomainReasoner -> Maybe String -> Script -> Exercise a -> StdGen -> XML -> Evaluator a IO HTMLPage
+htmlConverter :: DomainReasoner -> Maybe String -> Script -> Exercise a -> StdGen -> XML -> Evaluator a HTMLPage
 htmlConverter dr cgiBin script ex stdgen xml =
    Evaluator (return . htmlEncoder lm dr ex) d
  where
    lm = maybe staticLinks dynamicLinks cgiBin
    Evaluator _ d = stringFormatConverter script ex stdgen xml
 
-openMathConverter :: Bool -> Script -> Exercise a -> StdGen -> XML -> Evaluator a IO XMLBuilder
+openMathConverter :: Bool -> Script -> Exercise a -> StdGen -> XML -> Evaluator a XMLBuilder
 openMathConverter withMF script ex stdgen xml =
    Evaluator (runEncoderStateM xmlEncoder xes)
              (\tp -> runEncoderStateM (xmlDecoder tp) xds xml)

@@ -112,6 +112,8 @@ data TypeRep f t where
    Iso   :: Isomorphism t1 t2 -> TypeRep f t1 -> TypeRep f t2
    -- Function type
    (:->) :: TypeRep f t1 -> TypeRep f t2 -> TypeRep f (t1 -> t2)
+   -- Input/output
+   IO    :: TypeRep f t -> TypeRep f (IO t)
    -- Special annotations
    Tag   :: String -> TypeRep f t1 -> TypeRep f t1
    -- Type constructors
@@ -154,6 +156,7 @@ instance ShowF f => ShowF (TypeRep f) where
 instance ShowF f => Show (TypeRep f t) where
    show (Iso _ t)      = show t
    show (t1 :-> t2)    = show t1 ++ " -> " ++ show t2
+   show (IO t)         = show t
    show t@(Pair _ _)   = showTuple t
    show (t1 :|: t2)    = show t1 ++ " | " ++ show t2
    show (Tag s _)      = s
@@ -166,6 +169,7 @@ instance Show (TypedValue f) => Show (TypedValue (TypeRep f)) where
       case tp of
          Iso iso t  -> show (to iso val ::: t)
          _ :-> _    -> "<<function>>"
+         IO _       -> "<<io>>"
          Tag _ t    -> show (val ::: t)
          List t     -> showAsList (map (show . (::: t)) val)
          Pair t1 t2 -> "(" ++ show (fst val ::: t1) ++
@@ -317,6 +321,9 @@ instance (Typed a t1, Typed a t2, Typed a t3, Typed a t4) => Typed a (t1, t2, t3
 
 instance (Typed a t1, Typed a t2) => Typed a (t1 -> t2) where
    typed = typed :-> typed
+
+instance Typed a t => Typed a (IO t) where
+   typed = IO typed
 
 instance Typed a t => Typed a (Maybe t) where
    typed = Iso (f <-> g) (typed :|: Unit)

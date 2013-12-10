@@ -142,42 +142,15 @@ fromTyped = maybeEncoder $ \(val ::: tp) -> fmap ($ val) (equal tp typed)
 
 -------------------------------------------------------------------
 
-evalService :: Monad m => Evaluator a m b -> Service -> m b
+evalService :: Evaluator a b -> Service -> IO b
 evalService f = eval f . serviceFunction
 
-data Evaluator a m b where
-   Evaluator :: (TypedValue (Type a) -> m b)  -- encoder
-             -> (forall t . Type a t -> m t)  -- decoder
-             -> Evaluator a m b
+data Evaluator a b where
+   Evaluator :: (TypedValue (Type a) -> IO b)  -- encoder
+             -> (forall t . Type a t -> IO t)  -- decoder
+             -> Evaluator a b
 
-{-
-type Fix a = a -> a
-
-encodeTypeRep :: Monoid a => (TypedValue f -> a) -> TypedValue (TypeRep f) -> a
-encodeTypeRep = fix . encodeTypeRepFix
-
-encodeTypeRepFix :: Monoid a => (TypedValue f -> a) -> Fix (TypedValue (TypeRep f) -> a)
-encodeTypeRepFix enc rec (val ::: tp) =
-   case tp of
-      _ :-> _    -> mempty
-      t1 :|: t2  -> case val of
-                       Left a  -> rec (a ::: t1)
-                       Right a -> rec (a ::: t2)
-      Pair t1 t2 -> rec (fst val ::: t1) <> rec (snd val ::: t2)
-      List t     -> mconcat (map (rec . (::: t)) val)
-      Tree t     -> F.fold (fmap (rec . (::: t)) val)
-      Unit       -> mempty
-      Tag _ t    -> rec (val ::: t)
-      Iso v t    -> rec (to v val ::: t)
-      Const ctp  -> enc (val ::: ctp)
-
-encodeWith :: (Monad m, Typed a t) => (t -> m b) -> TypedValue (Type a) -> m b
-encodeWith enc (val ::: tp) =
-   case equal tp typed of
-      Just f  -> enc (f val)
-      Nothing -> fail "encoding failed" -}
-
-eval :: Monad m => Evaluator a m b -> TypedValue (Type a) -> m b
+eval :: Evaluator a b -> TypedValue (Type a) -> IO b
 eval f@(Evaluator enc dec) tv@(val ::: tp) =
    case tp of
       -- handle exceptions
@@ -189,5 +162,9 @@ eval f@(Evaluator enc dec) tv@(val ::: tp) =
       t1 :-> t2 -> do
          a <- dec t1
          eval f (val a ::: t2)
+      -- perform IO
+      IO t -> do
+         a <- val
+         eval f (a ::: t)
       _ ->
          enc tv

@@ -21,6 +21,7 @@ import Ideas.Encoding.DecoderJSON
 import Ideas.Encoding.EncoderJSON
 import Ideas.Encoding.Evaluator
 import Ideas.Service.DomainReasoner
+import Ideas.Service.FeedbackScript.Syntax (Script)
 import Ideas.Service.Request
 import Ideas.Text.JSON
 import System.Random hiding (getStdGen)
@@ -79,18 +80,19 @@ jsonRequest json = do
       }
 
 myHandler :: DomainReasoner -> RPCHandler IO
-myHandler dr fun arg = do
+myHandler dr fun json = do
    srv <- findService dr (newId fun)
    Some ex <-
       if fun == "exerciselist"
       then return (Some emptyExercise)
-      else extractExerciseId arg >>= findExercise dr
+      else extractExerciseId json >>= findExercise dr
    script <- defaultScript dr (getId ex)
    stdgen <- newStdGen
-   let jds = JSONDecoderState ex script stdgen
-   runEncoderStateM (evalService (jsonConverter ex) srv) jds arg
+   evalService (jsonConverter script ex stdgen json) srv
 
-jsonConverter :: Exercise a -> Evaluator a (JSONDecoder a) JSON
-jsonConverter ex = Evaluator
-   (runEncoderStateM jsonEncoder (String . prettyPrinter ex))
-   jsonDecoder
+jsonConverter :: Script -> Exercise a -> StdGen -> JSON -> Evaluator a JSON
+jsonConverter script ex stdgen json = Evaluator 
+   (runEncoderStateM jsonEncoder (String . prettyPrinter ex))  
+   (\tp -> runEncoderStateM (jsonDecoder tp) jds json)
+ where
+   jds = JSONDecoderState ex script stdgen

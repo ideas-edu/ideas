@@ -45,7 +45,7 @@ blackBoxTests dr path = do
 
 doBlackBoxTest :: DomainReasoner -> DataFormat -> FilePath -> TestSuite
 doBlackBoxTest dr format path =
-   assertIO (stripDirectoryPart path) $ do
+   assertMessageIO (stripDirectoryPart path) $ do
       -- Comparing output with expected output
       useFixedStdGen -- fix the random number generator
       withFile path ReadMode $ \h1 -> do
@@ -59,7 +59,7 @@ doBlackBoxTest dr format path =
             expt <- hGetContents h2
             -- Force evaluation of the result, to make sure that
             -- all file handles are closed afterwards.
-            evaluate (out ~= expt)
+            if out ~= expt then return mempty else return (message path)
  where
    expPath = baseOf path ++ ".exp"
    baseOf  = reverse . drop 1 . dropWhile (/= '.') . reverse

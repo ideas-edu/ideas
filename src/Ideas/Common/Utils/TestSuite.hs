@@ -19,7 +19,8 @@ module Ideas.Common.Utils.TestSuite
      TestSuite, module Data.Monoid
    , suite, useProperty, usePropertyWith
    , assertTrue, assertNull, assertEquals, assertIO
-   , assertMessage, onlyWarnings, rateOnError
+   , assertMessage, assertMessageIO
+   , onlyWarnings, rateOnError
      -- * Running a test suite
    , runTestSuite, runTestSuiteResult
      -- * Test Suite Result
@@ -116,6 +117,9 @@ assertIO :: String -> IO Bool -> TestSuite
 assertIO s = makeTestSuite . Case s . liftM f
  where
    f b = if b then mempty else message "assertion failed"
+   
+assertMessageIO :: String -> IO Message -> TestSuite
+assertMessageIO s = makeTestSuite . Case s
 
 -- | All errors are turned into warnings
 onlyWarnings :: TestSuite -> TestSuite

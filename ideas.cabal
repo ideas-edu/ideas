@@ -57,6 +57,7 @@ Library
    Ideas.Common.DerivationTree
    Ideas.Common.Environment
    Ideas.Common.Exercise
+   Ideas.Common.ExerciseTests
    Ideas.Common.Id
    Ideas.Common.Library
    Ideas.Common.Predicate

@@ -43,9 +43,9 @@ processXML maxTime dr cgiBin input = do
    let showXML | compactOutputDefault (isJust cgiBin) req = compactXML 
                | otherwise = show
    if htmlOutput req 
-   then return (req, showXML resp, "text/html")
-   else let out = addVersion (version dr) resp
-        in return (req, showXML out, "application/xml")
+      then return (req, showXML resp, "text/html")
+      else let out = addVersion (version dr) resp
+           in return (req, showXML out, "application/xml")
 
 addVersion :: String -> XML -> XML
 addVersion s xml =
@@ -89,18 +89,18 @@ xmlReply dr cgiBin request xml = do
    
    -- HTML encoder 
    if htmlOutput request
-   then do
-      res <- evalService (htmlConverter dr cgiBin script ex stdgen xml) srv
-      return (toXML res) 
-   -- OpenMath encoder
-   else if useOpenMath request 
-   then do
-      res <- evalService (openMathConverter True script ex stdgen xml) srv
-      return (resultOk res)
-   -- String encoder
-   else do
-      res <- evalService (stringFormatConverter script ex stdgen xml) srv
-      return (resultOk res)
+      then do
+         res <- evalService (htmlConverter dr cgiBin script ex stdgen xml) srv
+         return (toXML res) 
+      -- OpenMath encoder
+      else if useOpenMath request 
+      then do
+         res <- evalService (openMathConverter True script ex stdgen xml) srv
+         return (resultOk res)
+      -- String encoder
+      else do
+         res <- evalService (stringFormatConverter script ex stdgen xml) srv
+         return (resultOk res)
 
 extractExerciseId :: Monad m => XML -> m Id
 extractExerciseId = liftM newId . findAttribute "exerciseid"

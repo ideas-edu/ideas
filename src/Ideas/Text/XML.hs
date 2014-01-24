@@ -15,7 +15,7 @@
 module Ideas.Text.XML
    ( XML, Attr, AttrList, Element(..), InXML(..)
    , XMLBuilder, makeXML
-   , parseXML, compactXML, findAttribute
+   , parseXML, parseXMLFile, compactXML, findAttribute
    , children, Attribute(..), fromBuilder, findChild, getData
    , BuildXML(..)
    , module Data.Monoid, munless, mwhen
@@ -25,6 +25,7 @@ import Data.Char
 import Data.Foldable (toList)
 import Data.Monoid
 import Ideas.Text.XML.Interface hiding (parseXML)
+import System.IO
 import qualified Data.Sequence as Seq
 import qualified Ideas.Text.XML.Interface as I
 
@@ -50,6 +51,11 @@ class InXML a where
 
 ----------------------------------------------------------------
 -- XML parser (a scanner and a XML tree constructor)
+
+parseXMLFile :: FilePath -> IO XML
+parseXMLFile file = 
+   withBinaryFile file ReadMode $ \h ->
+      hGetContents h >>= either fail return . parseXML
 
 parseXML :: String -> Either String XML
 parseXML input = do

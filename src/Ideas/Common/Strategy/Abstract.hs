@@ -142,7 +142,10 @@ instance IsLabeled Rule where
 instance IsLabeled RewriteRule where
    toLabeled = toLabeled . ruleRewrite
 
--- | Labels a strategy with a string
+-- | Labels a strategy with an identifier. Labels are used to identify 
+-- substrategies and to specialize feedback messages. The first argument of
+-- 'label' can be of type 'String', in which case the string is used as 
+-- identifier (and not as description). 
 label :: (IsId l, IsStrategy f) => l -> f a -> LabeledStrategy a
 label l = LS (makeInfo l) . toStrategy
 

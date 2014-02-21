@@ -251,7 +251,7 @@ isPrivate = not . isPublic
 type Examples a = [(Difficulty, a)]
 
 data Difficulty = VeryEasy | Easy | Medium | Difficult | VeryDifficult
-   deriving (Eq, Ord, Enum)
+   deriving (Eq, Ord, Enum, Data, Typeable)
 
 instance Show Difficulty where
    show = (xs !!) . fromEnum

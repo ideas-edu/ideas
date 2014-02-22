@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Rank2Types, DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2013, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -45,6 +45,7 @@ import Data.Function
 import Data.List
 import Data.Maybe
 import Data.Ord
+import Data.Data
 import Ideas.Common.Classes
 import Ideas.Common.Context
 import Ideas.Common.Derivation

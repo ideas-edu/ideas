@@ -29,6 +29,8 @@ module Ideas.Common.Strategy
      -- ** Negation and greedy combinators
    , check, not, repeat, repeat1, try, (|>), exhaustive
    , while, until, multi
+     -- ** Graph
+   , DependencyGraph, dependencyGraph
      -- ** Traversal combinators
    , module Ideas.Common.Strategy.Traversal
      -- * Configuration combinators

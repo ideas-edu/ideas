@@ -14,12 +14,16 @@
 -----------------------------------------------------------------------------
 module Ideas.Common.Strategy.Combinators where
 
+import Data.List ((\\))
+import Data.Array
+import Data.Graph
 import Ideas.Common.Id
 import Ideas.Common.Classes
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Configuration
 import Ideas.Common.Strategy.Core
+import Ideas.Common.Utils (fst3)
 import Prelude hiding (not, repeat, fail, sequence)
 import qualified Prelude
 
@@ -146,3 +150,21 @@ exhaustive = repeat . alternatives
 -- (but dangerous) combinator
 fix :: (Strategy a -> Strategy a) -> Strategy a
 fix f = fromCore (coreFix (toCore . f . fromCore))
+
+-- Graph to strategy ----------------------
+
+type DependencyGraph node key = (Graph, Vertex -> (node, key, [key]), key -> Maybe Vertex)
+
+-- | Create a strategy from a dependency graph with strategies as nodes
+-- Does not check for cycles
+dependencyGraph:: IsStrategy f => DependencyGraph (f a) key -> Strategy a
+dependencyGraph (graph, vertex2data, _) = g2s []
+    where
+        g2s seen = 
+            if null reachables
+                then succeed 
+                else alternatives $ map makePath reachables
+            where             
+                reachables = filter isReachable $ vertices graph \\ seen
+                isReachable = null . flip (\\) seen . (!) graph
+                makePath vertex = (fst3 . vertex2data) vertex <*> g2s (vertex:seen) 

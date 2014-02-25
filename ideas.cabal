@@ -40,7 +40,8 @@ Library
                      directory, 
                      cgi, 
                      parsec,
-                     wl-pprint
+                     wl-pprint,
+                     array
 
   Exposed-modules:
    Ideas.Common.Algebra.Boolean

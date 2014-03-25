@@ -160,11 +160,10 @@ type DependencyGraph node key = (Graph, Vertex -> (node, key, [key]), key -> May
 dependencyGraph:: IsStrategy f => DependencyGraph (f a) key -> Strategy a
 dependencyGraph (graph, vertex2data, _) = g2s []
     where
-        g2s seen = 
-            if null reachables
-                then succeed 
-                else alternatives $ map makePath reachables
+        g2s seen 
+            | null reachables   = succeed 
+            | otherwise         = alternatives $ map makePath reachables
             where             
-                reachables = filter isReachable $ vertices graph \\ seen
-                isReachable = null . flip (\\) seen . (!) graph
-                makePath vertex = (fst3 . vertex2data) vertex <*> g2s (vertex:seen) 
+               reachables      = filter isReachable $ vertices graph \\ seen
+               isReachable     = null . (\\ seen) . (graph!)
+               makePath vertex = (fst3 . vertex2data) vertex <*> g2s (vertex:seen) 

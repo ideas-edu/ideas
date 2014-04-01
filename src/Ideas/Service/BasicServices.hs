@@ -12,7 +12,7 @@
 module Ideas.Service.BasicServices
    ( -- * Basic Services
      stepsremaining, findbuggyrules, ready, allfirsts, derivation
-   , onefirst, applicable, allapplications, apply, generate
+   , onefirst, applicable, allapplications, apply, generate, create
    , StepInfo, exampleDerivations, recognizeRule
    ) where
 
@@ -25,13 +25,23 @@ import Ideas.Common.Utils (fst3)
 import Ideas.Service.State
 import System.Random
 import qualified Ideas.Common.Classes as Apply
+import qualified Ideas.Common.Library as Library
 
 generate :: StdGen -> Exercise a -> Maybe Difficulty -> Either String (State a)
 generate rng ex md =
    case randomTerm rng ex md of
       Just a  -> return (emptyState ex a)
-      Nothing -> fail "No random term"
+      Nothing -> Left "No random term"
 
+create :: Exercise a -> String -> Either String (State a)
+create ex input = 
+    case parser ex input of
+        Left err -> Left err
+        Right a
+            | evalPredicate (Library.ready ex) a -> Left "Is ready"
+            | evalPredicate (Library.suitable ex) a -> Right (emptyState ex a)
+            | otherwise -> Left "Not suitable"
+      
 -- TODO: add a location to each step
 derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))
 derivation mcfg state =

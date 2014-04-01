@@ -31,7 +31,7 @@ serviceList =
    -- basic services
    [ derivationS, allfirstsS, onefirstS, readyS
    , stepsremainingS, allapplicationsS
-   , applyS, generateS, applicableS
+   , applyS, generateS, createS, applicableS
    , examplesS, submitS, diagnoseS
    , findbuggyrulesS, problemdecompositionS
    -- textual services
@@ -113,6 +113,12 @@ generateS = makeService "basic.generate"
    "Given an exercise code and a difficulty level (optional), this service \
    \returns an initial state with a freshly generated expression." $
    generate ::: typed
+   
+createS :: Service
+createS = makeService "basic.create"
+    "Given an expression, this service \
+    \returns an initial state with the original given expression." $
+    create ::: typed
 
 examplesS :: Service
 examplesS = makeService "basic.examples"

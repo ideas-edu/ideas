@@ -15,7 +15,7 @@ module Ideas.Common.Strategy.Traversal
    , topdown, bottomup, leftToRight, rightToLeft
    , full, spine, stop, once, traversalFilter, parentFilter
      -- * One-pass traversals
-   , fulltd, fullbu, oncetd, oncebu, somewhere
+   , fulltd, fullbu, oncetd, oncebu, leftmostbu, somewhere
      -- * Fixpoint traversals
    , innermost, outermost
    , ruleDown, ruleDownLast, ruleUp
@@ -141,6 +141,9 @@ oncetd = traverse [once, topdown]
 
 oncebu :: (IsStrategy f, Navigator a) => f a -> Strategy a
 oncebu = traverse [once, bottomup]
+
+leftmostbu :: (IsStrategy f, Navigator a) => f a -> Strategy a
+leftmostbu = traverse [setCombinator OrElse, setVisit VisitFirst, bottomup]
 
 somewhere :: (IsStrategy f, Navigator a) => f a -> Strategy a
 somewhere = traverse []

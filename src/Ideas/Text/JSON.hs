@@ -244,18 +244,19 @@ lookupM _ _ = fail "expecting a JSON object"
 --------------------------------------------------------
 -- JSON-RPC over HTTP
 
-type RPCHandler m = String -> JSON -> m JSON
+type RPCHandler = String -> JSON -> IO JSON
 
-jsonRPC :: (MonadError a m, InJSON a)
-        => JSON -> RPCHandler m -> m RPCResponse
+jsonRPC :: JSON -> RPCHandler -> IO RPCResponse
 jsonRPC input handler =
    case fromJSON input of
       Nothing  -> return (errorResponse (String "Invalid request") Null)
       Just req -> do
          json <- handler (requestMethod req) (requestParams req)
          return (okResponse json (requestId req))
-       `catchError` \msg ->
-          return (errorResponse (toJSON msg) (requestId req))
+       -- to do: improve catching errors (old and new styles are mixed)
+       `catchError` (\e -> return (errorResponse (toJSON (ioeGetErrorString e)) (requestId req)))
+       `catch` \(SomeException e) ->
+          return (errorResponse (toJSON (show e)) (requestId req))
 
 --------------------------------------------------------
 -- Testing parser/pretty-printer

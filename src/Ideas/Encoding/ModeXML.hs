@@ -13,6 +13,7 @@
 -----------------------------------------------------------------------------
 module Ideas.Encoding.ModeXML (processXML) where
 
+import Control.Exception
 import Control.Monad
 import Control.Monad.Error
 import Data.Maybe
@@ -39,7 +40,9 @@ processXML maxTime dr cgiBin input = do
    xml  <- either fail return (parseXML input)
    req  <- either fail return (xmlRequest xml)
    resp <- maybe id timedSeconds maxTime (xmlReply dr cgiBin req xml)
+    -- to do: improve catching errors (old and new styles are mixed)
     `catchError` (return . resultError . ioeGetErrorString)
+    `catch` (\(SomeException e) -> return (resultError (show e)))
    let showXML | compactOutputDefault (isJust cgiBin) req = compactXML 
                | otherwise = show
    if htmlOutput req 

@@ -151,7 +151,7 @@ defaultHint :: Environment a -> Script -> Text
 defaultHint env script = makeText $
    case expected env of
       Just r  -> ruleToString env script r
-      Nothing -> "Sorry, not hint available."
+      Nothing -> "Sorry, no hint available."
 
 make :: Id -> Environment a -> Script -> Maybe Text
 make feedbackId env script = toText env script (TextRef feedbackId)

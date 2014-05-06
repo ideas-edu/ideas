@@ -13,9 +13,10 @@ module Ideas.Common.Strategy.Traversal
    ( layer, traverse, Option
      -- * Options
    , topdown, bottomup, leftToRight, rightToLeft
-   , full, spine, stop, once, traversalFilter, parentFilter
+   , full, spine, stop, once, leftmost, rightmost
+   , traversalFilter, parentFilter
      -- * One-pass traversals
-   , fulltd, fullbu, oncetd, oncebu, leftmostbu, somewhere
+   , fulltd, fullbu, oncetd, oncebu, leftmostbu, leftmosttd, somewhere
      -- * Fixpoint traversals
    , innermost, outermost
    , ruleDown, ruleDownLast, ruleUp
@@ -113,6 +114,10 @@ spine = setCombinator Sequence `mappend` setVisit VisitOne
 stop  = setCombinator OrElse   `mappend` setVisit VisitAll
 once  = setCombinator OrElse   `mappend` setVisit VisitOne
 
+leftmost, rightmost :: Option a
+leftmost  = leftToRight <> setCombinator OrElse
+rightmost = rightToLeft <> setCombinator OrElse
+
 setVisit :: Visit -> Option a
 setVisit v = O $ \t -> t {getVisit = v}
 
@@ -145,17 +150,22 @@ oncebu = traverse [once, bottomup]
 leftmostbu :: (IsStrategy f, Navigator a) => f a -> Strategy a
 leftmostbu = traverse [setCombinator OrElse, setVisit VisitFirst, bottomup]
 
+leftmosttd :: (IsStrategy f, Navigator a) => f a -> Strategy a
+leftmosttd = traverse [setCombinator OrElse, setVisit VisitFirst, topdown]
+
 somewhere :: (IsStrategy f, Navigator a) => f a -> Strategy a
 somewhere = traverse []
 
 ----------------------------------------------------------------------
 -- fixpoint traverses
 
+-- | left-most innermost traversal.
 innermost :: (IsStrategy f, Navigator a) => f a -> Strategy a
-innermost = repeat . oncebu
+innermost = repeat . leftmostbu
 
+-- | left-most outermost traversal.
 outermost :: (IsStrategy f, Navigator a) => f a -> Strategy a
-outermost = repeat . oncetd
+outermost = repeat . leftmosttd
 
 ----------------------------------------------------------------------
 -- Navigator rules

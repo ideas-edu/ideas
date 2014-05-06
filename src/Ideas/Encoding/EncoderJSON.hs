@@ -123,7 +123,7 @@ encodeResult = encoderFor $ \result -> Object <$>
          , ("rules", Array $ map (String . showId) rs)
          ]
       Submit.NotEquivalent s -> pure $
-         [ ("result", String "NotEquivalent") ] ++
+         ("result", String "NotEquivalent") :
          [ ("reason", String s) | not (null s)]
       Submit.Ok rs st ->
          let f x =

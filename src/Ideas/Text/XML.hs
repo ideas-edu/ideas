@@ -21,6 +21,7 @@ module Ideas.Text.XML
    , module Data.Monoid, munless, mwhen
    ) where
 
+import Control.Monad
 import Data.Char
 import Data.Foldable (toList)
 import Data.Monoid
@@ -54,8 +55,8 @@ class InXML a where
 
 parseXMLFile :: FilePath -> IO XML
 parseXMLFile file = 
-   withBinaryFile file ReadMode $ \h ->
-      hGetContents h >>= either fail return . parseXML
+   withBinaryFile file ReadMode $
+      hGetContents >=> either fail return . parseXML
 
 parseXML :: String -> Either String XML
 parseXML input = do

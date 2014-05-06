@@ -25,7 +25,7 @@ import Test.QuickCheck
 
 testIterator :: (Show a, Eq a, Iterator a) => String -> Gen a -> TestSuite
 testIterator s gen = suite (s ++ " Iterator")
-   [ suite "previous/next" 
+   [ suite "previous/next"
         [ prop gen "previous; next" $  hasPrevious ==>>  previous >=> next ==! id
         , prop gen "next; previous" $  hasNext     ==>>  next >=> previous ==! id
         ]
@@ -92,7 +92,7 @@ testNavigator s gen = suite (s ++ " Navigator")
              childnr === fromMaybe 0 . listToMaybe . reverse . locationList
         ]
    ]
-   
+
 locationList :: Navigator a => a -> [Int]
 locationList = fromLocation . location
 

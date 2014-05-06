@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Ideas.Common.Strategy.Sequential 
+module Ideas.Common.Strategy.Sequential
    ( Sequential(..)
    , Process
    , Builder, build
@@ -20,7 +20,7 @@ module Ideas.Common.Strategy.Sequential
    , withPath, replay
    , uniquePath, tidyProcess
    ) where
-   
+
 import Ideas.Common.Strategy.Path
 
 class Sequential f where
@@ -39,7 +39,7 @@ class Sequential f where
 
 infixr 3 :~>, ~>
 
-data Process a 
+data Process a
    = Process a :|: Process a   -- choice (p or q)
    | Process a :?: Process a   -- non-deterministic choice (behaves as either p or q)
    | a   :~> Process a         -- prefix (a then p)
@@ -53,7 +53,7 @@ instance Sequential Process where
    (~>)  = (:~>)
    (<?>) = (:?:)
    (<|>) = (:|:)
-   
+
    p <*> Ok = p
    p <*> q  = fold (Alg (<|>) (:?:) (:~>) q Stop) p
 
@@ -69,9 +69,8 @@ instance Sequential Builder where
    B f <?> B g = B (\p -> f p <?> g p)
    B f <*> B g = B (f . g)
 
-build :: Builder a -> Process a 
+build :: Builder a -> Process a
 build (B f) = f Ok
-
 
 {-
 data Menu a = Menu { empty :: Bool, firstsSeq :: S.Seq (a, Menu a) }
@@ -83,17 +82,16 @@ instance Sequential Menu where
    ok      = Menu True  S.empty
    stop    = Menu False S.empty
    a ~> m  = Menu False (S.singleton (a, m))
-   
+
    Menu b1 xs <|> Menu b2 ys = Menu (b1 || b2) (xs <> ys)
-   
-   Menu b xs <*> m 
+
+   Menu b xs <*> m
       | b         = m <|> ys
       | otherwise = ys
     where
       ys = Menu b $ fmap (\(a, p) -> (a, p <*> m)) xs  -}
 
-   
-data Alg a b = Alg 
+data Alg a b = Alg
    { forChoice :: b -> b -> b
    , forEither :: b -> b -> b
    , forPrefix :: a -> b -> b
@@ -116,15 +114,15 @@ instance Monad Process where
    p >>= f = fold (Alg (:|:) (:?:) ((<*>) . f) Ok Stop) p -}
 
 fold :: Alg a b -> Process a -> b
-fold alg = rec 
+fold alg = rec
  where
    rec (p :|: q) = forChoice alg (rec p) (rec q)
    rec (p :?: q) = forEither alg (rec p) (rec q)
    rec (a :~> p) = forPrefix alg a (rec p)
    rec Ok        = forOk alg
    rec Stop      = forStop alg
-  
-  {- 
+
+  {-
 join :: Process (Process a) -> Process a
 join = fold (Alg (:|:) (:?:) (<*>) Ok Stop)
 -}
@@ -135,7 +133,7 @@ empty = fold $ Alg (||) (||) (\_ _ -> False) True False
 
 -- angelic for non-deterministic choice
 firsts :: Process a -> [(a, Process a)]
-firsts = ($ []) . rec 
+firsts = ($ []) . rec
  where
    rec (p :|: q) = rec p . rec q
    rec (p :?: q) = rec p . rec q
@@ -145,7 +143,7 @@ firsts = ($ []) . rec
 
 {-
 run :: Process a -> [[a]]
-run p = 
+run p =
    [ [] | empty p ] ++
    [ a:as | (a, q) <- firsts p, as <- run q ] -}
 
@@ -160,7 +158,7 @@ scanChoice f = rec
 
 -- remove left-biased choice
 prune :: (a -> Bool) -> Process a -> Process a
-prune f = fst . fold Alg 
+prune f = fst . fold Alg
    { forChoice = \ ~(p, b1) ~(q, b2) -> (p <|> q, b1 || b2)
    , forEither = \p q -> if snd p then p else q
    , forPrefix = \a ~(p, b) -> (a ~> p, f a || b)
@@ -169,7 +167,7 @@ prune f = fst . fold Alg
    }
 
 useFirst :: Sequential f => (a -> Process a -> f b) -> f b -> Process a -> f b
-useFirst op e = rec 
+useFirst op e = rec
  where
    rec (p :|: q) = rec p <|> rec q
    rec (p :?: q) = rec p <?> rec q
@@ -177,11 +175,9 @@ useFirst op e = rec
    rec Ok        = e
    rec Stop      = stop
 
-
-
 data Sym a = Single a | Composed (Process a)
-   
-fromAtoms :: Process (Sym a) -> Process a 
+
+fromAtoms :: Process (Sym a) -> Process a
 fromAtoms (Single a   :~> q) = a ~> fromAtoms q
 fromAtoms (Composed p :~> q) = p <*> fromAtoms q
 fromAtoms (p :|: q)          = fromAtoms p <|> fromAtoms q
@@ -194,7 +190,7 @@ atomic = single . Composed . fromAtoms
 
 concurrent :: Sequential f => (a -> Bool) -> Process a -> Process a -> f a
 concurrent switch = normal
- where 
+ where
    normal p q = stepBoth q p <|> (stepRight q p <|> stepRight p q)
 
    stepBoth  = useFirst stop2 . useFirst stop2 ok
@@ -229,28 +225,28 @@ withPath = rec emptyPath
  where
    rec path (p :|: q) = rec (toLeft path) p :|: rec (toRight path) q
    rec path (p :?: q) = rec (toLeft path) p :?: rec (toRight path) q
-   rec path (a :~> p) = let next = tick path 
+   rec path (a :~> p) = let next = tick path
                         in (a, next) :~> rec next p
    rec _    Ok        = Ok
    rec _    Stop      = Stop
-   
+
 replay :: Monad m => Path -> Process a -> m ([a], Process a)
 replay = flip (rec [])
  where
    rec acc process path
       | path == emptyPath = return (acc, process)
-      | otherwise = 
+      | otherwise =
            case process of
               p :|: q -> choose p q
               p :?: q -> choose p q
               a :~> p -> untick path >>= rec (a:acc) p
               _       -> fail "replay: invalid path"
-    where      
+    where
       choose p q = leftOrRight path >>= either (rec acc p) (rec acc q)
 
 --------------------------------
 
-filterP :: (a -> Bool) -> Process a -> Process a 
+filterP :: (a -> Bool) -> Process a -> Process a
 filterP p = fold idAlg
    { forPrefix = \a q -> if p a then a ~> q else stop }
 
@@ -272,7 +268,7 @@ tidyProcess eq cond = step2 . step1
 
     step2 = fold idAlg { forChoice = rmSameChoice }
 
-    rmChoiceUnitZero p q = 
+    rmChoiceUnitZero p q =
         case (p, q) of
           (Stop, _) -> q
           (_, Stop) -> p
@@ -283,7 +279,7 @@ tidyProcess eq cond = step2 . step1
     rmPrefix a p | cond a    = p
                  | otherwise = a ~> p
 
-    rmSameChoice p q = if cmpProcesses eq p q 
+    rmSameChoice p q = if cmpProcesses eq p q
                        then p
                        else p <|> q
 
@@ -296,9 +292,9 @@ cmpProcesses f = rec
     rec (a :~> p) (b :~> q) = f a b   && rec p q
     rec Ok        Ok        = True
     rec Stop      Stop      = True
-    rec _         _         = False 
+    rec _         _         = False
 
--- | The uniquePath transformation changes the process in such a way that all 
+-- | The uniquePath transformation changes the process in such a way that all
 --   intermediate states can only be reached by one path. A prerequisite is that
 --   symbols are unique (or only used once).
 uniquePath :: (a -> Bool) -> (a -> a -> Bool) -> Process a -> Process a

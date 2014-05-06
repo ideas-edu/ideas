@@ -29,7 +29,7 @@ processJSON :: Maybe Int -> Bool -> DomainReasoner -> String -> IO (Request, Str
 processJSON maxTime cgiMode dr input = do
    json <- either fail return (parseJSON input)
    req  <- jsonRequest json
-   resp <- jsonRPC json $ \fun arg -> 
+   resp <- jsonRPC json $ \fun arg ->
               maybe id timedSeconds maxTime (myHandler dr fun arg)
    let f   = if compactOutputDefault cgiMode req then compactJSON else show
        out = addVersion (version dr) (toJSON resp)
@@ -90,8 +90,8 @@ myHandler dr fun json = do
    evalService (jsonConverter script ex stdgen json) srv
 
 jsonConverter :: Script -> Exercise a -> StdGen -> JSON -> Evaluator a JSON
-jsonConverter script ex stdgen json = Evaluator 
-   (runEncoderStateM jsonEncoder (String . prettyPrinter ex))  
+jsonConverter script ex stdgen json = Evaluator
+   (runEncoderStateM jsonEncoder (String . prettyPrinter ex))
    (\tp -> runEncoderStateM (jsonDecoder tp) jds json)
  where
    jds = JSONDecoderState ex script stdgen

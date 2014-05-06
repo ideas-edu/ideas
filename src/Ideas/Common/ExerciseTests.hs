@@ -9,10 +9,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Ideas.Common.ExerciseTests where 
-   
-import Ideas.Common.Exercise
-import Ideas.Common.Utils.TestSuite
+module Ideas.Common.ExerciseTests where
+
 import Control.Monad
 import Data.Function
 import Data.List
@@ -20,20 +18,22 @@ import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Context
 import Ideas.Common.Derivation
-import Ideas.Common.Id
 import Ideas.Common.DerivationTree
 import Ideas.Common.Environment
+import Ideas.Common.Exercise
+import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy (derivationTree)
+import Ideas.Common.Utils.TestSuite
 import Ideas.Common.View
 import System.Random
 import Test.QuickCheck
-   
+
 ---------------------------------------------------------------
 -- Checks for an exercise
 
 checkExercise :: Exercise a -> IO ()
-checkExercise ex = do 
+checkExercise ex = do
    stdgen <- getStdGen
    runTestSuite True (exerciseTestSuite stdgen ex)
 
@@ -45,12 +45,12 @@ exerciseTestSuite stdgen ex = suite ("Exercise " ++ show (exerciseId ex)) $
         in length (nubBy eq xs) > 1
    , assertTrue "similarity implemented" $
         let sim a b = similarity ex (inContext ex a) (inContext ex b)
-        in length (nubBy sim xs) > 1 
+        in length (nubBy sim xs) > 1
    , checkExamples stdgen ex
-   ] ++ 
+   ] ++
    case testGenerator ex of
       Nothing  -> []
-      Just gen -> 
+      Just gen ->
          [ useProperty "parser/pretty printer" $ forAll showAsGen $
               checkParserPrettyEx ex . inContext ex . fromS
          , suite "Soundness non-buggy rules" $
@@ -58,7 +58,7 @@ exerciseTestSuite stdgen ex = suite ("Exercise " ++ show (exerciseId ex)) $
                      myGen  = showAs (prettyPrinterContext ex) (liftM (inContext ex) gen)
                      myView = makeView (Just . fromS) (S (prettyPrinterContext ex))
                      args   = stdArgs {maxSize = 10, maxSuccess = 10}
-                 in [ usePropertyWith (showId r) args $ 
+                 in [ usePropertyWith (showId r) args $
                          propRule eq (liftView myView r) myGen
                     | r <- ruleset ex
                     , not (isBuggy r)
@@ -67,7 +67,7 @@ exerciseTestSuite stdgen ex = suite ("Exercise " ++ show (exerciseId ex)) $
          , useProperty "soundness strategy/generator" $
               forAll showAsGen $
                  maybe False (isReady ex) . fromContext
-                 . applyD (strategy ex) . inContext ex . fromS 
+                 . applyD (strategy ex) . inContext ex . fromS
          ]
        where
          showAsGen = showAs (prettyPrinter ex) gen
@@ -110,10 +110,9 @@ checkExamples stdgen ex
         concatMap (checksForTerm True stdgen ex) xs
  where
    xs = map snd (examples ex)
- 
 
 checksForTerm :: Bool -> StdGen -> Exercise a -> a -> [TestSuite]
-checksForTerm leftMost stdgen ex a = 
+checksForTerm leftMost stdgen ex a =
    concat
    -- Left-most derivation
       [ case derivation tree of
@@ -128,7 +127,7 @@ checksForTerm leftMost stdgen ex a =
    tree = derivationTree (strategy ex) (inContext ex a)
 
 checksForDerivation :: Exercise a -> Derivation (Rule (Context a), Environment) (Context a) -> [TestSuite]
-checksForDerivation ex d = 
+checksForDerivation ex d =
    [ -- Conditions on starting term
      assertMessage "start term is suitable"
         (maybe False (isSuitable ex) (fromContext start))
@@ -142,8 +141,8 @@ checksForDerivation ex d =
         (prettyPrinterContext ex start)
    , assertMessage "final term is ready"
         (maybe False (isReady ex) (fromContext final))
-        (prettyPrinterContext ex start ++ "  =>  " ++ 
-         prettyPrinterContext ex final)    
+        (prettyPrinterContext ex start ++ "  =>  " ++
+         prettyPrinterContext ex final)
      -- Parser/pretty printer on terms
    , assertNull "parser/pretty-printer" $ take 1 $ flip map (filter p1 ts) $ \hd ->
         let s = prettyPrinterContext ex hd
@@ -153,25 +152,25 @@ checksForDerivation ex d =
    , assertNull "equivalences" $ take 1 $ flip map (filter p2 pairs) $ \(x, y) ->
         "not equivalent: " ++ prettyPrinterContext ex x
         ++ "  with  " ++ prettyPrinterContext ex y
-     -- Similarity of terms 
+     -- Similarity of terms
    , let xs = filter p3 (triples d) in
      let (x, (r, _), y) = head xs in
-     rateOnError 5 $ assertMessage "no similar steps" 
-        (null xs) 
-        ( prettyPrinterContext ex x ++ 
+     rateOnError 5 $ assertMessage "no similar steps"
+        (null xs)
+        ( prettyPrinterContext ex x ++
           "  with  " ++ prettyPrinterContext ex y ++
           "  using  " ++ show r)
    , assertNull "self similarity" $ take 1 $ do
         x <- terms d
         guard (not (similarity ex x x))
-        return $ "term not similar to itself: " ++ prettyPrinterContext ex x   
+        return $ "term not similar to itself: " ++ prettyPrinterContext ex x
    , -- Parameters
      assertNull "parameters" $ take 1 $ do
         (r, env) <- steps d
         maybeToList (checkReferences r env)
    ]
  where
-   start = firstTerm d 
+   start = firstTerm d
    final = lastTerm d
    ts  = terms d
    p1  = not . checkParserPrettyEx ex

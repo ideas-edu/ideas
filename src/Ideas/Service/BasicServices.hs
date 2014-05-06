@@ -34,14 +34,14 @@ generate rng ex md =
       Nothing -> Left "No random term"
 
 create :: Exercise a -> String -> Either String (State a)
-create ex input = 
+create ex input =
     case parser ex input of
         Left err -> Left err
         Right a
             | evalPredicate (Library.ready ex) a -> Left "Is ready"
             | evalPredicate (Library.suitable ex) a -> Right (emptyState ex a)
             | otherwise -> Left "Not suitable"
-      
+
 -- TODO: add a location to each step
 derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))
 derivation mcfg state =

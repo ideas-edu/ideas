@@ -66,7 +66,7 @@ controlMap = [ ('\x7F', '\x84'), ('\x86', '\x9F'), ('\xFDD0', '\xFDDF'),
    ('\x10FFFE', '\x10FFFF')] -}
 
 baseCharMap :: [(Int, Int)]
-baseCharMap = intpairs 
+baseCharMap = intpairs
    [ ('\x0041','\x005A'), ('\x0061','\x007A'), ('\x00C0','\x00D6'),
    ('\x00D8','\x00F6'), ('\x00F8','\x00FF'), ('\x0100','\x0131'),
    ('\x0134','\x013E'), ('\x0141','\x0148'), ('\x014A','\x017E'),
@@ -124,12 +124,12 @@ baseCharMap = intpairs
    ('\x3105','\x312C'), ('\xAC00','\xD7A3') ]
 
 ideographicMap :: [(Int, Int)]
-ideographicMap = intpairs 
+ideographicMap = intpairs
    [ ('\x4E00','\x9FA5'),
    f '\x3007' , ('\x3021','\x3029') ]
 
 combiningCharMap :: [(Int, Int)]
-combiningCharMap = intpairs 
+combiningCharMap = intpairs
    [('\x0300','\x0345'), ('\x0360','\x0361'), ('\x0483','\x0486'), ('\x0591','\x05A1'),
    ('\x05A3','\x05B9'), ('\x05BB','\x05BD'),  f '\x05BF' , ('\x05C1','\x05C2'),
    f '\x05C4' , ('\x064B','\x0652'), f '\x0670' , ('\x06D6','\x06DC'),

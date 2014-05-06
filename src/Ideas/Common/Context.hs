@@ -9,11 +9,11 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- 
--- The 'Context' datatype places a value in a context consisting of an 
+--
+-- The 'Context' datatype places a value in a context consisting of an
 -- environment with bindings and a point of focus. The datatype is an instance
 -- of the 'HasEnvironment' type class (for accessing the environment) and
--- the 'Navigator' type class (for traversing the term). 
+-- the 'Navigator' type class (for traversing the term).
 --
 -----------------------------------------------------------------------------
 module Ideas.Common.Context

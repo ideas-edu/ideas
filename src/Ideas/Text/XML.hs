@@ -54,7 +54,7 @@ class InXML a where
 -- XML parser (a scanner and a XML tree constructor)
 
 parseXMLFile :: FilePath -> IO XML
-parseXMLFile file = 
+parseXMLFile file =
    withBinaryFile file ReadMode $
       hGetContents >=> either fail return . parseXML
 

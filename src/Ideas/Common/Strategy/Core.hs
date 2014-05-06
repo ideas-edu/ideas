@@ -22,9 +22,9 @@ module Ideas.Common.Strategy.Core
 import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Rule
+import Ideas.Common.Strategy.Sequential
 import Ideas.Common.Utils.QuickCheck
 import Ideas.Common.Utils.Uniplate
-import Ideas.Common.Strategy.Sequential
 
 -----------------------------------------------------------------
 -- Strategy (internal) data structure, containing a selection
@@ -82,7 +82,7 @@ instance Uniplate (GCore l a) where
          Label l a -> plate Label  |- l |* a
          Atomic a  -> plate Atomic |* a
          Let ds a  -> let (ns, bs) = unzip ds
-                          make     = Let . zip ns 
+                          make     = Let . zip ns
                       in plate make ||* bs |* a
          _         -> plate core
 
@@ -119,7 +119,7 @@ coreFix f = -- disadvantage: function f is applied twice
    let i = nextVar (f (Var (-1)))
    in coreRec i (f (Var i))
 
-coreRec :: Int -> GCore l a -> GCore l a 
+coreRec :: Int -> GCore l a -> GCore l a
 coreRec n a = Let [(n, a)] (Var n)
 
 coreSubstAll :: GCore l a -> GCore l a
@@ -128,7 +128,7 @@ coreSubstAll = rec []
    rec xs (Var i)    = fromMaybe (error "coreInf") (lookup i xs)
    rec xs (Let ds a) = let this = [ (n, rec this b) | (n, b) <- ds ] ++ xs
                        in rec this a
-   rec xs core       = descend (rec xs) core 
+   rec xs core       = descend (rec xs) core
 
 -----------------------------------------------------------------
 -- Utility functions

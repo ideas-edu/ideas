@@ -289,9 +289,9 @@ bool :: Bool -> HTMLBuilder
 bool b = string (if b then "yes" else "no")
 
 encodeResult :: BuildXML b => LinkManager -> Result -> b
-encodeResult lm tests = mconcat 
+encodeResult lm tests = mconcat
    [ h2 "Test report"
-   , divClass "test-summary" $ mconcat 
+   , divClass "test-summary" $ mconcat
         [ divClass "test-status" (statusImg lm tests 32)
         , keyValueTable
              [ ("Tests",    text (nrOfTests tests))
@@ -305,9 +305,9 @@ encodeResult lm tests = mconcat
              | (s, t) <- subResults tests
              ]
         ]
-   , mwhen (isError tests) $ 
+   , mwhen (isError tests) $
         mconcat (h2 "Errors" : map makeItem errors)
-   , mwhen (isWarning tests) $ 
+   , mwhen (isWarning tests) $
         mconcat (h2 "Warnings" : map makeItem warnings)
    , h2 "Tests"
    , make tests
@@ -316,41 +316,41 @@ encodeResult lm tests = mconcat
    msgs     = allMessages tests
    errors   = filter (isError . snd) msgs
    warnings = filter (isWarning . snd) msgs
- 
-   make t = mconcat $ 
+
+   make t = mconcat $
       map makeGroup (subResults t) ++
       map makeItem (topMessages t)
-      
-   makeGroup (s, t) = divClass "test-group" $ 
-      divClass "test-title" (string (s ++ " " ++ show t)) 
+
+   makeGroup (s, t) = divClass "test-group" $
+      divClass "test-title" (string (s ++ " " ++ show t))
       <> make t
-      
-   makeItem (s, m) = divClass "test-item" $ 
+
+   makeItem (s, m) = divClass "test-item" $
       statusImg lm m 16 <> spaces 3 <> string s <> msg
     where
       msg | isOk m      = mempty
           | otherwise   = string ": " <> string (intercalate "," (messageLines m))
 
 statusImg :: (HasStatus a, BuildXML b) => LinkManager -> a -> Int -> b
-statusImg lm a n = element "img" 
+statusImg lm a n = element "img"
    [ "src"    .=. urlForImage lm (statusSrc a)
-   , "height" .=. show n 
+   , "height" .=. show n
    , "width"  .=. show n
    ]
 
 statusSrc :: HasStatus a => a -> String
 statusSrc a
-   | isError a   = "stop.png"  
-   | isWarning a = "flagblue.png" 
+   | isError a   = "stop.png"
+   | isWarning a = "flagblue.png"
    | otherwise   = "ok.png"
 
 showRating :: BuildXML a => LinkManager -> Int -> a
-showRating lm = rec (5::Int) 
+showRating lm = rec (5::Int)
  where
    rec 0 _ = mempty
-   rec n a = element "img" 
+   rec n a = element "img"
       [ "src"    .=. urlForImage lm png
-      , "height" .=. "16" 
+      , "height" .=. "16"
       , "width"  .=. "16"
       ] <> rec (n-1) (a-2)
     where
@@ -549,7 +549,7 @@ htmlDiagnosis = encoderFor $ \diagnosis ->
          spanClass "error" $ string $ if null s then "Not equivalent" else s
       Similar _ s ->
          h2 "Similar term" <> encodeState // s
-      WrongRule _ s mr -> 
+      WrongRule _ s mr ->
          h2 ("WrongRule " ++ maybe "" showId mr)
          <> encodeState // s
       Expected _ s r ->

@@ -63,8 +63,8 @@ coreBuilder f = rec
          Fail      -> emptyTag "fail"
     where
       asList s g = element s (map rec (collect g core))
-      decls ds   = mconcat [ tag "decl" (("var" .=. show n) <> rec a) 
-                           | (n, a) <- ds 
+      decls ds   = mconcat [ tag "decl" (("var" .=. show n) <> rec a)
+                           | (n, a) <- ds
                            ]
 
 collect :: (a -> Maybe (a, a)) -> a -> [a]

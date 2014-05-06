@@ -14,11 +14,11 @@
 -----------------------------------------------------------------------------
 module Ideas.Common.Strategy.Combinators where
 
-import Data.List ((\\))
 import Data.Array
 import Data.Graph
-import Ideas.Common.Id
+import Data.List ((\\))
 import Ideas.Common.Classes
+import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Configuration
@@ -160,10 +160,10 @@ type DependencyGraph node key = (Graph, Vertex -> (node, key, [key]), key -> May
 dependencyGraph:: IsStrategy f => DependencyGraph (f a) key -> Strategy a
 dependencyGraph (graph, vertex2data, _) = g2s []
     where
-        g2s seen 
-            | null reachables   = succeed 
+        g2s seen
+            | null reachables   = succeed
             | otherwise         = alternatives $ map makePath reachables
-            where             
+            where
                reachables      = filter isReachable $ vertices graph \\ seen
                isReachable     = null . (\\ seen) . (graph!)
-               makePath vertex = (fst3 . vertex2data) vertex <*> g2s (vertex:seen) 
+               makePath vertex = (fst3 . vertex2data) vertex <*> g2s (vertex:seen)

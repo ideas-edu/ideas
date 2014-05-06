@@ -51,7 +51,7 @@ import Ideas.Common.Strategy.Combinators
 import Ideas.Common.Strategy.Configuration
 import Ideas.Common.Strategy.Location
 import Ideas.Common.Strategy.Parsing
-import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Path
+import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Traversal hiding (full, spine, stop, once)
 import Prelude ()

@@ -19,15 +19,15 @@ module Ideas.Common.Strategy.Parsing
 
 import Data.Function (on)
 import Data.Monoid
-import Ideas.Common.Utils (fst3)
 import Ideas.Common.Classes
 import Ideas.Common.DerivationTree
 import Ideas.Common.Environment
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Core
 import Ideas.Common.Strategy.Path
-import qualified Ideas.Common.Strategy.Sequential as Sequential
 import Ideas.Common.Strategy.Sequential hiding (replay)
+import Ideas.Common.Utils (fst3)
+import qualified Ideas.Common.Strategy.Sequential as Sequential
 
 ----------------------------------------------------------------------
 -- Step data type
@@ -37,7 +37,7 @@ data Step l a = Enter l | Exit l | RuleStep Environment (Rule a)
 
 instance Show (Step l a) where
    show (Enter _) = "Enter"
-   show (Exit _)  = "Exit" 
+   show (Exit _)  = "Exit"
    show (RuleStep _ r) = show r
 
 -- A core expression where the symbols are steps instead of "only" rules
@@ -73,8 +73,8 @@ parseDerivationTree :: a -> ParseState l a -> DerivationTree (Step l a) (a, Pars
 parseDerivationTree = curry (makeTree next)
  where
    next (_, st) = (empty (remainder st), stateFirsts st (remainder st))
-   
-   stateFirsts st p = 
+
+   stateFirsts st p =
       [ ( step
         , (a, st {trace = step:trace st, remainder = q, choices = path})
         )
@@ -82,8 +82,8 @@ parseDerivationTree = curry (makeTree next)
       ]
 
 searchModeState :: (Step l a -> Bool) -> (Step l a -> Step l a -> Bool) -> ParseState l a -> ParseState l a
-searchModeState p eq state = 
-    state { remainder = tidyProcess eq' (not . p') $ 
+searchModeState p eq state =
+    state { remainder = tidyProcess eq' (not . p') $
                         uniquePath p' eq' (remainder state) }
   where
     eq' = eq `on` fst3
@@ -93,23 +93,23 @@ searchModeState p eq state =
 -- Running the parser
 
 runCore :: Core l a -> a -> [a]
-runCore = runProcess . toProcess . noLabels 
+runCore = runProcess . toProcess . noLabels
  where
    runProcess p a = rec a (applyMin2 a p)
 
-   rec a p = 
+   rec a p =
       (if empty p then (a:) else id)
       [ c
       | ((_, b), q) <- firsts p
       , c <- rec b q
       ]
-      
+
 -----------------------------
 
 toProcess :: Core l a -> Process (Step l a)
 toProcess = fromAtoms . build . rec . coreSubstAll
  where
-   rec core = 
+   rec core =
       case core of
          a :*: b   -> rec a <*> rec b
          a :|: b   -> rec a <|> rec b
@@ -117,7 +117,7 @@ toProcess = fromAtoms . build . rec . coreSubstAll
          a :|>: b  -> rec a <?> rec b
          Fail      -> stop
          Succeed   -> ok
-         Label l a -> Single (Enter l) ~> rec a 
+         Label l a -> Single (Enter l) ~> rec a
                       <*> single (Single (Exit l))
          a :%: b   -> concurrent switch (build (rec a)) (build (rec b))
          a :@: b   -> build (rec a) <@> build (rec b)
@@ -127,7 +127,7 @@ toProcess = fromAtoms . build . rec . coreSubstAll
 
    switch (Single (Enter _)) = False
    switch _ = True
-   
+
 applyMin2 :: a -> Process (Step l a) -> Process (Step l a, a)
 applyMin2 a0 = prune (isMajor . fst) . scanChoice step a0
  where
@@ -147,6 +147,6 @@ applyMin a0 = prune (isMajor . fst3) . scanChoice step a0
    step a (st, bs) = [(a, (st, a, bs))]
 
 replay :: Monad m => Path -> a -> Core l a -> m (ParseState l a)
-replay path a core = do 
+replay path a core = do
    (as, p) <- Sequential.replay path $ withPath $ toProcess core
    return (S (map fst as) path (applyMin a p))

@@ -26,10 +26,10 @@ import Data.Maybe
 import Data.Tree
 import Ideas.Common.Library
 import Ideas.Common.Utils
-import qualified Ideas.Common.Utils.TestSuite as TestSuite
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
 import System.Random
+import qualified Ideas.Common.Utils.TestSuite as TestSuite
 
 -----------------------------------------------------------------------------
 -- Services

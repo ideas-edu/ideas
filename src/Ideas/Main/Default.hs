@@ -12,7 +12,7 @@
 -- Main module for feedback services
 --
 -----------------------------------------------------------------------------
-module Ideas.Main.Default 
+module Ideas.Main.Default
    ( defaultMain, newDomainReasoner
      -- extra exports
    , Some(..), serviceList, metaServiceList, Service
@@ -34,10 +34,10 @@ import Ideas.Main.Documentation
 import Ideas.Main.LoggingDatabase
 import Ideas.Main.Options hiding (fullVersion)
 import Ideas.Service.DomainReasoner
-import Ideas.Service.ServiceList
-import Ideas.Service.Types (Service)
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.Request
+import Ideas.Service.ServiceList
+import Ideas.Service.Types (Service)
 import Network.CGI
 import Prelude hiding (catch)
 import System.IO

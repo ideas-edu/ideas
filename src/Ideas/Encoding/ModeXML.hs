@@ -43,9 +43,9 @@ processXML maxTime dr cgiBin input = do
     -- to do: improve catching errors (old and new styles are mixed)
     `catchError` (return . resultError . ioeGetErrorString)
     `catch` (\(SomeException e) -> return (resultError (show e)))
-   let showXML | compactOutputDefault (isJust cgiBin) req = compactXML 
+   let showXML | compactOutputDefault (isJust cgiBin) req = compactXML
                | otherwise = show
-   if htmlOutput req 
+   if htmlOutput req
       then return (req, showXML resp, "text/html")
       else let out = addVersion (version dr) resp
            in return (req, showXML out, "application/xml")
@@ -89,14 +89,14 @@ xmlReply dr cgiBin request xml = do
                    | getId ex == mempty -> return mempty
                    | otherwise          -> defaultScript dr (getId ex)
    stdgen <- newStdGen
-   
-   -- HTML encoder 
+
+   -- HTML encoder
    if htmlOutput request
       then do
          res <- evalService (htmlConverter dr cgiBin script ex stdgen xml) srv
-         return (toXML res) 
+         return (toXML res)
       -- OpenMath encoder
-      else if useOpenMath request 
+      else if useOpenMath request
       then do
          res <- evalService (openMathConverter True script ex stdgen xml) srv
          return (resultOk res)

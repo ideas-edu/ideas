@@ -135,7 +135,6 @@ prettyElement compact (Element n as c)
                  ibody = (if compact then id else indent 2) body
              in openTag n as `op` ibody `op` closeTag n
 
-
 {-
 instance Show XMLDoc where
    show doc = showXMLDecl doc ++ maybe "" show (dtd doc) ++ show (root doc)

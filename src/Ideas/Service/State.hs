@@ -68,7 +68,7 @@ makeNoState :: Exercise a -> Context a -> State a
 makeNoState = flip makeState []
 
 emptyStateContext :: Exercise a -> Context a -> State a
-emptyStateContext ex ca = 
+emptyStateContext ex ca =
    let pr = emptyPrefix (strategy ex) ca
    in makeState ex [pr] ca
 

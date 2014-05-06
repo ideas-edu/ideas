@@ -156,7 +156,7 @@ encodeDiagnosis = encoderFor $ \diagnosis ->
          make "buggy" [fromEnv env, fromRule r]
       Diagnose.Similar b st ->
          make "similar" [fromReady b, fromState st]
-      Diagnose.WrongRule b st mr -> 
+      Diagnose.WrongRule b st mr ->
          make "wrongrule" [fromReady b, fromState st, fromMaybeRule mr]
       Diagnose.Expected b st r ->
          make "expected" [fromReady b, fromState st, fromRule r]

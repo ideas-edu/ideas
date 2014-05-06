@@ -97,7 +97,7 @@ decodeState = do
    xml <- encoderFor (findChild "state")
    mp  <- decodePrefix  // xml
    ctx <- decodeContext // xml
-   prs <- forM (maybeToList mp) $ \path -> 
+   prs <- forM (maybeToList mp) $ \path ->
              makePrefix path (strategy ex) ctx
    return (makeState ex prs ctx)
 

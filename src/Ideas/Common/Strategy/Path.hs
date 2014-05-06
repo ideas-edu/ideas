@@ -14,7 +14,7 @@
 -- Use Show/Read type classes for serialization/deserialization
 --
 -----------------------------------------------------------------------------
-module Ideas.Common.Strategy.Path 
+module Ideas.Common.Strategy.Path
    ( -- * datatype and constructor
      Path, emptyPath
      -- * extending a path
@@ -23,13 +23,13 @@ module Ideas.Common.Strategy.Path
    , leftOrRight, untick
    ) where
 
-import Ideas.Common.Classes
-import Data.Sequence (Seq, empty, (|>), viewl, ViewL(..), fromList)
 import Data.Foldable (toList)
+import Data.Sequence (Seq, empty, (|>), viewl, ViewL(..), fromList)
+import Ideas.Common.Classes
 
 data Path = Path !Int (Seq Bool) -- depth, choices
    deriving Eq
-   
+
 instance Show Path where
    show = show . intList
 

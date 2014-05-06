@@ -161,7 +161,7 @@ instance Typed a (Diagnosis a) where
       f (Right (Right (Right (Left (b, s, as, r))))) = Detour b s as r
       f (Right (Right (Right (Right (Left (b, s)))))) = Correct b s
       f (Right (Right (Right (Right (Right (b, s)))))) = Unknown b s
-                         
+
       g (Buggy as r)       = Left (Left (as, r))
    --   g Missing            = Left (Right (Left ()))
    --   g (IncorrectPart xs) = Left (Right (Right (Left xs)))

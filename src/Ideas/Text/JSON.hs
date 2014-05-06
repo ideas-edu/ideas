@@ -47,7 +47,7 @@ data Number = I Integer | D Double deriving Eq
 instance Show Number where
    show (I n) = show n
    show (D d) = show d
-   
+
 instance Show JSON where
    show = show . prettyJSON False
 
@@ -55,9 +55,9 @@ compactJSON :: JSON -> String
 compactJSON = show . prettyJSON True
 
 prettyJSON :: Bool -> JSON -> Doc
-prettyJSON compact = rec 
+prettyJSON compact = rec
  where
-   rec json = 
+   rec json =
       case json of
          Number n  -> text (show n)
          String s  -> str (escape s)
@@ -70,12 +70,12 @@ prettyJSON compact = rec
            | isSimple y = str x <> string ": " <> rec y
            | otherwise  = align (str x <> char ':' <> line <> indent 2 (rec y))
 
-   str = dquotes . text 
+   str = dquotes . text
 
    make open close xs
-      | compact || length xs < 2 = 
+      | compact || length xs < 2 =
            enclose open close (hcat (intersperse comma xs))
-      | otherwise = 
+      | otherwise =
            align (vsep (zipWith (<+>) (open:repeat comma) xs ++ [close]))
 
    isSimple (Array xs)  = null xs

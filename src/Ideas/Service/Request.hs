@@ -33,7 +33,7 @@ data Encoding = EncHTML      -- html page as output
               | EncCompact   -- compact ouput
               | EncPretty    -- pretty output
  deriving Eq
- 
+
 instance Show Encoding where
    showList xs rest = intercalate "+" (map show xs) ++ rest
    show EncHTML     = "html"

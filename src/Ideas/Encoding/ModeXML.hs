@@ -32,7 +32,8 @@ import Ideas.Service.Request
 import Ideas.Text.HTML
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
-import System.IO.Error
+import Prelude hiding (catch)
+import System.IO.Error hiding (catch)
 import System.Random (StdGen, newStdGen)
 
 processXML :: Maybe Int -> DomainReasoner -> Maybe String -> String -> IO (Request, String, String)

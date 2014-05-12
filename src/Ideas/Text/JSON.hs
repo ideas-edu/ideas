@@ -25,7 +25,8 @@ import Control.Monad.Error
 import Data.List (intersperse)
 import Data.Maybe
 import Ideas.Text.Parsing hiding (string, char)
-import System.IO.Error
+import Prelude hiding (catch)
+import System.IO.Error hiding (catch)
 import Test.QuickCheck
 import Text.PrettyPrint.Leijen hiding ((<$>))
 import qualified Ideas.Text.UTF8 as UTF8

@@ -54,7 +54,7 @@ data Condition
 makeText :: String -> Text
 makeText s = case words s of
                 [] -> TextEmpty
-                xs -> TextString (combineList xs)
+                xs -> TextString (unwords xs)
 
 feedbackDecl, textForIdDecl :: HasId a => a -> Text -> Decl
 feedbackDecl  a = Simple Feedback  [getId a]
@@ -123,9 +123,9 @@ textItems t = rec t []
    rec TextEmpty  = id
    rec a          = (a:)
 
-combineList :: [String] -> String
-combineList = foldr combine []
-
+-- Combine two strings by inserting a space in between (unless one of the
+-- strings is empty, or when the second string starts with an interpunction
+-- symbol).
 combine :: String -> String -> String
 combine a b
    | null a    = b

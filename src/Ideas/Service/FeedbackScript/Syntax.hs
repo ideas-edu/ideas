@@ -47,6 +47,7 @@ data Text
 
 data Condition
    = RecognizedIs Id
+   | MotivationIs Id
    | CondNot   Condition
    | CondConst Bool
    | CondRef Id
@@ -86,6 +87,7 @@ instance Show DeclType where
 
 instance Show Condition where
    show (RecognizedIs a) = "recognize " ++ show a
+   show (MotivationIs a) = "motivation " ++ show a
    show (CondNot c)      = "not " ++ show c
    show (CondConst b)    = map toLower (show b)
    show (CondRef a)      = '@' : show a

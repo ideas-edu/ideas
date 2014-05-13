@@ -34,6 +34,7 @@ data Environment a = Env
    { oldReady   :: Bool
    , expected   :: Maybe (Rule (Context a))
    , recognized :: Maybe (Rule (Context a))
+   , motivation :: Maybe (Rule (Context a))
    , actives    :: Maybe [LabelInfo]
    , diffPair   :: Maybe (String, String)
    , before     :: Maybe Term
@@ -41,15 +42,16 @@ data Environment a = Env
    , afterText  :: Maybe String
    }
 
-newEnvironment :: State a -> Environment a
-newEnvironment st = newEnvironmentFor st next
+newEnvironment :: State a -> Maybe (Rule (Context a)) -> Environment a
+newEnvironment st motivationRule = newEnvironmentFor st motivationRule next
   where
     next = either (const Nothing) Just (onefirst st)
 
-newEnvironmentFor :: State a -> Maybe ((Rule (Context a), b, c), State a) -> Environment a
-newEnvironmentFor st next = Env
+newEnvironmentFor :: State a -> Maybe (Rule (Context a)) -> Maybe ((Rule (Context a), b, c), State a) -> Environment a
+newEnvironmentFor st motivationRule next = Env
   { oldReady   = ready st
   , expected   = fmap (\((x,_,_),_) -> x) next
+  , motivation = motivationRule
   , recognized = Nothing
   , actives    = listToMaybe (stateLabels st)
   , diffPair   = Nothing
@@ -83,17 +85,20 @@ eval env script = either (return . findIdRef) evalText
          | a == beforeId     = fmap TextTerm (before env)
          | a == afterId      = fmap TextTerm (after env)
          | a == afterTextId  = fmap TextString (afterText env)
+         | a == motivationId = fmap (findIdRef . getId) (motivation env)
          | otherwise         = findRef (==a)
       unref t = Just t
 
    evalBool :: Condition -> Bool
    evalBool (RecognizedIs a) = maybe False (eqId a . getId) (recognized env)
+   evalBool (MotivationIs a) = maybe False (eqId a . getId) (motivation env)
    evalBool (CondNot c)      = not (evalBool c)
    evalBool (CondConst b)    = b
    evalBool (CondRef a)
       | a == oldreadyId        = oldReady env
       | a == hasexpectedId     = isJust (expected env)
       | a == hasrecognizedId   = isJust (recognized env)
+      | a == hasmotivationId   = isJust (motivation env)
       | a == recognizedbuggyId = maybe False isBuggy (recognized env)
       | otherwise              = False
 
@@ -140,12 +145,12 @@ feedbackHint :: Id -> Environment a -> Script -> Text
 feedbackHint feedbackId env script =
    fromMaybe (defaultHint env script) $ make feedbackId env script
 
-feedbackHints :: Id -> [((Rule (Context a), b, c), State a)] -> State a -> Script -> [Text]
-feedbackHints feedbackId nexts state script =
+feedbackHints :: Id -> [((Rule (Context a), b, c), State a)] -> State a -> Maybe (Rule (Context a)) -> Script -> [Text]
+feedbackHints feedbackId nexts state motivationRule script =
    map (\env -> fromMaybe (defaultHint env script) $
      make feedbackId env script) envs
   where
-    envs = map (newEnvironmentFor state . Just) nexts
+    envs = map (\r -> newEnvironmentFor state motivationRule (Just r)) nexts
 
 defaultHint :: Environment a -> Script -> Text
 defaultHint env script = makeText $
@@ -162,12 +167,12 @@ feedbackIds = map newId
 
 attributeIds :: [Id]
 attributeIds =
-   [expectedId, recognizedId, diffbeforeId, diffafterId, beforeId, afterId, afterTextId]
+   [expectedId, recognizedId, diffbeforeId, diffafterId, beforeId, afterId, afterTextId, motivationId]
 
 conditionIds :: [Id]
-conditionIds = [oldreadyId, hasexpectedId, hasrecognizedId, recognizedbuggyId]
+conditionIds = [oldreadyId, hasexpectedId, hasrecognizedId, hasmotivationId, recognizedbuggyId]
 
-expectedId, recognizedId, diffbeforeId, diffafterId, beforeId, afterId, afterTextId :: Id
+expectedId, recognizedId, diffbeforeId, diffafterId, beforeId, afterId, afterTextId, motivationId :: Id
 expectedId   = newId "expected"
 recognizedId = newId "recognized"
 diffbeforeId = newId "diffbefore"
@@ -175,9 +180,11 @@ diffafterId  = newId "diffafter"
 beforeId     = newId "before"
 afterId      = newId "after"
 afterTextId  = newId "aftertext"
+motivationId = newId "motivation"
 
-oldreadyId, hasexpectedId, hasrecognizedId, recognizedbuggyId :: Id
+oldreadyId, hasexpectedId, hasrecognizedId, hasmotivationId, recognizedbuggyId :: Id
 oldreadyId        = newId "oldready"
 hasexpectedId     = newId "hasexpected"
 hasrecognizedId   = newId "hasrecognized"
+hasmotivationId   = newId "hasmotivation"
 recognizedbuggyId = newId "recognizedbuggy"

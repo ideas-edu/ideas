@@ -36,7 +36,7 @@ instance Typed a Message where
 
 derivationtext :: Script -> State a -> Either String (Derivation String (Context a))
 derivationtext script state =
-   let f = ruleToString (newEnvironment state) script . fst
+   let f = ruleToString (newEnvironment state Nothing) script . fst
    in right (mapFirst f) (derivation Nothing state)
 
 onefirsttext :: Script -> State a -> Maybe String -> (Message, Maybe (State a))
@@ -50,7 +50,7 @@ onefirsttext script old event =
                         else "step"
    ex   = exercise old
    next = either (const Nothing) Just (onefirst old)
-   env  = (newEnvironment old)
+   env  = (newEnvironment old Nothing)
       { diffPair = do
           new      <- fmap snd next
           oldC     <- fromContext (stateContext old)
@@ -71,7 +71,7 @@ submittext script old input =
    ex = exercise old
 
 feedbacktext :: Script -> State a -> Context a -> Maybe Id -> (Message, State a)
-feedbacktext script old new ruleUsed =
+feedbacktext script old new motivationId =
    case diagnosis of
       Buggy _ _       -> (msg False, old)
       NotEquivalent _ -> (msg False, old)
@@ -82,11 +82,12 @@ feedbacktext script old new ruleUsed =
       Correct _ s     -> (msg False, s)
       Unknown _ s     -> (msg False, s)
  where
-   diagnosis = diagnose old new ruleUsed
+   diagnosis = diagnose old new motivationId
    output    = feedbackDiagnosis diagnosis env script
    msg b     = M (Just b) output
-   ex  = exercise old
-   env = (newEnvironment old)
+   ex        = exercise old
+   motivationRule = motivationId >>= getRule ex
+   env = (newEnvironment old motivationRule)
             { diffPair = do
                  oldTerm  <- fromContext (stateContext old)
                  newTerm  <- fromContext new

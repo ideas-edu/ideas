@@ -77,7 +77,7 @@ newState diagnosis =
 -- The diagnose service
 
 diagnose :: State a -> Context a -> Maybe Id -> Diagnosis a
-diagnose state new ruleUsed
+diagnose state new motivationId
    -- Is the submitted term equivalent?
    | not (equivalence ex (stateContext state) new) =
         -- Is the rule used discoverable by trying all known buggy rules?
@@ -86,7 +86,7 @@ diagnose state new ruleUsed
            Nothing      -> NotEquivalent "" -- compareParts state new
 
    -- Is the used rule that is submitted applied correctly?
-   | isJust ruleUsed && isNothing (discovered False ruleUsed) =
+   | isJust motivationId && isNothing (discovered False motivationId) =
         case discovered False Nothing of -- search for a "sound" rule
            Just (r, _) -> WrongRule (ready state) state (Just r)
            Nothing -> 

@@ -97,6 +97,7 @@ condition :: Parser Condition
 condition = choice
    [ CondRef         <$> lexeme attribute
    , RecognizedIs    <$  lexString "recognize" <*> identifier
+   , MotivationIs    <$  lexString "motivation" <*> identifier
    , CondConst True  <$  lexString "true"
    , CondConst False <$  lexString "false"
    , CondNot         <$  lexString "not" <*> condition

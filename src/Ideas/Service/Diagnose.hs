@@ -17,7 +17,6 @@ module Ideas.Service.Diagnose
    , difference, differenceEqual
    ) where
 
-import Control.Monad
 import Data.Function
 import Data.List (sortBy)
 import Data.Maybe
@@ -88,9 +87,14 @@ diagnose state new ruleUsed
 
    -- Is the used rule that is submitted applied correctly?
    | isJust ruleUsed && isNothing (discovered False ruleUsed) =
-        let mr = fmap fst $ discovered False Nothing
-                  `mplus`   discovered True  Nothing
-        in WrongRule (ready state) state mr
+        case discovered False Nothing of -- search for a "sound" rule
+           Just (r, _) -> WrongRule (ready state) state (Just r)
+           Nothing -> 
+              case discovered True  Nothing of -- search for buggy rule
+                 Just (r, as) -> 
+                    Buggy as r -- report the buggy rule
+                 Nothing ->
+                    WrongRule (ready state) state Nothing
 
    -- Was the submitted term expected by the strategy?
    | isJust expected =

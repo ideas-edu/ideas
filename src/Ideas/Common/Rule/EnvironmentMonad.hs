@@ -24,7 +24,7 @@ module Ideas.Common.Rule.EnvironmentMonad
    , envMonadRefs, envMonadFunctionRefs
    ) where
 
-import Control.Monad.State
+import Control.Monad
 import Data.Maybe
 import Data.Typeable
 import Ideas.Common.Environment
@@ -71,21 +71,20 @@ updateRefs xs = msum . map return . execEnvMonad (sequence_ xs)
 -- Environment Monad
 
 runEnvMonad :: EnvMonad a -> Environment -> [(a, Environment)]
-runEnvMonad = runStateT . rec
- where
-   rec :: EnvMonad a -> StateT Environment [] a
-   rec monad =
-      case monad of
-         Return a   -> return a
-         Bind m f   -> rec m >>= rec . f
-         Then m n   -> rec m >> rec n
-         Fail s     -> fail s
-         Zero       -> mzero
-         Plus m n   -> rec m `mplus` rec n
-         ref := a   -> modify (insertRef ref a)
-         ref :~ f   -> modify (changeRef ref f)
-         ref :? a   -> gets (fromMaybe a . (ref ?))
-         GetRef ref -> gets (ref ?) >>= maybe (fail "getRef") return
+runEnvMonad envMonad env =
+   case envMonad of
+      Return a   -> [(a, env)]
+      Bind m f   -> concat [ runEnvMonad (f a) e | (a, e) <- runEnvMonad m env ]
+      Then m n   -> concat [ runEnvMonad n e     | (_, e) <- runEnvMonad m env ]
+      Fail _     -> []
+      Zero       -> []
+      Plus m n   -> runEnvMonad m env ++ runEnvMonad n env
+      ref := a   -> [((), insertRef ref a env)]
+      ref :~ f   -> [((), changeRef ref f env)]
+      ref :? a   -> [(fromMaybe a (ref ? env), env)]
+      GetRef ref -> case ref ? env of
+                       Just a  -> [(a, env)]
+                       Nothing -> []
 
 execEnvMonad :: EnvMonad a -> Environment -> [Environment]
 execEnvMonad m = liftM snd . runEnvMonad m

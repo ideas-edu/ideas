@@ -9,6 +9,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Algebra.BooleanLaws
    ( -- * Boolean laws
      andOverOrLaws, orOverAndLaws

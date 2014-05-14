@@ -12,6 +12,8 @@
 -- and allows to continue the derivation at that particular point.
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Strategy.Prefix
    ( Prefix, emptyPrefix, makePrefix, showPrefix
    , prefixToSteps, prefixTree, stepsToRules, lastStepInPrefix, activeLabels

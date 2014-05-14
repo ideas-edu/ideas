@@ -12,6 +12,8 @@
 -- data types
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Strategy.Combinators where
 
 import Data.Array

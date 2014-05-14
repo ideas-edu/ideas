@@ -10,6 +10,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Service.ProblemDecomposition
    ( problemDecomposition, Reply(..)
    ) where

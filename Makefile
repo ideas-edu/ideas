@@ -92,5 +92,5 @@ clean:
 nolicense:
 	find src -name \*.hs -print0 | xargs --null grep -L "LICENSE"
 	
-#
-# find src/Ideas -name "*.hs" -exec ../../trunk/tools/CleanCode.exe "{}" \;
+noid:
+	find src -name \*.hs -print0 | xargs --null grep -L '$$Id'

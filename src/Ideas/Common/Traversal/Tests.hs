@@ -9,6 +9,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Traversal.Tests
    ( testIterator, testNavigator, tests
    , uniGen, listGen

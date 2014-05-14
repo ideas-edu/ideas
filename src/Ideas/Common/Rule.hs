@@ -9,6 +9,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Rule (module Export) where
 
 import Ideas.Common.Rule.Abstract as Export

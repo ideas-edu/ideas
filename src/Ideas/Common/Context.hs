@@ -16,6 +16,8 @@
 -- the 'Navigator' type class (for traversing the term).
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Context
    ( -- * Abstract data type
      Context, newContext

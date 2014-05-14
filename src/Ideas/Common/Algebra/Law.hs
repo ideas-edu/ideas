@@ -10,6 +10,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Algebra.Law
    ( Law, LawSpec((:==:)), law, mapLaw
    , propertyLaw, rewriteLaw

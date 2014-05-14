@@ -12,6 +12,8 @@
 -- Services using XML notation
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Encoding.EncoderXML
    ( XMLEncoder, XMLEncoderState(..)
    , xmlEncoder, encodeState

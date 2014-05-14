@@ -11,6 +11,8 @@
 -- Extensions to the QuickCheck library
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Utils.QuickCheck
    ( module Test.QuickCheck
      -- * Data type

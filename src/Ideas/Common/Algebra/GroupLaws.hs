@@ -9,6 +9,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Algebra.GroupLaws
    ( -- * Monoid laws
      associative, leftIdentity

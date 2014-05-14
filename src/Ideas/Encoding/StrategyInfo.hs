@@ -11,6 +11,8 @@
 -- Converting a strategy to XML, and the other way around.
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Encoding.StrategyInfo (strategyToXML, xmlToStrategy) where
 
 import Control.Monad

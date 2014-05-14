@@ -14,6 +14,8 @@
 -- can be lifted with a view using the LiftView type class.
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Rule.Abstract
    ( -- * Rule data type and accessors
      Rule, transformation, recognizer, checkReferences

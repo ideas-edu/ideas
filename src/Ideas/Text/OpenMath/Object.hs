@@ -10,6 +10,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Text.OpenMath.Object
    ( OMOBJ(..), getOMVs, xml2omobj, omobj2xml
    ) where

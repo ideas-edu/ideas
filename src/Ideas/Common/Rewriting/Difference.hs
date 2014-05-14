@@ -12,6 +12,8 @@
 -- into account.
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Rewriting.Difference
    ( difference, differenceEqual
    , differenceWith, differenceEqualWith

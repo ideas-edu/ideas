@@ -9,6 +9,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Rewriting.Confluence
    ( isConfluent, checkConfluence, checkConfluenceWith
    , somewhereM

@@ -11,6 +11,8 @@
 -- Locations in a strategy
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Strategy.Location
    ( subTaskLocation, nextTaskLocation
    , strategyLocations, subStrategy

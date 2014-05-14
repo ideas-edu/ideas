@@ -10,6 +10,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Encoding.Evaluator
    ( EncoderState, simpleEncoder, maybeEncoder, eitherEncoder
    , encoderFor, encoderStateFor, encodeTyped

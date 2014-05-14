@@ -10,6 +10,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Encoding.OpenMathSupport
    ( -- * Conversion functions to/from OpenMath
      toOpenMath, fromOpenMath, noMixedFractions

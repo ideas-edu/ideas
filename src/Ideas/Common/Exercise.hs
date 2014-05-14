@@ -15,6 +15,8 @@
 -- "Ideas.Common.ExerciseTests" module.
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Exercise
    ( -- * Exercise record
      Exercise(..), emptyExercise, makeExercise

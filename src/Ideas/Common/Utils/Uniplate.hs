@@ -12,6 +12,8 @@
 -- class and its utility plus constructor functions)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Utils.Uniplate
    ( -- * Uniplate type class and utility functions
      Uniplate

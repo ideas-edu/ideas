@@ -12,6 +12,8 @@
 -- Services using JSON notation
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Encoding.EncoderJSON (jsonEncoder) where
 
 import Control.Monad

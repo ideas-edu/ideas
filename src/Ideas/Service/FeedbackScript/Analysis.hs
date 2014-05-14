@@ -11,6 +11,8 @@
 -- Analysis of a feedbackscript
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Service.FeedbackScript.Analysis
    ( -- Analysis functions
      makeScriptFor, parseAndAnalyzeScript, analyzeScript

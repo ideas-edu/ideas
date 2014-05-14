@@ -9,6 +9,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Rewriting (module Export) where
 
 import Ideas.Common.Rewriting.RewriteRule as Export

@@ -13,6 +13,8 @@
 -- A simple data type for term rewriting
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Rewriting.Term
    ( -- * Symbols
      Symbol, newSymbol

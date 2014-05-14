@@ -9,10 +9,12 @@
 -- Portability :  portable (depends on ghc)
 --
 -- A parser for XML documents, directly derived from the specification:
-
+--
 --    http://www.w3.org/TR/2006/REC-xml-20060816
-
+--
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Text.XML.Parser (document, extParsedEnt, extSubset) where
 
 import Control.Monad

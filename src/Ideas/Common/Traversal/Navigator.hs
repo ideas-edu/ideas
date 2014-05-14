@@ -10,6 +10,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Traversal.Navigator
    ( -- * Location information
      Location, toLocation, fromLocation

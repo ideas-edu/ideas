@@ -11,6 +11,8 @@
 -- Basic machinery for executing a core strategy expression.
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Strategy.Parsing
    ( Step(..)
    , ParseState, makeState, choices, trace

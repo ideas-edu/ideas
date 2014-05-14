@@ -11,6 +11,8 @@
 -- Formal mathematical properties (FMP)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Text.OpenMath.FMP where
 
 import Data.List (union)

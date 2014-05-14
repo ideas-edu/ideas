@@ -9,6 +9,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Strategy.Configuration
    ( -- Types and constructors
      StrategyConfiguration, makeStrategyConfiguration

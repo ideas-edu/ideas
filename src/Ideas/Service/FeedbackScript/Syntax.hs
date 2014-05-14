@@ -11,6 +11,8 @@
 -- Abstract syntax for feedback scripts, and pretty-printer (Show instance)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Service.FeedbackScript.Syntax
    ( Script, makeScript, scriptDecls, makeText, textItems
    , Decl(..), DeclType(..), Text(..), Condition(..), includes

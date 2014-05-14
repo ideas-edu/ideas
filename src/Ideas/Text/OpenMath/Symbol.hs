@@ -9,6 +9,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Text.OpenMath.Symbol where
 
 type Symbol = (Maybe String, String)

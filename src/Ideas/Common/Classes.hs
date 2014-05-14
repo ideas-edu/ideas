@@ -11,6 +11,8 @@
 -- Type classes and instances.
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Classes
    ( -- * Type class Apply
      Apply, apply, applyAll, applicable, applyD, applyM, applyList

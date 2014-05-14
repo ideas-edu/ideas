@@ -10,6 +10,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Traversal.Iterator
    ( -- * Iterator type class
      Iterator(..), isFirst, isFinal, hasNext, hasPrevious

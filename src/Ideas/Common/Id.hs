@@ -30,6 +30,8 @@
 -- The 'Id' datatype implements and re-exports the Monoid interface.
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Id
    ( -- * Constructing identifiers
      Id, IsId(..), ( # )

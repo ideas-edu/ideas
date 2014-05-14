@@ -12,6 +12,8 @@
 -- intermediate results as well as annotations for the steps.
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.DerivationTree
    ( -- * Data types
      DerivationTree

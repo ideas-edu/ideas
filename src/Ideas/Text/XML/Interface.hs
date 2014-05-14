@@ -11,6 +11,8 @@
 -- Collection of common operation on XML documents
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Text.XML.Interface
    ( Element(..), Content, Attribute(..), Attributes
    , normalize, parseXML, compactXML

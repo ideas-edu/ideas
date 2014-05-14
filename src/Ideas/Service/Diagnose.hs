@@ -12,6 +12,8 @@
 -- Diagnose a term submitted by a student
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Service.Diagnose
    ( Diagnosis(..), diagnose, restartIfNeeded, newState
    , difference, differenceEqual
@@ -89,9 +91,9 @@ diagnose state new motivationId
    | isJust motivationId && isNothing (discovered False motivationId) =
         case discovered False Nothing of -- search for a "sound" rule
            Just (r, _) -> WrongRule (ready state) state (Just r)
-           Nothing -> 
+           Nothing ->
               case discovered True  Nothing of -- search for buggy rule
-                 Just (r, as) -> 
+                 Just (r, as) ->
                     Buggy as r -- report the buggy rule
                  Nothing ->
                     WrongRule (ready state) state Nothing

@@ -12,6 +12,8 @@
 -- Encoding in HTML
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Encoding.EncoderHTML (htmlEncoder) where
 
 import Control.Monad

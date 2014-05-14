@@ -12,6 +12,8 @@
 -- Services using JSON notation
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Encoding.DecoderJSON
    ( JSONDecoder, JSONDecoderState(..), jsonDecoder
    ) where

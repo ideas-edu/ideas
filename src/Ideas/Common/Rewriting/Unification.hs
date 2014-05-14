@@ -9,6 +9,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Rewriting.Unification
    ( unify, match, matchExtended, matchList
    , Match, SymbolMatch

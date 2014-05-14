@@ -12,6 +12,8 @@
 -- See http://www.w3.org/TR/html4/
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Text.HTML
    ( HTMLPage, HTMLBuilder
    , addCSS, addScript, showHTML

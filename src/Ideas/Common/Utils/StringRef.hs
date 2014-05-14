@@ -15,6 +15,8 @@
 -- Virutal Machine (LVM) identifiers.
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Utils.StringRef
    ( StringRef, stringRef, toString, tableStatus
    ) where

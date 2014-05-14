@@ -12,6 +12,8 @@
 -- derivation.
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Service.State
    ( -- * Exercise state
      State, makeState, makeNoState, emptyStateContext, emptyState

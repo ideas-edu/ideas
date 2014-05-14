@@ -12,9 +12,11 @@
 -- JSON. JSON is a lightweight alternative for XML.
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Text.JSON
    ( JSON(..), Key, Number(..)            -- types
-   , InJSON(..)                           -- type class"
+   , InJSON(..)                           -- type class
    , lookupM
    , parseJSON, compactJSON               -- parser and pretty-printers
    , jsonRPC, RPCHandler, propEncoding

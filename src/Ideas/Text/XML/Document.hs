@@ -11,6 +11,8 @@
 -- Datatype for representing XML documents
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Text.XML.Document
    ( Name, Attributes, Attribute(..), Reference(..), Parameter(..)
    , XMLDoc(..), XML(..), Element(..), Content, DTD(..), DocTypeDecl(..)

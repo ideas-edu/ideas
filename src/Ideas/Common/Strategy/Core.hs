@@ -13,6 +13,8 @@
 -- directly on it.
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Strategy.Core
    ( GCore(..), Core
    , coreFix, coreSubstAll

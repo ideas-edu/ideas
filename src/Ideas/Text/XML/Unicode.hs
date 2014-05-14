@@ -11,6 +11,8 @@
 -- Support for Unicode
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Text.XML.Unicode
    ( isExtender, isLetter, isDigit, isCombiningChar
    , decoding

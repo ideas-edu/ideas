@@ -14,6 +14,8 @@
 -- functions yourself.
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Strategy
    ( -- * Data types and type classes
      Strategy, LabeledStrategy

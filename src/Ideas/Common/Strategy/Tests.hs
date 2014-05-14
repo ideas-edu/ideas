@@ -12,6 +12,8 @@
 -- Testing strategy combinator properties
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Strategy.Tests (tests) where
 
 import Data.Function

@@ -11,6 +11,8 @@
 -- Exports most from package Common
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Library
    ( module Export
    , failS, notS, repeatS, replicateS, sequenceS, untilS

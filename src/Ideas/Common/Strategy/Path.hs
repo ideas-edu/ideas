@@ -14,6 +14,8 @@
 -- Use Show/Read type classes for serialization/deserialization
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Common.Strategy.Path
    ( -- * datatype and constructor
      Path, emptyPath

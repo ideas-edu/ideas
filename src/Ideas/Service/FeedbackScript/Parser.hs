@@ -18,7 +18,7 @@ module Ideas.Service.FeedbackScript.Parser
    ) where
 
 import Control.Exception hiding (try)
-import Control.Monad.Error
+import Control.Monad
 import Data.Char
 import Data.List
 import Data.Monoid
@@ -31,7 +31,10 @@ import System.FilePath
 
 -- returns the empty script if something goes wrong
 parseScriptSafe :: FilePath -> IO Script
-parseScriptSafe file = parseScript file `mplus` return mempty
+parseScriptSafe file = parseScript file `catch` handler 
+ where
+   handler :: SomeException -> IO Script
+   handler _ = return mempty
 
 -- chases all included script files
 parseScript :: FilePath -> IO Script

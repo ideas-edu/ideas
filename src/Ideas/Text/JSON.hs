@@ -23,7 +23,7 @@ module Ideas.Text.JSON
    ) where
 
 import Control.Exception
-import Control.Monad.Error
+import Control.Monad
 import Data.List (intersperse)
 import Data.Maybe
 import Ideas.Text.Parsing hiding (string, char)
@@ -250,16 +250,17 @@ lookupM _ _ = fail "expecting a JSON object"
 type RPCHandler = String -> JSON -> IO JSON
 
 jsonRPC :: JSON -> RPCHandler -> IO RPCResponse
-jsonRPC input handler =
+jsonRPC input rpc =
    case fromJSON input of
       Nothing  -> return (errorResponse (String "Invalid request") Null)
       Just req -> do
-         json <- handler (requestMethod req) (requestParams req)
+         json <- rpc (requestMethod req) (requestParams req)
          return (okResponse json (requestId req))
-       -- to do: improve catching errors (old and new styles are mixed)
-       `catchError` (\e -> return (errorResponse (toJSON (ioeGetErrorString e)) (requestId req)))
-       `catch` \(SomeException e) ->
-          return (errorResponse (toJSON (show e)) (requestId req))
+       `catch` handler req
+ where
+   handler :: RPCRequest -> IOException -> IO RPCResponse
+   handler req e = return (errorResponse (toJSON e) (requestId req))
+
 
 --------------------------------------------------------
 -- Testing parser/pretty-printer

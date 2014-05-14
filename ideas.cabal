@@ -30,7 +30,7 @@ Library
   ghc-options:       -Wall
   hs-source-dirs:    src
   Build-Depends:     base >= 4.2 && < 5, 
-                     QuickCheck >= 2.4.1, 
+                     QuickCheck >= 2.4.1 && < 2.7, 
                      containers, 
                      random, 
                      mtl, 

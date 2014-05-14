@@ -12,6 +12,8 @@
 -- Facilities to create a log database
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Main.LoggingDatabase (logMessage, logEnabled) where
 
 import Data.Time

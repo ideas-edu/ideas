@@ -11,6 +11,8 @@
 -- Manages links to information
 --
 -----------------------------------------------------------------------------
+--  $Id$
+
 module Ideas.Main.Documentation (makeDocumentation) where
 
 import Control.Monad

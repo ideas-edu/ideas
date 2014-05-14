@@ -23,7 +23,7 @@ import Ideas.Encoding.ModeXML
 import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import System.Directory
-import System.IO hiding (readFile)
+import System.IO
 
 -- Returns the number of tests performed
 blackBoxTests :: DomainReasoner -> String -> IO TestSuite

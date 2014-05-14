@@ -96,10 +96,11 @@ defaultCommandLine dr flags = do
          Version -> putStrLn ("IDEAS, " ++ versionText)
          Help    -> putStrLn helpText
          -- process input file
-         InputFile file -> do
-            input <- readFile file
-            (_, txt, _) <- process dr Nothing input
-            putStrLn txt
+         InputFile file -> 
+            withBinaryFile file ReadMode $ \h -> do
+               input <- hGetContents h
+               (_, txt, _) <- process dr Nothing input
+               putStrLn txt
          -- blackbox tests
          Test dir -> do
             tests  <- blackBoxTests dr dir

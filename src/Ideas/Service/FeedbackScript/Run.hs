@@ -152,7 +152,7 @@ feedbackHints feedbackId nexts state motivationRule script =
    map (\env -> fromMaybe (defaultHint env script) $
      make feedbackId env script) envs
   where
-    envs = map (\r -> newEnvironmentFor state motivationRule (Just r)) nexts
+    envs = map (newEnvironmentFor state motivationRule . Just) nexts
 
 defaultHint :: Environment a -> Script -> Text
 defaultHint env script = makeText $

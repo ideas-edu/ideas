@@ -148,7 +148,7 @@ runTestSuite :: Bool -> TestSuite -> IO ()
 runTestSuite chattyIO = void . runTestSuiteResult chattyIO
 
 runTestSuiteResult :: Bool -> TestSuite -> IO Result
-runTestSuiteResult chattyIO ts = do
+runTestSuiteResult chattyIO = \ts -> do
    hSetBuffering stdout NoBuffering
    runWriteIO $ do
       result <- runTS ts

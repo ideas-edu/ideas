@@ -31,7 +31,7 @@ import System.FilePath
 
 -- returns the empty script if something goes wrong
 parseScriptSafe :: FilePath -> IO Script
-parseScriptSafe file = parseScript file `catch` handler 
+parseScriptSafe file = parseScript file `catch` handler
  where
    handler :: SomeException -> IO Script
    handler _ = return mempty

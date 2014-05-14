@@ -261,7 +261,6 @@ jsonRPC input rpc =
    handler :: RPCRequest -> IOException -> IO RPCResponse
    handler req e = return (errorResponse (toJSON e) (requestId req))
 
-
 --------------------------------------------------------
 -- Testing parser/pretty-printer
 

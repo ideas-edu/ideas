@@ -52,7 +52,6 @@ processXML maxTime dr cgiBin input = do
  where
    handler :: IOException -> IO XML
    handler = return . resultError . ioeGetErrorString
-   
 
 addVersion :: String -> XML -> XML
 addVersion s xml =

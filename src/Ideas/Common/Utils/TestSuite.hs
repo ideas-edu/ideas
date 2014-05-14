@@ -40,8 +40,9 @@ module Ideas.Common.Utils.TestSuite
    ) where
 
 import Control.Exception
-import Control.Monad.State.Strict
+import Control.Monad
 import Data.Foldable (toList)
+import Data.IORef
 import Data.List
 import Data.Maybe
 import Data.Monoid
@@ -148,88 +149,79 @@ runTestSuite :: Bool -> TestSuite -> IO ()
 runTestSuite chattyIO = void . runTestSuiteResult chattyIO
 
 runTestSuiteResult :: Bool -> TestSuite -> IO Result
-runTestSuiteResult chattyIO = \ts -> do
+runTestSuiteResult chattyIO ts = do
    hSetBuffering stdout NoBuffering
-   runWriteIO $ do
-      result <- runTS ts
-      newline
-      return result
+   ref <- newIORef 0
+   result <- runner ref chattyIO ts
+   newline ref
+   return result
  where
-   runTS :: TestSuite -> WriteIO Result
-   runTS t = do
-      (res, dt) <- getDiffTime (foldM addTest mempty (tests t))
+
+runner :: IORef Int -> Bool -> TestSuite -> IO Result
+runner ref chattyIO = runTS
+ where
+   runTS :: TestSuite -> IO Result
+   runTS ts = do
+      (res, dt) <- getDiffTime (foldM addTest mempty (tests ts))
       returnStrict res { diffTime = dt }
 
-   runTest :: Test -> WriteIO Result
+   runTest :: Test -> IO Result
    runTest t =
       case t of
          Suite s xs -> runSuite s xs
          Case s io  -> runTestCase s io
 
-   runSuite :: String -> TestSuite -> WriteIO Result
+   runSuite ::String -> TestSuite -> IO Result
    runSuite s ts = do
       when chattyIO $ do
-         newline
-         liftIO $ putStrLn s
-         reset
+         newline ref
+         putStrLn s
+         reset ref
       result <- runTS ts
       returnStrict (suiteResult s result)
 
-   runTestCase :: String -> IO Message -> WriteIO Result
+   runTestCase :: String -> IO Message -> IO Result
    runTestCase s io = do
-      msg <- liftIO (io `catch` handler)
+      msg <- io `catch` handler
       case messageStatus msg of
          _ | not chattyIO -> return ()
-         Ok -> dot
+         Ok -> dot ref
          _  -> do
-            newlineIndent
-            liftIO (print msg)
-            reset
+            newlineIndent ref
+            print msg
+            reset ref
       returnStrict (caseResult (s, msg))
     where
       handler :: SomeException -> IO Message
       handler = return . message . show
 
-   addTest :: Result -> Test -> WriteIO Result
-   addTest res = liftM (res <>) . runTest
+   addTest :: Result -> Test -> IO Result
+   addTest res t = liftM (res <>) (runTest t)
 
 -- formatting helpers
-newtype WriteIO a = WriteIO { fromWriteIO :: StateT Int IO a }
-
-runWriteIO :: WriteIO a -> IO a
-runWriteIO = (`evalStateT` 0) . fromWriteIO
-
-instance Monad WriteIO where
-   return  = WriteIO . return
-   fail    = WriteIO . fail
-   m >>= f = WriteIO (fromWriteIO m >>= fromWriteIO . f)
-
-instance MonadIO WriteIO where
-   liftIO = WriteIO . liftIO
+type WriteIO a = IORef Int -> IO a
 
 newline :: WriteIO ()
-newline = do
-   WriteIO $ do
-      i <- get
-      when (i>0) (liftIO $ putChar '\n')
-   reset
+newline ref = do
+   i <- readIORef ref
+   when (i>0) (putChar '\n')
+   reset ref
 
 newlineIndent :: WriteIO ()
-newlineIndent = do
-   newline
-   WriteIO $ do
-      liftIO $ putStr "   "
-      put 3
+newlineIndent ref = do
+   newline ref
+   putStr "   "
+   writeIORef ref 3
 
 dot :: WriteIO ()
-dot = WriteIO $ do
-   i <- get
-   unless (i>0 && i<60) (fromWriteIO newlineIndent)
-   liftIO $ putChar '.'
-   modify succ
+dot ref = do
+   i <- readIORef ref
+   unless (i>0 && i<60) (newlineIndent ref)
+   putChar '.'
+   modifyIORef ref (+1)
 
 reset :: WriteIO ()
-reset = WriteIO $ put 0
+reset = (`writeIORef` 0)
 
 ----------------------------------------------------------------
 -- Test Suite Result
@@ -418,11 +410,11 @@ instance HasRating Rating where
 -----------------------------------------------------
 -- Utility function
 
-getDiffTime :: MonadIO m => m a -> m (a, NominalDiffTime)
+getDiffTime :: IO a -> IO (a, NominalDiffTime)
 getDiffTime action = do
-   t0 <- liftIO getCurrentTime
+   t0 <- getCurrentTime
    a  <- action
-   t1 <- liftIO getCurrentTime
+   t1 <- getCurrentTime
    return (a, diffUTCTime t1 t0)
 
 returnStrict :: Monad m => a -> m a

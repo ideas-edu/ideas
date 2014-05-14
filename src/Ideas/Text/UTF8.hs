@@ -18,7 +18,7 @@ module Ideas.Text.UTF8
    , isUTF8, allBytes, propEncoding
    ) where
 
-import Control.Monad.Error
+import Control.Monad
 import Data.Char
 import Data.Maybe
 import Test.QuickCheck

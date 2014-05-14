@@ -20,8 +20,6 @@ module Ideas.Service.FeedbackScript.Analysis
    , Message(..)
    ) where
 
-import Control.Monad
-import Control.Monad.Error
 import Data.Either
 import Data.List
 import Ideas.Common.Library
@@ -46,11 +44,11 @@ parseAndAnalyzeScript :: DomainReasoner -> FilePath -> IO ()
 parseAndAnalyzeScript dr file = do
    putStrLn $ "Parsing " ++ show file
    script <- parseScript file
-   let sups = [ a | Supports as <- scriptDecls script, a <- as ]
-   exs <- forM sups $ \a ->
-             liftM Right (findExercise dr a)
-           `catchError` \_ -> return $ Left $ UnknownExercise a
-
+   let exs = [ maybe unknown Right (findExercise dr a)
+              | Supports as <- scriptDecls script
+              , a <- as
+              , let unknown = Left (UnknownExercise a)
+              ]
    let ms = lefts exs ++ analyzeScript (rights exs) script
    putStrLn $ unlines $ map show ms
    putStrLn $ "(errors: " ++ show (length ms) ++ ")"

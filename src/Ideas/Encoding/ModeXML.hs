@@ -17,7 +17,6 @@ module Ideas.Encoding.ModeXML (processXML) where
 
 import Control.Exception
 import Control.Monad
-import Control.Monad.Error
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Common.Utils (Some(..), timedSeconds)
@@ -43,15 +42,17 @@ processXML maxTime dr cgiBin input = do
    xml  <- either fail return (parseXML input)
    req  <- either fail return (xmlRequest xml)
    resp <- maybe id timedSeconds maxTime (xmlReply dr cgiBin req xml)
-    -- to do: improve catching errors (old and new styles are mixed)
-    `catchError` (return . resultError . ioeGetErrorString)
-    `catch` (\(SomeException e) -> return (resultError (show e)))
+    `catch` handler
    let showXML | compactOutputDefault (isJust cgiBin) req = compactXML
                | otherwise = show
    if htmlOutput req
       then return (req, showXML resp, "text/html")
       else let out = addVersion (version dr) resp
            in return (req, showXML out, "application/xml")
+ where
+   handler :: IOException -> IO XML
+   handler = return . resultError . ioeGetErrorString
+   
 
 addVersion :: String -> XML -> XML
 addVersion s xml =

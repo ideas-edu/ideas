@@ -1,6 +1,6 @@
 default: Tutorial.html
 
-IDEASDIR   = ../../tags/ideas-1.1
+IDEASDIR   = ../../tags/ideas-1.2
 SRCDIR     = $(IDEASDIR)/src
 OUTDIR     = $(IDEASDIR)/out
 INSTALLDIR = /var/www/tutorial

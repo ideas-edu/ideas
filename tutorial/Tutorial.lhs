@@ -1,7 +1,7 @@
 <div class="page-header"> 
 <div class="ideas-logo"><img src="ideas.png"/></div>
 <div class="ounl-logo"><img src="ounl.png"/></div>
-&nbsp; Ideas tutorial
+&nbsp; Ideas tutorial (version 1.2)
 </div>
 <div class="page-content">
 
@@ -27,14 +27,10 @@ Ideas package.
 > 
 > import Ideas.Common.Library
 > import Ideas.Main.Default
-> import Ideas.Service.DomainReasoner
-> import Ideas.Common.Utils (Some(..))
-> import Ideas.Service.Types
-> import Ideas.Service.ServiceList
 
 This will import basic functionality (`Ideas.Common.Library`) for defining
-your own exercise. The other imports are needed for step 4 of this 
-tutorial.
+your own exercise. The other import (`Ideas.Main.Default`) is needed for step 
+4 of this tutorial.
 
 In this tutorial we will develop a domain reasoner for a simple arithmetic
 expression language. The goal of the domain reasoner is to evaluate expressions.
@@ -209,7 +205,7 @@ We repeat the strategy until it can no longer be applied. Observe that the
 Testing this strategy is more involved because we first have to put an `Expr`
 into a `Context`: for this context we use the `termNavigator`.
 
-< Main> apply evalStrategy $ newContext mempty $ termNavigator expr1
+< Main> apply evalStrategy $ newContext $ termNavigator expr1
 < Just Con 3 @ []
 
 In the output, `@ []` prints the current focus of the zipper, which is here
@@ -219,7 +215,7 @@ Therefore, evaluating this expression gives two solution paths (with the
 same result). This can be inspected by using `applyAll`, which returns all 
 results of application in a list.
 
-< Main> applyAll evalStrategy $ newContext mempty $ termNavigator expr2
+< Main> applyAll evalStrategy $ newContext $ termNavigator expr2
 < [Con 6 @ [],Con 6 @ []]
 
 We define an extended exercise that is based on `evalStrategy`. In the 
@@ -236,20 +232,31 @@ exercise definition, we have to declare that navigation is based on the
 >    }
 
 We can now print worked-out solutions for `expr1` and `expr2`. Note that 
-`printDerivation` only prints one solution, not all.
+`printDerivations` prints all solutions (and `printDerivation` only shows one).
 
-< Main> printDerivation basicExercise expr1
+< Main> printDerivations basicExercise expr1
+< Derivation #1
 < Add (Con 5) (Negate (Con 2))
 <    => eval.negate
 < Add (Con 5) (Con (-2))
 <    => eval.add
 < Con 3
 < 
-< Main> printDerivation basicExercise expr2
+< Main> printDerivations basicExercise expr2
+< Derivation #1
 < Add (Negate (Con 2)) (Add (Con 3) (Con 5))
 <    => eval.add
 < Add (Negate (Con 2)) (Con 8)
 <    => eval.negate
+< Add (Con (-2)) (Con 8)
+<    => eval.add
+< Con 6
+< 
+< Derivation #2
+< Add (Negate (Con 2)) (Add (Con 3) (Con 5))
+<    => eval.negate
+< Add (Con (-2)) (Add (Con 3) (Con 5))
+<    => eval.add
 < Add (Con (-2)) (Con 8)
 <    => eval.add
 < Con 6
@@ -277,17 +284,9 @@ expression when we have reached a constant value.
 > isCon (Con _) = True
 > isCon _       = False
 
-The following function helps to parse an `Expr`.
-
-> parserRead :: String -> Either String Expr
-> parserRead s = 
->    case reads s of
->       [(a, xs)] | all (==' ') xs -> Right a
->       _ -> Left ("no read: " ++ s)
-
 We give an extended definition for the exercise with `equivalence` and 
 `ready`. We also specify its `status`, the `parser` for expressions, and 
-two example expressions (of a certain difficulty).
+two example expressions (of a certain difficulty). 
 
 > evalExercise :: Exercise Expr
 > evalExercise = emptyExercise
@@ -297,12 +296,15 @@ two example expressions (of a certain difficulty).
 >    , strategy      = evalStrategy
 >    , prettyPrinter = show
 >    , navigation    = termNavigator
->    , parser        = parserRead
+>    , parser        = readM
 >    , equivalence   = withoutContext eqExpr
 >    , ready         = predicate isCon
 >    , examples      = level Easy [expr1] ++ level Medium [expr2]
 >    }
 
+The `readM` function is
+defined in the Ideas library and provides a simple parser for values (here:
+a parser for `Expr`s) based on an instance for the `Read` type class.
 We now have a somewhat simple, but fully functional exercise for evaluating
 expressions.
 
@@ -342,8 +344,8 @@ Running the executable with the `--help` flag gives the options.
 ~~~~
 $ Tutorial.exe --help
 IDEAS: Intelligent Domain-specific Exercise Assistants
-Copyright 2013, Open Universiteit Nederland
-version 1.1, revision 5900, logging disabled
+Copyright 2014, Open Universiteit Nederland
+version 1.2, revision 6534, logging disabled
 
 Usage: ideas [OPTION]     (by default, CGI protocol)
 
@@ -372,13 +374,13 @@ The result of this request is:
 
 ~~~~ {#mycode .xml}
 $ Tutorial.exe --file=exerciselist.xml                                          
-<reply result="ok" version="1.1 (5900)">                                        
-  <list>                                                                        
+<reply result="ok" version="1.2 (6534)">
+  <list>
     <elem exerciseid="eval.basic" description="Evaluate an expression (basic)" status="Experimental"/>
     <elem exerciseid="eval.full" description="Evaluate an expression (full)" status="Experimental"/>
     <elem exerciseid="eval.minimal" description="Evaluate an expression (minimal)" status="Experimental"/>
-  </list>                                                                       
-</reply>                                               
+  </list>
+</reply>                                            
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Or we request a worked-out solution for `Add (Con 5) (Negate (Con 2))`. 
@@ -399,7 +401,7 @@ mathematical objects. The result of this request is:
 
 ~~~~ {#mycode .xml}   
 $ Tutorial.exe --file=solution.xml
-<reply result="ok" version="1.1 (5900)">
+<reply result="ok" version="1.2 (6534)">
   <list>
     <elem ruleid="eval.negate">
       <expr>
@@ -426,14 +428,13 @@ local server.
 * Install a webserver, such as [WampServer](http://www.wampserver.com/) for Windows.
 * Make sure you enable the execution of CGI scripts (in `httpd.conf`)
 * Rename the executable to `Tutorial.cgi` and place it in the directory for cgi scripts
-* Add the following [resources](resources.zip) to the directory
 * Start a browser and type in the URL `http://localhost/Tutorial.cgi?input=<request service="index" encoding="html"/>`
       
 You can now start exploring the supported exercises and feedback services. 
-For instance, go to `eval.full` and click on `derivation` in the yellow box
+For instance, go to the exercise `eval.full` and click on `derivations` in the yellow box
 to see the worked-out solutions for two examples.
 
 </div>
 <div class="page-footer">
-This tutorial is based on ideas-1.1. Last changed: October 2013
+This tutorial is based on ideas-1.2. Last changed: May 2014
 </div>

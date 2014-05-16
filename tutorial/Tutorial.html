@@ -35,7 +35,7 @@ code > span.er { color: #ff0000; font-weight: bold; }
 <div class="ounl-logo">
 <img src="ounl.png"/>
 </div>
-  Ideas tutorial
+  Ideas tutorial (version 1.2)
 </div>
 <div class="page-content">
 <h1>Making a domain reasoner</h1>
@@ -44,13 +44,9 @@ code > span.er { color: #ff0000; font-weight: bold; }
 <p>We can now start writing a new Haskell module and import some modules from the Ideas package.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Main</span> <span class="kw">where</span>
 
-<span class="kw">import</span> Ideas.Common.Library
-<span class="kw">import</span> Ideas.Main.Default
-<span class="kw">import</span> Ideas.Service.DomainReasoner
-<span class="kw">import</span> Ideas.Common.Utils (Some(..))
-<span class="kw">import</span> Ideas.Service.Types
-<span class="kw">import</span> Ideas.Service.ServiceList</code></pre>
-<p>This will import basic functionality (<code>Ideas.Common.Library</code>) for defining your own exercise. The other imports are needed for step 4 of this tutorial.</p>
+<span class="kw">import </span><span class="dt">Ideas.Common.Library</span>
+<span class="kw">import </span><span class="dt">Ideas.Main.Default</span></code></pre>
+<p>This will import basic functionality (<code>Ideas.Common.Library</code>) for defining your own exercise. The other import (<code>Ideas.Main.Default</code>) is needed for step 4 of this tutorial.</p>
 <p>In this tutorial we will develop a domain reasoner for a simple arithmetic expression language. The goal of the domain reasoner is to evaluate expressions. We define a data type for expressions with addition, (unary) negation, and integer constants.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Expr</span> <span class="fu">=</span> <span class="dt">Add</span> <span class="dt">Expr</span> <span class="dt">Expr</span> <span class="fu">|</span> <span class="dt">Negate</span> <span class="dt">Expr</span> <span class="fu">|</span> <span class="dt">Con</span> <span class="dt">Int</span>
    <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>, <span class="dt">Read</span>)</code></pre>
@@ -140,10 +136,10 @@ negateSymbol <span class="fu">=</span> newSymbol <span class="st">&quot;negate&q
 evalStrategy <span class="fu">=</span> label <span class="st">&quot;eval&quot;</span> <span class="fu">$</span>
    repeatS (somewhere (liftToContext addOrNegate))</code></pre>
 <p>Testing this strategy is more involved because we first have to put an <code>Expr</code> into a <code>Context</code>: for this context we use the <code>termNavigator</code>.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span><span class="fu">&gt;</span> apply evalStrategy <span class="fu">$</span> newContext mempty <span class="fu">$</span> termNavigator expr1
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span><span class="fu">&gt;</span> apply evalStrategy <span class="fu">$</span> newContext <span class="fu">$</span> termNavigator expr1
 <span class="dt">Just</span> <span class="dt">Con</span> <span class="dv">3</span> <span class="fu">@</span> []</code></pre>
 <p>In the output, <code>@ []</code> prints the current focus of the zipper, which is here the top-level node of the expression. For <code>expr2</code>, the strategy can start evaluating sub-expression <code>Negate (Con 2)</code> or sub-expression <code>Add (Con 3) (Con 5)</code>. Therefore, evaluating this expression gives two solution paths (with the same result). This can be inspected by using <code>applyAll</code>, which returns all results of application in a list.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span><span class="fu">&gt;</span> applyAll evalStrategy <span class="fu">$</span> newContext mempty <span class="fu">$</span> termNavigator expr2
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span><span class="fu">&gt;</span> applyAll evalStrategy <span class="fu">$</span> newContext <span class="fu">$</span> termNavigator expr2
 [<span class="dt">Con</span> <span class="dv">6</span> <span class="fu">@</span> [],<span class="dt">Con</span> <span class="dv">6</span> <span class="fu">@</span> []]</code></pre>
 <p>We define an extended exercise that is based on <code>evalStrategy</code>. In the exercise definition, we have to declare that navigation is based on the <code>termNavigator</code>.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">basicExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Expr</span>
@@ -154,19 +150,30 @@ basicExercise <span class="fu">=</span> emptyExercise
    , navigation    <span class="fu">=</span> termNavigator
    , prettyPrinter <span class="fu">=</span> show
    }</code></pre>
-<p>We can now print worked-out solutions for <code>expr1</code> and <code>expr2</code>. Note that <code>printDerivation</code> only prints one solution, not all.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span><span class="fu">&gt;</span> printDerivation basicExercise expr1
+<p>We can now print worked-out solutions for <code>expr1</code> and <code>expr2</code>. Note that <code>printDerivations</code> prints all solutions (and <code>printDerivation</code> only shows one).</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span><span class="fu">&gt;</span> printDerivations basicExercise expr1
+<span class="dt">Derivation</span> <span class="st">#1</span>
 <span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>))
    <span class="ot">=&gt;</span> eval<span class="fu">.</span>negate
 <span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> (<span class="fu">-</span><span class="dv">2</span>))
    <span class="ot">=&gt;</span> eval<span class="fu">.</span>add
 <span class="dt">Con</span> <span class="dv">3</span>
 
-<span class="dt">Main</span><span class="fu">&gt;</span> printDerivation basicExercise expr2
+<span class="dt">Main</span><span class="fu">&gt;</span> printDerivations basicExercise expr2
+<span class="dt">Derivation</span> <span class="st">#1</span>
 <span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))
    <span class="ot">=&gt;</span> eval<span class="fu">.</span>add
 <span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Con</span> <span class="dv">8</span>)
    <span class="ot">=&gt;</span> eval<span class="fu">.</span>negate
+<span class="dt">Add</span> (<span class="dt">Con</span> (<span class="fu">-</span><span class="dv">2</span>)) (<span class="dt">Con</span> <span class="dv">8</span>)
+   <span class="ot">=&gt;</span> eval<span class="fu">.</span>add
+<span class="dt">Con</span> <span class="dv">6</span>
+
+<span class="dt">Derivation</span> <span class="st">#2</span>
+<span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))
+   <span class="ot">=&gt;</span> eval<span class="fu">.</span>negate
+<span class="dt">Add</span> (<span class="dt">Con</span> (<span class="fu">-</span><span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))
+   <span class="ot">=&gt;</span> eval<span class="fu">.</span>add
 <span class="dt">Add</span> (<span class="dt">Con</span> (<span class="fu">-</span><span class="dv">2</span>)) (<span class="dt">Con</span> <span class="dv">8</span>)
    <span class="ot">=&gt;</span> eval<span class="fu">.</span>add
 <span class="dt">Con</span> <span class="dv">6</span></code></pre>
@@ -183,12 +190,6 @@ eval (<span class="dt">Con</span> x)    <span class="fu">=</span> x </code></pre
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">isCon ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span>
 isCon (<span class="dt">Con</span> _) <span class="fu">=</span> <span class="dt">True</span>
 isCon _       <span class="fu">=</span> <span class="dt">False</span></code></pre>
-<p>The following function helps to parse an <code>Expr</code>.</p>
-<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">parserRead ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Either</span> <span class="dt">String</span> <span class="dt">Expr</span>
-parserRead s <span class="fu">=</span> 
-   <span class="kw">case</span> reads s <span class="kw">of</span>
-      [(a, xs)] <span class="fu">|</span> all (<span class="fu">==</span><span class="ch">&#39; &#39;</span>) xs <span class="ot">-&gt;</span> <span class="dt">Right</span> a
-      _ <span class="ot">-&gt;</span> <span class="dt">Left</span> (<span class="st">&quot;no read: &quot;</span> <span class="fu">++</span> s)</code></pre>
 <p>We give an extended definition for the exercise with <code>equivalence</code> and <code>ready</code>. We also specify its <code>status</code>, the <code>parser</code> for expressions, and two example expressions (of a certain difficulty).</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">evalExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Expr</span>
 evalExercise <span class="fu">=</span> emptyExercise
@@ -198,12 +199,12 @@ evalExercise <span class="fu">=</span> emptyExercise
    , strategy      <span class="fu">=</span> evalStrategy
    , prettyPrinter <span class="fu">=</span> show
    , navigation    <span class="fu">=</span> termNavigator
-   , parser        <span class="fu">=</span> parserRead
+   , parser        <span class="fu">=</span> readM
    , equivalence   <span class="fu">=</span> withoutContext eqExpr
    , ready         <span class="fu">=</span> predicate isCon
    , examples      <span class="fu">=</span> level <span class="dt">Easy</span> [expr1] <span class="fu">++</span> level <span class="dt">Medium</span> [expr2]
    }</code></pre>
-<p>We now have a somewhat simple, but fully functional exercise for evaluating expressions.</p>
+<p>The <code>readM</code> function is defined in the Ideas library and provides a simple parser for values (here: a parser for <code>Expr</code>s) based on an instance for the <code>Read</code> type class. We now have a somewhat simple, but fully functional exercise for evaluating expressions.</p>
 <h2>Step 4: making a CGI-webservice</h2>
 <p>An exercise can be used by external tools by turning it into a domain reasoner: such a reasoner supports some exercises, and provides a number of (standard) feedback services. We use the three exercises we have defined so far, together with the standard set of services.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">dr ::</span> <span class="dt">DomainReasoner</span>
@@ -222,8 +223,8 @@ main <span class="fu">=</span> defaultMain dr</code></pre>
 <p>Running the executable with the <code>--help</code> flag gives the options.</p>
 <pre><code>$ Tutorial.exe --help
 IDEAS: Intelligent Domain-specific Exercise Assistants
-Copyright 2013, Open Universiteit Nederland
-version 1.1, revision 5900, logging disabled
+Copyright 2014, Open Universiteit Nederland
+version 1.2, revision 6534, logging disabled
 
 Usage: ideas [OPTION]     (by default, CGI protocol)
 
@@ -239,13 +240,13 @@ Options:
 <pre class="sourceCode xml" id="mycode"><code class="sourceCode xml"><span class="kw">&lt;request</span><span class="ot"> service=</span><span class="st">&quot;exerciselist&quot;</span><span class="ot"> source=</span><span class="st">&quot;tutorial&quot;</span><span class="kw">/&gt;</span></code></pre>
 <p>It is a good custom to always include the source of the request to let the domain reasoner know where the request came from. The result of this request is:</p>
 <pre class="sourceCode xml" id="mycode"><code class="sourceCode xml">$ Tutorial.exe --file=exerciselist.xml                                          
-<span class="kw">&lt;reply</span><span class="ot"> result=</span><span class="st">&quot;ok&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.1 (5900)&quot;</span><span class="kw">&gt;</span>                                        
-  <span class="kw">&lt;list&gt;</span>                                                                        
+<span class="kw">&lt;reply</span><span class="ot"> result=</span><span class="st">&quot;ok&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.2 (6534)&quot;</span><span class="kw">&gt;</span>
+  <span class="kw">&lt;list&gt;</span>
     <span class="kw">&lt;elem</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.basic&quot;</span><span class="ot"> description=</span><span class="st">&quot;Evaluate an expression (basic)&quot;</span><span class="ot"> status=</span><span class="st">&quot;Experimental&quot;</span><span class="kw">/&gt;</span>
     <span class="kw">&lt;elem</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.full&quot;</span><span class="ot"> description=</span><span class="st">&quot;Evaluate an expression (full)&quot;</span><span class="ot"> status=</span><span class="st">&quot;Experimental&quot;</span><span class="kw">/&gt;</span>
     <span class="kw">&lt;elem</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.minimal&quot;</span><span class="ot"> description=</span><span class="st">&quot;Evaluate an expression (minimal)&quot;</span><span class="ot"> status=</span><span class="st">&quot;Experimental&quot;</span><span class="kw">/&gt;</span>
-  <span class="kw">&lt;/list&gt;</span>                                                                       
-<span class="kw">&lt;/reply&gt;</span>                                               </code></pre>
+  <span class="kw">&lt;/list&gt;</span>
+<span class="kw">&lt;/reply&gt;</span>                                            </code></pre>
 <p>Or we request a worked-out solution for <code>Add (Con 5) (Negate (Con 2))</code>.</p>
 <pre class="sourceCode xml" id="mycode"><code class="sourceCode xml"><span class="kw">&lt;request</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.full&quot;</span><span class="ot"> service=</span><span class="st">&quot;derivation&quot;</span><span class="ot"> encoding=</span><span class="st">&quot;string&quot;</span><span class="ot"> source=</span><span class="st">&quot;tutorial&quot;</span><span class="kw">&gt;</span>
     <span class="kw">&lt;state&gt;</span>                
@@ -254,7 +255,7 @@ Options:
 <span class="kw">&lt;/request&gt;</span></code></pre>
 <p>In this request we have to specify that the encoding of expressions is a plain string and that we want to use the parser/pretty-printer defined for the exercise. The default encoding follows the <a href="http://www.openmath.org/standard/">OpenMath standard</a> for representing mathematical objects. The result of this request is:</p>
 <pre class="sourceCode xml" id="mycode"><code class="sourceCode xml">$ Tutorial.exe --file=solution.xml
-<span class="kw">&lt;reply</span><span class="ot"> result=</span><span class="st">&quot;ok&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.1 (5900)&quot;</span><span class="kw">&gt;</span>
+<span class="kw">&lt;reply</span><span class="ot"> result=</span><span class="st">&quot;ok&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.2 (6534)&quot;</span><span class="kw">&gt;</span>
   <span class="kw">&lt;list&gt;</span>
     <span class="kw">&lt;elem</span><span class="ot"> ruleid=</span><span class="st">&quot;eval.negate&quot;</span><span class="kw">&gt;</span>
       <span class="kw">&lt;expr&gt;</span>
@@ -276,13 +277,12 @@ Options:
 <li>Install a webserver, such as <a href="http://www.wampserver.com/">WampServer</a> for Windows.</li>
 <li>Make sure you enable the execution of CGI scripts (in <code>httpd.conf</code>)</li>
 <li>Rename the executable to <code>Tutorial.cgi</code> and place it in the directory for cgi scripts</li>
-<li>Add the following <a href="resources.zip">resources</a> to the directory</li>
 <li>Start a browser and type in the URL <code>http://localhost/Tutorial.cgi?input=&lt;request service=&quot;index&quot; encoding=&quot;html&quot;/&gt;</code></li>
 </ul>
-<p>You can now start exploring the supported exercises and feedback services. For instance, go to <code>eval.full</code> and click on <code>derivation</code> in the yellow box to see the worked-out solutions for two examples.</p>
+<p>You can now start exploring the supported exercises and feedback services. For instance, go to the exercise <code>eval.full</code> and click on <code>derivations</code> in the yellow box to see the worked-out solutions for two examples.</p>
 </div>
 <div class="page-footer">
-This tutorial is based on ideas-1.1. Last changed: October 2013
+This tutorial is based on ideas-1.2. Last changed: May 2014
 </div>
 </body>
 </html>

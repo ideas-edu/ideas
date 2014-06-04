@@ -74,25 +74,6 @@ instance Sequential Builder where
 build :: Builder a -> Process a
 build (B f) = f Ok
 
-{-
-data Menu a = Menu { empty :: Bool, firstsSeq :: S.Seq (a, Menu a) }
-
-firsts :: Menu a -> [(a, Menu a)]
-firsts = toList . firstsSeq
-
-instance Sequential Menu where
-   ok      = Menu True  S.empty
-   stop    = Menu False S.empty
-   a ~> m  = Menu False (S.singleton (a, m))
-
-   Menu b1 xs <|> Menu b2 ys = Menu (b1 || b2) (xs <> ys)
-
-   Menu b xs <*> m
-      | b         = m <|> ys
-      | otherwise = ys
-    where
-      ys = Menu b $ fmap (\(a, p) -> (a, p <*> m)) xs  -}
-
 data Alg a b = Alg
    { forChoice :: b -> b -> b
    , forEither :: b -> b -> b
@@ -100,20 +81,6 @@ data Alg a b = Alg
    , forOk     :: b
    , forStop   :: b
    }
-
-{-
-instance Monoid (Process a) where
-   mempty  = stop
-   mappend = (<|>) -}
-
---instance Functor Process where
---   fmap f = fold (Alg (:|:) (:?:) ((:~>) . f) Ok Stop)
-
-{-
-instance Monad Process where
-   return  = (:~> ok)
-   fail _  = Stop
-   p >>= f = fold (Alg (:|:) (:?:) ((<*>) . f) Ok Stop) p -}
 
 fold :: Alg a b -> Process a -> b
 fold alg = rec
@@ -123,11 +90,6 @@ fold alg = rec
    rec (a :~> p) = forPrefix alg a (rec p)
    rec Ok        = forOk alg
    rec Stop      = forStop alg
-
-  {-
-join :: Process (Process a) -> Process a
-join = fold (Alg (:|:) (:?:) (<*>) Ok Stop)
--}
 
 -- angelic for non-deterministic choice
 empty :: Process a -> Bool
@@ -142,12 +104,6 @@ firsts = ($ []) . rec
    rec (a :~> p) = ((a, p):)
    rec Ok        = id
    rec Stop      = id
-
-{-
-run :: Process a -> [[a]]
-run p =
-   [ [] | empty p ] ++
-   [ a:as | (a, q) <- firsts p, as <- run q ] -}
 
 scanChoice :: (a -> b -> [(a, c)]) -> a -> Process b -> Process c
 scanChoice f = rec
@@ -208,20 +164,6 @@ p <@> q = useFirst (\a r -> a ~> (q <@> r)) bothOk p
  where
    bothOk = useFirst (\_ _ -> stop) ok q
 
---------------------------------
-{-
-abc, de :: Process  Char
-abc = 'a' :~> 'b' :~> 'c' :~> ok
-de  = 'd' :~> 'e' :~> ok
-
-go = run (concurrent undefined undefined abc de)
-
-indep :: Char -> Char -> Bool
-indep x y = x `elem` "abc" && y `elem` "def"
-
-(%) :: Sequential f => Process a -> Process a -> f a
-(%) = concurrent (const True)
--}
 withPath :: Process a -> Process (a, Path)
 withPath = rec emptyPath
  where
@@ -308,15 +250,6 @@ uniquePath cond eq = rec
       rec (a :~> p) = a :~> rec p
       rec Ok        = Ok
       rec Stop      = Stop
-
-{-
-prefixes :: Process a -> [[a]]
-prefixes p = concatMap (\(a, q) -> [a] : (map (a:) $ prefixes q)) $ firsts p
-
---uniquePath_prop :: Eq a => Process a -> Property
-uniquePath_prop pred eq = unique_prop . prefixes . uniquePath pred eq
-  where
-    unique_prop xs = forAll (elements xs) $ \x -> filter (== x) xs == [x] -}
 
 -- | This functions returns the first symbols that hold for predicate p
 firstsWith :: (a -> Bool) -> Process a -> [(a, Process a)]

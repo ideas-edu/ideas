@@ -13,7 +13,7 @@
 
 module Ideas.Common.Strategy.Choice 
    ( Choice(..), Menu
-   , isStop, elems, bests
+   , isStop, elems, bests, cut
    , bind, mapWithIndex, getByIndex
    ) where
    
@@ -70,13 +70,20 @@ instance Monad Menu where
    (>>=)  = bind
 
 isStop :: Menu a -> Bool
-isStop = null . elems
+isStop Stop = True
+isStop _    = False
 
 bests :: Menu a -> [a]
 bests (p :|: q)  = bests p <|> bests q
 bests (p :|> q)  = bests p  |> bests q
 bests (Single a) = [a]
 bests Stop       = []
+
+cut :: Menu a -> Menu a
+cut (p :|: q)  = cut p <|> cut q
+cut (p :|> _)  = cut p
+cut (Single a) = single a
+cut Stop       = stop
 
 elems :: Menu a -> [a]
 elems = ($ []) . rec
@@ -97,7 +104,7 @@ bind m f = rec m
    rec Stop       = stop
 
 {-# INLINE mapWithIndex #-}
-mapWithIndex :: Choice f => (Int -> a -> b) -> Menu a -> f b
+mapWithIndex :: Choice f => (Int -> a -> f b) -> Menu a -> f b
 mapWithIndex f = snd . rec 0
  where
    rec n (p :|: q)  = let (n1, pn) = rec n p 
@@ -106,7 +113,7 @@ mapWithIndex f = snd . rec 0
    rec n (p :|> q)  = let (n1, pn) = rec n p 
                           (n2, qn) = rec n1 q
                       in (n2, pn |> qn)
-   rec n (Single a) = (n+1, single (f n a))
+   rec n (Single a) = (n+1, f n a)
    rec n Stop       = (n, stop)
                   
 getByIndex :: Int -> Menu a -> Maybe a

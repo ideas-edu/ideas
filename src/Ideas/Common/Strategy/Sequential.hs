@@ -12,136 +12,127 @@
 --  $Id$
 
 module Ideas.Common.Strategy.Sequential
-   ( Sequential(..)
+   ( Sequential(..), Choice(..)
    , Process
    , Builder, build
-   , empty, firsts, scanChoice, prune
-   , fromAtoms
-   , Sym(..)
-   , atomic, concurrent, (<@>)
+   , empty, firsts, scanChoice, prune, accum
+   
+   , fromAtoms, Sym(..), atomic, concurrent, (<@>)
+   
    , withPath, replay
-   , uniquePath, tidyProcess
+   , uniquePath
    ) where
 
+import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Path
+ 
+-----------------------------------------------------
 
-class Sequential f where
-   ok, stop :: f a
-   single   :: a -> f a
-   (~>)     :: a -> f a -> f a
-   (<|>)    :: f a -> f a -> f a
-   (<?>)    :: f a -> f a -> f a
-   (<*>)    :: f a -> f a -> f a
-   choice   :: [f a] -> f a
+class Choice f => Sequential f where
+   ok    :: f a
+   (~>)  :: a -> f a -> f a
+   (<*>) :: f a -> f a -> f a
    -- default implementation
-   single a = a ~> ok
-   a ~> p   = single a <*> p
-   p <?> q  = p <|> q -- angelic by default
-   choice   = foldr (<|>) stop
+   a ~> p = single a <*> p
 
 infixr 3 :~>, ~>
 
-data Process a
-   = Process a :|: Process a   -- choice (p or q)
-   | Process a :?: Process a   -- non-deterministic choice (behaves as either p or q)
-   | a   :~> Process a         -- prefix (a then p)
-   | Ok                        -- successful termination
-   | Stop                      -- failure
-   deriving (Show, Eq)
+newtype Process a = P { getMenu :: Menu (Step a) }
 
+data Step a = a :~> Process a
+            | Ok
+
+onStep :: Sequential f => (a -> Process a -> f b) -> Step a -> f b
+onStep f (a :~> p) = f a p
+onStep _ Ok        = ok
+
+{-# INLINE changeStep #-}
+changeStep :: Sequential f => (a -> Process a -> f b) -> Process a -> f b
+changeStep f p = bind (getMenu p) (onStep f)
+
+isOk :: Step a -> Bool
+isOk Ok = True
+isOk _  = False
+
+instance Choice Process where
+   single a = P (single (a :~> ok))
+   stop  = P stop
+   P xs <|> P ys = P (xs <|> ys)
+   P xs  |> P ys = P (xs  |> ys)
+  
 instance Sequential Process where
-   ok    = Ok
-   stop  = Stop
-   (~>)  = (:~>)
-   (<?>) = (:?:)
-   (<|>) = (:|:)
-
-   p <*> Ok = p
-   p <*> q  = fold (Alg (<|>) (:?:) (:~>) q Stop) p
-
+   ok     = P (single Ok)
+   a ~> p = P (single (a :~> p))
+   
+   P xs <*> q = xs `bind` f
+    where
+      f (a :~> p) = a ~> (p <*> q)
+      f Ok = q
+    
 newtype Builder a = B (Process a -> Process a)
 
+instance Choice Builder where
+   single a = B (a ~>)
+   stop        = B (const stop)
+   B f <|> B g = B (\p -> f p <|> g p)
+   B f  |> B g = B (\p -> f p  |> g p)
+   
 instance Sequential Builder where
    ok          = B id
-   stop        = B (const Stop)
-   single a    = B (a ~>)
    a ~> B f    = B ((a ~>) . f)
-
-   B f <|> B g = B (\p -> f p <|> g p)
-   B f <?> B g = B (\p -> f p <?> g p)
    B f <*> B g = B (f . g)
 
 build :: Builder a -> Process a
-build (B f) = f Ok
+build (B f) = f ok
 
-data Alg a b = Alg
-   { forChoice :: b -> b -> b
-   , forEither :: b -> b -> b
-   , forPrefix :: a -> b -> b
-   , forOk     :: b
-   , forStop   :: b
-   }
-
-fold :: Alg a b -> Process a -> b
-fold alg = rec
- where
-   rec (p :|: q) = forChoice alg (rec p) (rec q)
-   rec (p :?: q) = forEither alg (rec p) (rec q)
-   rec (a :~> p) = forPrefix alg a (rec p)
-   rec Ok        = forOk alg
-   rec Stop      = forStop alg
-
--- angelic for non-deterministic choice
 empty :: Process a -> Bool
-empty = fold $ Alg (||) (||) (\_ _ -> False) True False
+empty = any isOk . bests . getMenu
 
--- angelic for non-deterministic choice
 firsts :: Process a -> [(a, Process a)]
-firsts = ($ []) . rec
- where
-   rec (p :|: q) = rec p . rec q
-   rec (p :?: q) = rec p . rec q
-   rec (a :~> p) = ((a, p):)
-   rec Ok        = id
-   rec Stop      = id
+firsts p = [ (a, q) | a :~> q <- bests (getMenu p) ]
 
+{-# INLINE scanChoice #-}
 scanChoice :: (a -> b -> [(a, c)]) -> a -> Process b -> Process c
 scanChoice f = rec
  where
-   rec a (p :|: q) = rec a p :|: rec a q
-   rec a (p :?: q) = rec a p :?: rec a q
-   rec a (b :~> p) = choice [ c :~> rec a2 p | (a2, c) <- f a b ]
-   rec _ Ok        = Ok
-   rec _ Stop      = Stop
+   rec a = changeStep $ \b p ->
+      choice [ (c ~> rec a2 p) | (a2, c) <- f a b ]
 
--- remove left-biased choice
+{-# INLINE accum #-}
+accum :: (b -> a -> [a]) -> a -> Process b -> Menu a
+accum f = rec 
+ where
+   rec a p = getMenu p >>= g
+    where
+      g Ok = return a
+      g (b :~> q) = choice [ rec c q  | c <- f b a ]
+
+ --where
+--   rec a = changeStep $ \b p ->
+      --choice [ (rec a2 p) | (a2, c) <- f a b ]
+
+-- fail early
 prune :: (a -> Bool) -> Process a -> Process a
-prune f = fst . fold Alg
-   { forChoice = \ ~(p, b1) ~(q, b2) -> (p <|> q, b1 || b2)
-   , forEither = \p q -> if snd p then p else q
-   , forPrefix = \a ~(p, b) -> (a ~> p, f a || b)
-   , forOk     = (ok, True)
-   , forStop   = (stop, False)
-   }
+prune f = rec 
+ where
+   rec = changeStep $ \a p -> 
+      case P (cut (getMenu (rec p))) of
+         np | not (f a) && isStop (getMenu np) -> stop
+            | otherwise -> a ~> np
 
 useFirst :: Sequential f => (a -> Process a -> f b) -> f b -> Process a -> f b
-useFirst op e = rec
+useFirst op e p = bind (getMenu p) f
  where
-   rec (p :|: q) = rec p <|> rec q
-   rec (p :?: q) = rec p <?> rec q
-   rec (a :~> p) = op a p
-   rec Ok        = e
-   rec Stop      = stop
+   f Ok = e
+   f (a :~> q) = op a q
 
 data Sym a = Single a | Composed (Process a)
 
 fromAtoms :: Process (Sym a) -> Process a
-fromAtoms (Single a   :~> q) = a ~> fromAtoms q
-fromAtoms (Composed p :~> q) = p <*> fromAtoms q
-fromAtoms (p :|: q)          = fromAtoms p <|> fromAtoms q
-fromAtoms (p :?: q)          = fromAtoms p <?> fromAtoms q
-fromAtoms Ok                 = ok
-fromAtoms Stop               = stop
+fromAtoms = changeStep $ \sym q -> 
+   case sym of
+      Single a   -> a ~> fromAtoms q
+      Composed p -> p <*> fromAtoms q
 
 atomic :: Sequential f => Process (Sym a) -> f (Sym a)
 atomic = single . Composed . fromAtoms
@@ -165,95 +156,82 @@ p <@> q = useFirst (\a r -> a ~> (q <@> r)) bothOk p
    bothOk = useFirst (\_ _ -> stop) ok q
 
 withPath :: Process a -> Process (a, Path)
-withPath = rec emptyPath
+withPath = rec []
  where
-   rec path (p :|: q) = rec (toLeft path) p :|: rec (toRight path) q
-   rec path (p :?: q) = rec (toLeft path) p :?: rec (toRight path) q
-   rec path (a :~> p) = let next = tick path
-                        in (a, next) :~> rec next p
-   rec _    Ok        = Ok
-   rec _    Stop      = Stop
+   rec ns = mapWithIndex (onStep . f) . getMenu
+    where 
+      f n a p = (a, fromIntList (reverse ms)) ~> rec ms p
+       where
+         ms = n:ns
 
 replay :: Monad m => Path -> Process a -> m ([a], Process a)
-replay = flip (rec [])
+replay = rec [] . intList
  where
-   rec acc process path
-      | path == emptyPath = return (acc, process)
-      | otherwise =
-           case process of
-              p :|: q -> choose p q
-              p :?: q -> choose p q
-              a :~> p -> untick path >>= rec (a:acc) p
-              _       -> fail "replay: invalid path"
-    where
-      choose p q = leftOrRight path >>= either (rec acc p) (rec acc q)
+   rec acc [] p = return (acc, p)
+   rec acc (n:ns) p =
+      case getByIndex n (getMenu p) of
+         Just (a :~> q) -> rec (a:acc) ns q
+         _ ->  fail "replay: invalid path"
 
---------------------------------
-
-filterP :: (a -> Bool) -> Process a -> Process a
-filterP p = fold idAlg
-   { forPrefix = \a q -> if p a then a ~> q else stop }
-
-idAlg :: Sequential f => Alg a (f a)
-idAlg = Alg
-   { forChoice = (<|>)
-   , forEither = (<?>)
-   , forPrefix = (~>)
-   , forOk     = ok
-   , forStop   = stop
-   }
-
+---------------------------------------------------------------------------
+   
 tidyProcess :: (a -> a -> Bool) -> (a -> Bool) -> Process a -> Process a
-tidyProcess eq cond = step2 . step1
-  where
-    step1 = fold idAlg { forChoice = rmChoiceUnitZero
-                       , forPrefix = rmPrefix
-                       }
-
-    step2 = fold idAlg { forChoice = rmSameChoice }
-
-    rmChoiceUnitZero p q =
-        case (p, q) of
-          (Stop, _) -> q
-          (_, Stop) -> p
-          (Ok, _)   -> ok
-          (_, Ok)   -> ok
-          _         -> p <|> q
-
-    rmPrefix a p | cond a    = p
-                 | otherwise = a ~> p
-
-    rmSameChoice p q = if cmpProcesses eq p q
-                       then p
-                       else p <|> q
-
--- | Structural comparison of processes
-cmpProcesses :: (a -> b -> Bool) -> Process a -> Process b -> Bool
-cmpProcesses f = rec
-  where
-    rec (p :|: q) (r :|: s) = rec p r && rec q s
-    rec (p :?: q) (r :?: s) = rec p r && rec q s
-    rec (a :~> p) (b :~> q) = f a b   && rec p q
-    rec Ok        Ok        = True
-    rec Stop      Stop      = True
-    rec _         _         = False
+tidyProcess eq cond = rec 
+ where
+   rec = f . elems . getMenu
+ 
+   f xs | any isOk xs = ok
+        | otherwise   = choice (rmSameChoice (make xs))
+        
+   make xs = [ rmPrefix a (rec p) | a :~> p <- xs ]
+        
+   rmPrefix a p | cond a    = p
+                | otherwise = a ~> p
+                
+   -- unnecessary?
+   rmSameChoice (p:q:rs) 
+      | cmpProcesses eq p q = rmSameChoice (p:rs)
+      | otherwise           = p:rmSameChoice (q:rs)
+   rmSameChoice xs = xs
 
 -- | The uniquePath transformation changes the process in such a way that all
 --   intermediate states can only be reached by one path. A prerequisite is that
 --   symbols are unique (or only used once).
 uniquePath :: (a -> Bool) -> (a -> a -> Bool) -> Process a -> Process a
-uniquePath cond eq = rec
-    where
-      rec (p :|: q) = let f x = not $ any (eq x) (map fst $ firstsWith cond p)
-                      in  rec p <|> rec (filterP f q)
-      rec (p :?: q) = rec p :?: rec q
-      rec (a :~> p) = a :~> rec p
-      rec Ok        = Ok
-      rec Stop      = Stop
+uniquePath cond eq = tidyProcess eq (not . cond) . rec
+ where
+   rec = process . elems . getMenu
+ 
+   process [] = stop
+   process (Ok:xs) = ok <|> process xs
+   process ((a :~> p):xs) = 
+      let ys = map fst $ firstsWith cond (a ~> p)
+      in (a ~> rec p) <|> process (concatMap (change ys) xs)
 
--- | This functions returns the first symbols that hold for predicate p
+   change _  Ok        = [Ok]
+   change ys (a :~> q) = 
+      let f x = all (not . eq x) ys
+      in elems $ getMenu $ filterP f (a ~> q)
+
+cmpProcesses:: (a -> b -> Bool) -> Process a -> Process b -> Bool
+cmpProcesses eq p q = 
+   length as == length bs && all cmp (zip as bs)
+ where
+   as = elems (getMenu p)
+   bs = elems (getMenu q)
+
+   cmp (a :~> pa, b :~> qa) = eq a b && cmpProcesses eq pa qa
+   cmp (Ok, Ok) = True
+   cmp _ = False
+
+filterP :: (a -> Bool) -> Process a -> Process a
+filterP cond = rec 
+ where
+   rec = changeStep $ \a q -> 
+      if cond a then a ~> rec q else stop
+
 firstsWith :: (a -> Bool) -> Process a -> [(a, Process a)]
-firstsWith p = concatMap f . firsts
-  where
-    f (r, q) | p r       = [(r, q)]
-             | otherwise = firstsWith p q
+firstsWith cond = rec
+ where
+   rec = concatMap f . firsts
+   f (a, p) = if cond a then [(a, p)] else rec p

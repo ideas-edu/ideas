@@ -21,7 +21,7 @@ module Ideas.Common.Strategy.Parsing
 
 import Data.Function (on)
 import Data.Monoid
-import Ideas.Common.Classes
+import Ideas.Common.Classes hiding (singleton)
 import Ideas.Common.DerivationTree
 import Ideas.Common.Environment
 import Ideas.Common.Rule
@@ -30,6 +30,7 @@ import Ideas.Common.Strategy.Path
 import Ideas.Common.Strategy.Sequential hiding (replay)
 import Ideas.Common.Utils (fst3)
 import qualified Ideas.Common.Strategy.Sequential as Sequential
+import Ideas.Common.Strategy.Choice
 
 ----------------------------------------------------------------------
 -- Step data type
@@ -85,7 +86,7 @@ parseDerivationTree = curry (makeTree next)
 
 searchModeState :: (Step l a -> Bool) -> (Step l a -> Step l a -> Bool) -> ParseState l a -> ParseState l a
 searchModeState p eq state =
-    state { remainder = tidyProcess eq' (not . p') $
+    state { remainder = -- tidyProcess eq' (not . p') $
                         uniquePath p' eq' (remainder state) }
   where
     eq' = eq `on` fst3
@@ -97,14 +98,7 @@ searchModeState p eq state =
 runCore :: Core l a -> a -> [a]
 runCore = runProcess . toProcess . noLabels
  where
-   runProcess p a = rec a (applyMin2 a p)
-
-   rec a p =
-      (if empty p then (a:) else id)
-      [ c
-      | ((_, b), q) <- firsts p
-      , c <- rec b q
-      ]
+   runProcess p a = bests (accum applyAll a p)
 
 -----------------------------
 
@@ -116,7 +110,7 @@ toProcess = fromAtoms . build . rec . coreSubstAll
          a :*: b   -> rec a <*> rec b
          a :|: b   -> rec a <|> rec b
          Rule r    -> single (Single (RuleStep mempty r))
-         a :|>: b  -> rec a <?> rec b
+         a :|>: b  -> rec a |> rec b
          Fail      -> stop
          Succeed   -> ok
          Label l a -> Single (Enter l) ~> rec a
@@ -129,15 +123,6 @@ toProcess = fromAtoms . build . rec . coreSubstAll
 
    switch (Single (Enter _)) = False
    switch _ = True
-
-applyMin2 :: a -> Process (Step l a) -> Process (Step l a, a)
-applyMin2 a0 = prune (isMajor . fst) . scanChoice step a0
- where
-   step a (RuleStep _ r) =
-      [ (b, (RuleStep env r, b))
-      | (b, env) <- transApply (transformation r) a
-      ]
-   step a st = [(a, (st, a))]
 
 applyMin :: a -> Process (Step l a, Path) -> Process (Step l a, a, Path)
 applyMin a0 = prune (isMajor . fst3) . scanChoice step a0

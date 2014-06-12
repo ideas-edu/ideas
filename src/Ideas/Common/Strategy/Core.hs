@@ -59,13 +59,15 @@ data GCore l a
    | Let (CoreEnv l a) (GCore l a)
  deriving Show
 
-instance Sequential (GCore l) where
-   ok     = Succeed
-   stop   = Fail
+instance Choice (GCore l) where
    single = Rule
+   stop   = Fail
    (<|>)  = (:|:)
-   (<?>)  = (:|>:)
-   (<*>)  = (:*:)
+   (|>)   = (:|>:)
+   
+instance Sequential (GCore l) where
+   ok    = Succeed
+   (<*>) = (:*:)
 
 -----------------------------------------------------------------
 -- Useful instances

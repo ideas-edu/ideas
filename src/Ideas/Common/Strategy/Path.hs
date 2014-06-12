@@ -17,19 +17,13 @@
 --  $Id$
 
 module Ideas.Common.Strategy.Path
-   ( -- * datatype and constructor
-     Path, emptyPath
-     -- * extending a path
-   , toLeft, toRight, tick
-     -- * following a path
-   , leftOrRight, untick
+   ( Path, emptyPath
+   , fromIntList, intList
    ) where
 
-import Data.Foldable (toList)
-import Data.Sequence (Seq, empty, (|>), viewl, ViewL(..), fromList)
 import Ideas.Common.Classes
 
-data Path = Path !Int (Seq Bool) -- depth, choices
+newtype Path = Path [Int]
    deriving Eq
 
 instance Show Path where
@@ -39,32 +33,11 @@ instance Read Path where
    readsPrec _ = map (mapFirst fromIntList) . readList
 
 emptyPath :: Path
-emptyPath = Path 0 empty
-
-toLeft, toRight, tick :: Path -> Path
-toLeft  (Path n bs) = Path (n+1) (bs |> True)
-toRight (Path n bs) = Path (n+1) (bs |> False)
-tick    (Path n bs) = Path (n+1) bs
-
--- |Following a path without going left or right (counterpart of 'tick')
-untick :: Monad m => Path -> m Path
-untick (Path n bs)
-   | n > 0     = return (Path (n-1) bs)
-   | otherwise = fail "untick: invalid path"
-
-leftOrRight :: Monad m => Path -> m (Either Path Path)
-leftOrRight (Path n bs) =
-   case viewl bs of
-      b :< cs | n > 0 && b -> return (Left (Path (n-1) cs))
-              | n > 0      -> return (Right (Path (n-1) cs))
-      _ -> fail "untick: invalid path"
+emptyPath = Path []
 
 -- local helpers
 intList :: Path -> [Int]
-intList (Path n bs)
-   | n == 0    = []
-   | otherwise = n : map (\b -> if b then 0 else 1) (toList bs)
+intList (Path ns) = ns
 
 fromIntList :: [Int] -> Path
-fromIntList []     = emptyPath
-fromIntList (n:is) = Path n (fromList (map (==0) is))
+fromIntList = Path

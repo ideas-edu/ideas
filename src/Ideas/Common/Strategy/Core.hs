@@ -24,7 +24,9 @@ module Ideas.Common.Strategy.Core
 import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Rule
-import Ideas.Common.Strategy.Sequential
+import Ideas.Common.Strategy.Process
+import Ideas.Common.Strategy.Choice
+import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Utils.QuickCheck
 import Ideas.Common.Utils.Uniplate
 
@@ -60,13 +62,14 @@ data GCore l a
  deriving Show
 
 instance Choice (GCore l) where
+   empty  = Fail
    single = Rule
-   stop   = Fail
    (<|>)  = (:|:)
    (|>)   = (:|>:)
    
-instance Sequential (GCore l) where
-   ok    = Succeed
+instance Sequence (GCore l) where
+   done  = Succeed
+   (~>)  = (:*:) . Rule
    (<*>) = (:*:)
 
 -----------------------------------------------------------------

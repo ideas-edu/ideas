@@ -16,7 +16,7 @@
 module Ideas.Common.Strategy.Parsing
    ( Step(..)
    , ParseState, makeState, choices, trace
-   , parseDerivationTree, replay, runCore, searchModeState, toProcess
+   , parseDerivationTree, replay, runCore, searchModeState
    ) where
 
 import Data.Function (on)
@@ -27,10 +27,11 @@ import Ideas.Common.Environment
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Core
 import Ideas.Common.Strategy.Path
-import Ideas.Common.Strategy.Sequential hiding (replay)
+import Ideas.Common.Strategy.Process
 import Ideas.Common.Utils (fst3)
-import qualified Ideas.Common.Strategy.Sequential as Sequential
+import Ideas.Common.Strategy.Derived
 import Ideas.Common.Strategy.Choice
+import Ideas.Common.Strategy.Sequence hiding (Step)
 
 ----------------------------------------------------------------------
 -- Step data type
@@ -67,7 +68,7 @@ data ParseState l a = S
    }
 
 makeState :: a -> Core l a -> ParseState l a
-makeState a = S [] emptyPath . applyMin a . withPath . toProcess
+makeState a = S [] emptyPath . applyMin a . withPath . coreToProcess
 
 ----------------------------------------------------------------------
 -- Parse derivation tree
@@ -75,13 +76,13 @@ makeState a = S [] emptyPath . applyMin a . withPath . toProcess
 parseDerivationTree :: a -> ParseState l a -> DerivationTree (Step l a) (a, ParseState l a)
 parseDerivationTree = curry (makeTree next)
  where
-   next (_, st) = (empty (remainder st), stateFirsts st (remainder st))
+   next (_, st) = (ready (remainder st), stateFirsts st (remainder st))
 
    stateFirsts st p =
       [ ( step
         , (a, st {trace = step:trace st, remainder = q, choices = path})
         )
-      | ((step, a, path), q) <- Sequential.firsts p
+      | ((step, a, path), q) <- firsts p
       ]
 
 searchModeState :: (Step l a -> Bool) -> (Step l a -> Step l a -> Bool) -> ParseState l a -> ParseState l a
@@ -96,28 +97,29 @@ searchModeState p eq state =
 -- Running the parser
 
 runCore :: Core l a -> a -> [a]
-runCore = runProcess . toProcess . noLabels
+runCore = runProcess . coreToProcess . noLabels
  where
    runProcess p a = bests (accum applyAll a p)
 
 -----------------------------
 
-toProcess :: Core l a -> Process (Step l a)
-toProcess = fromAtoms . build . rec . coreSubstAll
+coreToProcess :: Core l a -> Process (Step l a)
+coreToProcess = fromAtoms . toProcess . rec . coreSubstAll
  where
+   rec :: Core l a -> Builder (Sym (Step l a))
    rec core =
       case core of
          a :*: b   -> rec a <*> rec b
          a :|: b   -> rec a <|> rec b
          Rule r    -> single (Single (RuleStep mempty r))
          a :|>: b  -> rec a |> rec b
-         Fail      -> stop
-         Succeed   -> ok
+         Fail      -> empty
+         Succeed   -> done
          Label l a -> Single (Enter l) ~> rec a
                       <*> single (Single (Exit l))
-         a :%: b   -> concurrent switch (build (rec a)) (build (rec b))
-         a :@: b   -> build (rec a) <@> build (rec b)
-         Atomic a  -> atomic (build (rec a))
+         a :%: b   -> concurrent switch (rec a) (rec b)
+         a :@: b   -> rec a <@> rec b
+         Atomic a  -> atomic (rec a)
          Let _ _   -> error "toMin: let"
          Var _     -> error "toMin: var"
 
@@ -125,7 +127,7 @@ toProcess = fromAtoms . build . rec . coreSubstAll
    switch _ = True
 
 applyMin :: a -> Process (Step l a, Path) -> Process (Step l a, a, Path)
-applyMin a0 = prune (isMajor . fst3) . scanChoice step a0
+applyMin a0 = prune (isMajor . fst3) . scan step a0
  where
    step a (RuleStep _ r, bs) =
       [ (b, (RuleStep env r, b, bs))
@@ -135,5 +137,5 @@ applyMin a0 = prune (isMajor . fst3) . scanChoice step a0
 
 replay :: Monad m => Path -> a -> Core l a -> m (ParseState l a)
 replay path a core = do
-   (as, p) <- Sequential.replay path $ withPath $ toProcess core
+   (as, p) <- replayPath path $ withPath $ coreToProcess core
    return (S (map fst as) path (applyMin a p))

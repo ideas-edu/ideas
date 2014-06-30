@@ -154,7 +154,7 @@ lexString :: String -> Parser ()
 lexString s = skip (lexeme (try (string s))) <?> "string " ++ show s
 
 comment :: Parser ()
-comment = skip (char '#' <* manyTill (noneOf "\n") (skip newline <|> eof))
+comment = char '#' *> many (satisfy (/= '\n')) *> (skip newline <|> eof)
 
 -- parse white space and comments afterwards
 lexeme :: Parser a -> Parser a

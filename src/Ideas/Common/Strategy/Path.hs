@@ -59,33 +59,16 @@ replayPath = rec [] . ints
 --   intermediate states can only be reached by one path. A prerequisite is that
 --   symbols are unique (or only used once).
 uniquePath :: (a -> Bool) -> (a -> a -> Bool) -> Process a -> Process a
-uniquePath cond eq = tidy . rec
+uniquePath cond eq = rec
  where
-   rec = process . elems . menu
+   rec p | ready p   = done
+         | otherwise = process (firsts p)
  
    process [] = empty
-   process (Done:xs) = done <|> process xs
-   process ((a :~> p):xs) = 
+   process ((a, p):xs) = 
       let ys = map fst $ firsts $ hide cond (a ~> p)
       in (a ~> rec p) <|> process (concatMap (change ys) xs)
 
-   change _  Done      = [Done]
-   change ys (a :~> q) = 
+   change ys (a, q) = 
       let f x = all (not . eq x) ys
-      in elems $ menu $ filterP f (a ~> q)
-      
-   tidy = make . elems . menu
-    
-   make xs 
-      | any isDone xs = done
-      | otherwise = rmSameChoice
-           [ rmPrefix a (tidy p) | a :~> p <- xs ]
-           
-   rmPrefix a = if cond a then (a ~>) else id
-                   
-   -- unnecessary?
-   rmSameChoice (p:q:rs) 
-      | eqProcessBy eq p q = rmSameChoice (p:rs)
-      | otherwise          = p <|> rmSameChoice (q:rs)
-   rmSameChoice [x] = x
-   rmSameChoice []  = empty
+      in firsts $ filterP f (a ~> q)

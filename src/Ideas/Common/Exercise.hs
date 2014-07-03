@@ -38,20 +38,18 @@ module Ideas.Common.Exercise
    , simpleGenerator, useGenerator, randomTerm, randomTerms
      -- * Derivations
    , showDerivation, showDerivations, printDerivation, printDerivations
-   , diffEnvironment
+   , diffEnvironment, defaultDerivation, allDerivations
    ) where
 
 import Data.Char
 import Data.Data
 import Data.Dynamic
-import Data.Function
 import Data.List
 import Data.Maybe
 import Data.Ord
 import Ideas.Common.Classes
 import Ideas.Common.Context
 import Ideas.Common.Derivation
-import Ideas.Common.DerivationTree
 import Ideas.Common.Environment
 import Ideas.Common.Id
 import Ideas.Common.Predicate
@@ -376,7 +374,10 @@ randomTerms rng ex mdif = rec rng
 -- | Shows the default derivation for a given start term. The specified rule ordering
 -- is used for selection.
 showDerivation :: Exercise a -> a -> String
-showDerivation ex a = showThisDerivation (defaultDerivation ex a) ex
+showDerivation ex a = 
+   case defaultDerivation ex a of 
+      Just d  -> showThisDerivation d ex
+      Nothing -> "no derivation" 
 
 -- | Shows all derivations for a given start term. Warning: there can be many
 -- derivations.
@@ -422,13 +423,9 @@ diffEnvironment = updateSteps $ \old a new ->
        list = bindings old
    in (a, makeEnvironment $ filter keep $ bindings new)
 
-defaultDerivation :: Exercise a -> a -> Derivation (Rule (Context a), Environment) (Context a)
-defaultDerivation ex a =
-   case allDerivations ex a of
-      []  -> emptyDerivation (inContext ex a)
-      d:_ -> d
+defaultDerivation :: Exercise a -> a -> Maybe (Derivation (Rule (Context a), Environment) (Context a))
+defaultDerivation ex = listToMaybe . allDerivations ex
 
 allDerivations :: Exercise a -> a -> [Derivation (Rule (Context a), Environment) (Context a)]
-allDerivations ex =
-   derivations . sortTree (ruleOrdering ex `on` fst)
-   . derivationTree (strategy ex) . inContext ex
+allDerivations ex = 
+   derivationList (ruleOrdering ex) (strategy ex) . inContext ex

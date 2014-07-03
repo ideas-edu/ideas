@@ -18,11 +18,11 @@ module Ideas.Common.Strategy.Process
    ( -- * IsProcess type class
      IsProcess(..)
      -- * Process data type
-   , Process, eqProcessBy
+   , Process, menu, eqProcessBy
      -- * Building sequences
    , Builder
      -- * Query functions on a Process
-   , menu, ready, stopped, firsts
+   , ready, stopped, firsts
      -- * Higher-order functions for iterating over a Process
    , fold, accum, scan, prune
    ) where
@@ -44,6 +44,12 @@ class (Choice f, Sequence f) => IsProcess f where
 -- building sequences with the '<*>' combinator. See the 'Builder' data
 -- type for a faster alternative.
 newtype Process a = P (Menu (Step Process a))
+
+-- | The menu of a process offers single steps (with the remaining process) and
+-- 'done' steps.
+menu :: Process a -> Menu (Step Process a)
+menu (P m) = m
+
 
 instance Eq a => Eq (Process a) where
    (==) = eqProcessBy (==)
@@ -71,6 +77,11 @@ instance Sequence Process where
  
 instance IsProcess Process where
    toProcess = id
+
+instance Firsts Process where
+   ready = any isDone . bests . menu
+   stopped = isEmpty . menu
+   firsts p = [ (a, q) | a :~> q <- bests (menu p) ]
 
 -- | Generalized equality of processes, which takes an equality function for 
 -- the symbols. 
@@ -105,27 +116,6 @@ instance Sequence Builder where
 
 instance IsProcess Builder where
    toProcess (B f) = f done
-   
-------------------------------------------------------------------------
--- Query functions on a Process
-  
--- | The menu of a process offers single steps (with the remaining process) and
--- 'done' steps.
-menu :: Process a -> Menu (Step Process a)
-menu (P m) = m
-
--- | A process is ready if its menu offers the 'Done' symbol
-ready :: Process a -> Bool
-ready = any isDone . bests . menu
-
--- | A process is stopped if its menu is empty: the process is not ready and
--- there are no further steps to take.
-stopped :: Process a -> Bool
-stopped = isEmpty . menu
- 
--- | Returns the best (first) steps that are in the menu of a process.
-firsts :: Process a -> [(a, Process a)]
-firsts p = [ (a, q) | a :~> q <- bests (menu p) ]
 
 ------------------------------------------------------------------------
 -- Higher-order functions for iterating over a Process
@@ -151,7 +141,7 @@ scan :: (s -> a -> [(s, b)]) -> s -> Process a -> Process b
 scan op = rec
  where
    rec s = 
-      let f a q = choice [ (b ~> rec s2 q) | (s2, b) <- op s a ]
+      let f a q = choice [ b ~> rec s2 q | (s2, b) <- op s a ]
       in onMenu (step done f) . menu
 
 

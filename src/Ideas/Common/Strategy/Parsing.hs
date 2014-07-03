@@ -15,14 +15,15 @@
 
 module Ideas.Common.Strategy.Parsing
    ( Step(..)
-   , ParseState, makeState, choices, trace
-   , parseDerivationTree, replay, runCore, searchModeState
+   , ParseState, makeState, majorOnly, getPath, trace
+   , ready, firsts, firstsWith
+   , replay, runCore, searchModeState
    ) where
 
+import Data.Maybe
 import Data.Function (on)
 import Data.Monoid
 import Ideas.Common.Classes hiding (singleton)
-import Ideas.Common.DerivationTree
 import Ideas.Common.Environment
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Core
@@ -37,15 +38,12 @@ import Ideas.Common.Strategy.Sequence hiding (Step)
 -- Step data type
 
 data Step l a = Enter l | Exit l | RuleStep Environment (Rule a)
-   deriving (Eq)
+   deriving Eq
 
 instance Show (Step l a) where
    show (Enter _) = "Enter"
    show (Exit _)  = "Exit"
    show (RuleStep _ r) = show r
-
--- A core expression where the symbols are steps instead of "only" rules
--- type StepCore l a = GCore l (Step l a)
 
 instance Apply (Step l) where
    applyAll (RuleStep _ r) = applyAll r
@@ -53,7 +51,7 @@ instance Apply (Step l) where
 
 instance Minor (Step l a) where
    setMinor b (RuleStep env r) = RuleStep env (setMinor b r)
-   setMinor _ step = step
+   setMinor _ st = st
 
    isMinor (RuleStep _ r) = isMinor r
    isMinor _ = True
@@ -61,37 +59,40 @@ instance Minor (Step l a) where
 ----------------------------------------------------------------------
 -- State data type
 
-data ParseState l a = S
-   { trace     :: [Step l a]
-   , choices   :: Path
-   , remainder :: Process (Step l a, a, Path)
+data ParseState l a = PS
+   { _value     :: a -- hidden
+   , trace      :: [Step l a]
+   , getPath    :: Path
+   , _remainder :: Process (Step l a, a, Path) -- hidden
    }
 
 makeState :: a -> Core l a -> ParseState l a
-makeState a = S [] emptyPath . applyMin a . withPath . coreToProcess
+makeState a = PS a [] emptyPath . applyMin a . withPath . coreToProcess
+
+majorOnly :: ParseState l a -> ParseState l a
+majorOnly st = st { _remainder = hide p (_remainder st) }
+ where
+   p (x, _, _) = isMajor x
 
 ----------------------------------------------------------------------
 -- Parse derivation tree
 
-parseDerivationTree :: a -> ParseState l a -> DerivationTree (Step l a) (a, ParseState l a)
-parseDerivationTree = curry (makeTree next)
- where
-   next (_, st) = (ready (remainder st), stateFirsts st (remainder st))
-
-   stateFirsts st p =
-      [ ( step
-        , (a, st {trace = step:trace st, remainder = q, choices = path})
-        )
-      | ((step, a, path), q) <- firsts p
+instance Firsts (ParseState l) where
+   ready = ready . _remainder
+   firsts pst = 
+      [ (b, PS b (st:trace pst) path q) 
+      | ((st, b, path), q) <- firsts (_remainder pst)
       ]
-
-searchModeState :: (Step l a -> Bool) -> (Step l a -> Step l a -> Bool) -> ParseState l a -> ParseState l a
-searchModeState p eq state =
-    state { remainder = -- tidyProcess eq' (not . p') $
-                        uniquePath p' eq' (remainder state) }
+   
+instance Minor (ParseState l a) where
+   setMinor _ = id
+   isMinor    = maybe False isMinor . listToMaybe . trace
+        
+searchModeState :: (Step l a -> Step l a -> Bool) -> ParseState l a -> ParseState l a
+searchModeState eq state =
+    state { _remainder = uniquePath eq' (_remainder (majorOnly state)) }
   where
     eq' = eq `on` fst3
-    p'  = p . fst3
 
 ----------------------------------------------------------------------
 -- Running the parser
@@ -127,15 +128,15 @@ coreToProcess = fromAtoms . toProcess . rec . coreSubstAll
    switch _ = True
 
 applyMin :: a -> Process (Step l a, Path) -> Process (Step l a, a, Path)
-applyMin a0 = prune (isMajor . fst3) . scan step a0
+applyMin a0 = prune (isMajor . fst3) . scan f a0
  where
-   step a (RuleStep _ r, bs) =
+   f a (RuleStep _ r, bs) =
       [ (b, (RuleStep env r, b, bs))
       | (b, env) <- transApply (transformation r) a
       ]
-   step a (st, bs) = [(a, (st, a, bs))]
+   f a (st, bs) = [(a, (st, a, bs))]
 
-replay :: Monad m => Path -> a -> Core l a -> m (ParseState l a)
-replay path a core = do
+replay :: Monad m => Path -> Core l a -> a -> m (ParseState l a)
+replay path core a = do
    (as, p) <- replayPath path $ withPath $ coreToProcess core
-   return (S (map fst as) path (applyMin a p))
+   return (PS a (map fst as) path (applyMin a p))

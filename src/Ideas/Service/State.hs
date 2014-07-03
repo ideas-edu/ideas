@@ -18,12 +18,15 @@ module Ideas.Service.State
    ( -- * Exercise state
      State, makeState, makeNoState, emptyStateContext, emptyState
    , exercise, statePrefixes, stateContext, stateTerm, stateLabels
+   , firsts, ready
    ) where
 
+import Data.Function
 import Data.List
 import Data.Maybe
-import Ideas.Common.Library
+import Ideas.Common.Library hiding (ready)
 import Ideas.Common.Strategy.Abstract (LabelInfo)
+import Ideas.Common.Strategy.Sequence
 
 data State a = State
    { exercise      :: Exercise a
@@ -48,6 +51,22 @@ instance HasEnvironment (State a) where
    environment = environment . stateContext
    setEnvironment env s =
       s { stateContext = setEnvironment env (stateContext s) }
+
+instance Firsts State where 
+   firsts st = sortBy cmp 
+      [ (a, State (exercise st) [q] ctx) 
+      | p <- statePrefixes st
+      , (ctx, q) <- firstsWith (const isMajor) p
+      , a <- fromContext ctx 
+      ]
+    where
+      cmp = ruleOrdering ex `on` (f . lastStepInPrefix . head . statePrefixes . snd)
+      ex  = exercise st
+      
+      f (Just (RuleStep _ r)) = r
+      f _ = emptyRule ()
+
+   ready st = isReady (exercise st) (stateTerm st)
 
 stateTerm :: State a -> a
 stateTerm = fromMaybe (error "invalid term") . fromContext . stateContext

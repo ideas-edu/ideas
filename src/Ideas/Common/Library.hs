@@ -21,7 +21,6 @@ module Ideas.Common.Library
 import Ideas.Common.Classes as Export
 import Ideas.Common.Context as Export
 import Ideas.Common.Derivation as Export
-import Ideas.Common.DerivationTree as Export
 import Ideas.Common.Environment as Export
 import Ideas.Common.Exercise as Export
 import Ideas.Common.Id as Export

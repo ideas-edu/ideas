@@ -18,6 +18,7 @@ module Ideas.Service.ProblemDecomposition
 
 import Data.Maybe
 import Ideas.Common.Library
+import Ideas.Common.Strategy.Parsing (firstsWith)
 import Ideas.Service.State
 import Ideas.Service.Types
 
@@ -35,7 +36,7 @@ problemDecomposition msloc state maybeAnswer
                     witnesses   = filter (similarity ex answeredTerm . fst) $ take 1 answers
                     (newCtx, newPrefix) = head witnesses
                     newLocation = nextTaskLocation (strategy ex) sloc $
-                                     fromMaybe topId $ nextMajorForPrefix newCtx newPrefix
+                                     fromMaybe topId $ nextMajorForPrefix newPrefix
                     newState    = makeState ex [newPrefix] newCtx
             _ -> Right $
                     Incorrect isEquiv newLocation expState arguments
@@ -50,28 +51,18 @@ problemDecomposition msloc state maybeAnswer
    ex      = exercise state
    topId   = getId (strategy ex)
    sloc    = fromMaybe topId msloc
-   answers = runPrefixLocation sloc (stateContext state) prefix
+   answers = runPrefixLocation sloc prefix
    prefix  = case statePrefixes state of
                 []   -> emptyPrefix (strategy ex) (stateContext state)
                 hd:_ -> hd
 
--- | Continue with a prefix until a certain strategy location is reached. At least one
--- major rule should have been executed
-runPrefixLocation :: Id -> a -> Prefix a -> [(a, Prefix a)]
-runPrefixLocation loc a0 p0 =
-   concatMap (checkPair . f) $ derivations $
-   cutOnStep (stop . lastStepInPrefix) $ prefixTree a0 p0
- where
-   f d = (lastTerm d, fromMaybe p0 (lastStep d))
-   stop (Just (Exit info)) = getId info == loc
-   stop _ = False
-
-   checkPair result@(a, p)
-      | null rules        = [result]
-      | all isMinor rules = runPrefixLocation loc a p
-      | otherwise         = [result]
-    where
-      rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
+-- | Continue with a prefix until a certain strategy location is reached.
+runPrefixLocation :: Id -> Prefix a -> [(a, Prefix a)]
+runPrefixLocation loc p = do
+   (a, q) <- firsts p
+   case lastStepInPrefix q of
+      Just (Exit info) | getId info == loc -> return (a, q)
+      _ -> runPrefixLocation loc q
 
 firstMajorInPrefix :: Prefix a -> Prefix a -> Maybe (Id, Environment)
 firstMajorInPrefix p0 = rec . drop len . prefixToSteps
@@ -84,9 +75,9 @@ firstMajorInPrefix p0 = rec . drop len . prefixToSteps
          _:rest -> rec rest
          []     -> Nothing
 
-nextMajorForPrefix :: a -> Prefix a -> Maybe Id
-nextMajorForPrefix a p0 = do
-   (_, p1)  <- listToMaybe $ runPrefixMajor a p0
+nextMajorForPrefix :: Prefix a -> Maybe Id
+nextMajorForPrefix p0 = do
+   (_, p1)  <- listToMaybe $ runPrefixMajor p0
    rec (reverse (prefixToSteps p1))
  where
    rec [] = Nothing
@@ -95,12 +86,8 @@ nextMajorForPrefix a p0 = do
    rec (_:rest)       = rec rest
 
 -- Copied from TypedAbstractService: clean me up
-runPrefixMajor :: a -> Prefix a -> [(a, Prefix a)]
-runPrefixMajor a p0 =
-   map f $ derivations $ cutOnStep (stop . lastStepInPrefix) $ prefixTree a p0
- where
-   f d = (lastTerm d, fromMaybe p0 (lastStep d))
-   stop = maybe False isMajor
+runPrefixMajor :: Prefix a -> [(a, Prefix a)]
+runPrefixMajor = firstsWith (const isMajor)
 
 ------------------------------------------------------------------------
 -- Data types for replies

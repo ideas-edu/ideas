@@ -14,7 +14,7 @@
 module Ideas.Service.ServiceList (serviceList, metaServiceList) where
 
 import Ideas.Common.ExerciseTests
-import Ideas.Common.Library hiding (apply, applicable, derivation, ready)
+import Ideas.Common.Library hiding (apply, applicable, ready)
 import Ideas.Common.Utils.TestSuite
 import Ideas.Service.BasicServices
 import Ideas.Service.DomainReasoner
@@ -80,7 +80,7 @@ readyS :: Service
 readyS = makeService "basic.ready"
    "Test if the current expression is in a form accepted as a final answer. \
    \For this, the strategy is not used." $
-   ready ::: typed
+   ready ::: Const State :-> Const Bool
 
 stepsremainingS :: Service
 stepsremainingS = makeService "basic.stepsremaining"

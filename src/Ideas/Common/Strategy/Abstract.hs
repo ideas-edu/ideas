@@ -15,7 +15,8 @@
 module Ideas.Common.Strategy.Abstract
    ( Strategy, IsStrategy(..)
    , LabeledStrategy, label, unlabel
-   , fullDerivationTree, derivationTree, rulesInStrategy
+   , derivationList
+   , rulesInStrategy
    , mapRules, mapRulesS
    , cleanUpStrategy, cleanUpStrategyAfter
      -- Accessors to the underlying representation
@@ -26,9 +27,10 @@ module Ideas.Common.Strategy.Abstract
    ) where
 
 import Control.Monad
+import Data.Function
 import Data.List
 import Ideas.Common.Classes
-import Ideas.Common.DerivationTree
+import Ideas.Common.Derivation
 import Ideas.Common.Environment
 import Ideas.Common.Id
 import Ideas.Common.Rewriting (RewriteRule)
@@ -36,6 +38,7 @@ import Ideas.Common.Rule
 import Ideas.Common.Strategy.Core
 import Ideas.Common.Strategy.Parsing
 import Ideas.Common.Utils.Uniplate hiding (rewriteM)
+import Ideas.Common.Utils (snd3)
 import Ideas.Common.View
 import Test.QuickCheck hiding (label)
 
@@ -182,19 +185,22 @@ processLabelInfo getInfo = rec []
 -----------------------------------------------------------
 --- Remaining functions
 
--- | Returns the derivation tree for a strategy and a term, including all
--- minor rules
-fullDerivationTree :: IsStrategy f => f a -> a -> DerivationTree (Step LabelInfo a) a
-fullDerivationTree = make . processLabelInfo id . toCore . toStrategy
+derivationList :: IsStrategy f => (Rule a -> Rule a -> Ordering) -> f a -> a -> [Derivation (Rule a, Environment) a]
+derivationList cmpRule s a0 = rec a0 (toState s)
  where
-   make core a = fmap fst (parseDerivationTree a (makeState a core))
-
--- | Returns the derivation tree for a strategy and a term with only major rules
-derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a, Environment) a
-derivationTree s = mergeMaybeSteps . mapFirst f . fullDerivationTree s
- where
-   f (RuleStep env r) | isMajor r = Just (r, env)
-   f _ = Nothing
+   toState = majorOnly . makeState a0 . processLabelInfo id . toCore . toStrategy
+ 
+   rec a pst = (if ready pst then (emptyDerivation a:) else id)
+      [ prepend (a, rEnv) d | (b, rEnv, new) <- firstsOrd pst, d <- rec b new ]
+ 
+   firstsOrd = sortBy cmp . map f . firsts
+    where
+      cmp = cmpRule `on` (fst . snd3)
+      
+      f (b, st) = (b, g (trace st), st)
+      
+      g (RuleStep env r:_) = (r, env)
+      g _ = (emptyRule (), makeEnvironment [])
 
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]

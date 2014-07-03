@@ -58,15 +58,15 @@ replayPath = rec [] . ints
 -- | The uniquePath transformation changes the process in such a way that all
 --   intermediate states can only be reached by one path. A prerequisite is that
 --   symbols are unique (or only used once).
-uniquePath :: (a -> Bool) -> (a -> a -> Bool) -> Process a -> Process a
-uniquePath cond eq = rec
+uniquePath :: (a -> a -> Bool) -> Process a -> Process a
+uniquePath eq = rec
  where
    rec p | ready p   = done
          | otherwise = process (firsts p)
  
    process [] = empty
    process ((a, p):xs) = 
-      let ys = map fst $ firsts $ hide cond (a ~> p)
+      let ys = map fst $ firsts (a ~> p)
       in (a ~> rec p) <|> process (concatMap (change ys) xs)
 
    change ys (a, q) = 

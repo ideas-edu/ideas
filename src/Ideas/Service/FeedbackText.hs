@@ -17,7 +17,7 @@ module Ideas.Service.FeedbackText
    , onefirsttext, submittext, derivationtext, feedbacktext
    ) where
 
-import Ideas.Common.Library hiding (derivation)
+import Ideas.Common.Library
 import Ideas.Service.BasicServices
 import Ideas.Service.Diagnose
 import Ideas.Service.FeedbackScript.Run

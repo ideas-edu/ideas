@@ -16,16 +16,17 @@
 
 module Ideas.Common.Strategy.Prefix
    ( Prefix, emptyPrefix, makePrefix, showPrefix
-   , prefixToSteps, prefixTree, stepsToRules, lastStepInPrefix, activeLabels
-   , searchModePrefix
+   , prefixToSteps, lastStepInPrefix, activeLabels
+   , searchModePrefix, prefixPath
    ) where
 
 import Data.List
 import Data.Maybe
-import Ideas.Common.DerivationTree
-import Ideas.Common.Rule
+import Control.Monad
+import Ideas.Common.Classes
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Parsing
+import Ideas.Common.Strategy.Sequence hiding (Step)
 import Ideas.Common.Strategy.Path
 
 -----------------------------------------------------------
@@ -35,10 +36,18 @@ import Ideas.Common.Strategy.Path
 -- executed rules). A prefix is still "aware" of the labels that appear in the
 -- strategy. A prefix is encoded as a list of integers (and can be reconstructed
 -- from such a list: see @makePrefix@). The list is stored in reversed order.
-type Prefix = ParseState LabelInfo
+newtype Prefix a = P { toState :: ParseState LabelInfo a }
 
+instance Minor (Prefix a) where
+   setMinor _ = id
+   isMinor    = isMinor . toState
+
+instance Firsts Prefix where
+   ready    = ready . toState
+   firsts x = [ (a, P y) | (a, y) <- firsts (toState x) ]
+   
 showPrefix :: Prefix a -> String
-showPrefix = show . choices
+showPrefix = show . getPath . toState
 
 -- | Construct the empty prefix for a labeled strategy
 emptyPrefix :: LabeledStrategy a -> a -> Prefix a
@@ -46,30 +55,25 @@ emptyPrefix a = fromMaybe (error "emptyPrefix") . makePrefix emptyPath a
 
 -- | Construct a prefix for a given list of integers and a labeled strategy.
 makePrefix :: Monad m => Path -> LabeledStrategy a -> a -> m (Prefix a)
-makePrefix path = flip (replay path) . mkCore
+makePrefix path s = liftM P . replay path (mkCore s)
  where
    mkCore = processLabelInfo id . toCore . toStrategy
 
--- | Create a derivation tree with a "prefix" as annotation.
-prefixTree :: a -> Prefix a -> DerivationTree (Prefix a) a
-prefixTree a = fmap fst . updateAnnotations (\_ _ -> snd) . parseDerivationTree a
-
-searchModePrefix :: (Step LabelInfo a -> Bool) -> (Step LabelInfo a -> Step LabelInfo a -> Bool) -> Prefix a -> Prefix a
-searchModePrefix = searchModeState
+searchModePrefix :: (Step LabelInfo a -> Step LabelInfo a -> Bool) -> Prefix a -> Prefix a
+searchModePrefix eq = P . searchModeState eq . toState
 
 prefixToSteps :: Prefix a -> [Step LabelInfo a]
-prefixToSteps = reverse . trace
-
--- | Retrieves the rules from a list of steps
-stepsToRules :: [Step l a] -> [Rule a]
-stepsToRules xs = [ r | RuleStep _ r <- xs ]
+prefixToSteps = reverse . trace . toState
 
 -- | Returns the last rule of a prefix (if such a rule exists)
 lastStepInPrefix :: Prefix a -> Maybe (Step LabelInfo a)
-lastStepInPrefix = listToMaybe . trace
+lastStepInPrefix = listToMaybe . trace . toState
 
 -- | Calculate the active labels
 activeLabels :: Prefix a -> [LabelInfo]
 activeLabels p = nub [l | Enter l <- steps] \\ [l | Exit l <- steps]
    where
       steps = prefixToSteps p
+      
+prefixPath :: Prefix a -> Path
+prefixPath = getPath . toState

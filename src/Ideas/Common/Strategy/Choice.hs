@@ -1,4 +1,4 @@
-﻿-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 -- Copyright 2014, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
 -- see the file "LICENSE.txt", which is included in the distribution.
@@ -24,7 +24,7 @@ module Ideas.Common.Strategy.Choice
      -- * Generalized functions
    , onMenu, cut, mapWithIndex
    ) where
-   
+
 import Data.Maybe (listToMaybe)
 
 infixr 3 <|>, |>, :|:, :|>

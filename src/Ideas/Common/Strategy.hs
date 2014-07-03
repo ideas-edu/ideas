@@ -21,7 +21,7 @@ module Ideas.Common.Strategy
      Strategy, LabeledStrategy
    , IsStrategy(..)
      -- * Running strategies
-   , fullDerivationTree, derivationTree
+   , derivationList
      -- * Strategy combinators
      -- ** Basic combinators
    , (<*>), (<|>), (<%>), succeed, fail, atomic, label
@@ -41,8 +41,9 @@ module Ideas.Common.Strategy
    , strategyLocations, subStrategy
    , subTaskLocation, nextTaskLocation
      -- * Prefixes
-   , Prefix, showPrefix, emptyPrefix, makePrefix, prefixTree, Step(..), Path, emptyPath
-   , prefixToSteps, stepsToRules, lastStepInPrefix, activeLabels
+   , Prefix, showPrefix, emptyPrefix, makePrefix
+   , Step(..), Path, emptyPath
+   , prefixToSteps, lastStepInPrefix, activeLabels, prefixPath
      -- * Misc
    , cleanUpStrategy, cleanUpStrategyAfter
    , rulesInStrategy

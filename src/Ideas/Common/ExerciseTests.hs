@@ -20,12 +20,10 @@ import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Context
 import Ideas.Common.Derivation
-import Ideas.Common.DerivationTree
 import Ideas.Common.Environment
 import Ideas.Common.Exercise
 import Ideas.Common.Id
 import Ideas.Common.Rule
-import Ideas.Common.Strategy (derivationTree)
 import Ideas.Common.Utils.TestSuite
 import Ideas.Common.View
 import System.Random
@@ -114,19 +112,19 @@ checkExamples stdgen ex
    xs = map snd (examples ex)
 
 checksForTerm :: Bool -> StdGen -> Exercise a -> a -> [TestSuite]
-checksForTerm leftMost stdgen ex a =
+checksForTerm leftMost _ ex a =
    concat
    -- Left-most derivation
-      [ case derivation tree of
+      [ case defaultDerivation ex a of
            Just d  -> checksForDerivation ex d
            Nothing -> [assertTrue ("no derivation for " ++ prettyPrinter ex a) False]
       | leftMost
-      ] ++
+      ] {- ++
    case randomDerivation stdgen tree of
       Just d  -> checksForDerivation ex d
       Nothing -> []
  where
-   tree = derivationTree (strategy ex) (inContext ex a)
+   tree = derivationTree (strategy ex) (inContext ex a) -}
 
 checksForDerivation :: Exercise a -> Derivation (Rule (Context a), Environment) (Context a) -> [TestSuite]
 checksForDerivation ex d =

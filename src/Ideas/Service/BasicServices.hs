@@ -21,7 +21,7 @@ module Ideas.Service.BasicServices
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Ideas.Common.Library hiding (derivation, applicable, apply, ready)
+import Ideas.Common.Library hiding (applicable, apply, ready)
 import Ideas.Common.Traversal.Navigator (downs, navigateTo)
 import Ideas.Common.Utils (fst3)
 import Ideas.Service.State
@@ -76,38 +76,27 @@ derivation mcfg state =
 
 type StepInfo a = (Rule (Context a), Location, Environment) -- find a good place
 
--- Note that we have to inspect the last step of the prefix afterwards, because
--- the remaining part of the derivation could consist of minor rules only.
 allfirsts :: State a -> Either String [(StepInfo a, State a)]
 allfirsts state
    | null ps   = Left "Prefix is required"
-   | otherwise =
-        let trees  = map tree ps
-            tree p = cutOnStep (justMajor . lastStepInPrefix)
-                               (prefixTree (stateContext state) p)
-            f ((r1, _, _), _) ((r2, _, _), _) =
-               ruleOrdering (exercise state) r1 r2
-            justMajor = maybe False isMajor
-        in Right $ noDuplicates $ sortBy f $ mapMaybe make $ concatMap derivations trees
+   | otherwise = Right $ 
+        noDuplicates $ concatMap make $ firsts state
  where
    ps = statePrefixes state
-
-   make d = do
-      prefixEnd <- lastStep d
-      case lastStepInPrefix prefixEnd of
-         Just (RuleStep env r) | isMajor r -> return
-            ( (r
-              , location (lastTerm d)
-              , env)
-            , makeState (exercise state) [prefixEnd] (lastTerm d)
-            )
-         _ -> Nothing
+   
+   make (_, st) = do
+      prfx <- statePrefixes st
+      let ctx = stateContext st
+      case lastStepInPrefix prfx of
+         Just (RuleStep env r) -> return
+            ( (r, location ctx, env), st )
+         _ -> []
 
    noDuplicates []     = []
    noDuplicates (x:xs) = x : noDuplicates (filter (not . eq x) xs)
 
-   eq ((r1, l1, a1), s1) ((r2, l2, a2), s2) =
-      r1==r2 && l1==l2 && a1==a2 && exercise s1 == exercise s2
+   eq (x1, s1) (x2, s2) =
+      x1 == x2 && exercise s1 == exercise s2
       && similarity (exercise s1) (stateContext s1) (stateContext s2)
 
 onefirst :: State a -> Either String (StepInfo a, State a)
@@ -163,9 +152,6 @@ apply r loc env state
       case transApplyWith env (transformation r) ca of
          (new, _):_ -> Right (makeNoState (exercise state) new)
          []         -> Left ("Cannot apply " ++ show r)
-
-ready :: State a -> Bool
-ready state = isReady (exercise state) (stateTerm state)
 
 stepsremaining :: State a -> Either String Int
 stepsremaining = mapSecond derivationLength . derivation Nothing

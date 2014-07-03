@@ -25,7 +25,7 @@ import Ideas.Common.Algebra.Law
 import Ideas.Common.Classes
 import Ideas.Common.Strategy
 import Ideas.Common.Strategy.Abstract
-import Ideas.Common.Strategy.Parsing
+import Ideas.Common.Strategy.Parsing hiding (firsts)
 import Ideas.Common.Utils.QuickCheck hiding (label, Result)
 import Ideas.Common.Utils.TestSuite
 import Prelude hiding (fail)

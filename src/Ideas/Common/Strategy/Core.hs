@@ -24,7 +24,6 @@ module Ideas.Common.Strategy.Core
 import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Rule
-import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Utils.QuickCheck

@@ -37,6 +37,7 @@ module Ideas.Common.Strategy
    , module Ideas.Common.Strategy.Traversal
      -- * Configuration combinators
    , module Ideas.Common.Strategy.Configuration
+   , remove, collapse, hide
      -- * Strategy locations
    , strategyLocations, subStrategy
    , subTaskLocation, nextTaskLocation

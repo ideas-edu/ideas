@@ -20,7 +20,6 @@ module Ideas.Encoding.DecoderXML
 
 import Control.Monad
 import Data.Char
-import Data.List
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Encoding.Evaluator
@@ -146,20 +145,17 @@ decodeEnvironment = encoderFor $ \xml ->
             value <- findAttribute "value" item
             return $ insertRef (makeRef n) value env
 
-decodeConfiguration :: XMLDecoder a StrategyConfiguration
+decodeConfiguration :: XMLDecoder a StrategyCfg
 decodeConfiguration = do
    xml <- encoderFor (findChild "configuration")
-   liftM makeStrategyConfiguration $
+   liftM mconcat $
       mapM decodeAction (children xml)
  where
    decodeAction item = do
       guard (null (children item))
-      action <-
-         case find (\a -> map toLower (show a) == name item) configActions of
-            Just a  -> return a
-            Nothing -> fail $ "unknown action " ++ show (name item)
+      action <- readM (name item)
       cfgloc <- findAttribute "name" item
-      return (byName (newId cfgloc), action)
+      return (action `byName` newId cfgloc)
 
 decodeArgEnvironment :: XMLDecoder a Environment
 decodeArgEnvironment = encoderFor $ \xml ->

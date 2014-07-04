@@ -26,7 +26,6 @@ import Data.List
 import Data.Maybe
 import Data.Monoid
 import Ideas.Common.Library hiding (ready, Environment)
-import Ideas.Common.Strategy.Abstract (LabelInfo)
 import Ideas.Service.BasicServices
 import Ideas.Service.Diagnose
 import Ideas.Service.FeedbackScript.Syntax
@@ -37,7 +36,7 @@ data Environment a = Env
    , expected   :: Maybe (Rule (Context a))
    , recognized :: Maybe (Rule (Context a))
    , motivation :: Maybe (Rule (Context a))
-   , actives    :: Maybe [LabelInfo]
+   , actives    :: Maybe [Id]
    , diffPair   :: Maybe (String, String)
    , before     :: Maybe Term
    , after      :: Maybe Term

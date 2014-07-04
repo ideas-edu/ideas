@@ -12,105 +12,95 @@
 --  $Id$
 
 module Ideas.Common.Strategy.Configuration
-   ( -- Types and constructors
-     StrategyConfiguration, makeStrategyConfiguration
-   , ConfigItem, ConfigLocation, byName, byGroup
-   , ConfigAction(..), configActions
-     --  Configure
-  ,  configure, configureNow
-     -- Combinators
-   , remove, reinsert, collapse, expand, hide, reveal
+   ( StrategyCfg, byName, ConfigAction(..)
+   , configure, configureS
+   , module Data.Monoid
    ) where
 
-import Data.Maybe
-import Ideas.Common.Classes
+import Data.Char
 import Ideas.Common.Id
 import Ideas.Common.Strategy.Abstract
-import Ideas.Common.Strategy.Core
+import Ideas.Common.Strategy.Core hiding (Remove, Collapse, Hide)
+import Ideas.Common.Utils.Uniplate
+import Data.Monoid
+import qualified Ideas.Common.Strategy.Core as Core
 
 ---------------------------------------------------------------------
 -- Types and constructors
 
-newtype StrategyConfiguration = SC { configItems :: [ConfigItem] }
-   deriving Show
+newtype StrategyCfg = Cfg [(ConfigLocation, ConfigAction)]
 
-makeStrategyConfiguration :: [ConfigItem] -> StrategyConfiguration
-makeStrategyConfiguration = SC
+instance Show StrategyCfg where
+   show (Cfg xs) = show xs
 
-type ConfigItem = (ConfigLocation, ConfigAction)
+instance Monoid StrategyCfg where
+   mempty  = Cfg []
+   mconcat xs = Cfg [ y | Cfg ys <- xs, y <- ys ]
+   mappend (Cfg xs) (Cfg ys) = Cfg (xs ++ ys)   
 
-data ConfigLocation
-   = ByName  Id
-   | ByGroup Id
- deriving Show
+data ConfigLocation = ByName Id
+
+instance Show ConfigLocation where
+   show (ByName a) = show a
 
 data ConfigAction = Remove | Reinsert | Collapse | Expand | Hide | Reveal
-   deriving (Show, Enum)
+   deriving (Show, Eq)
 
-configActions :: [ConfigAction]
-configActions = [Remove .. ]
+instance Read ConfigAction where
+   readsPrec _ s = 
+      let f = map toLower 
+      in [ (x, "") | x <- concat actionGroups, f s == f (show x) ]
 
-byName :: HasId a => a -> ConfigLocation
-byName = ByName . getId
+actionGroups :: [[ConfigAction]]
+actionGroups = [[Remove, Reinsert], [Collapse, Expand], [Hide, Reveal]]
 
-byGroup :: HasId a => a -> ConfigLocation
-byGroup = ByGroup . getId
+byName :: HasId a => ConfigAction -> a -> StrategyCfg
+byName action a = Cfg [(ByName (getId a), action)]
 
 ---------------------------------------------------------------------
 -- Configure
 
-configureNow :: LabeledStrategy a -> LabeledStrategy a
-configureNow =
-   let lsToCore = toCore . toStrategy
-       coreToLS = fromMaybe err . toLabeledStrategy . fromCore
-       err      = error "configureNow: label disappeared"
-   in coreToLS . processLabelInfo id . lsToCore
+configure :: StrategyCfg -> LabeledStrategy a -> LabeledStrategy a
+configure cfg ls = label (getId ls) (configureS cfg (unlabel ls))
 
-configure :: StrategyConfiguration -> LabeledStrategy a -> LabeledStrategy a
-configure cfg ls =
-   label (getId ls) (fromCore (configureCore cfg (toCore (unlabel ls))))
+configureS :: StrategyCfg -> Strategy a -> Strategy a
+configureS cfg = fromCore . configureCore cfg . toCore
 
-configureCore :: StrategyConfiguration -> Core LabelInfo a -> Core LabelInfo a
-configureCore cfg = mapFirst (change [])
+configureCore :: StrategyCfg -> Core a -> Core a
+configureCore (Cfg pairs) = rec
  where
-   change groups info =
-      let actions = getActions info groups cfg
-      in foldr doAction info actions
+   rec core = 
+      case core of
+         Core.Remove s   | has Reinsert -> rec s
+         Core.Collapse s | has Expand   -> rec s
+         Core.Hide s     | has Reveal   -> rec s
+         Label l s -> props (Label l (rec s))
+         _ -> descend rec core
+    where
+      myLabel  = getLabel core
+      actions  = cancel [ a | (loc, a) <- pairs, maybe False (here loc) myLabel ]
+      has      = (`elem` actions) 
+      make x g = if has x then g else id
+      
+      props    = make Remove   Core.Remove
+               . make Hide     Core.Hide
+               . make Collapse Core.Collapse 
 
-getActions :: LabelInfo -> [String]
-           -> StrategyConfiguration -> [ConfigAction]
-getActions info groups = map snd . filter (select . fst) . configItems
+here :: ConfigLocation -> Id -> Bool
+here (ByName a) info = getId info == a
+
+getLabel :: Core a -> Maybe Id
+getLabel (Label l _)       = Just l
+getLabel (Core.Remove s)   = getLabel s
+getLabel (Core.Collapse s) = getLabel s
+getLabel (Core.Hide s)     = getLabel s
+getLabel _                 = Nothing
+
+cancel :: [ConfigAction] -> [ConfigAction]
+cancel [] = []
+cancel (x:xs) = x : cancel (rec actionGroups)
  where
-   select (ByName a)  = getId info == a
-   select (ByGroup s) = showId s `elem` groups
-
-doAction :: ConfigAction -> LabelInfo -> LabelInfo
-doAction action =
-   case action of
-      Remove   -> setRemoved True
-      Reinsert -> setRemoved False
-      Collapse -> setCollapsed True
-      Expand   -> setCollapsed False
-      Hide     -> setHidden True
-      Reveal   -> setHidden False
-
----------------------------------------------------------------------
--- Configuration combinators
-
-remove, reinsert :: IsLabeled f => f a -> LabeledStrategy a
-remove   = changeInfo (doAction Remove)
-reinsert = changeInfo (doAction Reinsert)
-
-collapse, expand :: IsLabeled f => f a -> LabeledStrategy a
-collapse = changeInfo (doAction Collapse)
-expand   = changeInfo (doAction Expand)
-
-hide, reveal :: IsLabeled f => f a -> LabeledStrategy a
-hide   = changeInfo (doAction Hide)
-reveal = changeInfo (doAction Reveal)
-
--- helpers
-setRemoved, setCollapsed, setHidden :: Bool -> LabelInfo -> LabelInfo
-setRemoved   b info = info {removed   = b}
-setCollapsed b info = info {collapsed = b}
-setHidden    b info = info {hidden    = b}
+   rec (g:gs)
+      | x `elem` g = filter (`notElem` g) xs
+      | otherwise  = rec gs
+   rec [] = xs

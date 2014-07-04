@@ -138,7 +138,7 @@ data Const a t where
    Id           :: Const a Id
    Location     :: Const a Location
    Script       :: Const a Script
-   StratCfg     :: Const a StrategyConfiguration
+   StratCfg     :: Const a StrategyCfg
    Environment  :: Const a Environment
    Text         :: Const a Text
    StdGen       :: Const a StdGen
@@ -297,7 +297,7 @@ instance Typed a (Exercise a) where
 instance Typed a (Context a) where
    typed = Const Context
 
-instance Typed a StrategyConfiguration where
+instance Typed a StrategyCfg where
    typed = Const StratCfg
 
 instance Typed a Script where

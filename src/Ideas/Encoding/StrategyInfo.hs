@@ -16,9 +16,7 @@
 module Ideas.Encoding.StrategyInfo (strategyToXML, xmlToStrategy) where
 
 import Control.Monad
-import Data.Char
-import Data.Maybe
-import Ideas.Common.Library
+import Ideas.Common.Library hiding (Remove, Collapse, Hide, (:=))
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Core
 import Ideas.Common.Utils (readInt)
@@ -30,62 +28,65 @@ import Ideas.Text.XML
 strategyToXML :: IsStrategy f => f a -> XML
 strategyToXML = coreToXML . toCore . toStrategy
 
-infoToXML :: LabelInfo -> XMLBuilder
-infoToXML info = mconcat
-   [ "name" .=. showId info
-   , mwhen (removed   info) ("removed"   .=. "true")
-   , mwhen (collapsed info) ("collapsed" .=. "true")
-   , mwhen (hidden    info) ("hidden"    .=. "true")
-   ]
+nameAttr :: Id -> XMLBuilder
+nameAttr info = "name" .=. showId info
 
-coreToXML :: Core LabelInfo a -> XML
+coreToXML :: Core a -> XML
 coreToXML core = makeXML "label" $
    case core of
-      Label l a -> infoToXML l <> coreBuilder infoToXML a
-      _         -> coreBuilder infoToXML core
+      Label l a -> nameAttr l <> coreBuilder a
+      _         -> coreBuilder core
 
-coreBuilder :: HasId l => (l -> XMLBuilder) -> Core l a -> XMLBuilder
-coreBuilder f = rec
+coreBuilder :: Core a -> XMLBuilder
+coreBuilder core =
+   case core of
+      _ :*:  _   -> asList "sequence"   isSequence
+      _ :|:  _   -> asList "choice"     isChoice
+      _ :|>: _   -> asList "orelse"     isOrElse
+      _ :%: _    -> asList "interleave" isInterleave
+      a :@: b    -> tag "alternate" (coreBuilder a <> coreBuilder b)
+      Label l (Rule r) | getId l == getId r
+                 -> tag "rule"       (nameAttr l)
+      Label l a  -> tag "label"      (nameAttr l <> coreBuilder a)
+      Atomic a   -> tag "atomic"     (coreBuilder a)
+      Remove a   -> cfgItem "removed"     (coreBuilder a)
+      Collapse a -> cfgItem "collapsed" (coreBuilder a)
+      Hide a     -> cfgItem "hidden"      (coreBuilder a)
+      Let ds a   -> tag "let"        (decls ds <> coreBuilder a)
+      Rule r     -> tag "rule"       ("name" .=. show r)
+      Var n      -> tag "var"        ("var" .=. show n)
+      Succeed    -> emptyTag "succeed"
+      Fail       -> emptyTag "fail"
  where
-   rec core =
-      case core of
-         _ :*:  _  -> asList "sequence"   isSequence
-         _ :|:  _  -> asList "choice"     isChoice
-         _ :|>: _  -> asList "orelse"     isOrElse
-         _ :%: _   -> asList "interleave" isInterleave
-         a :@: b   -> tag "alternate" (rec a <> rec b)
-         Label l (Rule r) | getId l == getId r
-                   -> tag "rule"       (f l)
-         Label l a -> tag "label"      (f l <> rec a)
-         Atomic a  -> tag "atomic"     (rec a)
-         Let ds a  -> tag "let"        (decls ds <> rec a)
-         Rule r    -> tag "rule"       ("name" .=. show r)
-         Var n     -> tag "var"        ("var" .=. show n)
-         Succeed   -> emptyTag "succeed"
-         Fail      -> emptyTag "fail"
-    where
-      asList s g = element s (map rec (collect g core))
-      decls ds   = mconcat [ tag "decl" (("var" .=. show n) <> rec a)
-                           | (n, a) <- ds
-                           ]
+   asList s g = element s (map coreBuilder (collect g core))
+   decls ds   = mconcat [ tag "decl" (("var" .=. show n) <> coreBuilder a)
+                        | (n, a) <- ds
+                        ]
+
+cfgItem :: String -> XMLBuilder -> XMLBuilder
+cfgItem s a = 
+   case fromBuilder a of
+      Just e | name e `elem` ["label", "rule"] -> 
+         builder e { attributes = attributes e ++ [s := "true"] }
+      _      -> tag s a
 
 collect :: (a -> Maybe (a, a)) -> a -> [a]
 collect f = ($ []) . rec
  where rec a = maybe (a:) (\(x, y) -> rec x . rec y) (f a)
 
-isSequence :: Core l a -> Maybe (Core l a, Core l a)
+isSequence :: Core a -> Maybe (Core a, Core a)
 isSequence (a :*: b) = Just (a, b)
 isSequence _ = Nothing
 
-isChoice :: Core l a -> Maybe (Core l a, Core l a)
+isChoice :: Core a -> Maybe (Core a, Core a)
 isChoice (a :|: b) = Just (a, b)
 isChoice _ = Nothing
 
-isOrElse :: Core l a -> Maybe (Core l a, Core l a)
+isOrElse :: Core a -> Maybe (Core a, Core a)
 isOrElse (a :|>: b) = Just (a, b)
 isOrElse _ = Nothing
 
-isInterleave :: Core l a -> Maybe (Core l a, Core l a)
+isInterleave :: Core a -> Maybe (Core a, Core a)
 isInterleave (a :%: b) = Just (a, b)
 isInterleave _ = Nothing
 
@@ -99,25 +100,21 @@ xmlToStrategy f = liftM fromCore . readStrategy xmlToInfo g
                Just r  -> return r
                Nothing -> fail $ "Unknown rule: " ++ showId info
 
-xmlToInfo :: Monad m => XML -> m LabelInfo
+xmlToInfo :: Monad m => XML -> m Id
 xmlToInfo xml = do
    n <- findAttribute "name" xml
-   let boolAttr s = fromMaybe False (findBool s xml)
-   return (makeInfo n)
-      { removed   = boolAttr "removed"
-      , collapsed = boolAttr "collapsed"
-      , hidden    = boolAttr "hidden"
-      }
-
+   -- let boolAttr s = fromMaybe False (findBool s xml)
+   return (newId n)
+{-
 findBool :: Monad m => String -> XML -> m Bool
 findBool attr xml = do
    s <- findAttribute attr xml
    case map toLower s of
       "true"  -> return True
       "false" -> return False
-      _       -> fail "not a boolean"
+      _       -> fail "not a boolean" -}
 
-readStrategy :: Monad m => (XML -> m l) -> (l -> m (Rule a)) -> XML -> m (Core l a)
+readStrategy :: Monad m => (XML -> m Id) -> (Id -> m (Rule a)) -> XML -> m (Core a)
 readStrategy toLabel findRule xml = do
    xs <- mapM (readStrategy toLabel findRule) (children xml)
    let s = name xml

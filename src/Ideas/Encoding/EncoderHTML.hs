@@ -505,11 +505,11 @@ encodePrefixes = mconcat . zipWith make [1::Int ..]
     where
       prSteps = prefixToSteps pr
 
-isRuleStep :: Step l a -> Bool
+isRuleStep :: Step a -> Bool
 isRuleStep (RuleStep _ _) = True
 isRuleStep _ = False
 
-htmlStep :: Show l => Step l a -> HTMLBuilder
+htmlStep :: Step a -> HTMLBuilder
 htmlStep (Enter l)      = spanClass "step-enter" $ string $ "enter " ++ show l
 htmlStep (Exit  l)      = spanClass "step-exit"  $ string $ "exit " ++ show l
 htmlStep (RuleStep _ r) = let s = if isMinor r then "minor" else "major"

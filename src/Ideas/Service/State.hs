@@ -25,7 +25,6 @@ import Data.Function
 import Data.List
 import Data.Maybe
 import Ideas.Common.Library hiding (ready)
-import Ideas.Common.Strategy.Abstract (LabelInfo)
 import Ideas.Common.Strategy.Sequence
 
 data State a = State
@@ -71,7 +70,7 @@ instance Firsts State where
 stateTerm :: State a -> a
 stateTerm = fromMaybe (error "invalid term") . fromContext . stateContext
 
-stateLabels :: State a -> [[LabelInfo]]
+stateLabels :: State a -> [[Id]]
 stateLabels state =
     map (filterRules . activeLabels) $ statePrefixes state
   where

@@ -17,12 +17,12 @@
 
 module Ideas.Common.Strategy.Core
    ( GCore(..), Core
-   , coreFix, coreSubstAll
-   , noLabels, substCoreVar
+   , coreFix, coreSubstAll, substCoreVar
    ) where
 
 import Data.Maybe
 import Ideas.Common.Classes
+import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Sequence
@@ -38,35 +38,38 @@ infixr 3 :|:, :|>:
 infixr 5 :*:
 
 -- | Core expression, with rules
-type Core l a = GCore l (Rule a)
+type Core a = GCore (Rule a)
 
 -- | An environment with generalized Core expressions
-type CoreEnv l a = [(Int, GCore l a)]
+type CoreEnv a = [(Int, GCore a)]
 
 -- | A generalized Core expression, not restricted to rules. This makes GCore
 -- a (traversable and foldable) functor.
-data GCore l a
-   = GCore l a :*:  GCore l a
-   | GCore l a :|:  GCore l a
-   | GCore l a :|>: GCore l a
-   | GCore l a :%:  GCore l a -- interleave
-   | GCore l a :@:  GCore l a -- alternate
-   | Label l (GCore l a)
-   | Atomic  (GCore l a)
+data GCore a
+   = GCore a :*:  GCore a
+   | GCore a :|:  GCore a
+   | GCore a :|>: GCore a
+   | GCore a :%:  GCore a -- interleave
+   | GCore a :@:  GCore a -- alternate
+   | Label Id (GCore a)
+   | Atomic   (GCore a)
+   | Remove   (GCore a) -- config: replaced by fail
+   | Collapse (GCore a) -- config: execute labeled sub-strategy as 1 step
+   | Hide     (GCore a) -- config: make all steps invisible/minor
    | Succeed
    | Fail
    | Rule a -- ^ Generalized constructor (not restricted to rules)
    | Var Int
-   | Let (CoreEnv l a) (GCore l a)
+   | Let (CoreEnv a) (GCore a)
  deriving Show
 
-instance Choice (GCore l) where
+instance Choice GCore where
    empty  = Fail
    single = Rule
    (<|>)  = (:|:)
    (|>)   = (:|>:)
    
-instance Sequence (GCore l) where
+instance Sequence GCore where
    done  = Succeed
    (~>)  = (:*:) . Rule
    (<*>) = (:*:)
@@ -74,43 +77,46 @@ instance Sequence (GCore l) where
 -----------------------------------------------------------------
 -- Useful instances
 
-instance Functor (GCore l) where
-   fmap = mapSecond
-
-instance Uniplate (GCore l a) where
-   uniplate core =
-      case core of
-         a :*: b   -> plate (:*:)  |* a |* b
-         a :|: b   -> plate (:|:)  |* a |* b
-         a :|>: b  -> plate (:|>:) |* a |* b
-         a :%: b   -> plate (:%:)  |* a |* b
-         a :@: b   -> plate (:@:)  |* a |* b
-         Label l a -> plate Label  |- l |* a
-         Atomic a  -> plate Atomic |* a
-         Let ds a  -> let (ns, bs) = unzip ds
-                          make     = Let . zip ns
-                      in plate make ||* bs |* a
-         _         -> plate core
-
-instance BiFunctor GCore where
-   biMap f g = rec
+instance Functor GCore where
+   fmap f = rec
     where
       rec core =
          case core of
-            a :*: b   -> rec a :*:  rec b
-            a :|: b   -> rec a :|:  rec b
-            a :|>: b  -> rec a :|>: rec b
-            a :%: b   -> rec a :%:  rec b
-            a :@: b   -> rec a :@:  rec b
-            Atomic a  -> Atomic (rec a)
-            Let ds a  -> Let (map (mapSecond rec) ds) (rec a)
-            Label l a -> Label (f l) (rec a)
-            Rule a    -> Rule (g a)
-            Var n     -> Var n
-            Succeed   -> Succeed
-            Fail      -> Fail
+            a :*: b    -> rec a :*:  rec b
+            a :|: b    -> rec a :|:  rec b
+            a :|>: b   -> rec a :|>: rec b
+            a :%: b    -> rec a :%:  rec b
+            a :@: b    -> rec a :@:  rec b
+            Atomic a   -> Atomic   (rec a)
+            Remove a   -> Remove   (rec a)
+            Collapse a -> Collapse (rec a)
+            Hide a     -> Hide     (rec a)
+            Let ds a   -> Let (map (mapSecond rec) ds) (rec a)
+            Label l a  -> Label l (rec a)
+            Rule a     -> Rule (f a)
+            Var n      -> Var n
+            Succeed    -> Succeed
+            Fail       -> Fail
+            
+instance Uniplate (GCore a) where
+   uniplate core =
+      case core of
+         a :*: b    -> plate (:*:)  |* a |* b
+         a :|: b    -> plate (:|:)  |* a |* b
+         a :|>: b   -> plate (:|>:) |* a |* b
+         a :%: b    -> plate (:%:)  |* a |* b
+         a :@: b    -> plate (:@:)  |* a |* b
+         Label l a  -> plate Label  |- l |* a
+         Atomic a   -> plate Atomic   |* a
+         Remove a   -> plate Remove   |* a
+         Collapse a -> plate Collapse |* a
+         Hide a     -> plate Hide     |* a
+         Let ds a   -> let (ns, bs) = unzip ds
+                           make     = Let . zip ns
+                       in plate make ||* bs |* a
+         _          -> plate core
 
-instance (Arbitrary l, Arbitrary a) => Arbitrary (GCore l a) where
+instance Arbitrary a => Arbitrary (GCore a) where
    arbitrary = generators
       [ constGens [Succeed, Fail]
       , unaryGen Atomic, arbGen Rule, unaryArbGen Label
@@ -120,15 +126,15 @@ instance (Arbitrary l, Arbitrary a) => Arbitrary (GCore l a) where
 -----------------------------------------------------------------
 -- Definitions
 
-coreFix :: (GCore l a -> GCore l a) -> GCore l a
+coreFix :: (GCore a -> GCore a) -> GCore a
 coreFix f = -- disadvantage: function f is applied twice
    let i = nextVar (f (Var (-1)))
    in coreRec i (f (Var i))
 
-coreRec :: Int -> GCore l a -> GCore l a
+coreRec :: Int -> GCore a -> GCore a
 coreRec n a = Let [(n, a)] (Var n)
 
-coreSubstAll :: GCore l a -> GCore l a
+coreSubstAll :: GCore a -> GCore a
 coreSubstAll = rec []
  where
    rec xs (Var i)    = fromMaybe (error "coreInf") (lookup i xs)
@@ -139,27 +145,23 @@ coreSubstAll = rec []
 -----------------------------------------------------------------
 -- Utility functions
 
-substCoreVar :: Int -> GCore l a -> GCore l a -> GCore l a
+substCoreVar :: Int -> GCore a -> GCore a -> GCore a
 substCoreVar i a core =
    case core of
       Var j    | i==j -> a
       Let ds _ | i `elem` map fst ds -> core
       _               -> descend (substCoreVar i a) core
 
-nextVar :: GCore l a -> Int
+nextVar :: GCore a -> Int
 nextVar p
    | null xs   = 0
    | otherwise = maximum xs + 1
  where xs = coreVars p
 
-coreVars :: GCore l a -> [Int]
+coreVars :: GCore a -> [Int]
 coreVars core =
    case core of
       Var n    -> [n]
       Let ds a -> let (ns, bs) = unzip ds
                   in ns ++ concatMap coreVars (bs ++ [a])
       _        -> concatMap coreVars (children core)
-
-noLabels :: GCore l a -> GCore l a
-noLabels (Label _ a) = noLabels a
-noLabels core        = descend noLabels core

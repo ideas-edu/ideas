@@ -23,7 +23,6 @@ import Ideas.Common.Classes
 import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
-import Ideas.Common.Strategy.Configuration
 import Ideas.Common.Strategy.Core
 import Ideas.Common.Utils (fst3)
 import Prelude hiding (not, repeat, fail, sequence)
@@ -113,8 +112,6 @@ check = toStrategy . checkRule "check"
 not :: IsStrategy f => f a -> Strategy a
 not s = check (Prelude.not . applicable (toStrategy s))
 
--- liftCore (Not . noLabels)
-
 -- | Repeat a strategy zero or more times (greedy version of 'many')
 repeat :: IsStrategy f => f a -> Strategy a
 repeat a = fix $ \x -> (a <*> x) |> succeed
@@ -141,8 +138,8 @@ until :: IsStrategy f => (a -> Bool) -> f a -> Strategy a
 until p = while (Prelude.not . p)
 
 -- | Apply a strategy at least once, but collapse into a single step
-multi :: (IsId l, IsStrategy f) => l -> f a -> LabeledStrategy a
-multi s = collapse . label s . repeat1
+multi :: (IsId l, IsStrategy f) => l -> f a -> Strategy a
+multi l = collapse . label l . repeat1
 
 -- | Apply the strategies from the list exhaustively (until this is no longer possible)
 exhaustive :: IsStrategy f => [f a] -> Strategy a
@@ -152,6 +149,15 @@ exhaustive = repeat . alternatives
 -- (but dangerous) combinator
 fix :: (Strategy a -> Strategy a) -> Strategy a
 fix f = fromCore (coreFix (toCore . f . fromCore))
+
+remove :: IsStrategy f => f a -> Strategy a
+remove = liftCore Remove
+
+collapse :: IsStrategy f => f a -> Strategy a
+collapse = liftCore Collapse
+
+hide :: IsStrategy f => f a -> Strategy a
+hide = liftCore Hide
 
 -- Graph to strategy ----------------------
 

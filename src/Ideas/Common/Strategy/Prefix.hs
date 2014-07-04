@@ -24,6 +24,7 @@ import Data.List
 import Data.Maybe
 import Control.Monad
 import Ideas.Common.Classes
+import Ideas.Common.Id
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Parsing
 import Ideas.Common.Strategy.Sequence hiding (Step)
@@ -36,7 +37,7 @@ import Ideas.Common.Strategy.Path
 -- executed rules). A prefix is still "aware" of the labels that appear in the
 -- strategy. A prefix is encoded as a list of integers (and can be reconstructed
 -- from such a list: see @makePrefix@). The list is stored in reversed order.
-newtype Prefix a = P { toState :: ParseState LabelInfo a }
+newtype Prefix a = P { toState :: ParseState a }
 
 instance Minor (Prefix a) where
    setMinor _ = id
@@ -57,23 +58,25 @@ emptyPrefix a = fromMaybe (error "emptyPrefix") . makePrefix emptyPath a
 makePrefix :: Monad m => Path -> LabeledStrategy a -> a -> m (Prefix a)
 makePrefix path s = liftM P . replay path (mkCore s)
  where
-   mkCore = processLabelInfo id . toCore . toStrategy
+   mkCore = toCore . toStrategy
 
-searchModePrefix :: (Step LabelInfo a -> Step LabelInfo a -> Bool) -> Prefix a -> Prefix a
+searchModePrefix :: (Step a -> Step a -> Bool) -> Prefix a -> Prefix a
 searchModePrefix eq = P . searchModeState eq . toState
 
-prefixToSteps :: Prefix a -> [Step LabelInfo a]
+prefixToSteps :: Prefix a -> [Step a]
 prefixToSteps = reverse . trace . toState
 
 -- | Returns the last rule of a prefix (if such a rule exists)
-lastStepInPrefix :: Prefix a -> Maybe (Step LabelInfo a)
+lastStepInPrefix :: Prefix a -> Maybe (Step a)
 lastStepInPrefix = listToMaybe . trace . toState
 
 -- | Calculate the active labels
-activeLabels :: Prefix a -> [LabelInfo]
+activeLabels :: Prefix a -> [Id]
 activeLabels p = nub [l | Enter l <- steps] \\ [l | Exit l <- steps]
    where
       steps = prefixToSteps p
       
 prefixPath :: Prefix a -> Path
 prefixPath = getPath . toState
+
+---------

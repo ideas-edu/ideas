@@ -120,7 +120,7 @@ s1 === s2 = rec 100 [(start s1, start s2)]
  where
    start = return . makeState 0 . toCore
 
-   rec :: Int -> [([ParseState LabelInfo Int], [ParseState LabelInfo Int])] -> Bool
+   rec :: Int -> [([ParseState Int], [ParseState Int])] -> Bool
    rec _ [] = True
    rec n (pair:rest)
       | n == 0    = True
@@ -143,13 +143,13 @@ s1 === s2 = rec 100 [(start s1, start s2)]
       cmpFst = comparing (show . fst)
       eqFst  = (==) `on` fst
 
-firsts :: Bool -> ParseState l a -> [(Step l a, ParseState l a)]
+firsts :: Bool -> ParseState a -> [(Step a, ParseState a)]
 firsts = undefined -- fix me
 
-isReady :: Step l a -> Bool
+isReady :: Step a -> Bool
 isReady = undefined -- fix me
 
-myFirsts :: ParseState l a -> [(Step l a, ParseState l a)]
+myFirsts :: ParseState a -> [(Step a, ParseState a)]
 myFirsts = concatMap f . firsts False
  where
    f pair@(result, a) =

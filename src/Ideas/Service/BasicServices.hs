@@ -45,7 +45,7 @@ create ex input =
             | otherwise -> Left "Not suitable"
 
 -- TODO: add a location to each step
-derivation :: Maybe StrategyConfiguration -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))
+derivation :: Maybe StrategyCfg -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))
 derivation mcfg state =
    mapSecond (biMap (\(r, _, as) -> (r, as)) stateContext) $
    case mcfg of

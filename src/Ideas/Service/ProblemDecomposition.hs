@@ -18,7 +18,7 @@ module Ideas.Service.ProblemDecomposition
 
 import Data.Maybe
 import Ideas.Common.Library
-import Ideas.Common.Strategy.Parsing (firstsWith)
+import Ideas.Common.Strategy.Sequence
 import Ideas.Service.State
 import Ideas.Service.Types
 
@@ -61,7 +61,7 @@ runPrefixLocation :: Id -> Prefix a -> [(a, Prefix a)]
 runPrefixLocation loc p = do
    (a, q) <- firsts p
    case lastStepInPrefix q of
-      Just (Exit info) | getId info == loc -> return (a, q)
+      Just (Exit l) | l == loc -> return (a, q)
       _ -> runPrefixLocation loc q
 
 firstMajorInPrefix :: Prefix a -> Prefix a -> Maybe (Id, Environment)
@@ -70,8 +70,8 @@ firstMajorInPrefix p0 = rec . drop len . prefixToSteps
    len = length (prefixToSteps p0)
    rec xs =
       case xs of
-         Enter info:RuleStep env r:_ | isMajor r ->
-            Just (getId info, env)
+         Enter l:RuleStep env r:_ | isMajor r ->
+            Just (l, env)
          _:rest -> rec rest
          []     -> Nothing
 
@@ -80,10 +80,10 @@ nextMajorForPrefix p0 = do
    (_, p1)  <- listToMaybe $ runPrefixMajor p0
    rec (reverse (prefixToSteps p1))
  where
-   rec [] = Nothing
-   rec (Enter info:_) = Just (getId info)
-   rec (Exit  info:_) = Just (getId info)
-   rec (_:rest)       = rec rest
+   rec []          = Nothing
+   rec (Enter l:_) = Just l
+   rec (Exit  l:_) = Just l
+   rec (_:rest)    = rec rest
 
 -- Copied from TypedAbstractService: clean me up
 runPrefixMajor :: Prefix a -> [(a, Prefix a)]

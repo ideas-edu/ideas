@@ -37,7 +37,7 @@ instance Show (State a) where
    show s = unlines $ "State {" : map ("   "++) xs ++ ["}"]
     where
       xs = [ "exercise = " ++ showId s
-           , "prefix   = " ++ intercalate ";" (map showPrefix (statePrefixes s))
+           , "prefix   = " ++ intercalate ";" (map show (statePrefixes s))
            , "steps    = " ++ intercalate ";" (map (show . prefixToSteps) (statePrefixes s))
            , "term     = " ++ prettyPrinterContext (exercise s) (stateContext s)
            ]

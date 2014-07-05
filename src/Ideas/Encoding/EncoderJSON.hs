@@ -97,7 +97,7 @@ encodeState = encoderStateFor $ \encTerm st ->
    let f x = [ String (showId (exercise st))
              , String $ case statePrefixes st of
                            [] -> "NoPrefix"
-                           ps -> intercalate ";" $ map showPrefix ps
+                           ps -> intercalate ";" $ map show ps
              , encTerm (stateTerm st)
              , x
              ]

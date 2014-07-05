@@ -16,6 +16,7 @@ module Ideas.Common.Strategy.Abstract
    ( Strategy, IsStrategy(..)
    , LabeledStrategy, label, unlabel
    , derivationList
+   , emptyPrefix, replayStrategy
    , rulesInStrategy
    , mapRules, mapRulesS
    , cleanUpStrategy, cleanUpStrategyAfter
@@ -35,6 +36,7 @@ import Ideas.Common.Id
 import Ideas.Common.Rewriting (RewriteRule)
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Core
+import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.Parsing
 import Ideas.Common.Utils.Uniplate hiding (rewriteM)
 import Ideas.Common.Utils (snd3)
@@ -96,7 +98,7 @@ instance Apply LabeledStrategy where
    applyAll = applyAll . toStrategy
 
 instance HasId (LabeledStrategy a) where
-   getId (LS l _) = getId l
+   getId (LS l _)      = l
    changeId f (LS l s) = LS (changeId f l) s
 
 class IsLabeled f where
@@ -122,13 +124,23 @@ label l = LS (newId l) . toStrategy
 unlabel :: LabeledStrategy a -> Strategy a
 unlabel (LS _ s) = s
 
+-- | Construct the empty prefix for a labeled strategy
+emptyPrefix :: LabeledStrategy a -> a -> Prefix a
+emptyPrefix = replayStrategy emptyPath
+
+-- | Construct a prefix for a given list of integers and a labeled strategy.
+replayStrategy :: Path -> LabeledStrategy a -> a -> Prefix a
+replayStrategy path = replayCore path . mkCore
+ where
+   mkCore = toCore . toStrategy
+
 -----------------------------------------------------------
 --- Remaining functions
 
 derivationList :: IsStrategy f => (Rule a -> Rule a -> Ordering) -> f a -> a -> [Derivation (Rule a, Environment) a]
 derivationList cmpRule s a0 = rec a0 (toState s)
  where
-   toState = majorOnly . makeState a0 . toCore . toStrategy
+   toState = majorPrefix . flip (replayCore emptyPath) a0 . toCore . toStrategy
  
    rec a pst = (if ready pst then (emptyDerivation a:) else id)
       [ prepend (a, rEnv) d | (b, rEnv, new) <- firstsOrd pst, d <- rec b new ]
@@ -137,9 +149,9 @@ derivationList cmpRule s a0 = rec a0 (toState s)
     where
       cmp = cmpRule `on` (fst . snd3)
       
-      f (b, st) = (b, g (trace st), st)
+      f (b, st) = (b, g (lastStepInPrefix st), st)
       
-      g (RuleStep env r:_) = (r, env)
+      g (Just (RuleStep env r)) = (r, env)
       g _ = (emptyRule (), makeEnvironment [])
 
 -- | Returns a list of all major rules that are part of a labeled strategy
@@ -158,10 +170,7 @@ mapRules f (LS n s) = LS n (mapRulesS f s)
 
 mapRulesS :: (Rule a -> Rule b) -> Strategy a -> Strategy b
 mapRulesS f = S . fmap f . toCore
-{-
-mapRulesM :: Monad m => (Rule a -> m (Rule a)) -> Strategy a -> m (Strategy a)
-mapRulesM f = liftM S . T.mapM f . toCore
--}
+
 -- | Use a function as do-after hook for all rules in a labeled strategy, but
 -- also use the function beforehand
 cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a

@@ -112,7 +112,7 @@ decodeState = do
             a    <- decodeTerm        // term
             env  <- decodeEnvironment // jsonContext
             let ctx = setEnvironment env (inContext ex a)
-            ps   <- mapM (\is -> makePrefix is (strategy ex) ctx) iss
+            let ps = map (\is -> replayStrategy is (strategy ex) ctx) iss
             return $ makeState ex ps ctx
          _ -> fail $ "invalid state" ++ show json
 

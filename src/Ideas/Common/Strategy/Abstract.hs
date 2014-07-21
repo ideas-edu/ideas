@@ -16,7 +16,7 @@ module Ideas.Common.Strategy.Abstract
    ( Strategy, IsStrategy(..)
    , LabeledStrategy, label, unlabel
    , derivationList
-   , emptyPrefix, replayStrategy
+   , emptyPrefix, replayPath, replayStrategy
    , rulesInStrategy
    , mapRules, mapRulesS
    , cleanUpStrategy, cleanUpStrategyAfter
@@ -28,7 +28,6 @@ module Ideas.Common.Strategy.Abstract
 
 import Control.Monad
 import Data.Function
-import Data.List
 import Ideas.Common.Classes
 import Ideas.Common.Derivation
 import Ideas.Common.Environment
@@ -36,10 +35,9 @@ import Ideas.Common.Id
 import Ideas.Common.Rewriting (RewriteRule)
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Core
-import Ideas.Common.Strategy.Sequence
+import Ideas.Common.Strategy.Sequence (Firsts(..), firstsOrdered)
 import Ideas.Common.Strategy.Parsing
 import Ideas.Common.Utils.Uniplate hiding (rewriteM)
-import Ideas.Common.Utils (snd3)
 import Ideas.Common.View
 import Test.QuickCheck hiding (label)
 
@@ -47,7 +45,7 @@ import Test.QuickCheck hiding (label)
 --- Strategy data-type
 
 -- | Abstract data type for strategies
-newtype Strategy a = S { toCore :: Core a }
+newtype Strategy a = S (Core a)
 
 instance Show (Strategy a) where
    show = show . toCore
@@ -125,38 +123,44 @@ unlabel :: LabeledStrategy a -> Strategy a
 unlabel (LS _ s) = s
 
 -- | Construct the empty prefix for a labeled strategy
-emptyPrefix :: LabeledStrategy a -> a -> Prefix a
-emptyPrefix = replayStrategy emptyPath
+emptyPrefix :: IsStrategy f => f a -> a -> Prefix a
+emptyPrefix = makePrefix . toCore
 
--- | Construct a prefix for a given list of integers and a labeled strategy.
-replayStrategy :: Path -> LabeledStrategy a -> a -> Prefix a
-replayStrategy path = replayCore path . mkCore
- where
-   mkCore = toCore . toStrategy
+-- | Construct a prefix for a path and a labeled strategy. The third argument
+-- is the current term.
+replayPath :: (Monad m, IsStrategy f) => Path -> f a -> a -> m ([Step a], Prefix a)
+replayPath path s =
+   maybe (fail "Invalid path") return . replayCore path (toCore s)
+
+-- | Construct a prefix for a path and a labeled strategy. The third argument
+-- is the initial term.
+replayStrategy :: (Monad m, IsStrategy f) => Path -> f a -> a -> m (a, Prefix a)
+replayStrategy path s =
+   maybe (fail "Invalid path") return . replayAndApply path (toCore s)
 
 -----------------------------------------------------------
 --- Remaining functions
 
 derivationList :: IsStrategy f => (Rule a -> Rule a -> Ordering) -> f a -> a -> [Derivation (Rule a, Environment) a]
-derivationList cmpRule s a0 = rec a0 (toState s)
+derivationList cmpRule s a0 = rec a0 (toPrefix s)
  where
-   toState = majorPrefix . flip (replayCore emptyPath) a0 . toCore . toStrategy
+   toPrefix = majorPrefix . flip makePrefix a0 . toCore
  
-   rec a pst = (if ready pst then (emptyDerivation a:) else id)
-      [ prepend (a, rEnv) d | (b, rEnv, new) <- firstsOrd pst, d <- rec b new ]
+   rec a prfx = (if ready prfx then (emptyDerivation a:) else id)
+      [ prepend (a, rEnv) d | (rEnv, b, new) <- firstsOrd prfx, d <- rec b new ]
  
-   firstsOrd = sortBy cmp . map f . firsts
+   firstsOrd = map f . firstsOrdered cmp
     where
-      cmp = cmpRule `on` (fst . snd3)
+      cmp = cmpRule `on` (fst . g . fst)
       
-      f (b, st) = (b, g (lastStepInPrefix st), st)
+      f ((stp, b), new) = (g stp, b, new)
       
-      g (Just (RuleStep env r)) = (r, env)
+      g (RuleStep env r) = (r, env)
       g _ = (emptyRule (), makeEnvironment [])
 
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]
-rulesInStrategy f = [ r | Rule r <- universe (toCore (toStrategy f)), isMajor r ]
+rulesInStrategy s = [ r | Rule r <- universe (toCore s), isMajor r ]
 
 instance LiftView LabeledStrategy where
    liftViewIn = mapRules . liftViewIn
@@ -193,11 +197,14 @@ noInterleaving = liftCore $ transform f
 -----------------------------------------------------------
 --- Functions to lift the core combinators
 
+toCore :: IsStrategy f => f a -> Core a
+toCore s = let S core = toStrategy s in core
+
 fromCore :: Core a -> Strategy a
 fromCore = S
 
 liftCore :: IsStrategy f => (Core a -> Core a) -> f a -> Strategy a
-liftCore f = fromCore . f . toCore . toStrategy
+liftCore f = fromCore . f . toCore
 
 liftCore2 :: (IsStrategy f, IsStrategy g) => (Core a -> Core a -> Core a) -> f a -> g a -> Strategy a
-liftCore2 f = liftCore . f . toCore . toStrategy
+liftCore2 f = liftCore . f . toCore

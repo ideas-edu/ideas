@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- Copyright 2014, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -18,14 +19,15 @@ module Ideas.Service.State
    ( -- * Exercise state
      State, makeState, makeNoState, emptyStateContext, emptyState
    , exercise, statePrefixes, stateContext, stateTerm, stateLabels
-   , firsts, ready
+   , finished, firsts
    ) where
 
 import Data.Function
 import Data.List
 import Data.Maybe
-import Ideas.Common.Library hiding (ready)
+import Ideas.Common.Library hiding (ready, (:~>))
 import Ideas.Common.Strategy.Sequence
+import Ideas.Common.Strategy.Choice (choice)
 
 data State a = State
    { exercise      :: Exercise a
@@ -38,7 +40,7 @@ instance Show (State a) where
     where
       xs = [ "exercise = " ++ showId s
            , "prefix   = " ++ intercalate ";" (map show (statePrefixes s))
-           , "steps    = " ++ intercalate ";" (map (show . prefixToSteps) (statePrefixes s))
+           , "prefixes = " ++ intercalate ";" (map show (statePrefixes s))
            , "term     = " ++ prettyPrinterContext (exercise s) (stateContext s)
            ]
 
@@ -51,32 +53,24 @@ instance HasEnvironment (State a) where
    setEnvironment env s =
       s { stateContext = setEnvironment env (stateContext s) }
 
-instance Firsts State where 
-   firsts st = sortBy cmp 
-      [ (a, State (exercise st) [q] ctx) 
-      | p <- statePrefixes st
-      , (ctx, q) <- firstsWith (const isMajor) p
-      , a <- fromContext ctx 
-      ]
+instance Firsts (State a) where 
+   type Elem (State a) = (Step (Context a), Context a)
+
+   firsts st = firstsOrdered cmp st
     where
-      cmp = ruleOrdering ex `on` (f . lastStepInPrefix . head . statePrefixes . snd)
-      ex  = exercise st
+      cmp = ruleOrdering (exercise st) `on` (f . fst)
       
-      f (Just (RuleStep _ r)) = r
+      f (RuleStep _ r) = r
       f _ = emptyRule ()
 
-   ready st = isReady (exercise st) (stateTerm st)
+   menu st = choice 
+      [ fmap f (menu (majorPrefix prfx)) | prfx <- statePrefixes st ]
+    where
+      f Done = Done
+      f (info :~> p) = info :~> State (exercise st) [p] (snd info)
 
 stateTerm :: State a -> a
 stateTerm = fromMaybe (error "invalid term") . fromContext . stateContext
-
-stateLabels :: State a -> [[Id]]
-stateLabels state =
-    map (filterRules . activeLabels) $ statePrefixes state
-  where
-    rs          = ruleset $ exercise state
-    isRule      = flip elem (map getId rs) . getId
-    filterRules = filter (not . isRule)
 
 -----------------------------------------------------------
 
@@ -94,3 +88,16 @@ emptyStateContext ex ca =
 
 emptyState :: Exercise a -> a -> State a
 emptyState ex = emptyStateContext ex . inContext ex
+
+finished :: State a -> Bool
+finished st = isReady (exercise st) (stateTerm st)
+
+stateLabels :: State a -> [[Id]]
+stateLabels st = map make (statePrefixes st)
+ where
+   ex = exercise st
+   make prfx = 
+      case replayPath (prefixPath prfx) (strategy ex) (stateContext st) of 
+         Just (xs, _) -> nub [l | Enter l <- xs] \\ [l | Exit l <- xs]
+         Nothing -> []
+   

@@ -36,7 +36,6 @@ data Environment a = Env
    , expected   :: Maybe (Rule (Context a))
    , recognized :: Maybe (Rule (Context a))
    , motivation :: Maybe (Rule (Context a))
-   , actives    :: Maybe [Id]
    , diffPair   :: Maybe (String, String)
    , before     :: Maybe Term
    , after      :: Maybe Term
@@ -50,11 +49,10 @@ newEnvironment st motivationRule = newEnvironmentFor st motivationRule next
 
 newEnvironmentFor :: State a -> Maybe (Rule (Context a)) -> Maybe ((Rule (Context a), b, c), State a) -> Environment a
 newEnvironmentFor st motivationRule next = Env
-  { oldReady   = ready st
+  { oldReady   = finished st
   , expected   = fmap (\((x,_,_),_) -> x) next
   , motivation = motivationRule
   , recognized = Nothing
-  , actives    = listToMaybe (stateLabels st)
   , diffPair   = Nothing
   , before     = f st
   , after      = liftM snd next >>= f

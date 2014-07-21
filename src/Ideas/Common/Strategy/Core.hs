@@ -34,7 +34,7 @@ import Ideas.Common.Utils.Uniplate
 -- of combinators
 
 infixr 2 :%:, :@:
-infixr 3 :|:, :|>:
+infixr 3 :|:, :>|>, :|>:
 infixr 5 :*:
 
 -- | Core expression, with rules
@@ -48,7 +48,8 @@ type CoreEnv a = [(Int, GCore a)]
 data GCore a
    = GCore a :*:  GCore a
    | GCore a :|:  GCore a
-   | GCore a :|>: GCore a
+   | GCore a :>|> GCore a -- left-preference (choice)
+   | GCore a :|>: GCore a -- left-biased choice
    | GCore a :%:  GCore a -- interleave
    | GCore a :@:  GCore a -- alternate
    | Label Id (GCore a)
@@ -67,6 +68,7 @@ instance Choice GCore where
    empty  = Fail
    single = Rule
    (<|>)  = (:|:)
+   (>|>)  = (:>|>)
    (|>)   = (:|>:)
    
 instance Sequence GCore where
@@ -84,6 +86,7 @@ instance Functor GCore where
          case core of
             a :*: b    -> rec a :*:  rec b
             a :|: b    -> rec a :|:  rec b
+            a :>|> b   -> rec a :>|> rec b
             a :|>: b   -> rec a :|>: rec b
             a :%: b    -> rec a :%:  rec b
             a :@: b    -> rec a :@:  rec b
@@ -103,6 +106,7 @@ instance Uniplate (GCore a) where
       case core of
          a :*: b    -> plate (:*:)  |* a |* b
          a :|: b    -> plate (:|:)  |* a |* b
+         a :>|> b   -> plate (:>|>) |* a |* b
          a :|>: b   -> plate (:|>:) |* a |* b
          a :%: b    -> plate (:%:)  |* a |* b
          a :@: b    -> plate (:@:)  |* a |* b

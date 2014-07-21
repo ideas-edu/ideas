@@ -21,7 +21,7 @@ import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.Process
 
 useFirst :: Choice f => (a -> Process a -> f b) -> f b -> Process a -> f b
-useFirst op e = onMenu (step e op) . menu
+useFirst op e = onMenu (menuItem e op) . menu
 
 filterP :: (a -> Bool) -> Process a -> Process a
 filterP cond = fold (\a q -> if cond a then a ~> q else empty) done

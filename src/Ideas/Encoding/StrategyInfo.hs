@@ -42,6 +42,7 @@ coreBuilder core =
    case core of
       _ :*:  _   -> asList "sequence"   isSequence
       _ :|:  _   -> asList "choice"     isChoice
+      _ :>|> _   -> asList "preference" isPreference
       _ :|>: _   -> asList "orelse"     isOrElse
       _ :%: _    -> asList "interleave" isInterleave
       a :@: b    -> tag "alternate" (coreBuilder a <> coreBuilder b)
@@ -81,6 +82,10 @@ isSequence _ = Nothing
 isChoice :: Core a -> Maybe (Core a, Core a)
 isChoice (a :|: b) = Just (a, b)
 isChoice _ = Nothing
+
+isPreference :: Core a -> Maybe (Core a, Core a)
+isPreference (a :>|> b) = Just (a, b)
+isPreference _ = Nothing
 
 isOrElse :: Core a -> Maybe (Core a, Core a)
 isOrElse (a :|>: b) = Just (a, b)

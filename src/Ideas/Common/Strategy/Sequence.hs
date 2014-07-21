@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- Copyright 2014, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -17,12 +18,15 @@ module Ideas.Common.Strategy.Sequence
    ( -- * Sequence type class
      Sequence(..)
      -- * Firsts type class
-   , Firsts(..), firstsWith, firstsTree
-     -- * Step data type with some utility functions
-   , Step(..), step, isDone
+   , Firsts(..), firstsMenu, firstsOrdered, firstsTree, stopped
+     -- * MenuItem data type with some utility functions
+   , MenuItem(..), menuItem, isDone
    ) where
 
+import Data.Function
+import Ideas.Common.Classes
 import Ideas.Common.DerivationTree
+import Ideas.Common.Strategy.Choice
 
 infixr 5 :~>, ~>, <*>
 
@@ -40,56 +44,58 @@ class Sequence f where
 ------------------------------------------------------------------------
 -- Firsts type class
 
-class Firsts f where
+class Firsts s where
+   -- | The type associated with a step in the first set.
+   type Elem s
    -- | The ready predicate (we are done).
-   ready :: f a -> Bool
-   -- | not ready and no further steps to take.
-   stopped :: f a -> Bool
-   stopped a = not (ready a) && null (firsts a)
+   ready :: s -> Bool
+   ready = any isDone . bests . menu
    -- | The first set.
-   firsts :: f a -> [(a, f a)]
+   firsts :: s -> [(Elem s, s)]
+   firsts = bests . firstsMenu
+   -- | The menu offers single steps (with the remainder) and 'done' steps.
+   menu :: s -> Menu (MenuItem (Elem s) s)
    
-firstsWith :: Firsts f => (a -> f a -> Bool) -> f a -> [(a, f a)]
-firstsWith p = rec 
- where
-   rec pst = do
-      (a, new) <- firsts pst 
-      if p a new then return (a, new) else rec new
+firstsMenu :: Firsts s => s -> Menu (Elem s, s)
+firstsMenu s = do
+   item <- menu s
+   case item of
+      a :~> t -> return (a, t)
+      Done    -> empty
+
+firstsOrdered :: Firsts s => (Elem s -> Elem s -> Ordering) 
+              -> s -> [(Elem s, s)]
+firstsOrdered cmp = bestsOrdered (cmp `on` fst) . firstsMenu
    
-firstsTree :: Firsts f => f a -> DerivationTree a (f a)
+firstsTree :: Firsts s => s -> DerivationTree (Elem s) s
 firstsTree x = addBranches bs tr
  where
    tr = singleNode x (ready x)
    bs = [ (a, firstsTree y) | (a, y) <- firsts x ]
 
+-- | Not ready and no further steps to take.
+stopped :: Firsts s => s -> Bool
+stopped = isEmpty . menu
+
 ------------------------------------------------------------------------
--- Step data type with some utility functions
-  
-data Step f a = a :~> f a   -- ^ A single step.
-              | Done        -- ^ No step (we are done).
+-- MenuItem data type with some utility functions
+ 
+data MenuItem a s = a :~> s   -- ^ A single step.
+                  | Done      -- ^ No step (we are done).
 
-instance Sequence f => Sequence (Step f) where
-   done   = Done
-   a ~> x = a :~> fromStep x
+instance Functor (MenuItem a) where
+   fmap = mapSecond
 
-   Done      <*> y = y
-   (a :~> x) <*> y = a :~> (x <*> fromStep y)
+instance BiFunctor MenuItem where
+   biMap f g = menuItem Done (\a s -> f a :~> g s)
 
-instance Functor f => Functor (Step f) where
-   fmap _ Done      = Done
-   fmap f (a :~> x) = f a :~> fmap f x
-
--- | The 'step' function takes a default value for 'Done' and a function 
+-- | The 'menuItem' function takes a default value for 'Done' and a function 
 -- to combine the values for a single step.
-step :: b -> (a -> f a -> b) -> Step f a -> b
-step b _ Done      = b
-step _ f (a :~> x) = f a x
+menuItem :: b -> (a -> s -> b) -> MenuItem a s -> b
+menuItem b _ Done      = b
+menuItem _ f (a :~> x) = f a x
 
--- | Is the step 'done'?
-isDone :: Step f a -> Bool
+-- | Is the item 'done'?
+isDone :: MenuItem a s -> Bool
 isDone Done = True
 isDone _    = False
-
--- local helper
-fromStep :: Sequence f => Step f a -> f a
-fromStep = step done (~>)

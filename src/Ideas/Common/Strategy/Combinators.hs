@@ -35,7 +35,7 @@ import qualified Prelude
 
 infixr 2 <%>, <@>
 infixr 3 <|>
-infixr 4  |>
+infixr 4 >|>, |>
 infixr 5 <*>
 
 -- | Put two strategies in sequence (first do this, then do that)
@@ -123,6 +123,11 @@ repeat1 s = s <*> repeat s
 -- | Apply a certain strategy if this is possible (greedy version of 'option')
 try :: IsStrategy f => f a -> Strategy a
 try s = s |> succeed
+
+-- | Choose between the two strategies, with a preference for steps from the 
+-- left hand-side strategy.
+(>|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+(>|>) = liftCore2 (:>|>)
 
 -- | Left-biased choice: if the left-operand strategy can be applied, do so. Otherwise,
 --   try the right-operand strategy

@@ -90,32 +90,32 @@ diagnose state new motivationId
    -- Is the used rule that is submitted applied correctly?
    | isJust motivationId && isNothing (discovered False motivationId) =
         case discovered False Nothing of -- search for a "sound" rule
-           Just (r, _) -> WrongRule (ready state) state (Just r)
+           Just (r, _) -> WrongRule (finished state) state (Just r)
            Nothing ->
               case discovered True  Nothing of -- search for buggy rule
                  Just (r, as) ->
                     Buggy as r -- report the buggy rule
                  Nothing ->
-                    WrongRule (ready state) state Nothing
+                    WrongRule (finished state) state Nothing
 
    -- Was the submitted term expected by the strategy?
    | isJust expected =
         -- If yes, return new state and rule
         let ((r, _, _), ns) = fromJust expected
-        in Expected (ready ns) ns r
+        in Expected (finished ns) ns r
 
    -- Is the submitted term (very) similar to the previous one?
    -- (this check is performed after "expected by strategy". TODO: fix
    -- granularity of some math rules)
-   | similar = Similar (ready state) state
+   | similar = Similar (finished state) state
 
    -- Is the rule used discoverable by trying all known rules?
    | otherwise =
         case discovered False Nothing of
            Just (r, as) ->  -- If yes, report the found rule as a detour
-              Detour (ready restarted) restarted as r
+              Detour (finished restarted) restarted as r
            Nothing -> -- If not, we give up
-              Correct (ready restarted) restarted
+              Correct (finished restarted) restarted
  where
    ex        = exercise state
    restarted = restartIfNeeded (makeNoState ex new)

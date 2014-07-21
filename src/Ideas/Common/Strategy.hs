@@ -29,7 +29,7 @@ module Ideas.Common.Strategy
      -- ** EBNF combinators
    , many, many1, replicate, option
      -- ** Negation and greedy combinators
-   , check, not, repeat, repeat1, try, (|>), exhaustive
+   , check, not, repeat, repeat1, try, (|>), (>|>), exhaustive
    , while, until, multi
      -- ** Graph
    , DependencyGraph, dependencyGraph
@@ -42,9 +42,8 @@ module Ideas.Common.Strategy
    , strategyLocations, subStrategy
    , subTaskLocation, nextTaskLocation
      -- * Prefixes
-   , Prefix, emptyPrefix, replayStrategy
-   , Step(..), Path, emptyPath
-   , prefixToSteps, lastStepInPrefix, activeLabels, prefixPath
+   , Prefix, emptyPrefix, replayPath, replayStrategy
+   , Step(..), Path, emptyPath, prefixPath, majorPrefix
      -- * Misc
    , cleanUpStrategy, cleanUpStrategyAfter
    , rulesInStrategy

@@ -108,16 +108,16 @@ decodeState = do
       case json of
          Array [a] -> decodeState // a
          Array [String _code, pref, term, jsonContext] -> do
-            iss  <- decodePrefixes    // pref
+            pts  <- decodePaths       // pref
             a    <- decodeTerm        // term
             env  <- decodeEnvironment // jsonContext
             let ctx = setEnvironment env (inContext ex a)
-            let ps = map (\is -> replayStrategy is (strategy ex) ctx) iss
-            return $ makeState ex ps ctx
+            ps <- forM pts $ \path -> replayPath path (strategy ex) ctx
+            return $ makeState ex (map snd ps) ctx
          _ -> fail $ "invalid state" ++ show json
 
-decodePrefixes :: JSONDecoder a [Path]
-decodePrefixes =
+decodePaths :: JSONDecoder a [Path]
+decodePaths =
    encoderFor $ \json ->
       case json of
          String p -> mapM readM (deintercalate p)

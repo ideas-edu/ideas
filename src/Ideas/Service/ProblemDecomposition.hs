@@ -18,9 +18,9 @@ module Ideas.Service.ProblemDecomposition
 
 import Data.Maybe
 import Ideas.Common.Library
-import Ideas.Common.Strategy.Sequence
 import Ideas.Service.State
 import Ideas.Service.Types
+import Ideas.Common.Utils (fst3)
 
 problemDecomposition :: Maybe Id -> State a -> Maybe (Answer a) -> Either String (Reply a)
 problemDecomposition msloc state maybeAnswer
@@ -33,8 +33,8 @@ problemDecomposition msloc state maybeAnswer
             Just (Answer answeredTerm) | not (null witnesses) -> Right $
                     Ok newLocation newState
                   where
-                    witnesses   = filter (similarity ex answeredTerm . fst) $ take 1 answers
-                    (newCtx, newPrefix) = head witnesses
+                    witnesses   = filter (similarity ex answeredTerm . fst3) $ take 1 answers
+                    (newCtx, _, newPrefix) = head witnesses
                     newLocation = nextTaskLocation (strategy ex) sloc $
                                      fromMaybe topId $ nextMajorForPrefix newPrefix
                     newState    = makeState ex [newPrefix] newCtx
@@ -44,9 +44,9 @@ problemDecomposition msloc state maybeAnswer
                newLocation = subTaskLocation (strategy ex) sloc loc
                expState = makeState ex [pref] expected
                isEquiv  = maybe False (equivalence ex expected . fromAnswer) maybeAnswer
-               (expected, pref) = head answers
+               (expected, answerSteps, pref) = head answers
                (loc, arguments) = fromMaybe (topId, mempty) $
-                                     firstMajorInPrefix prefix pref
+                                     firstMajorInSteps answerSteps --  prefix pref
  where
    ex      = exercise state
    topId   = getId (strategy ex)
@@ -57,37 +57,34 @@ problemDecomposition msloc state maybeAnswer
                 hd:_ -> hd
 
 -- | Continue with a prefix until a certain strategy location is reached.
-runPrefixLocation :: Id -> Prefix a -> [(a, Prefix a)]
-runPrefixLocation loc p = do
-   (a, q) <- firsts p
-   case lastStepInPrefix q of
-      Just (Exit l) | l == loc -> return (a, q)
-      _ -> runPrefixLocation loc q
-
-firstMajorInPrefix :: Prefix a -> Prefix a -> Maybe (Id, Environment)
-firstMajorInPrefix p0 = rec . drop len . prefixToSteps
+runPrefixLocation :: Id -> Prefix a -> [(a, [Step a], Prefix a)]
+runPrefixLocation loc = rec []
  where
-   len = length (prefixToSteps p0)
-   rec xs =
-      case xs of
-         Enter l:RuleStep env r:_ | isMajor r ->
-            Just (l, env)
-         _:rest -> rec rest
-         []     -> Nothing
+   rec acc p = do
+      ((stp, a), q) <- firsts p
+      case stp of
+         Exit l | l == loc -> return (a, reverse acc, q)
+         _ -> rec (stp:acc) q
+
+firstMajorInSteps :: [Step a] -> Maybe (Id, Environment)
+firstMajorInSteps xs =
+   case xs of
+      Enter l:RuleStep env r:_ | isMajor r ->
+         Just (l, env)
+      _:rest -> firstMajorInSteps rest
+      []     -> Nothing
 
 nextMajorForPrefix :: Prefix a -> Maybe Id
-nextMajorForPrefix p0 = do
-   (_, p1)  <- listToMaybe $ runPrefixMajor p0
-   rec (reverse (prefixToSteps p1))
+nextMajorForPrefix = listToMaybe . rec []
  where
-   rec []          = Nothing
-   rec (Enter l:_) = Just l
-   rec (Exit  l:_) = Just l
-   rec (_:rest)    = rec rest
-
--- Copied from TypedAbstractService: clean me up
-runPrefixMajor :: Prefix a -> [(a, Prefix a)]
-runPrefixMajor = firstsWith (const isMajor)
+   rec res prfx = do
+      ((stp, _), p) <- firsts prfx
+      case stp of 
+         Enter l -> rec [l] p
+         Exit l  -> rec [l] p
+         RuleStep _ r 
+            | isMajor r -> res
+            | otherwise -> rec res p
 
 ------------------------------------------------------------------------
 -- Data types for replies

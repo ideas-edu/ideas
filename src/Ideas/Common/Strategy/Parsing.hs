@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- Copyright 2014, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -11,8 +12,8 @@
 -- Basic machinery for fully executing a core strategy expression, or only
 -- partially. Partial execution results in a prefix that keeps the current.
 -- location in the strategy (a @Path@) for continuing the execution later on.
--- A prefix also maintains the sequence of steps already performed (a so-called
--- trace).
+-- The path can be used to reconstruct the sequence of steps already performed 
+-- (a so-called trace).
 --
 -----------------------------------------------------------------------------
 --  $Id$
@@ -21,8 +22,8 @@ module Ideas.Common.Strategy.Parsing
    ( -- * Running @Core@ strategies
      runCore
      -- * Prefix
-   , Prefix, replayCore, majorPrefix, searchModePrefix
-   , prefixPath, prefixToSteps, lastStepInPrefix, activeLabels
+   , Prefix, makePrefix, replayCore, replayAndApply
+   , majorPrefix, searchModePrefix, prefixPath
      -- * Step
    , Step(..)
      -- * Path
@@ -30,7 +31,6 @@ module Ideas.Common.Strategy.Parsing
    ) where
 
 import Data.Function
-import Data.List
 import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Environment
@@ -40,7 +40,7 @@ import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Core
 import Ideas.Common.Strategy.Derived
 import Ideas.Common.Strategy.Process
-import Ideas.Common.Strategy.Sequence hiding (Step)
+import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Utils (fst3)
 import Ideas.Common.Utils.Uniplate
 
@@ -59,8 +59,9 @@ coreToProcess useLabels = fromAtoms . toProcess . rec . coreSubstAll
       case core of
          a :*: b    -> rec a <*> rec b
          a :|: b    -> rec a <|> rec b
-         Rule r     -> single (Single (RuleStep mempty r))
+         a :>|> b   -> rec a >|> rec b
          a :|>: b   -> rec a |> rec b
+         Rule r     -> single (Single (RuleStep mempty r))
          Fail       -> empty
          Succeed    -> done
          Label l a  
@@ -87,42 +88,56 @@ collapse core = descend collapse core
 -- Prefix datatype
 
 data Prefix a = Prefix
-   { _value    :: a
-   , trace     :: [Step a]
-   , getPath   :: Path
+   { getPath   :: Path
    , remainder :: Process (Step a, a, Path)
    }
 
 instance Show (Prefix a) where
    show = show . prefixPath
 
-instance Firsts Prefix where
-   ready = ready . remainder
-   firsts prfx = 
-      [ (a, Prefix a (st:trace prfx) path q) 
-      | ((st, a, path), q) <- firsts (remainder prfx)
-      ]
+instance Firsts (Prefix a) where
+   type Elem (Prefix a) = (Step a, a)
 
-instance Minor (Prefix a) where
-   setMinor _ = id
-   isMinor    = maybe False isMinor . lastStepInPrefix
+   menu = fmap f . menu . remainder
+    where
+      f Done = Done
+      f ((st, a, path) :~> p) = (st, a) :~> Prefix path p 
 
 --------------------------------------------------------------------------------
 -- Constructing a prefix
 
--- | A prefix is constructed by replaying a path in a core strategy.
-replayCore :: Path -> Core a -> a -> Prefix a
-replayCore path core a0 =
-   rec [] (ints path) $ withPath $ coreToProcess True core
- where 
-   rec acc []     p = Prefix a0 (map fst acc) path (applySteps a0 p)
+-- | Make a prefix from a core strategy and a start term.
+makePrefix :: Core a -> a -> Prefix a
+makePrefix core = snd . fromJust . replayCore emptyPath core
+ 
+-- | Construct a prefix by replaying a path in a core strategy: the third 
+-- argument is the current term.
+replayCore :: Path -> Core a -> a -> Maybe ([Step a], Prefix a)
+replayCore path core a = do
+   let p = withPath (coreToProcess True core)
+   (acc, q) <- runPath path p
+   let steps = map fst acc
+       prfx = Prefix path (applySteps q a)
+   return (steps, prfx)
+
+replayAndApply :: Path -> Core a -> a -> Maybe (a, Prefix a)
+replayAndApply path core a = do
+   let p = withPath (coreToProcess True core)
+   (acc, q) <- runPath path p
+   b <- applyList (map fst acc) a
+   return $ (b, Prefix path (applySteps q b))
+   
+runPath :: Path -> Process a -> Maybe ([a], Process a)
+runPath = rec [] . ints
+ where
+   rec acc []     p = Just (reverse acc, p)
    rec acc (n:ns) p =
       case getByIndex n (menu p) of
          Just (a :~> r) -> rec (a:acc) ns r
-         _ -> rec acc [] empty -- invalid path
+         _ -> Nothing
    
-applySteps :: a -> Process (Step a, Path) -> Process (Step a, a, Path)
-applySteps a0 = prune (isMajor . fst3) . scan f a0
+applySteps :: Process (Step a, Path) -> a -> Process (Step a, a, Path)
+applySteps p a0 = prune (isMajor . fst3) (scan f a0 p)
  where
    f a (RuleStep _ r, path) =
       [ (b, (RuleStep env r, b, path))
@@ -133,7 +148,7 @@ applySteps a0 = prune (isMajor . fst3) . scan f a0
 withPath :: Process a -> Process (a, Path)
 withPath = rec []
  where
-   rec ns = mapWithIndex (step done . f ns) . menu
+   rec ns = mapWithIndex (menuItem done . f ns) . menu
 
    f ns n a p = 
       let ms = n:ns
@@ -142,12 +157,10 @@ withPath = rec []
 --------------------------------------------------------------------------------
 -- Prefix fuctions
       
--- | Transforms the prefix such that only major steps are kept. 
+-- | Transforms the prefix such that only major steps are kept in the remaining
+-- strategy. 
 majorPrefix :: Prefix a -> Prefix a
-majorPrefix prfx = prfx 
-   { remainder = hide (isMajor . fst3) (remainder prfx) 
-   , trace     = filter isMajor (trace prfx)
-   }
+majorPrefix prfx = prfx { remainder = hide (isMajor . fst3) (remainder prfx) }
 
 -- | The searchModePrefix transformation changes the process in such a way that 
 --   all intermediate states can only be reached by one path. A prerequisite is 
@@ -173,20 +186,6 @@ searchModePrefix eq prfx =
 -- | Returns the current @Path@.
 prefixPath :: Prefix a -> Path
 prefixPath = getPath
-
--- | Returns all steps that are applied so far.
-prefixToSteps :: Prefix a -> [Step a]
-prefixToSteps = reverse . trace
-
--- | Returns the last step of a prefix (if such a step exists)
-lastStepInPrefix :: Prefix a -> Maybe (Step a)
-lastStepInPrefix = listToMaybe . trace
-
--- | Calculate the active labels
-activeLabels :: Prefix a -> [Id]
-activeLabels prfx = nub [l | Enter l <- steps] \\ [l | Exit l <- steps]
- where
-   steps = prefixToSteps prfx
 
 --------------------------------------------------------------------------------
 -- Step

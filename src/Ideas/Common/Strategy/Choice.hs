@@ -20,19 +20,19 @@ module Ideas.Common.Strategy.Choice
      -- * Menu data type
    , Menu, eqMenuBy
      -- * Queries
-   , elems, bests, isEmpty, getByIndex
+   , elems, bests, bestsOrdered, isEmpty, getByIndex
      -- * Generalized functions
    , onMenu, cut, mapWithIndex
    ) where
 
 import Data.Maybe (listToMaybe)
 
-infixr 3 <|>, |>, :|:, :|>
+infixr 3 <|>, >|>, |>, :|:, :>|, :|>
 
 ------------------------------------------------------------------------
 -- Choice type class
 
--- | Laws: '<|>' and '|>' are both associative, and have 'empty' as their 
+-- | Laws: '<|>', '>|>' '|>' are all associative, and have 'empty' as their 
 -- unit element.
 class Choice f where
    -- | Nothing to choose from.
@@ -41,6 +41,8 @@ class Choice f where
    single :: a -> f a 
    -- | Normal (unbiased) choice.
    (<|>) :: f a -> f a -> f a
+   -- | Left-preference.
+   (>|>) :: f a -> f a -> f a
    -- | Left-biased choice.
    (|>) :: f a -> f a -> f a
    -- | One element from a list (unbiased).
@@ -57,6 +59,7 @@ instance Choice [] where
    empty    = []
    single   = return
    (<|>)    = (++)
+   (>|>)    = (++)
    xs |> ys = if null xs then ys else xs
    oneof    = id
    choice   = concat
@@ -73,7 +76,8 @@ instance Choice [] where
 data Menu a = Single a
             | Empty
             | Menu a :|: Menu a
-            | Menu a :|> Menu a
+            | Menu a :>| Menu a -- left-preference
+            | Menu a :|> Menu a -- left-biased
 
 instance Eq a => Eq (Menu a) where
    (==) = eqMenuBy (==)
@@ -81,13 +85,18 @@ instance Eq a => Eq (Menu a) where
 instance Choice Menu where
    empty  = Empty
    single = Single
-   
-   
+
    p0 <|> rest = rec p0 -- maintain invariant
     where
      rec Empty     = rest
      rec (p :|: q) = p :|: rec q
      rec p         = p :|: rest
+     
+   p0 >|> rest = rec p0 -- maintain invariant
+    where
+     rec Empty     = rest
+     rec (p :>| q) = p :>| rec q
+     rec p         = p :>| rest
      
    p0 |> rest = rec p0 -- maintain invariant
     where
@@ -108,6 +117,7 @@ eqMenuBy :: (a -> a -> Bool) -> Menu a -> Menu a -> Bool
 eqMenuBy eq = test 
  where
    test (p1 :|: p2) (q1 :|: q2) = test p1 q1 && test p2 q2
+   test (p1 :>| p2) (q1 :>| q2) = test p1 q1 && test p2 q2
    test (p1 :|> p2) (q1 :|> q2) = test p1 q1 && test p2 q2
    test (Single a)  (Single b)  = eq a b
    test Empty       Empty       = True
@@ -121,17 +131,36 @@ elems :: Menu a -> [a]
 elems = ($ []) . rec
  where
    rec (p :|: q)  = rec p . rec q
+   rec (p :>| q)  = rec p . rec q
    rec (p :|> q)  = rec p . rec q
    rec (Single p) = (p:)
    rec Empty      = id
 
 -- | Returns only the best elements that are in the menu. 
 bests :: Menu a -> [a]
-bests (p :|: q)  = bests p <|> bests q
-bests (p :|> q)  = bests p  |> bests q
+bests (p :|: q)  = bests p ++ bests q
+bests (p :>| q)  = bests p ++ bests q
+bests (p :|> q)  = bests p |> bests q
 bests (Single a) = [a]
 bests Empty      = []
-  
+
+-- | Returns only the best elements that are in the menu, with a given ordering. 
+bestsOrdered :: (a -> a -> Ordering) -> Menu a -> [a]
+bestsOrdered cmp = rec
+ where
+   rec (p :|: q)  = merge (rec p) (rec q)
+   rec (p :>| q)  = rec p ++ rec q
+   rec (p :|> q)  = rec p |> rec q
+   rec (Single a) = [a]
+   rec Empty      = []
+   
+   -- merge two lists with comparison function
+   merge lx@(x:xs) ly@(y:ys)
+      | cmp x y == GT = y : merge lx ys
+      | otherwise     = x : merge xs ly
+   merge [] ys = ys
+   merge xs [] = xs
+
 -- | Is the menu empty?
 isEmpty :: Menu a -> Bool
 isEmpty Empty = True
@@ -149,7 +178,8 @@ getByIndex n = listToMaybe . drop n . elems
 onMenu :: Choice f => (a -> f b) -> Menu a -> f b
 onMenu f = rec
  where
-   rec (p :|: q) =  rec p <|> rec q 
+   rec (p :|: q)  = rec p <|> rec q
+   rec (p :>| q)  = rec p >|> rec q
    rec (p :|> q)  = rec p  |> rec q
    rec (Single a) = f a
    rec Empty      = empty
@@ -158,6 +188,7 @@ onMenu f = rec
 {-# INLINE cut #-}
 cut :: Choice f => Menu a -> f a
 cut (p :|: q)  = cut p <|> cut q
+cut (p :>| q)  = cut p >|> cut q
 cut (p :|> _)  = cut p
 cut (Single a) = single a
 cut Empty      = empty
@@ -170,6 +201,9 @@ mapWithIndex f = snd . rec 0
    rec n (p :|: q)  = let (n1, pn) = rec n p 
                           (n2, qn) = rec n1 q
                       in (n2, pn <|> qn)
+   rec n (p :>| q)  = let (n1, pn) = rec n p 
+                          (n2, qn) = rec n1 q
+                      in (n2, pn >|> qn)
    rec n (p :|> q)  = let (n1, pn) = rec n p 
                           (n2, qn) = rec n1 q
                       in (n2, pn |> qn)

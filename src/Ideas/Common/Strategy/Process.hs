@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- Copyright 2014, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -43,24 +44,22 @@ class (Choice f, Sequence f) => IsProcess f where
 -- | This datatype implements choices and sequences, but is slow for 
 -- building sequences with the '<*>' combinator. See the 'Builder' data
 -- type for a faster alternative.
-newtype Process a = P (Menu (Step Process a))
-
--- | The menu of a process offers single steps (with the remaining process) and
--- 'done' steps.
-menu :: Process a -> Menu (Step Process a)
-menu (P m) = m
-
+newtype Process a = P (Menu (MenuItem a (Process a)))
 
 instance Eq a => Eq (Process a) where
    (==) = eqProcessBy (==)
 
 instance Functor Process where
-   fmap f (P m) = P (fmap (fmap f) m)
+   fmap f (P m) = P (fmap g m)
+    where
+      g Done = Done
+      g (a :~> p) = f a :~> fmap f p
 
 instance Choice Process where
    single a = P (single (a :~> P (single Done)))
    empty    = P empty
    P x <|> P y = P (x <|> y)
+   P x >|> P y = P (x >|> y)
    P x  |> P y = P (x |> y)
    
 instance Sequence Process where
@@ -78,10 +77,10 @@ instance Sequence Process where
 instance IsProcess Process where
    toProcess = id
 
-instance Firsts Process where
-   ready = any isDone . bests . menu
-   stopped = isEmpty . menu
-   firsts p = [ (a, q) | a :~> q <- bests (menu p) ]
+instance Firsts (Process a) where
+   type Elem (Process a) = a
+   
+   menu (P m) = m
 
 -- | Generalized equality of processes, which takes an equality function for 
 -- the symbols. 
@@ -106,8 +105,9 @@ newtype Builder a = B (Process a -> Process a)
 instance Choice Builder where
    single a = B (a ~>)
    empty    = B (const empty)
-   B f <|> B g  = B (\p -> f p <|> g p)
-   B f  |> B g  = B (\p -> f p  |> g p)
+   B f <|> B g = B (\p -> f p <|> g p)
+   B f >|> B g = B (\p -> f p >|> g p)
+   B f  |> B g = B (\p -> f p  |> g p)
    
 instance Sequence Builder where
    done        = B id
@@ -125,7 +125,7 @@ instance IsProcess Builder where
 fold :: Choice f => (a -> f b -> f b) -> f b -> Process a -> f b
 fold op e = rec 
  where
-   rec = onMenu (step e (\a -> op a . rec)) . menu
+   rec = onMenu (menuItem e (\a -> op a . rec)) . menu
 
 {-# INLINE accum #-}
 accum :: (a -> b -> [b]) -> b -> Process a -> Menu b
@@ -142,9 +142,7 @@ scan op = rec
  where
    rec s = 
       let f a q = choice [ b ~> rec s2 q | (s2, b) <- op s a ]
-      in onMenu (step done f) . menu
-
-
+      in onMenu (menuItem done f) . menu
 
 -- fail early
 prune :: (a -> Bool) -> Process a -> Process a
@@ -155,5 +153,3 @@ prune f = fold op done
       | otherwise               = a ~> np
     where
       np = P (cut (menu p))
-
----------------------------------------------------------------------------

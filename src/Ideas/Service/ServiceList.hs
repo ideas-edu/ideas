@@ -80,7 +80,7 @@ readyS :: Service
 readyS = makeService "basic.ready"
    "Test if the current expression is in a form accepted as a final answer. \
    \For this, the strategy is not used." $
-   ready ::: Const State :-> Const Bool
+   finished ::: typed
 
 stepsremainingS :: Service
 stepsremainingS = makeService "basic.stepsremaining"

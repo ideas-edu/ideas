@@ -13,7 +13,7 @@
 
 module Ideas.Service.BasicServices
    ( -- * Basic Services
-     stepsremaining, findbuggyrules, ready, allfirsts, derivation
+     stepsremaining, findbuggyrules, allfirsts, derivation
    , onefirst, applicable, allapplications, apply, generate, create
    , StepInfo, exampleDerivations, recognizeRule
    ) where
@@ -53,7 +53,7 @@ derivation mcfg state =
       -- configuration is only allowed beforehand: hence, the prefix
       -- should be empty (or else, the configuration is ignored). This
       -- restriction should probably be relaxed later on.
-      Just cfg | all (null . prefixToSteps) ps ->
+      Just cfg | all ((== emptyPath) . prefixPath) ps ->
          let newStrategy = configure cfg (strategy ex)
              newExercise = ex {strategy = newStrategy}
          in rec timeout d0 (emptyStateContext newExercise (stateContext state))
@@ -78,18 +78,13 @@ type StepInfo a = (Rule (Context a), Location, Environment) -- find a good place
 
 allfirsts :: State a -> Either String [(StepInfo a, State a)]
 allfirsts state
-   | null ps   = Left "Prefix is required"
+   | null (statePrefixes state) = Left "Prefix is required"
    | otherwise = Right $ 
         noDuplicates $ concatMap make $ firsts state
  where
-   ps = statePrefixes state
-   
-   make (_, st) = do
-      prfx <- statePrefixes st
-      let ctx = stateContext st
-      case lastStepInPrefix prfx of
-         Just (RuleStep env r) -> return
-            ( (r, location ctx, env), st )
+   make ((stp, ctx), st) =
+      case stp of
+         RuleStep env r -> [((r, location ctx, env), st)]
          _ -> []
 
    noDuplicates []     = []

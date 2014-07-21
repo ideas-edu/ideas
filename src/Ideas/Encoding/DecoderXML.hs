@@ -20,7 +20,6 @@ module Ideas.Encoding.DecoderXML
 
 import Control.Monad
 import Data.Char
-import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Encoding.Evaluator
 import Ideas.Encoding.OpenMathSupport
@@ -98,7 +97,11 @@ decodeState = do
    xml <- encoderFor (findChild "state")
    mp  <- decodePrefix  // xml
    ctx <- decodeContext // xml
-   let prs = [  replayStrategy path (strategy ex) ctx | path <- maybeToList mp ]
+   prs <- case mp of 
+             Just path -> do
+                (_, p) <- replayPath path (strategy ex) ctx
+                return [p]
+             Nothing   -> return []
    return (makeState ex prs ctx)
 
 decodePrefix :: XMLDecoder a (Maybe Path)

@@ -466,7 +466,7 @@ htmlState = do
       para $ divClass "state" $
          stateLink lm state
          <> divClass "term" (string $ prettyPrinterContext (exercise state) (stateContext state))
-         <> string "ready: " <> bool (ready state)
+         <> string "ready: " <> bool (finished state)
 
 stateLink :: LinkManager -> State a -> HTMLBuilder
 stateLink lm st = munless (isStatic lm) $
@@ -484,13 +484,13 @@ encodeState = do
            ]
       , munless (noBindings state) $
            h2 "Environment" <> text (environment state)
-      , encodePrefixes (statePrefixes state)
+      , encodePrefixes state (statePrefixes state)
       ])
 
-encodePrefixes :: [Prefix (Context a)] -> HTMLBuilder
-encodePrefixes = mconcat . zipWith make [1::Int ..]
+encodePrefixes :: State a -> [Prefix (Context a)] -> HTMLBuilder
+encodePrefixes st = mconcat . zipWith3 make [1::Int ..] (stateLabels st)
  where
-   make i pr = mconcat
+   make i ls prfx = mconcat
       [ h2 $ "Prefix " ++ show i
       , let count p = text $ length $ filter p prSteps
             enter   = spanClass "step-enter" . text
@@ -498,12 +498,14 @@ encodePrefixes = mconcat . zipWith make [1::Int ..]
               [ ("steps", count (const True))
               , ("rules", count isRuleStep)
               , ("major rules", count isMajor)
-              , ("active labels", ul $ map enter $ activeLabels pr)
+              , ("active labels", ul $ map enter ls)
               ]
       , mconcat $ intersperse (string ", ") $ map htmlStep prSteps
       ]
     where
-      prSteps = prefixToSteps pr
+      ex  = exercise st
+      ctx = stateContext st
+      prSteps = maybe [] fst $ replayPath (prefixPath prfx) (strategy ex) ctx
 
 isRuleStep :: Step a -> Bool
 isRuleStep (RuleStep _ _) = True

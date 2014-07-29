@@ -54,6 +54,7 @@ data GCore a
    | GCore a :@:  GCore a -- alternate
    | Label Id (GCore a)
    | Atomic   (GCore a)
+   | Not      (GCore a)
    | Remove   (GCore a) -- config: replaced by fail
    | Collapse (GCore a) -- config: execute labeled sub-strategy as 1 step
    | Hide     (GCore a) -- config: make all steps invisible/minor
@@ -91,6 +92,7 @@ instance Functor GCore where
             a :%: b    -> rec a :%:  rec b
             a :@: b    -> rec a :@:  rec b
             Atomic a   -> Atomic   (rec a)
+            Not a      -> Not      (rec a)
             Remove a   -> Remove   (rec a)
             Collapse a -> Collapse (rec a)
             Hide a     -> Hide     (rec a)
@@ -112,6 +114,7 @@ instance Uniplate (GCore a) where
          a :@: b    -> plate (:@:)  |* a |* b
          Label l a  -> plate Label  |- l |* a
          Atomic a   -> plate Atomic   |* a
+         Not a      -> plate Not      |* a
          Remove a   -> plate Remove   |* a
          Collapse a -> plate Collapse |* a
          Hide a     -> plate Hide     |* a

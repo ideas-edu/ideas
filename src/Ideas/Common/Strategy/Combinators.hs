@@ -19,7 +19,6 @@ module Ideas.Common.Strategy.Combinators where
 import Data.Array
 import Data.Graph
 import Data.List ((\\))
-import Ideas.Common.Classes
 import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
@@ -110,7 +109,7 @@ check = toStrategy . checkRule "check"
 -- | Check whether or not the argument strategy cannot be applied: the result
 --   strategy only succeeds if this is not the case (otherwise it fails).
 not :: IsStrategy f => f a -> Strategy a
-not s = check (Prelude.not . applicable (toStrategy s))
+not = liftCore Not
 
 -- | Repeat a strategy zero or more times (greedy version of 'many')
 repeat :: IsStrategy f => f a -> Strategy a
@@ -133,6 +132,7 @@ try s = s |> succeed
 --   try the right-operand strategy
 (|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
 (|>) = liftCore2 (:|>:)
+-- s |> t = s <|> (not s <*> t)
 
 -- | Repeat the strategy as long as the predicate holds
 while :: IsStrategy f => (a -> Bool) -> f a -> Strategy a

@@ -71,6 +71,7 @@ coreToProcess useLabels = fromAtoms . toProcess . rec . coreSubstAll
          a :%: b    -> concurrent switch (rec a) (rec b)
          a :@: b    -> rec a <@> rec b
          Atomic a   -> atomic (rec a)
+         Not a      -> notCore a
          Remove _   -> empty
          Collapse a -> rec (collapse a)
          Hide a     -> rec (fmap minor a)
@@ -83,6 +84,10 @@ coreToProcess useLabels = fromAtoms . toProcess . rec . coreSubstAll
 collapse :: Core a -> Core a
 collapse (Label l s) = Rule $ makeRule l (runCore s)
 collapse core = descend collapse core
+
+notCore :: Core a -> Builder (Sym (Step a))
+notCore core = single $ Single $ RuleStep mempty $ 
+   checkRule "core.not" $ null . runCore core
 
 --------------------------------------------------------------------------------
 -- Prefix datatype

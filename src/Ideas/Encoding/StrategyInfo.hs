@@ -50,6 +50,7 @@ coreBuilder core =
                  -> tag "rule"       (nameAttr l)
       Label l a  -> tag "label"      (nameAttr l <> coreBuilder a)
       Atomic a   -> tag "atomic"     (coreBuilder a)
+      Not a      -> tag "not"        (coreBuilder a)
       Remove a   -> cfgItem "removed"     (coreBuilder a)
       Collapse a -> cfgItem "collapsed" (coreBuilder a)
       Hide a     -> cfgItem "hidden"      (coreBuilder a)

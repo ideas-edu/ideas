@@ -31,6 +31,7 @@ Library
   hs-source-dirs:    src
   Build-Depends:     base >= 4.2 && < 5, 
                      QuickCheck >= 2.4.1 && < 2.7, 
+                     Diff,
                      containers, 
                      random, 
                      uniplate, 

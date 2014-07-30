@@ -102,15 +102,11 @@ xmlEncoderConst = encoderFor $ \tv@(val ::: tp) ->
 
 encodeState :: XMLEncoder a (State a)
 encodeState = encoderFor $ \st -> element "state"
-   [ encodePrefixes // statePrefixes st
+   [ if withoutPrefix st
+     then mempty
+     else element "prefix" [string (show (statePrefix st))]
    , encodeContext // stateContext st
    ]
-
-encodePrefixes :: XMLEncoder a [Prefix (Context a)]
-encodePrefixes = encoderFor $ \ps ->
-   case ps of
-      [] -> mempty
-      _  -> element "prefix" $ map (string . show) ps
 
 encodeContext :: XMLEncoder a (Context a)
 encodeContext = encoderStateFor $ \xp ctx ->

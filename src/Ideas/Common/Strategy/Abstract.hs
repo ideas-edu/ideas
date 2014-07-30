@@ -64,7 +64,9 @@ instance IsStrategy (LabeledStrategy) where
   toStrategy (LS info (S core)) = S (Label info core)
 
 instance IsStrategy Rule where
-   toStrategy = S . Rule
+   toStrategy r
+      -- | isMajor r = S $ Label (getId r) (Rule r)
+      | otherwise = S $ Rule r
 
 instance IsStrategy RewriteRule where
    toStrategy = toStrategy . ruleRewrite

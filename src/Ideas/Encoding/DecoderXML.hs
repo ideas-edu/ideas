@@ -97,12 +97,12 @@ decodeState = do
    xml <- encoderFor (findChild "state")
    mp  <- decodePrefix  // xml
    ctx <- decodeContext // xml
-   prs <- case mp of 
+   prf <- case mp of 
              Just path -> do
                 (_, p) <- replayPath path (strategy ex) ctx
-                return [p]
-             Nothing   -> return []
-   return (makeState ex prs ctx)
+                return p
+             Nothing   -> return noPrefix
+   return (makeState ex prf ctx)
 
 decodePrefix :: XMLDecoder a (Maybe Path)
 decodePrefix = do

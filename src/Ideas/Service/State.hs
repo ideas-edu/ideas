@@ -18,8 +18,8 @@
 module Ideas.Service.State
    ( -- * Exercise state
      State, makeState, makeNoState, emptyStateContext, emptyState
-   , exercise, statePrefixes, stateContext, stateTerm, stateLabels
-   , finished, firsts
+   , exercise, statePrefix, stateContext, stateTerm
+   , withoutPrefix, stateLabels, finished, firsts
    ) where
 
 import Data.Function
@@ -27,20 +27,18 @@ import Data.List
 import Data.Maybe
 import Ideas.Common.Library hiding (ready, (:~>))
 import Ideas.Common.Strategy.Sequence
-import Ideas.Common.Strategy.Choice (choice)
 
 data State a = State
-   { exercise      :: Exercise a
-   , statePrefixes :: [Prefix (Context a)]
-   , stateContext  :: Context a
+   { exercise     :: Exercise a
+   , statePrefix  :: Prefix (Context a)
+   , stateContext :: Context a
    }
 
 instance Show (State a) where
    show s = unlines $ "State {" : map ("   "++) xs ++ ["}"]
     where
       xs = [ "exercise = " ++ showId s
-           , "prefix   = " ++ intercalate ";" (map show (statePrefixes s))
-           , "prefixes = " ++ intercalate ";" (map show (statePrefixes s))
+           , "prefix   = " ++ show (statePrefix s)
            , "term     = " ++ prettyPrinterContext (exercise s) (stateContext s)
            ]
 
@@ -63,41 +61,43 @@ instance Firsts (State a) where
       f (RuleStep _ r) = r
       f _ = emptyRule ()
 
-   menu st = choice 
-      [ fmap f (menu (majorPrefix prfx)) | prfx <- statePrefixes st ]
+   menu st = fmap f (menu (majorPrefix (statePrefix st)))
     where
       f Done = Done
-      f (info :~> p) = info :~> State (exercise st) [p] (snd info)
+      f (info :~> p) = info :~> State (exercise st) p (snd info)
 
 stateTerm :: State a -> a
 stateTerm = fromMaybe (error "invalid term") . fromContext . stateContext
 
 -----------------------------------------------------------
 
-makeState :: Exercise a -> [Prefix (Context a)] -> Context a -> State a
+makeState :: Exercise a -> Prefix (Context a) -> Context a -> State a
 makeState = State
 
 -- State without a prefix
 makeNoState :: Exercise a -> Context a -> State a
-makeNoState = flip makeState []
+makeNoState = flip makeState noPrefix
 
 emptyStateContext :: Exercise a -> Context a -> State a
 emptyStateContext ex ca =
    let pr = emptyPrefix (strategy ex) ca
-   in makeState ex [pr] ca
+   in makeState ex pr ca
 
 emptyState :: Exercise a -> a -> State a
 emptyState ex = emptyStateContext ex . inContext ex
+
+withoutPrefix :: State a -> Bool
+withoutPrefix = null . prefixPaths . statePrefix
 
 finished :: State a -> Bool
 finished st = isReady (exercise st) (stateTerm st)
 
 stateLabels :: State a -> [[Id]]
-stateLabels st = map make (statePrefixes st)
+stateLabels st = map make (prefixPaths (statePrefix st))
  where
    ex = exercise st
-   make prfx = 
-      case replayPath (prefixPath prfx) (strategy ex) (stateContext st) of 
+   make path = 
+      case replayPath path (strategy ex) (stateContext st) of 
          Just (xs, _) -> nub [l | Enter l <- xs] \\ [l | Exit l <- xs]
          Nothing -> []
    

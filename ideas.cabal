@@ -87,7 +87,6 @@ Library
     Ideas.Common.Strategy.Parsing
     Ideas.Common.Strategy.Process
     Ideas.Common.Strategy.Sequence
-    Ideas.Common.Strategy.Tests
     Ideas.Common.Strategy.Traversal
     Ideas.Common.Traversal.Iterator
     Ideas.Common.Traversal.Navigator

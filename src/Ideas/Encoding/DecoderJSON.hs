@@ -113,7 +113,7 @@ decodeState = do
             env  <- decodeEnvironment // jsonContext
             let ctx = setEnvironment env (inContext ex a)
             ps <- forM pts $ \path -> replayPath path (strategy ex) ctx
-            return $ makeState ex (map snd ps) ctx
+            return $ makeState ex (mconcat (map snd ps)) ctx
          _ -> fail $ "invalid state" ++ show json
 
 decodePaths :: JSONDecoder a [Path]

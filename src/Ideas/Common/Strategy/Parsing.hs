@@ -10,10 +10,11 @@
 -- Portability :  portable (depends on ghc)
 --
 -- Basic machinery for fully executing a core strategy expression, or only
--- partially. Partial execution results in a prefix that keeps the current.
--- location in the strategy (a @Path@) for continuing the execution later on.
--- The path can be used to reconstruct the sequence of steps already performed 
--- (a so-called trace).
+-- partially. Partial execution results in a prefix that keeps the current
+-- locations in the strategy (a list of @Path@s) for continuing the execution 
+-- later on. A path can be used to reconstruct the sequence of steps already 
+-- performed (a so-called trace). Prefixes can be merged with the Monoid 
+-- operation.
 --
 -----------------------------------------------------------------------------
 --  $Id$
@@ -22,8 +23,8 @@ module Ideas.Common.Strategy.Parsing
    ( -- * Running @Core@ strategies
      runCore
      -- * Prefix
-   , Prefix, makePrefix, replayCore, replayAndApply
-   , majorPrefix, searchModePrefix, prefixPath, mergePrefix
+   , Prefix, noPrefix, makePrefix, replayCore, replayAndApply
+   , majorPrefix, searchModePrefix, prefixPaths
      -- * Step
    , Step(..)
      -- * Path
@@ -31,6 +32,7 @@ module Ideas.Common.Strategy.Parsing
    ) where
 
 import Data.Function
+import Data.List
 import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Environment
@@ -43,9 +45,6 @@ import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Utils (fst3)
 import Ideas.Common.Utils.Uniplate
-
-mergePrefix :: Prefix a -> Prefix a -> Prefix a
-mergePrefix (Prefix path p) (Prefix _ q) = Prefix path (p <|> q)
 
 --------------------------------------------------------------------------------
 -- Running Core strategies
@@ -96,12 +95,16 @@ notCore core = single $ Single $ RuleStep mempty $
 -- Prefix datatype
 
 data Prefix a = Prefix
-   { getPath   :: Path
+   { getPaths  :: [Path]
    , remainder :: Process (Step a, a, Path)
    }
 
 instance Show (Prefix a) where
-   show = show . prefixPath
+   show = intercalate ";" . map show . prefixPaths
+
+instance Monoid (Prefix a) where
+   mempty = noPrefix
+   mappend (Prefix xs p) (Prefix ys q) = Prefix (xs ++ ys) (p <|> q)
 
 instance Firsts (Prefix a) where
    type Elem (Prefix a) = (Step a, a)
@@ -109,10 +112,14 @@ instance Firsts (Prefix a) where
    menu = fmap f . menu . remainder
     where
       f Done = Done
-      f ((st, a, path) :~> p) = (st, a) :~> Prefix path p 
+      f ((st, a, path) :~> p) = (st, a) :~> Prefix [path] p 
 
 --------------------------------------------------------------------------------
 -- Constructing a prefix
+
+-- | The error prefix (i.e., without a location in the strategy).
+noPrefix :: Prefix a
+noPrefix = Prefix [] empty
 
 -- | Make a prefix from a core strategy and a start term.
 makePrefix :: Core a -> a -> Prefix a
@@ -125,7 +132,7 @@ replayCore path core a = do
    let p = withPath (coreToProcess True core)
    (acc, q) <- runPath path p
    let steps = map fst acc
-       prfx = Prefix path (applySteps q a)
+       prfx = Prefix [path] (applySteps q a)
    return (steps, prfx)
 
 replayAndApply :: Path -> Core a -> a -> Maybe (a, Prefix a)
@@ -133,7 +140,7 @@ replayAndApply path core a = do
    let p = withPath (coreToProcess True core)
    (acc, q) <- runPath path p
    b <- applyList (map fst acc) a
-   return $ (b, Prefix path (applySteps q b))
+   return $ (b, Prefix [path] (applySteps q b))
    
 runPath :: Path -> Process a -> Maybe ([a], Process a)
 runPath = rec [] . ints
@@ -192,8 +199,8 @@ searchModePrefix eq prfx =
       in firsts $ filterP f (a ~> q)
 
 -- | Returns the current @Path@.
-prefixPath :: Prefix a -> Path
-prefixPath = getPath
+prefixPaths :: Prefix a -> [Path]
+prefixPaths = getPaths
 
 --------------------------------------------------------------------------------
 -- Step

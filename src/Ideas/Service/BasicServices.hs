@@ -49,11 +49,11 @@ derivation :: Maybe StrategyCfg -> State a -> Either String (Derivation (Rule (C
 derivation mcfg state =
    mapSecond (biMap (\(r, _, as) -> (r, as)) stateContext) $
    case mcfg of
-      _ | null ps -> Left "Prefix is required"
+      _ | withoutPrefix state -> Left "Prefix is required"
       -- configuration is only allowed beforehand: hence, the prefix
       -- should be empty (or else, the configuration is ignored). This
       -- restriction should probably be relaxed later on.
-      Just cfg | all ((== emptyPath) . prefixPath) ps ->
+      Just cfg | all (== emptyPath) (prefixPaths ps) ->
          let newStrategy = configure cfg (strategy ex)
              newExercise = ex {strategy = newStrategy}
          in rec timeout d0 (emptyStateContext newExercise (stateContext state))
@@ -61,7 +61,7 @@ derivation mcfg state =
  where
    d0 = emptyDerivation state
    ex = exercise state
-   ps = statePrefixes state
+   ps = statePrefix state
    timeout = 50 :: Int
 
    rec i acc st =
@@ -78,7 +78,7 @@ type StepInfo a = (Rule (Context a), Location, Environment) -- find a good place
 
 allfirsts :: State a -> Either String [(StepInfo a, State a)]
 allfirsts state
-   | null (statePrefixes state) = Left "Prefix is required"
+   | withoutPrefix state = Left "Prefix is required"
    | otherwise = Right $ 
         noDuplicates $ concatMap make $ firsts state
  where
@@ -135,8 +135,8 @@ setLocation loc c0 = fromMaybe c0 (navigateTo loc c0)
 -- to the current term at the given location, in which case the request is invalid.
 apply :: Rule (Context a) -> Location -> Environment -> State a -> Either String (State a)
 apply r loc env state
-   | null (statePrefixes state) = applyOff
-   | otherwise                  = applyOn
+   | withoutPrefix state = applyOff
+   | otherwise           = applyOn
  where
    applyOn = -- scenario 1: on-strategy
       maybe applyOff Right $ listToMaybe

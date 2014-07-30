@@ -38,12 +38,12 @@ problemDecomposition msloc state maybeAnswer
               (newCtx, _, newPrefix) = head witnesses
               newLocation = nextTaskLocation strat sloc $
                                fromMaybe topId $ nextMajorForPrefix newPrefix
-              newState = makeState ex [newPrefix] newCtx
+              newState = makeState ex newPrefix newCtx
 
            _ -> Incorrect isEquiv newLocation expState arguments
             where
               newLocation = subTaskLocation strat sloc loc
-              expState = makeState ex [pref] expected
+              expState = makeState ex pref expected
               isEquiv  = maybe False (equivalence ex expected . fromAnswer) maybeAnswer
               (expected, answerSteps, pref) = head answers
               (loc, arguments) = fromMaybe (topId, mempty) $
@@ -54,9 +54,9 @@ problemDecomposition msloc state maybeAnswer
    topId   = getId strat
    sloc    = fromMaybe topId msloc
    answers = runPrefixLocation sloc prefix
-   prefix  = case statePrefixes state of
-                []   -> emptyPrefix strat (stateContext state)
-                hd:_ -> hd
+   prefix  
+      | withoutPrefix state = emptyPrefix strat (stateContext state)
+      | otherwise           = statePrefix state
 
 -- | Continue with a prefix until a certain strategy location is reached.
 runPrefixLocation :: Id -> Prefix a -> [(a, [Step a], Prefix a)]

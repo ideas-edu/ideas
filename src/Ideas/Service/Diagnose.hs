@@ -148,7 +148,7 @@ diagnose state new motivationId
 -- When resetting the prefix, also make sure that the context is refreshed
 restartIfNeeded :: State a -> State a
 restartIfNeeded state
-   | null (statePrefixes state) && canBeRestarted ex =
+   | withoutPrefix state && canBeRestarted ex =
         emptyState ex (stateTerm state)
    | otherwise = state
  where

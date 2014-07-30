@@ -484,13 +484,14 @@ encodeState = do
            ]
       , munless (noBindings state) $
            h2 "Environment" <> text (environment state)
-      , encodePrefixes state (statePrefixes state)
+      , encodePrefix state (statePrefix state)
       ])
 
-encodePrefixes :: State a -> [Prefix (Context a)] -> HTMLBuilder
-encodePrefixes st = mconcat . zipWith3 make [1::Int ..] (stateLabels st)
+encodePrefix :: State a -> Prefix (Context a) -> HTMLBuilder
+encodePrefix st = 
+   mconcat . zipWith3 make [1::Int ..] (stateLabels st) . prefixPaths
  where
-   make i ls prfx = mconcat
+   make i ls path = mconcat
       [ h2 $ "Prefix " ++ show i
       , let count p = text $ length $ filter p prSteps
             enter   = spanClass "step-enter" . text
@@ -505,7 +506,7 @@ encodePrefixes st = mconcat . zipWith3 make [1::Int ..] (stateLabels st)
     where
       ex  = exercise st
       ctx = stateContext st
-      prSteps = maybe [] fst $ replayPath (prefixPath prfx) (strategy ex) ctx
+      prSteps = maybe [] fst $ replayPath path (strategy ex) ctx
 
 isRuleStep :: Step a -> Bool
 isRuleStep (RuleStep _ _) = True

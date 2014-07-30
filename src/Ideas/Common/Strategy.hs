@@ -39,7 +39,7 @@ module Ideas.Common.Strategy
    , module Ideas.Common.Strategy.Configuration
    , remove, collapse, hide
      -- * Strategy locations
-   , strategyLocations, subStrategy
+   , strategyLocations, checkLocation
    , subTaskLocation, nextTaskLocation
      -- * Prefixes
    , Prefix, emptyPrefix, replayPath, replayStrategy

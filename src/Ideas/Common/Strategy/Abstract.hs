@@ -22,11 +22,9 @@ module Ideas.Common.Strategy.Abstract
    , cleanUpStrategy, cleanUpStrategyAfter
      -- Accessors to the underlying representation
    , toCore, fromCore, liftCore, liftCore2
-   , toLabeledStrategy
-   , IsLabeled(..), noInterleaving
+   , noInterleaving
    ) where
 
-import Control.Monad
 import Data.Function
 import Ideas.Common.Classes
 import Ideas.Common.Derivation
@@ -39,7 +37,6 @@ import Ideas.Common.Strategy.Sequence (Firsts(..), firstsOrdered)
 import Ideas.Common.Strategy.Parsing
 import Ideas.Common.Utils.Uniplate hiding (rewriteM)
 import Ideas.Common.View
-import Test.QuickCheck hiding (label)
 
 -----------------------------------------------------------
 --- Strategy data-type
@@ -52,9 +49,6 @@ instance Show (Strategy a) where
 
 instance Apply Strategy where
    applyAll = runCore . toCore
-
-instance (Arbitrary a, CoArbitrary a) => Arbitrary (Strategy a) where
-   arbitrary = liftM fromCore arbitrary
 
 -----------------------------------------------------------
 --- Type class
@@ -70,9 +64,7 @@ instance IsStrategy (LabeledStrategy) where
   toStrategy (LS info (S core)) = S (Label info core)
 
 instance IsStrategy Rule where
-   toStrategy r
-      | isMajor r = toStrategy (toLabeled r)
-      | otherwise = S (Rule r)
+   toStrategy = S . Rule
 
 instance IsStrategy RewriteRule where
    toStrategy = toStrategy . ruleRewrite
@@ -83,12 +75,6 @@ instance IsStrategy RewriteRule where
 -- | A strategy which is labeled with an identifier
 data LabeledStrategy a = LS Id (Strategy a)
 
-toLabeledStrategy :: Monad m => Strategy a -> m (LabeledStrategy a)
-toLabeledStrategy s =
-   case toCore s of
-      Label l c -> return (label l (fromCore c))
-      _         -> fail "Strategy without label"
-
 instance Show (LabeledStrategy a) where
    show s = showId s ++ ": " ++ show (unlabel s)
 
@@ -98,18 +84,6 @@ instance Apply LabeledStrategy where
 instance HasId (LabeledStrategy a) where
    getId (LS l _)      = l
    changeId f (LS l s) = LS (changeId f l) s
-
-class IsLabeled f where
-   toLabeled :: f a -> LabeledStrategy a
-
-instance IsLabeled LabeledStrategy where
-   toLabeled = id
-
-instance IsLabeled Rule where
-   toLabeled r = LS (getId r) (S (Rule r))
-
-instance IsLabeled RewriteRule where
-   toLabeled = toLabeled . ruleRewrite
 
 -- | Labels a strategy with an identifier. Labels are used to identify
 -- substrategies and to specialize feedback messages. The first argument of

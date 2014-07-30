@@ -43,7 +43,6 @@ import Ideas.Common.Rule.EnvironmentMonad
 import Ideas.Common.Rule.Recognizer
 import Ideas.Common.Rule.Transformation
 import Ideas.Common.View
-import Test.QuickCheck
 
 -----------------------------------------------------------
 --- Rule data type and accessors
@@ -90,12 +89,6 @@ instance Buggy (Rule a) where
 instance Minor (Rule a) where
    setMinor b r = r {isMinorRule = b}
    isMinor = isMinorRule
-
-instance (Arbitrary a, CoArbitrary a) => Arbitrary (Rule a) where
-   arbitrary = liftM3 make arbitrary arbitrary arbitrary
-    where
-      make :: Bool -> Id -> (a -> Maybe a) -> Rule a
-      make b n f = setMinor b $ makeRule n f
 
 instance HasRefs (Rule a) where
    allRefs r = allRefs (transformation r) ++ allRefs (recognizer r)

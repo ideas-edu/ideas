@@ -24,36 +24,38 @@ import Ideas.Common.Utils (fst3)
 
 problemDecomposition :: Maybe Id -> State a -> Maybe (Answer a) -> Either String (Reply a)
 problemDecomposition msloc state maybeAnswer
-   | isNothing $ subStrategy sloc (strategy ex) =
+   | not (checkLocation sloc strat) =
         Left "request error: invalid location for strategy"
    | null answers =
         Left "strategy error: not able to compute an expected answer"
-   | otherwise =
-         case maybeAnswer of
-            Just (Answer answeredTerm) | not (null witnesses) -> Right $
-                    Ok newLocation newState
-                  where
-                    witnesses   = filter (similarity ex answeredTerm . fst3) $ take 1 answers
-                    (newCtx, _, newPrefix) = head witnesses
-                    newLocation = nextTaskLocation (strategy ex) sloc $
-                                     fromMaybe topId $ nextMajorForPrefix newPrefix
-                    newState    = makeState ex [newPrefix] newCtx
-            _ -> Right $
-                    Incorrect isEquiv newLocation expState arguments
-             where
-               newLocation = subTaskLocation (strategy ex) sloc loc
-               expState = makeState ex [pref] expected
-               isEquiv  = maybe False (equivalence ex expected . fromAnswer) maybeAnswer
-               (expected, answerSteps, pref) = head answers
-               (loc, arguments) = fromMaybe (topId, mempty) $
-                                     firstMajorInSteps answerSteps --  prefix pref
+   | otherwise = Right $
+        case maybeAnswer of
+        
+           Just (Answer answeredTerm) | not (null witnesses) ->
+              Ok newLocation newState
+            where
+              witnesses = filter (similarity ex answeredTerm . fst3) $ take 1 answers
+              (newCtx, _, newPrefix) = head witnesses
+              newLocation = nextTaskLocation strat sloc $
+                               fromMaybe topId $ nextMajorForPrefix newPrefix
+              newState = makeState ex [newPrefix] newCtx
+
+           _ -> Incorrect isEquiv newLocation expState arguments
+            where
+              newLocation = subTaskLocation strat sloc loc
+              expState = makeState ex [pref] expected
+              isEquiv  = maybe False (equivalence ex expected . fromAnswer) maybeAnswer
+              (expected, answerSteps, pref) = head answers
+              (loc, arguments) = fromMaybe (topId, mempty) $
+                                    firstMajorInSteps answerSteps
  where
    ex      = exercise state
-   topId   = getId (strategy ex)
+   strat   = strategy ex
+   topId   = getId strat
    sloc    = fromMaybe topId msloc
    answers = runPrefixLocation sloc prefix
    prefix  = case statePrefixes state of
-                []   -> emptyPrefix (strategy ex) (stateContext state)
+                []   -> emptyPrefix strat (stateContext state)
                 hd:_ -> hd
 
 -- | Continue with a prefix until a certain strategy location is reached.
@@ -61,30 +63,28 @@ runPrefixLocation :: Id -> Prefix a -> [(a, [Step a], Prefix a)]
 runPrefixLocation loc = rec []
  where
    rec acc p = do
-      ((stp, a), q) <- firsts p
-      case stp of
-         Exit l | l == loc -> return (a, reverse acc, q)
-         _ -> rec (stp:acc) q
+      ((st, a), q) <- firsts p
+      if isLoc st then return (a, reverse (st:acc), q)
+                  else rec (st:acc) q
+
+   isLoc (Exit l)       = l       == loc
+   isLoc (RuleStep _ r) = getId r == loc
+   isLoc _ = False
 
 firstMajorInSteps :: [Step a] -> Maybe (Id, Environment)
-firstMajorInSteps xs =
-   case xs of
-      Enter l:RuleStep env r:_ | isMajor r ->
-         Just (l, env)
-      _:rest -> firstMajorInSteps rest
-      []     -> Nothing
+firstMajorInSteps (RuleStep env r:_) | isMajor r = Just (getId r, env)
+firstMajorInSteps (_:xs) = firstMajorInSteps xs
+firstMajorInSteps []     = Nothing
 
 nextMajorForPrefix :: Prefix a -> Maybe Id
-nextMajorForPrefix = listToMaybe . rec []
+nextMajorForPrefix = listToMaybe . rec
  where
-   rec res prfx = do
-      ((stp, _), p) <- firsts prfx
-      case stp of 
-         Enter l -> rec [l] p
-         Exit l  -> rec [l] p
-         RuleStep _ r 
-            | isMajor r -> res
-            | otherwise -> rec res p
+   rec prfx = do
+      ((st, _), p) <- firsts prfx
+      case st of 
+         Enter l -> [l]
+         RuleStep _ r | isMajor r -> [getId r]
+         _ -> rec p
 
 ------------------------------------------------------------------------
 -- Data types for replies

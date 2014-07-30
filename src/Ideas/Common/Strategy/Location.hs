@@ -14,11 +14,12 @@
 --  $Id$
 
 module Ideas.Common.Strategy.Location
-   ( subTaskLocation, nextTaskLocation
-   , strategyLocations, subStrategy
+   ( checkLocation, subTaskLocation, nextTaskLocation
+   , strategyLocations
    ) where
 
 import Data.Maybe
+import Ideas.Common.Classes
 import Ideas.Common.Id
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Core
@@ -27,6 +28,10 @@ import Ideas.Common.Utils.Uniplate
 -----------------------------------------------------------
 --- Strategy locations
 
+checkLocation :: Id -> LabeledStrategy a -> Bool
+checkLocation loc =
+   any ((==loc) . getId . snd) . strategyLocations
+   
 -- old (current) and actual (next major rule) location
 subTaskLocation :: LabeledStrategy a -> Id -> Id -> Id
 subTaskLocation s xs ys = g (rec (f xs) (f ys))
@@ -50,27 +55,19 @@ nextTaskLocation s xs ys = g (rec (f xs) (f ys))
       | otherwise = [j]
    rec _ _        = []
 
--- | Returns a list of all strategy locations, paired with the labeled
--- substrategy at that location
-strategyLocations :: LabeledStrategy a -> [([Int], LabeledStrategy a)]
-strategyLocations s = ([], s) : rec [] (toCore (unlabel s))
+-- | Returns a list of all strategy locations, paired with the label
+strategyLocations :: LabeledStrategy a -> [([Int], Id)]
+strategyLocations s = ([], getId s) : rec [] (toCore (unlabel s))
  where
    rec is = concat . zipWith make (map (:is) [0..]) . collect
 
-   make is (l, core) =
-      let ls  = label l (fromCore core)
-      in (is, ls) : rec is core
+   make is (l, mc) = (is, l) : maybe [] (rec is) mc
 
    collect core =
       case core of
-         Label l t -> [(l, t)]
+         Label l c -> [(l, Just c)]
+         Rule r | isMajor r -> [(getId r, Nothing)]
          _         -> concatMap collect (children core)
-
--- | Returns the substrategy or rule at a strategy location. Nothing
--- indicates that the location is invalid
-subStrategy :: Id -> LabeledStrategy a -> Maybe (LabeledStrategy a)
-subStrategy loc =
-   fmap snd . listToMaybe . filter ((==loc) . getId . snd) . strategyLocations
 
 fromLoc :: LabeledStrategy a -> [Int] -> Maybe Id
 fromLoc s loc = fmap getId (lookup loc (strategyLocations s))

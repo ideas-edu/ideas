@@ -16,6 +16,133 @@
 
 module Ideas.Common.Strategy.Tests (tests) where
 
+import Control.Monad
+import Ideas.Common.Id
+import Ideas.Common.Strategy hiding (repeat)
+import Ideas.Common.Library (failS, makeRule, Rule)
+import Ideas.Common.Strategy.Sequence (Firsts(..), MenuItem(..))
+import Ideas.Common.Strategy.Choice (eqMenuBy, bestsOrdered)
+import Ideas.Common.Strategy.Parsing (mergePrefix)
+import Test.QuickCheck
+
+infix 0 ===
+
+(===) :: Strategy Int -> Strategy Int -> Bool
+s === t = eqPrefix (emptyPrefix s 0) (emptyPrefix t 0)
+
+eqPrefix :: Prefix Int -> Prefix Int -> Bool
+eqPrefix p q = -- eqMenuBy eq (menu p) (menu q)
+   f (merge $ bestsOrdered cmp $ menu p) (merge $ bestsOrdered cmp $ menu q)
+ where
+   eq :: MenuItem (Step Int, Int) (Prefix Int) -> MenuItem (Step Int, Int) (Prefix Int) -> Bool
+   eq Done Done = True
+   eq (a :~> x) (b :~> y) = a==b && eqPrefix x y
+   eq _ _ = False
+   
+   cmp :: MenuItem (Step Int, Int) (Prefix Int) -> MenuItem (Step Int, Int) (Prefix Int) -> Ordering
+   cmp Done Done = EQ
+   cmp Done _    = LT
+   cmp _    Done = GT
+   cmp (x :~> _) (y :~> _) = compareId (fst x) (fst y)
+
+   f :: [MenuItem (Step Int, Int) (Prefix Int)] -> [MenuItem (Step Int, Int) (Prefix Int)] -> Bool
+   f (x:xs) (y:ys) = eq x y && f xs ys
+   f [] [] = True
+   f _ _ = False
+   
+   merge :: [MenuItem (Step Int, Int) (Prefix Int)] -> [MenuItem (Step Int, Int) (Prefix Int)]
+   merge ((a :~> x):(b :~> y):zs) | a == b = 
+      merge $ (a :~> mergePrefix x y) : zs
+   merge (Done:Done:xs) = merge (Done:xs)
+   merge (x:xs) = x:merge xs
+   merge [] = []
+   
+prop1 :: Strategy Int -> Strategy Int -> Strategy Int -> Bool
+prop1 p q r = p <|> (q <|> r) === (p <|> q) <|> r
+
+prop2 :: Strategy Int -> Strategy Int -> Bool
+prop2 p q = p <|> q === q <|> p
+
+prop3 :: Strategy Int -> Bool
+prop3 p = p <|> p === p
+
+prop4 :: Strategy Int -> Bool
+prop4 p = failS <|> p === p
+
+prop5 :: Strategy Int -> Bool
+prop5 p = p <|> failS === p
+
+prop6 :: Strategy Int -> Strategy Int -> Strategy Int -> Bool
+prop6 p q r = p <*> (q <*> r) === (p <*> q) <*> r
+
+prop7 :: Strategy Int -> Bool
+prop7 p = succeed <*> p === p
+
+prop8 :: Strategy Int -> Bool
+prop8 p = p <*> succeed === p
+
+prop9 :: Strategy Int -> Bool
+prop9 p = failS <*> p === failS
+
+prop10 :: Strategy Int -> Bool
+prop10 p = p <*> failS === p
+
+prop11 :: Strategy Int -> Strategy Int -> Strategy Int -> Bool
+prop11 p q r = p <*> (q <|> r) === (p <*> q) <|> (p <*> r)
+
+prop12 :: Strategy Int -> Strategy Int -> Strategy Int -> Bool
+prop12 p q r = (p <|> q) <*> r === (p <*> r) <|> (q <*> r)
+
+main = do
+   cat "choice"
+   runSSS "1. associative" prop1
+   runSS  "2. commutative" prop2
+   runS   "3. idempotent"  prop3
+   runS   "4. fail left-unit" prop4
+   runS   "5. fail right-unit" prop5
+   cat "sequence"
+   runSSS "6. associative" prop6
+   runS   "7. succeed left-unit" prop7
+   runS   "8. succeed right-unit" prop8
+   runS   "9. fail left-zero" prop9
+   runS   "10. fail right-zero" prop10
+   cat "choice/sequence"
+   runSSS "11. left distributive" prop11
+   runSSS "12. right distributive" prop12
+ where 
+   cat :: String -> IO ()
+   cat s = putStrLn $ take 70 $ "--- " ++ s ++ " " ++ repeat '-' 
+   
+   run :: Testable a => String -> a -> IO ()
+   run s p = do
+      putStr $ take 30 $ "   " ++ s ++ repeat ' '
+      quickCheck p
+      
+   runS   s p = run   s (forAll arbS p)
+   runSS  s p = runS  s (forAll arbS . p)
+   runSSS s p = runSS s (\y -> forAll arbS . p y)
+      
+arbS :: Gen (Strategy Int)
+arbS = do 
+  rs <- arbRules
+  sized (f rs)
+ where
+   f rs n 
+      | n == 0    = elements (failS : succeed : map toStrategy rs)
+      | otherwise = oneof
+           [ f rs 0
+           , liftM2 (<|>) rec rec
+           , liftM2 (<*>) rec rec
+           ]
+    where
+      rec = f rs (n `div` 2)
+      
+arbRules :: Gen [Rule Int]
+arbRules = do
+   fs <- vector 3
+   return $ zipWith (\c f -> makeRule [c] (f :: Int -> Maybe Int)) ['A' .. ] fs
+     
+      
 tests = []
 {-
 import Data.Function

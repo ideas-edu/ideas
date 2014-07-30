@@ -26,7 +26,6 @@ import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Sequence
-import Ideas.Common.Utils.QuickCheck
 import Ideas.Common.Utils.Uniplate
 
 -----------------------------------------------------------------
@@ -122,13 +121,6 @@ instance Uniplate (GCore a) where
                            make     = Let . zip ns
                        in plate make ||* bs |* a
          _          -> plate core
-
-instance Arbitrary a => Arbitrary (GCore a) where
-   arbitrary = generators
-      [ constGens [Succeed, Fail]
-      , unaryGen Atomic, arbGen Rule, unaryArbGen Label
-      , binaryGens [(:*:), (:|:), (:%:)]
-      ]
 
 -----------------------------------------------------------------
 -- Definitions

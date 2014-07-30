@@ -23,7 +23,7 @@ module Ideas.Common.Strategy.Parsing
      runCore
      -- * Prefix
    , Prefix, makePrefix, replayCore, replayAndApply
-   , majorPrefix, searchModePrefix, prefixPath
+   , majorPrefix, searchModePrefix, prefixPath, mergePrefix
      -- * Step
    , Step(..)
      -- * Path
@@ -43,6 +43,9 @@ import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Utils (fst3)
 import Ideas.Common.Utils.Uniplate
+
+mergePrefix :: Prefix a -> Prefix a -> Prefix a
+mergePrefix (Prefix path p) (Prefix _ q) = Prefix path (p <|> q)
 
 --------------------------------------------------------------------------------
 -- Running Core strategies

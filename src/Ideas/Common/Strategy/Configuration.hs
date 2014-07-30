@@ -75,6 +75,7 @@ configureCore (Cfg pairs) = rec
          Core.Collapse s | has Expand   -> rec s
          Core.Hide s     | has Reveal   -> rec s
          Label l s -> props (Label l (rec s))
+         Rule r    -> props (Rule r)
          _ -> descend rec core
     where
       myLabel  = getLabel core
@@ -91,6 +92,7 @@ here (ByName a) info = getId info == a
 
 getLabel :: Core a -> Maybe Id
 getLabel (Label l _)       = Just l
+getLabel (Rule r)          = Just (getId r)
 getLabel (Core.Remove s)   = getLabel s
 getLabel (Core.Collapse s) = getLabel s
 getLabel (Core.Hide s)     = getLabel s

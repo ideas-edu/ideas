@@ -90,7 +90,9 @@ instance Choice Menu where
     where
      rec Empty     = rest
      rec (p :|: q) = p :|: rec q
-     rec p         = p :|: rest
+     rec p         = case rest of -- strict: also check rhs
+                        Empty -> p
+                        _     -> p :|: rest
      
    p0 >|> rest = rec p0 -- maintain invariant
     where
@@ -121,6 +123,10 @@ eqMenuBy eq = test
    test (p1 :|> p2) (q1 :|> q2) = test p1 q1 && test p2 q2
    test (Single a)  (Single b)  = eq a b
    test Empty       Empty       = True
+   test (p :>| Empty) q = test p q
+   test (p :|> Empty) q = test p q
+   test p (q :>| Empty) = test p q
+   test p (q :|> Empty) = test p q
    test _ _ = False
    
 ------------------------------------------------------------------------

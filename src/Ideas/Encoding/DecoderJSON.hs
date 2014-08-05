@@ -19,7 +19,9 @@ module Ideas.Encoding.DecoderJSON
    ) where
 
 import Control.Monad
+import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
+import Ideas.Common.Traversal.Navigator
 import Ideas.Encoding.Evaluator
 import Ideas.Service.FeedbackScript.Syntax (Script)
 import Ideas.Service.State
@@ -111,16 +113,24 @@ decodeState = do
             pts  <- decodePaths       // pref
             a    <- decodeTerm        // term
             env  <- decodeEnvironment // jsonContext
-            let ctx = setEnvironment env (inContext ex a)
-            ps <- forM pts $ \path -> replayPath path (strategy ex) ctx
-            return $ makeState ex (mconcat (map snd ps)) ctx
+            let loc = envToLoc env
+                ctx = navigateTowards loc $ deleteRef locRef $ 
+                         setEnvironment env $ inContext ex a
+                prfx = replayPaths pts (strategy ex) ctx
+            return $ makeState ex prfx ctx
          _ -> fail $ "invalid state" ++ show json
+
+envToLoc :: Environment -> Location
+envToLoc env = toLocation $ fromMaybe [] $ locRef ? env >>= readM
+
+locRef :: Ref String
+locRef = makeRef "location"
 
 decodePaths :: JSONDecoder a [Path]
 decodePaths =
    encoderFor $ \json ->
       case json of
-         String p -> mapM readM (deintercalate p)
+         String p -> readPaths p
          _ -> fail "invalid prefixes"
 
 decodeEnvironment :: JSONDecoder a Environment
@@ -145,11 +155,3 @@ decodeTerm = do
       case json of
          String s -> parser ex s
          _        -> Left "Expecting a string when reading a term"
-
--- local helper
-deintercalate :: String -> [String]
-deintercalate xs
-   | null zs   = [ys]
-   | otherwise = ys : deintercalate (drop 1 zs)
- where
-   (ys, zs) = break (== ';') xs

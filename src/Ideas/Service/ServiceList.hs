@@ -38,7 +38,7 @@ serviceList =
    , findbuggyrulesS, problemdecompositionS
    -- textual services
    , onefirsttextS, submittextS
-   , derivationtextS, feedbacktextS
+   , derivationtextS, feedbacktextS, microstepsS
    ]
 
 metaServiceList :: DomainReasoner -> [Service]
@@ -86,7 +86,7 @@ stepsremainingS :: Service
 stepsremainingS = makeService "basic.stepsremaining"
    "Computes how many steps are remaining to be done, according to the \
    \strategy. For this, only the first derivation is considered, which \
-   \corresponds to the one returned by the derivation Ideas.Service." $
+   \corresponds to the one returned by the derivation service." $
    stepsremaining ::: typed
 
 applicableS :: Service
@@ -141,7 +141,7 @@ submitS :: Service
 submitS = deprecate $ makeService "basic.submit"
    "Analyze an expression submitted by a student. Possible answers are Buggy, \
    \NotEquivalent, Ok, Detour, and Unknown. This service has been superseded \
-   \by the diagnose Ideas.Service." $
+   \by the diagnose service." $
    Submit.submit ::: typed
 
 diagnoseS :: Service
@@ -194,7 +194,7 @@ submittextS = deprecate $ makeService "textual.submittext"
 
 feedbacktextS :: Service
 feedbacktextS = makeService "textual.feedbacktext"
-   "Textual feedback for diagnose Ideas.Service. Experimental." $
+   "Textual feedback for diagnose service. Experimental." $
    feedbacktext ::: typed
 
 ------------------------------------------------------
@@ -254,6 +254,12 @@ stateinfoS :: Service
 stateinfoS = makeService "meta.stateinfo"
    "State information" $
    (id :: State a -> State a) ::: typed
+
+microstepsS :: Service
+microstepsS = makeService "meta.microsteps" "Next (minor) steps." $
+   (map f . microsteps) ::: typed
+ where
+   f ((s, ctx), st) = ((stepRule s, location ctx, stepEnvironment s), st)
 
 examplederivationsS :: Service
 examplederivationsS = makeService "meta.examplederivations"

@@ -58,7 +58,7 @@ class Firsts s where
    
 firstsMenu :: Firsts s => s -> Menu (Elem s, s)
 firstsMenu s = do
-   item <- menu s
+   item <- cut (menu s)
    case item of
       a :~> t -> return (a, t)
       Done    -> empty

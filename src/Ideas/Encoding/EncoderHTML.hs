@@ -71,7 +71,7 @@ encodeType lm ex = msum
    [ encodeTyped encodeIndex
    , encodeTyped (exerciseHeader // () <> htmlDiagnosis)
    , encodeTyped (exerciseHeader // () <> encodeExampleList lm ex)
-   , encodeTyped (exerciseHeader // () <> htmlAllFirsts)
+   , encodeTyped (exerciseHeader // () <> htmlFirsts)
    , encodeTyped (exerciseHeader // () <> htmlAllApplications)
    , encodeTyped (exerciseHeader // () <> encodeDerivation lm ex)
    , encodeTyped (exerciseHeader // () <> encodeDerivationList lm ex)
@@ -481,6 +481,7 @@ encodeState = do
       , ul [ linkToFirsts lm state $ string "allfirsts"
            , linkToApplications lm state $ string "allapplications"
            , linkToDerivation lm state $ string "derivation"
+           , linkToMicrosteps lm state $ string "microsteps"
            ]
       , munless (noBindings state) $
            h2 "Environment" <> text (environment state)
@@ -492,12 +493,13 @@ encodePrefix st =
    mconcat . zipWith3 make [1::Int ..] (stateLabels st) . prefixPaths
  where
    make i ls path = mconcat
-      [ h2 $ "Prefix " ++ show i
+      [ h2 $ "Path " ++ show i
       , let count p = text $ length $ filter p prSteps
             enter   = spanClass "step-enter" . text
+            comma c = if c == ',' then ", " else [c]
         in keyValueTable
-              [ ("steps", count (const True))
-              , ("rules", count isRuleStep)
+              [ ("path", string $ concatMap comma $ show path)
+              , ("steps", count (const True))
               , ("major rules", count isMajor)
               , ("active labels", ul $ map enter ls)
               ]
@@ -506,11 +508,7 @@ encodePrefix st =
     where
       ex  = exercise st
       ctx = stateContext st
-      prSteps = maybe [] fst $ replayPath path (strategy ex) ctx
-
-isRuleStep :: Step a -> Bool
-isRuleStep (RuleStep _ _) = True
-isRuleStep _ = False
+      prSteps = fst $ replayPath path (strategy ex) ctx
 
 htmlStep :: Step a -> HTMLBuilder
 htmlStep (Enter l)      = spanClass "step-enter" $ string $ "enter " ++ show l
@@ -524,9 +522,9 @@ htmlDerivationWith before forStep forTerm = simpleEncoder $ \d ->
       before : forTerm (firstTerm d) :
          [ forStep s <> forTerm a | (_, s, a) <- triples d ]
 
-htmlAllFirsts :: HTMLEncoder a [(StepInfo a, State a)]
-htmlAllFirsts = encoderFor $ \xs ->
-   h2 "All firsts" <>
+htmlFirsts :: HTMLEncoder a [(StepInfo a, State a)]
+htmlFirsts = encoderFor $ \xs ->
+   h2 "Firsts" <>
    ul [ keyValueTable
            [ ("Rule", string $ showId r)
            , ("Location", text loc)

@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2014, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -17,81 +17,91 @@
 module Ideas.Common.Strategy.Tests (tests) where
 
 import Control.Monad
+import Data.Function
+import Data.List
 import Ideas.Common.Id
 import Ideas.Common.Strategy hiding (repeat)
 import Ideas.Common.Library (failS, makeRule, Rule)
-import Ideas.Common.Strategy.Sequence (Firsts(..), MenuItem(..))
-import Ideas.Common.Strategy.Choice (eqMenuBy, bestsOrdered)
-import Ideas.Common.Strategy.Parsing (mergePrefix)
+import Ideas.Common.Strategy.Sequence (Firsts(..), MenuItem(..), firstsOrdered)
 import Test.QuickCheck
 
 infix 0 ===
 
-(===) :: Strategy Int -> Strategy Int -> Bool
-s === t = eqPrefix (emptyPrefix s 0) (emptyPrefix t 0)
+(===) :: Strategy Int -> Strategy Int -> Property
+s === t = forAll arbitrary $ \i -> 
+   eqPrefix (emptyPrefix s i) (emptyPrefix t i)
 
-eqPrefix :: Prefix Int -> Prefix Int -> Bool
-eqPrefix p q = -- eqMenuBy eq (menu p) (menu q)
-   f (merge $ bestsOrdered cmp $ menu p) (merge $ bestsOrdered cmp $ menu q)
+eqPrefix :: Eq a => Prefix a -> Prefix a -> Bool
+eqPrefix p q =
+   ready p == ready q &&
+   f (merge $ firstsOrdered cmp p) (merge $ firstsOrdered cmp q)
  where
-   eq :: MenuItem (Step Int, Int) (Prefix Int) -> MenuItem (Step Int, Int) (Prefix Int) -> Bool
-   eq Done Done = True
-   eq (a :~> x) (b :~> y) = a==b && eqPrefix x y
-   eq _ _ = False
-   
-   cmp :: MenuItem (Step Int, Int) (Prefix Int) -> MenuItem (Step Int, Int) (Prefix Int) -> Ordering
-   cmp Done Done = EQ
-   cmp Done _    = LT
-   cmp _    Done = GT
-   cmp (x :~> _) (y :~> _) = compareId (fst x) (fst y)
+   cmp :: (Step a, a) -> (Step a, a) -> Ordering
+   cmp = compareId `on` fst
 
-   f :: [MenuItem (Step Int, Int) (Prefix Int)] -> [MenuItem (Step Int, Int) (Prefix Int)] -> Bool
-   f (x:xs) (y:ys) = eq x y && f xs ys
+   f :: Eq a => [(Elem (Prefix a), Prefix a)] -> [(Elem (Prefix a), Prefix a)] -> Bool
+   f (x:xs) (y:ys) = fst x == fst y && eqPrefix (snd x) (snd y) && f xs ys
    f [] [] = True
    f _ _ = False
    
-   merge :: [MenuItem (Step Int, Int) (Prefix Int)] -> [MenuItem (Step Int, Int) (Prefix Int)]
-   merge ((a :~> x):(b :~> y):zs) | a == b = 
-      merge $ (a :~> mergePrefix x y) : zs
-   merge (Done:Done:xs) = merge (Done:xs)
+   merge :: Eq a => [(Elem (Prefix a), Prefix a)] -> [(Elem (Prefix a), Prefix a)]
+   merge ((a, x):(b, y):zs) | a == b = merge $ (a, x <> y) : zs
    merge (x:xs) = x:merge xs
    merge [] = []
-   
-prop1 :: Strategy Int -> Strategy Int -> Strategy Int -> Bool
+
+prop1 :: Strategy Int -> Strategy Int -> Strategy Int -> Property
 prop1 p q r = p <|> (q <|> r) === (p <|> q) <|> r
 
-prop2 :: Strategy Int -> Strategy Int -> Bool
+prop2 :: Strategy Int -> Strategy Int -> Property
 prop2 p q = p <|> q === q <|> p
 
-prop3 :: Strategy Int -> Bool
+prop3 :: Strategy Int -> Property
 prop3 p = p <|> p === p
 
-prop4 :: Strategy Int -> Bool
+prop4 :: Strategy Int -> Property
 prop4 p = failS <|> p === p
 
-prop5 :: Strategy Int -> Bool
+prop5 :: Strategy Int -> Property
 prop5 p = p <|> failS === p
 
-prop6 :: Strategy Int -> Strategy Int -> Strategy Int -> Bool
+prop6 :: Strategy Int -> Strategy Int -> Strategy Int -> Property
 prop6 p q r = p <*> (q <*> r) === (p <*> q) <*> r
 
-prop7 :: Strategy Int -> Bool
+prop7 :: Strategy Int -> Property
 prop7 p = succeed <*> p === p
 
-prop8 :: Strategy Int -> Bool
+prop8 :: Strategy Int -> Property
 prop8 p = p <*> succeed === p
 
-prop9 :: Strategy Int -> Bool
+prop9 :: Strategy Int -> Property
 prop9 p = failS <*> p === failS
 
-prop10 :: Strategy Int -> Bool
-prop10 p = p <*> failS === p
+prop10 :: Strategy Int -> Property
+prop10 p = p <*> failS === failS
 
-prop11 :: Strategy Int -> Strategy Int -> Strategy Int -> Bool
+prop11 :: Strategy Int -> Strategy Int -> Strategy Int -> Property
 prop11 p q r = p <*> (q <|> r) === (p <*> q) <|> (p <*> r)
 
-prop12 :: Strategy Int -> Strategy Int -> Strategy Int -> Bool
+prop12 :: Strategy Int -> Strategy Int -> Strategy Int -> Property
 prop12 p q r = (p <|> q) <*> r === (p <*> r) <|> (q <*> r)
+
+prop13 :: Strategy Int -> Strategy Int -> Strategy Int -> Property
+prop13 p q r = p |> (q |> r) === (p |> q) |> r
+
+prop14 :: Strategy Int -> Strategy Int -> Property
+prop14 p q = p |> q === q |> p
+
+prop15 :: Strategy Int -> Property
+prop15 p = p |> p === p
+
+prop16 :: Strategy Int -> Property
+prop16 p = failS |> p === p
+
+prop17 :: Strategy Int -> Property
+prop17 p = p |> failS === p
+
+prop18 :: Strategy Int -> Property
+prop18 p = succeed |> p=== succeed
 
 main = do
    cat "choice"
@@ -109,6 +119,13 @@ main = do
    cat "choice/sequence"
    runSSS "11. left distributive" prop11
    runSSS "12. right distributive" prop12
+   cat "left-biased choice"
+   runSSS "13. associative" prop13
+   runSS  "14. commutative" prop14
+   runS   "15. idempotent"  prop15
+   runS   "16. fail left-unit" prop16
+   runS   "17. fail right-unit" prop17
+   runS   "18. succeed left-zero" prop18
  where 
    cat :: String -> IO ()
    cat s = putStrLn $ take 70 $ "--- " ++ s ++ " " ++ repeat '-' 
@@ -118,30 +135,47 @@ main = do
       putStr $ take 30 $ "   " ++ s ++ repeat ' '
       quickCheck p
       
-   runS   s p = run   s (forAll arbS p)
-   runSS  s p = runS  s (forAll arbS . p)
-   runSSS s p = runSS s (\y -> forAll arbS . p y)
-      
+   runS   s p = run s (forAll arbS p)
+   runSS  s p = run s (forAll arbS2 $ \(x, y) -> p x y)
+   runSSS s p = run s (forAll arbS3 $ \(x, y, z) -> p x y z)
+
 arbS :: Gen (Strategy Int)
-arbS = do 
-  rs <- arbRules
-  sized (f rs)
+arbS = arbRules >>= arbWith
+
+arbS2 :: Gen (Strategy Int, Strategy Int)
+arbS2 = arbRules >>= \rs -> 
+   liftM2 (,) (arbWith rs) (arbWith rs)
+
+arbS3 :: Gen (Strategy Int, Strategy Int, Strategy Int)
+arbS3 = arbRules >>= \rs -> 
+   liftM3 (,,) (arbWith rs) (arbWith rs) (arbWith rs)
+
+data S a = S a :|: S a | S a :*: S a | Rule a | Succeed | Fail
+   deriving Show
+
+arbWith :: [Rule Int] -> Gen (Strategy Int)
+arbWith rs = sized f
  where
-   f rs n 
+   f n 
       | n == 0    = elements (failS : succeed : map toStrategy rs)
       | otherwise = oneof
-           [ f rs 0
+           [ f 0
            , liftM2 (<|>) rec rec
            , liftM2 (<*>) rec rec
+           , liftM2 (|>) rec rec
            ]
     where
-      rec = f rs (n `div` 2)
+      rec = f (n `div` 2)
       
 arbRules :: Gen [Rule Int]
 arbRules = do
    fs <- vector 3
    return $ zipWith (\c f -> makeRule [c] (f :: Int -> Maybe Int)) ['A' .. ] fs
-     
+      
+ra, rb, rc :: Rule Int
+ra = makeRule "a" Just
+rb = makeRule "b" $ \i -> if even i then Just (i `div` 2) else Nothing
+rc = makeRule "c" $ \i -> if i `mod` 3 == 0 then Just (i-1) else Nothing
       
 tests = []
 {-

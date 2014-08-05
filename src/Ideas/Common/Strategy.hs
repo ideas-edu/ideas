@@ -42,8 +42,11 @@ module Ideas.Common.Strategy
    , strategyLocations, checkLocation
    , subTaskLocation, nextTaskLocation
      -- * Prefixes
-   , Prefix, emptyPrefix, noPrefix, replayPath, replayStrategy
-   , Step(..), Path, emptyPath, prefixPaths, majorPrefix
+   , Prefix, emptyPrefix, noPrefix
+   , replayPath, replayPaths, replayStrategy
+   , Step(..), stepRule, stepEnvironment
+   , Path, emptyPath, readPath, readPaths
+   , prefixPaths, majorPrefix, isEmptyPrefix
      -- * Misc
    , cleanUpStrategy, cleanUpStrategyAfter
    , rulesInStrategy

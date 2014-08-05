@@ -16,7 +16,7 @@ module Ideas.Common.Strategy.Abstract
    ( Strategy, IsStrategy(..)
    , LabeledStrategy, label, unlabel
    , derivationList
-   , emptyPrefix, replayPath, replayStrategy
+   , emptyPrefix, replayPath, replayPaths, replayStrategy
    , rulesInStrategy
    , mapRules, mapRulesS
    , cleanUpStrategy, cleanUpStrategyAfter
@@ -104,15 +104,25 @@ emptyPrefix = makePrefix . toCore
 
 -- | Construct a prefix for a path and a labeled strategy. The third argument
 -- is the current term.
-replayPath :: (Monad m, IsStrategy f) => Path -> f a -> a -> m ([Step a], Prefix a)
-replayPath path s =
-   maybe (fail "Invalid path") return . replayCore path (toCore s)
+replayPath :: IsStrategy f => Path -> f a -> a -> ([Step a], Prefix a)
+replayPath path s a =
+   let (xs, f) = replayCore path (toCore s)
+   in (xs, f a)
+
+-- | Construct a prefix for a list of paths and a labeled strategy. The third 
+-- argument is the current term.
+replayPaths :: IsStrategy f => [Path] -> f a -> a -> Prefix a
+replayPaths paths s a = mconcat
+   [ snd (replayPath path s a) | path <- paths ]
 
 -- | Construct a prefix for a path and a labeled strategy. The third argument
 -- is the initial term.
 replayStrategy :: (Monad m, IsStrategy f) => Path -> f a -> a -> m (a, Prefix a)
-replayStrategy path s =
-   maybe (fail "Invalid path") return . replayAndApply path (toCore s)
+replayStrategy path s a =
+   let (xs, f) = replayCore path (toCore s)
+   in case applyList xs a of
+         Just b  -> return (b, f b)
+         Nothing -> fail "Cannot replay strategy"
 
 -----------------------------------------------------------
 --- Remaining functions
@@ -131,8 +141,7 @@ derivationList cmpRule s a0 = rec a0 (toPrefix s)
       
       f ((stp, b), new) = (g stp, b, new)
       
-      g (RuleStep env r) = (r, env)
-      g _ = (emptyRule (), makeEnvironment [])
+      g s = (stepRule s, stepEnvironment s)
 
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]

@@ -25,6 +25,7 @@ module Ideas.Encoding.LinkManager
    , linkToDerivations, linkToRule, linkToRandomExample, linkToTestReport
      -- links to state information (dynamic)
    , linkToState, linkToFirsts, linkToApplications, linkToDerivation
+   , linkToMicrosteps
    ) where
 
 import Data.Maybe
@@ -61,6 +62,7 @@ data LinkManager = LinkManager
    , urlForFirsts        :: forall a . State a -> String
    , urlForApplications  :: forall a . State a -> String
    , urlForDerivation    :: forall a . State a -> String
+   , urlForMicrosteps    :: forall a . State a -> String
    }
 
 ---------------------------------------------------------------------
@@ -117,6 +119,9 @@ linkToState = linkWith . urlForState
 linkToFirsts :: LinkManager -> State a -> HTMLBuilder -> HTMLBuilder
 linkToFirsts = linkWith . urlForFirsts
 
+linkToMicrosteps :: LinkManager -> State a -> HTMLBuilder -> HTMLBuilder
+linkToMicrosteps = linkWith . urlForMicrosteps
+
 linkToApplications :: LinkManager -> State a -> HTMLBuilder -> HTMLBuilder
 linkToApplications = linkWith . urlForApplications
 
@@ -153,6 +158,7 @@ dynamicLinks cgiBinary = LinkManager
    , urlForFirsts       = url . stateRequest "allfirsts"
    , urlForApplications = url . stateRequest "allapplications"
    , urlForDerivation   = url . stateRequest "derivation"
+   , urlForMicrosteps   = url . stateRequest "microsteps" 
    }
  where
    prefix  = cgiBinary ++ "?input="
@@ -228,6 +234,7 @@ staticLinks = LinkManager
    , urlForFirsts       = const ""
    , urlForApplications = const ""
    , urlForDerivation   = const ""
+   , urlForMicrosteps   = const ""
    }
 
 linksUp :: Int -> LinkManager -> LinkManager
@@ -252,6 +259,7 @@ linksUp n lm = lm
    , urlForFirsts       = f1 urlForFirsts
    , urlForApplications = f1 urlForApplications
    , urlForDerivation   = f1 urlForDerivation
+   , urlForMicrosteps   = f1 urlForMicrosteps
    }
  where
    f0 g   = pathUp n $ g lm

@@ -53,15 +53,15 @@ derivation mcfg state =
       -- configuration is only allowed beforehand: hence, the prefix
       -- should be empty (or else, the configuration is ignored). This
       -- restriction should probably be relaxed later on.
-      Just cfg | all (== emptyPath) (prefixPaths ps) ->
+      Just cfg | isEmptyPrefix prfx ->
          let newStrategy = configure cfg (strategy ex)
              newExercise = ex {strategy = newStrategy}
          in rec timeout d0 (emptyStateContext newExercise (stateContext state))
       _ -> rec timeout d0 state
  where
-   d0 = emptyDerivation state
-   ex = exercise state
-   ps = statePrefix state
+   d0   = emptyDerivation state
+   ex   = exercise state
+   prfx = statePrefix state
    timeout = 50 :: Int
 
    rec i acc st =
@@ -80,12 +80,9 @@ allfirsts :: State a -> Either String [(StepInfo a, State a)]
 allfirsts state
    | withoutPrefix state = Left "Prefix is required"
    | otherwise = Right $ 
-        noDuplicates $ concatMap make $ firsts state
+        noDuplicates $ map make $ firsts state
  where
-   make ((stp, ctx), st) =
-      case stp of
-         RuleStep env r -> [((r, location ctx, env), st)]
-         _ -> []
+   make ((s, ctx), st) = ((stepRule s, location ctx, stepEnvironment s), st)
 
    noDuplicates []     = []
    noDuplicates (x:xs) = x : noDuplicates (filter (not . eq x) xs)

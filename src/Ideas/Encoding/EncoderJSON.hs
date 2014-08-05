@@ -104,7 +104,10 @@ encodeState = encoderStateFor $ \encTerm st ->
 
 encodeContext :: JSONEncoder a (Context a)
 encodeContext = encoderFor $ \ctx ->
-   pure $ Object [ (showId a, String $ showValue a) | a <- bindings ctx ]
+   let loc = fromLocation (location ctx)
+       env = (if null loc then id else insertRef (makeRef "location") loc)
+           $ environment ctx
+   in pure $ Object [ (showId a, String $ showValue a) | a <- bindings env ]
 
 encodeDerivation :: JSONEncoder a (Derivation (Rule (Context a), Environment) (Context a))
 encodeDerivation = encoderFor $ \d ->

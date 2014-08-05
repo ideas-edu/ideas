@@ -21,6 +21,7 @@ module Ideas.Encoding.DecoderXML
 import Control.Monad
 import Data.Char
 import Ideas.Common.Library hiding (exerciseId, (:=))
+import Ideas.Common.Traversal.Navigator
 import Ideas.Encoding.Evaluator
 import Ideas.Encoding.OpenMathSupport
 import Ideas.Service.FeedbackScript.Syntax (Script)
@@ -95,23 +96,19 @@ decodeState :: XMLDecoder a (State a)
 decodeState = do
    ex  <- withState getExercise
    xml <- encoderFor (findChild "state")
-   mp  <- decodePrefix  // xml
+   ps  <- decodePaths   // xml
    ctx <- decodeContext // xml
-   prf <- case mp of 
-             Just path -> do
-                (_, p) <- replayPath path (strategy ex) ctx
-                return p
-             Nothing   -> return noPrefix
+   let prf = replayPaths ps (strategy ex) ctx
    return (makeState ex prf ctx)
 
-decodePrefix :: XMLDecoder a (Maybe Path)
-decodePrefix = do
+decodePaths :: XMLDecoder a [Path]
+decodePaths = do
    prefixText <- simpleEncoder (maybe "" getData . findChild "prefix")
    if all isSpace prefixText
-      then return (Just emptyPath)
+      then return [emptyPath]
       else if prefixText ~= "no prefix"
-      then return Nothing
-      else liftM Just (readM prefixText)
+      then return []
+      else readPaths prefixText
  where
    a ~= b = g a == g b
    g = map toLower . filter (not . isSpace)
@@ -122,7 +119,16 @@ decodeContext = do
    f    <- withState decodeTerm
    expr <- encoderFor (either fail return . f)
    env  <- decodeEnvironment
-   return (setEnvironment env (inContext ex expr))
+   let ctx = setEnvironment env (inContext ex expr)
+   case locRef ? env of 
+      Just s  -> maybe (fail "invalid location") return $ do 
+         loc <- liftM toLocation (readM s)
+         navigateTo loc (deleteRef locRef ctx)
+      Nothing -> 
+         return ctx
+
+locRef :: Ref String
+locRef = makeRef "location" 
 
 decodeEnvironment :: XMLDecoder a Environment
 decodeEnvironment = encoderFor $ \xml ->

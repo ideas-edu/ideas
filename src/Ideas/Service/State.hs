@@ -19,7 +19,7 @@ module Ideas.Service.State
    ( -- * Exercise state
      State, makeState, makeNoState, emptyStateContext, emptyState
    , exercise, statePrefix, stateContext, stateTerm
-   , withoutPrefix, stateLabels, finished, firsts
+   , withoutPrefix, stateLabels, finished, firsts, microsteps
    ) where
 
 import Data.Function
@@ -27,6 +27,7 @@ import Data.List
 import Data.Maybe
 import Ideas.Common.Library hiding (ready, (:~>))
 import Ideas.Common.Strategy.Sequence
+import Ideas.Common.Strategy.Choice
 
 data State a = State
    { exercise     :: Exercise a
@@ -56,15 +57,18 @@ instance Firsts (State a) where
 
    firsts st = firstsOrdered cmp st
     where
-      cmp = ruleOrdering (exercise st) `on` (f . fst)
-      
-      f (RuleStep _ r) = r
-      f _ = emptyRule ()
+      cmp = ruleOrdering (exercise st) `on` (stepRule . fst)
 
    menu st = fmap f (menu (majorPrefix (statePrefix st)))
     where
       f Done = Done
       f (info :~> p) = info :~> State (exercise st) p (snd info)
+
+microsteps :: State a -> [((Step (Context a), Context a), State a)]
+microsteps st = concatMap f (bests (menu (statePrefix st)))
+ where
+   f Done         = []
+   f (info :~> p) = [(info, State (exercise st) p (snd info))]
 
 stateTerm :: State a -> a
 stateTerm = fromMaybe (error "invalid term") . fromContext . stateContext
@@ -97,7 +101,6 @@ stateLabels st = map make (prefixPaths (statePrefix st))
  where
    ex = exercise st
    make path = 
-      case replayPath path (strategy ex) (stateContext st) of 
-         Just (xs, _) -> nub [l | Enter l <- xs] \\ [l | Exit l <- xs]
-         Nothing -> []
+      let (xs, _) = replayPath path (strategy ex) (stateContext st)
+      in nub [l | Enter l <- xs] \\ [l | Exit l <- xs]
    

@@ -23,17 +23,17 @@ module Ideas.Common.Strategy.Parsing
    ( -- * Running @Core@ strategies
      runCore
      -- * Prefix
-   , Prefix, noPrefix, makePrefix, replayCore, replayAndApply
-   , majorPrefix, searchModePrefix, prefixPaths
+   , Prefix, noPrefix, makePrefix, replayCore
+   , isEmptyPrefix, majorPrefix, searchModePrefix, prefixPaths
      -- * Step
-   , Step(..)
+   , Step(..), stepRule, stepEnvironment
      -- * Path
-   , Path, emptyPath
+   , Path, emptyPath, readPath, readPaths
    ) where
 
+import Control.Monad
 import Data.Function
 import Data.List
-import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Environment
 import Ideas.Common.Id
@@ -43,7 +43,7 @@ import Ideas.Common.Strategy.Core
 import Ideas.Common.Strategy.Derived
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence
-import Ideas.Common.Utils (fst3)
+import Ideas.Common.Utils (fst3, splitsWithElem, readM)
 import Ideas.Common.Utils.Uniplate
 
 --------------------------------------------------------------------------------
@@ -123,33 +123,23 @@ noPrefix = Prefix [] empty
 
 -- | Make a prefix from a core strategy and a start term.
 makePrefix :: Core a -> a -> Prefix a
-makePrefix core = snd . fromJust . replayCore emptyPath core
+makePrefix = snd . replayCore emptyPath
  
 -- | Construct a prefix by replaying a path in a core strategy: the third 
 -- argument is the current term.
-replayCore :: Path -> Core a -> a -> Maybe ([Step a], Prefix a)
-replayCore path core a = do
-   let p = withPath (coreToProcess True core)
-   (acc, q) <- runPath path p
-   let steps = map fst acc
-       prfx = Prefix [path] (applySteps q a)
-   return (steps, prfx)
-
-replayAndApply :: Path -> Core a -> a -> Maybe (a, Prefix a)
-replayAndApply path core a = do
-   let p = withPath (coreToProcess True core)
-   (acc, q) <- runPath path p
-   b <- applyList (map fst acc) a
-   return $ (b, Prefix [path] (applySteps q b))
+replayCore :: Path -> Core a -> ([Step a], a -> Prefix a)
+replayCore path core =
+   let (acc, p) = runPath path (withPath (coreToProcess True core))
+   in (map fst acc, Prefix [path] . applySteps p)
    
-runPath :: Path -> Process a -> Maybe ([a], Process a)
-runPath = rec [] . ints
+runPath :: Path -> Process a -> ([a], Process a)
+runPath (Path is) = rec [] is
  where
-   rec acc []     p = Just (reverse acc, p)
+   rec acc []     p = (reverse acc, p)
    rec acc (n:ns) p =
       case getByIndex n (menu p) of
          Just (a :~> r) -> rec (a:acc) ns r
-         _ -> Nothing
+         _ -> ([], empty)
    
 applySteps :: Process (Step a, Path) -> a -> Process (Step a, a, Path)
 applySteps p a0 = prune (isMajor . fst3) (scan f a0 p)
@@ -171,6 +161,9 @@ withPath = rec []
 
 --------------------------------------------------------------------------------
 -- Prefix fuctions
+      
+isEmptyPrefix :: Prefix a -> Bool
+isEmptyPrefix = all (== emptyPath) . getPaths
       
 -- | Transforms the prefix such that only major steps are kept in the remaining
 -- strategy. 
@@ -213,8 +206,8 @@ data Step a = Enter Id                      -- ^ Enter a labeled sub-strategy
    deriving Eq
 
 instance Show (Step a) where
-   show (Enter _) = "Enter"
-   show (Exit _)  = "Exit"
+   show (Enter l) = "enter " ++ showId l
+   show (Exit l)  = "exit " ++ showId l
    show (RuleStep _ r) = show r
 
 instance Apply Step where
@@ -237,20 +230,32 @@ instance Minor (Step a) where
    isMinor (RuleStep _ r) = isMinor r
    isMinor _ = True
 
+stepRule :: Step a -> Rule a
+stepRule (RuleStep _ r) = r
+stepRule (Enter l)      = idRule (l # "enter")
+stepRule (Exit l)       = idRule (l # "exit")
+
+stepEnvironment :: Step a -> Environment
+stepEnvironment (RuleStep env _) = env
+stepEnvironment _ = mempty
+
 --------------------------------------------------------------------------------
 -- Path
 
 -- | A path encodes a location in a strategy. Paths are represented as a list
--- of integers. Use the @Show@ and @Read@ type classes for serializing.
-newtype Path = Path { ints :: [Int] }
+-- of integers.
+newtype Path = Path [Int]
    deriving Eq
 
 instance Show Path where
-   show = show . ints
-
-instance Read Path where
-   readsPrec _ = map (mapFirst Path) . readList
+   show (Path is) = show is
 
 -- | The empty path.
 emptyPath :: Path
 emptyPath = Path []
+
+readPath :: Monad m => String -> m Path
+readPath = liftM Path . readM
+
+readPaths :: Monad m => String -> m [Path]
+readPaths = mapM readPath . splitsWithElem ';'

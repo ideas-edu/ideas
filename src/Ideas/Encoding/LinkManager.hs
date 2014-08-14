@@ -162,7 +162,7 @@ dynamicLinks cgiBinary = LinkManager
    }
  where
    prefix  = cgiBinary ++ "?input="
-   url req = prefix ++ show req
+   url req = prefix ++ compactXML req
 
 simpleRequest :: String -> XML
 simpleRequest s = makeRequest s mempty

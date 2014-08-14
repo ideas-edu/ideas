@@ -478,7 +478,10 @@ encodeState = do
    htmlState <> simpleEncoder (\state -> mconcat
       [ h2 "Feedback"
       , submitDiagnose lm state
-      , ul [ linkToFirsts lm state $ string "allfirsts"
+      , ul [ case allfirsts state of 
+                Right (hd:_) -> linkToState lm (snd hd) $ string "onefirst"
+                _ -> string "(no onefirst)"
+           , linkToFirsts lm state $ string "allfirsts"
            , linkToApplications lm state $ string "allapplications"
            , linkToDerivation lm state $ string "derivation"
            , linkToMicrosteps lm state $ string "microsteps"

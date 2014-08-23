@@ -15,7 +15,7 @@
 --  $Id$
 
 module Ideas.Main.Default
-   ( defaultMain, newDomainReasoner
+   ( defaultMain, defaultCGI, newDomainReasoner
      -- extra exports
    , Some(..), serviceList, metaServiceList, Service
    , module Ideas.Service.DomainReasoner
@@ -48,40 +48,57 @@ import qualified Ideas.Main.Options as Options
 
 defaultMain :: DomainReasoner -> IO ()
 defaultMain dr = do
-   startTime <- getCurrentTime
-   flags     <- getFlags
+   flags <- getFlags
    if null flags
-      then defaultCGI dr startTime
+      then defaultCGI dr
       else defaultCommandLine dr flags
 
 -- Invoked as a cgi binary
-defaultCGI :: DomainReasoner -> UTCTime -> IO ()
-defaultCGI dr startTime = do
-   logRef <- newIORef (return ())
+defaultCGI :: DomainReasoner -> IO ()
+defaultCGI dr = do
+   startTime <- getCurrentTime
+   logRef    <- newIORef (return ())
    runCGI $ do
       addr   <- remoteAddr       -- the IP address of the remote host making the request
       cgiBin <- scriptName       -- get name of binary
       raw    <- getInput "input" -- read input
       input  <- case raw of
-                   Nothing -> fail "Invalid request: environment variable \"input\" is empty"
                    Just s  -> return s
+                   Nothing -> do 
+                      b <- acceptsHTML
+                      if b then return defaultBrowser else 
+                         fail "environment variable 'input' is empty"
       (req, txt, ctp) <- liftIO $ process dr (Just cgiBin) input
       -- save logging action for later
       when (useLogging req) $
          liftIO $ writeIORef logRef $
             logMessage req input txt addr startTime
-      setHeader "Content-type" ctp
-      -- Cross-Origin Resource Sharing (CORS) prevents browser warnings
-      -- about cross-site scripting
-      setHeader "Access-Control-Allow-Origin" "*"
+      writeHeader ctp
       output txt
    -- log request to database
    join (readIORef logRef)
    -- if something goes wrong
  `catch` \ioe -> runCGI $ do
-   setHeader "Content-type" "text/plain"
+   writeHeader "text/plain"
+   output ("Invalid request: " ++ ioeGetErrorString ioe)
+
+writeHeader :: String -> CGI ()
+writeHeader ctp = do
+   setHeader "Content-type" ctp
+   -- Cross-Origin Resource Sharing (CORS) prevents browser warnings
+   -- about cross-site scripting
    setHeader "Access-Control-Allow-Origin" "*"
-   output ("Invalid request\n" ++ ioeGetErrorString ioe)
+
+-- Invoked from browser
+defaultBrowser :: String
+defaultBrowser = "<request service='index' encoding='html'/>"
+
+acceptsHTML :: CGI Bool
+acceptsHTML = do
+   maybeAcceptCT <- requestAccept
+   let htmlCT = ContentType "text" "html" []
+       xs = negotiate [htmlCT] maybeAcceptCT
+   return (isJust maybeAcceptCT && not (null xs))
 
 -- Invoked from command-line with flags
 defaultCommandLine :: DomainReasoner -> [Flag] -> IO ()

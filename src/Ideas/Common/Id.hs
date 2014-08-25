@@ -164,7 +164,7 @@ appendId a b
  where
    ref = stringRef (show a ++ "." ++ show b)
 
--- Only allow alphanum and '-' ('.' has a special meaning)
+-- Only allow alphanum and '-' and '_' ('.' has a special meaning)
 stringId :: String -> Id
 stringId txt = Id (make s) "" (stringRef s)
  where

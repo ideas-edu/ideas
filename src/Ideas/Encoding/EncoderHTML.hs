@@ -475,21 +475,24 @@ stateLink lm st = munless (isStatic lm) $
 encodeState :: HTMLEncoder a (State a)
 encodeState = do
    lm <- withState getLinkManager
-   htmlState <> simpleEncoder (\state -> mconcat
-      [ h2 "Feedback"
-      , submitDiagnose lm state
-      , ul [ case allfirsts state of 
-                Right (hd:_) -> linkToState lm (snd hd) $ string "onefirst"
-                _ -> string "(no onefirst)"
-           , linkToFirsts lm state $ string "allfirsts"
-           , linkToApplications lm state $ string "allapplications"
-           , linkToDerivation lm state $ string "derivation"
-           , linkToMicrosteps lm state $ string "microsteps"
-           ]
-      , munless (noBindings state) $
-           h2 "Environment" <> text (environment state)
-      , encodePrefix state (statePrefix state)
-      ])
+   htmlState <> simpleEncoder (\state -> 
+      let xs = allfirsts state
+          n  = either (const 0) length xs
+      in mconcat
+         [ h2 "Feedback"
+         , submitDiagnose lm state
+         , ul [ case xs of 
+                   Right (hd:_) -> linkToState lm (snd hd) $ string "onefirst"
+                   _ -> string "(no onefirst)"
+              , linkToFirsts lm state $ string $ "allfirsts (" ++ show n ++ ")"
+              , linkToApplications lm state $ string "allapplications"
+              , linkToDerivation lm state $ string "derivation"
+              , linkToMicrosteps lm state $ string "microsteps"
+              ]
+         , munless (noBindings state) $
+              h2 "Environment" <> text (environment state)
+         , encodePrefix state (statePrefix state)
+         ])
 
 encodePrefix :: State a -> Prefix (Context a) -> HTMLBuilder
 encodePrefix st = 
@@ -602,11 +605,12 @@ submitDiagnose lm st = submitForm mempty <> submitRequest lm request
           ++ "' encoding='html'>" ++ ststr ++ "<expr>\"  + getTerm() + \"</expr></request>"
 
    ststr   = case fromBuilder (stateToXML st) of
-                Just el -> concatMap f (show el)
+                Just el -> concatMap f (compactXML el)
                 Nothing -> ""
 
    f '\\' = "\\\\"
-   f c = [c]
+   f '"'  = "\\\""
+   f c    = [c]
 
 submitRequest :: LinkManager -> String -> HTMLBuilder
 submitRequest lm request = submitURL $
@@ -625,8 +629,11 @@ submitURL url = tag "script" $
       \   var result = '';\
       \   for (var i=0;i<s.length;i++) {\
       \      if (s[i]=='<') result+='&lt;';\
+      \      else if (s[i]=='>') result+='&gt;';\
       \      else if (s[i]=='&') result+='&amp;';\
-	   \      else result+=s[i];\
+      \      else if (s[i]=='\"') result+='&quot;';\
+      \      else if (s[i]==\"'\") result+='&apos;';\
+	    \      else result+=s[i];\
       \   }\
       \   return result;\
       \}\

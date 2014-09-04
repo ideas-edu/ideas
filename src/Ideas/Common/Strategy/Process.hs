@@ -69,7 +69,7 @@ instance Sequence Process where
    p0 <*> P rest = rec p0
     where
       rec (P m) = P $ do
-         st <- m
+         st <- m -- cutOn (menuItem True (\_ _ -> False)) m
          case st of
             a :~> p -> return (a :~> rec p)
             Done    -> rest
@@ -99,7 +99,8 @@ eqProcessBy eq = rec
 -- | The 'Builder' data type offers a fast implementation for building 
 -- sequences. The data type implements the 'IsProcess' type class. 
 -- A 'Builder' value must be converted to a 'Process' (with 'toProcess') 
--- it can be inspected in any way.
+-- it can be inspected in any way. 
+
 newtype Builder a = B (Process a -> Process a)
 
 instance Choice Builder where

@@ -22,7 +22,7 @@ module Ideas.Common.Strategy.Choice
      -- * Queries
    , elems, bests, bestsOrdered, isEmpty, getByIndex
      -- * Generalized functions
-   , onMenu, cut, mapWithIndex
+   , onMenu, cut, cutOn, mapWithIndex
    ) where
 
 import Data.Maybe (listToMaybe)
@@ -198,6 +198,21 @@ cut (p :>| q)  = cut p >|> cut q
 cut (p :|> _)  = cut p
 cut (Single a) = single a
 cut Empty      = empty
+
+cutOn :: Choice f => (a -> Bool) -> Menu a -> f a
+cutOn f = snd . rec
+ where
+   rec (p :|: q)  = let (b1, cp) = rec p
+                        (b2, cq) = rec q
+                    in (b1 || b2, cp <|> cq)
+   rec (p :>| q)  = let (b1, cp) = rec p
+                        (b2, cq) = rec q
+                    in (b1 || b2, cp >|> cq)
+   rec (p :|> q)  = let (b1, cp) = rec p
+                        (b2, cq) = rec q
+                    in (b1 || b2, if b1 then cp else cp |> cq)
+   rec (Single a) = (f a, single a)
+   rec Empty      = (False, empty)
 
 -- | Maps a function over a menu that also takes the index of an element.
 {-# INLINE mapWithIndex #-}

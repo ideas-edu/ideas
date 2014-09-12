@@ -19,6 +19,7 @@ module Ideas.Common.Strategy.Traversal
    , traversalFilter, parentFilter
      -- * One-pass traversals
    , fulltd, fullbu, oncetd, oncebu, leftmostbu, leftmosttd, somewhere
+   , oncetdPref, oncebuPref
      -- * Fixpoint traversals
    , innermost, outermost
    , ruleDown, ruleDownLast, ruleUp
@@ -77,13 +78,16 @@ traverseWith tr s =
       OrElse
          | getTopDown tr -> s |> descend a
          | otherwise     -> descend a |> s
+      Prefer
+         | getTopDown tr -> s >|> descend a
+         | otherwise     -> descend a >|> s
       Choice             -> s <|> descend a
  where
    descend = layerWith tr
 
 -----------------------------------------------------------------------
 
-data Combinator = Sequence | OrElse | Choice
+data Combinator = Sequence | OrElse | Choice | Prefer
 
 data Info a = Info
    { getVisit      :: Visit
@@ -146,8 +150,14 @@ fullbu = traverse [full, bottomup]
 oncetd :: (IsStrategy f, Navigator a) => f a -> Strategy a
 oncetd = traverse [once, topdown]
 
+oncetdPref :: (IsStrategy f, Navigator a) => f a -> Strategy a
+oncetdPref = traverse [setCombinator Prefer, once, topdown]
+
 oncebu :: (IsStrategy f, Navigator a) => f a -> Strategy a
 oncebu = traverse [once, bottomup]
+
+oncebuPref :: (IsStrategy f, Navigator a) => f a -> Strategy a
+oncebuPref = traverse [setCombinator Prefer, once, bottomup]
 
 leftmostbu :: (IsStrategy f, Navigator a) => f a -> Strategy a
 leftmostbu = traverse [setCombinator OrElse, setVisit VisitFirst, bottomup]

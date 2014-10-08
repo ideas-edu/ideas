@@ -37,8 +37,8 @@ import Prelude hiding (catch)
 import System.IO.Error hiding (catch)
 import System.Random (StdGen, newStdGen)
 
-processXML :: Maybe Int -> DomainReasoner -> Maybe String -> String -> IO (Request, String, String)
-processXML maxTime dr cgiBin input = do
+processXML :: Maybe Int -> Maybe String -> DomainReasoner -> String -> IO (Request, String, String)
+processXML maxTime cgiBin dr input = do
    xml  <- either fail return (parseXML input)
    req  <- either fail return (xmlRequest xml)
    resp <- maybe id timedSeconds maxTime (xmlReply dr cgiBin req xml)
@@ -70,6 +70,7 @@ xmlRequest xml = do
    return Request
       { service    = srv
       , exerciseId = a
+      , userId     = findAttribute "userid" xml
       , source     = findAttribute "source" xml
       , dataformat = XML
       , encoding   = enc

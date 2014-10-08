@@ -1,4 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2014, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -15,7 +14,7 @@
 --  $Id$
 
 module Ideas.Main.Default
-   ( defaultMain, defaultCGI, newDomainReasoner
+   ( defaultMain, defaultCGI
      -- extra exports
    , Some(..), serviceList, metaServiceList, Service
    , module Ideas.Service.DomainReasoner
@@ -23,10 +22,8 @@ module Ideas.Main.Default
 
 import Control.Exception
 import Control.Monad
-import Data.IORef
 import Data.Maybe
 import Data.Time
-import Ideas.Common.Id
 import Ideas.Common.Utils (useFixedStdGen, Some(..))
 import Ideas.Common.Utils.TestSuite
 import Ideas.Encoding.ModeJSON (processJSON)
@@ -44,7 +41,6 @@ import Network.CGI
 import Prelude hiding (catch)
 import System.IO
 import System.IO.Error (ioeGetErrorString)
-import qualified Ideas.Main.Options as Options
 
 defaultMain :: DomainReasoner -> IO ()
 defaultMain dr = do
@@ -55,50 +51,45 @@ defaultMain dr = do
 
 -- Invoked as a cgi binary
 defaultCGI :: DomainReasoner -> IO ()
-defaultCGI dr = do
-   startTime <- getCurrentTime
-   logRef    <- newIORef (return ())
-   runCGI $ do
-      addr   <- remoteAddr       -- the IP address of the remote host making the request
-      cgiBin <- scriptName       -- get name of binary
-      raw    <- getInput "input" -- read input
-      input  <- case raw of
-                   Just s  -> return s
-                   Nothing -> do 
-                      b <- acceptsHTML
-                      if b then return defaultBrowser else 
-                         fail "environment variable 'input' is empty"
-      (req, txt, ctp) <- liftIO $ process dr (Just cgiBin) input
-      -- save logging action for later
-      when (useLogging req) $
-         liftIO $ writeIORef logRef $
-            logMessage req input txt addr startTime
-      writeHeader ctp
-      output txt
+defaultCGI dr = runCGI $ handleErrors $ do
+   -- query environment
+   startTime <- liftIO getCurrentTime
+   addr      <- remoteAddr       -- the IP address of the remote host
+   cgiBin    <- scriptName       -- get name of binary
+   input     <- inputOrDefault
+   -- process request
+   (req, txt, ctp) <- liftIO $ 
+      process dr (Just cgiBin) input
    -- log request to database
-   join (readIORef logRef)
-   -- if something goes wrong
- `catch` \ioe -> runCGI $ do
-   writeHeader "text/plain"
-   output ("Invalid request: " ++ ioeGetErrorString ioe)
-
-writeHeader :: String -> CGI ()
-writeHeader ctp = do
+   when (useLogging req) $
+      liftIO $ logMessage req input txt addr startTime
+   -- write header and output
    setHeader "Content-type" ctp
    -- Cross-Origin Resource Sharing (CORS) prevents browser warnings
    -- about cross-site scripting
    setHeader "Access-Control-Allow-Origin" "*"
+   output txt
 
--- Invoked from browser
-defaultBrowser :: String
-defaultBrowser = "<request service='index' encoding='html'/>"
-
-acceptsHTML :: CGI Bool
-acceptsHTML = do
-   maybeAcceptCT <- requestAccept
-   let htmlCT = ContentType "text" "html" []
-       xs = negotiate [htmlCT] maybeAcceptCT
-   return (isJust maybeAcceptCT && not (null xs))
+inputOrDefault :: CGI String
+inputOrDefault = do
+   inHtml <- acceptsHTML
+   ms     <- getInput "input" -- read variable 'input'
+   case ms of
+      Just s -> return s
+      Nothing 
+         | inHtml    -> return defaultBrowser 
+         | otherwise -> fail "environment variable 'input' is empty"
+ where      
+   -- Invoked from browser
+   defaultBrowser :: String
+   defaultBrowser = "<request service='index' encoding='html'/>"
+ 
+   acceptsHTML :: CGI Bool
+   acceptsHTML = do
+      maybeAcceptCT <- requestAccept
+      let htmlCT = ContentType "text" "html" []
+          xs = negotiate [htmlCT] maybeAcceptCT
+      return (isJust maybeAcceptCT && not (null xs))
 
 -- Invoked from command-line with flags
 defaultCommandLine :: DomainReasoner -> [Flag] -> IO ()
@@ -131,15 +122,12 @@ defaultCommandLine dr flags = do
          AnalyzeScript file -> parseAndAnalyzeScript dr file
 
 process :: DomainReasoner -> Maybe String -> String -> IO (Request, String, String)
-process dr cgiBin input =
-   case discoverDataFormat input of
-      Just XML  -> processXML (Just 5) dr cgiBin input
-      Just JSON -> processJSON (Just 5) (isJust cgiBin) dr input
-      _ -> fail "Invalid input"
-
-newDomainReasoner :: IsId a => a -> DomainReasoner
-newDomainReasoner a = mempty
-   { reasonerId  = newId a
-   , version     = shortVersion
-   , fullVersion = Options.fullVersion
-   }
+process dr cgiBin input = do
+   format <- discoverDataFormat input
+   run format (Just 5) cgiBin dr input
+ `catch` \ioe -> 
+   let msg = "Error: " ++ ioeGetErrorString ioe
+   in return (emptyRequest, msg, "text/plain")
+ where
+   run XML  = processXML
+   run JSON = processJSON

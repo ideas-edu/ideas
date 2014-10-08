@@ -16,6 +16,7 @@
 module Ideas.Encoding.ModeJSON (processJSON) where
 
 import Data.Char
+import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (Some(..), timedSeconds)
 import Ideas.Encoding.DecoderJSON
@@ -27,13 +28,13 @@ import Ideas.Service.Request
 import Ideas.Text.JSON
 import System.Random hiding (getStdGen)
 
-processJSON :: Maybe Int -> Bool -> DomainReasoner -> String -> IO (Request, String, String)
-processJSON maxTime cgiMode dr input = do
+processJSON :: Maybe Int -> Maybe String -> DomainReasoner -> String -> IO (Request, String, String)
+processJSON maxTime cgiBin dr input = do
    json <- either fail return (parseJSON input)
    req  <- jsonRequest json
    resp <- jsonRPC json $ \fun arg ->
               maybe id timedSeconds maxTime (myHandler dr fun arg)
-   let f   = if compactOutputDefault cgiMode req then compactJSON else show
+   let f   = if compactOutputDefault (isJust cgiBin) req then compactJSON else show
        out = addVersion (version dr) (toJSON resp)
    return (req, f out, "application/json")
 
@@ -72,9 +73,13 @@ jsonRequest json = do
               Nothing         -> return Nothing
               Just (String s) -> return (Just s)
               _               -> fail "Invalid source"
+   let uid = case lookupM "id" json of
+                Just (String s) -> Just s
+                _               -> Nothing
    return Request
       { service    = srv
       , exerciseId = a
+      , userId     = uid
       , source     = src
       , dataformat = JSON
       , encoding   = enc

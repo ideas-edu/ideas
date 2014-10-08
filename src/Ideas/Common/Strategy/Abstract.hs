@@ -139,7 +139,7 @@ derivationList cmpRule s a0 = rec a0 (toPrefix s)
       
       f ((stp, b), new) = (g stp, b, new)
       
-      g s = (stepRule s, stepEnvironment s)
+      g stp = (stepRule stp, stepEnvironment stp)
 
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]

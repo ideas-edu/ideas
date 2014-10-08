@@ -13,7 +13,7 @@
 --  $Id$
 
 module Ideas.Service.DomainReasoner
-   ( DomainReasoner(..)
+   ( DomainReasoner(..), newDomainReasoner
    , exercisesSorted, servicesSorted
    , findExercise, findService
    , defaultScript -- , readScript
@@ -28,6 +28,7 @@ import Ideas.Common.Utils
 import Ideas.Common.Utils.TestSuite
 import Ideas.Service.FeedbackScript.Parser
 import Ideas.Service.Types
+import qualified Ideas.Main.Options as Options
 
 -----------------------------------------------------------------------
 -- Domain Reasoner data type
@@ -72,6 +73,13 @@ instance Typed a DomainReasoner where
              , (aliases dr, scripts dr)
              , (version dr, fullVersion dr)
              )
+
+newDomainReasoner :: IsId a => a -> DomainReasoner
+newDomainReasoner a = mempty
+   { reasonerId  = newId a
+   , version     = Options.shortVersion
+   , fullVersion = Options.fullVersion
+   }
 
 -----------------------------------------------------------------------
 -- Domain Reasoner functions

@@ -21,10 +21,14 @@ import Ideas.Common.Utils
 data Request = Request
    { service    :: String
    , exerciseId :: Maybe Id
+   , userId     :: Maybe String
    , source     :: Maybe String
    , dataformat :: DataFormat
    , encoding   :: [Encoding]
    }
+   
+emptyRequest :: Request
+emptyRequest = Request "" Nothing Nothing Nothing XML []
 
 data DataFormat = XML | JSON
    deriving Show -- needed for LoggingDatabase

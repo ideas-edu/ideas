@@ -38,12 +38,14 @@ import Ideas.Text.HTML
 import Ideas.Text.OpenMath.FMP
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
+import System.IO.Unsafe
 
 type HTMLEncoder a t = EncoderState (HTMLEncoderState a) t HTMLBuilder
 
 data HTMLEncoderState a = HTMLEncoderState
-   { getLinkManager :: LinkManager
-   , getExercise    :: Exercise a
+   { getDomainReasoner :: DomainReasoner
+   , getLinkManager    :: LinkManager
+   , getExercise       :: Exercise a
    }
 
 htmlEncoder :: LinkManager -> DomainReasoner -> Exercise a -> TypedValue (Type a) -> HTMLPage
@@ -58,7 +60,7 @@ htmlEncoder lm dr ex tv =
            , spanClass "menuitem"   $ linkToServices lm $ string "Services"
            ]
       , divClass "page-content" $
-           let hes = HTMLEncoderState lm ex in
+           let hes = HTMLEncoderState dr lm ex in
            case runEncoderState (encodeType lm ex) hes tv of
               Left err -> string err
               Right ok -> ok
@@ -474,9 +476,10 @@ stateLink lm st = munless (isStatic lm) $
 
 encodeState :: HTMLEncoder a (State a)
 encodeState = do
-   lm <- withState getLinkManager
+   dr  <- withState getDomainReasoner
+   lm  <- withState getLinkManager
    htmlState <> simpleEncoder (\state -> 
-      let xs = allfirsts state
+      let xs = useAllFirsts dr state
           n  = either (const 0) length xs
       in mconcat
          [ h2 "Feedback"
@@ -493,6 +496,19 @@ encodeState = do
               h2 "Environment" <> text (environment state)
          , encodePrefix state (statePrefix state)
          ])
+         
+-- use allfirsts service of domain reasoner, instead of calling the service
+-- directly. Note that the service can be redefined (e.g. for the Ask-Elle tutor)
+useAllFirsts :: DomainReasoner -> State a -> Either String [(StepInfo a, State a)]
+useAllFirsts dr = unsafePerformIO . useAllFirstsIO dr
+
+useAllFirstsIO :: DomainReasoner -> State a -> IO (Either String [(StepInfo a, State a)])
+useAllFirstsIO dr st = do
+   srv <- findService dr (newId "allfirsts")
+   case serviceFunction srv of
+      f ::: tp -> do 
+         conv <- equalM tp (typeOf allfirsts)
+         return (conv f st)
 
 encodePrefix :: State a -> Prefix (Context a) -> HTMLBuilder
 encodePrefix st = 

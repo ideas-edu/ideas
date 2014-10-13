@@ -39,7 +39,7 @@ instance Typed a Message where
 derivationtext :: Script -> State a -> Either String (Derivation String (Context a))
 derivationtext script state =
    let f = ruleToString (newEnvironment state Nothing) script . fst
-   in right (mapFirst f) (derivation Nothing state)
+   in right (mapFirst f) (solution Nothing state)
 
 onefirsttext :: Script -> State a -> Maybe String -> (Message, Maybe (State a))
 onefirsttext script old event =

@@ -13,7 +13,7 @@
 
 module Ideas.Service.BasicServices
    ( -- * Basic Services
-     stepsremaining, findbuggyrules, allfirsts, derivation
+     stepsremaining, findbuggyrules, allfirsts, solution
    , onefirst, applicable, allapplications, apply, generate, create
    , StepInfo, exampleDerivations, recognizeRule
    ) where
@@ -45,8 +45,8 @@ create ex input =
             | otherwise -> Left "Not suitable"
 
 -- TODO: add a location to each step
-derivation :: Maybe StrategyCfg -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))
-derivation mcfg state =
+solution :: Maybe StrategyCfg -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))
+solution mcfg state =
    mapSecond (biMap (\(r, _, as) -> (r, as)) stateContext) $
    case mcfg of
       _ | withoutPrefix state -> Left "Prefix is required"
@@ -146,7 +146,7 @@ apply r loc env state
          []         -> Left ("Cannot apply " ++ show r)
 
 stepsremaining :: State a -> Either String Int
-stepsremaining = mapSecond derivationLength . derivation Nothing
+stepsremaining = mapSecond derivationLength . solution Nothing
 
 findbuggyrules :: State a -> Context a -> [(Rule (Context a), Location, Environment)]
 findbuggyrules state a =
@@ -170,4 +170,4 @@ recognizeRule ex r ca cb = rec (top ca)
       concatMap rec (downs x)
 
 exampleDerivations :: Exercise a -> Either String [Derivation (Rule (Context a), Environment) (Context a)]
-exampleDerivations ex = mapM (derivation Nothing . emptyState ex . snd) (examples ex)
+exampleDerivations ex = mapM (solution Nothing . emptyState ex . snd) (examples ex)

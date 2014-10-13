@@ -31,7 +31,8 @@ import qualified Ideas.Service.Submit as Submit
 serviceList :: [Service]
 serviceList =
    -- basic services
-   [ derivationS, allfirstsS, onefirstS, readyS
+   [ solutionS, derivationS, allfirstsS, onefirstS
+   , finishedS, readyS
    , stepsremainingS, allapplicationsS
    , applyS, generateS, createS, applicableS
    , examplesS, submitS, diagnoseS
@@ -51,13 +52,18 @@ metaServiceList dr =
 ------------------------------------------------------
 -- Basic services
 
-derivationS :: Service
-derivationS = makeService "basic.derivation"
-   "Returns one possible derivation (or: worked-out example) starting with the \
+solutionS :: Service
+solutionS = makeService "basic.solution"
+   "Returns one possible worked-out solution starting with the \
    \current expression. The first optional argument lets you configure the \
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $
-   derivation ::: typed
+   solution ::: typed
+
+derivationS :: Service
+derivationS = deprecate $ makeService "basic.derivation"
+   "See 'solution' service." $
+   solution ::: typed
 
 allfirstsS :: Service
 allfirstsS = makeService "basic.allfirsts"
@@ -76,10 +82,15 @@ onefirstS = makeService "basic.onefirst"
    onefirst ::: typed :-> Const String :|: Tag "elem" typed
    -- special tag for (legacy) xml encoding
 
-readyS :: Service
-readyS = makeService "basic.ready"
+finishedS :: Service
+finishedS = makeService "basic.finished"
    "Test if the current expression is in a form accepted as a final answer. \
    \For this, the strategy is not used." $
+   finished ::: typed
+
+readyS :: Service
+readyS = deprecate $ makeService "basic.ready"
+   "See 'finished' service." $
    finished ::: typed
 
 stepsremainingS :: Service

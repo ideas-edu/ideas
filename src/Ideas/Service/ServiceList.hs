@@ -14,7 +14,7 @@
 module Ideas.Service.ServiceList (serviceList, metaServiceList) where
 
 import Ideas.Common.ExerciseTests
-import Ideas.Common.Library hiding (apply, applicable, ready)
+import Ideas.Common.Library hiding (apply, applicable, suitable, ready)
 import Ideas.Common.Utils.TestSuite
 import Ideas.Service.BasicServices
 import Ideas.Service.DomainReasoner
@@ -32,7 +32,7 @@ serviceList :: [Service]
 serviceList =
    -- basic services
    [ solutionS, derivationS, allfirstsS, onefirstS
-   , finishedS, readyS
+   , equivalenceS, similarityS, suitableS, finishedS, readyS
    , stepsremainingS, allapplicationsS
    , applyS, generateS, createS, applicableS
    , examplesS, submitS, diagnoseS
@@ -82,10 +82,24 @@ onefirstS = makeService "basic.onefirst"
    onefirst ::: typed :-> Const String :|: Tag "elem" typed
    -- special tag for (legacy) xml encoding
 
+equivalenceS :: Service
+equivalenceS = makeService "basic.equivalence"
+   "Tests whether two terms are semantically equivalent." $
+   (\st -> equivalence (exercise st) (stateContext st)) ::: typed
+
+similarityS :: Service
+similarityS = makeService "basic.similarity"
+   "Tests whether two terms are (nearly) the same." $
+   (\st -> similarity (exercise st) (stateContext st)) ::: typed
+
+suitableS :: Service
+suitableS = makeService "basic.suitable"
+   "Identifies which terms can be solved by the strategy." $
+   suitable ::: typed
+
 finishedS :: Service
 finishedS = makeService "basic.finished"
-   "Test if the current expression is in a form accepted as a final answer. \
-   \For this, the strategy is not used." $
+   "Checks whether a term is in solved form." $
    finished ::: typed
 
 readyS :: Service

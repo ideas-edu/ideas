@@ -19,13 +19,13 @@ module Ideas.Service.State
    ( -- * Exercise state
      State, makeState, makeNoState, emptyStateContext, emptyState
    , exercise, statePrefix, stateContext, stateTerm
-   , withoutPrefix, stateLabels, finished, firsts, microsteps
+   , withoutPrefix, stateLabels, suitable, finished, firsts, microsteps
    ) where
 
 import Data.Function
 import Data.List
 import Data.Maybe
-import Ideas.Common.Library hiding (ready, (:~>))
+import Ideas.Common.Library hiding (suitable, ready, (:~>))
 import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.Choice
 
@@ -92,6 +92,9 @@ emptyState ex = emptyStateContext ex . inContext ex
 
 withoutPrefix :: State a -> Bool
 withoutPrefix = null . prefixPaths . statePrefix
+
+suitable :: State a -> Bool
+suitable st = isSuitable (exercise st) (stateTerm st)
 
 finished :: State a -> Bool
 finished st = isReady (exercise st) (stateTerm st)

@@ -16,7 +16,7 @@
 module Ideas.Text.XML.Interface
    ( Element(..), Content, Attribute(..), Attributes
    , normalize, parseXML, compactXML
-   , children, findAttribute, findChild, getData
+   , children, findAttribute, findChildren, findChild, getData
    ) where
 
 import Control.Arrow
@@ -121,11 +121,16 @@ findAttribute s (Element _ as _) =
       [hd] -> return hd
       _    -> fail $ "Invalid attribute: " ++ show s
 
+findChildren :: String -> Element -> [Element]
+findChildren s = filter ((==s) . name) . children
+      
 findChild :: Monad m => String -> Element -> m Element
 findChild s e =
-   case filter ((==s) . name) (children e) of
+   case findChildren s e of
+      []  -> fail $ "Child not found: " ++ show s
       [a] -> return a
-      _   -> fail $ "Child not found: " ++ show s
+      _   -> fail $ "Multiple children found: " ++ show s
+      
 
 children :: Element -> [Element]
 children e = [ c | Right c <- content e ]

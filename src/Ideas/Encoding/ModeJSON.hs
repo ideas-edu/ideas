@@ -20,6 +20,7 @@ import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (Some(..), timedSeconds)
 import Ideas.Encoding.DecoderJSON
+import Ideas.Encoding.Encoder
 import Ideas.Encoding.EncoderJSON
 import Ideas.Encoding.Evaluator
 import Ideas.Service.DomainReasoner
@@ -98,7 +99,7 @@ myHandler dr fun json = do
 
 jsonConverter :: Script -> Exercise a -> StdGen -> JSON -> Evaluator a JSON
 jsonConverter script ex stdgen json = Evaluator
-   (runEncoderStateM jsonEncoder (String . prettyPrinter ex))
-   (\tp -> runEncoderStateM (jsonDecoder tp) jds json)
+   (runEncoderM jsonEncoder ex)
+   (\tp -> runDecoderStateM (jsonDecoder tp) jds json)
  where
    jds = JSONDecoderState ex script stdgen

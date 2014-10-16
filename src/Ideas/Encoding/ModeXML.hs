@@ -20,6 +20,7 @@ import Control.Monad
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Common.Utils (Some(..), timedSeconds)
+import Ideas.Encoding.Encoder
 import Ideas.Encoding.DecoderXML
 import Ideas.Encoding.EncoderHTML
 import Ideas.Encoding.EncoderXML
@@ -102,7 +103,7 @@ xmlReply dr cgiBin request xml = do
       -- OpenMath encoder
       else if useOpenMath request
       then do
-         res <- evalService (openMathConverter True script ex stdgen xml) srv
+         res <- evalService (openMathConverter script ex stdgen xml) srv
          return (resultOk res)
       -- String encoder
       else do
@@ -127,12 +128,11 @@ resultError txt = makeXML "reply" $
 
 stringFormatConverter :: Script -> Exercise a -> StdGen -> XML -> Evaluator a XMLBuilder
 stringFormatConverter script ex stdgen xml =
-   Evaluator (runEncoderStateM xmlEncoder xes)
-             (\tp -> runEncoderStateM (xmlDecoder tp) xds xml)
+   Evaluator (runEncoderM xmlEncoder ex)
+             (\tp -> runDecoderStateM (xmlDecoder tp) xds xml)
  where
-   xes = XMLEncoderState ex False (tag "expr" . string . prettyPrinter ex)
    xds = XMLDecoderState ex script stdgen False g
-   g = (liftM getData . findChild "expr") >=> parser ex
+   g   = (liftM getData . findChild "expr") >=> parser ex
 
 htmlConverter :: DomainReasoner -> Maybe String -> Script -> Exercise a -> StdGen -> XML -> Evaluator a HTMLPage
 htmlConverter dr cgiBin script ex stdgen xml =
@@ -141,16 +141,12 @@ htmlConverter dr cgiBin script ex stdgen xml =
    lm = maybe staticLinks dynamicLinks cgiBin
    Evaluator _ d = stringFormatConverter script ex stdgen xml
 
-openMathConverter :: Bool -> Script -> Exercise a -> StdGen -> XML -> Evaluator a XMLBuilder
-openMathConverter withMF script ex stdgen xml =
-   Evaluator (runEncoderStateM xmlEncoder xes)
-             (\tp -> runEncoderStateM (xmlDecoder tp) xds xml)
+openMathConverter :: Script -> Exercise a -> StdGen -> XML -> Evaluator a XMLBuilder
+openMathConverter script ex stdgen xml =
+   Evaluator (runEncoderOpenMath xmlEncoder ex)
+             (\tp -> runDecoderStateM (xmlDecoder tp) xds xml)
  where
-   xes = XMLEncoderState ex True h
-   xds = XMLDecoderState ex script stdgen True g
-   h a = case toOpenMath ex a of
-            Left _      -> error "Error encoding term in OpenMath" -- fix me!
-            Right omobj -> builder (toXML (handleMixedFractions omobj))
+   xds  = XMLDecoderState ex script stdgen True g
    g xml0 = do
       xob <- findChild "OMOBJ" xml0
       case xml2omobj xob of
@@ -159,5 +155,3 @@ openMathConverter withMF script ex stdgen xml =
             case fromOpenMath ex omobj of
               Just a  -> Right a
               Nothing -> Left "Invalid OpenMath object for this exercise"
-   -- Remove special mixed-fraction symbol (depending on boolean argument)
-   handleMixedFractions = if withMF then id else noMixedFractions

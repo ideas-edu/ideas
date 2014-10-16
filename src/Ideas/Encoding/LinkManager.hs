@@ -28,10 +28,9 @@ module Ideas.Encoding.LinkManager
    , linkToMicrosteps
    ) where
 
-import Data.Maybe
 import Ideas.Common.Library
 import Ideas.Encoding.EncoderXML
-import Ideas.Encoding.Evaluator
+import Ideas.Encoding.Encoder
 import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Text.HTML
@@ -186,10 +185,7 @@ stateRequest s state =
 
 -- assume nothing goest wrong
 stateToXML :: State a -> XMLBuilder
-stateToXML st = fromMaybe mempty (runEncoderStateM encodeState xes st)
- where
-   enc = tag "expr" . string . prettyPrinter (exercise st)
-   xes = XMLEncoderState (exercise st) False enc
+stateToXML st = tag "expr" $ runEncoder encodeState (exercise st) st
 
 linkWith :: (a -> String) -> a -> HTMLBuilder -> HTMLBuilder
 linkWith f = link . escapeInURL . f

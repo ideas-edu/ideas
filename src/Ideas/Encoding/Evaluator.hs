@@ -13,134 +13,157 @@
 --  $Id$
 
 module Ideas.Encoding.Evaluator
-   ( EncoderState, simpleEncoder, maybeEncoder, eitherEncoder
-   , encoderFor, encoderStateFor, encodeTyped
-   , runEncoderState, runEncoderStateM, (//)
-   , getState, withState
+   ( DecoderState, simpleDecoder, decoderFor, withStateD, (///)
+   , runDecoderStateM, setInput
      -- re-export
-   , pure, (<$>), (<**>)
-   , module Data.Monoid, liftA2
+   , module Control.Applicative, sequenceA
+   , module Data.Monoid
      -- old
    , Evaluator(..), evalService
    ) where
 
 import Control.Applicative hiding (Const)
-import Control.Arrow
 import Control.Monad
-import Data.List
 import Data.Monoid
-import Ideas.Common.Classes
+import Data.Traversable
+import Ideas.Common.Library (Exercise)
 import Ideas.Service.Types
 import Ideas.Text.XML
-import qualified Control.Category as C
 
-newtype EncoderState st a b = Enc (st -> a -> Either [String] b)
+newtype DecoderState st inp a = 
+   Dec { runDec :: st -> inp -> Either String (a, inp) }
 
-instance C.Category (EncoderState st) where
-   id = Enc $ const Right
-   Enc f . Enc g = Enc $ \st -> either Left (f st) . g st
+state :: DecoderState st inp st
+state = Dec (\st inp -> Right (st, inp))
 
-instance Arrow (EncoderState st) where
-   arr f = Enc $ \_ -> Right . f
-   first  (Enc f) = Enc $ \st (a, c) -> fmap (\b -> (b, c)) (f st a)
-   second (Enc f) = Enc $ \st (a, b) -> fmap (\c -> (a, c)) (f st b)
-   Enc f *** Enc g = Enc $ \st (a, b) ->
-      case (f st a, g st b) of
-         (Right c, Right d) -> Right (c, d)
-         (Left err, _)      -> Left err
-         (_, Left err)      -> Left err
+input :: DecoderState st inp inp
+input = Dec (\_ inp -> Right (inp, inp))
 
-instance ArrowZero (EncoderState st) where
-   zeroArrow = Enc $ \_ _ -> Left []
+setInput :: inp -> DecoderState st inp ()
+setInput inp = Dec (\_ _ -> Right ((), inp))
 
-instance ArrowPlus (EncoderState st) where
-   Enc f <+> Enc g = Enc $ \st a ->
-      case (f st a, g st a) of
-         (Right b, _      ) -> Right b
-         (_,       Right b) -> Right b
-         (Left e1, Left e2) -> Left (e1 ++ e2)
+{-
+instance Functor (DecoderState st inp) where
+   fmap = liftM
 
-instance ArrowChoice (EncoderState st) where
-   left  (Enc f) = Enc $ \st -> either (fmap Left . f st) (Right . Right)
-   right (Enc f) = Enc $ \st -> either (Right . Left) (fmap Right . f st)
-   Enc f +++ Enc g = Enc $ \st -> either (fmap Left . f st) (fmap Right . g st)
+instance Applicative (DecoderState st inp) where
+   pure  = return
+   (<*>) = liftM2 ($)
+   
+instance Alternative (DecoderState st inp) where
+   empty = fail "DecoderState: empty"
+   (<|>) = mplus -}
 
-instance ArrowApply (EncoderState st) where
-   app = Enc $ \st (Enc f, a) -> f st a
-
-instance Functor (EncoderState st a) where
-   fmap = liftA
-
-instance Applicative (EncoderState st a) where
-   pure    = arr . const
-   f <*> g = f &&& g >>> arr (uncurry ($))
-
-instance Monoid b => Monoid (EncoderState st a b) where
-   mempty  = pure mempty
-   mappend = liftA2 (<>)
-
-instance Monad (EncoderState st a) where
-   return = pure
-   fail s = Enc $ \_ _ -> Left [ s | not (null s) ]
-   Enc f >>= g = Enc $ \st a ->
-      case f st a of
+instance Monad (DecoderState st inp) where
+   return a    = Dec $ \_ inp -> Right (a, inp)
+   fail s      = Dec $ \_ _ -> Left s
+   Dec f >>= g = Dec $ \st inp -> 
+      case f st inp of
          Left err -> Left err
-         Right b  -> let Enc h = g b in h st a
+         Right (a, inp2) -> runDec (g a) st inp2
 
-instance MonadPlus (EncoderState st a) where
-   mzero = zeroArrow
-   mplus = (<+>)
+instance MonadPlus (DecoderState st inp) where
+   mzero = fail "DecoderState: mzero"
+   Dec f `mplus` Dec g = Dec $ \st inp -> 
+      case (f st inp, g st inp) of
+         (Right a, _)  -> Right a
+         (_, Right a)  -> Right a
+         (Left msg, _) -> Left msg
 
-instance BuildXML b => BuildXML (EncoderState st a b) where
-   n .=. s   = return (n .=. s)
-   unescaped = return . unescaped
-   builder   = return . builder
-   tag       = liftM . tag
+(///) :: DecoderState st a c -> a -> DecoderState st b c
+Dec f /// a = Dec $ \st inp -> 
+   case f st a of
+      Right (c, _) -> Right (c, inp)
+      Left msg     -> Left msg
 
-getState :: EncoderState st a st
-getState = Enc $ const . Right
+runDecoderStateM :: Monad m => DecoderState st a b -> st -> a -> m b
+runDecoderStateM f st = either fail (return . fst) . runDec f st
 
-withState :: (st -> b) -> EncoderState st a b
-withState f = liftM f getState
+-- derived
+simpleDecoder :: (a -> b) -> DecoderState st a b
+simpleDecoder f = liftM f input
 
-runEncoderState :: EncoderState st a b -> st -> a -> Either String b
-runEncoderState (Enc f) st = mapFirst (intercalate ", ") . f st
+decoderFor :: (a -> DecoderState st a b) -> DecoderState st a b
+decoderFor f = input >>= f
+
+withStateD :: (st -> b) -> DecoderState st a b
+withStateD f = liftM f state
 
 ---
 
-simpleEncoder :: (a -> b) -> EncoderState st a b
-simpleEncoder = arr
+type Encoder a t b = EncoderX (EncoderState a b) t b
 
-maybeEncoder :: (a -> Maybe b) -> EncoderState st a b
-maybeEncoder f = C.id >>= maybe mzero return . f
+newtype EncoderX st t b = Enc { runEncoderState :: st -> t -> b }
 
-eitherEncoder :: (a -> Either String b) -> EncoderState st a b
-eitherEncoder f = C.id >>= either fail return . f
+runEncoder :: Encoder a t b -> Exercise a -> (a -> b) -> t -> b
+runEncoder = runEncoderWith False
 
-encoderFor :: (a -> EncoderState st a b) -> EncoderState st a b
+runEncoderOM :: Encoder a t b -> Exercise a -> (a -> b) -> t -> b
+runEncoderOM = runEncoderWith True
+
+runEncoderWith :: Bool -> Encoder a t b -> Exercise a -> (a -> b) -> t -> b
+runEncoderWith b enc ex f = runEncoderState enc (EncoderState ex b f)
+
+data EncoderState a b = EncoderState
+   { getExercise :: Exercise a
+   , isOpenMath  :: Bool
+   , encodeTerm  :: a -> b
+   }
+
+instance Functor (EncoderX st a) where
+   fmap = liftA
+
+instance Applicative (EncoderX st a) where
+   pure a = Enc $ \_ _ -> a
+   Enc f <*> Enc g = Enc $ \st a -> (f st a) (g st a)
+
+instance Monoid b => Monoid (EncoderX st a b) where
+   mempty  = pure mempty
+   mappend = liftA2 (<>)
+
+instance BuildXML b => BuildXML (EncoderX st a b) where
+   n .=. s   = pure (n .=. s)
+   unescaped = pure . unescaped
+   builder   = pure . builder
+   tag       = liftA . tag
+
+withExercise :: (Exercise a -> Encoder a t b) -> Encoder a t b
+withExercise f = encoderStateFor $ \st _ -> f (getExercise st)
+
+withOpenMath :: (Bool -> Encoder a t b) -> Encoder a t b
+withOpenMath f = encoderStateFor $ \st _ -> f (isOpenMath st)
+
+withTermEncoder :: ((a -> b) -> Encoder a t b) -> Encoder a t b
+withTermEncoder f = encoderStateFor $ \st _ -> f (encodeTerm st)
+
+makeEncoder :: (a -> b) -> EncoderX st a b
+makeEncoder = Enc . const
+
+exerciseEncoder :: (Exercise st -> a -> b) -> Encoder st a b
+exerciseEncoder f = withExercise $ \ex -> makeEncoder (f ex)
+
+encoderFor :: (a -> EncoderX st a b) -> EncoderX st a b
 encoderFor = encoderStateFor . const
 
-encoderStateFor :: (st -> a -> EncoderState st a b) -> EncoderState st a b
-encoderStateFor f = do
-   st <- getState
-   a  <- C.id
-   f st a
+encoderStateFor :: (st -> a -> EncoderX st a b) -> EncoderX st a b
+encoderStateFor f = Enc $ \st a -> let Enc g = f st a in g st a
 
-runEncoderStateM :: Monad m => EncoderState st a b -> st -> a -> m b
-runEncoderStateM f st = either fail return . runEncoderState f st
+infixr 5 <?>
 
-encodeTyped :: Typed a t => EncoderState st t b -> EncoderState st (TypedValue (Type a)) b
-encodeTyped enc = fromTyped >>> enc
+(<?>) :: Typed a t => EncoderX st t b -> EncoderX st (TypedValue (Type a)) b 
+                                      -> EncoderX st (TypedValue (Type a)) b
+Enc f <?> Enc g = Enc $ \st tv@(val ::: tp) -> 
+   case equal tp typed of
+      Nothing -> g st tv
+      Just to -> f st (to val)
+
+encodeTyped :: Typed a t => EncoderX st t b -> EncoderX st (TypedValue (Type a)) b
+encodeTyped f = f <?> Enc (\_ _ -> error "Types do not match")
 
 infixl 8 //
 
-(//) :: EncoderState st a c -> a -> EncoderState st b c
-f // a = arr (const a) >>> f
-
-----
-
-fromTyped :: Typed a t => EncoderState st (TypedValue (Type a)) t
-fromTyped = maybeEncoder $ \(val ::: tp) -> fmap ($ val) (equal tp typed)
+(//) :: EncoderX st a c -> a -> EncoderX st b c
+Enc f // a = Enc $ \st _ -> f st a
 
 -------------------------------------------------------------------
 

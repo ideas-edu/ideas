@@ -100,6 +100,7 @@ Library
     Ideas.Common.View
     Ideas.Encoding.DecoderJSON
     Ideas.Encoding.DecoderXML
+    Ideas.Encoding.Encoder
     Ideas.Encoding.EncoderHTML
     Ideas.Encoding.EncoderJSON
     Ideas.Encoding.EncoderXML

@@ -18,7 +18,7 @@ module Ideas.Text.XML
    ( XML, Attr, AttrList, Element(..), InXML(..)
    , XMLBuilder, makeXML
    , parseXML, parseXMLFile, compactXML, findAttribute
-   , children, Attribute(..), fromBuilder, findChild, getData
+   , children, Attribute(..), fromBuilder, findChild, findChildren, getData
    , BuildXML(..)
    , module Data.Monoid, munless, mwhen
    ) where

@@ -90,6 +90,8 @@ escape :: String -> String
 escape = concatMap f . fromMaybe "invalid UTF8 string" . UTF8.encodeM
  where
    f '\n' = "\\\\n"
+   f '\r' = ""      -- carriage return (DOS files)
+   f '\t' = "\\\\t"
    f '"'  = "\\\""
    f '\\' = "\\\\"
    f c    = [c]

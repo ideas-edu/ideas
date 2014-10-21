@@ -85,12 +85,12 @@ onefirstS = makeService "basic.onefirst"
 equivalenceS :: Service
 equivalenceS = makeService "basic.equivalence"
    "Tests whether two terms are semantically equivalent." $
-   (\st -> equivalence (exercise st) (stateContext st)) ::: typed
+   equivalence ::: typed
 
 similarityS :: Service
 similarityS = makeService "basic.similarity"
    "Tests whether two terms are (nearly) the same." $
-   (\st -> similarity (exercise st) (stateContext st)) ::: typed
+   similarity ::: typed
 
 suitableS :: Service
 suitableS = makeService "basic.suitable"

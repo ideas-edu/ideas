@@ -20,7 +20,7 @@ module Ideas.Encoding.DecoderXML
 
 import Control.Monad
 import Data.Char
-import Ideas.Common.Library hiding (exerciseId, (:=))
+import Ideas.Common.Library hiding ((<|>))
 import Ideas.Common.Traversal.Navigator
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.OpenMathSupport
@@ -117,26 +117,26 @@ decodeContext = do
       Nothing -> 
          return ctx
 
-decodeTerm :: XMLDecoder a a -- TODO: rewrite me!
-decodeTerm = do
-   ex  <- getExercise
-   req <- getRequest
-   let make xml | useOpenMath req = either fail return $ do
-        xob <- findChild "OMOBJ" xml
-        omobj <- xml2omobj xob
-        case fromOpenMath ex omobj of
-                Just a  -> Right a
-                Nothing -> Left "Invalid OpenMath object for this exercise"
-            | otherwise = do
-                 s <- liftM getData (findChild "expr" xml)
-                 either fail return (parser ex s)
-   decoderFor make
+decodeTerm :: XMLDecoder a a
+decodeTerm = withOpenMath f
+ where
+   f True  = decodeOMOBJ
+   f False = decodeChild "expr" $ do
+      ex <- getExercise
+      decoderFor $ either fail return . parser ex . getData
 
+decodeOMOBJ :: XMLDecoder a a
+decodeOMOBJ = decodeChild "OMOBJ" $ decoderFor $ \xml -> do
+   ex    <- getExercise
+   omobj <- fromXML xml
+   case fromOpenMath ex omobj of
+      Just a  -> return a
+      Nothing -> fail "Invalid OpenMath object for this exercise"
+                
 decodeEnvironment :: XMLDecoder a Environment
-decodeEnvironment = decoderFor $ \xml ->
-   case findChild "context" xml of
-      Just this -> foldM add mempty (children this)
-      Nothing   -> return mempty
+decodeEnvironment = 
+   decodeChild "context" (decoderFor $ foldM add mempty . children)
+   <|> return mempty
  where
    add env item = do
       unless (name item == "item") $

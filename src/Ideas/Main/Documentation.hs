@@ -20,6 +20,7 @@ import Ideas.Common.Library
 import Ideas.Common.Utils
 import Ideas.Encoding.EncoderHTML
 import Ideas.Encoding.LinkManager
+import Ideas.Encoding.Encoder (run, simpleOptions)
 import Ideas.Service.BasicServices
 import Ideas.Service.DomainReasoner
 import Ideas.Service.Types
@@ -49,8 +50,10 @@ makeDocumentation dr dir = do
    lm = staticLinks
    makeIndex f = make emptyExercise (f lm)
    makeEx ex f = make ex (f lm ex)
-   make ex url tv = safeWrite (dir </> url) $
-      showHTML $ htmlEncoder (linksUp (pathLevel url) lm) dr ex tv
+   make ex url tv = do
+      let enc = htmlEncoderAt (pathLevel url) dr
+      html <- run enc (simpleOptions ex) tv
+      safeWrite (dir </> url) (showHTML html)
 
 safeWrite :: FilePath -> String -> IO ()
 safeWrite filename txt = do

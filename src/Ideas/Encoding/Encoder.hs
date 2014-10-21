@@ -13,129 +13,249 @@
 --  $Id: Evaluator.hs 6535 2014-05-14 11:05:06Z bastiaan $
 
 module Ideas.Encoding.Encoder
-   ( -- * Encoder datatype 
-     Encoder
-     -- * Constructors
-   , makeEncoder, encoderFor, (//), encoders
-     -- * Query the encoder's state
-   , exerciseEncoder, withExercise, withOpenMath
-     -- * Typed encoders
+   ( -- * Converter type class
+     Converter(..) 
+   , getExercise, getStdGen, getScript, getRequest
+   , withExercise, withOpenMath, (//)
+     -- * Options
+   , Options, simpleOptions, makeOptions
+     -- * Encoder datatype 
+   , Encoder, TypedEncoder
+   , makeEncoder, encoderFor, exerciseEncoder
    , (<?>), encodeTyped
-     -- * Running an encoder
-   , runEncoder, runEncoderM, runEncoderOpenMath
+     -- * Decoder datatype
+   , Decoder, TypedDecoder
+   , makeDecoder, decoderFor
+   , split, symbol, setInput
      -- re-export
    , module Data.Monoid, module Control.Applicative
-   , (C.>>>)
+   , module Control.Arrow
    ) where
 
 import Control.Applicative hiding (Const)
 import Control.Arrow
 import qualified Control.Category as C
-import Control.Monad
 import Data.Monoid
-import Ideas.Common.Library (Exercise)
+import Ideas.Common.Library hiding (exerciseId, symbol)
+import Ideas.Common.Utils (Some(..))
+import Ideas.Service.FeedbackScript.Parser (parseScriptSafe, Script)
 import Ideas.Service.Types
+import Ideas.Service.DomainReasoner
+import Ideas.Service.Request
 import Ideas.Text.XML
+import Control.Monad
+import System.Random (newStdGen, mkStdGen, StdGen)
 
 -------------------------------------------------------------------
--- Data type and its internal state
+-- Converter type class
 
-newtype Encoder a t b = Enc { run :: forall m . Monad m => EncoderState a -> t -> m b }
+class Converter f where 
+   fromOptions :: (Options a -> t) -> f a s t
+   run  :: Monad m => f a s t -> Options a -> s -> m t
 
-data EncoderState a = MakeState
-   { stateExercise :: Exercise a -- the current exercise
-   , stateOpenMath :: Bool       -- use OpenMath encoding
+getExercise :: Converter f => f a s (Exercise a)
+getExercise = fromOptions exercise
+
+getStdGen :: Converter f => f a s StdGen
+getStdGen = fromOptions stdGen
+
+getScript :: Converter f => f a s Script
+getScript = fromOptions script
+
+getRequest :: Converter f => f a s Request
+getRequest = fromOptions request
+
+withExercise :: (Converter f, Monad (f a s)) => (Exercise a -> f a s t) -> f a s t
+withExercise = (getExercise >>=)
+
+withOpenMath :: (Converter f, Monad (f a s)) => (Bool -> f a s t) -> f a s t
+withOpenMath = (liftM useOpenMath getRequest >>=)
+
+(//) :: (Converter f, Monad (f a s2)) => f a s t -> s -> f a s2 t
+p // a = do
+   xs <- fromOptions id
+   run p xs a
+
+-------------------------------------------------------------------
+-- Options
+
+data Options a = Options
+   { exercise :: Exercise a -- the current exercise
+   , request  :: Request    -- meta-information about the request
+   , stdGen   :: StdGen     -- random number generator
+   , script   :: Script     -- feedback script
    }
+
+simpleOptions :: Exercise a -> Options a
+simpleOptions ex = 
+   let req = emptyRequest {encoding = [EncHTML]} 
+   in Options ex req (mkStdGen 0) mempty
+
+makeOptions :: DomainReasoner -> Request -> IO (Some Options)
+makeOptions dr req = do
+   Some ex  <-
+      case exerciseId req of
+         Just code -> findExercise dr code
+         Nothing   -> return (Some emptyExercise)
+
+   scr <- case feedbackScript req of
+             Just s -> parseScriptSafe s
+             Nothing
+                | getId ex == mempty -> return mempty
+                | otherwise          -> defaultScript dr (getId ex)
+   stdgen <- newStdGen
+   return $ Some Options 
+      { exercise = ex
+      , request  = req
+      , stdGen   = stdgen
+      , script   = scr
+      }
+
+-------------------------------------------------------------------
+-- Encoder datatype
+
+newtype Encoder a s t = Enc { runEnc :: Options a -> s -> Error t }
+
+type TypedEncoder a = Encoder a (TypedValue (Type a))
 
 instance C.Category (Encoder a) where
    id    = arr id
-   f . g = Enc $ \st -> run g st >=> run f st
+   f . g = Enc $ \xs -> runEnc g xs >=> runEnc f xs
 
 instance Arrow (Encoder a) where
-   arr f   = Enc $ const (return . f)
-   first f = Enc $ \st (a, b) -> run f st a >>= \c -> return (c, b)
+   arr   f = Enc $ \_ -> return . f  
+   first f = Enc $ \xs (a, b) -> runEnc f xs a >>= \c -> return (c, b)  
 
-instance Functor (Encoder a t) where
-   fmap = liftA
+instance Monad (Encoder a s) where
+   return a = Enc $ \_ _ -> return a
+   fail s   = Enc $ \_ _ -> fail s
+   p >>= f  = Enc $ \xs s -> do
+      (a) <- runEnc p xs s
+      runEnc (f a) xs s
 
-instance Applicative (Encoder a t) where
-   pure    = arr . const
-   f <*> g = Enc $ \st a -> liftM2 ($) (run f st a) (run g st a)
+instance MonadPlus (Encoder a s) where
+   mzero = fail "Decoder: mzero"
+   mplus p q = Enc $ \xs s -> 
+      runEnc p xs s `mplus` runEnc q xs s
 
-instance Monad (Encoder a t) where
-   return  = pure
-   fail s  = Enc $ \_ _ -> fail s
-   m >>= f = Enc $ \st a -> run m st a >>= \b -> run (f b) st a
+instance Functor (Encoder a s) where
+   fmap = liftM
+   
+instance Applicative (Encoder a s) where
+   pure  = return
+   (<*>) = liftM2 ($)
 
-instance Monoid b => Monoid (Encoder a t b) where
+instance Converter Encoder where
+   fromOptions f = Enc $ \xs _ -> return (f xs)
+   run f xs = runErrorM . runEnc f xs
+
+instance Monoid t => Monoid (Encoder a s t) where
    mempty  = pure mempty
    mappend = liftA2 (<>)
 
-instance BuildXML b => BuildXML (Encoder a t b) where
+instance BuildXML t => BuildXML (Encoder a s t) where
    n .=. s   = pure (n .=. s)
    unescaped = pure . unescaped
    builder   = pure . builder
    tag       = liftA . tag
 
--------------------------------------------------------------------
--- Constructors
-
-makeEncoder :: (t -> b) -> Encoder a t b
+makeEncoder :: (s -> t) -> Encoder a s t
 makeEncoder = arr
 
-encoderFor :: (t -> Encoder a t b) -> Encoder a t b
-encoderFor f = Enc $ \st a -> run (f a) st a
+encoderFor :: (s -> Encoder a s t) -> Encoder a s t
+encoderFor f = C.id >>= f
 
-infixl 8 //
-
-(//) :: Encoder a t1 b -> t1 -> Encoder a t2 b
-f // a = arr (const a) >>> f
-
-encoders :: [Encoder a t b] -> Encoder a t [b]
-encoders = sequence
-
--------------------------------------------------------------------
--- Query the encoder's state
-
-exerciseEncoder :: (Exercise a -> t -> b) -> Encoder a t b
-exerciseEncoder f = withExercise $ \ex -> makeEncoder (f ex)
-
-withExercise :: (Exercise a -> Encoder a t b) -> Encoder a t b
-withExercise f = Enc $ \st -> run (f (stateExercise st)) st
-
-withOpenMath :: (Bool -> Encoder a t b) -> Encoder a t b
-withOpenMath f = Enc $ \st -> run (f (stateOpenMath st)) st
-
--------------------------------------------------------------------
--- Typed encoders
+exerciseEncoder :: (Exercise a -> s -> t) -> Encoder a s t
+exerciseEncoder f = withExercise $ makeEncoder . f
 
 infixr 5 <?>
 
 (<?>) :: Typed a1 t => Encoder a t b -> Encoder a (TypedValue (Type a1)) b
                                      -> Encoder a (TypedValue (Type a1)) b
-f <?> g = Enc $ \st tv@(val ::: tp) -> 
+p <?> q = do
+   val ::: tp <- makeEncoder id
    case equal tp typed of
-      Nothing -> run g st tv
-      Just to -> run f st (to val)
+      Just f -> p // f val
+      Nothing -> q
 
 encodeTyped :: Typed a t => Encoder st t b -> Encoder st (TypedValue (Type a)) b
-encodeTyped f = f <?> fail "Types do not match"
+encodeTyped p = p <?> fail "Types do not match"
 
 -------------------------------------------------------------------
--- Running an encoder
+-- Decoder datatype
+
+newtype Decoder a s t = Dec { runDec :: Options a -> s -> Error (t, s) }
+
+type TypedDecoder a s = forall t . Type a t -> Decoder a s t
+
+instance Monad (Decoder a s) where
+   return a = Dec $ \_ s -> return (a, s)
+   fail s   = Dec $ \_ _ -> fail s
+   p >>= f  = Dec $ \xs s1 -> do
+      (a, s2) <- runDec p xs s1
+      runDec (f a) xs s2
+
+instance MonadPlus (Decoder a s) where
+   mzero = fail "Decoder: mzero"
+   mplus p q = Dec $ \xs s -> 
+      runDec p xs s `mplus` runDec q xs s
+
+instance Functor (Decoder a s) where
+   fmap = liftM
    
--- | Run an encoder
-runEncoder :: Encoder a t b -> Exercise a -> t -> b
-runEncoder enc ex = either error id . runEncoderWith False enc ex
+instance Applicative (Decoder a s) where
+   pure  = return
+   (<*>) = liftM2 ($)
+   
+instance Alternative (Decoder a s) where
+   empty = fail "Decoder: empty"
+   (<|>) = mplus
 
--- | Run an encoder
-runEncoderM :: Monad m => Encoder a t b -> Exercise a -> t -> m b
-runEncoderM = runEncoderWith False
+get :: Decoder a s s
+get = Dec $ \_ s -> return (s, s)
 
--- | Run an encoder in OpenMath mode
-runEncoderOpenMath :: Monad m => Encoder a t b -> Exercise a -> t -> m b
-runEncoderOpenMath = runEncoderWith True
+put :: s -> Decoder a s ()
+put s = Dec $ \_ _ -> return ((), s)
 
--- helper
-runEncoderWith :: Monad m => Bool -> Encoder a t b -> Exercise a -> t -> m b
-runEncoderWith b f ex = run f (MakeState ex b)
+instance Converter Decoder where
+   fromOptions f = Dec $ \xs s -> return (f xs, s)
+   run f xs = liftM fst . runErrorM . runDec f xs
+
+split :: (s -> Either String (t, s)) -> Decoder a s t
+split f = get >>= either fail (\(a, s2) -> put s2 >> return a) . f
+
+symbol :: Decoder a [s] s
+symbol = split f
+ where
+   f []     = Left "Empty input"
+   f (x:xs) = Right (x, xs)
+
+setInput :: s -> Decoder a s ()
+setInput inp = split (\_ -> Right ((), inp))
+
+makeDecoder:: (s -> t) -> Decoder a s t
+makeDecoder f = fmap f get
+
+decoderFor :: (s -> Decoder a s t) -> Decoder a s t
+decoderFor f = get >>= f
+
+-------------------------------------------------------------------
+-- Error monad (helper)
+
+newtype Error a = Error { runError :: Either String a }
+
+instance Monad Error where
+   fail    = Error . Left
+   return  = Error . Right
+   m >>= f = Error $ either Left (runError . f) (runError m)
+
+instance MonadPlus Error where
+   mzero     = fail "mzero"
+   mplus p q = Error $
+      case (runError p, runError q) of
+         (Right a, _) -> Right a      
+         (_, Right a) -> Right a
+         (Left s, _)  -> Left s
+
+runErrorM :: Monad m => Error a -> m a
+runErrorM = either fail return . runError

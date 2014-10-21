@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 --  $Id$
 
-module Ideas.Encoding.EncoderHTML (htmlEncoder) where
+module Ideas.Encoding.EncoderHTML (htmlEncoder, htmlEncoderAt) where
 
 import Data.Char
 import Data.List
@@ -31,6 +31,7 @@ import Ideas.Encoding.StrategyInfo
 import Ideas.Service.BasicServices
 import Ideas.Service.Diagnose
 import Ideas.Service.DomainReasoner
+import Ideas.Service.Request
 import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Text.HTML
@@ -41,8 +42,18 @@ import System.IO.Unsafe
 
 type HTMLEncoder a t = Encoder a t HTMLBuilder
 
-htmlEncoder :: LinkManager -> DomainReasoner -> Exercise a -> TypedValue (Type a) -> HTMLPage
-htmlEncoder lm dr ex tv =
+htmlEncoder :: DomainReasoner -> TypedEncoder a HTMLPage
+htmlEncoder = htmlEncoderAt 0
+
+htmlEncoderAt :: Int -> DomainReasoner -> TypedEncoder a HTMLPage
+htmlEncoderAt n dr = do
+   req <- getRequest
+   let lm = f (maybe staticLinks dynamicLinks (cgiBinary req))
+       f  = if n==0 then id else linksUp n
+   makePage lm dr <$> encodeType lm dr
+
+makePage :: LinkManager -> DomainReasoner -> HTMLBuilder -> HTMLPage
+makePage lm dr a =
    addCSS (urlForCSS lm "ideas.css") $
    htmlPage "Ideas: documentation pages" $ mconcat
       [ divClass "page-header" $ mconcat
@@ -50,9 +61,9 @@ htmlEncoder lm dr ex tv =
            , divClass  "ounl-logo"  space
            , spanClass "menuitem"   $ linkToIndex lm $ string "Index"
            , spanClass "menuitem"   $ linkToExercises lm $ string "Exercises"
-           , spanClass "menuitem"   $ linkToServices lm $ string "Services"
+           , spanClass "menuitem"   $ linkToServices lm  $ string "Services"
            ]
-      , divClass "page-content" $ runEncoder (encodeType lm dr) ex tv
+      , divClass "page-content" a
       , divClass "page-footer" $
            string (fullVersion dr)
       ]

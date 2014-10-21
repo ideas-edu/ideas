@@ -208,13 +208,14 @@ instance InJSON RPCRequest where
       , ("params", requestParams req)
       , ("id"    , requestId req)
       ]
-   fromJSON obj = do
-      mj <- lookupM "method" obj
-      pj <- lookupM "params" obj
-      ij <- lookupM "id"     obj
-      case mj of
-         String s -> return (Request s pj ij)
-         _        -> fail "expecting a string"
+   fromJSON json =
+      case lookupM "method" json of
+         Just (String s) ->
+            let pj = fromMaybe Null (lookupM "params" json)
+                ij = fromMaybe Null (lookupM "id" json)
+            in return (Request s pj ij)
+         Just _  -> fail "expecting a string as method"
+         Nothing -> fail "no method specified" 
 
 instance InJSON RPCResponse where
    toJSON resp = Object

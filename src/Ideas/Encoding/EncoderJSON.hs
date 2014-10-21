@@ -28,11 +28,11 @@ import qualified Ideas.Service.Types as Tp
 
 type JSONEncoder a t = Encoder a t JSON
 
-jsonEncoder :: JSONEncoder a (TypedValue (Type a))
+jsonEncoder :: TypedEncoder a JSON
 jsonEncoder = encoderFor $ \tv@(val ::: tp) ->
    case tp of
       _ | length (tupleList tv) > 1 ->
-         jsonTuple <$> encoders [ jsonEncoder // x | x <- tupleList tv ]
+         jsonTuple <$> sequence [ jsonEncoder // x | x <- tupleList tv ]
       Iso p t   -> jsonEncoder // (to p val ::: t)
       t1 :|: t2 -> case val of
          Left  x -> jsonEncoder // (x ::: t1)
@@ -51,7 +51,7 @@ jsonEncoder = encoderFor $ \tv@(val ::: tp) ->
          | s == "elem"       -> jsonEncoder // (val ::: t)
          | otherwise -> (\b -> Object [(s, b)]) <$> jsonEncoder // (val ::: t)
       Tp.Unit   -> pure Null
-      Tp.List t -> Array <$> encoders [ jsonEncoder // (x ::: t) | x <- val ]
+      Tp.List t -> Array <$> sequence [ jsonEncoder // (x ::: t) | x <- val ]
       Const ctp -> jsonEncodeConst // (val ::: ctp)
       _ -> fail $ "Cannot encode type: " ++ show tp
  where
@@ -176,7 +176,7 @@ encodeDiagnosis = encoderFor $ \diagnosis ->
       Diagnose.Unknown b st ->
          make "unknown" [fromReady b, fromState st]
  where
-   make s = liftA (\xs -> Object [(s, Array xs)]) . encoders
+   make s = liftA (\xs -> Object [(s, Array xs)]) . sequence
    fromEnv env      = jsonEncoder // (env ::: typed)
    fromRule r       = pure (toJSON (showId r))
    fromMaybeRule mr = pure (maybe Null (toJSON . showId) mr)

@@ -185,7 +185,10 @@ stateRequest s state =
 
 -- assume nothing goest wrong
 stateToXML :: State a -> XMLBuilder
-stateToXML st = tag "expr" $ runEncoder encodeState (exercise st) st
+stateToXML st = 
+   case run encodeState (simpleOptions (exercise st)) st of
+      Just a  -> a
+      Nothing -> error "LinkManager: Invalid state"
 
 linkWith :: (a -> String) -> a -> HTMLBuilder -> HTMLBuilder
 linkWith f = link . escapeInURL . f

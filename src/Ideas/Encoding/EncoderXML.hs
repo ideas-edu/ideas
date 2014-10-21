@@ -41,7 +41,7 @@ import qualified Ideas.Service.ProblemDecomposition as PD
 
 type XMLEncoder a t = Encoder a t XMLBuilder
 
-xmlEncoder :: XMLEncoder a (TypedValue (Type a))
+xmlEncoder :: TypedEncoder a XMLBuilder
 xmlEncoder =
    encodeDiagnosis          <?>
    encodeDecompositionReply <?>

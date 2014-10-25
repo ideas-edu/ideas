@@ -13,7 +13,7 @@
 --  $Id$
 
 module Ideas.Service.DomainReasoner
-   ( DomainReasoner(..), newDomainReasoner
+   ( DomainReasoner(..), tDomainReasoner, newDomainReasoner
    , exercisesSorted, servicesSorted
    , findExercise, findService
    , defaultScript -- , readScript
@@ -63,10 +63,12 @@ instance HasId DomainReasoner where
    getId = reasonerId
    changeId f dr = dr { reasonerId = f (reasonerId dr) }
 
-instance Typed a DomainReasoner where
-   -- ignores views, testSuite
-   typed = Tag "DomainReasoner" $ Iso (f <-> g) typed
+tDomainReasoner :: Type a DomainReasoner
+tDomainReasoner = Tag "DomainReasoner" $ Iso (f <-> g) tp
     where
+      tp = tTuple3 (tTuple3 tId (tList tSomeExercise) (tList tService)) 
+           (tPair (tList (tPair tId tId)) (tList (tPair tId tString))) 
+           (tPair tString tString)
       f ((rid, ex, serv), (al, scr), (v, fv)) =
          DR rid ex serv [] al scr mempty v fv
       g dr = ( (reasonerId dr, exercises dr, services dr)

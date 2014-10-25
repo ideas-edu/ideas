@@ -39,7 +39,7 @@ xmlDecoder tp =
          | s == "answer" -> do
               decodeChild "answer" (xmlDecoder t)
          | s == "Difficulty" -> do
-              g <- equalM typed tp
+              g <- equalM tDifficulty tp
               a <- decoderFor (findAttribute "difficulty")
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
          | otherwise -> do

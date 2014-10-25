@@ -170,16 +170,16 @@ exerciseEncoder f = withExercise $ makeEncoder . f
 
 infixr 5 <?>
 
-(<?>) :: Typed a1 t => Encoder a t b -> Encoder a (TypedValue (Type a1)) b
-                                     -> Encoder a (TypedValue (Type a1)) b
-p <?> q = do
+(<?>) :: (Encoder a t b, Type a1 t) -> Encoder a (TypedValue (Type a1)) b
+                                    -> Encoder a (TypedValue (Type a1)) b
+(p, t) <?> q = do
    val ::: tp <- makeEncoder id
-   case equal tp typed of
+   case equal tp t of
       Just f -> p // f val
       Nothing -> q
 
-encodeTyped :: Typed a t => Encoder st t b -> Encoder st (TypedValue (Type a)) b
-encodeTyped p = p <?> fail "Types do not match"
+encodeTyped :: Encoder st t b -> Type a t -> Encoder st (TypedValue (Type a)) b
+encodeTyped p t = (p, t) <?> fail "Types do not match"
 
 -------------------------------------------------------------------
 -- Decoder datatype

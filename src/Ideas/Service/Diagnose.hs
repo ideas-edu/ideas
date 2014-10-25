@@ -15,7 +15,7 @@
 --  $Id$
 
 module Ideas.Service.Diagnose
-   ( Diagnosis(..), diagnose, restartIfNeeded, newState
+   ( Diagnosis(..), tDiagnosis, diagnose, restartIfNeeded, newState
    , difference, differenceEqual
    ) where
 
@@ -154,9 +154,13 @@ restartIfNeeded state
  where
    ex = exercise state
 
-instance Typed a (Diagnosis a) where
-   typed = Tag "Diagnosis" $ Iso (f <-> g) typed
+tDiagnosis :: Type a (Diagnosis a)
+tDiagnosis = Tag "Diagnosis" $ Iso (f <-> g) tp
     where
+      tp = (tPair tEnvironment tRule :|: (tString :|: tTuple3 tBool tState (tMaybe tRule))) 
+         :|: tPair tBool tState :|: tTuple3 tBool tState tRule 
+         :|: tTuple4 tBool tState tEnvironment tRule :|: tPair tBool tState :|: tPair tBool tState
+    
       f (Left (Left (as, r))) = Buggy as r
    --   f (Left (Right (Left ()))) = Missing
    --   f (Left (Right (Right (Left xs)))) = IncorrectPart xs

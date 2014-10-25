@@ -43,12 +43,12 @@ type XMLEncoder a t = Encoder a t XMLBuilder
 
 xmlEncoder :: TypedEncoder a XMLBuilder
 xmlEncoder =
-   encodeDiagnosis          <?>
-   encodeDecompositionReply <?>
-   encodeDerivation         <?>
-   encodeDerivationText     <?>
-   encodeDifficulty         <?>
-   encodeMessage            <?>
+   (encodeDiagnosis, tDiagnosis) <?>
+   (encodeDecompositionReply, PD.tReply) <?>
+   (encodeDerivation, tDerivation (tPair tRule tEnvironment) tContext) <?>
+   (encodeDerivationText, tDerivation tString tContext) <?>
+   (encodeDifficulty, tDifficulty) <?>
+   (encodeMessage, FeedbackText.tMessage) <?>
    encoderFor (\(val ::: tp) ->
         case tp of
            -- meta-information
@@ -148,7 +148,7 @@ encodeTypedBinding = withOpenMath $ \useOM -> makeEncoder $ \tb ->
 encodeDerivation :: XMLEncoder a (Derivation (Rule (Context a), Environment) (Context a))
 encodeDerivation = encoderFor $ \d ->
    let xs = [ (s, a) | (_, s, a) <- triples d ]
-   in xmlEncoder // (xs ::: typed)
+   in xmlEncoder // (xs ::: tList (tPair (tPair tRule tEnvironment) tContext))
 
 encodeDerivationText :: XMLEncoder a (Derivation String (Context a))
 encodeDerivationText = encoderFor $ \d -> encodeAsList

@@ -13,7 +13,7 @@
 --  $Id$
 
 module Ideas.Service.FeedbackText
-   ( Message, accept, text
+   ( Message, tMessage, accept, text
    , onefirsttext, submittext, derivationtext, feedbacktext
    ) where
 
@@ -27,11 +27,12 @@ import Ideas.Service.Types
 
 data Message = M { accept :: Maybe Bool, text :: Text }
 
-instance Typed a Message where
-   typed = Tag "Message" $ Iso (f <-> g) typed
-    where
-      f   = either (\(b, t) -> M (Just b) t) (M Nothing)
-      g m = maybe (Right (text m)) (\b -> Left (b, text m)) (accept m)
+tMessage :: Type a Message
+tMessage = Tag "Message" $ Iso (f <-> g) tp
+ where
+   tp  = tPair tBool tText :|: tText
+   f   = either (\(b, t) -> M (Just b) t) (M Nothing)
+   g m = maybe (Right (text m)) (\b -> Left (b, text m)) (accept m)
 
 ------------------------------------------------------------
 -- Services

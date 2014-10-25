@@ -15,7 +15,7 @@
 --  $Id$
 
 module Ideas.Service.Submit
-   ( submit, Result(..)
+   ( submit, Result(..), tResult
    ) where
 
 import Data.Maybe
@@ -49,9 +49,12 @@ fromDiagnose diagnosis =
 submit :: State a -> Context a -> Result a
 submit state ctx = fromDiagnose (diagnose state ctx Nothing)
 
-instance Typed a (Result a) where
-   typed = Tag "Result" (Iso (f <-> g) typed)
+tResult :: Type a (Result a)
+tResult = Tag "Result" (Iso (f <-> g) tp)
     where
+      tp = tList tRule :|: tString :|: tPair (tList tRule) tState 
+           :|: tPair (tList tRule) tState :|: tState
+    
       f (Left rs) = Buggy rs
       f (Right (Left s)) = NotEquivalent s
       f (Right (Right (Left (rs, s)))) = Ok rs s

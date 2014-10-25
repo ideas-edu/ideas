@@ -31,21 +31,21 @@ import System.FilePath (takeDirectory)
 makeDocumentation :: DomainReasoner -> String -> IO ()
 makeDocumentation dr dir = do
    putStrLn "Generating index pages"
-   makeIndex urlForIndex     (dr ::: typed)
-   makeIndex urlForExercises (exercises dr ::: typed)
-   makeIndex urlForServices  (services dr ::: typed)
+   makeIndex urlForIndex     (dr ::: tDomainReasoner)
+   makeIndex urlForExercises (exercises dr ::: tList tSomeExercise)
+   makeIndex urlForServices  (services dr ::: tList tService)
    putStrLn "Generating service pages"
    forM_ (services dr) $ \srv ->
-      makeIndex (`urlForService` srv) (srv ::: typed)
+      makeIndex (`urlForService` srv) (srv ::: tService)
    putStrLn "Generating exercise pages"
    forM_ (exercises dr) $ \(Some ex) -> do
-      makeEx ex urlForExercise    (ex ::: typed)
-      makeEx ex urlForStrategy    (toStrategy (strategy ex) ::: typed)
-      makeEx ex urlForRules       (ruleset ex ::: typed)
-      makeEx ex urlForExamples    (map (second (inContext ex)) (examples ex) ::: typed)
-      makeEx ex urlForDerivations (exampleDerivations ex ::: typed)
+      makeEx ex urlForExercise    (ex ::: tExercise)
+      makeEx ex urlForStrategy    (toStrategy (strategy ex) ::: tStrategy)
+      makeEx ex urlForRules       (ruleset ex ::: tList tRule)
+      makeEx ex urlForExamples    (map (second (inContext ex)) (examples ex) ::: tList (tPair tDifficulty tContext))
+      makeEx ex urlForDerivations (exampleDerivations ex ::: tError (tList (tDerivation (tPair tRule tEnvironment) tContext)))
       forM_ (ruleset ex) $ \r ->
-         make ex (urlForRule lm ex r) (r ::: typed)
+         make ex (urlForRule lm ex r) (r ::: tRule)
  where
    lm = staticLinks
    makeIndex f = make emptyExercise (f lm)

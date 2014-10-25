@@ -15,7 +15,7 @@ module Ideas.Service.BasicServices
    ( -- * Basic Services
      stepsremaining, findbuggyrules, allfirsts, solution
    , onefirst, applicable, allapplications, apply, generate, create
-   , StepInfo, exampleDerivations, recognizeRule
+   , StepInfo, tStepInfo, exampleDerivations, recognizeRule
    ) where
 
 import Control.Monad
@@ -25,6 +25,7 @@ import Ideas.Common.Library hiding (applicable, apply, ready)
 import Ideas.Common.Traversal.Navigator (downs, navigateTo)
 import Ideas.Common.Utils (fst3)
 import Ideas.Service.State
+import Ideas.Service.Types
 import System.Random
 import qualified Ideas.Common.Classes as Apply
 import qualified Ideas.Common.Library as Library
@@ -75,6 +76,9 @@ solution mcfg state =
             show (biMap fst3 (prettyPrinterContext ex . stateContext) acc)
 
 type StepInfo a = (Rule (Context a), Location, Environment) -- find a good place
+
+tStepInfo :: Type a (StepInfo a)
+tStepInfo = tTuple3 tRule tLocation tEnvironment
 
 allfirsts :: State a -> Either String [(StepInfo a, State a)]
 allfirsts state

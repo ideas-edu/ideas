@@ -13,7 +13,7 @@
 --  $Id$
 
 module Ideas.Service.ProblemDecomposition
-   ( problemDecomposition, Reply(..)
+   ( problemDecomposition, Reply(..), Answer, tAnswer, tReply
    ) where
 
 import Data.Maybe
@@ -97,12 +97,14 @@ data Reply a = Ok Id (State a)
 ------------------------------------------------------------------------
 -- Type definition
 
-instance Typed a (Answer a) where
-   typed = Tag "answer" $ Iso (Answer <-> fromAnswer) (Const Context)
+tAnswer :: Type a (Answer a)
+tAnswer = Tag "answer" $ Iso (Answer <-> fromAnswer) (Const Context)
 
-instance Typed a (Reply a) where
-   typed = Tag "DecompositionReply" (Iso (f <-> g) typed)
+tReply :: Type a (Reply a)
+tReply = Tag "DecompositionReply" (Iso (f <-> g) tp)
     where
+      tp = tPair tId tState :|: tTuple4 tBool tId tState tEnvironment
+    
       f (Left (a, b))        = Ok a b
       f (Right (a, b, c, d)) = Incorrect a b c d
 

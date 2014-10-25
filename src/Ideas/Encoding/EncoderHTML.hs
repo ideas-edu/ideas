@@ -70,13 +70,13 @@ makePage lm dr a =
 
 encodeType :: LinkManager -> DomainReasoner -> HTMLEncoder a (TypedValue (Type a))
 encodeType lm dr = 
-   encodeIndex <?>
-   (exerciseHeader lm <> htmlDiagnosis lm dr) <?>
-   (exerciseHeader lm <> encodeExampleList lm) <?>
-   (exerciseHeader lm <> htmlFirsts lm) <?> 
-   (exerciseHeader lm <> htmlAllApplications lm) <?> 
-   (exerciseHeader lm <> encodeDerivation lm) <?> 
-   (exerciseHeader lm <> encodeDerivationList lm) <?>
+   (encodeIndex, tDomainReasoner) <?>
+   (exerciseHeader lm <> htmlDiagnosis lm dr, tDiagnosis) <?>
+   (exerciseHeader lm <> encodeExampleList lm, tList (tPair tDifficulty tContext)) <?>
+   (exerciseHeader lm <> htmlFirsts lm, tList (tPair tStepInfo tState)) <?> 
+   (exerciseHeader lm <> htmlAllApplications lm, tList (tTuple3 tRule tLocation tState)) <?> 
+   (exerciseHeader lm <> encodeDerivation lm, tDerivation (tPair tRule tEnvironment) tContext) <?> 
+   (exerciseHeader lm <> encodeDerivationList lm, tList (tDerivation (tPair tRule tEnvironment) tContext)) <?>
    encoderFor (\(val ::: tp) ->
         case tp of
            Iso iso t  -> encodeType lm dr // (to iso val ::: t)
@@ -504,7 +504,7 @@ useAllFirstsIO dr st = do
    srv <- findService dr (newId "allfirsts")
    case serviceFunction srv of
       f ::: tp -> do 
-         conv <- equalM tp (typeOf allfirsts)
+         conv <- equalM tp (tState .-> tError (tList (tPair tStepInfo tState)))
          return (conv f st)
 
 encodePrefix :: State a -> Prefix (Context a) -> HTMLBuilder

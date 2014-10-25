@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, Rank2Types, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE GADTs, RankNTypes, FlexibleInstances, FlexibleContexts  #-}
 -----------------------------------------------------------------------------
 -- Copyright 2014, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -17,8 +17,14 @@ module Ideas.Service.Types
      Service, makeService, deprecate
    , serviceDeprecated, serviceFunction
      -- * Types
-   , TypeRep(..), Const(..), Type, TypedValue(..), Typed(..)
+   , TypeRep(..), Const(..), Type, TypedValue(..)
    , Equal(..), ShowF(..), equalM
+     -- * Constructing types
+   , tEnvironment, tLocation, tRule, tTuple3, tTuple4, tPair
+   , tStrategy, tTree, tState, tBool, tMaybe, tString, tList
+   , tId, tService, tSomeExercise, tText, tDifficulty, tContext
+   , tDerivation, tError, (.->), tIO, tExercise, tTestSuiteResult, tStdGen
+   , tScript, tExamples, tStrategyCfg, tInt
    ) where
 
 import Control.Monad
@@ -238,118 +244,112 @@ showTuple tp = "(" ++ intercalate ", " (collect tp) ++ ")"
 
 ---------------------------------------------------------------
 
-class Typed a t | t -> a where
-   typeOf    :: t -> Type a t
-   typed     :: Type a t
-   typedList :: Type a [t]
-   -- default implementation
-   typeOf    = const typed
-   typedList = List typed
+tError :: Type a t -> Type a (Either String t)
+tError = (:|:) tString
 
-instance Typed a Int where
-   typed = Const Int
+tDerivation :: Type a t1 -> Type a t2 -> Type a (Derivation t1 t2)
+tDerivation t1 t2 = Tag "Derivation" $ Iso (f <-> g) tp
+ where
+   tp = tPair t2 (tList (tPair t1 t2))
+   f (a, xs) = foldl extend (emptyDerivation a) xs
+   g d = (firstTerm d, [ (s, a) | (_, s, a) <- triples d ])
 
-instance Typed a Bool where
-   typed = Const Bool
+tIO :: Type a t -> Type a (IO t)
+tIO t = IO t
 
-instance Typed a () where
-   typed = Unit
+tText :: Type a Text
+tText = Const Text
 
-instance Typed a Char where
-   typed     = Iso (head <-> return) typed
-   typedList = Const String
+infixr 5 .->
 
-instance Typed a (Rule (Context a)) where
-   typed = Const Rule
+(.->) :: Type a t1 -> Type a t2 -> Type a (t1 -> t2)
+(.->) = (:->)
 
-instance Typed a (Strategy (Context a)) where
-   typed = Const Strategy
+tState :: Type a (State a)
+tState = Const State
 
-instance Typed a Id where
-   typed = Const Id
-
-instance Typed a Location where
-   typed = Const Location
-
-instance Typed a Environment where
-   typed = Const Environment
-
-instance Typed a StdGen where
-   typed = Const StdGen
-
-instance Typed a TestSuite.Result where
-   typed = Const Result
-
-instance Typed a Difficulty where
-   typed = Tag "Difficulty" (Iso (f <-> show) typed)
-    where
-      f = fromMaybe Medium . readDifficulty
-
-instance Typed a Service where
-   typed = Const Service
-
-instance Typed a (State a) where
-   typed = Const State
-
-instance Typed a (Exercise a) where
-   typed = Const Exercise
-
-instance Typed a (Context a) where
-   typed = Const Context
-
-instance Typed a StrategyCfg where
-   typed = Const StratCfg
-
-instance Typed a Script where
-   typed = Const Script
-
-instance Typed a Text where
-   typed = Const Text
-
-instance (Typed a t1, Typed a t2) => Typed a (t1, t2) where
-   typed = Pair typed typed
-
-instance (Typed a t1, Typed a t2, Typed a t3) => Typed a (t1, t2, t3) where
-   typed = Iso (f <-> g) (Pair typed (Pair typed typed))
-    where
-      f (a, (b, c)) = (a, b, c)
-      g (a, b, c)   = (a, (b, c))
-
-instance (Typed a t1, Typed a t2, Typed a t3, Typed a t4) => Typed a (t1, t2, t3, t4) where
-   typed = Iso (f <-> g) (Pair typed (Pair typed (Pair typed typed)))
-    where
-      f (a, (b, (c, d))) = (a, b, c, d)
-      g (a, b, c, d)     = (a, (b, (c, d)))
-
-instance (Typed a t1, Typed a t2) => Typed a (t1 -> t2) where
-   typed = typed :-> typed
-
-instance Typed a t => Typed a (IO t) where
-   typed = IO typed
-
-instance Typed a t => Typed a (Maybe t) where
-   typed = Iso (f <-> g) (typed :|: Unit)
+tMaybe :: Type a t -> Type a (Maybe t)
+tMaybe t = Iso (f <-> g) (t :|: Unit)
     where
       f = either Just (const Nothing)
       g = maybe (Right ()) Left
 
-instance (Typed a t1, Typed a t2) => Typed a (Either t1 t2) where
-   typed = typed :|: typed
+tStrategyCfg :: Type a StrategyCfg
+tStrategyCfg = Const StratCfg
 
-instance (Typed a t1, Typed a t2) => Typed a (Derivation t1 t2) where
-   typed = Tag "Derivation" $ Iso (f <-> g) typed
+tList :: Type a t -> Type a [t]
+tList = List
+
+tPair :: Type a t1 -> Type a t2 -> Type a (t1, t2)
+tPair = Pair
+
+tString :: Type a String
+tString = Const String
+
+tExercise :: Type a (Exercise a)
+tExercise = Const Exercise
+
+tContext :: Type a (Context a)
+tContext = Const Context
+
+tBool :: Type a Bool
+tBool = Const Bool
+
+tInt :: Type a Int
+tInt = Const Int
+
+tRule :: Type a (Rule (Context a))
+tRule = Const Rule
+
+tLocation :: Type a Location
+tLocation = Const Location
+
+tTuple3 :: Type a t1 -> Type a t2 -> Type a t3 -> Type a (t1, t2, t3)
+tTuple3 t1 t2 t3 = Iso (f <-> g) (Pair t1 (Pair t2 t3))
     where
-      f (a, xs) = foldl extend (emptyDerivation a) xs
-      g d = (firstTerm d, [ (s, a) | (_, s, a) <- triples d ])
+      f (a, (b, c)) = (a, b, c)
+      g (a, b, c)   = (a, (b, c))
 
-instance Typed a t => Typed a [t] where
-   typed = typedList
+tTuple4 :: Type a t1 -> Type a t2 -> Type a t3 -> Type a t4 -> Type a (t1, t2, t3, t4)
+tTuple4 t1 t2 t3 t4 = Iso (f <-> g) (Pair t1 (Pair t2 (Pair t3 t4)))
+    where
+      f (a, (b, (c, d))) = (a, b, c, d)
+      g (a, b, c, d)     = (a, (b, (c, d)))
 
-instance Typed a t => Typed a (Tree t) where
-   typed = Tag "Tree" $ Iso (f <-> g) typed
+tEnvironment :: Type a Environment
+tEnvironment = Const Environment
+
+tDifficulty :: Type a Difficulty
+tDifficulty = Tag "Difficulty" (Iso (f <-> show) tString)
+    where
+      f = fromMaybe Medium . readDifficulty
+
+tStdGen :: Type a StdGen
+tStdGen = Const StdGen
+
+tExamples :: Type a (Examples (Context a))
+tExamples = tList (tPair tDifficulty tContext)
+
+tId :: Type a Id
+tId = Const Id
+
+tScript :: Type a Script
+tScript = Const Script
+
+tSomeExercise :: Type a (Some Exercise)
+tSomeExercise = Const SomeExercise
+
+tService :: Type a Service
+tService = Const Service
+
+tStrategy :: Type a (Strategy (Context a))
+tStrategy = Const Strategy
+
+tTree :: Type a t -> Type a (Tree t)
+tTree t = Tag "Tree" $ Iso (f <-> g) (tPair t (tList (tTree t)))
     where
       f = uncurry Node
       g (Node a xs) = (a, xs)
 
-instance Typed a (Some Exercise) where
-   typed = Const SomeExercise
+tTestSuiteResult :: Type a (TestSuite.Result)
+tTestSuiteResult = Const Result

@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, RankNTypes, FlexibleInstances, FlexibleContexts  #-}
+{-# LANGUAGE GADTs, RankNTypes, FlexibleInstances, FlexibleContexts #-}
 -----------------------------------------------------------------------------
 -- Copyright 2014, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -20,7 +20,7 @@ module Ideas.Service.Types
    , TypeRep(..), Const(..), Type, TypedValue(..)
    , Equal(..), ShowF(..), equalM
      -- * Constructing types
-   , tEnvironment, tLocation, tRule, tTuple3, tTuple4, tPair
+   , tEnvironment, tLocation, tRule, tTuple3, tTuple4, tTuple5, tPair
    , tStrategy, tTree, tState, tBool, tMaybe, tString, tList
    , tId, tService, tSomeExercise, tText, tDifficulty, tContext
    , tDerivation, tError, (.->), tIO, tExercise, tTestSuiteResult, tStdGen
@@ -315,6 +315,12 @@ tTuple4 t1 t2 t3 t4 = Iso (f <-> g) (Pair t1 (Pair t2 (Pair t3 t4)))
     where
       f (a, (b, (c, d))) = (a, b, c, d)
       g (a, b, c, d)     = (a, (b, (c, d)))
+
+tTuple5 :: Type a t1 -> Type a t2 -> Type a t3 -> Type a t4 -> Type a t5 -> Type a (t1, t2, t3, t4, t5)
+tTuple5 t1 t2 t3 t4 t5 = Iso (f <-> g) (Pair t1 (Pair t2 (Pair t3 (Pair t4 t5))))
+    where
+      f (a, (b, (c, (d, e)))) = (a, b, c, d, e)
+      g (a, b, c, d, e)       = (a, (b, (c, (d, e))))
 
 tEnvironment :: Type a Environment
 tEnvironment = Const Environment

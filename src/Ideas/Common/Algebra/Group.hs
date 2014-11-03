@@ -29,7 +29,7 @@ import Control.Monad (liftM2)
 import Data.Foldable (Foldable)
 import Data.Maybe
 import Data.Monoid
-import Data.Traversable (Traversable)
+import Data.Traversable (Traversable, traverse)
 import Ideas.Common.Classes
 import qualified Data.Set as S
 
@@ -59,14 +59,17 @@ class Monoid a => MonoidZero a where
 
 -- Type that adds a zero element
 newtype WithZero a = WZ { fromWithZero :: Maybe a }
-   deriving (Eq, Ord, Functor, Foldable, Traversable, Applicative)
+   deriving (Eq, Ord, Functor, Foldable, Applicative)
 
 instance Monoid a => Monoid (WithZero a) where
    mempty = WZ (Just mempty)
    mappend x y = WZ (liftM2 mappend (fromWithZero x) (fromWithZero y))
-
+   
 instance Monoid a => MonoidZero (WithZero a) where
    mzero = WZ Nothing
+ 
+instance Traversable WithZero where
+   traverse f = liftA WZ . traverse f . fromWithZero
 
 --------------------------------------------------------
 -- Groups

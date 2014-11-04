@@ -1,5 +1,5 @@
 name:                   ideas
-version:                1.2.1
+version:                1.2.1.1
 synopsis:               Feedback services for intelligent tutoring systems
 homepage:               http://ideas.cs.uu.nl/www/
 description:
@@ -38,10 +38,17 @@ Library
                      time, 
                      filepath,
                      directory,
-                     cgi, 
                      parsec,
                      wl-pprint,
-                     array
+                     array,
+                     mtl == 2.1.*,
+                     network < 2.6,
+                     bytestring,
+                     exceptions,
+                     old-time,
+                     old-locale,
+                     xhtml,
+                     multipart
 
   Exposed-modules:
     Ideas.Common.Algebra.Boolean

@@ -163,6 +163,14 @@ Library
     Ideas.Text.XML.Parser
     Ideas.Text.XML.Unicode
 
+  Other-modules:
+    Network.CGI
+    Network.CGI.Accept
+    Network.CGI.Compat
+    Network.CGI.Cookie
+    Network.CGI.Monad
+    Network.CGI.Protocol
+
 
 --------------------------------------------------------------------------------
 

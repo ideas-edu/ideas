@@ -366,12 +366,13 @@ encodeRuleList lm = exerciseEncoder $ \ex rs ->
    let (rs1, rs2) = partition isBuggy rs
    
        header = [ string "Rule name", string "Args"
-                , string "Used", string "Rewrite rule"
+                , string "Used", string "Siblings", string "Rewrite rule"
                 ]
        used = rulesInStrategy (strategy ex)
        f r  = [ linkToRule lm ex r $ ttText (showId r)
               , text $ length $ getRefs r
               , bool $ r `elem` used
+              , string $ intercalate ", " $ map show $ ruleSiblings r
               , mwhen (isRewriteRule r) $
                    ruleToHTML (Some ex) r
               ]
@@ -547,6 +548,8 @@ htmlFirsts lm = encoderFor $ \xs ->
    ul [ keyValueTable
            [ ("Rule", string $ showId r)
            , ("Location", text loc)
+           , ("Term", text $ show $ currentTerm (top $ stateContext s) )
+           , ("Focus", text $ show $ currentTerm (stateContext s) )
            , ("Environment", text env)
            ] <> htmlState lm // s
       | ((r, loc, env), s) <- xs

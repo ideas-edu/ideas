@@ -434,6 +434,15 @@ You can now start exploring the supported exercises and feedback services.
 For instance, go to the exercise `eval.full` and click on `derivations` in the yellow box
 to see the worked-out solutions for two examples.
 
+Suggested exercises
+-------------------
+
+* Add multiplication to the expression language (and extend the evaluation strategy)
+* Add distribution rules to the strategy
+* Add support for calculating with fractions (e.g. 5/7 + 1/2)
+    * Find the least common multiple of the denominators
+    * Rewrite top-heavy fractions to mixed fractions (e.g. 17/14 becomes 1+3/14)
+
 </div>
 <div class="page-footer">
 This tutorial is based on ideas-1.2. Last changed: May 2014

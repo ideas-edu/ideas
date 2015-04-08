@@ -11,9 +11,9 @@
 --
 -- Basic machinery for fully executing a core strategy expression, or only
 -- partially. Partial execution results in a prefix that keeps the current
--- locations in the strategy (a list of @Path@s) for continuing the execution 
--- later on. A path can be used to reconstruct the sequence of steps already 
--- performed (a so-called trace). Prefixes can be merged with the Monoid 
+-- locations in the strategy (a list of @Path@s) for continuing the execution
+-- later on. A path can be used to reconstruct the sequence of steps already
+-- performed (a so-called trace). Prefixes can be merged with the Monoid
 -- operation.
 --
 -----------------------------------------------------------------------------
@@ -66,7 +66,7 @@ coreToProcess useLabels = fromAtoms . toProcess . rec . coreSubstAll
          Rule r     -> single (Single (RuleStep mempty r))
          Fail       -> empty
          Succeed    -> done
-         Label l a  
+         Label l a
             | useLabels -> Single (Enter l) ~> rec a
                            <*> single (Single (Exit l))
             | otherwise -> rec a
@@ -88,7 +88,7 @@ collapse (Label l s) = Rule $ makeRule l (runCore s)
 collapse core = descend collapse core
 
 notCore :: Core a -> Builder (Sym (Step a))
-notCore core = single $ Single $ RuleStep mempty $ 
+notCore core = single $ Single $ RuleStep mempty $
    checkRule "core.not" $ null . runCore core
 
 --------------------------------------------------------------------------------
@@ -112,7 +112,7 @@ instance Firsts (Prefix a) where
    menu = fmap f . menu . remainder
     where
       f Done = Done
-      f ((st, a, path) :~> p) = (st, a) :~> Prefix [path] p 
+      f ((st, a, path) :~> p) = (st, a) :~> Prefix [path] p
 
 --------------------------------------------------------------------------------
 -- Constructing a prefix
@@ -124,14 +124,14 @@ noPrefix = Prefix [] empty
 -- | Make a prefix from a core strategy and a start term.
 makePrefix :: Core a -> a -> Prefix a
 makePrefix = snd . replayCore emptyPath
- 
--- | Construct a prefix by replaying a path in a core strategy: the third 
+
+-- | Construct a prefix by replaying a path in a core strategy: the third
 -- argument is the current term.
 replayCore :: Path -> Core a -> ([Step a], a -> Prefix a)
 replayCore path core =
    let (acc, p) = runPath path (withPath (coreToProcess True core))
    in (map fst acc, Prefix [path] . applySteps p)
-   
+
 runPath :: Path -> Process a -> ([a], Process a)
 runPath (Path is) = rec [] is
  where
@@ -140,7 +140,7 @@ runPath (Path is) = rec [] is
       case getByIndex n (menu p) of
          Just (a :~> r) -> rec (a:acc) ns r
          _ -> ([], empty)
-   
+
 applySteps :: Process (Step a, Path) -> a -> Process (Step a, a, Path)
 applySteps p a0 = prune (isMajor . fst3) (scan f a0 p)
  where
@@ -155,23 +155,23 @@ withPath = rec []
  where
    rec ns = mapWithIndex (menuItem done . f ns) . menu
 
-   f ns n a p = 
+   f ns n a p =
       let ms = n:ns
       in (a, Path (reverse ms)) ~> rec ms p
 
 --------------------------------------------------------------------------------
 -- Prefix fuctions
-      
+
 isEmptyPrefix :: Prefix a -> Bool
 isEmptyPrefix = all (== emptyPath) . getPaths
-      
+
 -- | Transforms the prefix such that only major steps are kept in the remaining
--- strategy. 
+-- strategy.
 majorPrefix :: Prefix a -> Prefix a
 majorPrefix prfx = prfx { remainder = hide (isMajor . fst3) (remainder prfx) }
 
--- | The searchModePrefix transformation changes the process in such a way that 
---   all intermediate states can only be reached by one path. A prerequisite is 
+-- | The searchModePrefix transformation changes the process in such a way that
+--   all intermediate states can only be reached by one path. A prerequisite is
 --   that symbols are unique (or only used once).
 searchModePrefix :: (Step a -> Step a -> Bool) -> Prefix a -> Prefix a
 searchModePrefix eq prfx =
@@ -181,13 +181,13 @@ searchModePrefix eq prfx =
 
    rec p | ready p   = done
          | otherwise = process (firsts p)
- 
+
    process [] = empty
-   process ((a, p):xs) = 
+   process ((a, p):xs) =
       let ys = map fst $ firsts (a ~> p)
       in (a ~> rec p) <|> process (concatMap (change ys) xs)
 
-   change ys (a, q) = 
+   change ys (a, q) =
       let f x = all (not . eq3 x) ys
       in firsts $ filterP f (a ~> q)
 
@@ -198,7 +198,7 @@ prefixPaths = getPaths
 --------------------------------------------------------------------------------
 -- Step
 
--- | The steps during the parsing process: enter (or exit) a labeled 
+-- | The steps during the parsing process: enter (or exit) a labeled
 -- sub-strategy, or a rule.
 data Step a = Enter Id                      -- ^ Enter a labeled sub-strategy
             | Exit Id                       -- ^ Exit a labeled sub-strategy
@@ -218,7 +218,7 @@ instance HasId (Step a) where
    getId (Enter l)      = getId l
    getId (Exit l)       = getId l
    getId (RuleStep _ r) = getId r
-   
+
    changeId f (Enter l)        = Enter (changeId f l)
    changeId f (Exit l)         = Exit  (changeId f l)
    changeId f (RuleStep env r) = RuleStep env (changeId f r)

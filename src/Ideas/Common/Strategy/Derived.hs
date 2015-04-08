@@ -17,8 +17,8 @@ module Ideas.Common.Strategy.Derived
    ) where
 
 import Ideas.Common.Strategy.Choice
-import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.Process
+import Ideas.Common.Strategy.Sequence
 
 useFirst :: Choice f => (a -> Process a -> f b) -> f b -> Process a -> f b
 useFirst op e = onMenu (menuItem e op) . menu

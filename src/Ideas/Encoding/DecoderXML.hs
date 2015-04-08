@@ -24,9 +24,9 @@ import Ideas.Common.Library hiding ((<|>))
 import Ideas.Common.Traversal.Navigator
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.OpenMathSupport
+import Ideas.Service.Request
 import Ideas.Service.State
 import Ideas.Service.Types
-import Ideas.Service.Request
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
 
@@ -64,8 +64,8 @@ xmlDecoder tp =
             StdGen      -> getStdGen
             Script      -> getScript
             Exercise    -> getExercise
-            Id          -> -- improve! 
-                           decodeChild "location" $ 
+            Id          -> -- improve!
+                           decodeChild "location" $
                               makeDecoder (newId . getData)
             _ -> fail $ "No support for argument type in XML: " ++ show tp
       _ -> fail $ "No support for argument type in XML: " ++ show tp
@@ -81,7 +81,7 @@ decodeLocation :: XMLDecoder a Location
 decodeLocation = decodeChild "location" $
    makeDecoder (toLocation . read . getData)
 
--- <state> 
+-- <state>
 decodeState :: XMLDecoder a (State a)
 decodeState = decodeChild "state"  $ do
    ex  <- getExercise
@@ -109,12 +109,12 @@ decodeContext = do
    expr <- decodeTerm
    env  <- decodeEnvironment
    let ctx    = setEnvironment env (inContext ex expr)
-       locRef = makeRef "location" 
-   case locRef ? env of 
-      Just s  -> maybe (fail "invalid location") return $ do 
+       locRef = makeRef "location"
+   case locRef ? env of
+      Just s  -> maybe (fail "invalid location") return $ do
          loc <- liftM toLocation (readM s)
          navigateTo loc (deleteRef locRef ctx)
-      Nothing -> 
+      Nothing ->
          return ctx
 
 decodeTerm :: XMLDecoder a a
@@ -132,9 +132,9 @@ decodeOMOBJ = decodeChild "OMOBJ" $ decoderFor $ \xml -> do
    case fromOpenMath ex omobj of
       Just a  -> return a
       Nothing -> fail "Invalid OpenMath object for this exercise"
-                
+
 decodeEnvironment :: XMLDecoder a Environment
-decodeEnvironment = 
+decodeEnvironment =
    decodeChild "context" (decoderFor $ foldM add mempty . children)
    <|> return mempty
  where
@@ -158,7 +158,7 @@ decodeEnvironment =
 -- <configuration>
 decodeConfiguration :: XMLDecoder a StrategyCfg
 decodeConfiguration = decodeChild "configuration" $
-   decoderFor $ \xml -> 
+   decoderFor $ \xml ->
       liftM mconcat $
          mapM decodeAction (children xml)
  where
@@ -187,7 +187,7 @@ decodeBinding = decoderFor $ \xml -> do
  where
    termBinding :: String -> Term -> Binding
    termBinding = makeBinding . makeRef
-   
+
 decodeChild :: String -> XMLDecoder a b -> XMLDecoder a b
 decodeChild s m = split f >>= (m //)
  where

@@ -101,26 +101,24 @@ import Control.Monad.Trans (MonadIO, liftIO)
 import Data.Char (toUpper)
 import Data.List (intersperse, sort, group)
 import Data.Maybe (fromMaybe)
-import qualified Data.Map as Map
 import Network.Multipart
 import Network.Multipart.Header
-import Network.URI (URI(..), URIAuth(..), nullURI, parseRelativeReference,
-                    escapeURIString, isUnescapedInURI)
+import Network.URI (URI(..), URIAuth(..), nullURI, parseRelativeReference, escapeURIString, isUnescapedInURI)
+import qualified Data.Map as Map
 import System.IO (stdin, stdout)
 
-import qualified Data.ByteString.Lazy.Char8 as BS
 import Data.ByteString.Lazy.Char8 (ByteString)
+import qualified Data.ByteString.Lazy.Char8 as BS
 
-import Network.CGI.Cookie (Cookie(..), showCookie, newCookie, findCookie)
-import qualified Network.CGI.Cookie as Cookie (deleteCookie)
 import Network.CGI.Accept
+import Network.CGI.Compat
+import Network.CGI.Cookie (Cookie(..), showCookie, newCookie, findCookie)
 import Network.CGI.Monad
 import Network.CGI.Protocol
-import Network.CGI.Compat
+import qualified Network.CGI.Cookie as Cookie (deleteCookie)
 
 import Text.XHtml (renderHtml, header, (<<), thetitle, (+++),
                    body, h1, paragraph, hr, address)
-
 
 -- | Run a CGI action. Typically called by the main function.
 --   Reads input from stdin and writes to stdout. Gets
@@ -128,7 +126,6 @@ import Text.XHtml (renderHtml, header, (<<), thetitle, (+++),
 runCGI :: MonadIO m => CGIT m CGIResult -> m ()
 runCGI f = do env <- getCGIVars
               hRunCGI env stdin stdout (runCGIT f)
-
 
 --
 -- * Output \/ redirect
@@ -264,7 +261,6 @@ outputInternalServerError :: (MonadIO m, MonadCGI m) =>
                              [String] -- ^ Error information.
                           -> m CGIResult
 outputInternalServerError es = outputError 500 "Internal Server Error" es
-
 
 --
 -- * Environment variables
@@ -491,7 +487,6 @@ requestURI =
                                   uriQuery = uriQuery req
                                  }
 
-
 --
 -- * Inputs
 --
@@ -617,7 +612,6 @@ setCookie = setHeader "Set-cookie" . showCookie
 deleteCookie :: MonadCGI m => Cookie -> m ()
 deleteCookie = setCookie . Cookie.deleteCookie
 
-
 --
 -- * Headers
 --
@@ -638,4 +632,3 @@ setStatus :: MonadCGI m =>
           -> String -- ^ HTTP status message, e.g. @"Not Found"@
           -> m ()
 setStatus c m = setHeader "Status" (show c ++ " " ++ m)
-

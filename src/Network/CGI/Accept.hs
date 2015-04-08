@@ -17,7 +17,6 @@ import Text.ParserCombinators.Parsec
 import Network.Multipart
 import Network.Multipart.Header
 
-
 --
 -- * Accept-X headers
 --
@@ -47,7 +46,6 @@ instance HeaderValue a => HeaderValue (Accept a) where
 
 starOrEqualTo :: String -> String -> Bool
 starOrEqualTo x y = x == "*" || x == y
-
 
 negotiate :: Acceptable a => [a] -> Maybe (Accept a) -> [a]
 negotiate ys Nothing = ys

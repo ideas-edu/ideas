@@ -123,7 +123,7 @@ repeat1 s = s <*> repeat s
 try :: IsStrategy f => f a -> Strategy a
 try s = s |> succeed
 
--- | Choose between the two strategies, with a preference for steps from the 
+-- | Choose between the two strategies, with a preference for steps from the
 -- left hand-side strategy.
 (>|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
 (>|>) = liftCore2 (:>|>)

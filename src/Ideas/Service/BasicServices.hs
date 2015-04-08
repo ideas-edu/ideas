@@ -83,7 +83,7 @@ tStepInfo = tTuple3 tRule tLocation tEnvironment
 allfirsts :: State a -> Either String [(StepInfo a, State a)]
 allfirsts state
    | withoutPrefix state = Left "Prefix is required"
-   | otherwise = Right $ 
+   | otherwise = Right $
         noDuplicates $ map make $ firsts state
  where
    make ((s, ctx), st) = ((stepRule s, location ctx, stepEnvironment s), st)

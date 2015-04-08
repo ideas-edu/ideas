@@ -71,7 +71,7 @@ equalM t1 t2 = maybe (fail msg) return (equal t1 t2)
 instance Equal f => Equal (TypeRep f) where
    equal (Iso p a)  t2         = fmap (. to p) (equal a t2)
    equal t1         (Iso p b)  = fmap (from p .) (equal t1 b)
-   equal (a :-> b)  (c :-> d)  = liftM2 (\f g h -> g . h . f) 
+   equal (a :-> b)  (c :-> d)  = liftM2 (\f g h -> g . h . f)
                                         (equal c a) (equal b d)
    equal (Pair a b) (Pair c d) = liftM2 (***) (equal a c) (equal b d)
    equal (a :|: b)  (c :|: d)  = liftM2 biMap (equal a c) (equal b d)

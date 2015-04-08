@@ -34,15 +34,15 @@ module Network.CGI.Protocol (
 
 import Control.Monad.Trans (MonadIO(..))
 import Data.List (intersperse)
-import qualified Data.Map as Map
 import Data.Map (Map)
 import Data.Maybe (fromMaybe, listToMaybe, isJust)
 import Network.URI (unEscapeString,escapeURIString,isUnescapedInURI)
 import System.Environment (getEnvironment)
 import System.IO (Handle, hPutStrLn, stderr, hFlush, hSetBinaryMode)
+import qualified Data.Map as Map
 
-import qualified Data.ByteString.Lazy.Char8 as BS
 import Data.ByteString.Lazy.Char8 (ByteString)
+import qualified Data.ByteString.Lazy.Char8 as BS
 
 -- #if MIN_VERSION_base(4,7,0)
 -- import Data.Typeable
@@ -51,8 +51,6 @@ import Data.ByteString.Lazy.Char8 (ByteString)
 -- #endif
 
 import Network.Multipart
-
-
 
 --
 -- * CGI request
@@ -151,11 +149,9 @@ formatResponse c hs =
 defaultContentType :: String
 defaultContentType = "text/html; charset=ISO-8859-1"
 
-
 --
 -- * Inputs
 --
-
 
 -- | Gets and decodes the input according to the request
 --   method and the content-type.
@@ -300,7 +296,6 @@ bodyPartToInput (BodyPart hs b) =
               _ -> ("ERROR",simpleInput "ERROR") -- FIXME: report error
     where ctype = fromMaybe defaultInputType (getContentType hs)
 
-
 --
 -- * Utilities
 --
@@ -320,4 +315,3 @@ maybeRead = fmap fst . listToMaybe . reads
 --   returns the empty string if lookup fails.
 lookupOrNil :: String -> [(String,String)] -> String
 lookupOrNil n = fromMaybe "" . lookup n
-

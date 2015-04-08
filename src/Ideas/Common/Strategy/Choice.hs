@@ -8,7 +8,7 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A type class with an implementation for expressing choice and left-biased 
+-- A type class with an implementation for expressing choice and left-biased
 -- choice.
 --
 -----------------------------------------------------------------------------
@@ -32,13 +32,13 @@ infixr 3 <|>, >|>, |>, :|:, :>|, :|>
 ------------------------------------------------------------------------
 -- Choice type class
 
--- | Laws: '<|>', '>|>' '|>' are all associative, and have 'empty' as their 
+-- | Laws: '<|>', '>|>' '|>' are all associative, and have 'empty' as their
 -- unit element.
 class Choice f where
    -- | Nothing to choose from.
-   empty :: f a 
+   empty :: f a
    -- | One element.
-   single :: a -> f a 
+   single :: a -> f a
    -- | Normal (unbiased) choice.
    (<|>) :: f a -> f a -> f a
    -- | Left-preference.
@@ -51,7 +51,7 @@ class Choice f where
    choice :: [f a] -> f a
    -- default implementation
    oneof = choice . map single
-   choice xs 
+   choice xs
       | null xs   = empty
       | otherwise = foldr1 (<|>) xs
 
@@ -67,7 +67,7 @@ instance Choice [] where
 ------------------------------------------------------------------------
 -- Menu data type
 
--- Invariants for the Menu datatype: 
+-- Invariants for the Menu datatype:
 -- (Unit) The left-hand side of :|: and :|> cannot be Empty
 -- (Asso) :|: and :|> are balanced to the right
 
@@ -93,13 +93,13 @@ instance Choice Menu where
      rec p         = case rest of -- strict: also check rhs
                         Empty -> p
                         _     -> p :|: rest
-     
+
    p0 >|> rest = rec p0 -- maintain invariant
     where
      rec Empty     = rest
      rec (p :>| q) = p :>| rec q
      rec p         = p :>| rest
-     
+
    p0 |> rest = rec p0 -- maintain invariant
     where
      rec Empty     = rest
@@ -116,7 +116,7 @@ instance Monad Menu where
 
 -- | Equality with a comparison function for the elements
 eqMenuBy :: (a -> a -> Bool) -> Menu a -> Menu a -> Bool
-eqMenuBy eq = test 
+eqMenuBy eq = test
  where
    test (p1 :|: p2) (q1 :|: q2) = test p1 q1 && test p2 q2
    test (p1 :>| p2) (q1 :>| q2) = test p1 q1 && test p2 q2
@@ -128,7 +128,7 @@ eqMenuBy eq = test
    test p (q :>| Empty) = test p q
    test p (q :|> Empty) = test p q
    test _ _ = False
-   
+
 ------------------------------------------------------------------------
 -- Queries
 
@@ -142,7 +142,7 @@ elems = ($ []) . rec
    rec (Single p) = (p:)
    rec Empty      = id
 
--- | Returns only the best elements that are in the menu. 
+-- | Returns only the best elements that are in the menu.
 bests :: Menu a -> [a]
 bests (p :|: q)  = bests p ++ bests q
 bests (p :>| q)  = bests p ++ bests q
@@ -150,7 +150,7 @@ bests (p :|> q)  = bests p |> bests q
 bests (Single a) = [a]
 bests Empty      = []
 
--- | Returns only the best elements that are in the menu, with a given ordering. 
+-- | Returns only the best elements that are in the menu, with a given ordering.
 bestsOrdered :: (a -> a -> Ordering) -> Menu a -> [a]
 bestsOrdered cmp = rec
  where
@@ -159,7 +159,7 @@ bestsOrdered cmp = rec
    rec (p :|> q)  = rec p |> rec q
    rec (Single a) = [a]
    rec Empty      = []
-   
+
    -- merge two lists with comparison function
    merge lx@(x:xs) ly@(y:ys)
       | cmp x y == GT = y : merge lx ys
@@ -219,15 +219,14 @@ cutOn f = snd . rec
 mapWithIndex :: Choice f => (Int -> a -> f b) -> Menu a -> f b
 mapWithIndex f = snd . rec 0
  where
-   rec n (p :|: q)  = let (n1, pn) = rec n p 
+   rec n (p :|: q)  = let (n1, pn) = rec n p
                           (n2, qn) = rec n1 q
                       in (n2, pn <|> qn)
-   rec n (p :>| q)  = let (n1, pn) = rec n p 
+   rec n (p :>| q)  = let (n1, pn) = rec n p
                           (n2, qn) = rec n1 q
                       in (n2, pn >|> qn)
-   rec n (p :|> q)  = let (n1, pn) = rec n p 
+   rec n (p :|> q)  = let (n1, pn) = rec n p
                           (n2, qn) = rec n1 q
                       in (n2, pn |> qn)
    rec n (Single a) = (n+1, f n a)
    rec n Empty      = (n, empty)
-                  

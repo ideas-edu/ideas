@@ -374,10 +374,10 @@ randomTerms rng ex mdif = rec rng
 -- | Shows the default derivation for a given start term. The specified rule ordering
 -- is used for selection.
 showDerivation :: Exercise a -> a -> String
-showDerivation ex a = 
-   case defaultDerivation ex a of 
+showDerivation ex a =
+   case defaultDerivation ex a of
       Just d  -> showThisDerivation d ex
-      Nothing -> "no derivation" 
+      Nothing -> "no derivation"
 
 -- | Shows all derivations for a given start term. Warning: there can be many
 -- derivations.
@@ -427,5 +427,5 @@ defaultDerivation :: Exercise a -> a -> Maybe (Derivation (Rule (Context a), Env
 defaultDerivation ex = listToMaybe . allDerivations ex
 
 allDerivations :: Exercise a -> a -> [Derivation (Rule (Context a), Environment) (Context a)]
-allDerivations ex = 
+allDerivations ex =
    derivationList (ruleOrdering ex) (strategy ex) . inContext ex

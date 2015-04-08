@@ -52,9 +52,9 @@ submit state ctx = fromDiagnose (diagnose state ctx Nothing)
 tResult :: Type a (Result a)
 tResult = Tag "Result" (Iso (f <-> g) tp)
     where
-      tp = tList tRule :|: tString :|: tPair (tList tRule) tState 
+      tp = tList tRule :|: tString :|: tPair (tList tRule) tState
            :|: tPair (tList tRule) tState :|: tState
-    
+
       f (Left rs) = Buggy rs
       f (Right (Left s)) = NotEquivalent s
       f (Right (Right (Left (rs, s)))) = Ok rs s

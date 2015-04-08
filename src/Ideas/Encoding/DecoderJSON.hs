@@ -99,7 +99,7 @@ decodeState = do
             a    <- decodeTerm        // term
             env  <- decodeEnvironment // jsonContext
             let loc = envToLoc env
-                ctx = navigateTowards loc $ deleteRef locRef $ 
+                ctx = navigateTowards loc $ deleteRef locRef $
                          setEnvironment env $ inContext ex a
                 prfx = replayPaths pts (strategy ex) ctx
             return $ makeState ex prfx ctx

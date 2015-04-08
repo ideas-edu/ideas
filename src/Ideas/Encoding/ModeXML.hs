@@ -21,9 +21,9 @@ import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Common.Utils (Some(..), timedSeconds)
 import Ideas.Encoding.DecoderXML
+import Ideas.Encoding.Encoder (makeOptions)
 import Ideas.Encoding.EncoderHTML
 import Ideas.Encoding.EncoderXML
-import Ideas.Encoding.Encoder (makeOptions)
 import Ideas.Encoding.Evaluator
 import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
@@ -75,10 +75,10 @@ xmlReply :: DomainReasoner -> Request -> XML -> IO XML
 xmlReply dr request xml = do
    srv <- case serviceId request of
              Just a  -> findService dr a
-             Nothing -> fail "No service" 
-   
+             Nothing -> fail "No service"
+
    Some options <- makeOptions dr request
-   
+
    -- HTML evaluator
    if htmlOutput request
       then do

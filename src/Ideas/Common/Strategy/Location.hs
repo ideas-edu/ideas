@@ -31,7 +31,7 @@ import Ideas.Common.Utils.Uniplate
 checkLocation :: Id -> LabeledStrategy a -> Bool
 checkLocation loc =
    any ((==loc) . getId . snd) . strategyLocations
-   
+
 -- old (current) and actual (next major rule) location
 subTaskLocation :: LabeledStrategy a -> Id -> Id -> Id
 subTaskLocation s xs ys = g (rec (f xs) (f ys))

@@ -64,10 +64,10 @@ newtype WithZero a = WZ { fromWithZero :: Maybe a }
 instance Monoid a => Monoid (WithZero a) where
    mempty = WZ (Just mempty)
    mappend x y = WZ (liftM2 mappend (fromWithZero x) (fromWithZero y))
-   
+
 instance Monoid a => MonoidZero (WithZero a) where
    mzero = WZ Nothing
- 
+
 instance Traversable WithZero where
    traverse f = liftA WZ . traverse f . fromWithZero
 

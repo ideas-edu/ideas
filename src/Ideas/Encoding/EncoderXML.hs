@@ -57,7 +57,7 @@ xmlEncoder =
                  Just f  -> ruleShortInfo // f val
                  Nothing -> fail "rule short info"
            Tag "RulesInfo" _ ->
-              withExercise $ \ex -> 
+              withExercise $ \ex ->
               withOpenMath $ \useOM ->
                  pure (rulesInfoXML ex (buildTerm useOM ex))
            Tag "elem" t ->

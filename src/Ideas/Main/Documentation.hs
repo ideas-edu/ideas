@@ -18,9 +18,9 @@ module Ideas.Main.Documentation (makeDocumentation) where
 import Control.Monad
 import Ideas.Common.Library
 import Ideas.Common.Utils
+import Ideas.Encoding.Encoder (run, simpleOptions)
 import Ideas.Encoding.EncoderHTML
 import Ideas.Encoding.LinkManager
-import Ideas.Encoding.Encoder (run, simpleOptions)
 import Ideas.Service.BasicServices
 import Ideas.Service.DomainReasoner
 import Ideas.Service.Types

@@ -9,12 +9,12 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A type class for sequences together with the 'Step' datatype. 
--- 
+-- A type class for sequences together with the 'Step' datatype.
+--
 -----------------------------------------------------------------------------
 --  $Id: Sequential.hs 6612 2014-06-12 07:57:59Z bastiaan $
 
-module Ideas.Common.Strategy.Sequence 
+module Ideas.Common.Strategy.Sequence
    ( -- * Sequence type class
      Sequence(..)
      -- * Firsts type class
@@ -36,7 +36,7 @@ infixr 5 :~>, ~>, <*>
 class Sequence f where
    -- | The empty sequence.
    done :: f a
-   -- | Prefix a sequence with one element. 
+   -- | Prefix a sequence with one element.
    (~>) :: a -> f a -> f a
    -- | Append two sequences.
    (<*>) :: f a -> f a -> f a
@@ -55,7 +55,7 @@ class Firsts s where
    firsts = bests . firstsMenu
    -- | The menu offers single steps (with the remainder) and 'done' steps.
    menu :: s -> Menu (MenuItem (Elem s) s)
-   
+
 firstsMenu :: Firsts s => s -> Menu (Elem s, s)
 firstsMenu s = do
    item <- cut (menu s)
@@ -63,10 +63,10 @@ firstsMenu s = do
       a :~> t -> return (a, t)
       Done    -> empty
 
-firstsOrdered :: Firsts s => (Elem s -> Elem s -> Ordering) 
+firstsOrdered :: Firsts s => (Elem s -> Elem s -> Ordering)
               -> s -> [(Elem s, s)]
 firstsOrdered cmp = bestsOrdered (cmp `on` fst) . firstsMenu
-   
+
 firstsTree :: Firsts s => s -> DerivationTree (Elem s) s
 firstsTree x = addBranches bs tr
  where
@@ -79,7 +79,7 @@ stopped = isEmpty . menu
 
 ------------------------------------------------------------------------
 -- MenuItem data type with some utility functions
- 
+
 data MenuItem a s = a :~> s   -- ^ A single step.
                   | Done      -- ^ No step (we are done).
 
@@ -89,7 +89,7 @@ instance Functor (MenuItem a) where
 instance BiFunctor MenuItem where
    biMap f g = menuItem Done (\a s -> f a :~> g s)
 
--- | The 'menuItem' function takes a default value for 'Done' and a function 
+-- | The 'menuItem' function takes a default value for 'Done' and a function
 -- to combine the values for a single step.
 menuItem :: b -> (a -> s -> b) -> MenuItem a s -> b
 menuItem b _ Done      = b

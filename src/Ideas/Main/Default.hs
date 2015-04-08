@@ -58,7 +58,7 @@ defaultCGI dr = runCGI $ handleErrors $ do
    cgiBin    <- scriptName       -- get name of binary
    input     <- inputOrDefault
    -- process request
-   (req, txt, ctp) <- liftIO $ 
+   (req, txt, ctp) <- liftIO $
       process dr (Just cgiBin) input
    -- log request to database
    when (useLogging req) $
@@ -76,14 +76,14 @@ inputOrDefault = do
    ms     <- getInput "input" -- read variable 'input'
    case ms of
       Just s -> return s
-      Nothing 
-         | inHtml    -> return defaultBrowser 
+      Nothing
+         | inHtml    -> return defaultBrowser
          | otherwise -> fail "environment variable 'input' is empty"
- where      
+ where
    -- Invoked from browser
    defaultBrowser :: String
    defaultBrowser = "<request service='index' encoding='html'/>"
- 
+
    acceptsHTML :: CGI Bool
    acceptsHTML = do
       maybeAcceptCT <- requestAccept
@@ -125,7 +125,7 @@ process :: DomainReasoner -> Maybe String -> String -> IO (Request, String, Stri
 process dr cgiBin input = do
    format <- discoverDataFormat input
    run format (Just 5) cgiBin dr input
- `catch` \ioe -> 
+ `catch` \ioe ->
    let msg = "Error: " ++ ioeGetErrorString ioe
    in return (emptyRequest, msg, "text/plain")
  where

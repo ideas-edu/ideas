@@ -15,7 +15,6 @@ module Ideas.Main.BlackBoxTests (blackBoxTests) where
 
 import Control.Exception
 import Control.Monad
-import qualified Data.Algorithm.Diff as Diff
 import Data.Char
 import Data.List
 import Ideas.Common.Utils (useFixedStdGen, snd3)
@@ -26,6 +25,7 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import System.Directory
 import System.IO
+import qualified Data.Algorithm.Diff as Diff
 
 -- Returns the number of tests performed
 blackBoxTests :: DomainReasoner -> String -> IO TestSuite
@@ -79,7 +79,7 @@ force s | sum (map ord s) >= 0 = return ()
 
 prepare :: String -> [String]
 prepare = filter (not . null) . lines . filter (/= '\r') . noVersion
- where  
+ where
    noVersion s | "version\": \"" `isPrefixOf` s =
       "version\": \"X" ++ dropWhile (/='"') (drop 11 s)
    noVersion s | "version=\"" `isPrefixOf` s =

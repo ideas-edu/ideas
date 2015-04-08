@@ -30,8 +30,8 @@ module Ideas.Encoding.LinkManager
 
 import Data.Maybe
 import Ideas.Common.Library
-import Ideas.Encoding.EncoderXML
 import Ideas.Encoding.Encoder
+import Ideas.Encoding.EncoderXML
 import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Text.HTML
@@ -158,7 +158,7 @@ dynamicLinks cgiBinary = LinkManager
    , urlForFirsts       = url . stateRequest "allfirsts"
    , urlForApplications = url . stateRequest "allapplications"
    , urlForDerivation   = url . stateRequest "derivation"
-   , urlForMicrosteps   = url . stateRequest "microsteps" 
+   , urlForMicrosteps   = url . stateRequest "microsteps"
    }
  where
    prefix  = cgiBinary ++ "?input="

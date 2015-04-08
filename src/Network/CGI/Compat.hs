@@ -23,20 +23,19 @@ import Control.Concurrent (forkIO)
 import Control.Exception as Exception (SomeException, throw, catch, finally)
 import Control.Monad (unless)
 import Control.Monad.Trans (MonadIO, liftIO)
-import qualified Data.Map as Map
 import Network (PortID, Socket, listenOn, connectTo)
 import Network.Socket as Socket (SockAddr(SockAddrInet), accept, socketToHandle)
-import System.IO (Handle, hPutStrLn, stdin, stdout,
-                  hGetLine, hClose, IOMode(ReadWriteMode))
+import System.IO (Handle, hPutStrLn, stdin, stdout, hGetLine, hClose, IOMode(ReadWriteMode))
+import qualified Data.Map as Map
+                  
 import System.IO.Error (isEOFError)
 
-import qualified Data.ByteString.Lazy.Char8 as BS
 import Data.ByteString.Lazy.Char8 (ByteString)
+import qualified Data.ByteString.Lazy.Char8 as BS
 
 import Text.XHtml (Html, renderHtml)
 
 import Network.CGI.Protocol
-
 
 {-# DEPRECATED wrapper, pwrapper, connectToCGIScript "Use the new interface." #-}
 

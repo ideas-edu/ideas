@@ -91,16 +91,16 @@ encodeEnvironment = makeEncoder $ \env ->
    in Array [ f a | a <- bindings env ]
 
 encodeContext :: JSONEncoder a (Context a)
-encodeContext = exerciseEncoder $ \ex ctx -> 
+encodeContext = exerciseEncoder $ \ex ctx ->
    String $ prettyPrinterContext ex ctx
 
 encodeState :: JSONEncoder a (State a)
 encodeState = encoderFor $ \st ->
    let ctx = stateContext st
-       make pp env = Array 
+       make pp env = Array
           [ String $ showId (exercise st)
-          , String $ if withoutPrefix st 
-                     then "NoPrefix" 
+          , String $ if withoutPrefix st
+                     then "NoPrefix"
                      else show (statePrefix st)
           , pp
           , env

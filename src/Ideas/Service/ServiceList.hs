@@ -302,7 +302,7 @@ microstepsS = makeService "meta.microsteps" "Next (minor) steps." $
 
 examplederivationsS :: Service
 examplederivationsS = makeService "meta.examplederivations"
-   "Show example derivations" $ 
+   "Show example derivations" $
    exampleDerivations ::: tExercise .-> tError (tList (tDerivation (tPair tRule tEnvironment) tContext))
 
 testreportS :: Service

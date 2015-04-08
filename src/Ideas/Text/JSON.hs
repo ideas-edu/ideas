@@ -215,7 +215,7 @@ instance InJSON RPCRequest where
                 ij = fromMaybe Null (lookupM "id" json)
             in return (Request s pj ij)
          Just _  -> fail "expecting a string as method"
-         Nothing -> fail "no method specified" 
+         Nothing -> fail "no method specified"
 
 instance InJSON RPCResponse where
    toJSON resp = Object

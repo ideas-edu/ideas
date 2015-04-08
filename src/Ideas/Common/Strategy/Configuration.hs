@@ -18,11 +18,11 @@ module Ideas.Common.Strategy.Configuration
    ) where
 
 import Data.Char
+import Data.Monoid
 import Ideas.Common.Id
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Core hiding (Remove, Collapse, Hide)
 import Ideas.Common.Utils.Uniplate
-import Data.Monoid
 import qualified Ideas.Common.Strategy.Core as Core
 
 ---------------------------------------------------------------------
@@ -36,7 +36,7 @@ instance Show StrategyCfg where
 instance Monoid StrategyCfg where
    mempty  = Cfg []
    mconcat xs = Cfg [ y | Cfg ys <- xs, y <- ys ]
-   mappend (Cfg xs) (Cfg ys) = Cfg (xs ++ ys)   
+   mappend (Cfg xs) (Cfg ys) = Cfg (xs ++ ys)
 
 data ConfigLocation = ByName Id
 
@@ -47,8 +47,8 @@ data ConfigAction = Remove | Reinsert | Collapse | Expand | Hide | Reveal
    deriving (Show, Eq)
 
 instance Read ConfigAction where
-   readsPrec _ s = 
-      let f = map toLower 
+   readsPrec _ s =
+      let f = map toLower
       in [ (x, "") | x <- concat actionGroups, f s == f (show x) ]
 
 actionGroups :: [[ConfigAction]]
@@ -69,7 +69,7 @@ configureS cfg = fromCore . configureCore cfg . toCore
 configureCore :: StrategyCfg -> Core a -> Core a
 configureCore (Cfg pairs) = rec
  where
-   rec core = 
+   rec core =
       case core of
          Core.Remove s   | has Reinsert -> rec s
          Core.Collapse s | has Expand   -> rec s
@@ -80,12 +80,12 @@ configureCore (Cfg pairs) = rec
     where
       myLabel  = getLabel core
       actions  = cancel [ a | (loc, a) <- pairs, maybe False (here loc) myLabel ]
-      has      = (`elem` actions) 
+      has      = (`elem` actions)
       make x g = if has x then g else id
-      
+
       props    = make Remove   Core.Remove
                . make Hide     Core.Hide
-               . make Collapse Core.Collapse 
+               . make Collapse Core.Collapse
 
 here :: ConfigLocation -> Id -> Bool
 here (ByName a) info = getId info == a

@@ -69,13 +69,13 @@ makePage lm dr a =
       ]
 
 encodeType :: LinkManager -> DomainReasoner -> HTMLEncoder a (TypedValue (Type a))
-encodeType lm dr = 
+encodeType lm dr =
    (encodeIndex, tDomainReasoner) <?>
    (exerciseHeader lm <> htmlDiagnosis lm dr, tDiagnosis) <?>
    (exerciseHeader lm <> encodeExampleList lm, tList (tPair tDifficulty tContext)) <?>
-   (exerciseHeader lm <> htmlFirsts lm, tList (tPair tStepInfo tState)) <?> 
-   (exerciseHeader lm <> htmlAllApplications lm, tList (tTuple3 tRule tLocation tState)) <?> 
-   (exerciseHeader lm <> encodeDerivation lm, tDerivation (tPair tRule tEnvironment) tContext) <?> 
+   (exerciseHeader lm <> htmlFirsts lm, tList (tPair tStepInfo tState)) <?>
+   (exerciseHeader lm <> htmlAllApplications lm, tList (tTuple3 tRule tLocation tState)) <?>
+   (exerciseHeader lm <> encodeDerivation lm, tDerivation (tPair tRule tEnvironment) tContext) <?>
    (exerciseHeader lm <> encodeDerivationList lm, tList (tDerivation (tPair tRule tEnvironment) tContext)) <?>
    encoderFor (\(val ::: tp) ->
         case tp of
@@ -364,7 +364,7 @@ showRating lm = rec (5::Int)
 encodeRuleList :: LinkManager -> HTMLEncoder a [Rule (Context a)]
 encodeRuleList lm = exerciseEncoder $ \ex rs ->
    let (rs1, rs2) = partition isBuggy rs
-   
+
        header = [ string "Rule name", string "Args"
                 , string "Used", string "Siblings", string "Rewrite rule"
                 ]
@@ -376,7 +376,7 @@ encodeRuleList lm = exerciseEncoder $ \ex rs ->
               , mwhen (isRewriteRule r) $
                    ruleToHTML (Some ex) r
               ]
-   
+
    in mconcat
          [ h2 $ "Rules for " ++ showId ex
          , table True (header:map f rs2)
@@ -468,21 +468,21 @@ htmlState lm = makeEncoder $ \state ->
       <> string "ready: " <> bool (finished state)
 
 stateLink :: LinkManager -> State a -> HTMLBuilder
-stateLink lm st 
+stateLink lm st
    | isStatic lm = mempty
-   | otherwise = 
+   | otherwise =
         spanClass "derivation-statelink" $ linkToState lm st $ external lm
 
 encodeState :: LinkManager -> DomainReasoner -> HTMLEncoder a (State a)
 encodeState lm dr =
-   htmlState lm <> 
+   htmlState lm <>
    makeEncoder (\state ->
       let xs = useAllFirsts dr state
           n  = either (const 0) length xs
       in mconcat
          [ h2 "Feedback"
          , submitDiagnose lm state
-         , ul [ case xs of 
+         , ul [ case xs of
                    Right (hd:_) -> linkToState lm (snd hd) $ string "onefirst"
                    _ -> string "(no onefirst)"
               , linkToFirsts lm state $ string $ "allfirsts (" ++ show n ++ ")"
@@ -494,7 +494,7 @@ encodeState lm dr =
               h2 "Environment" <> text (environment state)
          , encodePrefix state (statePrefix state)
          ])
-         
+
 -- use allfirsts service of domain reasoner, instead of calling the service
 -- directly. Note that the service can be redefined (e.g. for the Ask-Elle tutor)
 useAllFirsts :: DomainReasoner -> State a -> Either String [(StepInfo a, State a)]
@@ -504,12 +504,12 @@ useAllFirstsIO :: DomainReasoner -> State a -> IO (Either String [(StepInfo a, S
 useAllFirstsIO dr st = do
    srv <- findService dr (newId "allfirsts")
    case serviceFunction srv of
-      f ::: tp -> do 
+      f ::: tp -> do
          conv <- equalM tp (tState .-> tError (tList (tPair tStepInfo tState)))
          return (conv f st)
 
 encodePrefix :: State a -> Prefix (Context a) -> HTMLBuilder
-encodePrefix st = 
+encodePrefix st =
    mconcat . zipWith3 make [1::Int ..] (stateLabels st) . prefixPaths
  where
    make i ls path = mconcat

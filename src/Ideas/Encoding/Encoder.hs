@@ -14,12 +14,12 @@
 
 module Ideas.Encoding.Encoder
    ( -- * Converter type class
-     Converter(..) 
+     Converter(..)
    , getExercise, getStdGen, getScript, getRequest
    , withExercise, withOpenMath, (//)
      -- * Options
    , Options, simpleOptions, makeOptions
-     -- * Encoder datatype 
+     -- * Encoder datatype
    , Encoder, TypedEncoder
    , makeEncoder, encoderFor, exerciseEncoder
    , (<?>), encodeTyped
@@ -34,22 +34,22 @@ module Ideas.Encoding.Encoder
 
 import Control.Applicative hiding (Const)
 import Control.Arrow
-import qualified Control.Category as C
+import Control.Monad
 import Data.Monoid
 import Ideas.Common.Library hiding (exerciseId, symbol)
 import Ideas.Common.Utils (Some(..))
-import Ideas.Service.FeedbackScript.Parser (parseScriptSafe, Script)
-import Ideas.Service.Types
 import Ideas.Service.DomainReasoner
+import Ideas.Service.FeedbackScript.Parser (parseScriptSafe, Script)
 import Ideas.Service.Request
+import Ideas.Service.Types
 import Ideas.Text.XML
-import Control.Monad
 import System.Random (newStdGen, mkStdGen, StdGen)
+import qualified Control.Category as C
 
 -------------------------------------------------------------------
 -- Converter type class
 
-class Converter f where 
+class Converter f where
    fromOptions :: (Options a -> t) -> f a s t
    run  :: Monad m => f a s t -> Options a -> s -> m t
 
@@ -87,8 +87,8 @@ data Options a = Options
    }
 
 simpleOptions :: Exercise a -> Options a
-simpleOptions ex = 
-   let req = emptyRequest {encoding = [EncHTML]} 
+simpleOptions ex =
+   let req = emptyRequest {encoding = [EncHTML]}
    in Options ex req (mkStdGen 0) mempty
 
 makeOptions :: DomainReasoner -> Request -> IO (Some Options)
@@ -104,7 +104,7 @@ makeOptions dr req = do
                 | getId ex == mempty -> return mempty
                 | otherwise          -> defaultScript dr (getId ex)
    stdgen <- newStdGen
-   return $ Some Options 
+   return $ Some Options
       { exercise = ex
       , request  = req
       , stdGen   = stdgen
@@ -123,8 +123,8 @@ instance C.Category (Encoder a) where
    f . g = Enc $ \xs -> runEnc g xs >=> runEnc f xs
 
 instance Arrow (Encoder a) where
-   arr   f = Enc $ \_ -> return . f  
-   first f = Enc $ \xs (a, b) -> runEnc f xs a >>= \c -> return (c, b)  
+   arr   f = Enc $ \_ -> return . f
+   first f = Enc $ \xs (a, b) -> runEnc f xs a >>= \c -> return (c, b)
 
 instance Monad (Encoder a s) where
    return a = Enc $ \_ _ -> return a
@@ -135,12 +135,12 @@ instance Monad (Encoder a s) where
 
 instance MonadPlus (Encoder a s) where
    mzero = fail "Decoder: mzero"
-   mplus p q = Enc $ \xs s -> 
+   mplus p q = Enc $ \xs s ->
       runEnc p xs s `mplus` runEnc q xs s
 
 instance Functor (Encoder a s) where
    fmap = liftM
-   
+
 instance Applicative (Encoder a s) where
    pure  = return
    (<*>) = liftM2 ($)
@@ -197,16 +197,16 @@ instance Monad (Decoder a s) where
 
 instance MonadPlus (Decoder a s) where
    mzero = fail "Decoder: mzero"
-   mplus p q = Dec $ \xs s -> 
+   mplus p q = Dec $ \xs s ->
       runDec p xs s `mplus` runDec q xs s
 
 instance Functor (Decoder a s) where
    fmap = liftM
-   
+
 instance Applicative (Decoder a s) where
    pure  = return
    (<*>) = liftM2 ($)
-   
+
 instance Alternative (Decoder a s) where
    empty = fail "Decoder: empty"
    (<|>) = mplus
@@ -253,7 +253,7 @@ instance MonadPlus Error where
    mzero     = fail "mzero"
    mplus p q = Error $
       case (runError p, runError q) of
-         (Right a, _) -> Right a      
+         (Right a, _) -> Right a
          (_, Right a) -> Right a
          (Left s, _)  -> Left s
 

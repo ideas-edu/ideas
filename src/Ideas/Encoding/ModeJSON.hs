@@ -19,9 +19,9 @@ import Data.Char
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (Some(..), timedSeconds)
 import Ideas.Encoding.DecoderJSON
+import Ideas.Encoding.Encoder (makeOptions)
 import Ideas.Encoding.EncoderJSON
 import Ideas.Encoding.Evaluator
-import Ideas.Encoding.Encoder (makeOptions)
 import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import Ideas.Text.JSON

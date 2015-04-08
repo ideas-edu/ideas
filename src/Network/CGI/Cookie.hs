@@ -135,7 +135,6 @@ showPair :: String -- ^ name
          -> String
 showPair name value = name ++ "=" ++ value
 
-
 -- | Gets all the cookies from a Cookie: header value
 readCookies :: String             -- ^ String to parse
             -> [(String,String)]  -- ^ Cookie name - cookie value pairs

@@ -11,7 +11,7 @@
 --
 -- Processes must support choices and sequences. This module defines a type
 -- class, an implementation, and utility functions.
--- 
+--
 -----------------------------------------------------------------------------
 --  $Id$
 
@@ -41,7 +41,7 @@ class (Choice f, Sequence f) => IsProcess f where
 ------------------------------------------------------------------------
 -- Process data type
 
--- | This datatype implements choices and sequences, but is slow for 
+-- | This datatype implements choices and sequences, but is slow for
 -- building sequences with the '<*>' combinator. See the 'Builder' data
 -- type for a faster alternative.
 newtype Process a = P (Menu (MenuItem a (Process a)))
@@ -61,7 +61,7 @@ instance Choice Process where
    P x <|> P y = P (x <|> y)
    P x >|> P y = P (x >|> y)
    P x  |> P y = P (x |> y)
-   
+
 instance Sequence Process where
    done   = P (return Done)
    a ~> p = P (return (a :~> p))
@@ -73,19 +73,19 @@ instance Sequence Process where
          case st of
             a :~> p -> return (a :~> rec p)
             Done    -> rest
- 
+
 instance IsProcess Process where
    toProcess = id
 
 instance Firsts (Process a) where
    type Elem (Process a) = a
-   
+
    menu (P m) = m
 
--- | Generalized equality of processes, which takes an equality function for 
--- the symbols. 
+-- | Generalized equality of processes, which takes an equality function for
+-- the symbols.
 eqProcessBy :: (a -> a -> Bool) -> Process a -> Process a -> Bool
-eqProcessBy eq = rec 
+eqProcessBy eq = rec
  where
    rec p q = eqMenuBy eqStep (menu p) (menu q)
 
@@ -96,10 +96,10 @@ eqProcessBy eq = rec
 ------------------------------------------------------------------------
 -- Building sequences
 
--- | The 'Builder' data type offers a fast implementation for building 
--- sequences. The data type implements the 'IsProcess' type class. 
--- A 'Builder' value must be converted to a 'Process' (with 'toProcess') 
--- it can be inspected in any way. 
+-- | The 'Builder' data type offers a fast implementation for building
+-- sequences. The data type implements the 'IsProcess' type class.
+-- A 'Builder' value must be converted to a 'Process' (with 'toProcess')
+-- it can be inspected in any way.
 
 newtype Builder a = B (Process a -> Process a)
 
@@ -109,7 +109,7 @@ instance Choice Builder where
    B f <|> B g = B (\p -> f p <|> g p)
    B f >|> B g = B (\p -> f p >|> g p)
    B f  |> B g = B (\p -> f p  |> g p)
-   
+
 instance Sequence Builder where
    done        = B id
    a ~> B f    = B ((a ~>) . f)
@@ -121,27 +121,27 @@ instance IsProcess Builder where
 ------------------------------------------------------------------------
 -- Higher-order functions for iterating over a Process
 
--- | Folding over a process takes a function for single steps and for 'done'. 
+-- | Folding over a process takes a function for single steps and for 'done'.
 {-# INLINE fold #-}
 fold :: Choice f => (a -> f b -> f b) -> f b -> Process a -> f b
-fold op e = rec 
+fold op e = rec
  where
    rec = onMenu (menuItem e (\a -> op a . rec)) . menu
 
 {-# INLINE accum #-}
 accum :: (a -> b -> [b]) -> b -> Process a -> Menu b
-accum f = rec 
+accum f = rec
  where
    rec b p = menu p >>= g
     where
       g Done      = single b
       g (a :~> q) = choice [ rec b2 q  | b2 <- f a b ]
-   
+
 {-# INLINE scan #-}
 scan :: (s -> a -> [(s, b)]) -> s -> Process a -> Process b
 scan op = rec
  where
-   rec s = 
+   rec s =
       let f a q = choice [ b ~> rec s2 q | (s2, b) <- op s a ]
       in onMenu (menuItem done f) . menu
 

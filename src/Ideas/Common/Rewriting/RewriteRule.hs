@@ -129,7 +129,7 @@ makeRewriteRule s f =
 termRewriteRule :: (IsId n, IsTerm a, Show a) => n -> RuleSpec Term -> RewriteRule a
 termRewriteRule s spec =
    R (newId s) spec show termView M.empty M.empty
-   
+
 symbolMatcher :: Symbol -> SymbolMatch -> RewriteRule a -> RewriteRule a
 symbolMatcher s f r = r {ruleMatchers = M.insert s f (ruleMatchers r)}
 

@@ -27,15 +27,15 @@ module Network.CGI.Monad (
   throwCGI, catchCGI, tryCGI, handleExceptionCGI,
  ) where
 
-import Prelude hiding (catch)
-import Control.Exception as Exception (SomeException)
 import Control.Applicative (Applicative(..))
+import Control.Exception as Exception (SomeException)
 import Control.Monad (liftM)
 import Control.Monad.Catch (MonadCatch, MonadThrow, MonadMask, throwM, catch, try, mask, uninterruptibleMask)
 import Control.Monad.Error (MonadError(..))
 import Control.Monad.Reader (ReaderT(..), asks)
-import Control.Monad.Writer (WriterT(..), tell)
 import Control.Monad.Trans (MonadTrans, MonadIO, liftIO, lift)
+import Control.Monad.Writer (WriterT(..), tell)
+import Prelude hiding (catch)
 -- #if MIN_VERSION_base(4,7,0)
 -- import Data.Typeable
 -- #else
@@ -44,7 +44,6 @@ import Control.Monad.Trans (MonadTrans, MonadIO, liftIO, lift)
 -- #endif
 
 import Network.CGI.Protocol
-
 
 --
 -- * CGIT monad transformer
@@ -57,7 +56,7 @@ type CGI a = CGIT IO a
 newtype CGIT m a = CGIT { unCGIT :: ReaderT CGIRequest (WriterT Headers m) a }
 -- #if MIN_VERSION_base(4,7,0)
 -- 			deriving (Typeable)
--- 
+--
 -- #else
 -- instance (Typeable1 m, Typeable a) => Typeable (CGIT m a) where
 --     typeOf _ = mkTyConApp (mkTyCon "Network.CGI.Monad.CGIT")
@@ -109,8 +108,6 @@ instance MonadTrans CGIT where
 -- | Run a CGI action.
 runCGIT :: Monad m => CGIT m a -> CGIRequest -> m (Headers, a)
 runCGIT (CGIT c) = liftM (uncurry (flip (,))) . runWriterT . runReaderT c
-
-
 
 --
 -- * Error handling

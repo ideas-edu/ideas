@@ -70,7 +70,7 @@ instance Choice GCore where
    (<|>)  = (:|:)
    (>|>)  = (:>|>)
    (|>)   = (:|>:)
-   
+
 instance Sequence GCore where
    done  = Succeed
    (~>)  = (:*:) . Rule
@@ -101,7 +101,7 @@ instance Functor GCore where
             Var n      -> Var n
             Succeed    -> Succeed
             Fail       -> Fail
-            
+
 instance Uniplate (GCore a) where
    uniplate core =
       case core of

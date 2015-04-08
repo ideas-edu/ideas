@@ -29,7 +29,7 @@ data Request = Request
    , dataformat     :: DataFormat
    , encoding       :: [Encoding]
    }
-   
+
 emptyRequest :: Request
 emptyRequest = Request Nothing Nothing Nothing Nothing Nothing Nothing XML []
 
@@ -60,9 +60,9 @@ compactOutput req =
       (True, False) -> True
       (False, True) -> False
       _             -> isJust (cgiBinary req)
- where 
+ where
    xs = encoding req
-   
+
 useOpenMath :: Request -> Bool
 useOpenMath r = all (`notElem` encoding r) [EncString, EncHTML]
 

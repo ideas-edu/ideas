@@ -66,9 +66,9 @@ coreBuilder core =
                         ]
 
 cfgItem :: String -> XMLBuilder -> XMLBuilder
-cfgItem s a = 
+cfgItem s a =
    case fromBuilder a of
-      Just e | name e `elem` ["label", "rule"] -> 
+      Just e | name e `elem` ["label", "rule"] ->
          builder e { attributes = attributes e ++ [s := "true"] }
       _      -> tag s a
 

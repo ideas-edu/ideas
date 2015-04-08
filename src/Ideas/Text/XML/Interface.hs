@@ -123,14 +123,13 @@ findAttribute s (Element _ as _) =
 
 findChildren :: String -> Element -> [Element]
 findChildren s = filter ((==s) . name) . children
-      
+
 findChild :: Monad m => String -> Element -> m Element
 findChild s e =
    case findChildren s e of
       []  -> fail $ "Child not found: " ++ show s
       [a] -> return a
       _   -> fail $ "Multiple children found: " ++ show s
-      
 
 children :: Element -> [Element]
 children e = [ c | Right c <- content e ]

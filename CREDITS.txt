@@ -4,4 +4,12 @@ Bastiaan Heeren, Alex Gerdes, Johan Jeuring
 
 CREDITS
 
-Harrie Passier, Arthur van Leeuwen, Josje Lodder
+Harrie Passier, Arthur van Leeuwen, Josje Lodder, Hieke Keuning
+
+
+This package contains a verbatim copy of the cgi-3001.2.2.0 package, with
+minor modifications to resolve conflicting dependencies. The original package,
+together with its BSD3 license and further information about copyright, author
+and maintainer, can be found at:
+
+   http://hackage.haskell.org/package/cgi-3001.2.2.0

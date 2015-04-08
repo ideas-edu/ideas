@@ -36,7 +36,7 @@ serviceList =
    , equivalenceS, similarityS, suitableS, finishedS, readyS
    , stepsremainingS, allapplicationsS
    , applyS, generateS, createS, applicableS
-   , examplesS, submitS, diagnoseS
+   , examplesS, exampleS, submitS, diagnoseS
    , findbuggyrulesS, problemdecompositionS
    -- textual services
    , onefirsttextS, submittextS
@@ -155,6 +155,19 @@ examplesS = makeService "basic.examples"
    \for each exercise. Also see the generate service, which returns a random \
    \start term." $
    examplesContext ::: tExercise .-> tExamples
+
+exampleS :: Service
+exampleS = makeService "basic.example"
+   "This services returns a specific (numbered) example expresssion that can be solved \
+   \with an exercise. These are the examples that appear at the page generated \
+   \for each exercise. Also see the generate service, which returns a random \
+   \start term." $
+   f ::: tExercise .-> tInt .-> tError tState
+ where
+   f ex nr =
+      case drop nr (examplesContext ex) of
+         []       -> Left "No such example"
+         (_,c ):_ -> Right (emptyStateContext ex c)
 
 findbuggyrulesS :: Service
 findbuggyrulesS = makeService "basic.findbuggyrules"

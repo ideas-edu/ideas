@@ -28,6 +28,7 @@ module Ideas.Encoding.LinkManager
    , linkToMicrosteps
    ) where
 
+import Data.Maybe
 import Ideas.Common.Library
 import Ideas.Encoding.EncoderXML
 import Ideas.Encoding.Encoder
@@ -185,10 +186,8 @@ stateRequest s state =
 
 -- assume nothing goest wrong
 stateToXML :: State a -> XMLBuilder
-stateToXML st = 
-   case run encodeState (simpleOptions (exercise st)) st of
-      Just a  -> a
-      Nothing -> error "LinkManager: Invalid state"
+stateToXML st = fromMaybe (error "LinkManager: Invalid state") $
+   run encodeState (simpleOptions (exercise st)) st
 
 linkWith :: (a -> String) -> a -> HTMLBuilder -> HTMLBuilder
 linkWith f = link . escapeInURL . f

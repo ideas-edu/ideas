@@ -64,7 +64,7 @@ solutionS = makeService "basic.solution"
 derivationS :: Service
 derivationS = deprecate $ makeService "basic.derivation"
    "See 'solution' service." $
-   (serviceFunction solutionS)
+   serviceFunction solutionS
 
 allfirstsS :: Service
 allfirstsS = makeService "basic.allfirsts"

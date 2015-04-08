@@ -255,7 +255,7 @@ tDerivation t1 t2 = Tag "Derivation" $ Iso (f <-> g) tp
    g d = (firstTerm d, [ (s, a) | (_, s, a) <- triples d ])
 
 tIO :: Type a t -> Type a (IO t)
-tIO t = IO t
+tIO = IO
 
 tText :: Type a Text
 tText = Const Text
@@ -357,5 +357,5 @@ tTree t = Tag "Tree" $ Iso (f <-> g) (tPair t (tList (tTree t)))
       f = uncurry Node
       g (Node a xs) = (a, xs)
 
-tTestSuiteResult :: Type a (TestSuite.Result)
+tTestSuiteResult :: Type a TestSuite.Result
 tTestSuiteResult = Const Result

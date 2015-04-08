@@ -36,13 +36,13 @@ xmlDecoder :: TypedDecoder a XML
 xmlDecoder tp =
    case tp of
       Tag s t
-         | s == "answer" -> do
+         | s == "answer" ->
               decodeChild "answer" (xmlDecoder t)
          | s == "Difficulty" -> do
               g <- equalM tDifficulty tp
               a <- decoderFor (findAttribute "difficulty")
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
-         | otherwise -> do
+         | otherwise ->
               decodeChild s (xmlDecoder t)
       Iso p t  -> liftM (from p) (xmlDecoder t)
       Pair t1 t2 -> do
@@ -78,7 +78,7 @@ decodeRule = decodeChild "ruleid" $ do
 
 -- <location>
 decodeLocation :: XMLDecoder a Location
-decodeLocation = decodeChild "location" $ do
+decodeLocation = decodeChild "location" $
    makeDecoder (toLocation . read . getData)
 
 -- <state> 

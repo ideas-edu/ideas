@@ -13,7 +13,6 @@
 
 module Ideas.Main.BlackBoxTests (blackBoxTests) where
 
-import Control.Exception
 import Control.Monad
 import Data.Char
 import Data.List

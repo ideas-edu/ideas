@@ -93,11 +93,7 @@ data Input = Input {
 -- | The result of a CGI program.
 data CGIResult = CGIOutput ByteString
                | CGINothing
--- #if MIN_VERSION_base(4,7,0)
---                  deriving (Show, Read, Eq, Ord, Typeable)
--- #else
-                 deriving (Show, Read, Eq, Ord)
--- #endif
+   deriving (Show, Read, Eq, Ord)
 
 --
 -- * Running CGI actions

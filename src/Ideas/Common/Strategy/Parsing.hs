@@ -54,21 +54,21 @@ runCore :: Core a -> a -> [a]
 runCore core a = bests $ accum applyAll a $ coreToProcess False core
 
 coreToProcess :: Bool -> Core a -> Process (Step a)
-coreToProcess useLabels = fromAtoms . toProcess . rec . coreSubstAll
+coreToProcess useLabels = toProcess . rec . coreSubstAll
  where
-   rec :: Core a -> Builder (Sym (Step a))
+   rec :: Core a -> Builder (Step a)
    rec core =
       case core of
          a :*: b    -> rec a <*> rec b
          a :|: b    -> rec a <|> rec b
          a :>|> b   -> rec a >|> rec b
          a :|>: b   -> rec a |> rec b
-         Rule r     -> single (Single (RuleStep mempty r))
+         Rule r     -> single (RuleStep mempty r)
          Fail       -> empty
          Succeed    -> done
          Label l a
-            | useLabels -> Single (Enter l) ~> rec a
-                           <*> single (Single (Exit l))
+            | useLabels -> Enter l ~> rec a
+                           <*> single (Exit l)
             | otherwise -> rec a
          a :%: b    -> concurrent switch (rec a) (rec b)
          a :@: b    -> rec a <@> rec b
@@ -80,15 +80,15 @@ coreToProcess useLabels = fromAtoms . toProcess . rec . coreSubstAll
          Let _ _    -> error "not substituted: let"
          Var _      -> error "not substituted: var"
 
-   switch (Single (Enter _)) = False
+   switch (Enter _) = False
    switch _ = True
 
 collapse :: Core a -> Core a
 collapse (Label l s) = Rule $ makeRule l (runCore s)
 collapse core = descend collapse core
 
-notCore :: Core a -> Builder (Sym (Step a))
-notCore core = single $ Single $ RuleStep mempty $
+notCore :: Core a -> Builder (Step a)
+notCore core = single $ RuleStep mempty $
    checkRule "core.not" $ null . runCore core
 
 --------------------------------------------------------------------------------
@@ -229,6 +229,10 @@ instance Minor (Step a) where
 
    isMinor (RuleStep _ r) = isMinor r
    isMinor _ = True
+
+instance AtomicSymbol (Step a) where
+   atomicOpen    = RuleStep mempty (idRule "atomic.open")
+   atomicClose   = RuleStep mempty (idRule "atomic.close")
 
 stepRule :: Step a -> Rule a
 stepRule (RuleStep _ r) = r

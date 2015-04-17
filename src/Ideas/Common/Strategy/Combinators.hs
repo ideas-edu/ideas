@@ -35,7 +35,7 @@ import qualified Prelude
 infixr 2 <%>, <@>
 infixr 3 <|>
 infixr 4 >|>, |>
-infixr 5 <*>
+infixr 5 <*>, !~>
 
 -- | Put two strategies in sequence (first do this, then do that)
 (<*>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
@@ -52,6 +52,18 @@ infixr 5 <*>
 -- | Alternate two strategies
 (<@>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
 (<@>) = liftCore2 (:@:)
+
+-- Prefixing a basic rule to a strategy (see Ask-Elle)
+-- (~>) :: IsStrategy f => Rule a -> f a -> Strategy a
+-- a ~> s = a <*> s
+
+-- | Prefixing a basic rule to a strategy atomically
+(!~>) :: IsStrategy f => Rule a -> f a -> Strategy a
+a !~> s = liftCore (a :!~>) s
+
+-- | Initial prefixes (allows the strategy to stop succesfully at any time)
+inits :: IsStrategy f => f a -> Strategy a
+inits = liftCore Inits
 
 -- | The strategy that always succeeds (without doing anything)
 succeed :: Strategy a

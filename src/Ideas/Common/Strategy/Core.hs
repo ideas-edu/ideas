@@ -51,8 +51,10 @@ data GCore a
    | GCore a :|>: GCore a -- left-biased choice
    | GCore a :%:  GCore a -- interleave
    | GCore a :@:  GCore a -- alternate
+   | a       :!~> GCore a -- atomic prefix
    | Label Id (GCore a)
    | Atomic   (GCore a)
+   | Inits    (GCore a)
    | Not      (GCore a)
    | Remove   (GCore a) -- config: replaced by fail
    | Collapse (GCore a) -- config: execute labeled sub-strategy as 1 step
@@ -90,7 +92,9 @@ instance Functor GCore where
             a :|>: b   -> rec a :|>: rec b
             a :%: b    -> rec a :%:  rec b
             a :@: b    -> rec a :@:  rec b
+            a :!~> b   -> f a :!~> rec b
             Atomic a   -> Atomic   (rec a)
+            Inits a    -> Inits    (rec a)
             Not a      -> Not      (rec a)
             Remove a   -> Remove   (rec a)
             Collapse a -> Collapse (rec a)
@@ -111,8 +115,10 @@ instance Uniplate (GCore a) where
          a :|>: b   -> plate (:|>:) |* a |* b
          a :%: b    -> plate (:%:)  |* a |* b
          a :@: b    -> plate (:@:)  |* a |* b
+         a :!~> b   -> plate (:!~>) |- a |* b
          Label l a  -> plate Label  |- l |* a
          Atomic a   -> plate Atomic   |* a
+         Inits a    -> plate Inits    |* a
          Not a      -> plate Not      |* a
          Remove a   -> plate Remove   |* a
          Collapse a -> plate Collapse |* a

@@ -46,10 +46,12 @@ coreBuilder core =
       _ :|>: _   -> asList "orelse"     isOrElse
       _ :%: _    -> asList "interleave" isInterleave
       a :@: b    -> tag "alternate" (coreBuilder a <> coreBuilder b)
+      r :!~> a   -> tag "atomicprefix" (("name" .=. show r) <> coreBuilder a)
       Label l (Rule r) | getId l == getId r
                  -> tag "rule"       (nameAttr l)
       Label l a  -> tag "label"      (nameAttr l <> coreBuilder a)
       Atomic a   -> tag "atomic"     (coreBuilder a)
+      Inits a    -> tag "inits"      (coreBuilder a)
       Not a      -> tag "not"        (coreBuilder a)
       Remove a   -> cfgItem "removed"     (coreBuilder a)
       Collapse a -> cfgItem "collapsed" (coreBuilder a)

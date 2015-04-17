@@ -33,7 +33,7 @@ module Ideas.Common.Strategy.Parsing
 
 import Control.Monad
 import Data.Function
-import Data.List
+import Data.List (intercalate)
 import Ideas.Common.Classes
 import Ideas.Common.Environment
 import Ideas.Common.Id
@@ -63,6 +63,7 @@ coreToProcess useLabels = toProcess . rec . coreSubstAll
          a :|: b    -> rec a <|> rec b
          a :>|> b   -> rec a >|> rec b
          a :|>: b   -> rec a |> rec b
+         r :!~> a   -> RuleStep mempty r !~> rec a
          Rule r     -> single (RuleStep mempty r)
          Fail       -> empty
          Succeed    -> done
@@ -73,6 +74,7 @@ coreToProcess useLabels = toProcess . rec . coreSubstAll
          a :%: b    -> concurrent switch (rec a) (rec b)
          a :@: b    -> rec a <@> rec b
          Atomic a   -> atomic (rec a)
+         Inits a    -> inits (rec a)
          Not a      -> notCore a
          Remove _   -> empty
          Collapse a -> rec (collapse a)
@@ -231,8 +233,8 @@ instance Minor (Step a) where
    isMinor _ = True
 
 instance AtomicSymbol (Step a) where
-   atomicOpen    = RuleStep mempty (idRule "atomic.open")
-   atomicClose   = RuleStep mempty (idRule "atomic.close")
+   atomicOpen  = RuleStep mempty (idRule "atomic.open")
+   atomicClose = RuleStep mempty (idRule "atomic.close")
 
 stepRule :: Step a -> Rule a
 stepRule (RuleStep _ r) = r

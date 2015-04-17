@@ -17,7 +17,7 @@
 
 module Ideas.Common.Strategy.Process
    ( -- * IsProcess type class
-     IsProcess(..)
+     IsProcess(..), fromProcess
      -- * Process data type
    , Process, menu, eqProcessBy
      -- * Building sequences
@@ -37,6 +37,9 @@ import Ideas.Common.Strategy.Sequence
 class (Choice f, Sequence f) => IsProcess f where
    -- | Convert to the 'Process' data type.
    toProcess :: f a -> Process a
+
+fromProcess :: IsProcess f => Process a -> f a
+fromProcess = fold (~>) done
 
 ------------------------------------------------------------------------
 -- Process data type

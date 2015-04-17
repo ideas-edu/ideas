@@ -1,0 +1,4 @@
+Changelog ideas-1.3.1 => ideas.1.3.2
+
+- reimplemented atomic combinator
+- added cabal flag to resolve dependency on network >= 2.6

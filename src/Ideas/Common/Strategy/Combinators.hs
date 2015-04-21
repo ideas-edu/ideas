@@ -22,9 +22,14 @@ import Data.List ((\\))
 import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
+import Ideas.Common.Strategy.Configuration
 import Ideas.Common.Strategy.Core
+import Ideas.Common.Strategy.Parsing (runCore)
 import Ideas.Common.Utils (fst3)
 import Prelude hiding (not, repeat, fail, sequence)
+import qualified Ideas.Common.Strategy.Choice as Choice
+import qualified Ideas.Common.Strategy.Derived as Derived
+import qualified Ideas.Common.Strategy.Sequence as Sequence
 import qualified Prelude
 
 -----------------------------------------------------------
@@ -39,19 +44,19 @@ infixr 5 <*>, !~>
 
 -- | Put two strategies in sequence (first do this, then do that)
 (<*>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<*>) = liftCore2 (:*:)
+(<*>) = liftCore2 (Sequence.<*>)
 
 -- | Choose between the two strategies (either do this or do that)
 (<|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<|>) = liftCore2 (:|:)
+(<|>) = liftCore2 (Choice.<|>)
 
 -- | Interleave two strategies
 (<%>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<%>) = liftCore2 (:%:)
+(<%>) = liftCore2 (applyDef2 interleaveDef)
 
 -- | Alternate two strategies
 (<@>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<@>) = liftCore2 (:@:)
+(<@>) = liftCore2 (applyDef2 alternateDef)
 
 -- Prefixing a basic rule to a strategy (see Ask-Elle)
 -- (~>) :: IsStrategy f => Rule a -> f a -> Strategy a
@@ -59,39 +64,45 @@ infixr 5 <*>, !~>
 
 -- | Prefixing a basic rule to a strategy atomically
 (!~>) :: IsStrategy f => Rule a -> f a -> Strategy a
-a !~> s = liftCore (a :!~>) s
+a !~> s = liftCore (applyDef2 atomicPrefixDef (Choice.single a)) s
 
 -- | Initial prefixes (allows the strategy to stop succesfully at any time)
 inits :: IsStrategy f => f a -> Strategy a
-inits = liftCore Inits
+inits = liftCore (applyDef1 initsDef)
 
 -- | The strategy that always succeeds (without doing anything)
 succeed :: Strategy a
-succeed = fromCore Succeed
+succeed = fromCore Sequence.done
 
 -- | The strategy that always fails
 fail :: Strategy a
-fail = fromCore Fail
+fail = fromCore Choice.empty
 
 -- | Makes a strategy atomic (w.r.t. parallel composition)
 atomic :: IsStrategy f => f a -> Strategy a
-atomic = liftCore Atomic
+atomic = liftCore (applyDef1 atomicDef)
 
 -- | Puts a list of strategies into a sequence
 sequence :: IsStrategy f => [f a] -> Strategy a
-sequence = foldr ((<*>) . toStrategy) succeed
+sequence = liftCoreN Sequence.sequence
 
 -- | Combines a list of alternative strategies
 alternatives :: IsStrategy f => [f a] -> Strategy a
-alternatives = foldr ((<|>) . toStrategy) fail
+alternatives = liftCoreN Choice.choice
 
 -- | Merges a list of strategies (in parallel)
 interleave :: IsStrategy f => [f a] -> Strategy a
-interleave = foldr ((<%>) . toStrategy) succeed
+interleave = liftCoreN (Apply interleaveDef)
 
 -- | Allows all permutations of the list
 permute :: IsStrategy f => [f a] -> Strategy a
-permute = foldr ((<%>) . atomic) succeed
+permute as
+   | null as   = succeed
+   | otherwise = alternatives [ s <*> permute ys | (s, ys) <- pickOne as ]
+ where
+   pickOne :: [a] -> [(a, [a])]
+   pickOne []     = []
+   pickOne (x:xs) = (x, xs) : [ (y, x:ys) | (y, ys) <- pickOne xs ]
 
 -- EBNF combinators --------------------------------------
 
@@ -121,7 +132,7 @@ check = toStrategy . checkRule "check"
 -- | Check whether or not the argument strategy cannot be applied: the result
 --   strategy only succeeds if this is not the case (otherwise it fails).
 not :: IsStrategy f => f a -> Strategy a
-not = liftCore Not
+not = liftCore (applyDef1 notDef)
 
 -- | Repeat a strategy zero or more times (greedy version of 'many')
 repeat :: IsStrategy f => f a -> Strategy a
@@ -138,12 +149,12 @@ try s = s |> succeed
 -- | Choose between the two strategies, with a preference for steps from the
 -- left hand-side strategy.
 (>|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(>|>) = liftCore2 (:>|>)
+(>|>) = liftCore2 (Choice.>|>)
 
 -- | Left-biased choice: if the left-operand strategy can be applied, do so. Otherwise,
 --   try the right-operand strategy
 (|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(|>) = liftCore2 (:|>:)
+(|>) = liftCore2 (Choice.|>)
 -- s |> t = s <|> (not s <*> t)
 
 -- | Repeat the strategy as long as the predicate holds
@@ -168,13 +179,34 @@ fix :: (Strategy a -> Strategy a) -> Strategy a
 fix f = fromCore (coreFix (toCore . f . fromCore))
 
 remove :: IsStrategy f => f a -> Strategy a
-remove = liftCore Remove
+remove = liftCore removeCore
 
 collapse :: IsStrategy f => f a -> Strategy a
-collapse = liftCore Collapse
+collapse = liftCore collapseCore
 
 hide :: IsStrategy f => f a -> Strategy a
-hide = liftCore Hide
+hide = liftCore hideCore
+
+---------------------------------------------------------------------------
+
+notDef :: Def
+notDef = makeDefTrans "not" $ \x -> 
+   Choice.single $ checkRule "core.not" $ null . runCore x
+
+interleaveDef :: Def
+interleaveDef = associativeDef "interleave" Derived.interleave
+
+alternateDef :: Def
+alternateDef = makeDef2 "alternate" (Derived.<@>)
+
+atomicDef :: Def
+atomicDef = makeDef1 "atomic" Derived.atomic
+
+atomicPrefixDef :: Def
+atomicPrefixDef = makeDef2 "atomicprefix" (Derived.!*>)
+
+initsDef :: Def
+initsDef = makeDef1 "inits" Derived.inits
 
 -- Graph to strategy ----------------------
 

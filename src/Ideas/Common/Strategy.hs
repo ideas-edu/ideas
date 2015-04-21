@@ -55,6 +55,7 @@ module Ideas.Common.Strategy
 
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Combinators
+import Ideas.Common.Strategy.Core
 import Ideas.Common.Strategy.Configuration
 import Ideas.Common.Strategy.Location
 import Ideas.Common.Strategy.Parsing

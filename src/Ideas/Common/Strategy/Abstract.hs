@@ -21,7 +21,7 @@ module Ideas.Common.Strategy.Abstract
    , mapRules, mapRulesS
    , cleanUpStrategy, cleanUpStrategyAfter
      -- Accessors to the underlying representation
-   , toCore, fromCore, liftCore, liftCore2
+   , toCore, fromCore, liftCore, liftCore2, liftCoreN
    , noInterleaving
    ) where
 
@@ -34,9 +34,10 @@ import Ideas.Common.Rewriting (RewriteRule)
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Core
 import Ideas.Common.Strategy.Parsing
-import Ideas.Common.Strategy.Sequence (Firsts(..), firstsOrdered)
+import Ideas.Common.Strategy.Sequence (Firsts(..), firstsOrdered, (<*>), sequence)
 import Ideas.Common.Utils.Uniplate hiding (rewriteM)
 import Ideas.Common.View
+import Prelude hiding (sequence)
 
 -----------------------------------------------------------
 --- Strategy data-type
@@ -64,7 +65,7 @@ instance IsStrategy (LabeledStrategy) where
   toStrategy (LS info (S core)) = S (Label info core)
 
 instance IsStrategy Rule where
-   toStrategy = S . Rule
+   toStrategy = S . Sym
 
 instance IsStrategy RewriteRule where
    toStrategy = toStrategy . ruleRewrite
@@ -143,7 +144,7 @@ derivationList cmpRule s a0 = rec a0 (toPrefix s)
 
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]
-rulesInStrategy s = [ r | Rule r <- universe (toCore s), isMajor r ]
+rulesInStrategy s = [ r | r <- toList (toCore s), isMajor r ]
 
 instance LiftView LabeledStrategy where
    liftViewIn = mapRules . liftViewIn
@@ -163,7 +164,7 @@ mapRulesS f = S . fmap f . toCore
 cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
 cleanUpStrategy f (LS n s) = cleanUpStrategyAfter f (LS n (make s))
  where
-   make = liftCore2 (:*:) (doAfter f (idRule ()))
+   make = liftCore2 (<*>) (doAfter f (idRule ()))
 
 -- | Use a function as do-after hook for all rules in a labeled strategy
 cleanUpStrategyAfter :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
@@ -172,10 +173,9 @@ cleanUpStrategyAfter f = mapRules $ \r ->
 
 noInterleaving :: IsStrategy f => f a -> Strategy a
 noInterleaving = liftCore $ transform f
-   where
-      f (a :%:  b) = a :*: b
-      f (Atomic a) = a
-      f s          = s
+ where
+   -- f (Apply d xs) | getId d == newId "interleave" = sequence xs
+   f s          = s
 
 -----------------------------------------------------------
 --- Functions to lift the core combinators
@@ -191,3 +191,6 @@ liftCore f = fromCore . f . toCore
 
 liftCore2 :: (IsStrategy f, IsStrategy g) => (Core a -> Core a -> Core a) -> f a -> g a -> Strategy a
 liftCore2 f = liftCore . f . toCore
+
+liftCoreN :: IsStrategy f => ([Core a] -> Core a) -> [f a] -> Strategy a
+liftCoreN f = fromCore . f . map toCore

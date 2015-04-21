@@ -14,6 +14,7 @@
 module Ideas.Common.Strategy.Configuration
    ( StrategyCfg, byName, ConfigAction(..)
    , configure, configureS
+   , removeCore, collapseCore, hideCore, configDefs
    , module Data.Monoid
    ) where
 
@@ -21,9 +22,12 @@ import Data.Char
 import Data.Monoid
 import Ideas.Common.Id
 import Ideas.Common.Strategy.Abstract
-import Ideas.Common.Strategy.Core hiding (Remove, Collapse, Hide)
+import Ideas.Common.Rule
+import Ideas.Common.Classes
+import Ideas.Common.Strategy.Choice
+import Ideas.Common.Strategy.Core 
+import Ideas.Common.Strategy.Parsing (runCore)
 import Ideas.Common.Utils.Uniplate
-import qualified Ideas.Common.Strategy.Core as Core
 
 ---------------------------------------------------------------------
 -- Types and constructors
@@ -71,11 +75,12 @@ configureCore (Cfg pairs) = rec
  where
    rec core =
       case core of
-         Core.Remove s   | has Reinsert -> rec s
-         Core.Collapse s | has Expand   -> rec s
-         Core.Hide s     | has Reveal   -> rec s
+         Apply d [s]
+            | d == removeDef   && has Reinsert -> rec s
+            | d == collapseDef && has Expand   -> rec s
+            | d == hideDef     && has Reveal   -> rec s
          Label l s -> props (Label l (rec s))
-         Rule r    -> props (Rule r)
+         Sym r     -> props (Sym r)
          _ -> descend rec core
     where
       myLabel  = getLabel core
@@ -83,20 +88,18 @@ configureCore (Cfg pairs) = rec
       has      = (`elem` actions)
       make x g = if has x then g else id
 
-      props    = make Remove   Core.Remove
-               . make Hide     Core.Hide
-               . make Collapse Core.Collapse
+      props    = make Remove   removeCore
+               . make Hide     hideCore
+               . make Collapse collapseCore
 
 here :: ConfigLocation -> Id -> Bool
 here (ByName a) info = getId info == a
 
 getLabel :: Core a -> Maybe Id
-getLabel (Label l _)       = Just l
-getLabel (Rule r)          = Just (getId r)
-getLabel (Core.Remove s)   = getLabel s
-getLabel (Core.Collapse s) = getLabel s
-getLabel (Core.Hide s)     = getLabel s
-getLabel _                 = Nothing
+getLabel (Label l _) = Just l
+getLabel (Sym r)     = Just (getId r)
+getLabel (Apply d [s]) | d `elem` configDefs = getLabel s
+getLabel _ = Nothing
 
 cancel :: [ConfigAction] -> [ConfigAction]
 cancel [] = []
@@ -106,3 +109,27 @@ cancel (x:xs) = x : cancel (rec actionGroups)
       | x `elem` g = filter (`notElem` g) xs
       | otherwise  = rec gs
    rec [] = xs
+   
+---------------------------------------------------------------------
+-- Combinator definitions
+
+removeCore, collapseCore, hideCore :: Core a -> Core a
+removeCore   = applyDef1 removeDef
+collapseCore = applyDef1 collapseDef
+hideCore     = applyDef1 hideDef
+
+configDefs :: [Def]
+configDefs = [removeDef, collapseDef, hideDef]
+
+removeDef :: Def
+removeDef = makeDefTrans "remove" (const empty)
+
+collapseDef :: Def
+collapseDef = makeDefTrans "collapse" collapse
+ where
+   collapse :: Core a -> Core a
+   collapse (Label l a) = Sym $ makeRule l (runCore a)
+   collapse a = descend collapse a
+
+hideDef :: Def
+hideDef = makeDefTrans "hide" (fmap minor)

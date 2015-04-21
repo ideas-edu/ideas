@@ -40,7 +40,10 @@ class Sequence f where
    (~>) :: a -> f a -> f a
    -- | Append two sequences.
    (<*>) :: f a -> f a -> f a
-
+   -- | Sequential composition.
+   sequence :: [f a] -> f a
+   sequence xs = if null xs then done else foldr1 (<*>) xs
+ 
 ------------------------------------------------------------------------
 -- Firsts type class
 

@@ -66,7 +66,7 @@ strategyLocations s = ([], getId s) : rec [] (toCore (unlabel s))
    collect core =
       case core of
          Label l c -> [(l, Just c)]
-         Rule r | isMajor r -> [(getId r, Nothing)]
+         Sym r | isMajor r -> [(getId r, Nothing)]
          _         -> concatMap collect (children core)
 
 fromLoc :: LabeledStrategy a -> [Int] -> Maybe Id

@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2015, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -16,25 +17,33 @@
 --  $Id$
 
 module Ideas.Common.Strategy.Core
-   ( GCore(..), Core
-   , coreFix, coreSubstAll, substCoreVar
+   ( -- * (Generalized) core strategies
+     GCore(..), Core, toList, coreFix, coreSubstAll
+     -- * Strategy definitions
+   , Def, makeDef, makeDef1, makeDef2, makeDefTrans, associativeDef
+   , isAssociative, useDef, applyDef0, applyDef1, applyDef2
+   , coreDefs
+     -- * Step
+   , Step(..), stepRule, stepEnvironment
    ) where
 
+import Data.Foldable (Foldable, foldMap, toList)
+import Data.List (intercalate)
 import Data.Maybe
 import Ideas.Common.Classes
+import Ideas.Common.Environment
 import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Sequence
+import Ideas.Common.Strategy.Process
+import Ideas.Common.Strategy.Derived
 import Ideas.Common.Utils.Uniplate
+import Prelude hiding (sequence)
 
 -----------------------------------------------------------------
 -- Strategy (internal) data structure, containing a selection
 -- of combinators
-
-infixr 2 :%:, :@:
-infixr 3 :|:, :>|>, :|>:
-infixr 5 :*:
 
 -- | Core expression, with rules
 type Core a = GCore (Rule a)
@@ -43,40 +52,92 @@ type Core a = GCore (Rule a)
 type CoreEnv a = [(Int, GCore a)]
 
 -- | A generalized Core expression, not restricted to rules. This makes GCore
--- a (traversable and foldable) functor.
+-- a functor.
 data GCore a
-   = GCore a :*:  GCore a
-   | GCore a :|:  GCore a
-   | GCore a :>|> GCore a -- left-preference (choice)
-   | GCore a :|>: GCore a -- left-biased choice
-   | GCore a :%:  GCore a -- interleave
-   | GCore a :@:  GCore a -- alternate
-   | a       :!~> GCore a -- atomic prefix
-   | Label Id (GCore a)
-   | Atomic   (GCore a)
-   | Inits    (GCore a)
-   | Not      (GCore a)
-   | Remove   (GCore a) -- config: replaced by fail
-   | Collapse (GCore a) -- config: execute labeled sub-strategy as 1 step
-   | Hide     (GCore a) -- config: make all steps invisible/minor
-   | Succeed
-   | Fail
-   | Rule a -- ^ Generalized constructor (not restricted to rules)
+   = Label Id (GCore a)
+   | Apply Def [GCore a]
+   | Sym a
    | Var Int
    | Let (CoreEnv a) (GCore a)
- deriving Show
 
+applyDef0 :: Def -> GCore a
+applyDef0 def = Apply def []
+
+applyDef1 :: Def -> GCore a -> GCore a
+applyDef1 def x = Apply def [x]
+
+applyDef2 :: Def -> GCore a -> GCore a -> GCore a
+applyDef2 def x y = Apply def [x, y]
+
+data Def = DefPrim Id Bool (forall a . [Builder (Step a)] -> Builder (Step a))
+         | DefCore Id (forall a . [Core a] -> Core a)
+
+makeDef :: IsId n => n -> (forall a . [Builder (Step a)] -> Builder (Step a)) -> Def
+makeDef n = DefPrim (newId n) False
+
+makeDef1 :: IsId n => n -> (forall a . Builder (Step a) -> Builder (Step a)) -> Def
+makeDef1 n f = makeDef n $ \xs -> 
+   case xs of
+      [a] -> f a
+      _   -> empty
+
+makeDef2 :: IsId n => n -> (forall a . Builder (Step a) -> Builder (Step a) -> Builder (Step a)) -> Def
+makeDef2 n f = makeDef n $ \xs -> 
+   case xs of
+      [a, b] -> f a b
+      _      -> empty
+
+associativeDef :: IsId n => n -> (forall a . [Builder (Step a)] -> Builder (Step a)) -> Def
+associativeDef n = DefPrim (newId n) True
+
+isAssociative :: Def -> Bool
+isAssociative (DefPrim _ b _) = b
+isAssociative (DefCore _ _)   = False
+
+makeDefTrans :: IsId n => n -> (forall a . Core a -> Core a) -> Def
+makeDefTrans n f = DefCore (newId n) $ \xs -> 
+   case xs of
+      [a] -> f a
+      _   -> empty
+
+useDef :: (Core a -> Builder (Step a)) -> Def -> [Core a] -> Builder (Step a)
+useDef rec (DefPrim _ _ f) = f . map rec
+useDef rec (DefCore _ f)   = rec . f
+
+instance Eq Def where
+   x == y = compareId x y == EQ
+
+instance HasId Def where
+   getId (DefPrim n _ _) = n
+   getId (DefCore n _)   = n
+   changeId f (DefPrim n b g) = DefPrim (f n) b g
+   changeId f (DefCore n g)   = DefCore (f n) g
+
+instance Show a => Show (GCore a) where
+   show core = 
+      case core of 
+         Apply d xs -> showId d ++ par (map show xs)
+         Let ds a   -> "let " ++ concatMap f ds ++ " in " ++ show a 
+         Label l a  -> show l ++ ":" ++ show a
+         Sym a      -> show a
+         Var n      -> show n
+    where
+      f (n, s) = show n ++ " " ++ show s
+      par xs 
+         | null xs   = ""
+         | otherwise = "(" ++ intercalate ", " xs ++ ")"
+ 
 instance Choice GCore where
-   empty  = Fail
-   single = Rule
-   (<|>)  = (:|:)
-   (>|>)  = (:>|>)
-   (|>)   = (:|>:)
+   empty  = applyDef0 failDef
+   single = Sym
+   (<|>)  = applyDef2 choiceDef
+   (>|>)  = applyDef2 preferenceDef
+   (|>)   = applyDef2 orelseDef
 
 instance Sequence GCore where
-   done  = Succeed
-   (~>)  = (:*:) . Rule
-   (<*>) = (:*:)
+   done   = applyDef0 succeedDef
+   a ~> s = Sym a <*> s
+   (<*>)  = applyDef2 sequenceDef
 
 -----------------------------------------------------------------
 -- Useful instances
@@ -86,43 +147,28 @@ instance Functor GCore where
     where
       rec core =
          case core of
-            a :*: b    -> rec a :*:  rec b
-            a :|: b    -> rec a :|:  rec b
-            a :>|> b   -> rec a :>|> rec b
-            a :|>: b   -> rec a :|>: rec b
-            a :%: b    -> rec a :%:  rec b
-            a :@: b    -> rec a :@:  rec b
-            a :!~> b   -> f a :!~> rec b
-            Atomic a   -> Atomic   (rec a)
-            Inits a    -> Inits    (rec a)
-            Not a      -> Not      (rec a)
-            Remove a   -> Remove   (rec a)
-            Collapse a -> Collapse (rec a)
-            Hide a     -> Hide     (rec a)
+            Apply d xs -> Apply d (map rec xs)
             Let ds a   -> Let (map (mapSecond rec) ds) (rec a)
             Label l a  -> Label l (rec a)
-            Rule a     -> Rule (f a)
+            Sym a      -> Sym (f a)
             Var n      -> Var n
-            Succeed    -> Succeed
-            Fail       -> Fail
+
+instance Foldable GCore where
+   foldMap f = rec
+    where
+      rec core =
+         case core of
+            Apply _ xs -> foldMap rec xs
+            Let ds a   -> foldMap (rec . snd) ds <> rec a
+            Label _ a  -> rec a
+            Sym a      -> f a
+            Var _      -> mempty
 
 instance Uniplate (GCore a) where
    uniplate core =
       case core of
-         a :*: b    -> plate (:*:)  |* a |* b
-         a :|: b    -> plate (:|:)  |* a |* b
-         a :>|> b   -> plate (:>|>) |* a |* b
-         a :|>: b   -> plate (:|>:) |* a |* b
-         a :%: b    -> plate (:%:)  |* a |* b
-         a :@: b    -> plate (:@:)  |* a |* b
-         a :!~> b   -> plate (:!~>) |- a |* b
          Label l a  -> plate Label  |- l |* a
-         Atomic a   -> plate Atomic   |* a
-         Inits a    -> plate Inits    |* a
-         Not a      -> plate Not      |* a
-         Remove a   -> plate Remove   |* a
-         Collapse a -> plate Collapse |* a
-         Hide a     -> plate Hide     |* a
+         Apply d xs -> plate (Apply d) ||* xs
          Let ds a   -> let (ns, bs) = unzip ds
                            make     = Let . zip ns
                        in plate make ||* bs |* a
@@ -130,6 +176,30 @@ instance Uniplate (GCore a) where
 
 -----------------------------------------------------------------
 -- Definitions
+
+succeedDef :: Def
+succeedDef = makeDef "succeed" (const done)
+
+failDef :: Def
+failDef = makeDef "fail" (const empty)
+
+sequenceDef :: Def
+sequenceDef = associativeDef "sequence" sequence
+
+choiceDef :: Def
+choiceDef = associativeDef "choice" choice
+        
+preferenceDef :: Def
+preferenceDef = associativeDef "preference" preference
+
+orelseDef :: Def
+orelseDef = associativeDef (newId "orelse") orelse
+
+coreDefs :: [Def]
+coreDefs =
+   [succeedDef, failDef, sequenceDef, choiceDef, preferenceDef, orelseDef]
+
+-----------------------------------------------------------------
 
 coreFix :: (GCore a -> GCore a) -> GCore a
 coreFix f = -- disadvantage: function f is applied twice
@@ -150,13 +220,6 @@ coreSubstAll = rec []
 -----------------------------------------------------------------
 -- Utility functions
 
-substCoreVar :: Int -> GCore a -> GCore a -> GCore a
-substCoreVar i a core =
-   case core of
-      Var j    | i==j -> a
-      Let ds _ | i `elem` map fst ds -> core
-      _               -> descend (substCoreVar i a) core
-
 nextVar :: GCore a -> Int
 nextVar p
    | null xs   = 0
@@ -170,3 +233,55 @@ coreVars core =
       Let ds a -> let (ns, bs) = unzip ds
                   in ns ++ concatMap coreVars (bs ++ [a])
       _        -> concatMap coreVars (children core)
+      
+--------------------------------------------------------------------------------
+-- Step
+
+-- | The steps during the parsing process: enter (or exit) a labeled
+-- sub-strategy, or a rule.
+data Step a = Enter Id                      -- ^ Enter a labeled sub-strategy
+            | Exit Id                       -- ^ Exit a labeled sub-strategy
+            | RuleStep Environment (Rule a) -- ^ Rule that was applied
+   deriving Eq
+
+instance Show (Step a) where
+   show (Enter l) = "enter " ++ showId l
+   show (Exit l)  = "exit " ++ showId l
+   show (RuleStep _ r) = show r
+
+instance Apply Step where
+   applyAll (RuleStep _ r) = applyAll r
+   applyAll _              = return
+
+instance HasId (Step a) where
+   getId (Enter l)      = getId l
+   getId (Exit l)       = getId l
+   getId (RuleStep _ r) = getId r
+
+   changeId f (Enter l)        = Enter (changeId f l)
+   changeId f (Exit l)         = Exit  (changeId f l)
+   changeId f (RuleStep env r) = RuleStep env (changeId f r)
+
+instance Minor (Step a) where
+   setMinor b (RuleStep env r) = RuleStep env (setMinor b r)
+   setMinor _ st = st
+
+   isMinor (RuleStep _ r) = isMinor r
+   isMinor _ = True
+
+instance AtomicSymbol (Step a) where
+   atomicOpen  = RuleStep mempty (idRule "atomic.open")
+   atomicClose = RuleStep mempty (idRule "atomic.close")
+
+instance LabelSymbol (Step a) where
+   isEnter (Enter _) = True
+   isEnter _         = False
+
+stepRule :: Step a -> Rule a
+stepRule (RuleStep _ r) = r
+stepRule (Enter l)      = idRule (l # "enter")
+stepRule (Exit l)       = idRule (l # "exit")
+
+stepEnvironment :: Step a -> Environment
+stepEnvironment (RuleStep env _) = env
+stepEnvironment _ = mempty

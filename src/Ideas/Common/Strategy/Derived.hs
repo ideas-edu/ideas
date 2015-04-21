@@ -14,7 +14,8 @@
 
 module Ideas.Common.Strategy.Derived
    ( filterP, hide
-   , AtomicSymbol(..), atomic, concurrent, (<@>), (!~>), inits
+   , AtomicSymbol(..), LabelSymbol(..)
+   , atomic, (<%>), interleave, concurrent, (<@>), (!*>), inits
    ) where
 
 import Ideas.Common.Strategy.Choice
@@ -45,11 +46,11 @@ split op = useFirst f
         | otherwise        = id
 
 -- atomic prefix
-(!~>) :: (IsProcess f, AtomicSymbol a) => a -> f a -> f a
-a !~> p = split op (single a) (toProcess p)
+(!*>) :: (IsProcess f, AtomicSymbol a) => f a -> f a -> f a
+a !*> p = split op (atomic a) (toProcess p)
  where
-   op (Left b) q   = atomic (a ~> b ~> done) <*> fromProcess q
-   op (Right bl) q = atomic (a ~> bl) <*> fromProcess q
+   op (Left b) q   = atomic (a <*> b ~> done) <*> fromProcess q
+   op (Right bl) q = atomic (a <*> bl) <*> fromProcess q
 
 filterP :: (a -> Bool) -> Process a -> Process a
 filterP cond = fold (\a q -> if cond a then a ~> q else empty) done
@@ -60,8 +61,17 @@ hide cond = fold (\a q -> if cond a then a ~> q else q) done
 class Eq a => AtomicSymbol a where
    atomicOpen, atomicClose :: a
 
+class Eq a => LabelSymbol a where
+   isEnter :: a -> Bool
+
 atomic :: (IsProcess f, AtomicSymbol a) => f a -> f a
 atomic p = atomicOpen ~> (p <*> single atomicClose)
+
+interleave :: (IsProcess f, AtomicSymbol a, LabelSymbol a) => [f a] -> f a
+interleave xs = if null xs then done else foldr1 (<%>) xs
+
+(<%>) :: (IsProcess f, AtomicSymbol a, LabelSymbol a) => f a -> f a -> f a
+(<%>) = concurrent (not . isEnter)
 
 concurrent :: (IsProcess f, AtomicSymbol a) => (a -> Bool) -> f a -> f a -> f a
 concurrent switch x y = normal (toProcess x) (toProcess y)

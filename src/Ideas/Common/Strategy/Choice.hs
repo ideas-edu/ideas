@@ -48,12 +48,14 @@ class Choice f where
    -- | One element from a list (unbiased).
    oneof :: [a]   -> f a
    -- | One of the alternatives in a list (unbiased).
-   choice :: [f a] -> f a
+   choice     :: [f a] -> f a
+   preference :: [f a] -> f a
+   orelse     :: [f a] -> f a
    -- default implementation
    oneof = choice . map single
-   choice xs
-      | null xs   = empty
-      | otherwise = foldr1 (<|>) xs
+   choice     xs = if null xs then empty else foldr1 (<|>) xs
+   preference xs = if null xs then empty else foldr1 (>|>) xs
+   orelse     xs = if null xs then empty else foldr1 (|>)  xs
 
 instance Choice [] where
    empty    = []

@@ -69,6 +69,7 @@ Library
     Ideas.Common.Algebra.SmartGroup
     Ideas.Common.Classes
     Ideas.Common.Context
+    Ideas.Common.CyclicTree
     Ideas.Common.Derivation
     Ideas.Common.DerivationTree
     Ideas.Common.Environment
@@ -96,12 +97,13 @@ Library
     Ideas.Common.Strategy.Choice
     Ideas.Common.Strategy.Combinators
     Ideas.Common.Strategy.Configuration
-    Ideas.Common.Strategy.Core
+    Ideas.Common.Strategy.Def
     Ideas.Common.Strategy.Derived
     Ideas.Common.Strategy.Location
-    Ideas.Common.Strategy.Parsing
+    Ideas.Common.Strategy.Prefix
     Ideas.Common.Strategy.Process
     Ideas.Common.Strategy.Sequence
+    Ideas.Common.Strategy.Step
     Ideas.Common.Strategy.Traversal
     Ideas.Common.Traversal.Iterator
     Ideas.Common.Traversal.Navigator

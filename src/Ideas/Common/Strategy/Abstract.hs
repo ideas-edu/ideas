@@ -22,9 +22,9 @@ module Ideas.Common.Strategy.Abstract
    , cleanUpStrategy, cleanUpStrategyAfter
      -- Accessors to the underlying representation
    , toCore, fromCore, liftCore, liftCore2, liftCoreN
-   , noInterleaving
    ) where
 
+import Data.Foldable (toList)
 import Data.Function
 import Ideas.Common.Classes
 import Ideas.Common.Derivation
@@ -32,12 +32,15 @@ import Ideas.Common.Environment
 import Ideas.Common.Id
 import Ideas.Common.Rewriting (RewriteRule)
 import Ideas.Common.Rule
-import Ideas.Common.Strategy.Core
-import Ideas.Common.Strategy.Parsing
-import Ideas.Common.Strategy.Sequence (Firsts(..), firstsOrdered, (<*>), sequence)
-import Ideas.Common.Utils.Uniplate hiding (rewriteM)
+import Ideas.Common.CyclicTree hiding (label)
+import Ideas.Common.Strategy.Def
+import Ideas.Common.Strategy.Prefix
+import Ideas.Common.Strategy.Process
+import Ideas.Common.Strategy.Sequence (firstsOrdered, Sequence(..))
+import Ideas.Common.Strategy.Step
 import Ideas.Common.View
 import Prelude hiding (sequence)
+import qualified Ideas.Common.CyclicTree as Tree
 
 -----------------------------------------------------------
 --- Strategy data-type
@@ -51,6 +54,9 @@ instance Show (Strategy a) where
 instance Apply Strategy where
    applyAll = runCore . toCore
 
+sequenceDef :: Def
+sequenceDef = associativeDef "sequence" sequence
+   
 -----------------------------------------------------------
 --- Type class
 
@@ -62,10 +68,10 @@ instance IsStrategy Strategy where
    toStrategy = id
 
 instance IsStrategy (LabeledStrategy) where
-  toStrategy (LS info (S core)) = S (Label info core)
+  toStrategy (LS info (S core)) = S (Tree.label info core)
 
 instance IsStrategy Rule where
-   toStrategy = S . Sym
+   toStrategy = S . leaf
 
 instance IsStrategy RewriteRule where
    toStrategy = toStrategy . ruleRewrite
@@ -162,20 +168,15 @@ mapRulesS f = S . fmap f . toCore
 -- | Use a function as do-after hook for all rules in a labeled strategy, but
 -- also use the function beforehand
 cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
-cleanUpStrategy f (LS n s) = cleanUpStrategyAfter f (LS n (make s))
+cleanUpStrategy f (LS n s) = cleanUpStrategyAfter f (LS n t)
  where
-   make = liftCore2 (<*>) (doAfter f (idRule ()))
+   t     = doAfter f (idRule ()) <*> s
+   (<*>) = liftCore2 (node2 sequenceDef) -- fix me
 
 -- | Use a function as do-after hook for all rules in a labeled strategy
 cleanUpStrategyAfter :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
 cleanUpStrategyAfter f = mapRules $ \r ->
    if isMajor r then doAfter f r else r
-
-noInterleaving :: IsStrategy f => f a -> Strategy a
-noInterleaving = liftCore $ transform f
- where
-   -- f (Apply d xs) | getId d == newId "interleave" = sequence xs
-   f s          = s
 
 -----------------------------------------------------------
 --- Functions to lift the core combinators

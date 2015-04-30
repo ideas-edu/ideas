@@ -13,14 +13,13 @@
 -----------------------------------------------------------------------------
 --  $Id$
 
-module Ideas.Encoding.StrategyInfo (strategyToXML, xmlToStrategy) where
+module Ideas.Encoding.StrategyInfo (strategyToXML) where
 
-import Control.Monad
 import Ideas.Common.Id
-import Ideas.Common.Rule (Rule)
+import Ideas.Common.CyclicTree
 import Ideas.Common.Strategy.Abstract
-import Ideas.Common.Strategy.Core
-import Ideas.Common.Utils (readInt)
+import Ideas.Common.Strategy.Prefix
+import Ideas.Common.Strategy.Def
 import Ideas.Text.XML
 
 -----------------------------------------------------------------------
@@ -34,40 +33,37 @@ nameAttr info = "name" .=. showId info
 
 coreToXML :: Core a -> XML
 coreToXML core = makeXML "label" $
-   case core of
-      Label l a -> nameAttr l <> coreBuilder a
-      _         -> coreBuilder core
+   case isLabel core of
+      Just (l, a) -> nameAttr l <> coreBuilder a
+      _ -> coreBuilder core
 
 coreBuilder :: Core a -> XMLBuilder
-coreBuilder core =
-   case core of
-      Label l (Sym r) | getId l == getId r
-                 -> tag "rule"       (nameAttr l)
-      Label l a  -> tag "label"      (nameAttr l <> coreBuilder a)
-      Apply d [a]
-         | getId d == newId "remove"   -> cfgItem "removed" (coreBuilder a)
-         | getId d == newId "collapse" -> cfgItem "collapsed" (coreBuilder a)
-         | getId d == newId "hide"     -> cfgItem "hidden" (coreBuilder a)
-      Apply d as -> 
-         tag (showId d) (mconcat (map coreBuilder (flattenList (getId d) as)))
-      Let ds a   -> tag "let"        (decls ds <> coreBuilder a)
-      Sym r      -> tag "rule"       ("name" .=. show r)
-      Var n      -> tag "var"        ("var" .=. show n)
+coreBuilder = fold emptyAlg
+   { fNode = \def xs -> 
+        case xs of
+           [x] | isProperty def 
+             -> addProperty (show def) x
+           _ -> tag (show def) (mconcat xs)
+   , fLeaf = \r -> 
+        tag "rule" ("name" .=. show r)
+   , fLabel = \l a ->
+        tag "label" (nameAttr l <> a)
+   , fRec = \n a ->
+        tag "rec" (("var" .=. show n) <> a)
+   , fVar = \n -> 
+        tag "var" ("var" .=. show n)
+   } . flatten
+
+flatten :: Core a -> Core a
+flatten = replaceNode $ \def -> node def . concatMap (collect def)
  where
-   decls ds   = mconcat [ tag "decl" (("var" .=. show n) <> coreBuilder a)
-                        | (n, a) <- ds
-                        ]
+   collect def core = 
+      case isNode core of
+         Just (d, xs) | d == def -> xs
+         _ -> [core]
 
-flattenList :: Id -> [Core a] -> [Core a]
-flattenList = concatMap . flatten
-
-flatten :: Id -> Core a -> [Core a]
-flatten n (Apply d as)
-   | n == getId d && isAssociative d = flattenList n as
-flatten _ core = [core]
-
-cfgItem :: String -> XMLBuilder -> XMLBuilder
-cfgItem s a =
+addProperty :: String -> XMLBuilder -> XMLBuilder
+addProperty s a =
    case fromBuilder a of
       Just e | name e `elem` ["label", "rule"] ->
          builder e { attributes = attributes e ++ [s := "true"] }
@@ -76,6 +72,7 @@ cfgItem s a =
 -----------------------------------------------------------------------
 -- XML to strategy
 
+{-
 xmlToStrategy :: Monad m => (String -> Maybe (Rule a)) ->  XML -> m (Strategy a)
 xmlToStrategy f = liftM fromCore . readStrategy xmlToInfo g
  where
@@ -88,24 +85,24 @@ xmlToInfo xml = do
    n <- findAttribute "name" xml
    -- let boolAttr s = fromMaybe False (findBool s xml)
    return (newId n)
-{-
+
 findBool :: Monad m => String -> XML -> m Bool
 findBool attr xml = do
    s <- findAttribute attr xml
    case map toLower s of
       "true"  -> return True
       "false" -> return False
-      _       -> fail "not a boolean" -}
+      _       -> fail "not a boolean"
 
 readStrategy :: Monad m => (XML -> m Id) -> (Id -> m (Rule a)) -> XML -> m (Core a)
-readStrategy toLabel findRule xml = do
+readStrategy toLabel findRule xml = error "not implemented" do
    xs <- mapM (readStrategy toLabel findRule) (children xml)
    let s = name xml
    case lookup s table of
       Just f  -> f s xs
       Nothing ->
          fail $ "Unknown strategy combinator " ++ show s
- where {-
+ where
    buildSequence _ xs
       | null xs   = return Succeed
       | otherwise = return (foldr1 (:*:) xs)
@@ -117,7 +114,7 @@ readStrategy toLabel findRule xml = do
       | otherwise = return (foldr1 (:|>:) xs) 
    buildInterleave _ xs
       | null xs   = return succeedCore
-      | otherwise = return (foldr1 (:%:) xs) -}
+      | otherwise = return (foldr1 (:%:) xs)
    buildLabel x = do
       info <- toLabel xml
       return (Label info x)
@@ -139,14 +136,16 @@ readStrategy toLabel findRule xml = do
    join2 f g a b = join (f g a b)
 
    table =
-      [ {- ("sequence",   buildSequence)
+      [ ("sequence",   buildSequence)
       , ("choice",     buildChoice)
       , ("orelse",     buildOrElse)
       , ("interleave", buildInterleave)
-      , -}("label",      join2 comb1 buildLabel)
+      , ("label",      join2 comb1 buildLabel)
      -- , ("atomic",     comb1 Atomic)
       , ("rule",       join2 comb0 buildRule)
       , ("var",        join2 comb0 buildVar)
 --      , ("succeed",    comb0 Succeed)
       --, ("fail",       comb0 Fail)
       ]
+
+-}

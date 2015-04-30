@@ -19,11 +19,9 @@ module Ideas.Common.Strategy.Location
    ) where
 
 import Data.Maybe
-import Ideas.Common.Classes
 import Ideas.Common.Id
 import Ideas.Common.Strategy.Abstract
-import Ideas.Common.Strategy.Core
-import Ideas.Common.Utils.Uniplate
+import Ideas.Common.CyclicTree
 
 -----------------------------------------------------------
 --- Strategy locations
@@ -57,17 +55,16 @@ nextTaskLocation s xs ys = g (rec (f xs) (f ys))
 
 -- | Returns a list of all strategy locations, paired with the label
 strategyLocations :: LabeledStrategy a -> [([Int], Id)]
-strategyLocations s = ([], getId s) : rec [] (toCore (unlabel s))
+strategyLocations s = ([], getId s) : make s
  where
-   rec is = concat . zipWith make (map (:is) [0..]) . collect
+   make = nrs . fold alg . toCore . unlabel
+   alg  = monoidAlg 
+      { fLeaf  = \a   -> [(getId a, [])]
+      , fLabel = \l x -> [(l, nrs x)]
+      }
+   nrs  = concat . zipWith f [0..]
 
-   make is (l, mc) = (is, l) : maybe [] (rec is) mc
-
-   collect core =
-      case core of
-         Label l c -> [(l, Just c)]
-         Sym r | isMajor r -> [(getId r, Nothing)]
-         _         -> concatMap collect (children core)
+   f i (l, xs) = ([i], l) : [ (i:is, l2) | (is, l2) <- xs ]
 
 fromLoc :: LabeledStrategy a -> [Int] -> Maybe Id
 fromLoc s loc = fmap getId (lookup loc (strategyLocations s))

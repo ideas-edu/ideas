@@ -19,11 +19,9 @@
 -----------------------------------------------------------------------------
 --  $Id$
 
-module Ideas.Common.Strategy.Parsing
-   ( -- * Running @Core@ strategies
-     runCore
-     -- * Prefix
-   , Prefix, noPrefix, makePrefix, replayCore
+module Ideas.Common.Strategy.Prefix
+   ( -- * Prefix
+     Prefix, noPrefix, makePrefix, Core, runCore, replayCore
    , isEmptyPrefix, majorPrefix, searchModePrefix, prefixPaths
      -- * Path
    , Path, emptyPath, readPath, readPaths
@@ -36,33 +34,13 @@ import Ideas.Common.Classes
 import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
-import Ideas.Common.Strategy.Core
+import Ideas.Common.CyclicTree
 import Ideas.Common.Strategy.Derived
 import Ideas.Common.Strategy.Process
+import Ideas.Common.Strategy.Def
 import Ideas.Common.Strategy.Sequence
+import Ideas.Common.Strategy.Step
 import Ideas.Common.Utils (fst3, splitsWithElem, readM)
-
---------------------------------------------------------------------------------
--- Running Core strategies
-
--- | Run a @Core@ strategy and return all results.
-runCore :: Core a -> a -> [a]
-runCore core a = bests $ accum applyAll a $ coreToProcess False core
-
-coreToProcess :: Bool -> Core a -> Process (Step a)
-coreToProcess useLabels = toProcess . rec . coreSubstAll
- where
-   rec :: Core a -> Builder (Step a)
-   rec core =
-      case core of
-         Sym r -> single (RuleStep mempty r)
-         Label l a
-            | useLabels -> Enter l ~> rec a
-                           <*> single (Exit l)
-            | otherwise -> rec a
-         Apply def as -> useDef rec def as
-         Let _ _      -> error "not substituted: let"
-         Var _        -> error "not substituted: var"
 
 --------------------------------------------------------------------------------
 -- Prefix datatype
@@ -88,6 +66,21 @@ instance Firsts (Prefix a) where
       f ((st, a, path) :~> p) = (st, a) :~> Prefix [path] p
 
 --------------------------------------------------------------------------------
+-- Running Core strategies
+
+type Core a = CyclicTree Def (Rule a)
+
+runCore :: Core a -> a -> [a]
+runCore = runProcess . coreToProcess
+
+coreToProcess :: Core a -> Process (Step a)
+coreToProcess = toProcess . foldUnwind emptyAlg 
+   { fNode  = useDef
+   , fLeaf  = single . RuleStep mempty
+   , fLabel = \l p -> Enter l ~> p <*> (Exit l ~> done)
+   }
+   
+--------------------------------------------------------------------------------
 -- Constructing a prefix
 
 -- | The error prefix (i.e., without a location in the strategy).
@@ -102,7 +95,7 @@ makePrefix = snd . replayCore emptyPath
 -- argument is the current term.
 replayCore :: Path -> Core a -> ([Step a], a -> Prefix a)
 replayCore path core =
-   let (acc, p) = runPath path (withPath (coreToProcess True core))
+   let (acc, p) = runPath path (withPath (coreToProcess core))
    in (map fst acc, Prefix [path] . applySteps p)
 
 runPath :: Path -> Process a -> ([a], Process a)

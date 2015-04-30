@@ -22,6 +22,8 @@ module Ideas.Common.Classes
    , BiArrow(..)
      -- * Type class BiFunctor
    , BiFunctor, biMap, mapFirst, mapSecond, mapBoth
+     -- * Type class Fix
+   , Fix(..)
      -- * Buggy and Minor properties
    , Buggy(..), Minor(..)
    ) where
@@ -111,6 +113,14 @@ instance BiFunctor (,) where
 
 mapBoth :: BiFunctor f => (a -> b) -> f a a -> f b b
 mapBoth f = biMap f f
+
+-----------------------------------------------------------
+-- Type class BiFunctor
+
+class Fix a where
+  fix :: (a -> a) -> a
+  -- default implementation
+  fix f = let a = f a in a
 
 -----------------------------------------------------------
 -- Buggy and Minor properties

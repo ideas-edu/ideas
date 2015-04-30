@@ -26,7 +26,7 @@ module Ideas.Common.Strategy
      -- ** Basic combinators
    , (<*>), (<|>), (<%>), (<@>), (!~>) 
    , succeed, fail, atomic, label, inits
-   , sequence, alternatives, interleave, permute, fix
+   , sequence, alternatives, interleave, permute
      -- ** EBNF combinators
    , many, many1, replicate, option
      -- ** Negation and greedy combinators
@@ -55,9 +55,9 @@ module Ideas.Common.Strategy
 
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Combinators
-import Ideas.Common.Strategy.Core
 import Ideas.Common.Strategy.Configuration
 import Ideas.Common.Strategy.Location
-import Ideas.Common.Strategy.Parsing
+import Ideas.Common.Strategy.Prefix
+import Ideas.Common.Strategy.Step
 import Ideas.Common.Strategy.Traversal hiding (full, spine, stop, once)
 import Prelude ()

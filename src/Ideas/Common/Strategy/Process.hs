@@ -24,10 +24,12 @@ module Ideas.Common.Strategy.Process
    , Builder
      -- * Query functions on a Process
    , ready, stopped, firsts
+   , runProcess
      -- * Higher-order functions for iterating over a Process
    , fold, accum, scan, prune
    ) where
 
+import Ideas.Common.Classes
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Sequence
 
@@ -96,6 +98,9 @@ eqProcessBy eq = rec
    eqStep Done      Done      = True
    eqStep _         _         = False
 
+runProcess :: Apply f => Process (f a) -> a -> [a]
+runProcess p a = bests (accum applyAll a p) 
+
 ------------------------------------------------------------------------
 -- Building sequences
 
@@ -105,6 +110,9 @@ eqProcessBy eq = rec
 -- it can be inspected in any way.
 
 newtype Builder a = B (Process a -> Process a)
+
+instance Functor Builder where
+   fmap f =  fromProcess . fmap f . toProcess -- inefficient
 
 instance Choice Builder where
    single a = B (a ~>)

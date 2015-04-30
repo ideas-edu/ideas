@@ -25,9 +25,13 @@ import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Rule
 import Ideas.Common.Classes
 import Ideas.Common.Strategy.Choice
-import Ideas.Common.Strategy.Core 
-import Ideas.Common.Strategy.Parsing (runCore)
-import Ideas.Common.Utils.Uniplate
+import Ideas.Common.Strategy.Def
+import Ideas.Common.Strategy.Sequence
+import Ideas.Common.Strategy.Prefix
+import Ideas.Common.Strategy.Process hiding (fold)
+import Ideas.Common.CyclicTree hiding (label)
+import Ideas.Common.Strategy.Step
+import qualified Ideas.Common.CyclicTree as Tree
 
 ---------------------------------------------------------------------
 -- Types and constructors
@@ -71,65 +75,65 @@ configureS :: StrategyCfg -> Strategy a -> Strategy a
 configureS cfg = fromCore . configureCore cfg . toCore
 
 configureCore :: StrategyCfg -> Core a -> Core a
-configureCore (Cfg pairs) = rec
+configureCore (Cfg pairs) core = foldr handle core pairs
  where
-   rec core =
-      case core of
-         Apply d [s]
-            | d == removeDef   && has Reinsert -> rec s
-            | d == collapseDef && has Expand   -> rec s
-            | d == hideDef     && has Reveal   -> rec s
-         Label l s -> props (Label l (rec s))
-         Sym r     -> props (Sym r)
-         _ -> descend rec core
-    where
-      myLabel  = getLabel core
-      actions  = cancel [ a | (loc, a) <- pairs, maybe False (here loc) myLabel ]
-      has      = (`elem` actions)
-      make x g = if has x then g else id
+   handle (ByName l, action) = 
+      case action of 
+         Remove   -> insertAtLabel l removeDef
+         Reinsert -> removeAtLabel l removeDef
+         Collapse -> insertAtLabel l collapseDef
+         Expand   -> removeAtLabel l collapseDef
+         Hide     -> insertAtLabel l hideDef
+         Reveal   -> removeAtLabel l hideDef
 
-      props    = make Remove   removeCore
-               . make Hide     hideCore
-               . make Collapse collapseCore
-
-here :: ConfigLocation -> Id -> Bool
-here (ByName a) info = getId info == a
-
-getLabel :: Core a -> Maybe Id
-getLabel (Label l _) = Just l
-getLabel (Sym r)     = Just (getId r)
-getLabel (Apply d [s]) | d `elem` configDefs = getLabel s
-getLabel _ = Nothing
-
-cancel :: [ConfigAction] -> [ConfigAction]
-cancel [] = []
-cancel (x:xs) = x : cancel (rec actionGroups)
+insertAtLabel :: HasId a => Id -> d -> CyclicTree d a -> CyclicTree d a
+insertAtLabel n def = replaceLeaf f . replaceLabel g
  where
-   rec (g:gs)
-      | x `elem` g = filter (`notElem` g) xs
-      | otherwise  = rec gs
-   rec [] = xs
-   
+   f a | n == getId a = node def [leaf a]
+       | otherwise    = leaf a
+       
+   g l a | n == l    = node def [Tree.label l a]
+         | otherwise = Tree.label l a
+
+removeAtLabel :: HasId a => Id -> Def -> CyclicTree Def a -> CyclicTree Def a
+removeAtLabel n def = replaceNode $ \d xs -> 
+   case map nextId xs of
+      [Just l] | n == l -> head xs
+      _ -> node d xs
+
+nextId :: HasId a => CyclicTree Def a -> Maybe Id
+nextId = fold monoidAlg 
+   { fNode  = \d xs -> if isProperty d && length xs == 1 
+                       then head xs 
+                       else Nothing
+   , fLeaf  = \a    -> Just (getId a)
+   , fLabel = \l _  -> Just l
+   } 
+
 ---------------------------------------------------------------------
 -- Combinator definitions
 
 removeCore, collapseCore, hideCore :: Core a -> Core a
-removeCore   = applyDef1 removeDef
-collapseCore = applyDef1 collapseDef
-hideCore     = applyDef1 hideDef
+removeCore   = node1 removeDef
+collapseCore = node1 collapseDef
+hideCore     = node1 hideDef
 
 configDefs :: [Def]
 configDefs = [removeDef, collapseDef, hideDef]
 
 removeDef :: Def
-removeDef = makeDefTrans "remove" (const empty)
+removeDef = propertyDef "removed" (const empty)
 
 collapseDef :: Def
-collapseDef = makeDefTrans "collapse" collapse
+collapseDef = propertyDef "collapsed" (collapse . toProcess)
  where
-   collapse :: Core a -> Core a
-   collapse (Label l a) = Sym $ makeRule l (runCore a)
-   collapse a = descend collapse a
+   collapse a = 
+      case firsts a of
+         [(Enter l, _)] -> collapseWith l a
+         _              -> empty
+    
+   collapseWith l = 
+      single . RuleStep mempty . makeRule l . runProcess
 
 hideDef :: Def
-hideDef = makeDefTrans "hide" (fmap minor)
+hideDef = propertyDef "hidden" (fmap minor)

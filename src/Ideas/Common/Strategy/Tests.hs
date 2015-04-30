@@ -21,7 +21,8 @@ import Data.Function
 import Ideas.Common.Library hiding (ready)
 import Ideas.Common.Strategy.Abstract (toCore, fromCore)
 import Ideas.Common.Strategy.Core (Core, GCore(..))
-import Ideas.Common.Strategy.Sequence (Firsts(..), firstsOrdered)
+import Ideas.Common.Strategy.Sequence (Firsts(..), done, firstsOrdered)
+import Ideas.Common.Strategy.Choice (empty)
 import Ideas.Common.Utils.Uniplate
 import Test.QuickCheck
 
@@ -172,14 +173,14 @@ rightDistributive f op = law3 "right distributive" $ \x y z ->
 
 instance Arbitrary (Strategy Int) where
    arbitrary = arbRules >>= arbWith
-   shrink = map fromCore . shrinkCore . toCore
+   -- shrink = map fromCore . shrinkCore . toCore
 
 shrinkCore :: Core a -> [Core a]
-shrinkCore Fail    = []
-shrinkCore Succeed = [Fail]
+--shrinkCore Fail    = []
+--shrinkCore Succeed = [Fail]
 shrinkCore core = do
    (a, f) <- holes core
-   Fail : Succeed : a : map f (shrinkCore a)
+   empty : done : a : map f (shrinkCore a)
 
 arbWith :: [Rule Int] -> Gen (Strategy Int)
 arbWith rs = sized f

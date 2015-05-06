@@ -29,6 +29,7 @@ module Ideas.Common.CyclicTree
 import Control.Applicative
 import Data.Foldable (Foldable, foldMap)
 import Data.List (intercalate)
+import Data.Traversable (Traversable, traverse, sequenceA)
 import Ideas.Common.Classes
 import Ideas.Common.Id
 
@@ -67,6 +68,15 @@ instance Monad (CyclicTree d) where
 
 instance Foldable (CyclicTree d) where
    foldMap f = fold monoidAlg {fLeaf = f}
+
+instance Traversable (CyclicTree d) where
+   traverse f = fold emptyAlg 
+      { fNode  = \a -> liftA (node a) . sequenceA
+      , fLeaf  = liftA leaf . f
+      , fLabel = liftA . label
+      , fRec   = liftA . Rec
+      , fVar   = pure . Var
+      }
 
 instance Fix (CyclicTree a b) where
    fix f = Rec n (f (Var n))

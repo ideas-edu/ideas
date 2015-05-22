@@ -24,7 +24,7 @@ import Data.Time
 import Ideas.Service.Request (Request, Schema(..))
 import qualified Ideas.Service.Request as R
 
-#ifdef LOG
+#ifdef DB
 import Data.List
 import Database.HDBC
 #endif
@@ -75,7 +75,7 @@ addRequest req r = r
 logEnabled :: Bool
 logRecord  :: Schema -> Record -> IO ()
 
-#ifdef LOG
+#ifdef DB
 logEnabled = True
 logRecord schema r = 
    case schema of
@@ -90,7 +90,7 @@ logRecord _ _ = return ()
 
 --------------------------------------------------------------------------------
 
-#ifdef LOG
+#ifdef DB
 nameOfTable :: Schema -> String
 nameOfTable V1 = "log"
 nameOfTable _  = "requests"

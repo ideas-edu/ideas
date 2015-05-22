@@ -76,12 +76,16 @@ jsonRequest cgiBin json = do
                 Just (String s)     -> Just s
                 Just (Number (I n)) -> Just (show n)
                 _                   -> Nothing
+   let sch = case lookupM "logging" json of
+                Just (String s) -> readSchema s  
+                _               -> Nothing
    return emptyRequest
       { serviceId  = srv
       , exerciseId = exId
       , user       = uid
       , source     = src
       , cgiBinary  = cgiBin
+      , logSchema  = sch
       , dataformat = JSON
       , encoding   = enc
       }

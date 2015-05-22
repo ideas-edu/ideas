@@ -26,14 +26,27 @@ data Request = Request
    , source         :: Maybe String
    , feedbackScript :: Maybe String
    , cgiBinary      :: Maybe String
+   , logSchema      :: Maybe Schema
    , dataformat     :: DataFormat
    , encoding       :: [Encoding]
    }
 
 emptyRequest :: Request
-emptyRequest = Request Nothing Nothing Nothing Nothing Nothing Nothing XML []
+emptyRequest = Request Nothing Nothing Nothing Nothing Nothing Nothing Nothing XML []
 
 data Schema = V1 | V2 | NoLogging deriving (Show, Eq)
+
+getSchema :: Request -> Schema
+getSchema = fromMaybe V1 . logSchema -- log schema V1 is the default
+
+readSchema :: String -> Maybe Schema
+readSchema s0
+   | s == "v1" = Just V1
+   | s == "v2" = Just V2
+   | s `elem` ["false", "no"] = Just NoLogging
+   | otherwise = Nothing
+ where
+   s = map toLower (filter isAlphaNum s0)
 
 data DataFormat = XML | JSON
    deriving Show -- needed for LoggingDatabase

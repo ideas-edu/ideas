@@ -62,7 +62,7 @@ defaultCGI dr = runCGI $ handleErrors $ do
       process dr (Just cgiBin) input
    -- log request to database
    when (useLogging req) $
-      liftIO $ Log.logRecord V1 (Log.addRequest req record)
+      liftIO $ Log.logRecord (getSchema req) (Log.addRequest req record)
          { Log.ipaddress = addr
          , Log.binary    = cgiBin
          , Log.input     = input

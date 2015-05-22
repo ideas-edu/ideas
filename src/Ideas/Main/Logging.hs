@@ -67,6 +67,7 @@ addRequest req r = r
    { service    = maybe "unknown" show (R.serviceId req)
    , exerciseid = maybe "unknown" show (R.exerciseId req)
    , source     = fromMaybe "unknown" (R.source req)
+   , binary     = fromMaybe "" (R.cgiBinary req)
    , dataformat = show (R.dataformat req)
    , encoding   = show (R.encoding req)
    }

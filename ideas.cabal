@@ -1,5 +1,5 @@
 name:                   ideas
-version:                1.3.2
+version:                1.3.3
 synopsis:               Feedback services for intelligent tutoring systems
 homepage:               http://ideas.cs.uu.nl/www/
 description:
@@ -132,7 +132,7 @@ Library
     Ideas.Main.BlackBoxTests
     Ideas.Main.Default
     Ideas.Main.Documentation
-    Ideas.Main.LoggingDatabase
+    Ideas.Main.Logging
     Ideas.Main.Options
     Ideas.Main.Revision
     Ideas.Service.BasicServices

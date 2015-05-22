@@ -19,7 +19,7 @@ module Ideas.Main.Options
    ) where
 
 import Data.Maybe
-import Ideas.Main.LoggingDatabase (logEnabled)
+import Ideas.Main.Logging (logEnabled)
 import Ideas.Main.Revision
 import System.Console.GetOpt
 import System.Environment

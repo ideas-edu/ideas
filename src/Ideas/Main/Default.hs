@@ -23,14 +23,13 @@ module Ideas.Main.Default
 import Control.Exception
 import Control.Monad
 import Data.Maybe
-import Data.Time
 import Ideas.Common.Utils (useFixedStdGen, Some(..))
 import Ideas.Common.Utils.TestSuite
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
 import Ideas.Main.BlackBoxTests
 import Ideas.Main.Documentation
-import Ideas.Main.LoggingDatabase
+import qualified Ideas.Main.Logging as Log
 import Ideas.Main.Options hiding (fullVersion)
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Analysis
@@ -52,17 +51,23 @@ defaultMain dr = do
 -- Invoked as a cgi binary
 defaultCGI :: DomainReasoner -> IO ()
 defaultCGI dr = runCGI $ handleErrors $ do
+   -- create a record for logging
+   record  <- liftIO Log.makeRecord
    -- query environment
-   startTime <- liftIO getCurrentTime
-   addr      <- remoteAddr       -- the IP address of the remote host
-   cgiBin    <- scriptName       -- get name of binary
-   input     <- inputOrDefault
+   addr    <- remoteAddr       -- the IP address of the remote host
+   cgiBin  <- scriptName       -- get name of binary
+   input   <- inputOrDefault
    -- process request
    (req, txt, ctp) <- liftIO $
       process dr (Just cgiBin) input
    -- log request to database
    when (useLogging req) $
-      liftIO $ logMessage req input txt addr startTime
+      liftIO $ Log.logRecord V1 (Log.addRequest req record)
+         { Log.ipaddress = addr
+         , Log.binary    = cgiBin
+         , Log.input     = input
+         , Log.output    = txt
+         }
    -- write header and output
    setHeader "Content-type" ctp
    -- Cross-Origin Resource Sharing (CORS) prevents browser warnings

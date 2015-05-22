@@ -27,6 +27,7 @@ import qualified Ideas.Service.Request as R
 #ifdef DB
 import Data.List
 import Database.HDBC
+import Database.HDBC.Sqlite3 (connectSqlite3)
 #endif
 
 type Diff = NominalDiffTime

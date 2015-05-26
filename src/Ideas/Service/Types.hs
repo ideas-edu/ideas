@@ -20,7 +20,7 @@ module Ideas.Service.Types
    , TypeRep(..), Const(..), Type, TypedValue(..)
    , Equal(..), ShowF(..), equalM
      -- * Constructing types
-   , tEnvironment, tLocation, tRule, tTuple3, tTuple4, tTuple5, tPair
+   , tEnvironment, tLocation, tRule, tUnit, tTuple3, tTuple4, tTuple5, tPair
    , tStrategy, tTree, tState, tBool, tMaybe, tString, tList
    , tId, tService, tSomeExercise, tText, tDifficulty, tContext
    , tDerivation, tError, (.->), tIO, tExercise, tTestSuiteResult, tStdGen
@@ -279,6 +279,9 @@ tStrategyCfg = Const StratCfg
 
 tList :: Type a t -> Type a [t]
 tList = List
+
+tUnit :: Type a ()
+tUnit = Unit
 
 tPair :: Type a t1 -> Type a t2 -> Type a (t1, t2)
 tPair = Pair

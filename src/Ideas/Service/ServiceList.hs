@@ -47,7 +47,7 @@ metaServiceList :: DomainReasoner -> [Service]
 metaServiceList dr =
    [ indexS dr, servicelistS dr, serviceinfoS dr, exerciselistS dr
    , rulelistS, ruleinfoS, rulesinfoS, strategyinfoS, exerciseinfoS
-   , stateinfoS, examplederivationsS, testreportS
+   , stateinfoS, examplederivationsS, testreportS, logS
    ]
 
 ------------------------------------------------------
@@ -309,3 +309,8 @@ testreportS :: Service
 testreportS = makeService "meta.testreport"
    "Show test report for an exercise." $
    (\stdgen -> runTestSuiteResult False . exerciseTestSuite stdgen) ::: tStdGen .-> tExercise .-> tIO tTestSuiteResult
+   
+logS :: Service
+logS = makeService "meta.log" 
+   "Feedback service for logging events: the reply is always empty."
+   (const () ::: tUnit .-> tUnit)

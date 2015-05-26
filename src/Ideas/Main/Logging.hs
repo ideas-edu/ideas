@@ -33,28 +33,39 @@ import Database.HDBC.Sqlite3 (connectSqlite3)
 type Diff = NominalDiffTime
 type Time = UTCTime
 
+-- | The Record datatype is based on the Ideas Request Logging Schema version 2.
 data Record = Record
-   { service      :: String  -- name of feedback service
+   { -- request attributes  
+     service      :: String  -- name of feedback service
    , exerciseid   :: String  -- exercise identifier
-   , userid       :: String  -- user identifier (e.g. student number)
    , source       :: String  -- tool/learning environment that makes request
-   , ipaddress    :: String  -- IP address of client
-   , binary       :: String  -- name of (cgi) binary that is being executed
+   , script       :: String  -- name of feedback script (for textual feedback)
+   , requestinfo  :: String  -- additional information from client (only for logging)
+     -- request format
    , dataformat   :: String  -- xml, json
    , encoding     :: String  -- options for encoding (e.g. OpenMath, string)
+   , -- grouping requests
+     userid       :: String  -- user identifier (e.g. student number)
+   , sessionid    :: String  -- session identifier (grouping requests for one task)
+   , taskid       :: String  -- task identifier (default: start term)
+     -- meta-information
    , time         :: Time    -- date and time of request
-   , responsetime :: Diff    -- time needed for processing request
-   , ruleid       :: String  -- rule identifier (customized for each service)
-   , serviceinfo  :: String  -- summary of reply (customized for each service)
+   , responsetime :: Diff    -- time needed for processing request 
+   , ipaddress    :: String  -- IP address of client
+   , binary       :: String  -- name of (cgi) binary that is being executed
    , version      :: String  -- version (and revision) information
    , errormsg     :: String  -- internal error message (default: empty string)
+     -- service info
+   , serviceinfo  :: String  -- summary of reply (customized for each service)
+   , ruleid       :: String  -- rule identifier (customized for each service)
+     -- raw data
    , input        :: String  -- raw input (request)
    , output       :: String  -- raw output (reply)
    }
  deriving Show
 
 record :: Record
-record = Record "" "" "" "" "" "" "" "" t0 0 "" "" "" "" "" ""
+record = Record "" "" "" "" "" "" "" "" "" "" t0 0 "" "" "" "" "" "" "" ""
  where t0 = UTCTime (toEnum 0) 0
 
 makeRecord :: IO Record
@@ -111,9 +122,10 @@ values_v1 r =
 values_v2 :: Record -> [SqlValue]
 values_v2 r =
    let get f = toSql (f r) 
-   in [ get service, get exerciseid, get userid, get source, get ipaddress
-      , get dataformat, get encoding, get time, get responsetime, get ruleid
-      , get serviceinfo, get version, get errormsg, get input, get output
+   in [ get service, get exerciseid, get source, get script, get requestinfo
+      , get dataformat, get encoding, get userid, get sessionid, get taskid
+      , get time, get responsetime, get ipaddress, get binary, get version
+      , get errormsg, get serviceinfo, get ruleid, get input, get output
       ]
       
 logRecordWith :: IConnection c => Schema -> Record -> c -> IO ()

@@ -64,7 +64,7 @@ defaultCGI dr = runCGI $ handleErrors $ do
    when (useLogging req) $
       liftIO $ Log.logRecord (getSchema req) (Log.addRequest req record)
          { Log.ipaddress = addr
-         , Log.binary    = cgiBin
+         , Log.version   = shortVersion
          , Log.input     = input
          , Log.output    = txt
          }

@@ -25,6 +25,7 @@ data Request = Request
    , user           :: Maybe String
    , source         :: Maybe String
    , feedbackScript :: Maybe String
+   , requestInfo    :: Maybe String
    , cgiBinary      :: Maybe String
    , logSchema      :: Maybe Schema
    , dataformat     :: DataFormat
@@ -32,19 +33,20 @@ data Request = Request
    }
 
 emptyRequest :: Request
-emptyRequest = Request Nothing Nothing Nothing Nothing Nothing Nothing Nothing XML []
+emptyRequest = Request Nothing Nothing Nothing Nothing 
+                       Nothing Nothing Nothing Nothing XML []
 
 data Schema = V1 | V2 | NoLogging deriving (Show, Eq)
 
 getSchema :: Request -> Schema
 getSchema = fromMaybe V1 . logSchema -- log schema V1 is the default
 
-readSchema :: String -> Maybe Schema
+readSchema :: Monad m => String -> m Schema
 readSchema s0
-   | s == "v1" = Just V1
-   | s == "v2" = Just V2
-   | s `elem` ["false", "no"] = Just NoLogging
-   | otherwise = Nothing
+   | s == "v1" = return V1
+   | s == "v2" = return V2
+   | s `elem` ["false", "no"] = return NoLogging
+   | otherwise = fail "Unknown schema"
  where
    s = map toLower (filter isAlphaNum s0)
 

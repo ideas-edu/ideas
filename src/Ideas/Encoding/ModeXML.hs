@@ -65,9 +65,10 @@ xmlRequest cgiBin xml = do
       , exerciseId     = extractExerciseId xml
       , user           = findAttribute "userid" xml
       , source         = findAttribute "source" xml
-      , feedbackScript = findAttribute "script" xml
-      , logSchema      = findAttribute "logging" xml >>= readSchema
       , cgiBinary      = cgiBin
+      , requestInfo    = findAttribute "requestinfo" xml
+      , logSchema      = findAttribute "logging" xml >>= readSchema
+      , feedbackScript = findAttribute "script" xml
       , dataformat     = XML
       , encoding       = enc
       }

@@ -15,6 +15,7 @@
 
 module Ideas.Encoding.ModeJSON (processJSON) where
 
+import Control.Monad
 import Data.Char
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (Some(..), timedSeconds)
@@ -59,36 +60,37 @@ addVersion str json =
 
 jsonRequest :: Monad m => Maybe String -> JSON -> m Request
 jsonRequest cgiBin json = do
-   srv  <- case lookupM "method" json of
-              Just (String s) -> return (Just (newId s))
-              Nothing         -> return Nothing
-              _               -> fail "Invalid method"
    let exId = lookupM "params" json >>= extractExerciseId
-   enc  <- case lookupM "encoding" json of
-              Nothing         -> return []
-              Just (String s) -> readEncoding s
-              _               -> fail "Invalid encoding"
-   src  <- case lookupM "source" json of
-              Nothing         -> return Nothing
-              Just (String s) -> return (Just s)
-              _               -> fail "Invalid source"
-   let uid = case lookupM "id" json of
-                Just (String s)     -> Just s
-                Just (Number (I n)) -> Just (show n)
-                _                   -> Nothing
-   let sch = case lookupM "logging" json of
-                Just (String s) -> readSchema s  
-                _               -> Nothing
+   let uid  = case lookupM "id" json of
+                 Just (String s)     -> Just s
+                 Just (Number (I n)) -> Just (show n)
+                 _                   -> Nothing
+   srv  <- stringOption  "method"      json newId
+   src  <- stringOption  "source"      json id
+   rinf <- stringOption  "requestinfo" json id
+   enc  <- stringOptionM "encoding"    json [] readEncoding
+   sch  <- stringOptionM "logging"     json Nothing (liftM Just . readSchema)
    return emptyRequest
-      { serviceId  = srv
-      , exerciseId = exId
-      , user       = uid
-      , source     = src
-      , cgiBinary  = cgiBin
-      , logSchema  = sch
-      , dataformat = JSON
-      , encoding   = enc
+      { serviceId   = srv
+      , exerciseId  = exId
+      , user        = uid
+      , source      = src
+      , cgiBinary   = cgiBin
+      , requestInfo = rinf
+      , logSchema   = sch
+      , dataformat  = JSON
+      , encoding    = enc
       }
+
+stringOption :: Monad m => String -> JSON -> (String -> a) -> m (Maybe a)
+stringOption attr json f = stringOptionM attr json Nothing (return . Just . f)
+
+stringOptionM :: Monad m => String -> JSON -> a -> (String -> m a) -> m a
+stringOptionM attr json a f = 
+   case lookupM attr json of
+      Just (String s) -> f s
+      Just _  -> fail $ "Invalid value for " ++ attr ++ " (expecting string)"
+      Nothing -> return a
 
 myHandler :: DomainReasoner -> Request -> RPCHandler
 myHandler dr request fun json = do

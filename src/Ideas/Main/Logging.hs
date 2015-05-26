@@ -75,12 +75,14 @@ makeRecord = do
 
 addRequest :: Request -> Record -> Record
 addRequest req r = r 
-   { service    = maybe "unknown" show (R.serviceId req)
-   , exerciseid = maybe "unknown" show (R.exerciseId req)
-   , source     = fromMaybe "unknown" (R.source req)
-   , binary     = fromMaybe "" (R.cgiBinary req)
-   , dataformat = show (R.dataformat req)
-   , encoding   = show (R.encoding req)
+   { service     = maybe (service r) show (R.serviceId req)
+   , exerciseid  = maybe (exerciseid r) show (R.exerciseId req)
+   , source      = fromMaybe (source r) (R.source req)
+   , script      = fromMaybe (script r) (R.feedbackScript req)
+   , requestinfo = fromMaybe (requestinfo r) (R.requestInfo req)
+   , dataformat  = show (R.dataformat req)
+   , encoding    = show (R.encoding req)
+   , binary      = fromMaybe (binary r) (R.cgiBinary req)
    }
 
 --------------------------------------------------------------------------------

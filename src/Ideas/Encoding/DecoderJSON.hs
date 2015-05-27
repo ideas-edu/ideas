@@ -94,7 +94,7 @@ decodeState = do
    decoderFor $ \json ->
       case json of
          Array [a] -> setInput a >> decodeState
-         Array [String _code, pref, term, jsonContext] -> do
+         Array (String _code : pref : term : jsonContext : rest) -> do
             pts  <- decodePaths       // pref
             a    <- decodeTerm        // term
             env  <- decodeEnvironment // jsonContext
@@ -102,7 +102,15 @@ decodeState = do
                 ctx = navigateTowards loc $ deleteRef locRef $
                          setEnvironment env $ inContext ex a
                 prfx = replayPaths pts (strategy ex) ctx
-            return $ makeState ex prfx ctx
+            case rest of
+               [] -> return $ makeState ex prfx ctx
+               [Array [String user, String session, String startterm]] -> 
+                  return (makeState ex prfx ctx)
+                     { stateUser      = Just user
+                     , stateSession   = Just session
+                     , stateStartTerm = Just startterm
+                     }
+               _  -> fail $ "invalid state" ++ show json
          _ -> fail $ "invalid state" ++ show json
 
 envToLoc :: Environment -> Location

@@ -19,6 +19,7 @@ module Ideas.Service.State
    ( -- * Exercise state
      State, makeState, makeNoState, emptyStateContext, emptyState
    , exercise, statePrefix, stateContext, stateTerm
+   , stateUser, stateSession, stateStartTerm
    , withoutPrefix, stateLabels, suitable, finished, firsts, microsteps
    ) where
 
@@ -30,17 +31,23 @@ import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Sequence
 
 data State a = State
-   { exercise     :: Exercise a
-   , statePrefix  :: Prefix (Context a)
-   , stateContext :: Context a
+   { exercise       :: Exercise a
+   , statePrefix    :: Prefix (Context a)
+   , stateContext   :: Context a
+   , stateUser      :: Maybe String
+   , stateSession   :: Maybe String -- min 40 bits (10 hex)
+   , stateStartTerm :: Maybe String
    }
 
 instance Show (State a) where
    show s = unlines $ "State {" : map ("   "++) xs ++ ["}"]
     where
-      xs = [ "exercise = " ++ showId s
-           , "prefix   = " ++ show (statePrefix s)
-           , "term     = " ++ prettyPrinterContext (exercise s) (stateContext s)
+      xs = [ "exercise  = " ++ showId s
+           , "prefix    = " ++ show (statePrefix s)
+           , "term      = " ++ prettyPrinterContext (exercise s) (stateContext s)
+           , "user      = " ++ show (stateUser s)
+           , "session   = " ++ show (stateSession s)
+           , "startterm = " ++ show (stateStartTerm s)
            ]
 
 instance HasId (State a) where
@@ -62,13 +69,13 @@ instance Firsts (State a) where
    menu st = fmap f (menu (majorPrefix (statePrefix st)))
     where
       f Done = Done
-      f (info :~> p) = info :~> State (exercise st) p (snd info)
+      f (info :~> p) = info :~> st {statePrefix = p, stateContext = snd info}
 
 microsteps :: State a -> [((Step (Context a), Context a), State a)]
 microsteps st = concatMap f (bests (menu (statePrefix st)))
  where
    f Done         = []
-   f (info :~> p) = [(info, State (exercise st) p (snd info))]
+   f (info :~> p) = [(info, st {statePrefix = p, stateContext = snd info})]
 
 stateTerm :: State a -> a
 stateTerm = fromMaybe (error "invalid term") . fromContext . stateContext
@@ -76,7 +83,7 @@ stateTerm = fromMaybe (error "invalid term") . fromContext . stateContext
 -----------------------------------------------------------
 
 makeState :: Exercise a -> Prefix (Context a) -> Context a -> State a
-makeState = State
+makeState ex prf ctx = State ex prf ctx Nothing Nothing Nothing
 
 -- State without a prefix
 makeNoState :: Exercise a -> Context a -> State a

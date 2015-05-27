@@ -16,6 +16,7 @@
 
 module Ideas.Encoding.EncoderJSON (jsonEncoder) where
 
+import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, (<|>), (<*>))
 import Ideas.Common.Utils (Some(..), distinct)
 import Ideas.Encoding.Encoder
@@ -96,15 +97,17 @@ encodeContext = exerciseEncoder $ \ex ctx ->
 
 encodeState :: JSONEncoder a (State a)
 encodeState = encoderFor $ \st ->
-   let ctx = stateContext st
-       make pp env = Array
+   let ctx   = stateContext st
+       get f = String (fromMaybe "" (f st)) 
+       make pp env = Array $
           [ String $ showId (exercise st)
           , String $ if withoutPrefix st
                      then "NoPrefix"
                      else show (statePrefix st)
           , pp
           , env
-          ]
+          ] ++ if isNothing (stateUser st) then [] else
+          [ Array [get stateUser, get stateSession, get stateStartTerm] ]
    in make <$> (encodeContext // ctx) <*> (encodeStateEnvironment // ctx)
 
 encodeStateEnvironment :: JSONEncoder a (Context a)

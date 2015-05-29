@@ -140,13 +140,13 @@ generateS :: Service
 generateS = makeService "basic.generate"
    "Given an exercise code and a difficulty level (optional), this service \
    \returns an initial state with a freshly generated expression." $
-   generate ::: tStdGen .-> tExercise .-> tMaybe tDifficulty .-> tError tState
+   generate ::: tStdGen .-> tExercise .-> tMaybe tDifficulty .-> tMaybe tUserId .-> tIO tState
 
 createS :: Service
 createS = makeService "basic.create"
     "Given an expression, this service \
     \returns an initial state with the original given expression." $
-    create ::: tExercise .-> tString .-> tError tState
+    create ::: tExercise .-> tString .-> tMaybe tUserId .-> tIO tState
 
 examplesS :: Service
 examplesS = makeService "basic.examples"
@@ -162,12 +162,12 @@ exampleS = makeService "basic.example"
    \with an exercise. These are the examples that appear at the page generated \
    \for each exercise. Also see the generate service, which returns a random \
    \start term." $
-   f ::: tExercise .-> tInt .-> tError tState
+   f ::: tExercise .-> tInt .-> tMaybe tUserId .-> tIO tState
  where
-   f ex nr =
-      case drop nr (examplesContext ex) of
-         []       -> Left "No such example"
-         (_,c ):_ -> Right (emptyStateContext ex c)
+   f ex nr userId =
+      case drop nr (examples ex) of
+         []       -> fail "No such example"
+         (_,a):_ -> startState ex userId a
 
 findbuggyrulesS :: Service
 findbuggyrulesS = makeService "basic.findbuggyrules"

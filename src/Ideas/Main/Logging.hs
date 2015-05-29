@@ -15,13 +15,14 @@
 --  $Id$
 
 module Ideas.Main.Logging 
-   ( Record(..), makeRecord, addRequest
+   ( Record(..), makeRecord, addRequest, addState
    , logEnabled, logRecord
    ) where
 
 import Data.Maybe
 import Data.Time
 import Ideas.Service.Request (Request, Schema(..))
+import Ideas.Service.State
 import qualified Ideas.Service.Request as R
 
 #ifdef DB
@@ -73,6 +74,7 @@ makeRecord = do
    now <- getCurrentTime
    return record { time = now }
 
+-- | Add record information from the Request datatype
 addRequest :: Request -> Record -> Record
 addRequest req r = r 
    { service     = maybe (service r) show (R.serviceId req)
@@ -83,6 +85,14 @@ addRequest req r = r
    , dataformat  = show (R.dataformat req)
    , encoding    = show (R.encoding req)
    , binary      = fromMaybe (binary r) (R.cgiBinary req)
+   }
+
+-- | Add record information from the state (userid, sessionid, taskid)
+addState :: State a -> Record -> Record
+addState st r = r
+   { userid    = fromMaybe (userid r)    (stateUser st)
+   , sessionid = fromMaybe (sessionid r) (stateSession st)
+   , taskid    = fromMaybe (taskid r)    (stateStartTerm st)
    }
 
 --------------------------------------------------------------------------------

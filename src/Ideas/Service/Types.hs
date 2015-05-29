@@ -22,7 +22,7 @@ module Ideas.Service.Types
      -- * Constructing types
    , tEnvironment, tLocation, tRule, tUnit, tTuple3, tTuple4, tTuple5, tPair
    , tStrategy, tTree, tState, tBool, tMaybe, tString, tList
-   , tId, tService, tSomeExercise, tText, tDifficulty, tContext
+   , tId, tService, tSomeExercise, tText, tDifficulty, tUserId ,tContext
    , tDerivation, tError, (.->), tIO, tExercise, tTestSuiteResult, tStdGen
    , tScript, tExamples, tStrategyCfg, tInt
    ) where
@@ -332,6 +332,9 @@ tDifficulty :: Type a Difficulty
 tDifficulty = Tag "Difficulty" (Iso (f <-> show) tString)
     where
       f = fromMaybe Medium . readDifficulty
+      
+tUserId :: Type a String
+tUserId = Tag "UserId" tString
 
 tStdGen :: Type a StdGen
 tStdGen = Const StdGen
@@ -362,3 +365,23 @@ tTree t = Tag "Tree" $ Iso (f <-> g) (tPair t (tList (tTree t)))
 
 tTestSuiteResult :: Type a TestSuite.Result
 tTestSuiteResult = Const Result
+
+-------------------------------------
+
+findState :: TypedValue (Type a) -> [State a]
+findState = concatMap f . constValues
+ where
+   f :: TypedValue (Const a) -> [State a]
+   f (st ::: State) = [st]
+   f _              = []
+
+constValues :: TypedValue (Type a) -> [TypedValue (Const a)] 
+constValues (a ::: tp) = 
+   case tp of
+      Iso iso t  -> constValues (to iso a ::: t)
+      Tag _ t    -> constValues (a ::: t)
+      List t     -> concatMap (\b -> constValues (b ::: t)) a
+      Pair t1 t2 -> constValues (fst a ::: t1) ++ constValues (snd a ::: t2)
+      t1 :|: t2  -> either (\b -> constValues (b ::: t1)) (\b -> constValues (b ::: t2)) a
+      Const t    -> [a ::: t]
+      _          -> []

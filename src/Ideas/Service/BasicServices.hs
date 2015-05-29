@@ -30,20 +30,20 @@ import System.Random
 import qualified Ideas.Common.Classes as Apply
 import qualified Ideas.Common.Library as Library
 
-generate :: StdGen -> Exercise a -> Maybe Difficulty -> Either String (State a)
-generate rng ex md =
+generate :: StdGen -> Exercise a -> Maybe Difficulty -> Maybe String -> IO (State a)
+generate rng ex md userId =
    case randomTerm rng ex md of
-      Just a  -> return (emptyState ex a)
-      Nothing -> Left "No random term"
+      Just a  -> startState ex userId a
+      Nothing -> fail "No random term"
 
-create :: Exercise a -> String -> Either String (State a)
-create ex input =
-    case parser ex input of
-        Left err -> Left err
-        Right a
-            | evalPredicate (Library.ready ex) a -> Left "Is ready"
-            | evalPredicate (Library.suitable ex) a -> Right (emptyState ex a)
-            | otherwise -> Left "Not suitable"
+create :: Exercise a -> String -> Maybe String -> IO (State a)
+create ex input userId =
+   case parser ex input of
+      Left err -> fail err
+      Right a
+         | evalPredicate (Library.ready ex) a -> fail "Is ready"
+         | evalPredicate (Library.suitable ex) a -> startState ex userId a
+         | otherwise -> fail "Not suitable"
 
 -- TODO: add a location to each step
 solution :: Maybe StrategyCfg -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))
@@ -56,8 +56,8 @@ solution mcfg state =
       -- restriction should probably be relaxed later on.
       Just cfg | isEmptyPrefix prfx ->
          let newStrategy = configure cfg (strategy ex)
-             newExercise = ex {strategy = newStrategy}
-         in rec timeout d0 (emptyStateContext newExercise (stateContext state))
+             newPrefix   = emptyPrefix newStrategy (stateContext state)
+         in rec timeout d0 state { statePrefix = newPrefix }
       _ -> rec timeout d0 state
  where
    d0   = emptyDerivation state
@@ -116,7 +116,7 @@ allapplications state = sortBy cmp (xs ++ ys)
    ys = f (top (stateContext state))
 
    f c = g c ++ concatMap f (downs c)
-   g c = [ (r, location new, makeNoState ex new)
+   g c = [ (r, location new, state { statePrefix = noPrefix, stateContext = new })
          | r   <- ruleset ex
          , (r, location c) `notElem` ps
          , new <- applyAll r c
@@ -146,7 +146,7 @@ apply r loc env state
    ca = setLocation loc (stateContext state)
    applyOff  = -- scenario 2: off-strategy
       case transApplyWith env (transformation r) ca of
-         (new, _):_ -> Right (makeNoState (exercise state) new)
+         (new, _):_ -> Right (state {stateContext = new, statePrefix = noPrefix})
          []         -> Left ("Cannot apply " ++ show r)
 
 stepsremaining :: State a -> Either String Int

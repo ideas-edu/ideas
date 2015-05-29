@@ -15,7 +15,7 @@
 --  $Id$
 
 module Ideas.Service.Diagnose
-   ( Diagnosis(..), tDiagnosis, diagnose, restartIfNeeded, newState
+   ( Diagnosis(..), tDiagnosis, diagnose
    , difference, differenceEqual
    ) where
 
@@ -62,7 +62,7 @@ instance Show (Diagnosis a) where
       showArgs as
          | noBindings as = ""
          | otherwise     = " (" ++ show as ++ ")"
-
+{-
 newState :: Diagnosis a -> Maybe (State a)
 newState diagnosis =
    case diagnosis of
@@ -74,7 +74,7 @@ newState diagnosis =
       Detour   _ s _ _ -> Just s
       Correct  _ s     -> Just s
       Unknown  _ s     -> Just s
-
+-}
 ----------------------------------------------------------------
 -- The diagnose service
 
@@ -118,11 +118,11 @@ diagnose state new motivationId
               Correct (finished restarted) restarted
  where
    ex        = exercise state
-   restarted = restartIfNeeded (makeNoState ex new)
+   restarted = restart state {stateContext = new}
    similar   = similarity ex (stateContext state) new
 
    expected = do
-      let xs = either (const []) id $ allfirsts (restartIfNeeded state)
+      let xs = either (const []) id $ allfirsts state
           p (_, ns) = similarity ex new (stateContext ns) -- use rule recognizer?
       listToMaybe (filter p xs)
 
@@ -142,17 +142,6 @@ diagnose state new motivationId
 
 ----------------------------------------------------------------
 -- Helpers
-
--- If possible (and if needed), restart the strategy
--- Make sure that the new state has a prefix
--- When resetting the prefix, also make sure that the context is refreshed
-restartIfNeeded :: State a -> State a
-restartIfNeeded state
-   | withoutPrefix state && canBeRestarted ex =
-        emptyState ex (stateTerm state)
-   | otherwise = state
- where
-   ex = exercise state
 
 tDiagnosis :: Type a (Diagnosis a)
 tDiagnosis = Tag "Diagnosis" $ Iso (f <-> g) tp

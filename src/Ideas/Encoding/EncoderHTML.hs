@@ -456,8 +456,9 @@ htmlDerivation lm = exerciseEncoder $ \ex d ->
              , showEnv env1 -- local environment
              , showEnv env2 -- global environment (diff)
              ]
+       textLines = mconcat . intersperse br . map string . lines
        forTerm a =
-          divClass "term" $ string $ prettyPrinterContext ex a
+          divClass "term" $ textLines $ prettyPrinterContext ex a
    in htmlDerivationWith before forStep forTerm (diffEnvironment d)
 
 htmlState :: LinkManager -> HTMLEncoder a (State a)

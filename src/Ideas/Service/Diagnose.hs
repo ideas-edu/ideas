@@ -20,7 +20,7 @@ module Ideas.Service.Diagnose
    ) where
 
 import Data.Function
-import Data.List (sortBy)
+import Data.List (intercalate, sortBy)
 import Data.Maybe
 import Ideas.Common.Library hiding (ready)
 import Ideas.Service.BasicServices hiding (apply)
@@ -47,21 +47,20 @@ data Diagnosis a
 instance Show (Diagnosis a) where
    show diagnosis =
       case diagnosis of
-         Buggy as r       -> "Buggy rule " ++ show (show r) ++ showArgs as
-         Unknown _ _      -> "Unknown step"
+         Buggy _ r       -> f "Buggy" [show r]
 --         Missing          -> "Missing solutions"
 --         IncorrectPart xs -> "Incorrect parts (" ++ show (length xs) ++ " items)"
-         NotEquivalent s  -> if null s then "Unknown mistake" else s
-         Similar _ _      -> "Very similar"
-         WrongRule _ _ mr -> "Wrong rule selected"  ++
-                             maybe "" (\r -> ", " ++ showId r ++ "recognized") mr
-         Expected _ _ r   -> "Rule " ++ show (show r) ++ ", expected by strategy"
-         Detour _ _ _ r   -> "Rule " ++ show (show r) ++ ", not following strategy"
-         Correct _ _      -> "Unknown step"
+         NotEquivalent s  -> f "NotEquivalent" [ s | not (null s) ]
+         Similar _ _      -> "Similar"
+         WrongRule _ _ mr -> f "WrongRule" [ show r | r <- maybeToList mr ]
+         Expected _ _ r   -> f "Expected" [show r]
+         Detour _ _ _ r   -> f "Detour" [show r]
+         Correct _ _      -> "Correct"
+         Unknown _ _      -> "Unknown"
     where
-      showArgs as
-         | noBindings as = ""
-         | otherwise     = " (" ++ show as ++ ")"
+      f s xs
+         | null xs   = s 
+         | otherwise = s ++ "(" ++ intercalate "," xs ++ ")"
 {-
 newState :: Diagnosis a -> Maybe (State a)
 newState diagnosis =

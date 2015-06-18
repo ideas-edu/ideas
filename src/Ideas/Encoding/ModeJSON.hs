@@ -24,15 +24,18 @@ import Ideas.Encoding.Encoder (makeOptions)
 import Ideas.Encoding.EncoderJSON
 import Ideas.Encoding.Evaluator
 import Ideas.Service.DomainReasoner
+import Ideas.Main.Logging (LogInfo, changeRecord, errormsg)
 import Ideas.Service.Request
 import Ideas.Text.JSON
 
-processJSON :: Maybe Int -> Maybe String -> DomainReasoner -> String -> IO (Request, String, String)
-processJSON maxTime cgiBin dr input = do
+processJSON :: Maybe Int -> Maybe String -> DomainReasoner -> LogInfo -> String -> IO (Request, String, String)
+processJSON maxTime cgiBin dr logRef input = do
    json <- either fail return (parseJSON input)
    req  <- jsonRequest cgiBin json
    resp <- jsonRPC json $ \fun arg ->
-              maybe id timedSeconds maxTime (myHandler dr req fun arg)
+              maybe id timedSeconds maxTime (myHandler dr logRef req fun arg)
+   unless (responseError resp == Null) $
+      changeRecord logRef (\r -> r {errormsg = show (responseError resp)})
    let f   = if compactOutput req then compactJSON else show
        out = addVersion (version dr) (toJSON resp)
    return (req, f out, "application/json")
@@ -61,10 +64,6 @@ addVersion str json =
 jsonRequest :: Monad m => Maybe String -> JSON -> m Request
 jsonRequest cgiBin json = do
    let exId = lookupM "params" json >>= extractExerciseId
-   let uid  = case lookupM "id" json of
-                 Just (String s)     -> Just s
-                 Just (Number (I n)) -> Just (show n)
-                 _                   -> Nothing
    srv  <- stringOption  "method"      json newId
    src  <- stringOption  "source"      json id
    rinf <- stringOption  "requestinfo" json id
@@ -73,7 +72,6 @@ jsonRequest cgiBin json = do
    return emptyRequest
       { serviceId   = srv
       , exerciseId  = exId
-      , user        = uid
       , source      = src
       , cgiBinary   = cgiBin
       , requestInfo = rinf
@@ -92,11 +90,11 @@ stringOptionM attr json a f =
       Just _  -> fail $ "Invalid value for " ++ attr ++ " (expecting string)"
       Nothing -> return a
 
-myHandler :: DomainReasoner -> Request -> RPCHandler
-myHandler dr request fun json = do
+myHandler :: DomainReasoner -> LogInfo -> Request -> RPCHandler
+myHandler dr logRef request fun json = do
    srv <- findService dr (newId fun)
    Some options <- makeOptions dr request
-   evalService options jsonEvaluator srv json
+   evalService logRef options jsonEvaluator srv json
 
 jsonEvaluator :: Evaluator a JSON JSON
 jsonEvaluator = Evaluator jsonDecoder jsonEncoder

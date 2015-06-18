@@ -22,7 +22,6 @@ import Ideas.Common.Utils
 data Request = Request
    { serviceId      :: Maybe Id
    , exerciseId     :: Maybe Id
-   , user           :: Maybe String
    , source         :: Maybe String
    , feedbackScript :: Maybe String
    , requestInfo    :: Maybe String
@@ -34,7 +33,7 @@ data Request = Request
 
 emptyRequest :: Request
 emptyRequest = Request Nothing Nothing Nothing Nothing 
-                       Nothing Nothing Nothing Nothing XML []
+                       Nothing Nothing Nothing XML []
 
 data Schema = V1 | V2 | NoLogging deriving (Show, Eq)
 

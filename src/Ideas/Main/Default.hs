@@ -52,17 +52,19 @@ defaultMain dr = do
 defaultCGI :: DomainReasoner -> IO ()
 defaultCGI dr = runCGI $ handleErrors $ do
    -- create a record for logging
-   record  <- liftIO Log.makeRecord
+   logRef  <- liftIO Log.makeLogInfo
    -- query environment
    addr    <- remoteAddr       -- the IP address of the remote host
    cgiBin  <- scriptName       -- get name of binary
    input   <- inputOrDefault
    -- process request
    (req, txt, ctp) <- liftIO $
-      process dr (Just cgiBin) input
+      process dr logRef (Just cgiBin) input
    -- log request to database
-   when (useLogging req) $
-      liftIO $ Log.logRecord (getSchema req) (Log.addRequest req record)
+   when (useLogging req) $ liftIO $ do
+      Log.changeRecord logRef (Log.addRequest req)
+      record <- Log.getRecord logRef
+      Log.logRecord (getSchema req) record
          { Log.ipaddress = addr
          , Log.version   = shortVersion
          , Log.input     = input
@@ -112,7 +114,7 @@ defaultCommandLine dr flags = do
          InputFile file ->
             withBinaryFile file ReadMode $ \h -> do
                input <- hGetContents h
-               (_, txt, _) <- process dr Nothing input
+               (_, txt, _) <- process dr Log.noLogInfo Nothing input
                putStrLn txt
          -- blackbox tests
          Test dir -> do
@@ -126,13 +128,14 @@ defaultCommandLine dr flags = do
          MakeScriptFor s    -> makeScriptFor dr s
          AnalyzeScript file -> parseAndAnalyzeScript dr file
 
-process :: DomainReasoner -> Maybe String -> String -> IO (Request, String, String)
-process dr cgiBin input = do
+process :: DomainReasoner -> Log.LogInfo -> Maybe String -> String -> IO (Request, String, String)
+process dr logRef cgiBin input = do
    format <- discoverDataFormat input
-   run format (Just 5) cgiBin dr input
- `catch` \ioe ->
+   run format (Just 5) cgiBin dr logRef input
+ `catch` \ioe -> do
    let msg = "Error: " ++ ioeGetErrorString ioe
-   in return (emptyRequest, msg, "text/plain")
+   Log.changeRecord logRef (\r -> r { Log.errormsg = msg })
+   return (emptyRequest, msg, "text/plain")
  where
    run XML  = processXML
    run JSON = processJSON

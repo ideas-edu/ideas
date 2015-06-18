@@ -29,14 +29,15 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import Ideas.Text.HTML
 import Ideas.Text.XML
+import Ideas.Main.Logging (LogInfo, changeRecord, errormsg)
 import Prelude hiding (catch)
 import System.IO.Error hiding (catch)
 
-processXML :: Maybe Int -> Maybe String -> DomainReasoner -> String -> IO (Request, String, String)
-processXML maxTime cgiBin dr input = do
+processXML :: Maybe Int -> Maybe String -> DomainReasoner -> LogInfo -> String -> IO (Request, String, String)
+processXML maxTime cgiBin dr logRef input = do
    xml  <- either fail return (parseXML input)
    req  <- xmlRequest cgiBin xml
-   resp <- maybe id timedSeconds maxTime (xmlReply dr req xml)
+   resp <- maybe id timedSeconds maxTime (xmlReply dr logRef req xml)
     `catch` handler
    let showXML | compactOutput req = compactXML
                | otherwise = show
@@ -46,7 +47,7 @@ processXML maxTime cgiBin dr input = do
            in return (req, showXML out, "application/xml")
  where
    handler :: IOException -> IO XML
-   handler = return . resultError . ioeGetErrorString
+   handler = resultError logRef . ioeGetErrorString
 
 addVersion :: String -> XML -> XML
 addVersion s xml =
@@ -63,7 +64,6 @@ xmlRequest cgiBin xml = do
    return emptyRequest
       { serviceId      = fmap newId $ findAttribute "service" xml
       , exerciseId     = extractExerciseId xml
-      , user           = findAttribute "userid" xml
       , source         = findAttribute "source" xml
       , cgiBinary      = cgiBin
       , requestInfo    = findAttribute "requestinfo" xml
@@ -73,23 +73,19 @@ xmlRequest cgiBin xml = do
       , encoding       = enc
       }
 
-xmlReply :: DomainReasoner -> Request -> XML -> IO XML
-xmlReply dr request xml = do
+xmlReply :: DomainReasoner -> LogInfo -> Request -> XML -> IO XML
+xmlReply dr logRef request xml = do
    srv <- case serviceId request of
              Just a  -> findService dr a
              Nothing -> fail "No service"
 
    Some options <- makeOptions dr request
 
-   -- HTML evaluator
    if htmlOutput request
-      then do
-         res <- evalService options (htmlEvaluator dr) srv xml
-         return (toXML res)
+      -- HTML evaluator
+      then liftM toXML $ evalService logRef options (htmlEvaluator dr) srv xml
       -- xml evaluator
-      else do
-         res <- evalService options xmlEvaluator srv xml
-         return (resultOk res)
+      else liftM resultOk $ evalService logRef options xmlEvaluator srv xml
 
 extractExerciseId :: Monad m => XML -> m Id
 extractExerciseId = liftM newId . findAttribute "exerciseid"
@@ -99,10 +95,12 @@ resultOk body = makeXML "reply" $
    ("result" .=. "ok")
    <> body
 
-resultError :: String -> XML
-resultError txt = makeXML "reply" $
-   ("result" .=. "error")
-   <> tag "message" (string txt)
+resultError :: LogInfo -> String -> IO XML
+resultError logRef msg = do
+   changeRecord logRef (\r -> r {errormsg = msg})
+   return $ makeXML "reply" $
+      ("result" .=. "error")
+      <> tag "message" (string msg)
 
 ------------------------------------------------------------
 

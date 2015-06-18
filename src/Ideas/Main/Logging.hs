@@ -16,9 +16,11 @@
 
 module Ideas.Main.Logging 
    ( Record(..), makeRecord, addRequest, addState
-   , logEnabled, logRecord
+   , LogInfo, makeLogInfo, getRecord, changeRecord
+   , logEnabled, noLogInfo, logRecord
    ) where
 
+import Data.IORef
 import Data.Maybe
 import Data.Time
 import Ideas.Service.Request (Request, Schema(..))
@@ -94,6 +96,25 @@ addState st r = r
    , sessionid = fromMaybe (sessionid r) (stateSession st)
    , taskid    = fromMaybe (taskid r)    (stateStartTerm st)
    }
+
+---------------------------------------------------------------------
+
+newtype LogInfo = LogInfo { mref :: Maybe (IORef Record) }
+
+noLogInfo :: LogInfo
+noLogInfo = LogInfo Nothing
+
+makeLogInfo :: IO LogInfo
+makeLogInfo = do 
+   r   <- makeRecord
+   ref <- newIORef r
+   return (LogInfo (Just ref))
+
+getRecord :: LogInfo -> IO Record
+getRecord = maybe (return record) readIORef . mref
+
+changeRecord :: LogInfo -> (Record -> Record) -> IO ()
+changeRecord = maybe (\_ -> return ()) modifyIORef . mref
 
 --------------------------------------------------------------------------------
 

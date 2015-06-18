@@ -25,6 +25,8 @@ module Ideas.Service.Types
    , tId, tService, tSomeExercise, tText, tDifficulty, tUserId ,tContext
    , tDerivation, tError, (.->), tIO, tExercise, tTestSuiteResult, tStdGen
    , tScript, tExamples, tStrategyCfg, tInt
+     -- * Searching a typed value
+   , findValuesOfType
    ) where
 
 import Control.Monad
@@ -368,20 +370,19 @@ tTestSuiteResult = Const Result
 
 -------------------------------------
 
-findState :: TypedValue (Type a) -> [State a]
-findState = concatMap f . constValues
+findValuesOfType :: Type a t -> TypedValue (Type a) -> [t]
+findValuesOfType thisType = rec 
  where
-   f :: TypedValue (Const a) -> [State a]
-   f (st ::: State) = [st]
-   f _              = []
-
-constValues :: TypedValue (Type a) -> [TypedValue (Const a)] 
-constValues (a ::: tp) = 
-   case tp of
-      Iso iso t  -> constValues (to iso a ::: t)
-      Tag _ t    -> constValues (a ::: t)
-      List t     -> concatMap (\b -> constValues (b ::: t)) a
-      Pair t1 t2 -> constValues (fst a ::: t1) ++ constValues (snd a ::: t2)
-      t1 :|: t2  -> either (\b -> constValues (b ::: t1)) (\b -> constValues (b ::: t2)) a
-      Const t    -> [a ::: t]
-      _          -> []
+   rec tv@(a ::: tp) = 
+      case equal tp thisType of
+         Just f  -> [f a] 
+         Nothing -> recDown tv
+   
+   recDown (a ::: tp) = 
+      case tp of
+         Iso iso t  -> rec (to iso a ::: t)
+         Tag _ t    -> rec (a ::: t)
+         List t     -> concatMap (\b -> rec (b ::: t)) a
+         Pair t1 t2 -> rec (fst a ::: t1) ++ rec (snd a ::: t2)
+         t1 :|: t2  -> either (\b -> rec (b ::: t1)) (\b -> rec (b ::: t2)) a
+         _          -> []

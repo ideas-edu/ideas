@@ -22,6 +22,7 @@ import Ideas.Encoding.ModeJSON
 import Ideas.Encoding.ModeXML
 import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
+import Ideas.Main.Logging
 import System.Directory
 import System.IO
 import qualified Data.Algorithm.Diff as Diff
@@ -55,8 +56,8 @@ doBlackBoxTest dr format path =
          hSetBinaryMode h1 True
          txt <- hGetContents h1
          out  <- case format of
-                    JSON -> liftM snd3 (processJSON Nothing Nothing dr txt)
-                    XML  -> liftM snd3 (processXML  Nothing Nothing dr txt)
+                    JSON -> liftM snd3 (processJSON Nothing Nothing dr noLogInfo txt)
+                    XML  -> liftM snd3 (processXML  Nothing Nothing dr noLogInfo txt)
          withFile expPath ReadMode $ \h2 -> do
             hSetBinaryMode h2 True
             expt <- hGetContents h2

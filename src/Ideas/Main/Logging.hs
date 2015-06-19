@@ -164,7 +164,7 @@ values_v2 r =
       , get errormsg, get serviceinfo, get ruleid, get input, get output
       ]
       
-logRecordWith :: IConnection c => Schema -> LogInfo -> c -> IO ()
+logRecordWith :: IConnection c => Schema -> LogRef -> c -> IO ()
 logRecordWith schema logRef conn = do
    -- calculate duration
    r   <- getRecord logRef

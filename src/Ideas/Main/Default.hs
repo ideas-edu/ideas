@@ -52,7 +52,7 @@ defaultMain dr = do
 defaultCGI :: DomainReasoner -> IO ()
 defaultCGI dr = runCGI $ handleErrors $ do
    -- create a record for logging
-   logRef  <- liftIO Log.makeLogInfo
+   logRef  <- liftIO Log.newLogRef
    -- query environment
    addr    <- remoteAddr       -- the IP address of the remote host
    cgiBin  <- scriptName       -- get name of binary
@@ -62,14 +62,14 @@ defaultCGI dr = runCGI $ handleErrors $ do
       process dr logRef (Just cgiBin) input
    -- log request to database
    when (useLogging req) $ liftIO $ do
-      Log.changeRecord logRef (Log.addRequest req)
-      record <- Log.getRecord logRef
-      Log.logRecord (getSchema req) record
+      Log.changeLog logRef $ \r -> Log.addRequest req r
          { Log.ipaddress = addr
          , Log.version   = shortVersion
          , Log.input     = input
          , Log.output    = txt
          }
+      Log.logRecord (getSchema req) logRef
+         
    -- write header and output
    setHeader "Content-type" ctp
    -- Cross-Origin Resource Sharing (CORS) prevents browser warnings
@@ -114,7 +114,7 @@ defaultCommandLine dr flags = do
          InputFile file ->
             withBinaryFile file ReadMode $ \h -> do
                input <- hGetContents h
-               (_, txt, _) <- process dr Log.noLogInfo Nothing input
+               (_, txt, _) <- process dr Log.noLogRef Nothing input
                putStrLn txt
          -- blackbox tests
          Test dir -> do
@@ -128,13 +128,13 @@ defaultCommandLine dr flags = do
          MakeScriptFor s    -> makeScriptFor dr s
          AnalyzeScript file -> parseAndAnalyzeScript dr file
 
-process :: DomainReasoner -> Log.LogInfo -> Maybe String -> String -> IO (Request, String, String)
+process :: DomainReasoner -> Log.LogRef -> Maybe String -> String -> IO (Request, String, String)
 process dr logRef cgiBin input = do
    format <- discoverDataFormat input
    run format (Just 5) cgiBin dr logRef input
  `catch` \ioe -> do
    let msg = "Error: " ++ ioeGetErrorString ioe
-   Log.changeRecord logRef (\r -> r { Log.errormsg = msg })
+   Log.changeLog logRef (\r -> r { Log.errormsg = msg })
    return (emptyRequest, msg, "text/plain")
  where
    run XML  = processXML

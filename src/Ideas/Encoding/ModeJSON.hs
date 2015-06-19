@@ -24,18 +24,18 @@ import Ideas.Encoding.Encoder (makeOptions)
 import Ideas.Encoding.EncoderJSON
 import Ideas.Encoding.Evaluator
 import Ideas.Service.DomainReasoner
-import Ideas.Main.Logging (LogInfo, changeRecord, errormsg)
+import Ideas.Main.Logging (LogRef, changeLog, errormsg)
 import Ideas.Service.Request
 import Ideas.Text.JSON
 
-processJSON :: Maybe Int -> Maybe String -> DomainReasoner -> LogInfo -> String -> IO (Request, String, String)
+processJSON :: Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
 processJSON maxTime cgiBin dr logRef input = do
    json <- either fail return (parseJSON input)
    req  <- jsonRequest cgiBin json
    resp <- jsonRPC json $ \fun arg ->
               maybe id timedSeconds maxTime (myHandler dr logRef req fun arg)
    unless (responseError resp == Null) $
-      changeRecord logRef (\r -> r {errormsg = show (responseError resp)})
+      changeLog logRef (\r -> r {errormsg = show (responseError resp)})
    let f   = if compactOutput req then compactJSON else show
        out = addVersion (version dr) (toJSON resp)
    return (req, f out, "application/json")
@@ -90,7 +90,7 @@ stringOptionM attr json a f =
       Just _  -> fail $ "Invalid value for " ++ attr ++ " (expecting string)"
       Nothing -> return a
 
-myHandler :: DomainReasoner -> LogInfo -> Request -> RPCHandler
+myHandler :: DomainReasoner -> LogRef -> Request -> RPCHandler
 myHandler dr logRef request fun json = do
    srv <- findService dr (newId fun)
    Some options <- makeOptions dr request

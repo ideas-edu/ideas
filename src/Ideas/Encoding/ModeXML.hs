@@ -29,11 +29,11 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import Ideas.Text.HTML
 import Ideas.Text.XML
-import Ideas.Main.Logging (LogInfo, changeRecord, errormsg)
+import Ideas.Main.Logging (LogRef, changeLog, errormsg)
 import Prelude hiding (catch)
 import System.IO.Error hiding (catch)
 
-processXML :: Maybe Int -> Maybe String -> DomainReasoner -> LogInfo -> String -> IO (Request, String, String)
+processXML :: Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
 processXML maxTime cgiBin dr logRef input = do
    xml  <- either fail return (parseXML input)
    req  <- xmlRequest cgiBin xml
@@ -73,7 +73,7 @@ xmlRequest cgiBin xml = do
       , encoding       = enc
       }
 
-xmlReply :: DomainReasoner -> LogInfo -> Request -> XML -> IO XML
+xmlReply :: DomainReasoner -> LogRef -> Request -> XML -> IO XML
 xmlReply dr logRef request xml = do
    srv <- case serviceId request of
              Just a  -> findService dr a
@@ -95,9 +95,9 @@ resultOk body = makeXML "reply" $
    ("result" .=. "ok")
    <> body
 
-resultError :: LogInfo -> String -> IO XML
+resultError :: LogRef -> String -> IO XML
 resultError logRef msg = do
-   changeRecord logRef (\r -> r {errormsg = msg})
+   changeLog logRef (\r -> r {errormsg = msg})
    return $ makeXML "reply" $
       ("result" .=. "error")
       <> tag "message" (string msg)

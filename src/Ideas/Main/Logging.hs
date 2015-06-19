@@ -15,9 +15,9 @@
 --  $Id$
 
 module Ideas.Main.Logging 
-   ( Record(..), makeRecord, addRequest, addState
-   , LogInfo, makeLogInfo, getRecord, changeRecord
-   , logEnabled, noLogInfo, logRecord
+   ( Record(..), addRequest, addState
+   , LogRef, newLogRef, noLogRef, changeLog
+   , logEnabled, logRecord, printLog
    ) where
 
 import Data.IORef
@@ -99,34 +99,37 @@ addState st r = r
 
 ---------------------------------------------------------------------
 
-newtype LogInfo = LogInfo { mref :: Maybe (IORef Record) }
+newtype LogRef = L { mref :: Maybe (IORef Record) }
 
-noLogInfo :: LogInfo
-noLogInfo = LogInfo Nothing
+noLogRef :: LogRef
+noLogRef = L Nothing
 
-makeLogInfo :: IO LogInfo
-makeLogInfo = do 
+newLogRef :: IO LogRef
+newLogRef = do 
    r   <- makeRecord
    ref <- newIORef r
-   return (LogInfo (Just ref))
+   return (L (Just ref))
 
-getRecord :: LogInfo -> IO Record
+getRecord :: LogRef -> IO Record
 getRecord = maybe (return record) readIORef . mref
 
-changeRecord :: LogInfo -> (Record -> Record) -> IO ()
-changeRecord = maybe (\_ -> return ()) modifyIORef . mref
+changeLog :: LogRef -> (Record -> Record) -> IO ()
+changeLog = maybe (\_ -> return ()) modifyIORef . mref
+
+printLog :: LogRef -> IO ()
+printLog logRef = getRecord logRef >>= print
 
 --------------------------------------------------------------------------------
 
 logEnabled :: Bool
-logRecord  :: Schema -> Record -> IO ()
+logRecord  :: Schema -> LogRef -> IO ()
 
 #ifdef DB
 logEnabled = True
-logRecord schema r = 
+logRecord schema logRef =
    case schema of
-      V1 -> connectSqlite3 "service.db"  >>= logRecordWith V1 r
-      V2 -> connectSqlite3 "requests.db" >>= logRecordWith V2 r
+      V1 -> connectSqlite3 "service.db"  >>= logRecordWith V1 logRef
+      V2 -> connectSqlite3 "requests.db" >>= logRecordWith V2 logRef
       NoLogging -> return ()
 #else
 -- without logging
@@ -161,9 +164,10 @@ values_v2 r =
       , get errormsg, get serviceinfo, get ruleid, get input, get output
       ]
       
-logRecordWith :: IConnection c => Schema -> Record -> c -> IO ()
-logRecordWith schema r conn = do
+logRecordWith :: IConnection c => Schema -> LogInfo -> c -> IO ()
+logRecordWith schema logRef conn = do
    -- calculate duration
+   r   <- getRecord logRef
    end <- getCurrentTime
    let diff = diffUTCTime end (time r)
    -- insert data into database

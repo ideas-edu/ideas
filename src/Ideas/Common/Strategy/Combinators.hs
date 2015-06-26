@@ -108,13 +108,7 @@ noInterleaving = liftCore (mapFirst f)
    
 -- | Allows all permutations of the list
 permute :: IsStrategy f => [f a] -> Strategy a
-permute as
-   | null as   = succeed
-   | otherwise = alternatives [ s <*> permute ys | (s, ys) <- pickOne as ]
- where
-   pickOne :: [a] -> [(a, [a])]
-   pickOne []     = []
-   pickOne (x:xs) = (x, xs) : [ (y, x:ys) | (y, ys) <- pickOne xs ]
+permute = liftCoreN (node permuteDef)
 
 -- EBNF combinators --------------------------------------
 
@@ -241,6 +235,9 @@ notDef = makeDef1 "not" $ \x ->
 
 interleaveDef :: Def
 interleaveDef = associativeDef "interleave" Derived.interleave
+
+permuteDef :: Def
+permuteDef = associativeDef "permute" Derived.permute
 
 alternateDef :: Def
 alternateDef = makeDef2 "alternate" (Derived.<@>)

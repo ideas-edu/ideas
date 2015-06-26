@@ -15,7 +15,7 @@
 module Ideas.Common.Strategy.Derived
    ( filterP, hide
    , AtomicSymbol(..), LabelSymbol(..)
-   , atomic, (<%>), interleave, concurrent, (<@>), (!*>), inits
+   , atomic, (<%>), interleave, permute, concurrent, (<@>), (!*>), inits
    ) where
 
 import Ideas.Common.Strategy.Choice
@@ -88,6 +88,16 @@ concurrent switch x y = normal (toProcess x) (toProcess y)
          | otherwise = a ~> stepRight p q2
       op (Right q1) q2 = q1 <*> normal p q2
 
+-- | Allows all permutations of the list
+permute :: (Choice f, Sequence f) => [f a] -> f a
+permute as
+   | null as   = done
+   | otherwise = choice [ s <*> permute ys | (s, ys) <- pickOne as ]
+ where
+   pickOne :: [a] -> [(a, [a])]
+   pickOne []     = []
+   pickOne (x:xs) = (x, xs) : [ (y, x:ys) | (y, ys) <- pickOne xs ]
+   
 -- Alternate combinator
 (<@>) :: (IsProcess f, AtomicSymbol a) => f a -> f a -> f a
 p0 <@> q0 = rec (toProcess q0) (toProcess p0)

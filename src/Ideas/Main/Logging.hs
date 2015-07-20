@@ -117,7 +117,9 @@ changeLog :: LogRef -> (Record -> Record) -> IO ()
 changeLog = maybe (\_ -> return ()) modifyIORef . mref
 
 printLog :: LogRef -> IO ()
-printLog logRef = getRecord logRef >>= print
+printLog logRef = do
+   putStrLn "-- log information"
+   getRecord logRef >>= print
 
 --------------------------------------------------------------------------------
 

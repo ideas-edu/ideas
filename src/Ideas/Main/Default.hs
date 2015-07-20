@@ -113,9 +113,18 @@ defaultCommandLine dr flags = do
          -- process input file
          InputFile file ->
             withBinaryFile file ReadMode $ \h -> do
-               input <- hGetContents h
-               (_, txt, _) <- process dr Log.noLogRef Nothing input
+               logRef <- liftIO Log.newLogRef
+               input  <- hGetContents h
+               (req, txt, _) <- process dr logRef Nothing input
                putStrLn txt
+               when (PrintLog `elem` flags) $ do
+                  Log.changeLog logRef $ \r -> Log.addRequest req r
+                     { Log.ipaddress = "command-line"
+                     , Log.version   = shortVersion
+                     , Log.input     = input
+                     , Log.output    = txt
+                     }
+                  Log.printLog logRef
          -- blackbox tests
          Test dir -> do
             tests  <- blackBoxTests dr dir
@@ -127,6 +136,8 @@ defaultCommandLine dr flags = do
          -- feedback scripts
          MakeScriptFor s    -> makeScriptFor dr s
          AnalyzeScript file -> parseAndAnalyzeScript dr file
+         PrintLog           -> return ()
+         
 
 process :: DomainReasoner -> Log.LogRef -> Maybe String -> String -> IO (Request, String, String)
 process dr logRef cgiBin input = do

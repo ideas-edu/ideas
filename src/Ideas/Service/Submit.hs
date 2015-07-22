@@ -35,6 +35,7 @@ data Result a = Buggy  [Rule (Context a)]
 fromDiagnose :: Diagnosis a -> Result a
 fromDiagnose diagnosis =
    case diagnosis of
+      Diagnose.SyntaxError s    -> NotEquivalent s -- should not happen
       Diagnose.Buggy _ r        -> Buggy [r]
       Diagnose.NotEquivalent s  -> NotEquivalent s
       Diagnose.Similar _ s      -> Ok [] s

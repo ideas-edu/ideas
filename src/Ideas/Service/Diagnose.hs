@@ -32,9 +32,8 @@ import qualified Ideas.Common.Rewriting.Difference as Diff
 -- Result types for diagnose service
 
 data Diagnosis a
-   = Buggy          Environment (Rule (Context a))
---   | Missing
---   | IncorrectPart  [a]
+   = SyntaxError    String
+   | Buggy          Environment (Rule (Context a))
    | NotEquivalent  String
    | Similar        Bool (State a)
    | WrongRule      Bool (State a) (Maybe (Rule (Context a)))
@@ -47,9 +46,8 @@ data Diagnosis a
 instance Show (Diagnosis a) where
    show diagnosis =
       case diagnosis of
-         Buggy _ r       -> f "Buggy" [show r]
---         Missing          -> "Missing solutions"
---         IncorrectPart xs -> "Incorrect parts (" ++ show (length xs) ++ " items)"
+         SyntaxError s    -> f "SyntaxError" [s]
+         Buggy _ r        -> f "Buggy" [show r]
          NotEquivalent s  -> f "NotEquivalent" [ s | not (null s) ]
          Similar _ _      -> "Similar"
          WrongRule _ _ mr -> f "WrongRule" [ show r | r <- maybeToList mr ]
@@ -145,26 +143,24 @@ diagnose state new motivationId
 tDiagnosis :: Type a (Diagnosis a)
 tDiagnosis = Tag "Diagnosis" $ Iso (f <-> g) tp
     where
-      tp = (tPair tEnvironment tRule :|: (tString :|: tTuple3 tBool tState (tMaybe tRule)))
+      tp = (tString :|: tPair tEnvironment tRule :|: (tString :|: tTuple3 tBool tState (tMaybe tRule)))
          :|: tPair tBool tState :|: tTuple3 tBool tState tRule
          :|: tTuple4 tBool tState tEnvironment tRule :|: tPair tBool tState :|: tPair tBool tState
 
-      f (Left (Left (as, r))) = Buggy as r
-   --   f (Left (Right (Left ()))) = Missing
-   --   f (Left (Right (Right (Left xs)))) = IncorrectPart xs
-      f (Left (Right (Left s))) = NotEquivalent s
-      f (Left (Right (Right (b, s, mr)))) = WrongRule b s mr
+      f (Left (Left s)) = SyntaxError s
+      f (Left (Right (Left (as, r)))) = Buggy as r
+      f (Left (Right (Right (Left s)))) = NotEquivalent s
+      f (Left (Right (Right (Right (b, s, mr))))) = WrongRule b s mr
       f (Right (Left (b, s))) = Similar b s
       f (Right (Right (Left (b, s, r)))) = Expected b s r
       f (Right (Right (Right (Left (b, s, as, r))))) = Detour b s as r
       f (Right (Right (Right (Right (Left (b, s)))))) = Correct b s
       f (Right (Right (Right (Right (Right (b, s)))))) = Unknown b s
 
-      g (Buggy as r)       = Left (Left (as, r))
-   --   g Missing            = Left (Right (Left ()))
-   --   g (IncorrectPart xs) = Left (Right (Right (Left xs)))
-      g (NotEquivalent s)  = Left (Right (Left s))
-      g (WrongRule b s mr) = Left (Right (Right (b, s, mr)))
+      g (SyntaxError s)    = Left (Left s)
+      g (Buggy as r)       = Left (Right (Left (as, r)))
+      g (NotEquivalent s)  = Left (Right (Right (Left s)))
+      g (WrongRule b s mr) = Left (Right (Right (Right (b, s, mr))))
       g (Similar b s)      = Right (Left (b, s))
       g (Expected b s r)   = Right (Right (Left (b, s, r)))
       g (Detour b s as r)  = Right (Right (Right (Left (b, s, as, r))))

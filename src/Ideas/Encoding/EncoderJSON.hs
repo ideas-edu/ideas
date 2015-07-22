@@ -161,6 +161,8 @@ encodeResult = encoderFor $ \result -> Object <$>
 encodeDiagnosis :: JSONEncoder a (Diagnose.Diagnosis a)
 encodeDiagnosis = encoderFor $ \diagnosis ->
    case diagnosis of
+      Diagnose.SyntaxError s -> 
+         pure $ Object [("syntaxerror", String s)]
       Diagnose.NotEquivalent s ->
          if null s then pure (Object [("notequiv", Null)])
                    else make "notequiv" [fromReason s]

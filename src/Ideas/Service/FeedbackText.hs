@@ -76,6 +76,7 @@ submittext script old input =
 feedbacktext :: Script -> State a -> Context a -> Maybe Id -> (Message, State a)
 feedbacktext script old new motivationId =
    case diagnosis of
+      SyntaxError s   -> (M (Just False) (makeText s), old)
       Buggy _ _       -> (msg False, old)
       NotEquivalent _ -> (msg False, old)
       Expected _ s _  -> (msg True, s)

@@ -569,6 +569,8 @@ htmlAllApplications lm = encoderFor $ \xs ->
 htmlDiagnosis :: LinkManager -> DomainReasoner -> HTMLEncoder a (Diagnosis a)
 htmlDiagnosis lm dr = encoderFor $ \diagnosis ->
    case diagnosis of
+      SyntaxError s -> 
+         spanClass "error" $ string s
       Buggy _ r ->
          spanClass "error" $ string $ "Not equivalent: buggy rule " ++ show r
       NotEquivalent s ->

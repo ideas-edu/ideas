@@ -24,6 +24,7 @@ module Ideas.Common.Rule.EnvironmentMonad
    , envMonadRefs, envMonadFunctionRefs
    ) where
 
+import Control.Applicative (Applicative(..), Alternative(..))
 import Control.Monad
 import Data.Maybe
 import Data.Typeable
@@ -51,6 +52,17 @@ data EnvMonad a where
    (:~)   :: Typeable a => Ref a -> (a -> a) -> EnvMonad ()
    (:?)   :: Typeable a => Ref a -> a -> EnvMonad a
    GetRef :: Typeable a => Ref a -> EnvMonad a
+
+instance Functor EnvMonad where
+   fmap = liftM
+
+instance Applicative EnvMonad where
+   pure  = return
+   (<*>) = ap
+
+instance Alternative EnvMonad where
+   empty = Zero
+   (<|>) = Plus
 
 instance Monad EnvMonad where
    return = Return

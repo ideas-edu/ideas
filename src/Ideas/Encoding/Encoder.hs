@@ -126,6 +126,10 @@ instance Arrow (Encoder a) where
    arr   f = Enc $ \_ -> return . f
    first f = Enc $ \xs (a, b) -> runEnc f xs a >>= \c -> return (c, b)
 
+instance Alternative (Encoder a s) where
+   empty = mzero
+   (<|>) = mplus
+
 instance Monad (Encoder a s) where
    return a = Enc $ \_ _ -> return a
    fail s   = Enc $ \_ _ -> fail s
@@ -243,6 +247,17 @@ decoderFor f = get >>= f
 -- Error monad (helper)
 
 newtype Error a = Error { runError :: Either String a }
+
+instance Functor Error where
+   fmap = (<$>)
+
+instance Applicative Error where
+   pure  = return
+   (<*>) = ap
+
+instance Alternative Error where
+   empty = mzero
+   (<|>) = mplus
 
 instance Monad Error where
    fail    = Error . Left

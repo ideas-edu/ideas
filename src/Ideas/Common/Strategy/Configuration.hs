@@ -96,7 +96,7 @@ insertAtLabel n def = replaceLeaf f . replaceLabel g
          | otherwise = Tree.label l a
 
 removeAtLabel :: HasId a => Id -> Def -> CyclicTree Def a -> CyclicTree Def a
-removeAtLabel n def = replaceNode $ \d xs -> 
+removeAtLabel n def = replaceNode $ \d xs -> -- fix me: use def
    case map nextId xs of
       [Just l] | n == l -> head xs
       _ -> node d xs

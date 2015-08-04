@@ -29,6 +29,7 @@ module Ideas.Common.Algebra.Field
    , CoSemiRing(..), CoRing(..), CoField(..)
    ) where
 
+import qualified Control.Applicative as Applicative
 import Control.Monad
 import Ideas.Common.Algebra.Group
 import Ideas.Common.Classes (mapBoth)
@@ -152,6 +153,10 @@ instance Show a => Show (SafeNum a) where
 
 instance Functor SafeNum where
    fmap f = either Exception (return . f) . safeNum
+
+instance Applicative.Applicative SafeNum where
+   pure  = return
+   (<*>) = ap
 
 instance Monad SafeNum where
    return  = Ok

@@ -25,6 +25,8 @@ module Ideas.Common.Strategy.Choice
    , onMenu, cut, cutOn, mapWithIndex
    ) where
 
+import Control.Applicative (Applicative(..))
+import Control.Monad
 import Data.Maybe (listToMaybe)
 
 infixr 3 <|>, >|>, |>, :|:, :>|, :|>
@@ -110,6 +112,10 @@ instance Choice Menu where
 
 instance Functor Menu where
    fmap f p = p >>= (Single . f)
+
+instance Applicative Menu where
+   pure  = return
+   (<*>) = ap
 
 instance Monad Menu where
    return = single

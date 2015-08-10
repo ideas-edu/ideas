@@ -19,7 +19,7 @@ module Ideas.Common.CyclicTree
      -- * Querying
    , isNode, isLeaf, isLabel
      -- * Replace functions
-   , replaceNode, replaceLeaf, replaceLabel
+   , replaceNode, replaceLeaf, replaceLabel, shrinkTree
      -- * Fold and algebra
    , fold, foldUnwind 
    , CyclicTreeAlg, fNode, fLeaf, fLabel, fRec, fVar
@@ -27,11 +27,13 @@ module Ideas.Common.CyclicTree
    ) where
 
 import Control.Applicative
+import Control.Monad
 import Data.Foldable (Foldable, foldMap)
 import Data.List (intercalate)
 import Data.Traversable (Traversable, traverse, sequenceA)
 import Ideas.Common.Classes
 import Ideas.Common.Id
+import Test.QuickCheck hiding (label)
 
 --------------------------------------------------------------
 -- Data type
@@ -83,7 +85,41 @@ instance Fix (CyclicTree a b) where
     where 
       vs = vars (f (Var (-1)))
       n  = maximum (-1 : vs) + 1
-      
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (CyclicTree a b) where
+   arbitrary = sized arbTree
+   shrink    = shrinkTree
+
+arbTree :: (Arbitrary a, Arbitrary b) => Int -> Gen (CyclicTree a b)
+arbTree = rec 0
+ where
+   rec vi 0 = frequency $
+      (3, liftM leaf arbitrary)
+      : [ (1, elements (map Var [1..vi])) | vi > 0 ]
+   rec vi n = frequency
+      [ (3, liftM2 node arbitrary ms)
+      , (2, rec vi 0)
+      , (1, liftM2 label genId m)
+      , (1, liftM (Rec (vi+1)) (rec (vi+1) (n `div` 2)))
+      ]
+    where
+      m = rec vi (n `div` 2)
+      genId = elements [ newId [c] | c <- ['A' .. 'Z']]
+      ms = choose (0, 3) >>= \i -> replicateM i m
+
+shrinkTree :: CyclicTree a b -> [CyclicTree a b]
+shrinkTree tree = 
+   case tree of
+      Node a ts -> ts ++ map (node a) (shrinkTrees ts)
+      Label l t -> t : map (Label l) (shrinkTree t)
+      Rec n t   -> map (Rec n) (shrinkTree t)
+      _ -> []
+
+-- shrink exactly one tree
+shrinkTrees :: [CyclicTree a b] -> [[CyclicTree a b]]
+shrinkTrees []    = []
+shrinkTrees (t:ts) = map (:ts) (shrinkTree t) ++ map (t:) (shrinkTrees ts)
+
 -- local helpers
 par :: [String] -> String
 par xs | null xs   = ""

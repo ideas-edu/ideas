@@ -36,11 +36,15 @@ import Ideas.Common.Strategy.Sequence
 ------------------------------------------------------------------------
 -- IsProcess type class
 
-class (Choice f, Sequence f) => IsProcess f where
+infixr 5 ~>
+
+class IsProcess f where
    -- | Convert to the 'Process' data type.
    toProcess :: f a -> Process a
+   single    :: a -> f a
+   (~>)      :: a -> f a -> f a
 
-fromProcess :: IsProcess f => Process a -> f a
+fromProcess :: (IsProcess f, Choice (f a), Sequence (f a)) => Process a -> f a
 fromProcess = fold (~>) done
 
 ------------------------------------------------------------------------
@@ -60,16 +64,14 @@ instance Functor Process where
       g Done = Done
       g (a :~> p) = f a :~> fmap f p
 
-instance Choice Process where
-   single a = P (single (a :~> P (single Done)))
+instance Choice (Process a) where
    empty    = P empty
    P x <|> P y = P (x <|> y)
    P x >|> P y = P (x >|> y)
    P x  |> P y = P (x |> y)
 
-instance Sequence Process where
+instance Sequence (Process a) where
    done   = P (return Done)
-   a ~> p = P (return (a :~> p))
 
    p0 <*> P rest = rec p0
     where
@@ -81,6 +83,8 @@ instance Sequence Process where
 
 instance IsProcess Process where
    toProcess = id
+   single a  = P (singleMenu (a :~> P (singleMenu Done)))
+   a ~> p    = P (return (a :~> p))
 
 instance Firsts (Process a) where
    type Elem (Process a) = a
@@ -112,29 +116,29 @@ runProcess p a = bests (accum applyAll a p)
 newtype Builder a = B (Process a -> Process a)
 
 instance Functor Builder where
-   fmap f =  fromProcess . fmap f . toProcess -- inefficient
+   fmap f = fromProcess . fmap f . toProcess -- inefficient
 
-instance Choice Builder where
-   single a = B (a ~>)
+instance Choice (Builder a) where
    empty    = B (const empty)
    B f <|> B g = B (\p -> f p <|> g p)
    B f >|> B g = B (\p -> f p >|> g p)
    B f  |> B g = B (\p -> f p  |> g p)
 
-instance Sequence Builder where
+instance Sequence (Builder a) where
    done        = B id
-   a ~> B f    = B ((a ~>) . f)
    B f <*> B g = B (f . g)
 
 instance IsProcess Builder where
    toProcess (B f) = f done
+   single a        = B (a ~>)
+   a ~> B f        = B ((a ~>) . f)
 
 ------------------------------------------------------------------------
 -- Higher-order functions for iterating over a Process
 
 -- | Folding over a process takes a function for single steps and for 'done'.
 {-# INLINE fold #-}
-fold :: Choice f => (a -> f b -> f b) -> f b -> Process a -> f b
+fold :: Choice b => (a -> b -> b) -> b -> Process a -> b
 fold op e = rec
  where
    rec = onMenu (menuItem e (\a -> op a . rec)) . menu
@@ -145,7 +149,7 @@ accum f = rec
  where
    rec b p = menu p >>= g
     where
-      g Done      = single b
+      g Done      = singleMenu b
       g (a :~> q) = choice [ rec b2 q  | b2 <- f a b ]
 
 {-# INLINE scan #-}

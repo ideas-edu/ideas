@@ -50,11 +50,11 @@ infixr 5 <*>, !~>
 
 -- | Put two strategies in sequence (first do this, then do that)
 (<*>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<*>) = liftCore2 (node2 sequenceDef)
+s <*> t = toStrategy s Sequence.<*> toStrategy t
 
 -- | Choose between the two strategies (either do this or do that)
 (<|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<|>) = liftCore2 (node2 choiceDef)
+s <|> t = toStrategy s Choice.<|> toStrategy t
 
 -- | Interleave two strategies
 (<%>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
@@ -78,11 +78,11 @@ inits = liftCore (node1 initsDef)
 
 -- | The strategy that always succeeds (without doing anything)
 succeed :: Strategy a
-succeed = fromCore (node0 succeedDef)
+succeed = Sequence.done
 
 -- | The strategy that always fails
 fail :: Strategy a
-fail = fromCore (node0 failDef)
+fail = Choice.empty
 
 -- | Makes a strategy atomic (w.r.t. parallel composition)
 atomic :: IsStrategy f => f a -> Strategy a
@@ -90,11 +90,11 @@ atomic = liftCore (node1 atomicDef)
 
 -- | Puts a list of strategies into a sequence
 sequence :: IsStrategy f => [f a] -> Strategy a
-sequence = liftCoreN (node sequenceDef)
+sequence = Sequence.sequence . map toStrategy
 
 -- | Combines a list of alternative strategies
 alternatives :: IsStrategy f => [f a] -> Strategy a
-alternatives = liftCoreN (node choiceDef)
+alternatives = Choice.choice . map toStrategy
 
 -- | Merges a list of strategies (in parallel)
 interleave :: IsStrategy f => [f a] -> Strategy a
@@ -103,7 +103,7 @@ interleave = liftCoreN (node interleaveDef)
 noInterleaving :: IsStrategy f => f a -> Strategy a
 noInterleaving = liftCore (mapFirst f)
  where
-   f d | d == interleaveDef = sequenceDef
+   f d | d == interleaveDef = associativeDef "sequence" Sequence.sequence -- fix me
        | otherwise          = d
    
 -- | Allows all permutations of the list
@@ -171,12 +171,12 @@ try s = s |> succeed
 -- | Choose between the two strategies, with a preference for steps from the
 -- left hand-side strategy.
 (>|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(>|>) = liftCore2 (node2 preferenceDef)
+s >|> t = toStrategy s Choice.>|> toStrategy t
 
 -- | Left-biased choice: if the left-operand strategy can be applied, do so. Otherwise,
 --   try the right-operand strategy
 (|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(|>) = liftCore2 (node2 orelseDef)
+s |> t = toStrategy s Choice.|> toStrategy t
 -- s |> t = s <|> (not s <*> t)
 
 -- | Repeat the strategy as long as the predicate holds
@@ -211,27 +211,9 @@ hide = liftCore hideCore
 
 ---------------------------------------------------------------------------
 
-succeedDef :: Def
-succeedDef = makeDef "succeed" (const Sequence.done)
-
-failDef :: Def
-failDef = makeDef "fail" (const Choice.empty)
-
-sequenceDef :: Def
-sequenceDef = associativeDef "sequence" Sequence.sequence
-
-choiceDef :: Def
-choiceDef = associativeDef "choice" Choice.choice
-        
-preferenceDef :: Def
-preferenceDef = associativeDef "preference" Choice.preference
-
-orelseDef :: Def
-orelseDef = associativeDef "orelse" Choice.orelse
-
 notDef :: Def
 notDef = makeDef1 "not" $ \x -> 
-   Choice.single $ RuleStep mempty $ checkRule "core.not" $ null . runProcess (toProcess x)
+   single $ RuleStep mempty $ checkRule "core.not" $ null . runProcess (toProcess x)
 
 interleaveDef :: Def
 interleaveDef = associativeDef "interleave" Derived.interleave

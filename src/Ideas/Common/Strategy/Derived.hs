@@ -22,11 +22,11 @@ import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence
 
-useFirst :: Choice f => (a -> Process a -> f b) -> f b -> Process a -> f b
+useFirst :: Choice b => (a -> Process a -> b) -> b -> Process a -> b
 useFirst op e = onMenu (menuItem e op) . menu
 
-split :: (AtomicSymbol a, Choice f, Sequence f)
-      => (Either a (f a) -> Process a -> f b) -> f b -> Process a -> f b         
+split :: (AtomicSymbol a, Choice b, Sequence (f a), IsProcess f)
+      => (Either a (f a) -> Process a -> b) -> b -> Process a -> b         
 split op = useFirst f
  where
    f a s | a == atomicOpen = onMenu (uncurry op) $ fmap (make a) (rec 1 s)
@@ -35,7 +35,7 @@ split op = useFirst f
    make a (x, y) = (Right (a ~> x), y)
          
    rec n s
-      | n == 0    = single (done, s)
+      | n == 0    = singleMenu (done, s)
       | otherwise = onMenu (menuItem empty g) (menu s)
     where
       g a t = fmap (\(x, y) -> (a ~> x, y)) (rec (pm a n) t)
@@ -46,7 +46,7 @@ split op = useFirst f
         | otherwise        = id
 
 -- atomic prefix
-(!*>) :: (IsProcess f, AtomicSymbol a) => f a -> f a -> f a
+(!*>) :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a) => f a -> f a -> f a
 a !*> p = split op (atomic a) (toProcess p)
  where
    op (Left b) q   = atomic (a <*> b ~> done) <*> fromProcess q
@@ -64,16 +64,16 @@ class Eq a => AtomicSymbol a where
 class Eq a => LabelSymbol a where
    isEnter :: a -> Bool
 
-atomic :: (IsProcess f, AtomicSymbol a) => f a -> f a
+atomic :: (IsProcess f, Sequence (f a), AtomicSymbol a) => f a -> f a
 atomic p = atomicOpen ~> (p <*> single atomicClose)
 
-interleave :: (IsProcess f, AtomicSymbol a, LabelSymbol a) => [f a] -> f a
+interleave :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a, LabelSymbol a) => [f a] -> f a
 interleave xs = if null xs then done else foldr1 (<%>) xs
 
-(<%>) :: (IsProcess f, AtomicSymbol a, LabelSymbol a) => f a -> f a -> f a
+(<%>) :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a, LabelSymbol a) => f a -> f a -> f a
 (<%>) = concurrent (not . isEnter)
 
-concurrent :: (IsProcess f, AtomicSymbol a) => (a -> Bool) -> f a -> f a -> f a
+concurrent :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a) => (a -> Bool) -> f a -> f a -> f a
 concurrent switch x y = normal (toProcess x) (toProcess y)
  where
    normal p q = stepBoth q p <|> (stepRight q p <|> stepRight p q)
@@ -89,7 +89,7 @@ concurrent switch x y = normal (toProcess x) (toProcess y)
       op (Right q1) q2 = q1 <*> normal p q2
 
 -- | Allows all permutations of the list
-permute :: (Choice f, Sequence f) => [f a] -> f a
+permute :: (Choice a, Sequence a) => [a] -> a
 permute as
    | null as   = done
    | otherwise = choice [ s <*> permute ys | (s, ys) <- pickOne as ]
@@ -99,7 +99,7 @@ permute as
    pickOne (x:xs) = (x, xs) : [ (y, x:ys) | (y, ys) <- pickOne xs ]
    
 -- Alternate combinator
-(<@>) :: (IsProcess f, AtomicSymbol a) => f a -> f a -> f a
+(<@>) :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a) => f a -> f a -> f a
 p0 <@> q0 = rec (toProcess q0) (toProcess p0)
  where
    rec q  = let f (Left a) r  = a ~>  rec r q
@@ -107,7 +107,7 @@ p0 <@> q0 = rec (toProcess q0) (toProcess p0)
             in split f (bothOk q)
    bothOk = useFirst (\_ _ -> empty) done
 
-inits :: (IsProcess f, AtomicSymbol a) => f a -> f a
+inits :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a) => f a -> f a
 inits = rec . toProcess
  where
    rec p = done <|> split op empty p

@@ -28,20 +28,18 @@ import Ideas.Common.Classes
 import Ideas.Common.DerivationTree
 import Ideas.Common.Strategy.Choice
 
-infixr 5 :~>, ~>, <*>
+infixr 5 :~>, <*>
 
 ------------------------------------------------------------------------
 -- Sequence type class
 
-class Sequence f where
+class Sequence a where
    -- | The empty sequence.
-   done :: f a
-   -- | Prefix a sequence with one element.
-   (~>) :: a -> f a -> f a
+   done :: a
    -- | Append two sequences.
-   (<*>) :: f a -> f a -> f a
+   (<*>) :: a -> a -> a
    -- | Sequential composition.
-   sequence :: [f a] -> f a
+   sequence :: [a] -> a
    sequence xs = if null xs then done else foldr1 (<*>) xs
  
 ------------------------------------------------------------------------

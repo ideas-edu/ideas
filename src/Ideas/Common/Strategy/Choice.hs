@@ -18,11 +18,11 @@ module Ideas.Common.Strategy.Choice
    ( -- * Choice type class
      Choice(..)
      -- * Menu data type
-   , Menu, eqMenuBy
+   , Menu, singleMenu, eqMenuBy
      -- * Queries
-   , elems, bests, bestsOrdered, isEmpty, getByIndex
+   , elems, bests, bestsOrdered, isEmpty, getByIndex, cut
      -- * Generalized functions
-   , onMenu, cut, cutOn, mapWithIndex
+   , onMenu, mapWithIndex
    ) where
 
 import Control.Applicative (Applicative(..))
@@ -36,36 +36,29 @@ infixr 3 <|>, >|>, |>, :|:, :>|, :|>
 
 -- | Laws: '<|>', '>|>' '|>' are all associative, and have 'empty' as their
 -- unit element.
-class Choice f where
+class Choice a where
    -- | Nothing to choose from.
-   empty :: f a
-   -- | One element.
-   single :: a -> f a
+   empty :: a
    -- | Normal (unbiased) choice.
-   (<|>) :: f a -> f a -> f a
+   (<|>) :: a -> a -> a
    -- | Left-preference.
-   (>|>) :: f a -> f a -> f a
+   (>|>) :: a -> a -> a
    -- | Left-biased choice.
-   (|>) :: f a -> f a -> f a
-   -- | One element from a list (unbiased).
-   oneof :: [a]   -> f a
+   (|>) :: a -> a -> a
    -- | One of the alternatives in a list (unbiased).
-   choice     :: [f a] -> f a
-   preference :: [f a] -> f a
-   orelse     :: [f a] -> f a
+   choice     :: [a] -> a
+   preference :: [a] -> a
+   orelse     :: [a] -> a
    -- default implementation
-   oneof = choice . map single
    choice     xs = if null xs then empty else foldr1 (<|>) xs
    preference xs = if null xs then empty else foldr1 (>|>) xs
    orelse     xs = if null xs then empty else foldr1 (|>)  xs
 
-instance Choice [] where
+instance Choice [a] where
    empty    = []
-   single   = return
    (<|>)    = (++)
    (>|>)    = (++)
    xs |> ys = if null xs then ys else xs
-   oneof    = id
    choice   = concat
 
 ------------------------------------------------------------------------
@@ -86,9 +79,8 @@ data Menu a = Single a
 instance Eq a => Eq (Menu a) where
    (==) = eqMenuBy (==)
 
-instance Choice Menu where
+instance Choice (Menu a) where
    empty  = Empty
-   single = Single
 
    p0 <|> rest = rec p0 -- maintain invariant
     where
@@ -118,9 +110,12 @@ instance Applicative Menu where
    (<*>) = ap
 
 instance Monad Menu where
-   return = single
+   return = singleMenu
    fail _ = empty
    (>>=)  = flip onMenu
+
+singleMenu :: a -> Menu a
+singleMenu = Single
 
 -- | Equality with a comparison function for the elements
 eqMenuBy :: (a -> a -> Bool) -> Menu a -> Menu a -> Bool
@@ -184,12 +179,20 @@ isEmpty _     = False -- because of invariant
 getByIndex :: Int -> Menu a -> Maybe a
 getByIndex n = listToMaybe . drop n . elems
 
+-- | Only keep the best elements in the menu.
+cut :: Menu a -> Menu a
+cut (p :|: q)  = cut p <|> cut q
+cut (p :>| q)  = cut p >|> cut q
+cut (p :|> _)  = cut p
+cut (Single a) = singleMenu a
+cut Empty      = empty
+
 ------------------------------------------------------------------------
 -- Generalized functions
 
 -- | Generalized monadic bind, with the arguments flipped.
 {-# INLINE onMenu #-}
-onMenu :: Choice f => (a -> f b) -> Menu a -> f b
+onMenu :: Choice b => (a -> b) -> Menu a -> b
 onMenu f = rec
  where
    rec (p :|: q)  = rec p <|> rec q
@@ -198,33 +201,9 @@ onMenu f = rec
    rec (Single a) = f a
    rec Empty      = empty
 
--- | Only keep the best elements in the menu.
-{-# INLINE cut #-}
-cut :: Choice f => Menu a -> f a
-cut (p :|: q)  = cut p <|> cut q
-cut (p :>| q)  = cut p >|> cut q
-cut (p :|> _)  = cut p
-cut (Single a) = single a
-cut Empty      = empty
-
-cutOn :: Choice f => (a -> Bool) -> Menu a -> f a
-cutOn f = snd . rec
- where
-   rec (p :|: q)  = let (b1, cp) = rec p
-                        (b2, cq) = rec q
-                    in (b1 || b2, cp <|> cq)
-   rec (p :>| q)  = let (b1, cp) = rec p
-                        (b2, cq) = rec q
-                    in (b1 || b2, cp >|> cq)
-   rec (p :|> q)  = let (b1, cp) = rec p
-                        (b2, cq) = rec q
-                    in (b1 || b2, if b1 then cp else cp |> cq)
-   rec (Single a) = (f a, single a)
-   rec Empty      = (False, empty)
-
 -- | Maps a function over a menu that also takes the index of an element.
 {-# INLINE mapWithIndex #-}
-mapWithIndex :: Choice f => (Int -> a -> f b) -> Menu a -> f b
+mapWithIndex :: Choice b => (Int -> a -> b) -> Menu a -> b
 mapWithIndex f = snd . rec 0
  where
    rec n (p :|: q)  = let (n1, pn) = rec n p

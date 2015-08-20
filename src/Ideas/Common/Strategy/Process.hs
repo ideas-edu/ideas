@@ -53,16 +53,15 @@ fromProcess = fold (~>) done
 -- | This datatype implements choices and sequences, but is slow for
 -- building sequences with the '<*>' combinator. See the 'Builder' data
 -- type for a faster alternative.
-newtype Process a = P (Menu (MenuItem a (Process a)))
+newtype Process a = P (Menu a (Process a))
 
 instance Eq a => Eq (Process a) where
    (==) = eqProcessBy (==)
 
 instance Functor Process where
-   fmap f (P m) = P (fmap g m)
+   fmap f (P m) = onMenu g done m
     where
-      g Done = Done
-      g (a :~> p) = f a :~> fmap f p
+      g a p = P (f a |-> fmap f p)
 
 instance Choice (Process a) where
    empty    = P empty
@@ -71,20 +70,18 @@ instance Choice (Process a) where
    P x  |> P y = P (x |> y)
 
 instance Sequence (Process a) where
-   done   = P (return Done)
+   done   = P doneMenu
 
    p0 <*> P rest = rec p0
     where
-      rec (P m) = P $ do
-         st <- m -- cutOn (menuItem True (\_ _ -> False)) m
-         case st of
-            a :~> p -> return (a :~> rec p)
-            Done    -> rest
+      rec (P m) = P (onMenu f rest m)
+      
+      f a p = a |-> rec p
 
 instance IsProcess Process where
    toProcess = id
-   single a  = P (singleMenu (a :~> P (singleMenu Done)))
-   a ~> p    = P (return (a :~> p))
+   single a  = P (a |-> done)
+   a ~> p    = P (a |-> p)
 
 instance Firsts (Process a) where
    type Elem (Process a) = a
@@ -96,15 +93,17 @@ instance Firsts (Process a) where
 eqProcessBy :: (a -> a -> Bool) -> Process a -> Process a -> Bool
 eqProcessBy eq = rec
  where
-   rec p q = eqMenuBy eqStep (menu p) (menu q)
+   rec p q = eqMenuBy eq rec (menu p) (menu q)
 
-   eqStep (a :~> p) (b :~> q) = eq a b && rec p q
-   eqStep Done      Done      = True
-   eqStep _         _         = False
+   --eqStep (Just a) (Just b) = eq a b
+   --eqStep Nothing  Nothing  = True
+   --eqStep _        _        = False
 
 runProcess :: Apply f => Process (f a) -> a -> [a]
-runProcess p a = bests (accum applyAll a p) 
-
+runProcess p a = map fst $ bests (accum applyFst a () p) 
+ where
+   applyFst f x y = [ (z, y) | z <- applyAll f x ]
+   
 ------------------------------------------------------------------------
 -- Building sequences
 
@@ -141,24 +140,24 @@ instance IsProcess Builder where
 fold :: Choice b => (a -> b -> b) -> b -> Process a -> b
 fold op e = rec
  where
-   rec = onMenu (menuItem e (\a -> op a . rec)) . menu
-
+   rec = onMenu f e . menu
+   f a p = op a (rec p)
+   
 {-# INLINE accum #-}
-accum :: (a -> b -> [b]) -> b -> Process a -> Menu b
+accum :: (a -> k -> b -> [(k, b)]) -> k -> b -> Process a -> Menu k b
 accum f = rec
  where
-   rec b p = menu p >>= g
+   rec k b = onMenu g (k |-> b) . menu
     where
-      g Done      = singleMenu b
-      g (a :~> q) = choice [ rec b2 q  | b2 <- f a b ]
-
+      g a q = choice [ rec k2 b2 q  | (k2, b2) <- f a k b ]
+      
 {-# INLINE scan #-}
 scan :: (s -> a -> [(s, b)]) -> s -> Process a -> Process b
 scan op = rec
  where
    rec s =
       let f a q = choice [ b ~> rec s2 q | (s2, b) <- op s a ]
-      in onMenu (menuItem done f) . menu
+      in onMenu f done . menu
 
 -- fail early
 prune :: (a -> Bool) -> Process a -> Process a

@@ -60,10 +60,9 @@ instance Monoid (Prefix a) where
 instance Firsts (Prefix a) where
    type Elem (Prefix a) = (Step a, a)
 
-   menu = fmap f . menu . remainder
+   menu = onMenu f doneMenu . menu . remainder
     where
-      f Done = Done
-      f ((st, a, path) :~> p) = (st, a) :~> Prefix [path] p
+      f (st, a, path) p = (st, a) |-> Prefix [path] p
 
 --------------------------------------------------------------------------------
 -- Running Core strategies
@@ -104,7 +103,7 @@ runPath (Path is) = rec [] is
    rec acc []     p = (reverse acc, p)
    rec acc (n:ns) p =
       case getByIndex n (menu p) of
-         Just (a :~> r) -> rec (a:acc) ns r
+         Just (a, r) -> rec (a:acc) ns r
          _ -> ([], empty)
 
 applySteps :: Process (Step a, Path) -> a -> Process (Step a, a, Path)
@@ -119,12 +118,12 @@ applySteps p a0 = prune (isMajor . fst3) (scan f a0 p)
 withPath :: Process a -> Process (a, Path)
 withPath = rec []
  where
-   rec ns = mapWithIndex (menuItem done . f ns) . menu
+   rec ns = mapWithIndex (f ns) done . menu
 
    f ns n a p =
       let ms = n:ns
       in (a, Path (reverse ms)) ~> rec ms p
-
+ 
 --------------------------------------------------------------------------------
 -- Prefix fuctions
 

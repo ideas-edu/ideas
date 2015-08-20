@@ -18,17 +18,14 @@ module Ideas.Common.Strategy.Sequence
    ( -- * Sequence type class
      Sequence(..)
      -- * Firsts type class
-   , Firsts(..), firstsMenu, firstsOrdered, firstsTree, stopped
+   , Firsts(..), firstsOrdered, firstsTree, stopped
      -- * MenuItem data type with some utility functions
-   , MenuItem(..), menuItem, isDone
    ) where
 
-import Data.Function
-import Ideas.Common.Classes
 import Ideas.Common.DerivationTree
 import Ideas.Common.Strategy.Choice
 
-infixr 5 :~>, <*>
+infixr 5 <*>
 
 ------------------------------------------------------------------------
 -- Sequence type class
@@ -50,23 +47,16 @@ class Firsts s where
    type Elem s
    -- | The ready predicate (we are done).
    ready :: s -> Bool
-   ready = any isDone . bests . menu
+   ready = hasDone . menu
    -- | The first set.
    firsts :: s -> [(Elem s, s)]
-   firsts = bests . firstsMenu
+   firsts = bests . menu
    -- | The menu offers single steps (with the remainder) and 'done' steps.
-   menu :: s -> Menu (MenuItem (Elem s) s)
-
-firstsMenu :: Firsts s => s -> Menu (Elem s, s)
-firstsMenu s = do
-   item <- cut (menu s)
-   case item of
-      a :~> t -> return (a, t)
-      Done    -> empty
+   menu :: s -> Menu (Elem s) s
 
 firstsOrdered :: Firsts s => (Elem s -> Elem s -> Ordering)
               -> s -> [(Elem s, s)]
-firstsOrdered cmp = bestsOrdered (cmp `on` fst) . firstsMenu
+firstsOrdered cmp = bestsOrdered cmp . menu
 
 firstsTree :: Firsts s => s -> DerivationTree (Elem s) s
 firstsTree x = addBranches bs tr
@@ -77,26 +67,3 @@ firstsTree x = addBranches bs tr
 -- | Not ready and no further steps to take.
 stopped :: Firsts s => s -> Bool
 stopped = isEmpty . menu
-
-------------------------------------------------------------------------
--- MenuItem data type with some utility functions
-
-data MenuItem a s = a :~> s   -- ^ A single step.
-                  | Done      -- ^ No step (we are done).
-
-instance Functor (MenuItem a) where
-   fmap = mapSecond
-
-instance BiFunctor MenuItem where
-   biMap f g = menuItem Done (\a s -> f a :~> g s)
-
--- | The 'menuItem' function takes a default value for 'Done' and a function
--- to combine the values for a single step.
-menuItem :: b -> (a -> s -> b) -> MenuItem a s -> b
-menuItem b _ Done      = b
-menuItem _ f (a :~> x) = f a x
-
--- | Is the item 'done'?
-isDone :: MenuItem a s -> Bool
-isDone Done = True
-isDone _    = False

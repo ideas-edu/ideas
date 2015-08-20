@@ -23,22 +23,23 @@ import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence
 
 useFirst :: Choice b => (a -> Process a -> b) -> b -> Process a -> b
-useFirst op e = onMenu (menuItem e op) . menu
+useFirst op e = onMenu op e . menu
 
 split :: (AtomicSymbol a, Choice b, Sequence (f a), IsProcess f)
       => (Either a (f a) -> Process a -> b) -> b -> Process a -> b         
 split op = useFirst f
  where
-   f a s | a == atomicOpen = onMenu (uncurry op) $ fmap (make a) (rec 1 s)
+   f a s | a == atomicOpen = onMenu op empty $ onMenu (make a) (make2 a) (rec 1 s)
          | otherwise       = op (Left a) s
       
-   make a (x, y) = (Right (a ~> x), y)
+   make a x y = Right (a ~> x) |-> y
+   make2 a    = Right (a ~> done) |-> empty
          
    rec n s
-      | n == 0    = singleMenu (done, s)
-      | otherwise = onMenu (menuItem empty g) (menu s)
+      | n == 0    = done |-> s
+      | otherwise = onMenu g empty (menu s)
     where
-      g a t = fmap (\(x, y) -> (a ~> x, y)) (rec (pm a n) t)
+      g a t = onMenu (\x y -> (a ~> x) |-> y) doneMenu (rec (pm a n) t)
 
    pm :: AtomicSymbol a => a -> Int -> Int
    pm a | a == atomicOpen  = succ

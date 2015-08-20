@@ -18,18 +18,18 @@ module Ideas.Common.Strategy.Choice
    ( -- * Choice type class
      Choice(..)
      -- * Menu data type
-   , Menu, singleMenu, eqMenuBy
+   , Menu, (|->), doneMenu, eqMenuBy
      -- * Queries
-   , elems, bests, bestsOrdered, isEmpty, getByIndex, cut
+   , elems, bests, bestsOrdered
+   , isEmpty, hasDone, getByIndex, cut
      -- * Generalized functions
    , onMenu, mapWithIndex
    ) where
 
-import Control.Applicative (Applicative(..))
-import Control.Monad
-import Data.Maybe (listToMaybe)
+import Data.Maybe
 
 infixr 3 <|>, >|>, |>, :|:, :>|, :|>
+infixr 5 |->, :->
 
 ------------------------------------------------------------------------
 -- Choice type class
@@ -70,16 +70,17 @@ instance Choice [a] where
 
 -- | A menu offers choices and preferences. It is an instance of the 'Functor'
 -- and 'Monad' type classes.
-data Menu a = Single a
-            | Empty
-            | Menu a :|: Menu a
-            | Menu a :>| Menu a -- left-preference
-            | Menu a :|> Menu a -- left-biased
+data Menu k a = k :-> a
+              | Done
+              | Empty
+              | Menu k a :|: Menu k a
+              | Menu k a :>| Menu k a -- left-preference
+              | Menu k a :|> Menu k a -- left-biased
 
-instance Eq a => Eq (Menu a) where
-   (==) = eqMenuBy (==)
+instance (Eq k, Eq a) => Eq (Menu k a) where
+   (==) = eqMenuBy (==) (==)
 
-instance Choice (Menu a) where
+instance Choice (Menu k a) where
    empty  = Empty
 
    p0 <|> rest = rec p0 -- maintain invariant
@@ -102,29 +103,42 @@ instance Choice (Menu a) where
      rec (p :|> q) = p :|> rec q
      rec p         = p :|> rest
 
+{-
 instance Functor Menu where
-   fmap f p = p >>= (Single . f)
+   fmap f = onMenu (Single . f)
 
 instance Applicative Menu where
-   pure  = return
-   (<*>) = ap
+   pure  = singleMenu
+   f <*> g = onMenu (\x -> fmap (\y -> x y) g) f
 
 instance Monad Menu where
    return = singleMenu
    fail _ = empty
-   (>>=)  = flip onMenu
+   (>>=)  = flip onMenu -}
 
-singleMenu :: a -> Menu a
-singleMenu = Single
+(|->) :: a -> s -> Menu a s
+(|->) = (:->)
+
+doneMenu :: Menu k a
+doneMenu = Done
+
+hasDone :: Menu k a -> Bool
+hasDone (p :|: q) = hasDone p || hasDone q
+hasDone (p :>| q) = hasDone p || hasDone q
+hasDone (p :|> _) = hasDone p
+hasDone (_ :-> _) = False
+hasDone Done      = True
+hasDone Empty     = False
 
 -- | Equality with a comparison function for the elements
-eqMenuBy :: (a -> a -> Bool) -> Menu a -> Menu a -> Bool
-eqMenuBy eq = test
+eqMenuBy :: (k -> k -> Bool) -> (a -> a -> Bool) -> Menu k a -> Menu k a -> Bool
+eqMenuBy eqK eqA = test
  where
    test (p1 :|: p2) (q1 :|: q2) = test p1 q1 && test p2 q2
    test (p1 :>| p2) (q1 :>| q2) = test p1 q1 && test p2 q2
    test (p1 :|> p2) (q1 :|> q2) = test p1 q1 && test p2 q2
-   test (Single a)  (Single b)  = eq a b
+   test (k1 :-> a1) (k2 :-> a2) = eqK k1 k2 && eqA a1 a2
+   test Done        Done        = True
    test Empty       Empty       = True
    test (p :>| Empty) q = test p q
    test (p :|> Empty) q = test p q
@@ -136,84 +150,90 @@ eqMenuBy eq = test
 -- Queries
 
 -- | Returns all elements that are in the menu.
-elems :: Menu a -> [a]
+elems :: Menu k a -> [(k, a)]
 elems = ($ []) . rec
  where
-   rec (p :|: q)  = rec p . rec q
-   rec (p :>| q)  = rec p . rec q
-   rec (p :|> q)  = rec p . rec q
-   rec (Single p) = (p:)
-   rec Empty      = id
+   rec (p :|: q) = rec p . rec q
+   rec (p :>| q) = rec p . rec q
+   rec (p :|> q) = rec p . rec q
+   rec (k :-> a) = ((k, a):)
+   rec Done      = id
+   rec Empty     = id
 
 -- | Returns only the best elements that are in the menu.
-bests :: Menu a -> [a]
-bests (p :|: q)  = bests p ++ bests q
-bests (p :>| q)  = bests p ++ bests q
-bests (p :|> q)  = bests p |> bests q
-bests (Single a) = [a]
-bests Empty      = []
+bests :: Menu k a -> [(k, a)]
+bests = bestsWith (++)
 
 -- | Returns only the best elements that are in the menu, with a given ordering.
-bestsOrdered :: (a -> a -> Ordering) -> Menu a -> [a]
-bestsOrdered cmp = rec
+bestsOrdered :: (k -> k -> Ordering) -> Menu k a -> [(k, a)]
+bestsOrdered cmp = bestsWith merge
  where
-   rec (p :|: q)  = merge (rec p) (rec q)
-   rec (p :>| q)  = rec p ++ rec q
-   rec (p :|> q)  = rec p |> rec q
-   rec (Single a) = [a]
-   rec Empty      = []
-
    -- merge two lists with comparison function
-   merge lx@(x:xs) ly@(y:ys)
-      | cmp x y == GT = y : merge lx ys
-      | otherwise     = x : merge xs ly
+   merge lx@(x:xs) ly@(y:ys) =
+      case cmp (fst x) (fst y) of 
+         GT -> y : merge lx ys
+         _  -> x : merge xs ly
    merge [] ys = ys
    merge xs [] = xs
 
+-- helper: takes combinator for (:|:)
+bestsWith:: ([(k, a)] -> [(k, a)] -> [(k, a)]) -> Menu k a -> [(k, a)]
+bestsWith f = rec
+ where
+   rec (p :|: q) = f (rec p) (rec q)
+   rec (p :>| q) = rec p ++ rec q
+   rec (p :|> _) = rec p
+   rec (k :-> a) = [(k, a)]
+   rec Done      = []
+   rec Empty     = []
+
 -- | Is the menu empty?
-isEmpty :: Menu a -> Bool
+isEmpty :: Menu k a -> Bool
 isEmpty Empty = True
 isEmpty _     = False -- because of invariant
 
 -- | Get an element from the menu by its index.
-getByIndex :: Int -> Menu a -> Maybe a
+getByIndex :: Int -> Menu k a -> Maybe (k, a)
 getByIndex n = listToMaybe . drop n . elems
 
 -- | Only keep the best elements in the menu.
-cut :: Menu a -> Menu a
-cut (p :|: q)  = cut p <|> cut q
-cut (p :>| q)  = cut p >|> cut q
-cut (p :|> _)  = cut p
-cut (Single a) = singleMenu a
-cut Empty      = empty
+cut :: Menu k a -> Menu k a
+cut (p :|: q) = cut p <|> cut q
+cut (p :>| q) = cut p >|> cut q
+cut (p :|> _) = cut p
+cut (k :-> a) = k |-> a
+cut Done      = doneMenu
+cut Empty     = empty
 
 ------------------------------------------------------------------------
 -- Generalized functions
 
 -- | Generalized monadic bind, with the arguments flipped.
 {-# INLINE onMenu #-}
-onMenu :: Choice b => (a -> b) -> Menu a -> b
-onMenu f = rec
+onMenu :: Choice b => (k -> a -> b) -> b -> Menu k a -> b
+onMenu f e = rec
  where
-   rec (p :|: q)  = rec p <|> rec q
-   rec (p :>| q)  = rec p >|> rec q
-   rec (p :|> q)  = rec p  |> rec q
-   rec (Single a) = f a
-   rec Empty      = empty
+   rec (p :|: q) = rec p <|> rec q
+   rec (p :>| q) = rec p >|> rec q
+   rec (p :|> q) = rec p  |> rec q
+   rec (k :-> a) = f k a
+   rec Done      = e
+   rec Empty     = empty
 
 -- | Maps a function over a menu that also takes the index of an element.
 {-# INLINE mapWithIndex #-}
-mapWithIndex :: Choice b => (Int -> a -> b) -> Menu a -> b
-mapWithIndex f = snd . rec 0
+mapWithIndex :: Choice b => (Int -> k -> a -> b) -> b -> Menu k a -> b
+mapWithIndex f e = snd . rec 0
  where
-   rec n (p :|: q)  = let (n1, pn) = rec n p
-                          (n2, qn) = rec n1 q
-                      in (n2, pn <|> qn)
-   rec n (p :>| q)  = let (n1, pn) = rec n p
-                          (n2, qn) = rec n1 q
-                      in (n2, pn >|> qn)
-   rec n (p :|> q)  = let (n1, pn) = rec n p
-                          (n2, qn) = rec n1 q
-                      in (n2, pn |> qn)
-   rec n (Single a) = (n+1, f n a)
-   rec n Empty      = (n, empty)
+   rec n (p :|: q) = let (n1, pn) = rec n p
+                         (n2, qn) = rec n1 q
+                     in (n2, pn <|> qn)
+   rec n (p :>| q) = let (n1, pn) = rec n p
+                         (n2, qn) = rec n1 q
+                     in (n2, pn >|> qn)
+   rec n (p :|> q) = let (n1, pn) = rec n p
+                         (n2, qn) = rec n1 q
+                     in (n2, pn |> qn)
+   rec n (k :-> a) = (n+1, f n k a)
+   rec n Done      = (n, e)
+   rec n Empty     = (n, empty)

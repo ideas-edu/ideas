@@ -69,16 +69,14 @@ instance Firsts (State a) where
     where
       cmp = ruleOrdering (exercise st) `on` (stepRule . fst)
 
-   menu st = fmap f (menu (majorPrefix (statePrefix st)))
+   menu st = onMenu f doneMenu (menu (majorPrefix (statePrefix st)))
     where
-      f Done = Done
-      f (info :~> p) = info :~> st {statePrefix = p, stateContext = snd info}
+      f info p = info |-> st {statePrefix = p, stateContext = snd info}
 
 microsteps :: State a -> [((Step (Context a), Context a), State a)]
 microsteps st = concatMap f (bests (menu (statePrefix st)))
  where
-   f Done         = []
-   f (info :~> p) = [(info, st {statePrefix = p, stateContext = snd info})]
+   f (info, p) = [(info, st {statePrefix = p, stateContext = snd info})]
 
 stateTerm :: State a -> a
 stateTerm = fromMaybe (error "invalid term") . fromContext . stateContext

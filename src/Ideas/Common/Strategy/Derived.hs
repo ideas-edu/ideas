@@ -26,20 +26,23 @@ useFirst :: Choice b => (a -> Process a -> b) -> b -> Process a -> b
 useFirst op e = onMenu op e . menu
 
 split :: (AtomicSymbol a, Choice b, Sequence (f a), IsProcess f)
-      => (Either a (f a) -> Process a -> b) -> b -> Process a -> b         
-split op = useFirst f
+      => (f a -> Process a -> b) -> b -> Process a -> b         
+split op = split2 (op . single) op
+
+-- Specialized version of split that also takes an operator for the special case
+-- that the left part of the split is a single symbol. 
+split2 :: (AtomicSymbol a, Choice b, Sequence (f a), IsProcess f)
+      => (a -> Process a -> b) -> (f a -> Process a -> b) -> b -> Process a -> b         
+split2 op1 op2 = useFirst f
  where
-   f a s | a == atomicOpen = onMenu op empty $ onMenu (make a) (make2 a) (rec 1 s)
-         | otherwise       = op (Left a) s
-      
-   make a x y = Right (a ~> x) |-> y
-   make2 a    = Right (a ~> done) |-> empty
+   f a | a == atomicOpen = rec (op2 . (a ~>)) 1
+       | otherwise       = op1 a
          
-   rec n s
-      | n == 0    = done |-> s
-      | otherwise = onMenu g empty (menu s)
+   rec acc n
+      | n == 0    = acc done
+      | otherwise = onMenu g empty . menu
     where
-      g a t = onMenu (\x y -> (a ~> x) |-> y) doneMenu (rec (pm a n) t)
+      g a = rec (acc . (a ~>)) (pm a n)
 
    pm :: AtomicSymbol a => a -> Int -> Int
    pm a | a == atomicOpen  = succ
@@ -50,8 +53,7 @@ split op = useFirst f
 (!*>) :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a) => f a -> f a -> f a
 a !*> p = split op (atomic a) (toProcess p)
  where
-   op (Left b) q   = atomic (a <*> b ~> done) <*> fromProcess q
-   op (Right bl) q = atomic (a <*> bl) <*> fromProcess q
+   op b q = atomic (a <*> b) <*> fromProcess q
 
 filterP :: (a -> Bool) -> Process a -> Process a
 filterP cond = fold (\a q -> if cond a then a ~> q else empty) done
@@ -82,12 +84,12 @@ concurrent switch x y = normal (toProcess x) (toProcess y)
    stepBoth  = useFirst stop2 . useFirst stop2 done
    stop2 _ _ = empty
 
-   stepRight p q = split op empty (toProcess q)
+   stepRight p q = split2 op1 op2 empty (toProcess q)
     where
-      op (Left a) q2
+      op1 a q2
          | switch a  = a ~> normal p q2
          | otherwise = a ~> stepRight p q2
-      op (Right q1) q2 = q1 <*> normal p q2
+      op2 q1 q2 = q1 <*> normal p q2
 
 -- | Allows all permutations of the list
 permute :: (Choice a, Sequence a) => [a] -> a
@@ -103,15 +105,14 @@ permute as
 (<@>) :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a) => f a -> f a -> f a
 p0 <@> q0 = rec (toProcess q0) (toProcess p0)
  where
-   rec q  = let f (Left a) r  = a ~>  rec r q
-                f (Right b) r = b <*> rec r q
-            in split f (bothOk q)
+   rec q  = let op b r = b <*> rec r q
+            in split op (bothOk q)
    bothOk = useFirst (\_ _ -> empty) done
 
 inits :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a) => f a -> f a
 inits = rec . toProcess
  where
    rec p = done <|> split op empty p
-   op  x = either (~>) (<*>) x . rec
+   op x  = (x <*>) . rec
 
 ---------------------------------------------------------------------------

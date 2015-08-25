@@ -103,18 +103,15 @@ instance Choice (Menu k a) where
      rec (p :|> q) = p :|> rec q
      rec p         = p :|> rest
 
-{-
-instance Functor Menu where
-   fmap f = onMenu (Single . f)
-
-instance Applicative Menu where
-   pure  = singleMenu
-   f <*> g = onMenu (\x -> fmap (\y -> x y) g) f
-
-instance Monad Menu where
-   return = singleMenu
-   fail _ = empty
-   (>>=)  = flip onMenu -}
+instance Functor (Menu k) where
+   fmap f = rec 
+    where
+      rec (p :|: q) = rec p :|: rec q
+      rec (p :>| q) = rec p :>| rec q
+      rec (p :|> q) = rec p :|> rec q
+      rec (k :-> a) = k :-> f a
+      rec Done      = Done
+      rec Empty     = Empty
 
 (|->) :: a -> s -> Menu a s
 (|->) = (:->)

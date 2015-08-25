@@ -125,7 +125,7 @@ removeDef :: Def
 removeDef = propertyDef "removed" (const empty)
 
 collapseDef :: Def
-collapseDef = propertyDef "collapsed" (collapse . toProcess)
+collapseDef = propertyDef "collapsed" (collapse . fromBuilder)
  where
    collapse a = 
       case firsts a of
@@ -136,4 +136,4 @@ collapseDef = propertyDef "collapsed" (collapse . toProcess)
       single . RuleStep mempty . makeRule l . runProcess
 
 hideDef :: Def
-hideDef = propertyDef "hidden" (fmap minor)
+hideDef = propertyDef "hidden" (mapBuilder minor)

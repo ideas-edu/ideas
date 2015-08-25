@@ -17,11 +17,11 @@
 
 module Ideas.Common.Strategy.Process
    ( -- * IsProcess type class
-     IsProcess(..), fromProcess
+     IsProcess(..)
      -- * Process data type
    , Process, menu, eqProcessBy
      -- * Building sequences
-   , Builder
+   , Builder, mapBuilder, toBuilder, fromBuilder
      -- * Query functions on a Process
    , ready, stopped, firsts
    , runProcess
@@ -40,12 +40,8 @@ infixr 5 ~>
 
 class IsProcess f where
    -- | Convert to the 'Process' data type.
-   toProcess :: f a -> Process a
    single    :: a -> f a
    (~>)      :: a -> f a -> f a
-
-fromProcess :: (IsProcess f, Choice (f a), Sequence (f a)) => Process a -> f a
-fromProcess = fold (~>) done
 
 ------------------------------------------------------------------------
 -- Process data type
@@ -57,11 +53,6 @@ newtype Process a = P (Menu a (Process a))
 
 instance Eq a => Eq (Process a) where
    (==) = eqProcessBy (==)
-
-instance Functor Process where
-   fmap f (P m) = onMenu g done m
-    where
-      g a p = P (f a |-> fmap f p)
 
 instance Choice (Process a) where
    empty    = P empty
@@ -79,7 +70,6 @@ instance Sequence (Process a) where
       f a p = a |-> rec p
 
 instance IsProcess Process where
-   toProcess = id
    single a  = P (a |-> done)
    a ~> p    = P (a |-> p)
 
@@ -104,6 +94,12 @@ runProcess p a = map fst $ bests (accum applyFst a () p)
  where
    applyFst f x y = [ (z, y) | z <- applyAll f x ]
    
+mapProcess :: (a -> a) -> Process a -> Process a
+mapProcess f = rec
+ where
+   rec (P m) = onMenu g done m
+   g a p     = P (f a |-> rec p)
+   
 ------------------------------------------------------------------------
 -- Building sequences
 
@@ -113,9 +109,6 @@ runProcess p a = map fst $ bests (accum applyFst a () p)
 -- it can be inspected in any way.
 
 newtype Builder a = B (Process a -> Process a)
-
-instance Functor Builder where
-   fmap f = fromProcess . fmap f . toProcess -- inefficient
 
 instance Choice (Builder a) where
    empty    = B (const empty)
@@ -128,9 +121,17 @@ instance Sequence (Builder a) where
    B f <*> B g = B (f . g)
 
 instance IsProcess Builder where
-   toProcess (B f) = f done
    single a        = B (a ~>)
    a ~> B f        = B ((a ~>) . f)
+
+mapBuilder :: (a -> a) -> Builder a -> Builder a
+mapBuilder f (B g) = B (mapProcess f . g)
+
+toBuilder :: Process a -> Builder a
+toBuilder p = B (p <*>)
+
+fromBuilder :: Builder a -> Process a
+fromBuilder (B f) = f done
 
 ------------------------------------------------------------------------
 -- Higher-order functions for iterating over a Process

@@ -25,14 +25,14 @@ import Ideas.Common.Strategy.Sequence
 useFirst :: Choice b => (a -> Process a -> b) -> b -> Process a -> b
 useFirst op e = onMenu op e . menu
 
-split :: (AtomicSymbol a, Choice b, Sequence (f a), IsProcess f)
-      => (f a -> Process a -> b) -> b -> Process a -> b         
+split :: (AtomicSymbol a, Choice b)
+      => (Builder a -> Process a -> b) -> b -> Process a -> b         
 split op = split2 (op . single) op
 
 -- Specialized version of split that also takes an operator for the special case
 -- that the left part of the split is a single symbol. 
-split2 :: (AtomicSymbol a, Choice b, Sequence (f a), IsProcess f)
-      => (a -> Process a -> b) -> (f a -> Process a -> b) -> b -> Process a -> b         
+split2 :: (AtomicSymbol a, Choice b)
+       => (a -> Process a -> b) -> (Builder a -> Process a -> b) -> b -> Process a -> b         
 split2 op1 op2 = useFirst f
  where
    f a | a == atomicOpen = rec (op2 . (a ~>)) 1
@@ -50,10 +50,10 @@ split2 op1 op2 = useFirst f
         | otherwise        = id
 
 -- atomic prefix
-(!*>) :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a) => f a -> f a -> f a
-a !*> p = split op (atomic a) (toProcess p)
+(!*>) :: AtomicSymbol a => Builder a -> Builder a -> Builder a
+a !*> p = split op (atomic a) (fromBuilder p)
  where
-   op b q = atomic (a <*> b) <*> fromProcess q
+   op b q = atomic (a <*> b) <*> toBuilder q
 
 filterP :: (a -> Bool) -> Process a -> Process a
 filterP cond = fold (\a q -> if cond a then a ~> q else empty) done
@@ -67,24 +67,24 @@ class Eq a => AtomicSymbol a where
 class Eq a => LabelSymbol a where
    isEnter :: a -> Bool
 
-atomic :: (IsProcess f, Sequence (f a), AtomicSymbol a) => f a -> f a
+atomic :: AtomicSymbol a => Builder a -> Builder a
 atomic p = atomicOpen ~> (p <*> single atomicClose)
 
-interleave :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a, LabelSymbol a) => [f a] -> f a
+interleave :: (AtomicSymbol a, LabelSymbol a) => [Builder a] -> Builder a
 interleave xs = if null xs then done else foldr1 (<%>) xs
 
-(<%>) :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a, LabelSymbol a) => f a -> f a -> f a
+(<%>) :: (AtomicSymbol a, LabelSymbol a) => Builder a -> Builder a -> Builder a
 (<%>) = concurrent (not . isEnter)
 
-concurrent :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a) => (a -> Bool) -> f a -> f a -> f a
-concurrent switch x y = normal (toProcess x) (toProcess y)
+concurrent :: AtomicSymbol a => (a -> Bool) -> Builder a -> Builder a -> Builder a
+concurrent switch x y = normal (fromBuilder x) (fromBuilder y)
  where
    normal p q = stepBoth q p <|> (stepRight q p <|> stepRight p q)
 
    stepBoth  = useFirst stop2 . useFirst stop2 done
    stop2 _ _ = empty
 
-   stepRight p q = split2 op1 op2 empty (toProcess q)
+   stepRight p = split2 op1 op2 empty
     where
       op1 a q2
          | switch a  = a ~> normal p q2
@@ -102,15 +102,15 @@ permute as
    pickOne (x:xs) = (x, xs) : [ (y, x:ys) | (y, ys) <- pickOne xs ]
    
 -- Alternate combinator
-(<@>) :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a) => f a -> f a -> f a
-p0 <@> q0 = rec (toProcess q0) (toProcess p0)
+(<@>) :: AtomicSymbol a => Builder a -> Builder a -> Builder a
+p0 <@> q0 = rec (fromBuilder q0) (fromBuilder p0)
  where
    rec q  = let op b r = b <*> rec r q
             in split op (bothOk q)
    bothOk = useFirst (\_ _ -> empty) done
 
-inits :: (IsProcess f, Choice (f a), Sequence (f a), AtomicSymbol a) => f a -> f a
-inits = rec . toProcess
+inits :: AtomicSymbol a => Builder a -> Builder a
+inits = rec . fromBuilder
  where
    rec p = done <|> split op empty p
    op x  = (x <*>) . rec

@@ -73,7 +73,7 @@ runCore :: Core a -> a -> [a]
 runCore = runProcess . coreToProcess
 
 coreToProcess :: Core a -> Process (Step a)
-coreToProcess = toProcess . foldUnwind emptyAlg 
+coreToProcess = fromBuilder . foldUnwind emptyAlg 
    { fNode  = useDef
    , fLeaf  = single . RuleStep mempty
    , fLabel = \l p -> Enter l ~> p <*> (Exit l ~> done)

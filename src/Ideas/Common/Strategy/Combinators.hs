@@ -213,7 +213,7 @@ hide = liftCore hideCore
 
 notDef :: Def
 notDef = makeDef1 "not" $ \x -> 
-   single $ RuleStep mempty $ checkRule "core.not" $ null . runProcess (fromBuilder x)
+   Sequence.single $ RuleStep mempty $ checkRule "core.not" $ null . runProcess (fromBuilder x)
 
 interleaveDef :: Def
 interleaveDef = associativeDef "interleave" Derived.interleave

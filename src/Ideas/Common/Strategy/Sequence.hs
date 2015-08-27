@@ -25,16 +25,22 @@ module Ideas.Common.Strategy.Sequence
 import Ideas.Common.DerivationTree
 import Ideas.Common.Strategy.Choice
 
-infixr 5 <*>
+infixr 5 <*>, ~>
 
 ------------------------------------------------------------------------
 -- Sequence type class
 
 class Sequence a where
+   type Sym a
    -- | The empty sequence.
    done :: a
+   -- | Prepend a symbol to a sequence.
+   (~>) :: Sym a -> a -> a
    -- | Append two sequences.
    (<*>) :: a -> a -> a
+   -- | Singleton sequence.
+   single :: Sym a -> a
+   single s = s ~> done
    -- | Sequential composition.
    sequence :: [a] -> a
    sequence xs = if null xs then done else foldr1 (<*>) xs

@@ -16,32 +16,20 @@
 --  $Id$
 
 module Ideas.Common.Strategy.Process
-   ( -- * IsProcess type class
-     IsProcess(..)
-     -- * Process data type
-   , Process, menu, eqProcessBy
+   ( -- * Process data type
+     Process, menu, eqProcessBy
      -- * Building sequences
    , Builder, mapBuilder, toBuilder, fromBuilder
      -- * Query functions on a Process
    , ready, stopped, firsts
    , runProcess
      -- * Higher-order functions for iterating over a Process
-   , fold, accum, scan, prune
+   , fold, scan, prune
    ) where
 
 import Ideas.Common.Classes
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Sequence
-
-------------------------------------------------------------------------
--- IsProcess type class
-
-infixr 5 ~>
-
-class IsProcess f where
-   -- | Convert to the 'Process' data type.
-   single    :: a -> f a
-   (~>)      :: a -> f a -> f a
 
 ------------------------------------------------------------------------
 -- Process data type
@@ -55,23 +43,21 @@ instance Eq a => Eq (Process a) where
    (==) = eqProcessBy (==)
 
 instance Choice (Process a) where
-   empty    = P empty
-   P x <|> P y = P (x <|> y)
-   P x >|> P y = P (x >|> y)
-   P x  |> P y = P (x |> y)
+   empty   = P empty
+   x <|> y = P (menu x <|> menu y)
+   x >|> y = P (menu x >|> menu y)
+   x  |> y = P (menu x  |> menu y)
 
 instance Sequence (Process a) where
-   done   = P doneMenu
+   type Sym (Process a) = a
 
+   done   = P doneMenu
+   a ~> p = P (a |-> p)
+   
    p0 <*> P rest = rec p0
     where
-      rec (P m) = P (onMenu f rest m)
-      
+      rec   = P . onMenu f rest . menu
       f a p = a |-> rec p
-
-instance IsProcess Process where
-   single a  = P (a |-> done)
-   a ~> p    = P (a |-> p)
 
 instance Firsts (Process a) where
    type Elem (Process a) = a
@@ -84,21 +70,17 @@ eqProcessBy :: (a -> a -> Bool) -> Process a -> Process a -> Bool
 eqProcessBy eq = rec
  where
    rec p q = eqMenuBy eq rec (menu p) (menu q)
-
-   --eqStep (Just a) (Just b) = eq a b
-   --eqStep Nothing  Nothing  = True
-   --eqStep _        _        = False
-
+   
 runProcess :: Apply f => Process (f a) -> a -> [a]
-runProcess p a = map fst $ bests (accum applyFst a () p) 
+runProcess p a = onMenu op [a] (menu p)
  where
-   applyFst f x y = [ (z, y) | z <- applyAll f x ]
+   op f x = [ c | b <- applyAll f a, c <- runProcess x b ]
    
 mapProcess :: (a -> a) -> Process a -> Process a
 mapProcess f = rec
  where
-   rec (P m) = onMenu g done m
-   g a p     = P (f a |-> rec p)
+   rec   = onMenu g done . menu
+   g a p = P (f a |-> rec p)
    
 ------------------------------------------------------------------------
 -- Building sequences
@@ -117,12 +99,11 @@ instance Choice (Builder a) where
    B f  |> B g = B (\p -> f p  |> g p)
 
 instance Sequence (Builder a) where
-   done        = B id
-   B f <*> B g = B (f . g)
+   type Sym (Builder a) = a
 
-instance IsProcess Builder where
-   single a        = B (a ~>)
-   a ~> B f        = B ((a ~>) . f)
+   done        = B id
+   a ~> B f    = B ((a ~>) . f)
+   B f <*> B g = B (f . g)
 
 mapBuilder :: (a -> a) -> Builder a -> Builder a
 mapBuilder f (B g) = B (mapProcess f . g)
@@ -142,15 +123,7 @@ fold :: Choice b => (a -> b -> b) -> b -> Process a -> b
 fold op e = rec
  where
    rec = onMenu f e . menu
-   f a p = op a (rec p)
-   
-{-# INLINE accum #-}
-accum :: (a -> k -> b -> [(k, b)]) -> k -> b -> Process a -> Menu k b
-accum f = rec
- where
-   rec k b = onMenu g (k |-> b) . menu
-    where
-      g a q = choice [ rec k2 b2 q  | (k2, b2) <- f a k b ]
+   f a = op a . rec
       
 {-# INLINE scan #-}
 scan :: (s -> a -> [(s, b)]) -> s -> Process a -> Process b

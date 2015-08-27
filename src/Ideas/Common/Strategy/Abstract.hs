@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts, UndecidableInstances, TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- Copyright 2015, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -62,7 +62,10 @@ instance Choice (Strategy a) where
    (>|>) = liftCore2 (node2 preferenceDef)
 
 instance Sequence (Strategy a) where
+   type Sym (Strategy a) = Rule a
+
    done  = fromCore (node0 succeedDef)
+   (~>)  = liftCore2 (node2 sequenceDef)
    (<*>) = liftCore2 (node2 sequenceDef)
 
 succeedDef :: Def

@@ -35,19 +35,18 @@ import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.CyclicTree
-import Ideas.Common.Strategy.Derived
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Def
 import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.Step
-import Ideas.Common.Utils (fst3, splitsWithElem, readM)
+import Ideas.Common.Utils (splitsWithElem, readM)
 
 --------------------------------------------------------------------------------
 -- Prefix datatype
 
 data Prefix a = Prefix
-   { getPaths  :: [Path]
-   , remainder :: Process (Step a, a, Path)
+   { getPaths    :: [Path]
+   , remainder   :: Menu (Step a, a) (Prefix a)
    }
 
 instance Show (Prefix a) where
@@ -60,9 +59,7 @@ instance Monoid (Prefix a) where
 instance Firsts (Prefix a) where
    type Elem (Prefix a) = (Step a, a)
 
-   menu = onMenu f doneMenu . menu . remainder
-    where
-      f (st, a, path) p = (st, a) |-> Prefix [path] p
+   menu = remainder
 
 --------------------------------------------------------------------------------
 -- Running Core strategies
@@ -93,37 +90,37 @@ makePrefix = snd . replayCore emptyPath
 -- | Construct a prefix by replaying a path in a core strategy: the third
 -- argument is the current term.
 replayCore :: Path -> Core a -> ([Step a], a -> Prefix a)
-replayCore path core =
-   let (acc, p) = runPath path (withPath (coreToProcess core))
-   in (map fst acc, Prefix [path] . applySteps p)
-
-runPath :: Path -> Process a -> ([a], Process a)
-runPath (Path is) = rec [] is
+replayCore (Path is) = replay [] is . coreToProcess
  where
-   rec acc []     p = (reverse acc, p)
-   rec acc (n:ns) p =
+   replay acc []     p = (reverse acc, createPrefix p)
+   replay acc (n:ns) p =
       case getByIndex n (menu p) of
-         Just (a, r) -> rec (a:acc) ns r
-         _ -> ([], empty)
+         Just (a, r) -> replay (a:acc) ns r
+         _ -> ([], const noPrefix)
+         
+   createPrefix p = Prefix [Path is] . flip (rec []) p
 
-applySteps :: Process (Step a, Path) -> a -> Process (Step a, a, Path)
-applySteps p a0 = prune (isMajor . fst3) (scan f a0 p)
- where
-   f a (RuleStep _ r, path) =
-      [ (b, (RuleStep env r, b, path))
-      | (b, env) <- transApply (transformation r) a
-      ]
-   f a (st, path) = [(a, (st, a, path))]
+   rec ns a = cut . onMenuWithIndex f doneMenu . menu
+    where
+      f n st p =
+         case st of
+            RuleStep _ r -> choice
+               [ (RuleStep env r, b) ?~> mk b
+               | (b, env) <- transApply (transformation r) a
+               ]
+            _ -> (st, a) ?~> mk a
+       where
+         ms   = n:ns
+         path = Path (is ++ reverse ms)
+         mk b = Prefix [path] (rec ms b p)
 
-withPath :: Process a -> Process (a, Path)
-withPath = rec []
- where
-   rec ns = mapWithIndex (f ns) done . menu
+         x ?~> y
+            | isMinor st && stopped y = empty
+            | otherwise = x |-> y
 
-   f ns n a p =
-      let ms = n:ns
-      in (a, Path (reverse ms)) ~> rec ms p
- 
+stopped :: Prefix a -> Bool
+stopped = isEmpty . remainder
+
 --------------------------------------------------------------------------------
 -- Prefix fuctions
 
@@ -133,28 +130,39 @@ isEmptyPrefix = all (== emptyPath) . getPaths
 -- | Transforms the prefix such that only major steps are kept in the remaining
 -- strategy.
 majorPrefix :: Prefix a -> Prefix a
-majorPrefix prfx = prfx { remainder = hide (isMajor . fst3) (remainder prfx) }
+majorPrefix prfx = prfx { remainder = onMenu f doneMenu (remainder prfx) }
+ where
+   f t@(st, _) p
+      | isMajor st = t |-> majorPrefix p 
+      | otherwise  = remainder (majorPrefix p)
 
 -- | The searchModePrefix transformation changes the process in such a way that
 --   all intermediate states can only be reached by one path. A prerequisite is
 --   that symbols are unique (or only used once).
 searchModePrefix :: (Step a -> Step a -> Bool) -> Prefix a -> Prefix a
-searchModePrefix eq prfx =
+searchModePrefix eq prfx = 
    prfx { remainder = rec (remainder (majorPrefix prfx)) }
  where
-   eq3 = eq `on` fst3
+   eqFst = eq `on` fst
 
-   rec p | ready p   = done
-         | otherwise = process (firsts p)
+   rec m | hasDone m = doneMenu
+         | otherwise = process (bests m)
 
    process [] = empty
    process ((a, p):xs) =
-      let ys = map fst $ firsts (a ~> p)
-      in (a ~> rec p) <|> process (concatMap (change ys) xs)
+      let ys = map fst $ bests (a |-> p)
+      in (a |-> p { remainder = rec (remainder p) }) 
+      <|> process (concatMap (change ys) xs)
 
-   change ys (a, q) =
-      let f x = all (not . eq3 x) ys
-      in firsts $ filterP f (a ~> q)
+   change ys (a, q) = 
+      let f x = all (not . eqFst x) ys
+      in bests $ filterPrefix f (a |-> q)
+
+filterPrefix :: ((Step a, a) -> Bool) -> Menu (Step a, a) (Prefix a) -> Menu (Step a, a) (Prefix a)
+filterPrefix cond = rec 
+ where
+   rec   = onMenu f doneMenu
+   f a p = if cond a then a |-> p { remainder = rec (remainder p) } else empty
 
 -- | Returns the current @Path@.
 prefixPaths :: Prefix a -> [Path]

@@ -18,7 +18,7 @@ module Ideas.Common.Strategy.Sequence
    ( -- * Sequence type class
      Sequence(..)
      -- * Firsts type class
-   , Firsts(..), firstsOrdered, firstsTree, stopped
+   , Firsts(..), firstsOrdered, firstsTree
      -- * MenuItem data type with some utility functions
    ) where
 
@@ -45,6 +45,14 @@ class Sequence a where
    sequence :: [a] -> a
    sequence xs = if null xs then done else foldr1 (<*>) xs
  
+instance Sequence b => Sequence (a -> b) where
+   type Sym (a -> b) = Sym b
+   
+   done   = const done
+   single = const . single
+   a ~> f = (a ~>) . f
+   (f <*> g) x = f x <*> g x
+
 ------------------------------------------------------------------------
 -- Firsts type class
 
@@ -69,7 +77,3 @@ firstsTree x = addBranches bs tr
  where
    tr = singleNode x (ready x)
    bs = [ (a, firstsTree y) | (a, y) <- firsts x ]
-
--- | Not ready and no further steps to take.
-stopped :: Firsts s => s -> Bool
-stopped = isEmpty . menu

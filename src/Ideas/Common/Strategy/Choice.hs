@@ -23,7 +23,7 @@ module Ideas.Common.Strategy.Choice
    , elems, bests, bestsOrdered
    , isEmpty, hasDone, getByIndex, cut
      -- * Generalized functions
-   , onMenu, mapWithIndex
+   , onMenu, onMenuWithIndex
    ) where
 
 import Data.Maybe
@@ -60,6 +60,12 @@ instance Choice [a] where
    (>|>)    = (++)
    xs |> ys = if null xs then ys else xs
    choice   = concat
+
+instance Choice b => Choice (a -> b) where
+   empty       = const empty
+   (f <|> g) a = f a <|> g a
+   (f >|> g) a = f a >|> g a
+   (f |> g)  a = f a  |> g a
 
 ------------------------------------------------------------------------
 -- Menu data type
@@ -218,9 +224,9 @@ onMenu f e = rec
    rec Empty     = empty
 
 -- | Maps a function over a menu that also takes the index of an element.
-{-# INLINE mapWithIndex #-}
-mapWithIndex :: Choice b => (Int -> k -> a -> b) -> b -> Menu k a -> b
-mapWithIndex f e = snd . rec 0
+{-# INLINE onMenuWithIndex #-}
+onMenuWithIndex :: Choice b => (Int -> k -> a -> b) -> b -> Menu k a -> b
+onMenuWithIndex f e = snd . rec 0
  where
    rec n (p :|: q) = let (n1, pn) = rec n p
                          (n2, qn) = rec n1 q

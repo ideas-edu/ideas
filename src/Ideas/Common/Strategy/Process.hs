@@ -21,10 +21,10 @@ module Ideas.Common.Strategy.Process
      -- * Building sequences
    , Builder, mapBuilder, toBuilder, fromBuilder
      -- * Query functions on a Process
-   , ready, stopped, firsts
+   , ready, firsts
    , runProcess
      -- * Higher-order functions for iterating over a Process
-   , fold, scan, prune
+   , fold
    ) where
 
 import Ideas.Common.Classes
@@ -93,10 +93,10 @@ mapProcess f = rec
 newtype Builder a = B (Process a -> Process a)
 
 instance Choice (Builder a) where
-   empty    = B (const empty)
-   B f <|> B g = B (\p -> f p <|> g p)
-   B f >|> B g = B (\p -> f p >|> g p)
-   B f  |> B g = B (\p -> f p  |> g p)
+   empty       = B empty
+   B f <|> B g = B (f <|> g)
+   B f >|> B g = B (f >|> g)
+   B f  |> B g = B (f  |> g)
 
 instance Sequence (Builder a) where
    type Sym (Builder a) = a
@@ -124,7 +124,8 @@ fold op e = rec
  where
    rec = onMenu f e . menu
    f a = op a . rec
-      
+    
+{-  
 {-# INLINE scan #-}
 scan :: (s -> a -> [(s, b)]) -> s -> Process a -> Process b
 scan op = rec
@@ -141,4 +142,7 @@ prune f = fold op done
       | not (f a) && stopped np = empty
       | otherwise               = a ~> np
     where
-      np = P (cut (menu p))
+      np = cutProcess p 
+        
+cutProcess :: Process a -> Process a
+cutProcess = P . cut . menu -}

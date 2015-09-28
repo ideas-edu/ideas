@@ -37,7 +37,7 @@ import Ideas.Common.Strategy.Def
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Process
-import Ideas.Common.Strategy.Sequence (firstsOrdered, Sequence(..))
+import Ideas.Common.Strategy.Sequence (Sequence(..))
 import Ideas.Common.Strategy.Step
 import Ideas.Common.View
 import Prelude hiding (sequence)
@@ -171,7 +171,7 @@ derivationList cmpRule s a0 = rec a0 (toPrefix s)
 
    firstsOrd = map f . firstsOrdered cmp
     where
-      cmp = cmpRule `on` (fst . g . fst)
+      cmp = cmpRule `on` (fst . g)
 
       f ((stp, b), new) = (g stp, b, new)
 

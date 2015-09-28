@@ -21,7 +21,8 @@
 
 module Ideas.Common.Strategy.Prefix
    ( -- * Prefix
-     Prefix, noPrefix, makePrefix, Core, runCore, replayCore
+     Prefix, noPrefix, makePrefix, firstsOrdered
+   , Core, runCore, replayCore
    , isEmptyPrefix, majorPrefix, searchModePrefix, prefixPaths
      -- * Path
    , Path, emptyPath, readPath, readPaths
@@ -45,8 +46,8 @@ import Ideas.Common.Utils (splitsWithElem, readM)
 -- Prefix datatype
 
 data Prefix a = Prefix
-   { getPaths    :: [Path]
-   , remainder   :: Menu (Step a, a) (Prefix a)
+   { getPaths  :: [Path]
+   , remainder :: Menu (Step a, a) (Prefix a)
    }
 
 instance Show (Prefix a) where
@@ -59,7 +60,11 @@ instance Monoid (Prefix a) where
 instance Firsts (Prefix a) where
    type Elem (Prefix a) = (Step a, a)
 
-   menu = remainder
+   ready  = hasDone . remainder
+   firsts = bests . remainder
+
+firstsOrdered :: (Step a -> Step a -> Ordering) -> Prefix a -> [((Step a, a), Prefix a)]
+firstsOrdered cmp = bestsOrdered (cmp `on` fst) . remainder
 
 --------------------------------------------------------------------------------
 -- Running Core strategies

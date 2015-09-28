@@ -37,7 +37,7 @@ import Ideas.Common.Strategy.Sequence
 -- | This datatype implements choices and sequences, but is slow for
 -- building sequences with the '<*>' combinator. See the 'Builder' data
 -- type for a faster alternative.
-newtype Process a = P (Menu a (Process a))
+newtype Process a = P { menu :: Menu a (Process a) }
 
 instance Eq a => Eq (Process a) where
    (==) = eqProcessBy (==)
@@ -62,7 +62,8 @@ instance Sequence (Process a) where
 instance Firsts (Process a) where
    type Elem (Process a) = a
 
-   menu (P m) = m
+   ready  = hasDone . menu
+   firsts = bests . menu
 
 -- | Generalized equality of processes, which takes an equality function for
 -- the symbols.

@@ -18,7 +18,7 @@ module Ideas.Common.Strategy.Sequence
    ( -- * Sequence type class
      Sequence(..)
      -- * Firsts type class
-   , Firsts(..), firstsOrdered, firstsTree
+   , Firsts(..), firstsTree
      -- * MenuItem data type with some utility functions
    ) where
 
@@ -61,16 +61,8 @@ class Firsts s where
    type Elem s
    -- | The ready predicate (we are done).
    ready :: s -> Bool
-   ready = hasDone . menu
    -- | The first set.
    firsts :: s -> [(Elem s, s)]
-   firsts = bests . menu
-   -- | The menu offers single steps (with the remainder) and 'done' steps.
-   menu :: s -> Menu (Elem s) s
-
-firstsOrdered :: Firsts s => (Elem s -> Elem s -> Ordering)
-              -> s -> [(Elem s, s)]
-firstsOrdered cmp = bestsOrdered cmp . menu
 
 firstsTree :: Firsts s => s -> DerivationTree (Elem s) s
 firstsTree x = addBranches bs tr

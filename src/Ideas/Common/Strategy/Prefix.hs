@@ -54,7 +54,7 @@ instance Show (Prefix a) where
 
 instance Monoid (Prefix a) where
    mempty = noPrefix
-   mappend (Prefix xs p) (Prefix ys q) = Prefix (xs ++ ys) (p <|> q)
+   mappend (Prefix xs p) (Prefix ys q) = Prefix (xs ++ ys) (p .|. q)
 
 instance Firsts (Prefix a) where
    type Elem (Prefix a) = (Step a, a)
@@ -80,7 +80,7 @@ coreToProcess :: Core a -> Process (Step a)
 coreToProcess = fromBuilder . foldUnwind emptyAlg 
    { fNode  = useDef
    , fLeaf  = single . RuleStep mempty
-   , fLabel = \l p -> Enter l ~> p <*> (Exit l ~> done)
+   , fLabel = \l p -> Enter l ~> p .*. (Exit l ~> done)
    }
    
 --------------------------------------------------------------------------------
@@ -156,7 +156,7 @@ searchModePrefix eq prfx =
    process [] = empty
    process ((st, (a, pr)):xs) =
       (st |-> (a, pr { remainder = rec (remainder pr) })) 
-      <|> process (concatMap (change st) xs)
+      .|. process (concatMap (change st) xs)
 
    change y (st, pair) =
       let f x = not (eq x y)

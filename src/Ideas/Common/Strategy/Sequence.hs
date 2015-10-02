@@ -23,9 +23,8 @@ module Ideas.Common.Strategy.Sequence
    ) where
 
 import Ideas.Common.DerivationTree
-import Ideas.Common.Strategy.Choice
 
-infixr 5 <*>, ~>
+infixr 5 .*., ~>
 
 ------------------------------------------------------------------------
 -- Sequence type class
@@ -37,13 +36,13 @@ class Sequence a where
    -- | Prepend a symbol to a sequence.
    (~>) :: Sym a -> a -> a
    -- | Append two sequences.
-   (<*>) :: a -> a -> a
+   (.*.) :: a -> a -> a
    -- | Singleton sequence.
    single :: Sym a -> a
    single s = s ~> done
    -- | Sequential composition.
    sequence :: [a] -> a
-   sequence xs = if null xs then done else foldr1 (<*>) xs
+   sequence xs = if null xs then done else foldr1 (.*.) xs
  
 instance Sequence b => Sequence (a -> b) where
    type Sym (a -> b) = Sym b
@@ -51,7 +50,7 @@ instance Sequence b => Sequence (a -> b) where
    done   = const done
    single = const . single
    a ~> f = (a ~>) . f
-   (f <*> g) x = f x <*> g x
+   (f .*. g) x = f x .*. g x
 
 ------------------------------------------------------------------------
 -- Firsts type class

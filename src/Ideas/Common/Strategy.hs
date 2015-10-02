@@ -24,13 +24,13 @@ module Ideas.Common.Strategy
    , derivationList
      -- * Strategy combinators
      -- ** Basic combinators
-   , (<*>), (<|>), (<%>), (<@>), (!~>) 
+   , (.*.), (.|.), (.%.), (.@.), (!~>) 
    , succeed, fail, atomic, label, inits
    , sequence, alternatives, interleave, permute
      -- ** EBNF combinators
    , many, many1, replicate, option
      -- ** Negation and greedy combinators
-   , check, not, repeat, repeat1, try, (|>), (>|>), exhaustive
+   , check, not, repeat, repeat1, try, (|>), (./.), exhaustive
    , while, until, multi
      -- ** Graph
    , DependencyGraph, dependencyGraph

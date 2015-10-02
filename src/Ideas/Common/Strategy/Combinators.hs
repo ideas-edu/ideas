@@ -43,30 +43,30 @@ import qualified Prelude
 
 -- Basic combinators --------------------------------------
 
-infixr 2 <%>, <@>
-infixr 3 <|>
-infixr 4 >|>, |>
-infixr 5 <*>, !~>
+infixr 2 .%., .@.
+infixr 3 .|.
+infixr 4 ./., |>
+infixr 5 .*., !~>
 
 -- | Put two strategies in sequence (first do this, then do that)
-(<*>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-s <*> t = toStrategy s Sequence.<*> toStrategy t
+(.*.) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+s .*. t = toStrategy s Sequence..*. toStrategy t
 
 -- | Choose between the two strategies (either do this or do that)
-(<|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-s <|> t = toStrategy s Choice.<|> toStrategy t
+(.|.) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+s .|. t = toStrategy s Choice..|. toStrategy t
 
 -- | Interleave two strategies
-(<%>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<%>) = liftCore2 (node2 interleaveDef)
+(.%.) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+(.%.) = liftCore2 (node2 interleaveDef)
 
 -- | Alternate two strategies
-(<@>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<@>) = liftCore2 (node2 alternateDef)
+(.@.) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+(.@.) = liftCore2 (node2 alternateDef)
 
 -- Prefixing a basic rule to a strategy (see Ask-Elle)
 -- (~>) :: IsStrategy f => Rule a -> f a -> Strategy a
--- a ~> s = a <*> s
+-- a ~> s = a .*. s
 
 -- | Prefixing a basic rule to a strategy atomically
 (!~>) :: IsStrategy f => Rule a -> f a -> Strategy a
@@ -121,12 +121,12 @@ manyCore = node1 manyDef
    
 manyDef :: Def
 manyDef = makeDef1 "many" $
-   let f x = Sequence.done Choice.<|> (x Sequence.<*> f x)
+   let f x = Sequence.done Choice..|. (x Sequence..*. f x)
    in f
 
 -- | Apply a certain strategy at least once (non-greedy)
 many1 :: IsStrategy f => f a -> Strategy a
-many1 s = s <*> many s
+many1 s = s .*. many s
 
 -- | Apply a strategy a certain number of times
 replicate :: IsStrategy f => Int -> f a -> Strategy a
@@ -134,7 +134,7 @@ replicate n = sequence . Prelude.replicate n
 
 -- | Apply a certain strategy or do nothing (non-greedy)
 option :: IsStrategy f => f a -> Strategy a
-option s = s <|> succeed
+option s = s .|. succeed
 
 -- Negation and greedy combinators ----------------------
 
@@ -157,12 +157,12 @@ repeatCore = node1 repeatDef
    
 repeatDef :: Def
 repeatDef = makeDef1 "repeat" $ 
-   let f x = (x Sequence.<*> f x) Choice.|> Sequence.done
+   let f x = (x Sequence..*. f x) Choice.|> Sequence.done
    in f
    
 -- | Apply a certain strategy at least once (greedy version of 'many1')
 repeat1 :: IsStrategy f => f a -> Strategy a
-repeat1 s = s <*> repeat s
+repeat1 s = s .*. repeat s
 
 -- | Apply a certain strategy if this is possible (greedy version of 'option')
 try :: IsStrategy f => f a -> Strategy a
@@ -170,18 +170,18 @@ try s = s |> succeed
 
 -- | Choose between the two strategies, with a preference for steps from the
 -- left hand-side strategy.
-(>|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-s >|> t = toStrategy s Choice.>|> toStrategy t
+(./.) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+s ./. t = toStrategy s Choice../. toStrategy t
 
 -- | Left-biased choice: if the left-operand strategy can be applied, do so. Otherwise,
 --   try the right-operand strategy
 (|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
 s |> t = toStrategy s Choice.|> toStrategy t
--- s |> t = s <|> (not s <*> t)
+-- s |> t = s <|> (not s .*. t)
 
 -- | Repeat the strategy as long as the predicate holds
 while :: IsStrategy f => (a -> Bool) -> f a -> Strategy a
-while p s = repeat (check p <*> s)
+while p s = repeat (check p .*. s)
 
 -- | Repeat the strategy until the predicate holds
 until :: IsStrategy f => (a -> Bool) -> f a -> Strategy a
@@ -248,4 +248,4 @@ dependencyGraph (graph, vertex2data, _) = g2s []
             where
                reachables      = filter isReachable $ vertices graph \\ seen
                isReachable     = null . (\\ seen) . (graph!)
-               makePath vertex = (fst3 . vertex2data) vertex <*> g2s (vertex:seen)
+               makePath vertex = (fst3 . vertex2data) vertex .*. g2s (vertex:seen)

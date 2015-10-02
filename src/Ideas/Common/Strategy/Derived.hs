@@ -53,7 +53,7 @@ split2 op1 op2 = useFirst f
 (!*>) :: AtomicSymbol a => Builder a -> Builder a -> Builder a
 a !*> p = split op (atomic a) (fromBuilder p)
  where
-   op b q = atomic (a <*> b) <*> toBuilder q
+   op b q = atomic (a .*. b) .*. toBuilder q
 
 filterP :: (a -> Bool) -> Process a -> Process a
 filterP cond = fold (\a q -> if cond a then a ~> q else empty) done
@@ -68,7 +68,7 @@ class Eq a => LabelSymbol a where
    isEnter :: a -> Bool
 
 atomic :: AtomicSymbol a => Builder a -> Builder a
-atomic p = atomicOpen ~> (p <*> single atomicClose)
+atomic p = atomicOpen ~> (p .*. single atomicClose)
 
 interleave :: (AtomicSymbol a, LabelSymbol a) => [Builder a] -> Builder a
 interleave xs = if null xs then done else foldr1 (<%>) xs
@@ -79,7 +79,7 @@ interleave xs = if null xs then done else foldr1 (<%>) xs
 concurrent :: AtomicSymbol a => (a -> Bool) -> Builder a -> Builder a -> Builder a
 concurrent switch x y = normal (fromBuilder x) (fromBuilder y)
  where
-   normal p q = stepBoth q p <|> (stepRight q p <|> stepRight p q)
+   normal p q = stepBoth q p .|. (stepRight q p .|. stepRight p q)
 
    stepBoth  = useFirst stop2 . useFirst stop2 done
    stop2 _ _ = empty
@@ -89,13 +89,13 @@ concurrent switch x y = normal (fromBuilder x) (fromBuilder y)
       op1 a q2
          | switch a  = a ~> normal p q2
          | otherwise = a ~> stepRight p q2
-      op2 q1 q2 = q1 <*> normal p q2
+      op2 q1 q2 = q1 .*. normal p q2
 
 -- | Allows all permutations of the list
 permute :: (Choice a, Sequence a) => [a] -> a
 permute as
    | null as   = done
-   | otherwise = choice [ s <*> permute ys | (s, ys) <- pickOne as ]
+   | otherwise = choice [ s .*. permute ys | (s, ys) <- pickOne as ]
  where
    pickOne :: [a] -> [(a, [a])]
    pickOne []     = []
@@ -105,14 +105,14 @@ permute as
 (<@>) :: AtomicSymbol a => Builder a -> Builder a -> Builder a
 p0 <@> q0 = rec (fromBuilder q0) (fromBuilder p0)
  where
-   rec q  = let op b r = b <*> rec r q
+   rec q  = let op b r = b .*. rec r q
             in split op (bothOk q)
    bothOk = useFirst (\_ _ -> empty) done
 
 inits :: AtomicSymbol a => Builder a -> Builder a
 inits = rec . fromBuilder
  where
-   rec p = done <|> split op empty p
-   op x  = (x <*>) . rec
+   rec p = done .|. split op empty p
+   op x  = (x .*.) . rec
 
 ---------------------------------------------------------------------------

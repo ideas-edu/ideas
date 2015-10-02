@@ -57,16 +57,16 @@ instance Apply Strategy where
 
 instance Choice (Strategy a) where
    empty = fromCore (node0 failDef)
-   (<|>) = liftCore2 (node2 choiceDef)
+   (.|.) = liftCore2 (node2 choiceDef)
    (|>)  = liftCore2 (node2 orelseDef)
-   (>|>) = liftCore2 (node2 preferenceDef)
+   (./.) = liftCore2 (node2 preferenceDef)
 
 instance Sequence (Strategy a) where
    type Sym (Strategy a) = Rule a
 
    done  = fromCore (node0 succeedDef)
    (~>)  = liftCore2 (node2 sequenceDef)
-   (<*>) = liftCore2 (node2 sequenceDef)
+   (.*.) = liftCore2 (node2 sequenceDef)
 
 succeedDef :: Def
 succeedDef = makeDef "succeed" (const done)
@@ -199,8 +199,8 @@ mapRulesS f = S . fmap f . toCore
 cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
 cleanUpStrategy f (LS n s) = cleanUpStrategyAfter f (LS n t)
  where
-   t     = doAfter f (idRule ()) <*> s
-   (<*>) = liftCore2 (node2 sequenceDef)
+   t      = doAfter f (idRule ()) .**. s
+   (.**.) = liftCore2 (node2 sequenceDef)
 
 -- | Use a function as do-after hook for all rules in a labeled strategy
 cleanUpStrategyAfter :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a

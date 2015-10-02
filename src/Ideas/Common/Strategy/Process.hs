@@ -35,7 +35,7 @@ import Ideas.Common.Strategy.Sequence
 -- Process data type
 
 -- | This datatype implements choices and sequences, but is slow for
--- building sequences with the '<*>' combinator. See the 'Builder' data
+-- building sequences with the '.*.' combinator. See the 'Builder' data
 -- type for a faster alternative.
 newtype Process a = P { menu :: Menu a (Process a) }
 
@@ -44,8 +44,8 @@ instance Eq a => Eq (Process a) where
 
 instance Choice (Process a) where
    empty   = P empty
-   x <|> y = P (menu x <|> menu y)
-   x >|> y = P (menu x >|> menu y)
+   x .|. y = P (menu x .|. menu y)
+   x ./. y = P (menu x ./. menu y)
    x  |> y = P (menu x  |> menu y)
 
 instance Sequence (Process a) where
@@ -54,7 +54,7 @@ instance Sequence (Process a) where
    done   = P doneMenu
    a ~> p = P (a |-> p)
    
-   p0 <*> P rest = rec p0
+   p0 .*. P rest = rec p0
     where
       rec   = P . onMenu f rest . menu
       f a p = a |-> rec p
@@ -95,8 +95,8 @@ newtype Builder a = B (Process a -> Process a)
 
 instance Choice (Builder a) where
    empty       = B empty
-   B f <|> B g = B (f <|> g)
-   B f >|> B g = B (f >|> g)
+   B f .|. B g = B (f .|. g)
+   B f ./. B g = B (f ./. g)
    B f  |> B g = B (f  |> g)
 
 instance Sequence (Builder a) where
@@ -104,13 +104,13 @@ instance Sequence (Builder a) where
 
    done        = B id
    a ~> B f    = B ((a ~>) . f)
-   B f <*> B g = B (f . g)
+   B f .*. B g = B (f . g)
 
 mapBuilder :: (a -> a) -> Builder a -> Builder a
 mapBuilder f (B g) = B (mapProcess f . g)
 
 toBuilder :: Process a -> Builder a
-toBuilder p = B (p <*>)
+toBuilder p = B (p .*.)
 
 fromBuilder :: Builder a -> Process a
 fromBuilder (B f) = f done

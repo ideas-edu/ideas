@@ -42,11 +42,11 @@ data Visit = VisitFirst | VisitOne | VisitSome | VisitAll | VisitMany
 visit :: (IsStrategy f, IsStrategy g) => Visit -> f a -> g a -> Strategy a
 visit v next s = fix $ \a ->
    case v of
-      VisitFirst -> s  |> next <*> a
-      VisitOne   -> s <|> next <*> a
-      VisitSome  -> s <*> try (next <*> visit VisitMany next s) <|> next <*> a
-      VisitAll   -> s <*> (not next |> (next <*> a))
-      VisitMany  -> try s <*> (not next |> (next <*> a))
+      VisitFirst -> s  |> next .*. a
+      VisitOne   -> s .|. next .*. a
+      VisitSome  -> s .*. try (next .*. visit VisitMany next s) .|. next .*. a
+      VisitAll   -> s .*. (not next |> (next .*. a))
+      VisitMany  -> try s .*. (not next |> (next .*. a))
 
 ----------------------------------------------------------------------
 -- Parameterized traversals
@@ -56,7 +56,7 @@ layer = layerWith . fromOptions
 
 layerWith :: (IsStrategy f, Navigator a) => Info a -> f a -> Strategy a
 layerWith tr s =
-   goDown <*> findOk <*> visit (getVisit tr) (next <*> findOk) s <*> try ruleUp
+   goDown .*. findOk .*. visit (getVisit tr) (next .*. findOk) s .*. try ruleUp
  where
    (next, goDown)
       | getReversed tr = (ruleLeft, ruleDownLast)
@@ -65,7 +65,7 @@ layerWith tr s =
    findOk =
       case getFilters tr of
          [] -> succeed
-         ps -> fix $ \a -> check (\x -> all ($ x) ps) |> (next <*> a)
+         ps -> fix $ \a -> check (\x -> all ($ x) ps) |> (next .*. a)
 
 traverse :: (IsStrategy f, Navigator a) => [Option a] -> f a -> Strategy a
 traverse = traverseWith . fromOptions
@@ -75,15 +75,15 @@ traverseWith tr s =
    fix $ \a ->
    case getCombinator tr of
       Sequence
-         | getTopDown tr -> s <*> (descend a <|> check isLeaf)
-         | otherwise     -> (descend a <|> check isLeaf) <*> s
+         | getTopDown tr -> s .*. (descend a .|. check isLeaf)
+         | otherwise     -> (descend a .|. check isLeaf) .*. s
       OrElse
          | getTopDown tr -> s |> descend a
          | otherwise     -> descend a |> s
       Prefer
-         | getTopDown tr -> s >|> descend a
-         | otherwise     -> descend a >|> s
-      Choice             -> s <|> descend a
+         | getTopDown tr -> s ./. descend a
+         | otherwise     -> descend a ./. s
+      Choice             -> s .|. descend a
  where
    descend = layerWith tr
 
@@ -173,7 +173,7 @@ somewhere = traverse []
 -- as long as the predicate does not hold, go to the next layer
 somewhereWhen :: (IsStrategy g, Navigator a) => (a -> Bool) -> g a -> Strategy a
 somewhereWhen p s = fix $ \this -> 
-   check p <*> s <|> check (Prelude.not . p) <*> layer [] this
+   check p .*. s .|. check (Prelude.not . p) .*. layer [] this
 
 ----------------------------------------------------------------------
 -- fixpoint traverses

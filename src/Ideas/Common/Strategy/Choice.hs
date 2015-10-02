@@ -28,7 +28,7 @@ module Ideas.Common.Strategy.Choice
 
 import Data.Maybe
 
-infixr 3 <|>, >|>, |>, :|:, :>|, :|>
+infixr 3 .|., ./., |>, :|:, :/:, :|>
 infixr 5 |->, :->
 
 ------------------------------------------------------------------------
@@ -40,9 +40,9 @@ class Choice a where
    -- | Nothing to choose from.
    empty :: a
    -- | Normal (unbiased) choice.
-   (<|>) :: a -> a -> a
+   (.|.) :: a -> a -> a
    -- | Left-preference.
-   (>|>) :: a -> a -> a
+   (./.) :: a -> a -> a
    -- | Left-biased choice.
    (|>) :: a -> a -> a
    -- | One of the alternatives in a list (unbiased).
@@ -50,21 +50,21 @@ class Choice a where
    preference :: [a] -> a
    orelse     :: [a] -> a
    -- default implementation
-   choice     xs = if null xs then empty else foldr1 (<|>) xs
-   preference xs = if null xs then empty else foldr1 (>|>) xs
+   choice     xs = if null xs then empty else foldr1 (.|.) xs
+   preference xs = if null xs then empty else foldr1 (./.) xs
    orelse     xs = if null xs then empty else foldr1 (|>)  xs
 
 instance Choice [a] where
    empty    = []
-   (<|>)    = (++)
-   (>|>)    = (++)
+   (.|.)    = (++)
+   (./.)    = (++)
    xs |> ys = if null xs then ys else xs
    choice   = concat
 
 instance Choice b => Choice (a -> b) where
    empty       = const empty
-   (f <|> g) a = f a <|> g a
-   (f >|> g) a = f a >|> g a
+   (f .|. g) a = f a .|. g a
+   (f ./. g) a = f a ./. g a
    (f |> g)  a = f a  |> g a
 
 ------------------------------------------------------------------------
@@ -80,7 +80,7 @@ data Menu k a = k :-> a
               | Done
               | Empty
               | Menu k a :|: Menu k a
-              | Menu k a :>| Menu k a -- left-preference
+              | Menu k a :/: Menu k a -- left-preference
               | Menu k a :|> Menu k a -- left-biased
 
 instance (Eq k, Eq a) => Eq (Menu k a) where
@@ -89,7 +89,7 @@ instance (Eq k, Eq a) => Eq (Menu k a) where
 instance Choice (Menu k a) where
    empty  = Empty
 
-   p0 <|> rest = rec p0 -- maintain invariant
+   p0 .|. rest = rec p0 -- maintain invariant
     where
      rec Empty     = rest
      rec (p :|: q) = p :|: rec q
@@ -97,11 +97,11 @@ instance Choice (Menu k a) where
                         Empty -> p
                         _     -> p :|: rest
 
-   p0 >|> rest = rec p0 -- maintain invariant
+   p0 ./. rest = rec p0 -- maintain invariant
     where
      rec Empty     = rest
-     rec (p :>| q) = p :>| rec q
-     rec p         = p :>| rest
+     rec (p :/: q) = p :/: rec q
+     rec p         = p :/: rest
 
    p0 |> rest = rec p0 -- maintain invariant
     where
@@ -113,7 +113,7 @@ instance Functor (Menu k) where
    fmap f = rec 
     where
       rec (p :|: q) = rec p :|: rec q
-      rec (p :>| q) = rec p :>| rec q
+      rec (p :/: q) = rec p :/: rec q
       rec (p :|> q) = rec p :|> rec q
       rec (k :-> a) = k :-> f a
       rec Done      = Done
@@ -127,7 +127,7 @@ doneMenu = Done
 
 hasDone :: Menu k a -> Bool
 hasDone (p :|: q) = hasDone p || hasDone q
-hasDone (p :>| q) = hasDone p || hasDone q
+hasDone (p :/: q) = hasDone p || hasDone q
 hasDone (p :|> _) = hasDone p
 hasDone (_ :-> _) = False
 hasDone Done      = True
@@ -138,14 +138,14 @@ eqMenuBy :: (k -> k -> Bool) -> (a -> a -> Bool) -> Menu k a -> Menu k a -> Bool
 eqMenuBy eqK eqA = test
  where
    test (p1 :|: p2) (q1 :|: q2) = test p1 q1 && test p2 q2
-   test (p1 :>| p2) (q1 :>| q2) = test p1 q1 && test p2 q2
+   test (p1 :/: p2) (q1 :/: q2) = test p1 q1 && test p2 q2
    test (p1 :|> p2) (q1 :|> q2) = test p1 q1 && test p2 q2
    test (k1 :-> a1) (k2 :-> a2) = eqK k1 k2 && eqA a1 a2
    test Done        Done        = True
    test Empty       Empty       = True
-   test (p :>| Empty) q = test p q
+   test (p :/: Empty) q = test p q
    test (p :|> Empty) q = test p q
-   test p (q :>| Empty) = test p q
+   test p (q :/: Empty) = test p q
    test p (q :|> Empty) = test p q
    test _ _ = False
 
@@ -157,7 +157,7 @@ elems :: Menu k a -> [(k, a)]
 elems = ($ []) . rec
  where
    rec (p :|: q) = rec p . rec q
-   rec (p :>| q) = rec p . rec q
+   rec (p :/: q) = rec p . rec q
    rec (p :|> q) = rec p . rec q
    rec (k :-> a) = ((k, a):)
    rec Done      = id
@@ -184,7 +184,7 @@ bestsWith:: ([(k, a)] -> [(k, a)] -> [(k, a)]) -> Menu k a -> [(k, a)]
 bestsWith f = rec
  where
    rec (p :|: q) = f (rec p) (rec q)
-   rec (p :>| q) = rec p ++ rec q
+   rec (p :/: q) = rec p ++ rec q
    rec (p :|> _) = rec p
    rec (k :-> a) = [(k, a)]
    rec Done      = []
@@ -201,8 +201,8 @@ getByIndex n = listToMaybe . drop n . elems
 
 -- | Only keep the best elements in the menu.
 cut :: Menu k a -> Menu k a
-cut (p :|: q) = cut p <|> cut q
-cut (p :>| q) = cut p >|> cut q
+cut (p :|: q) = cut p .|. cut q
+cut (p :/: q) = cut p ./. cut q
 cut (p :|> _) = cut p
 cut (k :-> a) = k |-> a
 cut Done      = doneMenu
@@ -216,8 +216,8 @@ cut Empty     = empty
 onMenu :: Choice b => (k -> a -> b) -> b -> Menu k a -> b
 onMenu f e = rec
  where
-   rec (p :|: q) = rec p <|> rec q
-   rec (p :>| q) = rec p >|> rec q
+   rec (p :|: q) = rec p .|. rec q
+   rec (p :/: q) = rec p ./. rec q
    rec (p :|> q) = rec p  |> rec q
    rec (k :-> a) = f k a
    rec Done      = e
@@ -230,10 +230,10 @@ onMenuWithIndex f e = snd . rec 0
  where
    rec n (p :|: q) = let (n1, pn) = rec n p
                          (n2, qn) = rec n1 q
-                     in (n2, pn <|> qn)
-   rec n (p :>| q) = let (n1, pn) = rec n p
+                     in (n2, pn .|. qn)
+   rec n (p :/: q) = let (n1, pn) = rec n p
                          (n2, qn) = rec n1 q
-                     in (n2, pn >|> qn)
+                     in (n2, pn ./. qn)
    rec n (p :|> q) = let (n1, pn) = rec n p
                          (n2, qn) = rec n1 q
                      in (n2, pn |> qn)

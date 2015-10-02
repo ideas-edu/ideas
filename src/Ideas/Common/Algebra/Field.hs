@@ -39,49 +39,49 @@ import qualified Control.Applicative as A
 --------------------------------------------------------
 -- Semi-ring
 
-infixl 6 <+>
-infixl 7 <*>
+infixl 6 |+|
+infixl 7 |*|
 
 class SemiRing a where
    -- additive
-   (<+>) :: a -> a -> a
+   (|+|) :: a -> a -> a
    zero  :: a
    sum   :: [a] -> a
    -- multiplicative
-   (<*>)   :: a -> a -> a
+   (|*|)   :: a -> a -> a
    one     :: a
    product :: [a] -> a
    -- default implementation
    sum     [] = zero
-   sum     xs = foldl1 (<+>) xs
+   sum     xs = foldl1 (|+|) xs
    product [] = one
-   product xs = foldl1 (<*>) xs
+   product xs = foldl1 (|*|) xs
 
 --------------------------------------------------------
 -- Ring
 
-infixl 6 <->
+infixl 6 |-|
 
 -- Minimal complete definition: plusInverse or <->
 class SemiRing a => Ring a where
    plusInverse :: a -> a
-   (<->)       :: a -> a -> a
+   (|-|)       :: a -> a -> a
    -- default definitions
-   plusInverse = (zero <->)
-   a <-> b     = a <+> plusInverse b
+   plusInverse = (zero |-|)
+   a |-| b     = a |+| plusInverse b
 
 --------------------------------------------------------
 -- Field
 
-infixl 7 </>
+infixl 7 |/|
 
 -- Minimal complete definition: mulInverse or </>
 class Ring a => Field a where
    timesInverse :: a -> a
-   (</>)        :: a -> a -> a
+   (|/|)        :: a -> a -> a
    -- default definitions
-   timesInverse = (one </>)
-   a </> b      = a <*> timesInverse b
+   timesInverse = (one |/|)
+   a |/| b      = a |*| timesInverse b
 
 --------------------------------------------------------
 -- Additive monoid
@@ -98,11 +98,11 @@ instance A.Applicative Additive where
 
 instance SemiRing a => Monoid (Additive a) where
    mempty  = A.pure zero
-   mappend = A.liftA2 (<+>)
+   mappend = A.liftA2 (|+|)
 
 instance Ring a => Group (Additive a) where
    inverse   = A.liftA plusInverse
-   appendInv = A.liftA2 (<->)
+   appendInv = A.liftA2 (|-|)
 
 --------------------------------------------------------
 -- Multiplicative monoid
@@ -119,11 +119,11 @@ instance A.Applicative Multiplicative where
 
 instance SemiRing a => Monoid (Multiplicative a) where
    mempty  = A.pure one
-   mappend = A.liftA2 (<*>)
+   mappend = A.liftA2 (|*|)
 
 instance Field a => Group (Multiplicative a) where
    inverse   = A.liftA timesInverse
-   appendInv = A.liftA2 (</>)
+   appendInv = A.liftA2 (|/|)
 
 instance SemiRing a => MonoidZero (Multiplicative a) where
    mzero = Multiplicative zero
@@ -178,18 +178,18 @@ instance (Eq a, Fractional a) => Fractional (SafeNum a) where
    fromRational = return . fromRational
 
 instance Num a => SemiRing (SafeNum a) where
-   (<+>) = (+)
-   (<*>) = (*)
+   (|+|) = (+)
+   (|*|) = (*)
    zero  = 0
    one   = 1
 
 instance Num a => Ring (SafeNum a) where
    plusInverse = negate
-   (<->)       = (-)
+   (|-|)       = (-)
 
 instance (Eq a, Fractional a) => Field (SafeNum a) where
    timesInverse = recip
-   (</>)        = (/)
+   (|/|)        = (/)
 
 safeDivisor :: (Eq a, Num a) => SafeNum a -> SafeNum a
 safeDivisor m = m >>= \a ->

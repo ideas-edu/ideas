@@ -20,7 +20,7 @@ module Ideas.Encoding.DecoderXML
 
 import Control.Monad
 import Data.Char
-import Ideas.Common.Library hiding ((<|>))
+import Ideas.Common.Library
 import Ideas.Common.Traversal.Navigator
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.OpenMathSupport

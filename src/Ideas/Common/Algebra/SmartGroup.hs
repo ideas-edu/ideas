@@ -25,9 +25,8 @@ import Control.Applicative
 import Control.Monad (mplus)
 import Data.Maybe
 import Ideas.Common.Algebra.Boolean
-import Ideas.Common.Algebra.Field hiding ((<*>))
+import Ideas.Common.Algebra.Field
 import Ideas.Common.Algebra.Group
-import qualified Ideas.Common.Algebra.Field as Field
 
 newtype Smart a = Smart {fromSmart :: a}
    deriving (Show, Eq, Ord, CoMonoid, MonoidZero, CoMonoidZero)
@@ -121,22 +120,22 @@ instance Applicative SmartField where
 instance (CoField a, Field a) => SemiRing (SmartField a) where
    zero = SmartField zero
    one  = SmartField one
-   SmartField a <+> SmartField b = SmartField $ fromAdditive $ fromSmartGroup $
+   SmartField a |+| SmartField b = SmartField $ fromAdditive $ fromSmartGroup $
       SmartGroup (Additive a) <> SmartGroup (Additive b)
-   a <*> b
-      | Just x <- isNegate a = plusInverse (x Field.<*> b)
-      | Just x <- isNegate b = plusInverse (a Field.<*> x)
+   a |*| b
+      | Just x <- isNegate a = plusInverse (x |*| b)
+      | Just x <- isNegate b = plusInverse (a |*| x)
       | isZero a || isZero b = zero
       | isOne a = b
       | isOne b = a
-      | Just (x, y) <- isTimes b = (a Field.<*> x) Field.<*> y
-      | Just (x, y) <- isDivision b = (a Field.<*> x) </> y
-      | otherwise = liftA2 (Field.<*>) a b
+      | Just (x, y) <- isTimes b = (a |*| x) |*| y
+      | Just (x, y) <- isDivision b = (a |*| x) |/| y
+      | otherwise = liftA2 (|*|) a b
 
 instance (CoField a, Field a) => Ring (SmartField a) where
    plusInverse = SmartField . fromAdditive . fromSmartGroup . inverse
                . SmartGroup . Additive . fromSmartField
-   SmartField a <-> SmartField b = SmartField $ fromAdditive $ fromSmartGroup $
+   SmartField a |-| SmartField b = SmartField $ fromAdditive $ fromSmartGroup $
       SmartGroup (Additive a) <>- SmartGroup (Additive b)
 
 instance (CoField a, Field a) => Field (SmartField a) where
@@ -144,12 +143,12 @@ instance (CoField a, Field a) => Field (SmartField a) where
       | Just x <- isNegate a = plusInverse (timesInverse x)
       | Just (x, y) <- isDivision a, isOne y = x
       | otherwise = liftA timesInverse a
-   a </> b
-      | Just x <- isNegate a = plusInverse (x </> b)
-      | Just x <- isNegate b = plusInverse (a </> x)
+   a |/| b
+      | Just x <- isNegate a = plusInverse (x |/| b)
+      | Just x <- isNegate b = plusInverse (a |/| x)
       | isOne b = a
-      | Just (x, y) <- isDivision a = x </> (y Field.<*> b)
-      | otherwise = liftA2 (</>) a b
+      | Just (x, y) <- isDivision a = x |/| (y |*| b)
+      | otherwise = liftA2 (|/|) a b
 
 ------------------------------------------------------------------
 
@@ -157,19 +156,19 @@ infixl 7 .*., ./.
 infixl 6 .-., .+.
 
 (.+.) :: (CoField a, Field a) => a -> a -> a
-a .+. b = fromSmartField $ SmartField a <+> SmartField b
+a .+. b = fromSmartField $ SmartField a |+| SmartField b
 
 (.-.) :: (CoField a, Field a) => a -> a -> a
-a .-. b = fromSmartField $ SmartField a <-> SmartField b
+a .-. b = fromSmartField $ SmartField a |-| SmartField b
 
 neg :: (CoField a, Field a) => a -> a
 neg = fromSmartField . plusInverse . SmartField
 
 (.*.) :: (CoField a, Field a) => a -> a -> a
-a .*. b = fromSmartField $ SmartField a Field.<*> SmartField b
+a .*. b = fromSmartField $ SmartField a |*| SmartField b
 
 (./.) :: (CoField a, Field a) => a -> a -> a
-a ./. b = fromSmartField $ SmartField a </> SmartField b
+a ./. b = fromSmartField $ SmartField a |/| SmartField b
 
 -- myrecip :: (CoField a, Field a) => a -> a
 -- myrecip = fromSmartField . timesInverse . SmartField

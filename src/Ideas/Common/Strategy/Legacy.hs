@@ -15,7 +15,7 @@
 
 module Ideas.Common.Strategy.Legacy where
 
-import Prelude hiding ((<*>))
+import qualified Prelude
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Combinators
 

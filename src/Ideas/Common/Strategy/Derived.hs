@@ -21,6 +21,7 @@ module Ideas.Common.Strategy.Derived
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence
+import Ideas.Common.Strategy.Step
 
 useFirst :: Choice b => (a -> Process a -> b) -> b -> Process a -> b
 useFirst op e = onMenu op e . menu
@@ -61,12 +62,6 @@ filterP cond = fold (\a q -> if cond a then a ~> q else empty) done
 hide :: (a -> Bool) -> Process a -> Process a
 hide cond = fold (\a q -> if cond a then a ~> q else q) done
 
-class Eq a => AtomicSymbol a where
-   atomicOpen, atomicClose :: a
-
-class Eq a => LabelSymbol a where
-   isEnter :: a -> Bool
-
 atomic :: AtomicSymbol a => Builder a -> Builder a
 atomic p = atomicOpen ~> (p .*. single atomicClose)
 
@@ -74,7 +69,7 @@ interleave :: (AtomicSymbol a, LabelSymbol a) => [Builder a] -> Builder a
 interleave xs = if null xs then done else foldr1 (<%>) xs
 
 (<%>) :: (AtomicSymbol a, LabelSymbol a) => Builder a -> Builder a -> Builder a
-(<%>) = concurrent (not . isEnter)
+(<%>) = concurrent (not . isEnterSymbol)
 
 concurrent :: AtomicSymbol a => (a -> Bool) -> Builder a -> Builder a -> Builder a
 concurrent switch x y = normal (fromBuilder x) (fromBuilder y)

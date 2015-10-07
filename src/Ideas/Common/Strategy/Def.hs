@@ -24,8 +24,8 @@ module Ideas.Common.Strategy.Def
    ) where
 
 import Ideas.Common.Id
+import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
-import Ideas.Common.Strategy.Step
 import Ideas.Common.Strategy.Process
 import Prelude hiding (sequence)
 
@@ -33,31 +33,31 @@ data Def = Def
    { defId         :: Id 
    , isAssociative :: Bool 
    , isProperty    :: Bool
-   , useDef        :: forall a . [Builder (Step a)] -> Builder (Step a)
+   , useDef        :: forall a . [Builder (Rule a)] -> Builder (Rule a)
    }
 
 instance Show Def where
    show = showId
 
-makeDef :: IsId n => n -> (forall a . [Builder (Step a)] -> Builder (Step a)) -> Def
+makeDef :: IsId n => n -> (forall a . [Builder (Rule a)] -> Builder (Rule a)) -> Def
 makeDef n = Def (newId n) False False
 
-makeDef1 :: IsId n => n -> (forall a . Builder (Step a) -> Builder (Step a)) -> Def
+makeDef1 :: IsId n => n -> (forall a . Builder (Rule a) -> Builder (Rule a)) -> Def
 makeDef1 n f = makeDef n $ \xs -> 
    case xs of
       [a] -> f a
       _   -> empty
 
-makeDef2 :: IsId n => n -> (forall a . Builder (Step a) -> Builder (Step a) -> Builder (Step a)) -> Def
+makeDef2 :: IsId n => n -> (forall a . Builder (Rule a) -> Builder (Rule a) -> Builder (Rule a)) -> Def
 makeDef2 n f = makeDef n $ \xs -> 
    case xs of
       [a, b] -> f a b
       _      -> empty
 
-associativeDef :: IsId n => n -> (forall a . [Builder (Step a)] -> Builder (Step a)) -> Def
+associativeDef :: IsId n => n -> (forall a . [Builder (Rule a)] -> Builder (Rule a)) -> Def
 associativeDef n f = (makeDef n f) { isAssociative = True }
 
-propertyDef :: IsId n => n -> (forall a . Builder (Step a) -> Builder (Step a)) -> Def
+propertyDef :: IsId n => n -> (forall a . Builder (Rule a) -> Builder (Rule a)) -> Def
 propertyDef n f = (makeDef1 n f) { isProperty = True }
 
 instance Eq Def where

@@ -311,7 +311,7 @@ microstepsS :: Service
 microstepsS = makeService "meta.microsteps" "Next (minor) steps." $
    (map f . microsteps) ::: tState .-> tList (tPair (tTuple3 tRule tLocation tEnvironment) tState)
  where
-   f ((s, ctx), st) = ((stepRule s, location ctx, stepEnvironment s), st)
+   f ((s, ctx, env), st) = ((s, location ctx, env), st)
 
 examplederivationsS :: Service
 examplederivationsS = makeService "meta.examplederivations"

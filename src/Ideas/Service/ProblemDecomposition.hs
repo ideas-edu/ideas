@@ -19,6 +19,7 @@ module Ideas.Service.ProblemDecomposition
 import Data.Maybe
 import Ideas.Common.Library
 import Ideas.Common.Utils (fst3)
+import Ideas.Common.Strategy.Step
 import Ideas.Service.State
 import Ideas.Service.Types
 
@@ -64,20 +65,22 @@ problemDecomposition msloc state maybeAnswer
       | otherwise           = statePrefix state
 
 -- | Continue with a prefix until a certain strategy location is reached.
-runPrefixLocation :: Id -> Prefix a -> [(a, [Step a], Prefix a)]
+runPrefixLocation :: Id -> Prefix a -> [(a, [(Rule a, Environment)], Prefix a)]
 runPrefixLocation loc = rec []
  where
    rec acc p = do
-      ((st, a), q) <- firsts p
-      if isLoc st then return (a, reverse (st:acc), q)
-                  else rec (st:acc) q
+      ((st, a, env), q) <- firsts p
+      if isLoc st then return (a, reverse ((st, env):acc), q)
+                  else rec ((st, env):acc) q
+    
+   isLoc r = 
+      case (isEnterRule r, isExitRule r) of
+         (Just _, _) -> False
+         (_, Just l) -> l == loc
+         _           -> getId r == loc
 
-   isLoc (Exit l)       = l       == loc
-   isLoc (RuleStep _ r) = getId r == loc
-   isLoc _ = False
-
-firstMajorInSteps :: [Step a] -> Maybe (Id, Environment)
-firstMajorInSteps (RuleStep env r:_) | isMajor r = Just (getId r, env)
+firstMajorInSteps :: [(Rule a, Environment)] -> Maybe (Id, Environment)
+firstMajorInSteps ((r, env):_) | isMajor r = Just (getId r, env)
 firstMajorInSteps (_:xs) = firstMajorInSteps xs
 firstMajorInSteps []     = Nothing
 
@@ -85,11 +88,12 @@ nextMajorForPrefix :: Prefix a -> Maybe Id
 nextMajorForPrefix = listToMaybe . rec
  where
    rec prfx = do
-      ((st, _), p) <- firsts prfx
-      case st of
-         Enter l -> [l]
-         RuleStep _ r | isMajor r -> [getId r]
-         _ -> rec p
+      ((r, _, _), p) <- firsts prfx
+      case isEnterRule r of
+         Just l -> [l]
+         Nothing 
+            | isMajor r -> [getId r]
+            | otherwise -> rec p
 
 ------------------------------------------------------------------------
 -- Data types for replies

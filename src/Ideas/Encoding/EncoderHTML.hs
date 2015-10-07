@@ -21,6 +21,7 @@ import Data.List
 import Data.Maybe
 import Data.Ord
 import Ideas.Common.Library hiding (alternatives)
+import Ideas.Common.Strategy.Step
 import Ideas.Common.Utils
 import Ideas.Common.Utils.TestSuite
 import Ideas.Encoding.Encoder
@@ -531,11 +532,13 @@ encodePrefix st =
       ctx = stateContext st
       prSteps = fst $ replayPath path (strategy ex) ctx
 
-htmlStep :: Step a -> HTMLBuilder
-htmlStep (Enter l)      = spanClass "step-enter" $ string $ "enter " ++ show l
-htmlStep (Exit  l)      = spanClass "step-exit"  $ string $ "exit " ++ show l
-htmlStep (RuleStep _ r) = let s = if isMinor r then "minor" else "major"
-                          in spanClass ("step-"++s) $ string $ showId r
+htmlStep :: Rule a -> HTMLBuilder
+htmlStep r = 
+   case (isEnterRule r, isExitRule r) of
+      (Just l, _) -> spanClass "step-enter" $ string $ "enter " ++ show l
+      (_, Just l) -> spanClass "step-exit"  $ string $ "exit " ++ show l
+      _ -> let s = if isMinor r then "minor" else "major"
+           in spanClass ("step-"++s) $ string $ showId r
 
 htmlDerivationWith :: HTMLBuilder -> (s -> HTMLBuilder) -> (t -> HTMLBuilder) -> Derivation s t -> HTMLBuilder
 htmlDerivationWith before forStep forTerm d =

@@ -28,7 +28,6 @@ import Ideas.Common.Strategy.Configuration
 import Ideas.Common.CyclicTree hiding (label)
 import Ideas.Common.Strategy.Def
 import Ideas.Common.Strategy.Prefix
-import Ideas.Common.Strategy.Step
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Utils (fst3)
 import Prelude hiding (not, repeat, fail, sequence)
@@ -213,7 +212,7 @@ hide = liftCore hideCore
 
 notDef :: Def
 notDef = makeDef1 "not" $ \x -> 
-   Sequence.single $ RuleStep mempty $ checkRule "core.not" $ null . runProcess (fromBuilder x)
+   Sequence.single $ checkRule "core.not" $ null . runProcess (fromBuilder x)
 
 interleaveDef :: Def
 interleaveDef = associativeDef "interleave" Derived.interleave

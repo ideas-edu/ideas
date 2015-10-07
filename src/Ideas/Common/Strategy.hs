@@ -45,7 +45,6 @@ module Ideas.Common.Strategy
      -- * Prefixes
    , Prefix, emptyPrefix, noPrefix
    , replayPath, replayPaths, replayStrategy
-   , Step(..), stepRule, stepEnvironment
    , Path, emptyPath, readPath, readPaths
    , prefixPaths, majorPrefix, isEmptyPrefix
      -- * Misc
@@ -58,6 +57,5 @@ import Ideas.Common.Strategy.Combinators
 import Ideas.Common.Strategy.Configuration
 import Ideas.Common.Strategy.Location
 import Ideas.Common.Strategy.Prefix
-import Ideas.Common.Strategy.Step
 import Ideas.Common.Strategy.Traversal hiding (full, spine, stop, once)
 import Prelude ()

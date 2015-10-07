@@ -129,11 +129,11 @@ collapseDef = propertyDef "collapsed" (collapse . fromBuilder)
  where
    collapse a = 
       case firsts a of
-         [(Enter l, _)] -> collapseWith l a
-         _              -> empty
+         [(s, _)] -> maybe empty (\l -> collapseWith l a) (isEnterRule s)
+         _        -> empty
     
    collapseWith l = 
-      single . RuleStep mempty . makeRule l . runProcess
+      single . makeRule l . runProcess
 
 hideDef :: Def
 hideDef = propertyDef "hidden" (mapBuilder minor)

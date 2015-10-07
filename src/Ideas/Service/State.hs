@@ -25,12 +25,12 @@ module Ideas.Service.State
 
 import Control.Monad
 import Data.Char
-import Data.Function
 import Data.List
 import Data.Maybe
 import Ideas.Common.Library hiding (suitable, ready, (:~>))
 import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.Prefix
+import Ideas.Common.Strategy.Step
 import System.Random
 
 data State a = State
@@ -63,19 +63,19 @@ instance HasEnvironment (State a) where
       s { stateContext = setEnvironment env (stateContext s) }
 
 instance Firsts (State a) where
-   type Elem (State a) = (Step (Context a), Context a)
+   type Elem (State a) = (Rule (Context a), Context a, Environment)
 
    ready  = ready . majorPrefix . statePrefix
    firsts = firstsWith (majorPrefix . statePrefix)
 
-microsteps :: State a -> [((Step (Context a), Context a), State a)]
+microsteps :: State a -> [((Rule (Context a), Context a, Environment), State a)]
 microsteps = firstsWith statePrefix
 
-firstsWith :: (State a -> Prefix (Context a)) -> State a -> [((Step (Context a), Context a), State a)]
+firstsWith :: (State a -> Prefix (Context a)) -> State a -> [((Rule (Context a), Context a, Environment), State a)]
 firstsWith getPrefix st = map f (firstsOrdered cmp (getPrefix st))
  where
-   cmp = ruleOrdering (exercise st) `on` stepRule
-   f ((step, a), pr) = ((step, a), st {statePrefix = pr, stateContext = a})
+   cmp = ruleOrdering (exercise st)
+   f ((r, a, env), pr) = ((r, a, env), st {statePrefix = pr, stateContext = a})
 
 stateTerm :: State a -> a
 stateTerm = fromMaybe (error "invalid term") . fromContext . stateContext
@@ -134,7 +134,7 @@ stateLabels st = map make (prefixPaths (statePrefix st))
    ex = exercise st
    make path =
       let (xs, _) = replayPath path (strategy ex) (stateContext st)
-      in nub [l | Enter l <- xs] \\ [l | Exit l <- xs]
+      in nub (mapMaybe isEnterRule xs) \\ (mapMaybe isExitRule xs)
 
 -- | Produces a 80 bit random number, represented as 20 hexadecimal digits
 newSessionId :: IO String

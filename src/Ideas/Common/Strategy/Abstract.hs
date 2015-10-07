@@ -38,7 +38,6 @@ import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence (Sequence(..))
-import Ideas.Common.Strategy.Step
 import Ideas.Common.View
 import Prelude hiding (sequence)
 import qualified Ideas.Common.CyclicTree as Tree
@@ -138,7 +137,7 @@ emptyPrefix = makePrefix . toCore
 
 -- | Construct a prefix for a path and a labeled strategy. The third argument
 -- is the current term.
-replayPath :: IsStrategy f => Path -> f a -> a -> ([Step a], Prefix a)
+replayPath :: IsStrategy f => Path -> f a -> a -> ([Rule a], Prefix a)
 replayPath path s a =
    let (xs, f) = replayCore path (toCore s)
    in (xs, f a)
@@ -169,13 +168,9 @@ derivationList cmpRule s a0 = rec a0 (toPrefix s)
    rec a prfx = (if ready prfx then (emptyDerivation a:) else id)
       [ prepend (a, rEnv) d | (rEnv, b, new) <- firstsOrd prfx, d <- rec b new ]
 
-   firstsOrd = map f . firstsOrdered cmp
+   firstsOrd = map f . firstsOrdered cmpRule
     where
-      cmp = cmpRule `on` (fst . g)
-
-      f ((stp, b), new) = (g stp, b, new)
-
-      g stp = (stepRule stp, stepEnvironment stp)
+      f ((stp, b, env), new) = ((stp, env), b, new)
 
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]

@@ -8,70 +8,55 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- The Step datatype defines the symbols during parsing.
+-- This module defines special symbols
 --
 -----------------------------------------------------------------------------
 --  $Id: Core.hs 7590 2015-04-21 07:26:58Z bastiaan $
 
 module Ideas.Common.Strategy.Step
-   ( -- * Step
-     Step(..), stepRule, stepEnvironment
+   ( AtomicSymbol(..), LabelSymbol(..)
+   , enterRule, exitRule, isEnterRule, isExitRule
    ) where
 
-import Ideas.Common.Classes
-import Ideas.Common.Environment
+import Control.Monad
+import Data.List
+import Data.Maybe
 import Ideas.Common.Id
 import Ideas.Common.Rule
-import Ideas.Common.Strategy.Derived
 
 --------------------------------------------------------------------------------
 -- Step
 
--- | The steps during the parsing process: enter (or exit) a labeled
--- sub-strategy, or a rule.
-data Step a = Enter Id                      -- ^ Enter a labeled sub-strategy
-            | Exit Id                       -- ^ Exit a labeled sub-strategy
-            | RuleStep Environment (Rule a) -- ^ Rule that was applied
-   deriving Eq
+class Eq a => AtomicSymbol a where
+   atomicOpen, atomicClose :: a
+  
+instance AtomicSymbol (Rule a) where
+   atomicOpen  = idRule "atomic.open"
+   atomicClose = idRule "atomic.close"
 
-instance Show (Step a) where
-   show (Enter l) = "enter " ++ showId l
-   show (Exit l)  = "exit " ++ showId l
-   show (RuleStep _ r) = show r
+class Eq a => LabelSymbol a where
+   isEnterSymbol :: a -> Bool
 
-instance Apply Step where
-   applyAll (RuleStep _ r) = applyAll r
-   applyAll _              = return
+instance LabelSymbol (Rule a) where
+   isEnterSymbol = isJust . isEnterRule
 
-instance HasId (Step a) where
-   getId (Enter l)      = getId l
-   getId (Exit l)       = getId l
-   getId (RuleStep _ r) = getId r
+enterRule :: Id -> Rule a
+enterRule l = idRule (l # "enter")
 
-   changeId f (Enter l)        = Enter (changeId f l)
-   changeId f (Exit l)         = Exit  (changeId f l)
-   changeId f (RuleStep env r) = RuleStep env (changeId f r)
+exitRule :: Id -> Rule a
+exitRule l = idRule (l # "exit")
 
-instance Minor (Step a) where
-   setMinor b (RuleStep env r) = RuleStep env (setMinor b r)
-   setMinor _ st = st
+isEnterRule :: Rule a -> Maybe Id
+isEnterRule st = do 
+   let n = getId st
+   guard (unqualified n == "enter")
+   return (initId n)
 
-   isMinor (RuleStep _ r) = isMinor r
-   isMinor _ = True
-
-instance AtomicSymbol (Step a) where
-   atomicOpen  = RuleStep mempty (idRule "atomic.open")
-   atomicClose = RuleStep mempty (idRule "atomic.close")
-
-instance LabelSymbol (Step a) where
-   isEnter (Enter _) = True
-   isEnter _         = False
-
-stepRule :: Step a -> Rule a
-stepRule (RuleStep _ r) = r
-stepRule (Enter l)      = idRule (l # "enter")
-stepRule (Exit l)       = idRule (l # "exit")
-
-stepEnvironment :: Step a -> Environment
-stepEnvironment (RuleStep env _) = env
-stepEnvironment _ = mempty
+isExitRule :: Rule a -> Maybe Id
+isExitRule st = do
+   let n = getId st
+   guard (unqualified n == "exit")
+   return (initId n)
+   
+initId :: Id -> Id
+initId = newId . intercalate "." . qualifiers

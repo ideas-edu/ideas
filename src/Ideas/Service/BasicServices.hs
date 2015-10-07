@@ -86,7 +86,7 @@ allfirsts state
    | otherwise = Right $
         noDuplicates $ map make $ firsts state
  where
-   make ((s, ctx), st) = ((stepRule s, location ctx, stepEnvironment s), st)
+   make ((s, ctx, env), st) = ((s, location ctx, env), st)
 
    noDuplicates []     = []
    noDuplicates (x:xs) = x : noDuplicates (filter (not . eq x) xs)

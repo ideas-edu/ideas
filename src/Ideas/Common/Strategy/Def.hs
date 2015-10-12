@@ -33,31 +33,31 @@ data Def = Def
    { defId         :: Id 
    , isAssociative :: Bool 
    , isProperty    :: Bool
-   , useDef        :: forall a . [Builder (Rule a)] -> Builder (Rule a)
+   , useDef        :: forall a . [Process (Rule a)] -> Process (Rule a)
    }
 
 instance Show Def where
    show = showId
 
-makeDef :: IsId n => n -> (forall a . [Builder (Rule a)] -> Builder (Rule a)) -> Def
+makeDef :: IsId n => n -> (forall a . [Process (Rule a)] -> Process (Rule a)) -> Def
 makeDef n = Def (newId n) False False
 
-makeDef1 :: IsId n => n -> (forall a . Builder (Rule a) -> Builder (Rule a)) -> Def
+makeDef1 :: IsId n => n -> (forall a . Process (Rule a) -> Process (Rule a)) -> Def
 makeDef1 n f = makeDef n $ \xs -> 
    case xs of
       [a] -> f a
       _   -> empty
 
-makeDef2 :: IsId n => n -> (forall a . Builder (Rule a) -> Builder (Rule a) -> Builder (Rule a)) -> Def
+makeDef2 :: IsId n => n -> (forall a . Process (Rule a) -> Process (Rule a) -> Process (Rule a)) -> Def
 makeDef2 n f = makeDef n $ \xs -> 
    case xs of
       [a, b] -> f a b
       _      -> empty
 
-associativeDef :: IsId n => n -> (forall a . [Builder (Rule a)] -> Builder (Rule a)) -> Def
+associativeDef :: IsId n => n -> (forall a . [Process (Rule a)] -> Process (Rule a)) -> Def
 associativeDef n f = (makeDef n f) { isAssociative = True }
 
-propertyDef :: IsId n => n -> (forall a . Builder (Rule a) -> Builder (Rule a)) -> Def
+propertyDef :: IsId n => n -> (forall a . Process (Rule a) -> Process (Rule a)) -> Def
 propertyDef n f = (makeDef1 n f) { isProperty = True }
 
 instance Eq Def where

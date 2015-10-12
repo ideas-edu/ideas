@@ -13,9 +13,9 @@
 --  $Id: Sequential.hs 6612 2014-06-12 07:57:59Z bastiaan $
 
 module Ideas.Common.Strategy.Derived
-   ( filterP, hide
-   , AtomicSymbol(..), LabelSymbol(..)
+   ( AtomicSymbol(..), LabelSymbol(..)
    , atomic, (<%>), interleave, permute, concurrent, (<@>), (!*>), inits
+   , filterP, hide
    ) where
 
 import Ideas.Common.Strategy.Choice
@@ -24,16 +24,16 @@ import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.Step
 
 useFirst :: Choice b => (a -> Process a -> b) -> b -> Process a -> b
-useFirst op e = onMenu op e . menu
+useFirst op e = menuFirst op e
 
 split :: (AtomicSymbol a, Choice b)
-      => (Builder a -> Process a -> b) -> b -> Process a -> b         
+      => (Process a -> Process a -> b) -> b -> Process a -> b         
 split op = split2 (op . single) op
 
 -- Specialized version of split that also takes an operator for the special case
 -- that the left part of the split is a single symbol. 
 split2 :: (AtomicSymbol a, Choice b)
-       => (a -> Process a -> b) -> (Builder a -> Process a -> b) -> b -> Process a -> b         
+       => (a -> Process a -> b) -> (Process a -> Process a -> b) -> b -> Process a -> b         
 split2 op1 op2 = useFirst f
  where
    f a | a == atomicOpen = rec (op2 . (a ~>)) 1
@@ -41,7 +41,7 @@ split2 op1 op2 = useFirst f
          
    rec acc n
       | n == 0    = acc done
-      | otherwise = onMenu g empty . menu
+      | otherwise = useFirst g empty
     where
       g a = rec (acc . (a ~>)) (pm a n)
 
@@ -51,10 +51,10 @@ split2 op1 op2 = useFirst f
         | otherwise        = id
 
 -- atomic prefix
-(!*>) :: AtomicSymbol a => Builder a -> Builder a -> Builder a
-a !*> p = split op (atomic a) (fromBuilder p)
+(!*>) :: AtomicSymbol a => Process a -> Process a -> Process a
+a !*> p = split op (atomic a) p
  where
-   op b q = atomic (a .*. b) .*. toBuilder q
+   op b q = atomic (a .*. b) .*. q
 
 filterP :: (a -> Bool) -> Process a -> Process a
 filterP cond = fold (\a q -> if cond a then a ~> q else empty) done
@@ -62,17 +62,17 @@ filterP cond = fold (\a q -> if cond a then a ~> q else empty) done
 hide :: (a -> Bool) -> Process a -> Process a
 hide cond = fold (\a q -> if cond a then a ~> q else q) done
 
-atomic :: AtomicSymbol a => Builder a -> Builder a
+atomic :: AtomicSymbol a => Process a -> Process a
 atomic p = atomicOpen ~> (p .*. single atomicClose)
 
-interleave :: (AtomicSymbol a, LabelSymbol a) => [Builder a] -> Builder a
+interleave :: (AtomicSymbol a, LabelSymbol a) => [Process a] -> Process a
 interleave xs = if null xs then done else foldr1 (<%>) xs
 
-(<%>) :: (AtomicSymbol a, LabelSymbol a) => Builder a -> Builder a -> Builder a
+(<%>) :: (AtomicSymbol a, LabelSymbol a) => Process a -> Process a -> Process a
 (<%>) = concurrent (not . isEnterSymbol)
 
-concurrent :: AtomicSymbol a => (a -> Bool) -> Builder a -> Builder a -> Builder a
-concurrent switch x y = normal (fromBuilder x) (fromBuilder y)
+concurrent :: AtomicSymbol a => (a -> Bool) -> Process a -> Process a -> Process a
+concurrent switch = normal
  where
    normal p q = stepBoth q p .|. (stepRight q p .|. stepRight p q)
 
@@ -97,15 +97,15 @@ permute as
    pickOne (x:xs) = (x, xs) : [ (y, x:ys) | (y, ys) <- pickOne xs ]
    
 -- Alternate combinator
-(<@>) :: AtomicSymbol a => Builder a -> Builder a -> Builder a
-p0 <@> q0 = rec (fromBuilder q0) (fromBuilder p0)
+(<@>) :: AtomicSymbol a => Process a -> Process a -> Process a
+p0 <@> q0 = rec q0 p0
  where
    rec q  = let op b r = b .*. rec r q
             in split op (bothOk q)
    bothOk = useFirst (\_ _ -> empty) done
 
-inits :: AtomicSymbol a => Builder a -> Builder a
-inits = rec . fromBuilder
+inits :: AtomicSymbol a => Process a -> Process a
+inits = rec
  where
    rec p = done .|. split op empty p
    op x  = (x .*.) . rec

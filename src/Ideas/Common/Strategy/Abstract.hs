@@ -37,7 +37,7 @@ import Ideas.Common.Strategy.Def
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Process
-import Ideas.Common.Strategy.Sequence (Sequence(..))
+import Ideas.Common.Strategy.Sequence (Sequence(..), ready)
 import Ideas.Common.View
 import Prelude hiding (sequence)
 import qualified Ideas.Common.CyclicTree as Tree

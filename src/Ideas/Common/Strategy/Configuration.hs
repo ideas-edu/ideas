@@ -125,15 +125,15 @@ removeDef :: Def
 removeDef = propertyDef "removed" (const empty)
 
 collapseDef :: Def
-collapseDef = propertyDef "collapsed" (collapse . fromBuilder)
+collapseDef = propertyDef "collapsed" collapse
  where
    collapse a = 
       case firsts a of
-         [(s, _)] -> maybe empty (\l -> collapseWith l a) (isEnterRule s)
+         [(r, _)] -> maybe empty (\l -> collapseWith l a) (isEnterRule r)
          _        -> empty
     
    collapseWith l = 
       single . makeRule l . runProcess
 
 hideDef :: Def
-hideDef = propertyDef "hidden" (mapBuilder minor)
+hideDef = propertyDef "hidden" (fmap minor)

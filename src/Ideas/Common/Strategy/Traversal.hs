@@ -27,6 +27,7 @@ module Ideas.Common.Strategy.Traversal
    ) where
 
 import Data.Monoid
+import Ideas.Common.Classes
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Combinators

@@ -21,11 +21,11 @@ module Ideas.Common.Strategy.Abstract
    , mapRules, mapRulesS
    , cleanUpStrategy, cleanUpStrategyAfter
      -- Accessors to the underlying representation
-   , toCore, fromCore, liftCore, liftCore2, liftCoreN
+   , Core, toCore, liftCore, liftCore2, liftCoreN
    ) where
 
 import Data.Foldable (toList)
-import Data.Function
+import Data.Function ()
 import Ideas.Common.Classes
 import Ideas.Common.Derivation
 import Ideas.Common.Environment
@@ -37,6 +37,7 @@ import Ideas.Common.Strategy.Def
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Process
+import Ideas.Common.Strategy.Step
 import Ideas.Common.Strategy.Sequence (Sequence(..), ready)
 import Ideas.Common.View
 import Prelude hiding (sequence)
@@ -52,7 +53,7 @@ instance Show (Strategy a) where
    show = show . toCore
 
 instance Apply Strategy where
-   applyAll = runCore . toCore
+   applyAll = runProcess . toProcesss
 
 instance Choice (Strategy a) where
    empty = fromCore (node0 failDef)
@@ -66,6 +67,9 @@ instance Sequence (Strategy a) where
    done  = fromCore (node0 succeedDef)
    (~>)  = liftCore2 (node2 sequenceDef)
    (.*.) = liftCore2 (node2 sequenceDef)
+
+instance Fix (Strategy a) where
+   fix f = fromCore (fix (toCore . f . fromCore))
 
 succeedDef :: Def
 succeedDef = makeDef "succeed" (const done)
@@ -133,13 +137,13 @@ unlabel (LS _ s) = s
 
 -- | Construct the empty prefix for a labeled strategy
 emptyPrefix :: IsStrategy f => f a -> a -> Prefix a
-emptyPrefix = makePrefix . toCore
+emptyPrefix = makePrefix . toProcesss
 
 -- | Construct a prefix for a path and a labeled strategy. The third argument
 -- is the current term.
 replayPath :: IsStrategy f => Path -> f a -> a -> ([Rule a], Prefix a)
 replayPath path s a =
-   let (xs, f) = replayCore path (toCore s)
+   let (xs, f) = replayProcess path (toProcesss s)
    in (xs, f a)
 
 -- | Construct a prefix for a list of paths and a labeled strategy. The third
@@ -152,7 +156,7 @@ replayPaths paths s a = mconcat
 -- is the initial term.
 replayStrategy :: (Monad m, IsStrategy f) => Path -> f a -> a -> m (a, Prefix a)
 replayStrategy path s a =
-   let (xs, f) = replayCore path (toCore s)
+   let (xs, f) = replayProcess path (toProcesss s)
    in case applyList xs a of
          Just b  -> return (b, f b)
          Nothing -> fail "Cannot replay strategy"
@@ -163,7 +167,7 @@ replayStrategy path s a =
 derivationList :: IsStrategy f => (Rule a -> Rule a -> Ordering) -> f a -> a -> [Derivation (Rule a, Environment) a]
 derivationList cmpRule s a0 = rec a0 (toPrefix s)
  where
-   toPrefix = majorPrefix . flip makePrefix a0 . toCore
+   toPrefix = majorPrefix . flip makePrefix a0 . toProcesss
 
    rec a prfx = (if ready prfx then (emptyDerivation a:) else id)
       [ prepend (a, rEnv) d | (rEnv, b, new) <- firstsOrd prfx, d <- rec b new ]
@@ -205,6 +209,8 @@ cleanUpStrategyAfter f = mapRules $ \r ->
 -----------------------------------------------------------
 --- Functions to lift the core combinators
 
+type Core a = CyclicTree Def (Rule a)
+
 toCore :: IsStrategy f => f a -> Core a
 toCore s = let S core = toStrategy s in core
 
@@ -219,3 +225,10 @@ liftCore2 f = liftCore . f . toCore
 
 liftCoreN :: IsStrategy f => ([Core a] -> Core a) -> [f a] -> Strategy a
 liftCoreN f = fromCore . f . map toCore
+
+toProcesss :: IsStrategy f => f a -> Process (Rule a)
+toProcesss = foldUnwind emptyAlg
+   { fNode  = useDef
+   , fLeaf  = single
+   , fLabel = \l p -> enterRule l ~> p .*. (exitRule l ~> done)
+   } . toCore

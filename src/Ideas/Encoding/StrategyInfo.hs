@@ -18,7 +18,6 @@ module Ideas.Encoding.StrategyInfo (strategyToXML) where
 import Ideas.Common.Id
 import Ideas.Common.CyclicTree
 import Ideas.Common.Strategy.Abstract
-import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Def
 import Ideas.Text.XML
 

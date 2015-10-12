@@ -27,14 +27,12 @@ import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Configuration
 import Ideas.Common.CyclicTree hiding (label)
 import Ideas.Common.Strategy.Def
-import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Utils (fst3)
 import Prelude hiding (not, repeat, fail, sequence)
 import qualified Ideas.Common.Strategy.Choice as Choice
 import qualified Ideas.Common.Strategy.Derived as Derived
 import qualified Ideas.Common.Strategy.Sequence as Sequence
-import qualified Ideas.Common.Classes as Classes
 import qualified Prelude
 
 -----------------------------------------------------------
@@ -193,11 +191,6 @@ multi l = collapse . label l . repeat1
 -- | Apply the strategies from the list exhaustively (until this is no longer possible)
 exhaustive :: IsStrategy f => [f a] -> Strategy a
 exhaustive = repeat . alternatives
-
--- | A fix-point combinator on strategies (to model recursion). Powerful
--- (but dangerous) combinator
-fix :: (Strategy a -> Strategy a) -> Strategy a
-fix f = fromCore (Classes.fix (toCore . f . fromCore)) -- TO DO: move
 
 remove :: IsStrategy f => f a -> Strategy a
 remove = liftCore removeCore

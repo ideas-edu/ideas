@@ -22,7 +22,7 @@
 module Ideas.Common.Strategy.Prefix
    ( -- * Prefix
      Prefix, noPrefix, makePrefix, firstsOrdered
-   , Core, runCore, replayCore
+   , replayProcess
    , isEmptyPrefix, majorPrefix, searchModePrefix, prefixPaths
      -- * Path
    , Path, emptyPath, readPath, readPaths
@@ -35,11 +35,8 @@ import Ideas.Common.Environment
 import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
-import Ideas.Common.CyclicTree
 import Ideas.Common.Strategy.Process
-import Ideas.Common.Strategy.Def
 import Ideas.Common.Strategy.Sequence
-import Ideas.Common.Strategy.Step
 import Ideas.Common.Utils (splitsWithElem, readM)
 
 --------------------------------------------------------------------------------
@@ -68,22 +65,7 @@ firstsOrdered cmp = map reorder . bestsOrdered cmp . remainder
 
 reorder :: (a, (b, env, c)) -> ((a, b, env), c)
 reorder (x, (y, env, z)) = ((x, y, env), z)
-
---------------------------------------------------------------------------------
--- Running Core strategies
-
-type Core a = CyclicTree Def (Rule a)
-
-runCore :: Core a -> a -> [a]
-runCore = runProcess . coreToProcess
-
-coreToProcess :: Core a -> Process (Rule a)
-coreToProcess = foldUnwind emptyAlg 
-   { fNode  = useDef
-   , fLeaf  = single
-   , fLabel = \l p -> enterRule l ~> p .*. (exitRule l ~> done)
-   }
-   
+  
 --------------------------------------------------------------------------------
 -- Constructing a prefix
 
@@ -92,13 +74,13 @@ noPrefix :: Prefix a
 noPrefix = Prefix [] empty
 
 -- | Make a prefix from a core strategy and a start term.
-makePrefix :: Core a -> a -> Prefix a
-makePrefix = snd . replayCore emptyPath
+makePrefix :: Process (Rule a) -> a -> Prefix a
+makePrefix = snd . replayProcess emptyPath
 
 -- | Construct a prefix by replaying a path in a core strategy: the third
 -- argument is the current term.
-replayCore :: Path -> Core a -> ([Rule a], a -> Prefix a)
-replayCore (Path is) = replay [] is . coreToProcess
+replayProcess :: Path -> Process (Rule a) -> ([Rule a], a -> Prefix a)
+replayProcess (Path is) = replay [] is
  where
    replay acc []     p = (reverse acc, createPrefix p)
    replay acc (n:ns) p =

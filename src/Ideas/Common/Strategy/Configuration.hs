@@ -27,7 +27,6 @@ import Ideas.Common.Classes
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Def
 import Ideas.Common.Strategy.Sequence
-import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Process hiding (fold)
 import Ideas.Common.CyclicTree hiding (label)
 import Ideas.Common.Strategy.Step
@@ -72,7 +71,7 @@ configure :: StrategyCfg -> LabeledStrategy a -> LabeledStrategy a
 configure cfg ls = label (getId ls) (configureS cfg (unlabel ls))
 
 configureS :: StrategyCfg -> Strategy a -> Strategy a
-configureS cfg = fromCore . configureCore cfg . toCore
+configureS cfg = liftCore (configureCore cfg)
 
 configureCore :: StrategyCfg -> Core a -> Core a
 configureCore (Cfg pairs) core = foldr handle core pairs

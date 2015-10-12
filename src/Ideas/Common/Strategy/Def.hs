@@ -27,7 +27,6 @@ import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Process
-import Prelude hiding (sequence)
 
 data Def = Def
    { defId         :: Id 

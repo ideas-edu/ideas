@@ -52,6 +52,8 @@ instance Sequence (Process a) where
    a ~> b = P [a |-> b]
    P xs .*. P ys = P (xs ++ ys)
       
+instance Fix (Process a)
+      
 instance Firsts (Process a) where
    type Elem (Process a) = a
    

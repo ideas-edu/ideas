@@ -26,7 +26,7 @@ module Ideas.Common.Strategy
      -- ** Basic combinators
    , (.*.), (.|.), (.%.), (.@.), (!~>) 
    , succeed, fail, atomic, label, inits
-   , sequence, alternatives, interleave, permute
+   , sequence, choice, alternatives, interleave, permute
      -- ** EBNF combinators
    , many, many1, replicate, option
      -- ** Negation and greedy combinators
@@ -38,7 +38,6 @@ module Ideas.Common.Strategy
    , module Ideas.Common.Strategy.Traversal
      -- * Configuration combinators
    , module Ideas.Common.Strategy.Configuration
-   , remove, collapse, hide
      -- * Strategy locations
    , strategyLocations, checkLocation
    , subTaskLocation, nextTaskLocation
@@ -55,6 +54,7 @@ module Ideas.Common.Strategy
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Combinators
 import Ideas.Common.Strategy.Configuration
+import Ideas.Common.Strategy.Legacy (alternatives)
 import Ideas.Common.Strategy.Location
 import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Traversal hiding (full, spine, stop, once)

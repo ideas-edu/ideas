@@ -134,7 +134,7 @@ stateLabels st = map make (prefixPaths (statePrefix st))
    ex = exercise st
    make path =
       let (xs, _) = replayPath path (strategy ex) (stateContext st)
-      in nub (mapMaybe isEnterRule xs) \\ (mapMaybe isExitRule xs)
+      in nub (mapMaybe isEnterRule xs) \\ mapMaybe isExitRule xs
 
 -- | Produces a 80 bit random number, represented as 20 hexadecimal digits
 newSessionId :: IO String

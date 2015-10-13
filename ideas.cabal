@@ -97,7 +97,6 @@ Library
     Ideas.Common.Strategy.Choice
     Ideas.Common.Strategy.Combinators
     Ideas.Common.Strategy.Configuration
-    Ideas.Common.Strategy.Def
     Ideas.Common.Strategy.Derived
     Ideas.Common.Strategy.Legacy
     Ideas.Common.Strategy.Location

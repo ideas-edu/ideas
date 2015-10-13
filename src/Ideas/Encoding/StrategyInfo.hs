@@ -18,29 +18,29 @@ module Ideas.Encoding.StrategyInfo (strategyToXML) where
 import Ideas.Common.Id
 import Ideas.Common.CyclicTree
 import Ideas.Common.Strategy.Abstract
-import Ideas.Common.Strategy.Def
+import Ideas.Common.Strategy.Configuration
 import Ideas.Text.XML
 
 -----------------------------------------------------------------------
 -- Strategy to XML
 
 strategyToXML :: IsStrategy f => f a -> XML
-strategyToXML = coreToXML . toCore . toStrategy
+strategyToXML = strategyTreeToXML . toStrategyTree
 
 nameAttr :: Id -> XMLBuilder
 nameAttr info = "name" .=. showId info
 
-coreToXML :: Core a -> XML
-coreToXML core = makeXML "label" $
-   case isLabel core of
-      Just (l, a) -> nameAttr l <> coreBuilder a
-      _ -> coreBuilder core
+strategyTreeToXML :: StrategyTree a -> XML
+strategyTreeToXML tree = makeXML "label" $
+   case isLabel tree of
+      Just (l, a) -> nameAttr l <> strategyTreeBuilder a
+      _ -> strategyTreeBuilder tree
 
-coreBuilder :: Core a -> XMLBuilder
-coreBuilder = fold emptyAlg
+strategyTreeBuilder :: StrategyTree a -> XMLBuilder
+strategyTreeBuilder = fold emptyAlg
    { fNode = \def xs -> 
         case xs of
-           [x] | isProperty def 
+           [x] | isConfigId def 
              -> addProperty (show def) x
            _ -> tag (show def) (mconcat xs)
    , fLeaf = \r -> 
@@ -51,15 +51,7 @@ coreBuilder = fold emptyAlg
         tag "rec" (("var" .=. show n) <> a)
    , fVar = \n -> 
         tag "var" ("var" .=. show n)
-   } . flatten
-
-flatten :: Core a -> Core a
-flatten = replaceNode $ \def -> node def . concatMap (collect def)
- where
-   collect def core = 
-      case isNode core of
-         Just (d, xs) | d == def -> xs
-         _ -> [core]
+   }
 
 addProperty :: String -> XMLBuilder -> XMLBuilder
 addProperty s a =

@@ -32,3 +32,6 @@ infixr 5 <*>
 (<|>) = (.|.)
 (>|>) = (./.)
 (<*>) = (.*.)
+
+alternatives :: IsStrategy f => [f a] -> Strategy a
+alternatives = choice

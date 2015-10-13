@@ -47,7 +47,7 @@ data CyclicTree a b
 
 instance (Show a, Show b) => Show (CyclicTree a b) where
    show = fold Alg
-      { fNode  = \a xs -> show a ++ (par xs)
+      { fNode  = \a xs -> show a ++ par xs
       , fLeaf  = show
       , fLabel = \l s -> show l ++ ":" ++ s
       , fRec   = \n s -> '#' : show n ++ "=" ++ s

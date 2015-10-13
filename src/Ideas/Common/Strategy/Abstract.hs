@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, UndecidableInstances, TypeFamilies #-}
+{-# LANGUAGE TypeFamilies, RankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2015, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -17,15 +17,17 @@ module Ideas.Common.Strategy.Abstract
    , LabeledStrategy, label, unlabel
    , derivationList
    , emptyPrefix, replayPath, replayPaths, replayStrategy
-   , rulesInStrategy
-   , mapRules, mapRulesS
+   , rulesInStrategy, mapRules, mapRulesS
    , cleanUpStrategy, cleanUpStrategyAfter
      -- Accessors to the underlying representation
-   , Core, toCore, liftCore, liftCore2, liftCoreN
+   , liftS, liftS2, liftSn
+   , toStrategyTree, onStrategyTree
+   , combinator, combinatorA, combinator1, combinator2
+   , Combinator, useCombinator, StrategyTree, useDef
    ) where
 
 import Data.Foldable (toList)
-import Data.Function ()
+import Data.Function (on)
 import Ideas.Common.Classes
 import Ideas.Common.Derivation
 import Ideas.Common.Environment
@@ -33,7 +35,6 @@ import Ideas.Common.Id
 import Ideas.Common.Rewriting (RewriteRule)
 import Ideas.Common.Rule
 import Ideas.Common.CyclicTree hiding (label)
-import Ideas.Common.Strategy.Def
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Process
@@ -47,47 +48,36 @@ import qualified Ideas.Common.CyclicTree as Tree
 --- Strategy data-type
 
 -- | Abstract data type for strategies
-newtype Strategy a = S (Core a)
+newtype Strategy a = S { unS :: StrategyTree a }
 
 instance Show (Strategy a) where
-   show = show . toCore
+   show = show . unS
 
 instance Apply Strategy where
-   applyAll = runProcess . toProcesss
+   applyAll = runProcess . getProcess
 
 instance Choice (Strategy a) where
-   empty = fromCore (node0 failDef)
-   (.|.) = liftCore2 (node2 choiceDef)
-   (|>)  = liftCore2 (node2 orelseDef)
-   (./.) = liftCore2 (node2 preferenceDef)
+   empty   = useCombinator (combinator0 "fail" empty)
+   s .|. t = choice [s, t]
+   
+   s |>  t = orelse [s, t]
+   s ./. t = preference [s, t]
+   
+   choice     = useCombinator (combinatorA "choice" choice)
+   preference = useCombinator (combinatorA "preference" preference)
+   orelse     = useCombinator (combinatorA "orelse" orelse)
 
 instance Sequence (Strategy a) where
    type Sym (Strategy a) = Rule a
 
-   done  = fromCore (node0 succeedDef)
-   (~>)  = liftCore2 (node2 sequenceDef)
-   (.*.) = liftCore2 (node2 sequenceDef)
+   done     = useCombinator (combinator0 "succeed" done)
+   a ~> s   = sequence [toStrategy a, s]
+   s .*. t  = sequence [s, t]
+   single   = toStrategy
+   sequence = useCombinator (combinatorA "sequence" sequence)
 
 instance Fix (Strategy a) where
-   fix f = fromCore (fix (toCore . f . fromCore))
-
-succeedDef :: Def
-succeedDef = makeDef "succeed" (const done)
-
-failDef :: Def
-failDef = makeDef "fail" (const empty)
-
-sequenceDef :: Def
-sequenceDef = associativeDef "sequence" sequence
-
-choiceDef :: Def
-choiceDef = associativeDef "choice" choice
-        
-preferenceDef :: Def
-preferenceDef = associativeDef "preference" preference
-
-orelseDef :: Def
-orelseDef = associativeDef "orelse" orelse
+   fix f = S (fix (unS . f . S))
    
 -----------------------------------------------------------
 --- Type class
@@ -99,14 +89,24 @@ class IsStrategy f where
 instance IsStrategy Strategy where
    toStrategy = id
 
-instance IsStrategy (LabeledStrategy) where
-  toStrategy (LS info (S core)) = S (Tree.label info core)
+instance IsStrategy LabeledStrategy where
+  toStrategy (LS info (S t)) = S (Tree.label info t)
 
 instance IsStrategy Rule where
    toStrategy = S . leaf
 
 instance IsStrategy RewriteRule where
    toStrategy = toStrategy . ruleRewrite
+
+liftS :: IsStrategy f => (Strategy a -> Strategy a) -> f a -> Strategy a
+liftS f = f . toStrategy
+
+liftS2 :: (IsStrategy f, IsStrategy g) 
+       => (Strategy a -> Strategy a -> Strategy a) -> f a -> g a -> Strategy a
+liftS2 f = liftS . f . toStrategy
+
+liftSn :: IsStrategy f => ([Strategy a] -> Strategy a) -> [f a] -> Strategy a
+liftSn f = f . map toStrategy
 
 -----------------------------------------------------------
 --- Labeled Strategy data-type
@@ -137,13 +137,13 @@ unlabel (LS _ s) = s
 
 -- | Construct the empty prefix for a labeled strategy
 emptyPrefix :: IsStrategy f => f a -> a -> Prefix a
-emptyPrefix = makePrefix . toProcesss
+emptyPrefix = makePrefix . getProcess
 
 -- | Construct a prefix for a path and a labeled strategy. The third argument
 -- is the current term.
 replayPath :: IsStrategy f => Path -> f a -> a -> ([Rule a], Prefix a)
 replayPath path s a =
-   let (xs, f) = replayProcess path (toProcesss s)
+   let (xs, f) = replayProcess path (getProcess s)
    in (xs, f a)
 
 -- | Construct a prefix for a list of paths and a labeled strategy. The third
@@ -156,7 +156,7 @@ replayPaths paths s a = mconcat
 -- is the initial term.
 replayStrategy :: (Monad m, IsStrategy f) => Path -> f a -> a -> m (a, Prefix a)
 replayStrategy path s a =
-   let (xs, f) = replayProcess path (toProcesss s)
+   let (xs, f) = replayProcess path (getProcess s)
    in case applyList xs a of
          Just b  -> return (b, f b)
          Nothing -> fail "Cannot replay strategy"
@@ -167,7 +167,7 @@ replayStrategy path s a =
 derivationList :: IsStrategy f => (Rule a -> Rule a -> Ordering) -> f a -> a -> [Derivation (Rule a, Environment) a]
 derivationList cmpRule s a0 = rec a0 (toPrefix s)
  where
-   toPrefix = majorPrefix . flip makePrefix a0 . toProcesss
+   toPrefix = majorPrefix . flip makePrefix a0 . getProcess
 
    rec a prfx = (if ready prfx then (emptyDerivation a:) else id)
       [ prepend (a, rEnv) d | (rEnv, b, new) <- firstsOrd prfx, d <- rec b new ]
@@ -178,7 +178,7 @@ derivationList cmpRule s a0 = rec a0 (toPrefix s)
 
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]
-rulesInStrategy s = [ r | r <- toList (toCore s), isMajor r ]
+rulesInStrategy s = [ r | r <- toList (toStrategyTree s), isMajor r ]
 
 instance LiftView LabeledStrategy where
    liftViewIn = mapRules . liftViewIn
@@ -191,15 +191,13 @@ mapRules :: (Rule a -> Rule b) -> LabeledStrategy a -> LabeledStrategy b
 mapRules f (LS n s) = LS n (mapRulesS f s)
 
 mapRulesS :: (Rule a -> Rule b) -> Strategy a -> Strategy b
-mapRulesS f = S . fmap f . toCore
+mapRulesS f = S . fmap f . unS
 
 -- | Use a function as do-after hook for all rules in a labeled strategy, but
 -- also use the function beforehand
 cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
-cleanUpStrategy f (LS n s) = cleanUpStrategyAfter f (LS n t)
- where
-   t      = doAfter f (idRule ()) .**. s
-   (.**.) = liftCore2 (node2 sequenceDef)
+cleanUpStrategy f (LS n s) = cleanUpStrategyAfter f $ 
+   LS n (doAfter f (idRule ()) ~> s)
 
 -- | Use a function as do-after hook for all rules in a labeled strategy
 cleanUpStrategyAfter :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
@@ -209,26 +207,89 @@ cleanUpStrategyAfter f = mapRules $ \r ->
 -----------------------------------------------------------
 --- Functions to lift the core combinators
 
-type Core a = CyclicTree Def (Rule a)
+toStrategyTree :: IsStrategy f => f a -> StrategyTree a
+toStrategyTree = unS . toStrategy
 
-toCore :: IsStrategy f => f a -> Core a
-toCore s = let S core = toStrategy s in core
+onStrategyTree :: IsStrategy f => (StrategyTree a -> StrategyTree a) -> f a -> Strategy a
+onStrategyTree f = S . f . toStrategyTree
 
-fromCore :: Core a -> Strategy a
-fromCore = S
-
-liftCore :: IsStrategy f => (Core a -> Core a) -> f a -> Strategy a
-liftCore f = fromCore . f . toCore
-
-liftCore2 :: (IsStrategy f, IsStrategy g) => (Core a -> Core a -> Core a) -> f a -> g a -> Strategy a
-liftCore2 f = liftCore . f . toCore
-
-liftCoreN :: IsStrategy f => ([Core a] -> Core a) -> [f a] -> Strategy a
-liftCoreN f = fromCore . f . map toCore
-
-toProcesss :: IsStrategy f => f a -> Process (Rule a)
-toProcesss = foldUnwind emptyAlg
-   { fNode  = useDef
+getProcess :: IsStrategy f => f a -> Process (Rule a)
+getProcess = foldUnwind emptyAlg
+   { fNode  = applyCombinator
    , fLeaf  = single
    , fLabel = \l p -> enterRule l ~> p .*. (exitRule l ~> done)
-   } . toCore
+   } . toStrategyTree
+
+makeC :: IsId n
+            => n 
+            -> ([StrategyTree a] -> [StrategyTree a]) 
+            -> (forall b . [Process (Rule b)] -> Process (Rule b))
+            -> Combinator ([Strategy a] -> Strategy a)
+makeC n f op = 
+   let strCom = C (newId n) op (S . useDef strCom . f . map unS)
+   in strCom
+
+combinator :: IsId n
+            => n -> (forall b . [Process (Rule b)] -> Process (Rule b))
+            -> Combinator ([Strategy a] -> Strategy a)
+combinator n = makeC n id
+
+combinatorA :: IsId n
+            => n -> (forall b. [Process (Rule b)] -> Process (Rule b)) 
+            -> Combinator ([Strategy a] -> Strategy a)
+combinatorA n = makeC myId (concatMap g)
+ where
+   myId = newId n
+   g a  = case isNode a of 
+             Just (da, as) | getId da == myId -> as
+             _ -> [a]
+
+combinator0 :: IsId n 
+            => n -> (forall b . Process (Rule b)) 
+            -> Combinator (Strategy a)
+combinator0 n p = 
+   fmap ($ []) (combinator n (const p))
+
+combinator1 :: IsId n
+            => n -> (forall b . Process (Rule b) -> Process (Rule b)) 
+            -> Combinator (Strategy a -> Strategy a)
+combinator1 n op = 
+   fmap (\f x -> f [x]) (combinator n (list1 empty op))
+ where
+   list1 _ f [a] = f a
+   list1 b _ _   = b
+
+combinator2 :: IsId n
+            => n -> (forall b . Process (Rule b) -> Process (Rule b) -> Process (Rule b)) 
+            -> Combinator (Strategy a -> Strategy a -> Strategy a)
+combinator2 n op =
+   fmap (\f x y -> f [x, y]) (combinator n (list2 empty op))
+ where
+   list2 _ f [a1, a2] = f a1 a2
+   list2 b _ _        = b
+
+-------------------------------------------------------------------------------
+
+data Combinator a = C
+   { combinatorId    :: Id
+   , applyCombinator :: forall b . [Process (Rule b)] -> Process (Rule b)
+   , useCombinator   :: a
+   } 
+
+useDef :: Combinator a -> [StrategyTree b] -> StrategyTree b
+useDef d = node (d {useCombinator = ()})
+
+type StrategyTree a = CyclicTree (Combinator ()) (Rule a)
+
+instance Show (Combinator a) where
+   show = showId
+
+instance Eq (Combinator a) where
+   (==) = (==) `on` getId
+
+instance HasId (Combinator a) where
+   getId = combinatorId
+   changeId f d = d { combinatorId = f (combinatorId d) }
+   
+instance Functor Combinator where
+   fmap f (C n op a) = C n op (f a)

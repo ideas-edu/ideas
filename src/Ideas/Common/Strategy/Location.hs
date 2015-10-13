@@ -57,7 +57,7 @@ nextTaskLocation s xs ys = g (rec (f xs) (f ys))
 strategyLocations :: LabeledStrategy a -> [([Int], Id)]
 strategyLocations s = ([], getId s) : make s
  where
-   make = nrs . fold alg . toCore . unlabel
+   make = nrs . fold alg . toStrategyTree . unlabel
    alg  = monoidAlg 
       { fLeaf  = \a   -> [(getId a, [])]
       , fLabel = \l x -> [(l, nrs x)]

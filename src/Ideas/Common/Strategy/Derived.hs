@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 -----------------------------------------------------------------------------
 -- Copyright 2015, Open Universiteit Nederland. This file is distributed
 -- under the terms of the GNU General Public License. For more information,
@@ -15,16 +14,17 @@
 module Ideas.Common.Strategy.Derived
    ( AtomicSymbol(..), LabelSymbol(..)
    , atomic, (<%>), interleave, permute, concurrent, (<@>), (!*>), inits
+   , many, many1, replicate, option, try, repeat, repeat1, exhaustive
    , filterP, hide
    ) where
 
+import Ideas.Common.Classes
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.Step
-
-useFirst :: Choice b => (a -> Process a -> b) -> b -> Process a -> b
-useFirst op e = menuFirst op e
+import Prelude hiding (sequence, replicate, repeat)
+import qualified Prelude
 
 split :: (AtomicSymbol a, Choice b)
       => (Process a -> Process a -> b) -> b -> Process a -> b         
@@ -34,14 +34,14 @@ split op = split2 (op . single) op
 -- that the left part of the split is a single symbol. 
 split2 :: (AtomicSymbol a, Choice b)
        => (a -> Process a -> b) -> (Process a -> Process a -> b) -> b -> Process a -> b         
-split2 op1 op2 = useFirst f
+split2 op1 op2 = menuFirst f
  where
    f a | a == atomicOpen = rec (op2 . (a ~>)) 1
        | otherwise       = op1 a
          
    rec acc n
       | n == 0    = acc done
-      | otherwise = useFirst g empty
+      | otherwise = menuFirst g empty
     where
       g a = rec (acc . (a ~>)) (pm a n)
 
@@ -76,7 +76,7 @@ concurrent switch = normal
  where
    normal p q = stepBoth q p .|. (stepRight q p .|. stepRight p q)
 
-   stepBoth  = useFirst stop2 . useFirst stop2 done
+   stepBoth  = menuFirst stop2 . menuFirst stop2 done
    stop2 _ _ = empty
 
    stepRight p = split2 op1 op2 empty
@@ -102,12 +102,41 @@ p0 <@> q0 = rec q0 p0
  where
    rec q  = let op b r = b .*. rec r q
             in split op (bothOk q)
-   bothOk = useFirst (\_ _ -> empty) done
+   bothOk = menuFirst (\_ _ -> empty) done
 
 inits :: AtomicSymbol a => Process a -> Process a
 inits = rec
  where
    rec p = done .|. split op empty p
    op x  = (x .*.) . rec
+
+many :: (Sequence a, Fix a, Choice a) => a -> a 
+many s = fix $ \x -> done .|. (s .*. x)
+
+many1 :: (Sequence a, Fix a, Choice a) => a -> a 
+many1 s = s .*. many s
+
+replicate :: Sequence a => Int -> a -> a
+replicate n = sequence . Prelude.replicate n
+
+-- | Apply a certain strategy or do nothing (non-greedy)
+option :: (Choice a, Sequence a) => a -> a
+option s = s .|. done
+
+-- | Apply a certain strategy if this is possible (greedy version of 'option')
+try :: (Choice a, Sequence a) => a -> a
+try s = s |> done
+
+-- | Repeat a strategy zero or more times (greedy version of 'many')
+repeat :: (Sequence a, Fix a, Choice a) => a -> a
+repeat s = fix $ \x -> try (s .*. x)
+   
+-- | Apply a certain strategy at least once (greedy version of 'many1')
+repeat1 :: (Sequence a, Fix a, Choice a) => a -> a
+repeat1 s = s .*. repeat s
+
+-- | Apply the strategies from the list exhaustively (until this is no longer possible)
+exhaustive :: (Sequence a, Fix a, Choice a) => [a] -> a
+exhaustive = repeat . choice
 
 ---------------------------------------------------------------------------

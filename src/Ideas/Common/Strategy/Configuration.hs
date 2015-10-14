@@ -27,6 +27,7 @@ import Ideas.Common.Rule
 import Ideas.Common.Classes
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Sequence
+import Ideas.Common.Strategy.StrategyTree
 import Ideas.Common.Strategy.Process hiding (fold)
 import Ideas.Common.CyclicTree hiding (label)
 import Ideas.Common.Strategy.Step
@@ -78,24 +79,24 @@ configureStrategyTree (Cfg pairs) tree = foldr handle tree pairs
  where
    handle (ByName l, action) = 
       case action of 
-         Remove   -> insertAtLabel l removeDef
-         Reinsert -> removeAtLabel l removeDef
-         Collapse -> insertAtLabel l collapseDef
-         Expand   -> removeAtLabel l collapseDef
-         Hide     -> insertAtLabel l hideDef
-         Reveal   -> removeAtLabel l hideDef
+         Remove   -> insertAtLabel l removeDecl
+         Reinsert -> removeAtLabel l removeDecl
+         Collapse -> insertAtLabel l collapseDecl
+         Expand   -> removeAtLabel l collapseDecl
+         Hide     -> insertAtLabel l hideDecl
+         Reveal   -> removeAtLabel l hideDecl
 
-insertAtLabel :: Id -> Combinator f -> StrategyTree a -> StrategyTree a
+insertAtLabel :: Id -> Decl Unary -> StrategyTree a -> StrategyTree a
 insertAtLabel n comb = replaceLeaf f . replaceLabel g
  where
-   f a | n == getId a = useDef comb [leaf a]
+   f a | n == getId a = fromUnary (applyDecl comb) (leaf a)
        | otherwise    = leaf a
        
-   g l a | n == l    = useDef comb [Tree.label l a]
+   g l a | n == l    = fromUnary (applyDecl comb) (Tree.label l a)
          | otherwise = Tree.label l a
 
-removeAtLabel :: Id -> Combinator f -> StrategyTree a -> StrategyTree a
-removeAtLabel n _def = replaceNode $ \d xs -> -- fix me: use def
+removeAtLabel :: Id -> Decl Unary -> StrategyTree a -> StrategyTree a
+removeAtLabel n _decl = replaceNode $ \d xs -> -- fix me: use decl
    case map nextId xs of
       [Just l] | n == l -> head xs
       _ -> node d xs
@@ -110,34 +111,30 @@ nextId = fold monoidAlg
    } 
 
 isConfigId :: HasId a => a -> Bool
-isConfigId = (`elem` map getId configDefs) . getId
+isConfigId = (`elem` map getId configIds) . getId
 
 ---------------------------------------------------------------------
 -- Combinator definitions
 
-remove :: IsStrategy f => f a -> Strategy a
-remove = liftS (useCombinator removeDef)
+remove, collapse, hide :: IsStrategy f => f a -> Strategy a
+remove   = decl1 removeDecl
+collapse = decl1 collapseDecl
+hide     = decl1 hideDecl
 
-collapse :: IsStrategy f => f a -> Strategy a
-collapse = liftS (useCombinator collapseDef)
+configIds :: [Id]
+configIds = map getId [removeDecl, collapseDecl, hideDecl]
 
-hide :: IsStrategy f => f a -> Strategy a
-hide = liftS (useCombinator hideDef)
+removeDecl :: Decl Unary
+removeDecl = "removed" .=. Unary (const empty)
 
-configDefs :: [Id]
-configDefs = [getId removeDef, getId collapseDef, getId hideDef]
-
-removeDef :: Combinator (Strategy a -> Strategy a)
-removeDef = combinator1 "removed" (const empty)
-
-collapseDef :: Combinator (Strategy a -> Strategy a)
-collapseDef = combinator1 "collapsed" $ \a -> 
+collapseDecl :: Decl Unary
+collapseDecl = "collapsed" .=. Unary (\a -> 
    case firsts a of
       [(r, _)] -> maybe empty (`collapseWith` a) (isEnterRule r)
-      _        -> empty
+      _        -> empty)
  where    
    collapseWith l = 
       single . makeRule l . runProcess
 
-hideDef :: Combinator (Strategy a -> Strategy a)
-hideDef = combinator1 "hidden" (fmap minor)
+hideDecl :: Decl Unary
+hideDecl = "hidden" .=. Unary (fmap minor)

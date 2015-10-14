@@ -113,6 +113,7 @@ Library
     Ideas.Common.Strategy.Process
     Ideas.Common.Strategy.Sequence
     Ideas.Common.Strategy.Step
+    Ideas.Common.Strategy.StrategyTree
     Ideas.Common.Strategy.Traversal
     Ideas.Common.Traversal.Iterator
     Ideas.Common.Traversal.Navigator

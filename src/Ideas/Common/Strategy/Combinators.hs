@@ -25,6 +25,7 @@ import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Configuration
 import Ideas.Common.Strategy.Process
+import Ideas.Common.Strategy.StrategyTree
 import Ideas.Common.Utils (fst3)
 import Prelude hiding (not, repeat, fail, sequence)
 import qualified Ideas.Common.Strategy.Choice as Choice
@@ -56,15 +57,15 @@ s .%. t = interleave [toStrategy s, toStrategy t]
 
 -- | Alternate two strategies
 (.@.) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(.@.) = liftS2 $ useCombinator $ combinator2 "alternate" (Derived.<@>)
+(.@.) = decl2 $ "alternate" .=. Binary (Derived.<@>)
 
 -- | Prefixing a basic rule to a strategy atomically
 (!~>) :: IsStrategy f => Rule a -> f a -> Strategy a
-(!~>) = liftS2 $ useCombinator $ combinator2 "atomicprefix" (Derived.!*>)
+(!~>) = decl2 $ "atomicprefix" .=. Binary (Derived.!*>)
 
 -- | Initial prefixes (allows the strategy to stop succesfully at any time)
 inits :: IsStrategy f => f a -> Strategy a
-inits = liftS $ useCombinator $ combinator1 "inits" Derived.inits
+inits = decl1 $ "inits" .=. Unary Derived.inits
 
 -- | The strategy that always succeeds (without doing anything)
 succeed :: Strategy a
@@ -76,7 +77,7 @@ fail = Choice.empty
 
 -- | Makes a strategy atomic (w.r.t. parallel composition)
 atomic :: IsStrategy f => f a -> Strategy a
-atomic = liftS $ useCombinator $ combinator1 "atomic" Derived.atomic
+atomic = decl1 $ "atomic" .=. Unary Derived.atomic
 
 -- | Puts a list of strategies into a sequence
 sequence :: IsStrategy f => [f a] -> Strategy a
@@ -88,13 +89,13 @@ choice = Choice.choice . map toStrategy
 
 -- | Merges a list of strategies (in parallel)
 interleave :: IsStrategy f => [f a] -> Strategy a
-interleave = liftSn $ useCombinator $ combinatorA interleaveId Derived.interleave
+interleave = declN $ associative (interleaveId .=. Nary Derived.interleave)
 
 noInterleaving :: IsStrategy f => f a -> Strategy a
 noInterleaving = onStrategyTree (replaceNode f)
  where
    f d = if getId d == interleaveId  
-         then useDef (combinator "sequence" Sequence.sequence) -- fix me
+         then fromNary (applyDecl ("sequence" .=. Nary Sequence.sequence)) -- fix me
          else node d
 
 interleaveId :: Id
@@ -102,25 +103,25 @@ interleaveId = newId "interleave"
    
 -- | Allows all permutations of the list
 permute :: IsStrategy f => [f a] -> Strategy a
-permute = liftSn $ useCombinator $ combinatorA "permute" Derived.permute
+permute = declN $ "permute" .=. Nary Derived.permute
 
 -- EBNF combinators --------------------------------------
 
 -- | Repeat a strategy zero or more times (non-greedy)
 many :: IsStrategy f => f a -> Strategy a
-many = liftS $ useCombinator $ combinator1 "many" Derived.many
+many = decl1 $ "many" .=. Unary Derived.many
 
 -- | Apply a certain strategy at least once (non-greedy)
 many1 :: IsStrategy f => f a -> Strategy a
-many1 = liftS $ useCombinator $ combinator1 "many1" Derived.many1
+many1 = decl1 $ "many1" .=. Unary Derived.many1
 
 -- | Apply a strategy a certain number of times
 replicate :: IsStrategy f => Int -> f a -> Strategy a
-replicate n = liftS $ useCombinator $ combinator1 ("replicate" # show n) (Derived.replicate n)
+replicate n = decl1 $ ("replicate" # show n) .=. Unary (Derived.replicate n)
 
 -- | Apply a certain strategy or do nothing (non-greedy)
 option :: IsStrategy f => f a -> Strategy a
-option = liftS $ useCombinator $ combinator1 "option" Derived.option
+option = decl1 $ "option" .=. Unary Derived.option
 
 -- Negation and greedy combinators ----------------------
 
@@ -132,20 +133,20 @@ check = toStrategy . checkRule "check"
 -- | Check whether or not the argument strategy cannot be applied: the result
 --   strategy only succeeds if this is not the case (otherwise it fails).
 not :: IsStrategy f => f a -> Strategy a
-not = liftS $ useCombinator $ combinator1 "not" $ \x -> 
-   Sequence.single $ checkRule "core.not" $ null . runProcess x
+not = decl1 $ "not" .=. Unary (\x -> 
+   Sequence.single $ checkRule "core.not" $ null . runProcess x)
 
 -- | Repeat a strategy zero or more times (greedy version of 'many')
 repeat :: IsStrategy f => f a -> Strategy a
-repeat = liftS $ useCombinator $ combinator1 "repeat" Derived.repeat
+repeat = decl1 $ "repeat" .=. Unary Derived.repeat
    
 -- | Apply a certain strategy at least once (greedy version of 'many1')
 repeat1 :: IsStrategy f => f a -> Strategy a
-repeat1 = liftS $ useCombinator $ combinator1 "repeat1" Derived.repeat1
+repeat1 = decl1 $ "repeat1" .=. Unary Derived.repeat1
 
 -- | Apply a certain strategy if this is possible (greedy version of 'option')
 try :: IsStrategy f => f a -> Strategy a
-try = liftS $ useCombinator $ combinator1 "try" Derived.try
+try = decl1 $ "try" .=. Unary Derived.try
 
 -- | Choose between the two strategies, with a preference for steps from the
 -- left hand-side strategy.
@@ -168,7 +169,7 @@ until p = while (Prelude.not . p)
 
 -- | Apply the strategies from the list exhaustively (until this is no longer possible)
 exhaustive :: IsStrategy f => [f a] -> Strategy a
-exhaustive = liftSn $ useCombinator $ combinator "exhaustive" Derived.exhaustive
+exhaustive = declN $ "exhaustive" .=. Nary Derived.exhaustive
 
 -- | Apply a strategy at least once, but collapse into a single step
 multi :: (IsId l, IsStrategy f) => l -> f a -> Strategy a

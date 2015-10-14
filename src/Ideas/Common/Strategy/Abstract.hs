@@ -14,20 +14,18 @@
 
 module Ideas.Common.Strategy.Abstract
    ( Strategy, IsStrategy(..)
+   , liftS, liftS2, liftSn
    , LabeledStrategy, label, unlabel
    , derivationList
    , emptyPrefix, replayPath, replayPaths, replayStrategy
    , rulesInStrategy, mapRules, mapRulesS
    , cleanUpStrategy, cleanUpStrategyAfter
      -- Accessors to the underlying representation
-   , liftS, liftS2, liftSn
    , toStrategyTree, onStrategyTree
-   , combinator, combinatorA, combinator1, combinator2
-   , Combinator, useCombinator, StrategyTree, useDef
+   , useDecl, decl0, decl1, decl2, declN
    ) where
 
 import Data.Foldable (toList)
-import Data.Function (on)
 import Ideas.Common.Classes
 import Ideas.Common.Derivation
 import Ideas.Common.Environment
@@ -40,6 +38,7 @@ import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Step
 import Ideas.Common.Strategy.Sequence (Sequence(..), ready)
+import Ideas.Common.Strategy.StrategyTree
 import Ideas.Common.View
 import Prelude hiding (sequence)
 import qualified Ideas.Common.CyclicTree as Tree
@@ -57,24 +56,24 @@ instance Apply Strategy where
    applyAll = runProcess . getProcess
 
 instance Choice (Strategy a) where
-   empty   = useCombinator (combinator0 "fail" empty)
+   empty   = decl0 ("fail" .=. Nullary empty)
    s .|. t = choice [s, t]
    
    s |>  t = orelse [s, t]
    s ./. t = preference [s, t]
    
-   choice     = useCombinator (combinatorA "choice" choice)
-   preference = useCombinator (combinatorA "preference" preference)
-   orelse     = useCombinator (combinatorA "orelse" orelse)
+   choice     = declN (associative ("choice" .=. Nary choice))
+   preference = declN (associative ("preference" .=. Nary preference))
+   orelse     = declN (associative ("orelse" .=. Nary orelse))
 
 instance Sequence (Strategy a) where
    type Sym (Strategy a) = Rule a
 
-   done     = useCombinator (combinator0 "succeed" done)
+   done     = decl0 ("succeed" .=. Nullary done)
    a ~> s   = sequence [toStrategy a, s]
    s .*. t  = sequence [s, t]
    single   = toStrategy
-   sequence = useCombinator (combinatorA "sequence" sequence)
+   sequence = declN (associative ("sequence" .=. Nary sequence))
 
 instance Fix (Strategy a) where
    fix f = S (fix (unS . f . S))
@@ -215,81 +214,24 @@ onStrategyTree f = S . f . toStrategyTree
 
 getProcess :: IsStrategy f => f a -> Process (Rule a)
 getProcess = foldUnwind emptyAlg
-   { fNode  = applyCombinator
+   { fNode  = fromNary . combinator
    , fLeaf  = single
    , fLabel = \l p -> enterRule l ~> p .*. (exitRule l ~> done)
    } . toStrategyTree
 
-makeC :: IsId n
-            => n 
-            -> ([StrategyTree a] -> [StrategyTree a]) 
-            -> (forall b . [Process (Rule b)] -> Process (Rule b))
-            -> Combinator ([Strategy a] -> Strategy a)
-makeC n f op = 
-   let strCom = C (newId n) op (S . useDef strCom . f . map unS)
-   in strCom
+-------------------------
 
-combinator :: IsId n
-            => n -> (forall b . [Process (Rule b)] -> Process (Rule b))
-            -> Combinator ([Strategy a] -> Strategy a)
-combinator n = makeC n id
+decl0 :: Decl Nullary -> Strategy a
+decl0 = fromNullary . useDecl
 
-combinatorA :: IsId n
-            => n -> (forall b. [Process (Rule b)] -> Process (Rule b)) 
-            -> Combinator ([Strategy a] -> Strategy a)
-combinatorA n = makeC myId (concatMap g)
- where
-   myId = newId n
-   g a  = case isNode a of 
-             Just (da, as) | getId da == myId -> as
-             _ -> [a]
+decl1 :: IsStrategy f => Decl Unary -> f a -> Strategy a
+decl1 = liftS . fromUnary . useDecl
 
-combinator0 :: IsId n 
-            => n -> (forall b . Process (Rule b)) 
-            -> Combinator (Strategy a)
-combinator0 n p = 
-   fmap ($ []) (combinator n (const p))
+decl2 :: (IsStrategy f, IsStrategy g) => Decl Binary -> f a -> g a -> Strategy a
+decl2 = liftS2 . fromBinary . useDecl
 
-combinator1 :: IsId n
-            => n -> (forall b . Process (Rule b) -> Process (Rule b)) 
-            -> Combinator (Strategy a -> Strategy a)
-combinator1 n op = 
-   fmap (\f x -> f [x]) (combinator n (list1 empty op))
- where
-   list1 _ f [a] = f a
-   list1 b _ _   = b
+declN :: IsStrategy f => Decl Nary -> [f a] -> Strategy a
+declN = liftSn . fromNary . useDecl
 
-combinator2 :: IsId n
-            => n -> (forall b . Process (Rule b) -> Process (Rule b) -> Process (Rule b)) 
-            -> Combinator (Strategy a -> Strategy a -> Strategy a)
-combinator2 n op =
-   fmap (\f x y -> f [x, y]) (combinator n (list2 empty op))
- where
-   list2 _ f [a1, a2] = f a1 a2
-   list2 b _ _        = b
-
--------------------------------------------------------------------------------
-
-data Combinator a = C
-   { combinatorId    :: Id
-   , applyCombinator :: forall b . [Process (Rule b)] -> Process (Rule b)
-   , useCombinator   :: a
-   } 
-
-useDef :: Combinator a -> [StrategyTree b] -> StrategyTree b
-useDef d = node (d {useCombinator = ()})
-
-type StrategyTree a = CyclicTree (Combinator ()) (Rule a)
-
-instance Show (Combinator a) where
-   show = showId
-
-instance Eq (Combinator a) where
-   (==) = (==) `on` getId
-
-instance HasId (Combinator a) where
-   getId = combinatorId
-   changeId f d = d { combinatorId = f (combinatorId d) }
-   
-instance Functor Combinator where
-   fmap f (C n op a) = C n op (f a)
+useDecl :: Arity f => Decl f -> f (Strategy a)
+useDecl = liftIso (S <-> unS) . applyDecl

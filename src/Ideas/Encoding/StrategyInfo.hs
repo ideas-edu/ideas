@@ -19,6 +19,7 @@ import Ideas.Common.Id
 import Ideas.Common.CyclicTree
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Configuration
+import Ideas.Common.Strategy.StrategyTree (StrategyTree)
 import Ideas.Text.XML
 
 -----------------------------------------------------------------------

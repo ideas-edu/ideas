@@ -27,14 +27,14 @@ import Ideas.Common.Strategy.Sequence
 
 ------------------------------------------------------------------------
 -- Process data type
-   
+
 newtype Process a = P [Menu a (Process a)]
 
 instance Eq a => Eq (Process a) where
    (==) = eqProcessBy (==)
 
-instance Functor Process where 
-   fmap f = rec 
+instance Functor Process where
+   fmap f = rec
     where
       rec (P xs) = P (map g xs)
       g = onMenu (\a q -> f a |-> rec q) doneMenu
@@ -51,20 +51,20 @@ instance Sequence (Process a) where
    done = P []
    a ~> b = P [a |-> b]
    P xs .*. P ys = P (xs ++ ys)
-      
+
 instance Fix (Process a)
-      
+
 instance Firsts (Process a) where
    type Elem (Process a) = a
-   
+
    firsts = bests . menu
    ready  = hasDone . menu
-      
+
 runProcess :: Apply f => Process (f a) -> a -> [a]
 runProcess p a = menuFirst op [a] p
  where
    op f x = [ c | b <- applyAll f a, c <- runProcess x b ]
-   
+
 menu :: Process a -> Menu a (Process a)
 menu (P zs) = rec zs
  where
@@ -77,7 +77,7 @@ menuFirst op e (P zs) = rec zs
  where
    rec []     = e
    rec (x:xs) = onMenu (\a (P ys) -> op a (P (ys ++ xs))) (rec xs) x
-   
+
 -- | Generalized equality of processes, which takes an equality function for
 -- the symbols.
 eqProcessBy :: (a -> a -> Bool) -> Process a -> Process a -> Bool
@@ -86,6 +86,6 @@ eqProcessBy eq = rec
    rec p q = eqMenuBy eq rec (menu p) (menu q)
 
 fold :: Choice b => (a -> b -> b) -> b -> Process a -> b
-fold op e = rec 
+fold op e = rec
  where
    rec = menuFirst (\a -> op a . rec) e

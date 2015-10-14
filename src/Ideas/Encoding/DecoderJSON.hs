@@ -104,7 +104,7 @@ decodeState = do
                 prfx = replayPaths pts (strategy ex) ctx
             case rest of
                [] -> return $ makeState ex prfx ctx
-               [Array [String user, String session, String startterm]] -> 
+               [Array [String user, String session, String startterm]] ->
                   return (makeState ex prfx ctx)
                      { stateUser      = Just user
                      , stateSession   = Just session

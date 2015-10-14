@@ -29,7 +29,6 @@ import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
 import Ideas.Main.BlackBoxTests
 import Ideas.Main.Documentation
-import qualified Ideas.Main.Logging as Log
 import Ideas.Main.Options hiding (fullVersion)
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Analysis
@@ -40,6 +39,7 @@ import Network.CGI
 import Prelude hiding (catch)
 import System.IO
 import System.IO.Error (ioeGetErrorString)
+import qualified Ideas.Main.Logging as Log
 
 defaultMain :: DomainReasoner -> IO ()
 defaultMain dr = do
@@ -69,7 +69,7 @@ defaultCGI dr = runCGI $ handleErrors $ do
          , Log.output    = txt
          }
       Log.logRecord (getSchema req) logRef
-         
+
    -- write header and output
    setHeader "Content-type" ctp
    -- Cross-Origin Resource Sharing (CORS) prevents browser warnings
@@ -137,7 +137,6 @@ defaultCommandLine dr flags = do
          MakeScriptFor s    -> makeScriptFor dr s
          AnalyzeScript file -> parseAndAnalyzeScript dr file
          PrintLog           -> return ()
-         
 
 process :: DomainReasoner -> Log.LogRef -> Maybe String -> String -> IO (Request, String, String)
 process dr logRef cgiBin input = do

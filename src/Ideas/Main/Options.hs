@@ -29,7 +29,7 @@ data Flag = Version | Help | PrintLog
           | InputFile String
           | MakePages FilePath | Test FilePath
           | MakeScriptFor String | AnalyzeScript FilePath
-          
+
    deriving Eq
 
 header :: String

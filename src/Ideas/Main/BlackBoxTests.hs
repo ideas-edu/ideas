@@ -20,9 +20,9 @@ import Ideas.Common.Utils (useFixedStdGen, snd3)
 import Ideas.Common.Utils.TestSuite
 import Ideas.Encoding.ModeJSON
 import Ideas.Encoding.ModeXML
+import Ideas.Main.Logging
 import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
-import Ideas.Main.Logging
 import System.Directory
 import System.IO
 import qualified Data.Algorithm.Diff as Diff

@@ -28,8 +28,8 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import Ideas.Common.Library hiding (suitable, ready, (:~>))
-import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.Prefix
+import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.Step
 import System.Random
 
@@ -109,7 +109,7 @@ startState ex userId a = do
 -- Restart the strategy: make sure that the new state has a prefix
 -- When resetting the prefix, also make sure that the context is refreshed
 restart :: State a -> State a
-restart state 
+restart state
    | canBeRestarted ex = state
         { stateContext = ctx
         , statePrefix  = emptyPrefix (strategy ex) ctx

@@ -21,25 +21,25 @@ module Ideas.Common.Strategy.StrategyTree
 import Data.Function
 import Ideas.Common.CyclicTree
 import Ideas.Common.Id
-import Ideas.Common.View
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Process
- 
+import Ideas.Common.View
+
 infix 1 .=.
 
 ------------------------------------------------------------------------------
 
 type StrategyTree a = CyclicTree (Decl Nary) (Rule a)
- 
+
 applyDecl :: Arity f => Decl f -> f (StrategyTree a)
 applyDecl d = toArity ( (node (C (getId d) (Nary $ \xs -> maybe empty id $ listify (combinator d) xs) (isAssociative d)) . make))
  where
-   make | isAssociative d = concatMap collect 
+   make | isAssociative d = concatMap collect
         | otherwise       = id
-        
-   collect a  = 
-      case isNode a of 
+
+   collect a  =
+      case isNode a of
          Just (da, as) | getId da == getId d -> as
          _ -> [a]
 
@@ -52,7 +52,7 @@ data Decl f = C
    , combinator    :: Combinator f
    , isAssociative :: Bool
    }
-   
+
 instance Show (Decl f) where
    show = showId
 
@@ -80,7 +80,7 @@ data Nullary a = Nullary { fromNullary :: a }
 data Unary   a = Unary   { fromUnary   :: a -> a }
 data Binary  a = Binary  { fromBinary  :: a -> a -> a }
 data Nary    a = Nary    { fromNary    :: [a] -> a }
- 
+
 instance Arity Nullary where
    listify (Nullary a) [] = Just a
    listify _ _ = Nothing

@@ -59,13 +59,13 @@ instance Firsts (Prefix a) where
 
    ready  = hasDone . remainder
    firsts = map reorder . bests . remainder
-    
+
 firstsOrdered :: (Rule a -> Rule a -> Ordering) -> Prefix a -> [((Rule a, a, Environment), Prefix a)]
 firstsOrdered cmp = map reorder . bestsOrdered cmp . remainder
 
 reorder :: (a, (b, env, c)) -> ((a, b, env), c)
 reorder (x, (y, env, z)) = ((x, y, env), z)
-  
+
 --------------------------------------------------------------------------------
 -- Constructing a prefix
 
@@ -87,7 +87,7 @@ replayProcess (Path is) = replay [] is
       case getByIndex n (menu p) of
          Just (a, r) -> replay (a:acc) ns r
          _ -> ([], const noPrefix)
-         
+
    createPrefix p = Prefix [Path is] . flip (rec []) p
 
    rec ns a = cut . onMenuWithIndex f doneMenu . menu
@@ -135,7 +135,7 @@ searchModePrefix prfx =
 
    process [] = empty
    process ((r, (a, env, pr)):xs) =
-      (r |-> (a, env, pr { remainder = rec (remainder pr) })) 
+      (r |-> (a, env, pr { remainder = rec (remainder pr) }))
       .|. process (concatMap (change r) xs)
 
    change y (r, pair) =

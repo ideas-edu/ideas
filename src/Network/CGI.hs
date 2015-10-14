@@ -104,8 +104,8 @@ import Data.Maybe (fromMaybe)
 import Network.Multipart
 import Network.Multipart.Header
 import Network.URI (URI(..), URIAuth(..), nullURI, parseRelativeReference, escapeURIString, isUnescapedInURI)
-import qualified Data.Map as Map
 import System.IO (stdin, stdout)
+import qualified Data.Map as Map
 
 import Data.ByteString.Lazy.Char8 (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as BS

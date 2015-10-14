@@ -18,8 +18,8 @@ module Ideas.Service.ProblemDecomposition
 
 import Data.Maybe
 import Ideas.Common.Library
-import Ideas.Common.Utils (fst3)
 import Ideas.Common.Strategy.Step
+import Ideas.Common.Utils (fst3)
 import Ideas.Service.State
 import Ideas.Service.Types
 
@@ -39,15 +39,15 @@ problemDecomposition msloc state maybeAnswer
               (newCtx, _, newPrefix) = head witnesses
               newLocation = nextTaskLocation strat sloc $
                                fromMaybe topId $ nextMajorForPrefix newPrefix
-              newState = state 
-                 { statePrefix  = newPrefix 
+              newState = state
+                 { statePrefix  = newPrefix
                  , stateContext = newCtx
                  }
            _ -> Incorrect isEquiv newLocation expState arguments
             where
               newLocation = subTaskLocation strat sloc loc
-              expState = state 
-                 { statePrefix  = pref 
+              expState = state
+                 { statePrefix  = pref
                  , stateContext = expected
                  }
               isEquiv  = maybe False (equivalence ex expected . fromAnswer) maybeAnswer
@@ -72,8 +72,8 @@ runPrefixLocation loc = rec []
       ((st, a, env), q) <- firsts p
       if isLoc st then return (a, reverse ((st, env):acc), q)
                   else rec ((st, env):acc) q
-    
-   isLoc r = 
+
+   isLoc r =
       case (isEnterRule r, isExitRule r) of
          (Just _, _) -> False
          (_, Just l) -> l == loc
@@ -91,7 +91,7 @@ nextMajorForPrefix = listToMaybe . rec
       ((r, _, _), p) <- firsts prfx
       case isEnterRule r of
          Just l -> [l]
-         Nothing 
+         Nothing
             | isMajor r -> [getId r]
             | otherwise -> rec p
 

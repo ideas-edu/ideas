@@ -29,7 +29,7 @@ import Ideas.Common.Rule
 
 class Eq a => AtomicSymbol a where
    atomicOpen, atomicClose :: a
-  
+
 instance AtomicSymbol (Rule a) where
    atomicOpen  = idRule "atomic.open"
    atomicClose = idRule "atomic.close"
@@ -47,7 +47,7 @@ exitRule :: Id -> Rule a
 exitRule l = idRule (l # "exit")
 
 isEnterRule :: Rule a -> Maybe Id
-isEnterRule st = do 
+isEnterRule st = do
    let n = getId st
    guard (unqualified n == "enter")
    return (initId n)
@@ -57,6 +57,6 @@ isExitRule st = do
    let n = getId st
    guard (unqualified n == "exit")
    return (initId n)
-   
+
 initId :: Id -> Id
 initId = newId . intercalate "." . qualifiers

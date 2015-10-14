@@ -12,7 +12,7 @@
 --  $Id: Core.hs 7590 2015-04-21 07:26:58Z bastiaan $
 
 module Ideas.Common.CyclicTree
-   ( -- * Data type 
+   ( -- * Data type
      CyclicTree
      -- * Constructor functions
    , node, node0, node1, node2, leaf, label
@@ -21,7 +21,7 @@ module Ideas.Common.CyclicTree
      -- * Replace functions
    , replaceNode, replaceLeaf, replaceLabel, shrinkTree
      -- * Fold and algebra
-   , fold, foldUnwind 
+   , fold, foldUnwind
    , CyclicTreeAlg, fNode, fLeaf, fLabel, fRec, fVar
    , emptyAlg, monoidAlg
    ) where
@@ -38,7 +38,7 @@ import Test.QuickCheck hiding (label)
 --------------------------------------------------------------
 -- Data type
 
-data CyclicTree a b 
+data CyclicTree a b
    = Node a [CyclicTree a b]
    | Leaf b
    | Label Id (CyclicTree a b)
@@ -72,7 +72,7 @@ instance Foldable (CyclicTree d) where
    foldMap f = fold monoidAlg {fLeaf = f}
 
 instance Traversable (CyclicTree d) where
-   traverse f = fold emptyAlg 
+   traverse f = fold emptyAlg
       { fNode  = \a -> liftA (node a) . sequenceA
       , fLeaf  = liftA leaf . f
       , fLabel = liftA . label
@@ -82,7 +82,7 @@ instance Traversable (CyclicTree d) where
 
 instance Fix (CyclicTree a b) where
    fix f = Rec n (f (Var n))
-    where 
+    where
       vs = vars (f (Var (-1)))
       n  = maximum (-1 : vs) + 1
 
@@ -108,7 +108,7 @@ arbTree = rec 0
       ms = choose (0, 3) >>= \i -> replicateM i m
 
 shrinkTree :: CyclicTree a b -> [CyclicTree a b]
-shrinkTree tree = 
+shrinkTree tree =
    case tree of
       Node a ts -> ts ++ map (node a) (shrinkTrees ts)
       Label l t -> t : map (Label l) (shrinkTree t)
@@ -124,10 +124,10 @@ shrinkTrees (t:ts) = map (:ts) (shrinkTree t) ++ map (t:) (shrinkTrees ts)
 par :: [String] -> String
 par xs | null xs   = ""
        | otherwise = "(" ++ intercalate ", " xs ++ ")"
-      
+
 vars :: CyclicTree a b -> [Int]
 vars = fold monoidAlg {fVar = return}
-      
+
 --------------------------------------------------------------
 -- Constructor functions
 
@@ -143,7 +143,7 @@ node1 a x = node a [x]
 node2 :: a -> CyclicTree a b -> CyclicTree a b -> CyclicTree a b
 node2 a x y = node a [x, y]
 
-leaf :: b -> CyclicTree a b 
+leaf :: b -> CyclicTree a b
 leaf = Leaf
 
 label :: IsId n => n -> CyclicTree a b -> CyclicTree a b
@@ -159,7 +159,7 @@ isNode _ = Nothing
 isLeaf :: CyclicTree a b -> Maybe b
 isLeaf (Leaf b) = Just b
 isLeaf _ = Nothing
- 
+
 isLabel :: CyclicTree a b -> Maybe (Id, CyclicTree a b)
 isLabel (Label l t) = Just (l, t)
 isLabel _ = Nothing
@@ -169,7 +169,7 @@ isLabel _ = Nothing
 
 replaceNode :: (a -> [CyclicTree a b] -> CyclicTree a b) -> CyclicTree a b -> CyclicTree a b
 replaceNode f = fold idAlg {fNode = f}
-   
+
 replaceLabel :: (Id -> CyclicTree a b -> CyclicTree a b) -> CyclicTree a b -> CyclicTree a b
 replaceLabel f = fold idAlg {fLabel = f}
 
@@ -200,16 +200,16 @@ foldUnwind alg = start . fold Alg
  where
    start f = f (error "foldUnwind: unbound var")
    extend n a sub i
-      | i == n    = a 
+      | i == n    = a
       | otherwise = sub i
 
-data CyclicTreeAlg a b t = Alg 
-   { fNode  :: a -> [t] -> t 
+data CyclicTreeAlg a b t = Alg
+   { fNode  :: a -> [t] -> t
    , fLeaf  :: b -> t
    , fLabel :: Id -> t -> t
    , fRec   :: Int -> t -> t
    , fVar   :: Int -> t
-   } 
+   }
 
 idAlg :: CyclicTreeAlg a b (CyclicTree a b)
 idAlg = Alg Node Leaf Label Rec Var

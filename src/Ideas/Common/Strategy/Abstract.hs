@@ -27,17 +27,17 @@ module Ideas.Common.Strategy.Abstract
 
 import Data.Foldable (toList)
 import Ideas.Common.Classes
+import Ideas.Common.CyclicTree hiding (label)
 import Ideas.Common.Derivation
 import Ideas.Common.Environment
 import Ideas.Common.Id
 import Ideas.Common.Rewriting (RewriteRule)
 import Ideas.Common.Rule
-import Ideas.Common.CyclicTree hiding (label)
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Process
-import Ideas.Common.Strategy.Step
 import Ideas.Common.Strategy.Sequence (Sequence(..), ready)
+import Ideas.Common.Strategy.Step
 import Ideas.Common.Strategy.StrategyTree
 import Ideas.Common.View
 import Prelude hiding (sequence)
@@ -58,10 +58,10 @@ instance Apply Strategy where
 instance Choice (Strategy a) where
    empty   = decl0 ("fail" .=. Nullary empty)
    s .|. t = choice [s, t]
-   
+
    s |>  t = orelse [s, t]
    s ./. t = preference [s, t]
-   
+
    choice     = declN (associative ("choice" .=. Nary choice))
    preference = declN (associative ("preference" .=. Nary preference))
    orelse     = declN (associative ("orelse" .=. Nary orelse))
@@ -77,7 +77,7 @@ instance Sequence (Strategy a) where
 
 instance Fix (Strategy a) where
    fix f = S (fix (unS . f . S))
-   
+
 -----------------------------------------------------------
 --- Type class
 
@@ -100,7 +100,7 @@ instance IsStrategy RewriteRule where
 liftS :: IsStrategy f => (Strategy a -> Strategy a) -> f a -> Strategy a
 liftS f = f . toStrategy
 
-liftS2 :: (IsStrategy f, IsStrategy g) 
+liftS2 :: (IsStrategy f, IsStrategy g)
        => (Strategy a -> Strategy a -> Strategy a) -> f a -> g a -> Strategy a
 liftS2 f = liftS . f . toStrategy
 
@@ -195,7 +195,7 @@ mapRulesS f = S . fmap f . unS
 -- | Use a function as do-after hook for all rules in a labeled strategy, but
 -- also use the function beforehand
 cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
-cleanUpStrategy f (LS n s) = cleanUpStrategyAfter f $ 
+cleanUpStrategy f (LS n s) = cleanUpStrategyAfter f $
    LS n (doAfter f (idRule ()) ~> s)
 
 -- | Use a function as do-after hook for all rules in a labeled strategy

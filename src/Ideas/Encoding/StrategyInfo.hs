@@ -15,8 +15,8 @@
 
 module Ideas.Encoding.StrategyInfo (strategyToXML) where
 
-import Ideas.Common.Id
 import Ideas.Common.CyclicTree
+import Ideas.Common.Id
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Configuration
 import Ideas.Common.Strategy.StrategyTree (StrategyTree)
@@ -39,18 +39,18 @@ strategyTreeToXML tree = makeXML "label" $
 
 strategyTreeBuilder :: StrategyTree a -> XMLBuilder
 strategyTreeBuilder = fold emptyAlg
-   { fNode = \def xs -> 
+   { fNode = \def xs ->
         case xs of
-           [x] | isConfigId def 
+           [x] | isConfigId def
              -> addProperty (show def) x
            _ -> tag (show def) (mconcat xs)
-   , fLeaf = \r -> 
+   , fLeaf = \r ->
         tag "rule" ("name" .=. show r)
    , fLabel = \l a ->
         tag "label" (nameAttr l <> a)
    , fRec = \n a ->
         tag "rec" (("var" .=. show n) <> a)
-   , fVar = \n -> 
+   , fVar = \n ->
         tag "var" ("var" .=. show n)
    }
 
@@ -100,10 +100,10 @@ readStrategy toLabel findRule xml = error "not implemented" do
       | otherwise = return (foldr1 (:*:) xs)
    buildChoice _ xs
       | null xs   = return Fail
-      | otherwise = return (foldr1 (:|:) xs) 
+      | otherwise = return (foldr1 (:|:) xs)
    buildOrElse _ xs
       | null xs   = return Fail
-      | otherwise = return (foldr1 (:|>:) xs) 
+      | otherwise = return (foldr1 (:|>:) xs)
    buildInterleave _ xs
       | null xs   = return succeedCore
       | otherwise = return (foldr1 (:%:) xs)

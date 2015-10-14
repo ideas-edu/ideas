@@ -173,7 +173,7 @@ somewhere = traverse []
 
 -- as long as the predicate does not hold, go to the next layer
 somewhereWhen :: (IsStrategy g, Navigator a) => (a -> Bool) -> g a -> Strategy a
-somewhereWhen p s = fix $ \this -> 
+somewhereWhen p s = fix $ \this ->
    check p .*. s .|. check (Prelude.not . p) .*. layer [] this
 
 ----------------------------------------------------------------------

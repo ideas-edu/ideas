@@ -15,16 +15,16 @@
 
 module Ideas.Common.Strategy.Legacy where
 
-import qualified Prelude
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Combinators
+import qualified Prelude
 
 infixr 2 <%>, <@>
 infixr 3 <|>
 infixr 4 >|>
 infixr 5 <*>
 
-(<%>), (<@>), (<|>), (>|>), (<*>) :: 
+(<%>), (<@>), (<|>), (>|>), (<*>) ::
    (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
 
 (<%>) = (.%.)

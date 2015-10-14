@@ -98,7 +98,7 @@ encodeContext = exerciseEncoder $ \ex ctx ->
 encodeState :: JSONEncoder a (State a)
 encodeState = encoderFor $ \st ->
    let ctx   = stateContext st
-       get f = String (fromMaybe "" (f st)) 
+       get f = String (fromMaybe "" (f st))
        make pp env = Array $
           [ String $ showId (exercise st)
           , String $ if withoutPrefix st
@@ -161,7 +161,7 @@ encodeResult = encoderFor $ \result -> Object <$>
 encodeDiagnosis :: JSONEncoder a (Diagnose.Diagnosis a)
 encodeDiagnosis = encoderFor $ \diagnosis ->
    case diagnosis of
-      Diagnose.SyntaxError s -> 
+      Diagnose.SyntaxError s ->
          pure $ Object [("syntaxerror", String s)]
       Diagnose.NotEquivalent s ->
          if null s then pure (Object [("notequiv", Null)])

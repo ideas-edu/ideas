@@ -19,9 +19,9 @@ module Ideas.Common.Strategy.Location
    ) where
 
 import Data.Maybe
+import Ideas.Common.CyclicTree
 import Ideas.Common.Id
 import Ideas.Common.Strategy.Abstract
-import Ideas.Common.CyclicTree
 
 -----------------------------------------------------------
 --- Strategy locations
@@ -58,7 +58,7 @@ strategyLocations :: LabeledStrategy a -> [([Int], Id)]
 strategyLocations s = ([], getId s) : make s
  where
    make = nrs . fold alg . toStrategyTree . unlabel
-   alg  = monoidAlg 
+   alg  = monoidAlg
       { fLeaf  = \a   -> [(getId a, [])]
       , fLabel = \l x -> [(l, nrs x)]
       }

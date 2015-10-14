@@ -27,7 +27,7 @@ data Law a = Law String (LawSpec a)
 instance Show (Law a) where
    show (Law s _) = s
 
-data LawSpec a 
+data LawSpec a
    = AbsMono (a -> LawSpec a) -- simple abstraction (fewer classes needed)
    | forall b . (Arbitrary b, Show b, Different b) => Abs (b -> LawSpec a) -- generalized abstraction
    | a :==: a

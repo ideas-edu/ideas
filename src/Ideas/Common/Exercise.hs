@@ -260,7 +260,7 @@ instance Show Difficulty where
       xs = ["very_easy", "easy", "medium", "difficult", "very_difficult"]
 
 instance Read Difficulty where
-   readsPrec _ s = 
+   readsPrec _ s =
       case concatMap f txt of
          "veryeasy"      -> [(VeryEasy, xs)]
          "easy"          -> [(Easy, xs)]
@@ -270,7 +270,7 @@ instance Read Difficulty where
          _               -> []
     where
       (txt, xs) = break (not . p) (dropWhile isSpace s)
-      p c   = isAlpha c || c `elem` "_-" 
+      p c   = isAlpha c || c `elem` "_-"
       f c   = [toLower c | c `notElem` "_-"]
 
 -- | Parser for difficulty levels, which ignores non-alpha charactes (including

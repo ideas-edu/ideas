@@ -29,12 +29,12 @@ module Ideas.Common.Algebra.Field
    , CoSemiRing(..), CoRing(..), CoField(..)
    ) where
 
-import qualified Control.Applicative as Applicative
 import Control.Monad
 import Ideas.Common.Algebra.Group
 import Ideas.Common.Classes (mapBoth)
 import Test.QuickCheck
 import qualified Control.Applicative as A
+import qualified Control.Applicative as Applicative
 
 --------------------------------------------------------
 -- Semi-ring

@@ -24,7 +24,7 @@ module Ideas.Common.Strategy
    , derivationList
      -- * Strategy combinators
      -- ** Basic combinators
-   , (.*.), (.|.), (.%.), (.@.), (!~>) 
+   , (.*.), (.|.), (.%.), (.@.), (!~>)
    , succeed, fail, atomic, label, inits
    , sequence, choice, alternatives, interleave, permute
      -- ** EBNF combinators

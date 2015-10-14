@@ -334,7 +334,7 @@ tDifficulty :: Type a Difficulty
 tDifficulty = Tag "Difficulty" (Iso (f <-> show) tString)
     where
       f = fromMaybe Medium . readDifficulty
-      
+
 tUserId :: Type a String
 tUserId = Tag "UserId" tString
 
@@ -371,14 +371,14 @@ tTestSuiteResult = Const Result
 -------------------------------------
 
 findValuesOfType :: Type a t -> TypedValue (Type a) -> [t]
-findValuesOfType thisType = rec 
+findValuesOfType thisType = rec
  where
-   rec tv@(a ::: tp) = 
+   rec tv@(a ::: tp) =
       case equal tp thisType of
-         Just f  -> [f a] 
+         Just f  -> [f a]
          Nothing -> recDown tv
-   
-   recDown (a ::: tp) = 
+
+   recDown (a ::: tp) =
       case tp of
          Iso iso t  -> rec (to iso a ::: t)
          Tag _ t    -> rec (a ::: t)

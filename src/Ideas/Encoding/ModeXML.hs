@@ -25,11 +25,11 @@ import Ideas.Encoding.Encoder (makeOptions)
 import Ideas.Encoding.EncoderHTML
 import Ideas.Encoding.EncoderXML
 import Ideas.Encoding.Evaluator
+import Ideas.Main.Logging (LogRef, changeLog, errormsg)
 import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import Ideas.Text.HTML
 import Ideas.Text.XML
-import Ideas.Main.Logging (LogRef, changeLog, errormsg)
 import Prelude hiding (catch)
 import System.IO.Error hiding (catch)
 

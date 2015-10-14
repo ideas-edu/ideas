@@ -14,8 +14,8 @@
 
 module Ideas.Encoding.Evaluator (Evaluator(..), evalService) where
 
-import Ideas.Encoding.Encoder
 import Ideas.Common.Library
+import Ideas.Encoding.Encoder
 import Ideas.Main.Logging
 import Ideas.Service.Diagnose
 import Ideas.Service.Types
@@ -32,7 +32,7 @@ values :: EvalResult a c -> [TypedValue (Type a)]
 values result = outputValue result : inputValues result
 
 logType :: LogRef -> EvalResult a c -> Type a b -> (b -> Record -> Record) -> IO ()
-logType logRef res tp f = 
+logType logRef res tp f =
    case concatMap (findValuesOfType tp) (values res) of
       []   -> return ()
       hd:_ -> changeLog logRef (f hd)
@@ -44,7 +44,7 @@ evalService logRef opts f srv b = do
    logType logRef res tRule $ \rl r -> r {ruleid = showId rl}
    logType logRef res tDiagnosis $ \d r -> r {serviceinfo = show d}
    return (evalResult res)
-   
+
 eval :: Options a -> Evaluator a b c -> b -> TypedValue (Type a) -> IO (EvalResult a c)
 eval opts (Evaluator dec enc) b = rec
  where

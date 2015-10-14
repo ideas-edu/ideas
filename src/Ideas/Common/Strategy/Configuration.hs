@@ -21,16 +21,16 @@ module Ideas.Common.Strategy.Configuration
 
 import Data.Char
 import Data.Monoid
-import Ideas.Common.Id
-import Ideas.Common.Strategy.Abstract
-import Ideas.Common.Rule
 import Ideas.Common.Classes
-import Ideas.Common.Strategy.Choice
-import Ideas.Common.Strategy.Sequence
-import Ideas.Common.Strategy.StrategyTree
-import Ideas.Common.Strategy.Process hiding (fold)
 import Ideas.Common.CyclicTree hiding (label)
+import Ideas.Common.Id
+import Ideas.Common.Rule
+import Ideas.Common.Strategy.Abstract
+import Ideas.Common.Strategy.Choice
+import Ideas.Common.Strategy.Process hiding (fold)
+import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.Step
+import Ideas.Common.Strategy.StrategyTree
 import qualified Ideas.Common.CyclicTree as Tree
 
 ---------------------------------------------------------------------
@@ -77,8 +77,8 @@ configureS = onStrategyTree . configureStrategyTree
 configureStrategyTree :: StrategyCfg -> StrategyTree a -> StrategyTree a
 configureStrategyTree (Cfg pairs) tree = foldr handle tree pairs
  where
-   handle (ByName l, action) = 
-      case action of 
+   handle (ByName l, action) =
+      case action of
          Remove   -> insertAtLabel l removeDecl
          Reinsert -> removeAtLabel l removeDecl
          Collapse -> insertAtLabel l collapseDecl
@@ -91,7 +91,7 @@ insertAtLabel n comb = replaceLeaf f . replaceLabel g
  where
    f a | n == getId a = fromUnary (applyDecl comb) (leaf a)
        | otherwise    = leaf a
-       
+
    g l a | n == l    = fromUnary (applyDecl comb) (Tree.label l a)
          | otherwise = Tree.label l a
 
@@ -102,13 +102,13 @@ removeAtLabel n _decl = replaceNode $ \d xs -> -- fix me: use decl
       _ -> node d xs
 
 nextId :: StrategyTree a -> Maybe Id
-nextId = fold monoidAlg 
-   { fNode  = \d xs -> if isConfigId d && length xs == 1 
-                       then head xs 
+nextId = fold monoidAlg
+   { fNode  = \d xs -> if isConfigId d && length xs == 1
+                       then head xs
                        else Nothing
    , fLeaf  = Just . getId
    , fLabel = \l _  -> Just l
-   } 
+   }
 
 isConfigId :: HasId a => a -> Bool
 isConfigId = (`elem` map getId configIds) . getId
@@ -128,12 +128,12 @@ removeDecl :: Decl Unary
 removeDecl = "removed" .=. Unary (const empty)
 
 collapseDecl :: Decl Unary
-collapseDecl = "collapsed" .=. Unary (\a -> 
+collapseDecl = "collapsed" .=. Unary (\a ->
    case firsts a of
       [(r, _)] -> maybe empty (`collapseWith` a) (isEnterRule r)
       _        -> empty)
- where    
-   collapseWith l = 
+ where
+   collapseWith l =
       single . makeRule l . runProcess
 
 hideDecl :: Decl Unary

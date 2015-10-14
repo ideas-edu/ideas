@@ -27,18 +27,18 @@ import Prelude hiding (sequence, replicate, repeat)
 import qualified Prelude
 
 split :: (AtomicSymbol a, Choice b)
-      => (Process a -> Process a -> b) -> b -> Process a -> b         
+      => (Process a -> Process a -> b) -> b -> Process a -> b
 split op = split2 (op . single) op
 
 -- Specialized version of split that also takes an operator for the special case
--- that the left part of the split is a single symbol. 
+-- that the left part of the split is a single symbol.
 split2 :: (AtomicSymbol a, Choice b)
-       => (a -> Process a -> b) -> (Process a -> Process a -> b) -> b -> Process a -> b         
+       => (a -> Process a -> b) -> (Process a -> Process a -> b) -> b -> Process a -> b
 split2 op1 op2 = menuFirst f
  where
    f a | a == atomicOpen = rec (op2 . (a ~>)) 1
        | otherwise       = op1 a
-         
+
    rec acc n
       | n == 0    = acc done
       | otherwise = menuFirst g empty
@@ -95,7 +95,7 @@ permute as
    pickOne :: [a] -> [(a, [a])]
    pickOne []     = []
    pickOne (x:xs) = (x, xs) : [ (y, x:ys) | (y, ys) <- pickOne xs ]
-   
+
 -- Alternate combinator
 (<@>) :: AtomicSymbol a => Process a -> Process a -> Process a
 p0 <@> q0 = rec q0 p0
@@ -110,10 +110,10 @@ inits = rec
    rec p = done .|. split op empty p
    op x  = (x .*.) . rec
 
-many :: (Sequence a, Fix a, Choice a) => a -> a 
+many :: (Sequence a, Fix a, Choice a) => a -> a
 many s = fix $ \x -> done .|. (s .*. x)
 
-many1 :: (Sequence a, Fix a, Choice a) => a -> a 
+many1 :: (Sequence a, Fix a, Choice a) => a -> a
 many1 s = s .*. many s
 
 replicate :: Sequence a => Int -> a -> a
@@ -130,7 +130,7 @@ try s = s |> done
 -- | Repeat a strategy zero or more times (greedy version of 'many')
 repeat :: (Sequence a, Fix a, Choice a) => a -> a
 repeat s = fix $ \x -> try (s .*. x)
-   
+
 -- | Apply a certain strategy at least once (greedy version of 'many1')
 repeat1 :: (Sequence a, Fix a, Choice a) => a -> a
 repeat1 s = s .*. repeat s

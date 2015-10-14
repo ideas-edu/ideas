@@ -94,13 +94,13 @@ interleave = declN $ associative (interleaveId .=. Nary Derived.interleave)
 noInterleaving :: IsStrategy f => f a -> Strategy a
 noInterleaving = onStrategyTree (replaceNode f)
  where
-   f d = if getId d == interleaveId  
+   f d = if getId d == interleaveId
          then fromNary (applyDecl ("sequence" .=. Nary Sequence.sequence)) -- fix me
          else node d
 
 interleaveId :: Id
 interleaveId = newId "interleave"
-   
+
 -- | Allows all permutations of the list
 permute :: IsStrategy f => [f a] -> Strategy a
 permute = declN $ "permute" .=. Nary Derived.permute
@@ -133,13 +133,13 @@ check = toStrategy . checkRule "check"
 -- | Check whether or not the argument strategy cannot be applied: the result
 --   strategy only succeeds if this is not the case (otherwise it fails).
 not :: IsStrategy f => f a -> Strategy a
-not = decl1 $ "not" .=. Unary (\x -> 
+not = decl1 $ "not" .=. Unary (\x ->
    Sequence.single $ checkRule "core.not" $ null . runProcess x)
 
 -- | Repeat a strategy zero or more times (greedy version of 'many')
 repeat :: IsStrategy f => f a -> Strategy a
 repeat = decl1 $ "repeat" .=. Unary Derived.repeat
-   
+
 -- | Apply a certain strategy at least once (greedy version of 'many1')
 repeat1 :: IsStrategy f => f a -> Strategy a
 repeat1 = decl1 $ "repeat1" .=. Unary Derived.repeat1

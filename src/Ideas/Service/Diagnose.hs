@@ -57,7 +57,7 @@ instance Show (Diagnosis a) where
          Unknown _ _      -> "Unknown"
     where
       f s xs
-         | null xs   = s 
+         | null xs   = s
          | otherwise = s ++ "(" ++ intercalate "," xs ++ ")"
 {-
 newState :: Diagnosis a -> Maybe (State a)

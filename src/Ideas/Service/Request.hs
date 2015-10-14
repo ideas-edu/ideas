@@ -32,7 +32,7 @@ data Request = Request
    }
 
 emptyRequest :: Request
-emptyRequest = Request Nothing Nothing Nothing Nothing 
+emptyRequest = Request Nothing Nothing Nothing Nothing
                        Nothing Nothing Nothing XML []
 
 data Schema = V1 | V2 | NoLogging deriving (Show, Eq)

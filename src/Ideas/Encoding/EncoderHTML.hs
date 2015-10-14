@@ -533,7 +533,7 @@ encodePrefix st =
       prSteps = fst $ replayPath path (strategy ex) ctx
 
 htmlStep :: Rule a -> HTMLBuilder
-htmlStep r = 
+htmlStep r =
    case (isEnterRule r, isExitRule r) of
       (Just l, _) -> spanClass "step-enter" $ string $ "enter " ++ show l
       (_, Just l) -> spanClass "step-exit"  $ string $ "exit " ++ show l
@@ -572,7 +572,7 @@ htmlAllApplications lm = encoderFor $ \xs ->
 htmlDiagnosis :: LinkManager -> DomainReasoner -> HTMLEncoder a (Diagnosis a)
 htmlDiagnosis lm dr = encoderFor $ \diagnosis ->
    case diagnosis of
-      SyntaxError s -> 
+      SyntaxError s ->
          spanClass "error" $ string s
       Buggy _ r ->
          spanClass "error" $ string $ "Not equivalent: buggy rule " ++ show r

@@ -110,7 +110,7 @@ instance Choice (Menu k a) where
      rec p         = p :|> rest
 
 instance Functor (Menu k) where
-   fmap f = rec 
+   fmap f = rec
     where
       rec (p :|: q) = rec p :|: rec q
       rec (p :/: q) = rec p :/: rec q
@@ -173,7 +173,7 @@ bestsOrdered cmp = bestsWith merge
  where
    -- merge two lists with comparison function
    merge lx@(x:xs) ly@(y:ys) =
-      case cmp (fst x) (fst y) of 
+      case cmp (fst x) (fst y) of
          GT -> y : merge lx ys
          _  -> x : merge xs ly
    merge [] ys = ys

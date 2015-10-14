@@ -27,7 +27,7 @@ import Network (PortID, Socket, listenOn, connectTo)
 import Network.Socket as Socket (SockAddr(SockAddrInet), accept, socketToHandle)
 import System.IO (Handle, hPutStrLn, stdin, stdout, hGetLine, hClose, IOMode(ReadWriteMode))
 import qualified Data.Map as Map
-                  
+
 import System.IO.Error (isEOFError)
 
 import Data.ByteString.Lazy.Char8 (ByteString)

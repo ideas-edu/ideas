@@ -196,14 +196,14 @@ diagnoseS = makeService "basic.diagnose"
    Diagnose.diagnose ::: tState .-> tContext .-> tMaybe tId .-> Diagnose.tDiagnosis
 
 diagnoseStringS :: Service
-diagnoseStringS = makeService "basic.diagnose-string" 
+diagnoseStringS = makeService "basic.diagnose-string"
    "See diagnose service, but also returns a SyntaxError for invalid input." $
    diagnoseString ::: tState .-> tString .-> tMaybe tId .-> Diagnose.tDiagnosis
 
 diagnoseString :: State a -> String -> Maybe Id -> Diagnose.Diagnosis a
 diagnoseString st s mot =
    case parser ex s of
-      Left msg -> Diagnose.SyntaxError msg 
+      Left msg -> Diagnose.SyntaxError msg
       Right ca -> Diagnose.diagnose st (inContext ex ca) mot
  where
    ex = exercise st
@@ -322,9 +322,9 @@ testreportS :: Service
 testreportS = makeService "meta.testreport"
    "Show test report for an exercise." $
    (\stdgen -> runTestSuiteResult False . exerciseTestSuite stdgen) ::: tStdGen .-> tExercise .-> tIO tTestSuiteResult
-   
+
 logS :: Service
-logS = makeService "meta.log" 
+logS = makeService "meta.log"
    "Feedback service for logging events: the reply is always empty. The \
    \optional input state can be used to record userid, sessionid, and \
    \taskid."

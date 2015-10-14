@@ -43,10 +43,10 @@ class Sequence a where
    -- | Sequential composition.
    sequence :: [a] -> a
    sequence xs = if null xs then done else foldr1 (.*.) xs
- 
+
 instance Sequence b => Sequence (a -> b) where
    type Sym (a -> b) = Sym b
-   
+
    done   = const done
    single = const . single
    a ~> f = (a ~>) . f

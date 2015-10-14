@@ -10,12 +10,12 @@ description:
 
 category:               Education
 copyright:              (c) 2015
-license:                GPL
+license:                Apache-2
 license-file:           LICENSE.txt
 author:                 Bastiaan Heeren, Alex Gerdes, Johan Jeuring
 maintainer:             bastiaan.heeren@ou.nl
 stability:              provisional
-extra-source-files:     CREDITS.txt
+extra-source-files:     NOTICE.txt
 build-type:             Simple
 cabal-version:          >= 1.8.0.2
 tested-with:            GHC == 7.4.1, GHC == 7.6.3, GHC == 7.8.3

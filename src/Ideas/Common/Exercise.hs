@@ -1,8 +1,8 @@
 {-# LANGUAGE Rank2Types, DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
--- Copyright 2015, Open Universiteit Nederland. This file is distributed
--- under the terms of the GNU General Public License. For more information,
--- see the file "LICENSE.txt", which is included in the distribution.
+-- Copyright 2015, Ideas project team. This file is distributed under the
+-- terms of the Apache License 2.0. For more information, see the files
+-- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
 -- |
 -- Maintainer  :  bastiaan.heeren@ou.nl

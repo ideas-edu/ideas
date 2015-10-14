@@ -27,10 +27,19 @@ source-repository head
 flag network-uri
   description: Get Network.URI from the network-uri package
   default: True
-   
+
+flag logging
+  description: enable support for logging interactions to a sqlite3 database
+  default: False
+
 --------------------------------------------------------------------------------
 
 Library
+  if flag(logging) {
+    cpp-options:     -DDB
+    Build-Depends:   HDBC, HDBC-sqlite3
+  }
+
   ghc-options:       -Wall
   hs-source-dirs:    src
   Build-Depends:     base >= 4.2 && < 5, 

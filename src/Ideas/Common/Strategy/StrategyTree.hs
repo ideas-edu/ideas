@@ -9,12 +9,19 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
+-- Representation of a strategy as a cyclic tree with explicit fixed-points.
+-- The nodes in the tree are named strategy combinators. The leafs are rules.
+--
 -----------------------------------------------------------------------------
 --  $Id: Abstract.hs 8734 2015-10-13 14:43:11Z bastiaan $
 
 module Ideas.Common.Strategy.StrategyTree
-   ( StrategyTree, applyDecl
-   , Combinator, Decl, (.=.), associative, isAssociative, combinator
+   ( -- * StrategyTree type synonym
+     StrategyTree
+     -- * Declarations (named combinators)
+   , Decl, Combinator, associative, isAssociative, combinator
+   ,  (.=.), applyDecl
+     -- * Arities
    , Arity(..), Nullary(..), Unary(..), Binary(..), Nary(..)
    ) where
 

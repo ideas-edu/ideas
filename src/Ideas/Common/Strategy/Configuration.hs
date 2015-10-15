@@ -8,15 +8,17 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
+-- Strategies can be configured at their labeled positions. Possible actions 
+-- are remove/reinsert, collapse/expand, and hide/reveal.
+--
 -----------------------------------------------------------------------------
 --  $Id$
 
 module Ideas.Common.Strategy.Configuration
    ( StrategyCfg, byName, ConfigAction(..)
    , configure, configureS
-   , remove, collapse, hide
+   , remove, collapse, hide, multi
    , isConfigId
-   , module Data.Monoid
    ) where
 
 import Data.Char
@@ -27,9 +29,10 @@ import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Choice
+import Ideas.Common.Strategy.Derived (repeat1)
 import Ideas.Common.Strategy.Process hiding (fold)
 import Ideas.Common.Strategy.Sequence
-import Ideas.Common.Strategy.Step
+import Ideas.Common.Strategy.Symbol
 import Ideas.Common.Strategy.StrategyTree
 import qualified Ideas.Common.CyclicTree as Tree
 
@@ -120,6 +123,13 @@ remove, collapse, hide :: IsStrategy f => f a -> Strategy a
 remove   = decl1 removeDecl
 collapse = decl1 collapseDecl
 hide     = decl1 hideDecl
+
+-- | Apply a strategy at least once, but collapse into a single step
+multi :: (IsId l, IsStrategy f) => l -> f a -> Strategy a
+multi l = collapse . label l . decl1 repeatDecl . toStrategy
+
+repeatDecl :: Decl Unary -- fix me: overlap with combinators
+repeatDecl = "repeat1" .=. Unary repeat1
 
 configIds :: [Id]
 configIds = map getId [removeDecl, collapseDecl, hideDecl]

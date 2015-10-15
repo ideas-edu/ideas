@@ -8,12 +8,16 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
+-- Parameterized traversals based on the strategy language.
+--
 -----------------------------------------------------------------------------
 --  $Id$
 
 module Ideas.Common.Strategy.Traversal
-   ( layer, traverse, Option
+   ( -- * Parameterized traversals
+     layer, traverse
      -- * Options
+   , Option
    , topdown, bottomup, leftToRight, rightToLeft
    , full, spine, stop, once, leftmost, rightmost
    , traversalFilter, parentFilter
@@ -23,7 +27,8 @@ module Ideas.Common.Strategy.Traversal
    , oncetdPref, oncebuPref
      -- * Fixpoint traversals
    , innermost, outermost
-   , ruleDown, ruleDownLast, ruleUp
+     -- * Navigator rules
+   , ruleUp, ruleDown, ruleDownLast, ruleLeft, ruleRight
    ) where
 
 import Data.Monoid

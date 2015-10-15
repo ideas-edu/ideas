@@ -21,7 +21,7 @@ import Data.List
 import Data.Maybe
 import Data.Ord
 import Ideas.Common.Library hiding (alternatives)
-import Ideas.Common.Strategy.Step
+import Ideas.Common.Strategy.Symbol
 import Ideas.Common.Utils
 import Ideas.Common.Utils.TestSuite
 import Ideas.Encoding.Encoder

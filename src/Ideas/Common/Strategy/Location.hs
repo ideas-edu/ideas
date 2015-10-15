@@ -8,7 +8,7 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Locations in a strategy
+-- Locations that correspond to the labels in a strategy
 --
 -----------------------------------------------------------------------------
 --  $Id$

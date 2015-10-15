@@ -9,7 +9,7 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Basic machinery for fully executing a core strategy expression, or only
+-- Basic machinery for fully executing a strategy expression, or only
 -- partially. Partial execution results in a prefix that keeps the current
 -- locations in the strategy (a list of @Path@s) for continuing the execution
 -- later on. A path can be used to reconstruct the sequence of steps already

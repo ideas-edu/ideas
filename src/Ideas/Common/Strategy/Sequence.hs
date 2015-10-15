@@ -9,7 +9,8 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A type class for sequences together with the 'Step' datatype.
+-- A type class for sequences together with the 'Firsts' type class for 
+-- accessing the firsts set and ready predicate.
 --
 -----------------------------------------------------------------------------
 --  $Id: Sequential.hs 6612 2014-06-12 07:57:59Z bastiaan $
@@ -19,7 +20,6 @@ module Ideas.Common.Strategy.Sequence
      Sequence(..)
      -- * Firsts type class
    , Firsts(..), firstsTree
-     -- * MenuItem data type with some utility functions
    ) where
 
 import Ideas.Common.DerivationTree
@@ -60,7 +60,7 @@ class Firsts s where
    type Elem s
    -- | The ready predicate (we are done).
    ready :: s -> Bool
-   -- | The first set.
+   -- | The firsts set.
    firsts :: s -> [(Elem s, s)]
 
 firstsTree :: Firsts s => s -> DerivationTree (Elem s) s

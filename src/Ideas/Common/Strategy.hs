@@ -9,9 +9,10 @@
 -- Portability :  portable (depends on ghc)
 --
 -- A strategy is a context-free grammar with rules as symbols. Strategies can be
--- labeled with strings. A type class is introduced to lift all the combinators
--- that work on strategies, only to prevent that you have to insert these lifting
--- functions yourself.
+-- labeled with strings. The type class 'IsStrategy' is introduced to lift 
+-- functions and combinators that work on strategies to also accept rules and
+-- labeled strategies. This module re-exports the most important functionality
+-- of the underlying modules.
 --
 -----------------------------------------------------------------------------
 --  $Id$
@@ -30,8 +31,8 @@ module Ideas.Common.Strategy
      -- ** EBNF combinators
    , many, many1, replicate, option
      -- ** Negation and greedy combinators
-   , check, not, repeat, repeat1, try, (|>), (./.), exhaustive
-   , while, until, multi
+   , check, not, repeat, repeat1, try, (|>), (./.)
+   , exhaustive, while, until
      -- ** Graph
    , DependencyGraph, dependencyGraph
      -- ** Traversal combinators

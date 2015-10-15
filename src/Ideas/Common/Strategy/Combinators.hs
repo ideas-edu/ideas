@@ -23,7 +23,6 @@ import Ideas.Common.CyclicTree hiding (label)
 import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
-import Ideas.Common.Strategy.Configuration
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.StrategyTree
 import Ideas.Common.Utils (fst3)
@@ -170,10 +169,6 @@ until p = while (Prelude.not . p)
 -- | Apply the strategies from the list exhaustively (until this is no longer possible)
 exhaustive :: IsStrategy f => [f a] -> Strategy a
 exhaustive = declN $ "exhaustive" .=. Nary Derived.exhaustive
-
--- | Apply a strategy at least once, but collapse into a single step
-multi :: (IsId l, IsStrategy f) => l -> f a -> Strategy a
-multi l = collapse . label l . repeat1
 
 -- Graph to strategy ----------------------
 

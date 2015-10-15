@@ -30,7 +30,7 @@ import Data.Maybe
 import Ideas.Common.Library hiding (suitable, ready, (:~>))
 import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Sequence
-import Ideas.Common.Strategy.Step
+import Ideas.Common.Strategy.Symbol
 import System.Random
 
 data State a = State

@@ -8,12 +8,12 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- This module defines special symbols
+-- This module defines special symbols for labeling and atomicity.
 --
 -----------------------------------------------------------------------------
 --  $Id: Core.hs 7590 2015-04-21 07:26:58Z bastiaan $
 
-module Ideas.Common.Strategy.Step
+module Ideas.Common.Strategy.Symbol
    ( AtomicSymbol(..), LabelSymbol(..)
    , enterRule, exitRule, isEnterRule, isExitRule
    ) where

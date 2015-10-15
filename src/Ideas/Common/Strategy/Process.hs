@@ -9,16 +9,15 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Processes must support choices and sequences. This module defines a type
--- class, an implementation, and utility functions.
+-- Processes support choices and sequences and are modelled after Hoare's CSP 
+-- calculus.
 --
 -----------------------------------------------------------------------------
 --  $Id$
 
 module Ideas.Common.Strategy.Process
-   ( menu, menuFirst
-   , Process
-   , runProcess, eqProcessBy, fold
+   ( Process, eqProcessBy, menu, withMenu
+   , fold, runProcess
    ) where
 
 import Ideas.Common.Classes
@@ -28,6 +27,7 @@ import Ideas.Common.Strategy.Sequence
 ------------------------------------------------------------------------
 -- Process data type
 
+-- | Process data type with efficient support for sequences
 newtype Process a = P [Menu a (Process a)]
 
 instance Eq a => Eq (Process a) where
@@ -51,6 +51,7 @@ instance Sequence (Process a) where
    done = P []
    a ~> b = P [a |-> b]
    P xs .*. P ys = P (xs ++ ys)
+   sequence ps = P [ x | P xs <- ps, x <- xs ]
 
 instance Fix (Process a)
 
@@ -61,7 +62,7 @@ instance Firsts (Process a) where
    ready  = hasDone . menu
 
 runProcess :: Apply f => Process (f a) -> a -> [a]
-runProcess p a = menuFirst op [a] p
+runProcess p a = withMenu op [a] p
  where
    op f x = [ c | b <- applyAll f a, c <- runProcess x b ]
 
@@ -72,10 +73,11 @@ menu (P zs) = rec zs
    rec [x]    = x
    rec (x:xs) = onMenu (\a (P ys) -> a |-> P (ys ++ xs)) (rec xs) x
 
-menuFirst :: Choice b => (a -> Process a -> b) -> b -> Process a -> b
-menuFirst op e (P zs) = rec zs
+withMenu :: Choice b => (a -> Process a -> b) -> b -> Process a -> b
+withMenu op e (P zs) = rec zs
  where
    rec []     = e
+   rec [x]    = onMenu op e x
    rec (x:xs) = onMenu (\a (P ys) -> op a (P (ys ++ xs))) (rec xs) x
 
 -- | Generalized equality of processes, which takes an equality function for
@@ -88,4 +90,4 @@ eqProcessBy eq = rec
 fold :: Choice b => (a -> b -> b) -> b -> Process a -> b
 fold op e = rec
  where
-   rec = menuFirst (\a -> op a . rec) e
+   rec = withMenu (\a -> op a . rec) e

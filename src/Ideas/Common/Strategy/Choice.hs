@@ -8,8 +8,9 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A type class with an implementation for expressing choice and left-biased
--- choice.
+-- A type class for expressing choice, preference, and left-biased choice.
+-- The 'Menu' datatype implements the type class by keeping all the 
+-- alternatives. 
 --
 -----------------------------------------------------------------------------
 --  $Id: Sequential.hs 6598 2014-06-04 14:59:01Z bastiaan $
@@ -34,7 +35,7 @@ infixr 5 |->, :->
 ------------------------------------------------------------------------
 -- Choice type class
 
--- | Laws: '<|>', '>|>' '|>' are all associative, and have 'empty' as their
+-- | Laws: '.|.', './.' '|>' are all associative, and have 'empty' as their
 -- unit element.
 class Choice a where
    -- | Nothing to choose from.
@@ -74,8 +75,9 @@ instance Choice b => Choice (a -> b) where
 -- (Unit) The left-hand side of :|: and :|> cannot be Empty
 -- (Asso) :|: and :|> are balanced to the right
 
--- | A menu offers choices and preferences. It is an instance of the 'Functor'
--- and 'Monad' type classes.
+-- | A menu offers choices and preferences. It stores singleton bindings (thus
+-- acting as a finite map) and one special element ('doneMenu'). It is an 
+-- instance of the 'Functor' and 'Monad' type classes.
 data Menu k a = k :-> a
               | Done
               | Empty
@@ -119,9 +121,11 @@ instance Functor (Menu k) where
       rec Done      = Done
       rec Empty     = Empty
 
+-- | Singleton binding
 (|->) :: a -> s -> Menu a s
 (|->) = (:->)
 
+-- | Special element for denoting success
 doneMenu :: Menu k a
 doneMenu = Done
 
@@ -163,7 +167,8 @@ elems = ($ []) . rec
    rec Done      = id
    rec Empty     = id
 
--- | Returns only the best elements that are in the menu.
+-- | Returns only the best elements that are in the menu with respect to 
+-- left-biased choices.
 bests :: Menu k a -> [(k, a)]
 bests = bestsWith (++)
 

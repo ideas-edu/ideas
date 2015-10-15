@@ -8,21 +8,25 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
+-- This module defines extra combinators.
+--
 -----------------------------------------------------------------------------
 --  $Id: Sequential.hs 6612 2014-06-12 07:57:59Z bastiaan $
 
 module Ideas.Common.Strategy.Derived
-   ( AtomicSymbol(..), LabelSymbol(..)
-   , atomic, (<%>), interleave, permute, concurrent, (<@>), (!*>), inits
-   , many, many1, replicate, option, try, repeat, repeat1, exhaustive
-   , filterP, hide
+   ( -- * General combinators
+     permute, many, many1, replicate, option, try
+   , repeat, repeat1, exhaustive
+     -- * Process-specific combinators
+   , atomic, (<%>), interleave, concurrent
+   , (<@>), (!*>), inits, filterP, hide
    ) where
 
 import Ideas.Common.Classes
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence
-import Ideas.Common.Strategy.Step
+import Ideas.Common.Strategy.Symbol
 import Prelude hiding (sequence, replicate, repeat)
 import qualified Prelude
 
@@ -34,14 +38,14 @@ split op = split2 (op . single) op
 -- that the left part of the split is a single symbol.
 split2 :: (AtomicSymbol a, Choice b)
        => (a -> Process a -> b) -> (Process a -> Process a -> b) -> b -> Process a -> b
-split2 op1 op2 = menuFirst f
+split2 op1 op2 = withMenu f
  where
    f a | a == atomicOpen = rec (op2 . (a ~>)) 1
        | otherwise       = op1 a
 
    rec acc n
       | n == 0    = acc done
-      | otherwise = menuFirst g empty
+      | otherwise = withMenu g empty
     where
       g a = rec (acc . (a ~>)) (pm a n)
 
@@ -76,7 +80,7 @@ concurrent switch = normal
  where
    normal p q = stepBoth q p .|. (stepRight q p .|. stepRight p q)
 
-   stepBoth  = menuFirst stop2 . menuFirst stop2 done
+   stepBoth  = withMenu stop2 . withMenu stop2 done
    stop2 _ _ = empty
 
    stepRight p = split2 op1 op2 empty
@@ -102,7 +106,7 @@ p0 <@> q0 = rec q0 p0
  where
    rec q  = let op b r = b .*. rec r q
             in split op (bothOk q)
-   bothOk = menuFirst (\_ _ -> empty) done
+   bothOk = withMenu (\_ _ -> empty) done
 
 inits :: AtomicSymbol a => Process a -> Process a
 inits = rec

@@ -13,7 +13,7 @@
 -- The nodes in the tree are named strategy combinators. The leafs are rules.
 --
 -----------------------------------------------------------------------------
---  $Id: Abstract.hs 8734 2015-10-13 14:43:11Z bastiaan $
+--  $Id$
 
 module Ideas.Common.Strategy.StrategyTree
    ( -- * StrategyTree type synonym

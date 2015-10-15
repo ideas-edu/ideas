@@ -11,7 +11,7 @@
 -- This module defines special symbols for labeling and atomicity.
 --
 -----------------------------------------------------------------------------
---  $Id: Core.hs 7590 2015-04-21 07:26:58Z bastiaan $
+--  $Id$
 
 module Ideas.Common.Strategy.Symbol
    ( AtomicSymbol(..), LabelSymbol(..)

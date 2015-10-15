@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
---  $Id: Core.hs 7590 2015-04-21 07:26:58Z bastiaan $
+--  $Id$
 
 module Ideas.Common.CyclicTree
    ( -- * Data type

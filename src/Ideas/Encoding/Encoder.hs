@@ -10,7 +10,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
---  $Id: Evaluator.hs 6535 2014-05-14 11:05:06Z bastiaan $
+--  $Id$
 
 module Ideas.Encoding.Encoder
    ( -- * Converter type class

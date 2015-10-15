@@ -11,7 +11,7 @@
 -- This module defines extra combinators.
 --
 -----------------------------------------------------------------------------
---  $Id: Sequential.hs 6612 2014-06-12 07:57:59Z bastiaan $
+--  $Id$
 
 module Ideas.Common.Strategy.Derived
    ( -- * General combinators

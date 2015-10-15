@@ -13,7 +13,7 @@
 -- accessing the firsts set and ready predicate.
 --
 -----------------------------------------------------------------------------
---  $Id: Sequential.hs 6612 2014-06-12 07:57:59Z bastiaan $
+--  $Id$
 
 module Ideas.Common.Strategy.Sequence
    ( -- * Sequence type class

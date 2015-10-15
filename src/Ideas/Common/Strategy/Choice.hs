@@ -13,7 +13,7 @@
 -- alternatives. 
 --
 -----------------------------------------------------------------------------
---  $Id: Sequential.hs 6598 2014-06-04 14:59:01Z bastiaan $
+--  $Id$
 
 module Ideas.Common.Strategy.Choice
    ( -- * Choice type class

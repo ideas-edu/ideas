@@ -11,7 +11,7 @@
 -- Legacy strategy combinators (before the Functor-Applicative-Monad proposal)
 --
 -----------------------------------------------------------------------------
---  $Id: Combinators.hs 8571 2015-08-27 08:23:13Z bastiaan $
+--  $Id$
 
 module Ideas.Common.Strategy.Legacy where
 

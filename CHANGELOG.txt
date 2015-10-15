@@ -1,12 +1,24 @@
-Changelog ideas-1.3.1 => ideas.1.3.2
+Changelog ideas-1.3.1 => ideas.1.4
+-----------------------------------------------------------------------------
 
-* Changed the Core datatype
-  - Strategy definitions allow new combinators to be defined outside framework
-
+* refactoring of strategies
+  - strategies are now represented cyclic trees (that preserve fixpoints)
+  - new strategy combinators can be defined outside the framework
+  - simpler interfaces: no more Builder, Step, and Core datatypes
+  - nice speed-up for constructing and running strategies
+  
 * support for new database schema (v2) with more columns
-* request can have an optional 'logging' attribute (false, v1, v2)
-* userid, sessionid, and taskid are stored in a state
-* reimplemented atomic combinator
-* added cabal flag to resolve dependency on network >= 2.6
-* introduced inits combatinator (initial prefixes) and atomic prefix (!~>)
+  - request can have an optional 'logging' attribute (false, v1, v2)
+  - command-line flag for seeing information that is logged 
+  - userid, sessionid, and taskid are stored in a state
+
+* changing license to Apache License version 2.0 (was: GPL)
+* renaming strategy combinators (eg .*.) to solve clash with Applicative.<*> 
+* adding SyntaxError constructor to Diagnose datatype
+* added read instance for Difficulty
+* changed newline and tab escaping in JSON
+* re-implemented atomic combinator
+* introduced inits combinator  (initial prefixes) and atomic prefix (!~>)
 * introduced somewhereWhen traversal combinator
+* added cabal flag to resolve dependency on network >= 2.6
+* added cabal flag to enable support for logging

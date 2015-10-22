@@ -9,7 +9,7 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Processes support choices and sequences and are modelled after Hoare's CSP 
+-- Processes support choices and sequences and are modelled after Hoare's CSP
 -- calculus.
 --
 -----------------------------------------------------------------------------

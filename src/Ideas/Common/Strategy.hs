@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -- A strategy is a context-free grammar with rules as symbols. Strategies can be
--- labeled with strings. The type class 'IsStrategy' is introduced to lift 
+-- labeled with strings. The type class 'IsStrategy' is introduced to lift
 -- functions and combinators that work on strategies to also accept rules and
 -- labeled strategies. This module re-exports the most important functionality
 -- of the underlying modules.

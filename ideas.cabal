@@ -1,16 +1,26 @@
 name:                   ideas
-version:                1.3.4
+version:                1.4
 synopsis:               Feedback services for intelligent tutoring systems
 homepage:               http://ideas.cs.uu.nl/www/
 description:
 
-  ideas provides feedback services to intelligent tutoring systems such as 
-  the digital mathematical environment of the Freudenthal Institute, MathDox,
-  and Activemath. 
+  Ideas (Interactive Domain-specific Exercise Assistants) is a joint research 
+  project between the Open University of the Netherlands and Utrecht 
+  University. The project's goal is to use software and compiler technology to 
+  build state-of-the-art components for intelligent tutoring systems (ITS) and 
+  learning environments. The 'ideas' software package provides a generic 
+  framework for constructing the expert knowledge module (also known as a 
+  domain reasoner) for an ITS or learning environment. Domain knowledge is 
+  offered as a set of feedback services that are used by external tools such 
+  as the digital mathematical environment (DME), MathDox, and the Math-Bridge 
+  system. We have developed several domain reasoners based on this framework, 
+  including reasoners for mathematics, linear algebra, logic, learning Haskell 
+  (the Ask-Elle programming tutor) and evaluating Haskell expressions, and for 
+  practicing communication skills (the serious game Communicate!).
 
 category:               Education
 copyright:              (c) 2015
-license:                Apache-2
+license:                Apache-2.0
 license-file:           LICENSE.txt
 author:                 Bastiaan Heeren, Alex Gerdes, Johan Jeuring
 maintainer:             bastiaan.heeren@ou.nl
@@ -18,7 +28,7 @@ stability:              provisional
 extra-source-files:     NOTICE.txt, CHANGELOG.txt
 build-type:             Simple
 cabal-version:          >= 1.8.0.2
-tested-with:            GHC == 7.4.1, GHC == 7.6.3, GHC == 7.8.3
+tested-with:            GHC == 7.4.1, GHC == 7.8.3
 
 source-repository head
   type:     svn
@@ -43,6 +53,7 @@ Library
   ghc-options:       -Wall
   hs-source-dirs:    src
   Build-Depends:     base >= 4.2 && < 5, 
+                     mtl == 2.1.*,
                      QuickCheck >= 2.4.1 && < 2.7, 
                      Diff,
                      containers, 
@@ -54,7 +65,6 @@ Library
                      parsec,
                      wl-pprint,
                      array,
-                     mtl == 2.1.*,
                      exceptions,
                      multipart,
                      bytestring,

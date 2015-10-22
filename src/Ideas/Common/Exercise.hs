@@ -269,7 +269,7 @@ instance Read Difficulty where
          "verydifficult" -> [(VeryDifficult, xs)]
          _               -> []
     where
-      (txt, xs) = break (not . p) (dropWhile isSpace s)
+      (txt, xs) = span p (dropWhile isSpace s)
       p c   = isAlpha c || c `elem` "_-"
       f c   = [toLower c | c `notElem` "_-"]
 

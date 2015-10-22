@@ -8,7 +8,7 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Strategies can be configured at their labeled positions. Possible actions 
+-- Strategies can be configured at their labeled positions. Possible actions
 -- are remove/reinsert, collapse/expand, and hide/reveal.
 --
 -----------------------------------------------------------------------------
@@ -32,8 +32,8 @@ import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Derived (repeat1)
 import Ideas.Common.Strategy.Process hiding (fold)
 import Ideas.Common.Strategy.Sequence
-import Ideas.Common.Strategy.Symbol
 import Ideas.Common.Strategy.StrategyTree
+import Ideas.Common.Strategy.Symbol
 import qualified Ideas.Common.CyclicTree as Tree
 
 ---------------------------------------------------------------------

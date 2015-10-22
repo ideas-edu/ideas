@@ -9,17 +9,17 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Abstract data type for a 'Strategy' and a 'LabeledStrategy'. 
+-- Abstract data type for a 'Strategy' and a 'LabeledStrategy'.
 --
 -----------------------------------------------------------------------------
 --  $Id$
 
 module Ideas.Common.Strategy.Abstract
-   ( -- * Strategy data type 
+   ( -- * Strategy data type
      Strategy
      -- * Labeled strategies
    , LabeledStrategy, label, unlabel
-     -- * Lifting to strategies 
+     -- * Lifting to strategies
    , IsStrategy(..), liftS, liftS2, liftSn
     -- * Prefixes
    , emptyPrefix, replayPath, replayPaths, replayStrategy
@@ -45,8 +45,8 @@ import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence (Sequence(..), ready)
-import Ideas.Common.Strategy.Symbol
 import Ideas.Common.Strategy.StrategyTree
+import Ideas.Common.Strategy.Symbol
 import Ideas.Common.View
 import Prelude hiding (sequence)
 import qualified Ideas.Common.CyclicTree as Tree

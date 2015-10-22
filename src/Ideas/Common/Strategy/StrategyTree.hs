@@ -26,6 +26,7 @@ module Ideas.Common.Strategy.StrategyTree
    ) where
 
 import Data.Function
+import Data.Maybe
 import Ideas.Common.CyclicTree
 import Ideas.Common.Id
 import Ideas.Common.Rule
@@ -40,8 +41,10 @@ infix 1 .=.
 type StrategyTree a = CyclicTree (Decl Nary) (Rule a)
 
 applyDecl :: Arity f => Decl f -> f (StrategyTree a)
-applyDecl d = toArity ( (node (C (getId d) (Nary $ \xs -> maybe empty id $ listify (combinator d) xs) (isAssociative d)) . make))
+applyDecl d = toArity (node (d {combinator = op}) . make)
  where
+   op = Nary $ fromMaybe empty . listify (combinator d)
+
    make | isAssociative d = concatMap collect
         | otherwise       = id
 

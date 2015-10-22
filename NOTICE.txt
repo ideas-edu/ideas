@@ -12,20 +12,33 @@ Copyright 2015 Ideas project team
    See the License for the specific language governing permissions and
    limitations under the License.
    
+PROJECT
+
+   Ideas (Interactive Domain-specific Exercise Assistants) is a joint research
+   project between the Open University of the Netherlands and Utrecht
+   University. The project's goal is to use software and compiler technology to
+   build state-of-the-art components of intelligent tutoring systems (ITS) and
+   learning environments. The 'ideas' software package provides a generic
+   framework for constructing the expert knowledge module (also known as a
+   domain reasoner) for an ITS or learning environment. More information about
+   the project can be found on the project's homepage:
+   
+       http://ideas.cs.uu.nl/www/
+       
 AUTHORS
 
-   Bastiaan Heeren   (bastiaan.heeren@ou.nl)
-   Alex Gerdes       (agerdes@me.com)
-   Johan Jeuring     (J.T.Jeuring@uu.nl)
+   The authors and copyright holders of the 'ideas' software package are:
+   - Bastiaan Heeren   (bastiaan.heeren@ou.nl, maintainer)
+   - Alex Gerdes       (agerdes@me.com)
+   - Johan Jeuring     (J.T.Jeuring@uu.nl)
 
 CREDITS
 
-Harrie Passier, Arthur van Leeuwen, Josje Lodder, Hieke Keuning
+   Harrie Passier, Arthur van Leeuwen, Josje Lodder, Hieke Keuning
 
+   This package contains a verbatim copy of the cgi-3001.2.2.0 package, with
+   minor modifications to resolve conflicting dependencies. The original 
+   package, together with its BSD3 license and further information about 
+   copyright, author and maintainer, can be found at:
 
-This package contains a verbatim copy of the cgi-3001.2.2.0 package, with
-minor modifications to resolve conflicting dependencies. The original package,
-together with its BSD3 license and further information about copyright, author
-and maintainer, can be found at:
-
-   http://hackage.haskell.org/package/cgi-3001.2.2.0
+       http://hackage.haskell.org/package/cgi-3001.2.2.0

@@ -9,8 +9,8 @@
 -- Portability :  portable (depends on ghc)
 --
 -- A type class for expressing choice, preference, and left-biased choice.
--- The 'Menu' datatype implements the type class by keeping all the 
--- alternatives. 
+-- The 'Menu' datatype implements the type class by keeping all the
+-- alternatives.
 --
 -----------------------------------------------------------------------------
 --  $Id$
@@ -76,7 +76,7 @@ instance Choice b => Choice (a -> b) where
 -- (Asso) :|: and :|> are balanced to the right
 
 -- | A menu offers choices and preferences. It stores singleton bindings (thus
--- acting as a finite map) and one special element ('doneMenu'). It is an 
+-- acting as a finite map) and one special element ('doneMenu'). It is an
 -- instance of the 'Functor' and 'Monad' type classes.
 data Menu k a = k :-> a
               | Done
@@ -167,7 +167,7 @@ elems = ($ []) . rec
    rec Done      = id
    rec Empty     = id
 
--- | Returns only the best elements that are in the menu with respect to 
+-- | Returns only the best elements that are in the menu with respect to
 -- left-biased choices.
 bests :: Menu k a -> [(k, a)]
 bests = bestsWith (++)

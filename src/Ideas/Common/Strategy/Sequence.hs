@@ -9,7 +9,7 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A type class for sequences together with the 'Firsts' type class for 
+-- A type class for sequences together with the 'Firsts' type class for
 -- accessing the firsts set and ready predicate.
 --
 -----------------------------------------------------------------------------

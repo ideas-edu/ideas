@@ -15,13 +15,13 @@
 
 module Ideas.Common.Classes
    ( -- * Type class Apply
-     Apply, apply, applyAll, applicable, applyD, applyM, applyList
+     Apply(applyAll), apply, applicable, applyD, applyM, applyList
      -- * Type class Container
-   , Container, singleton, getSingleton
+   , Container(singleton, getSingleton)
      -- * Type class BiArrow
    , BiArrow(..)
      -- * Type class BiFunctor
-   , BiFunctor, biMap, mapFirst, mapSecond, mapBoth
+   , BiFunctor(biMap, mapFirst, mapSecond), mapBoth
      -- * Type class Fix
    , Fix(..)
      -- * Buggy and Minor properties

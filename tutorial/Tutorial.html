@@ -35,11 +35,11 @@ code > span.er { color: #ff0000; font-weight: bold; }
 <div class="ounl-logo">
 <img src="ounl.png"/>
 </div>
-  Ideas tutorial (version 1.2)
+  Ideas tutorial (version 1.4)
 </div>
 <div class="page-content">
 <h1>Making a domain reasoner</h1>
-<p>This tutorial shows how to make a simple domain reasoner with the Ideas framework. We start by defining a minimal exercise and show how this can be compiled into an application that can handle feedback requests. Make sure you have installed a Haskell compiler and the cabal package manager (see <a href="http://www.haskell.org/platform/">Haskell Platform</a>). Get the latest version of the <a href="http://hackage.haskell.org/package/ideas">ideas package</a> from Hackage and install the library with the following command:</p>
+<p>This tutorial shows how to make a simple domain reasoner with the Ideas framework. We start by defining a minimal exercise and show how this can be compiled into an application that can handle feedback requests. Make sure you have installed a Haskell compiler and the cabal package manager (see <a href="http://www.haskell.org/platform/">Haskell Platform</a>): we strongly advise to use ghc version 7.8 (or Haskell Platform 2014.2.0.0) to work with our software. Get the latest version of the <a href="http://hackage.haskell.org/package/ideas">ideas package</a> from Hackage and install the library with the following command:</p>
 <pre><code>cabal install ideas</code></pre>
 <p>We can now start writing a new Haskell module and import some modules from the Ideas package.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Main</span> <span class="kw">where</span>
@@ -87,10 +87,10 @@ negateRule <span class="fu">=</span> describe <span class="st">&quot;Negate numb
 
 <span class="dt">Main</span><span class="fu">&gt;</span> apply negateRule expr2
 <span class="dt">Nothing</span></code></pre>
-<p>The last example shows that rules are only applied at top-level, and not automatically to some arbitrary sub-expression. The rules can be combined into a strategy: the strategy combinator <code>&lt;|&gt;</code> denotes choice. We <code>label</code> the strategy with an identifier.</p>
+<p>The last example shows that rules are only applied at top-level, and not automatically to some arbitrary sub-expression. The rules can be combined into a strategy: the strategy combinator <code>.|.</code> denotes choice. We <code>label</code> the strategy with an identifier.</p>
 <pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">addOrNegate ::</span> <span class="dt">LabeledStrategy</span> <span class="dt">Expr</span>
 addOrNegate <span class="fu">=</span> label <span class="st">&quot;add-or-negate&quot;</span> <span class="fu">$</span>
-   addRule <span class="fu">&lt;|&gt;</span> negateRule</code></pre>
+   addRule <span class="fu">.|.</span> negateRule</code></pre>
 <p>Also strategies can be applied to a term.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span><span class="fu">&gt;</span> apply addOrNegate (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>))
 <span class="dt">Just</span> (<span class="dt">Con</span> <span class="dv">8</span>)
@@ -223,14 +223,15 @@ main <span class="fu">=</span> defaultMain dr</code></pre>
 <p>Running the executable with the <code>--help</code> flag gives the options.</p>
 <pre><code>$ Tutorial.exe --help
 IDEAS: Intelligent Domain-specific Exercise Assistants
-Copyright 2014, Open Universiteit Nederland
-version 1.2, revision 6534, logging disabled
+Copyright 2015, Open Universiteit Nederland
+version 1.4, revision 8775, logging disabled
 
 Usage: ideas [OPTION]     (by default, CGI protocol)
 
 Options:
            --version              show version number
   -?       --help                 show options
+           --print-log            print log information (for debugging)
   -f FILE  --file=FILE            use input FILE as request
            --make-pages[=DIR]     generate pages for exercises and services
            --test[=DIR]           run tests on directory (default: &#39;test&#39;)
@@ -240,13 +241,13 @@ Options:
 <pre class="sourceCode xml" id="mycode"><code class="sourceCode xml"><span class="kw">&lt;request</span><span class="ot"> service=</span><span class="st">&quot;exerciselist&quot;</span><span class="ot"> source=</span><span class="st">&quot;tutorial&quot;</span><span class="kw">/&gt;</span></code></pre>
 <p>It is a good custom to always include the source of the request to let the domain reasoner know where the request came from. The result of this request is:</p>
 <pre class="sourceCode xml" id="mycode"><code class="sourceCode xml">$ Tutorial.exe --file=exerciselist.xml                                          
-<span class="kw">&lt;reply</span><span class="ot"> result=</span><span class="st">&quot;ok&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.2 (6534)&quot;</span><span class="kw">&gt;</span>
+<span class="kw">&lt;reply</span><span class="ot"> result=</span><span class="st">&quot;ok&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.4 (8775)&quot;</span><span class="kw">&gt;</span>
   <span class="kw">&lt;list&gt;</span>
     <span class="kw">&lt;elem</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.basic&quot;</span><span class="ot"> description=</span><span class="st">&quot;Evaluate an expression (basic)&quot;</span><span class="ot"> status=</span><span class="st">&quot;Experimental&quot;</span><span class="kw">/&gt;</span>
     <span class="kw">&lt;elem</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.full&quot;</span><span class="ot"> description=</span><span class="st">&quot;Evaluate an expression (full)&quot;</span><span class="ot"> status=</span><span class="st">&quot;Experimental&quot;</span><span class="kw">/&gt;</span>
     <span class="kw">&lt;elem</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.minimal&quot;</span><span class="ot"> description=</span><span class="st">&quot;Evaluate an expression (minimal)&quot;</span><span class="ot"> status=</span><span class="st">&quot;Experimental&quot;</span><span class="kw">/&gt;</span>
   <span class="kw">&lt;/list&gt;</span>
-<span class="kw">&lt;/reply&gt;</span>                                            </code></pre>
+<span class="kw">&lt;/reply&gt;</span>                                         </code></pre>
 <p>Or we request a worked-out solution for <code>Add (Con 5) (Negate (Con 2))</code>.</p>
 <pre class="sourceCode xml" id="mycode"><code class="sourceCode xml"><span class="kw">&lt;request</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.full&quot;</span><span class="ot"> service=</span><span class="st">&quot;derivation&quot;</span><span class="ot"> encoding=</span><span class="st">&quot;string&quot;</span><span class="ot"> source=</span><span class="st">&quot;tutorial&quot;</span><span class="kw">&gt;</span>
     <span class="kw">&lt;state&gt;</span>                
@@ -255,7 +256,7 @@ Options:
 <span class="kw">&lt;/request&gt;</span></code></pre>
 <p>In this request we have to specify that the encoding of expressions is a plain string and that we want to use the parser/pretty-printer defined for the exercise. The default encoding follows the <a href="http://www.openmath.org/standard/">OpenMath standard</a> for representing mathematical objects. The result of this request is:</p>
 <pre class="sourceCode xml" id="mycode"><code class="sourceCode xml">$ Tutorial.exe --file=solution.xml
-<span class="kw">&lt;reply</span><span class="ot"> result=</span><span class="st">&quot;ok&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.2 (6534)&quot;</span><span class="kw">&gt;</span>
+<span class="kw">&lt;reply</span><span class="ot"> result=</span><span class="st">&quot;ok&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.4 (8775)&quot;</span><span class="kw">&gt;</span>
   <span class="kw">&lt;list&gt;</span>
     <span class="kw">&lt;elem</span><span class="ot"> ruleid=</span><span class="st">&quot;eval.negate&quot;</span><span class="kw">&gt;</span>
       <span class="kw">&lt;expr&gt;</span>
@@ -277,7 +278,7 @@ Options:
 <li>Install a webserver, such as <a href="http://www.wampserver.com/">WampServer</a> for Windows.</li>
 <li>Make sure you enable the execution of CGI scripts (in <code>httpd.conf</code>)</li>
 <li>Rename the executable to <code>Tutorial.cgi</code> and place it in the directory for cgi scripts</li>
-<li>Start a browser and type in the URL <code>http://localhost/Tutorial.cgi?input=&lt;request service=&quot;index&quot; encoding=&quot;html&quot;/&gt;</code></li>
+<li>Start a browser and type in the URL <code>http://localhost/Tutorial.cgi</code></li>
 </ul>
 <p>You can now start exploring the supported exercises and feedback services. For instance, go to the exercise <code>eval.full</code> and click on <code>derivations</code> in the yellow box to see the worked-out solutions for two examples.</p>
 <h2>Suggested exercises</h2>
@@ -292,7 +293,7 @@ Options:
 </ul>
 </div>
 <div class="page-footer">
-This tutorial is based on ideas-1.2. Last changed: May 2014
+This tutorial is based on ideas-1.4. Last changed: October 2015
 </div>
 </body>
 </html>

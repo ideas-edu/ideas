@@ -1,7 +1,7 @@
 <div class="page-header"> 
 <div class="ideas-logo"><img src="ideas.png"/></div>
 <div class="ounl-logo"><img src="ounl.png"/></div>
-&nbsp; Ideas tutorial (version 1.2)
+&nbsp; Ideas tutorial (version 1.4)
 </div>
 <div class="page-content">
 
@@ -12,8 +12,9 @@ This tutorial shows how to make a simple domain reasoner with the Ideas framewor
 We start by defining a minimal exercise and show how this can be compiled into an 
 application that can handle feedback requests. Make sure you have installed a 
 Haskell compiler and the cabal package manager 
-(see [Haskell Platform](http://www.haskell.org/platform/)). Get the 
-latest version of the [ideas package](http://hackage.haskell.org/package/ideas) 
+(see [Haskell Platform](http://www.haskell.org/platform/)): we strongly advise
+to use ghc version 7.8 (or Haskell Platform 2014.2.0.0) to work with our software.
+Get the latest version of the [ideas package](http://hackage.haskell.org/package/ideas) 
 from Hackage and install the library with the following command:
 
 ~~~~~~~~
@@ -112,12 +113,12 @@ type class.
 
 The last example shows that rules are only applied at top-level, and not 
 automatically to some arbitrary sub-expression. The rules can be combined 
-into a strategy: the strategy combinator `<|>` denotes choice. We `label` 
+into a strategy: the strategy combinator `.|.` denotes choice. We `label` 
 the strategy with an identifier.
 
 > addOrNegate :: LabeledStrategy Expr
 > addOrNegate = label "add-or-negate" $
->    addRule <|> negateRule
+>    addRule .|. negateRule
 
 Also strategies can be applied to a term.
 
@@ -344,14 +345,15 @@ Running the executable with the `--help` flag gives the options.
 ~~~~
 $ Tutorial.exe --help
 IDEAS: Intelligent Domain-specific Exercise Assistants
-Copyright 2014, Open Universiteit Nederland
-version 1.2, revision 6534, logging disabled
+Copyright 2015, Open Universiteit Nederland
+version 1.4, revision 8775, logging disabled
 
 Usage: ideas [OPTION]     (by default, CGI protocol)
 
 Options:
            --version              show version number
   -?       --help                 show options
+           --print-log            print log information (for debugging)
   -f FILE  --file=FILE            use input FILE as request
            --make-pages[=DIR]     generate pages for exercises and services
            --test[=DIR]           run tests on directory (default: 'test')
@@ -374,13 +376,13 @@ The result of this request is:
 
 ~~~~ {#mycode .xml}
 $ Tutorial.exe --file=exerciselist.xml                                          
-<reply result="ok" version="1.2 (6534)">
+<reply result="ok" version="1.4 (8775)">
   <list>
     <elem exerciseid="eval.basic" description="Evaluate an expression (basic)" status="Experimental"/>
     <elem exerciseid="eval.full" description="Evaluate an expression (full)" status="Experimental"/>
     <elem exerciseid="eval.minimal" description="Evaluate an expression (minimal)" status="Experimental"/>
   </list>
-</reply>                                            
+</reply>                                         
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Or we request a worked-out solution for `Add (Con 5) (Negate (Con 2))`. 
@@ -401,7 +403,7 @@ mathematical objects. The result of this request is:
 
 ~~~~ {#mycode .xml}   
 $ Tutorial.exe --file=solution.xml
-<reply result="ok" version="1.2 (6534)">
+<reply result="ok" version="1.4 (8775)">
   <list>
     <elem ruleid="eval.negate">
       <expr>
@@ -428,7 +430,7 @@ local server.
 * Install a webserver, such as [WampServer](http://www.wampserver.com/) for Windows.
 * Make sure you enable the execution of CGI scripts (in `httpd.conf`)
 * Rename the executable to `Tutorial.cgi` and place it in the directory for cgi scripts
-* Start a browser and type in the URL `http://localhost/Tutorial.cgi?input=<request service="index" encoding="html"/>`
+* Start a browser and type in the URL `http://localhost/Tutorial.cgi`
       
 You can now start exploring the supported exercises and feedback services. 
 For instance, go to the exercise `eval.full` and click on `derivations` in the yellow box
@@ -445,5 +447,5 @@ Suggested exercises
 
 </div>
 <div class="page-footer">
-This tutorial is based on ideas-1.2. Last changed: May 2014
+This tutorial is based on ideas-1.4. Last changed: October 2015
 </div>

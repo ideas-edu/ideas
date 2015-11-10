@@ -1,5 +1,7 @@
 # IDEAS
 
+[![Build Status](https://travis-ci.org/ideas-edu/ideas.svg?branch=master)](https://travis-ci.org/ideas-edu/ideas)
+
 ## Feedback services for intelligent tutoring systems
 
 Ideas (Interactive Domain-specific Exercise Assistants) is a joint research project between the 

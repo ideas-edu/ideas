@@ -44,7 +44,7 @@ $(SRCDIR)/Ideas/Main/Revision.hs:
 	@echo "ideasVersion :: String" >> $@
 	@grep '^version' ideas.cabal | sed 's/version: *\(.*\)/ideasVersion = "\1"/' >> $@
 	@echo "" >> $@
-	$(GIT) log -1 --pretty=format:'ideasRevision :: String%nideasRevision = “%H”%n%nideasLastChanged :: String%nideasLastChanged = “%cd”%n' >> $@
+	$(GIT) log -1 --pretty=format:'ideasRevision :: String%nideasRevision = "%H"%n%nideasLastChanged :: String%nideasLastChanged = "%cd"%n' >> $@
 
 .PHONY: $(SRCDIR)/Ideas/Main/Revision.hs
 

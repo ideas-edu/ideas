@@ -10,7 +10,6 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Service.FeedbackText
    ( Message, tMessage, accept, text

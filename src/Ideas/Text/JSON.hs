@@ -12,7 +12,6 @@
 -- JSON. JSON is a lightweight alternative for XML.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Text.JSON
    ( JSON(..), Key, Number(..)            -- types

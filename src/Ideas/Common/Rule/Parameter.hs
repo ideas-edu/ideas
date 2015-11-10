@@ -15,7 +15,6 @@
 -- the LiftView type class.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Rule.Parameter
    ( ParamTrans

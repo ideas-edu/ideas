@@ -11,7 +11,6 @@
 -- Substitutions on terms. Substitutions are idempotent, and non-cyclic.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Rewriting.Substitution
    ( Substitution, emptySubst, singletonSubst, dom, lookupVar

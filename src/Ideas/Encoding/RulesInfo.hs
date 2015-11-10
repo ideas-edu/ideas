@@ -9,7 +9,6 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Encoding.RulesInfo
    ( rulesInfoXML, rewriteRuleToFMP, collectExamples, ExampleMap

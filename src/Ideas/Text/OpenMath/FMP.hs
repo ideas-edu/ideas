@@ -11,7 +11,6 @@
 -- Formal mathematical properties (FMP)
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Text.OpenMath.FMP where
 

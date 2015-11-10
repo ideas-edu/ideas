@@ -13,7 +13,6 @@
 -- a list of results (often a singleton list or the empty list).
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Rule.Transformation
    ( -- * Trans data type

@@ -12,7 +12,6 @@
 -- Services using JSON notation
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Encoding.DecoderJSON
    ( JSONDecoder, jsonDecoder

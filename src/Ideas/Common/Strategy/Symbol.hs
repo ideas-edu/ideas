@@ -11,7 +11,6 @@
 -- This module defines special symbols for labeling and atomicity.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Strategy.Symbol
    ( AtomicSymbol(..), LabelSymbol(..)

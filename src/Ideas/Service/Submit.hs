@@ -12,7 +12,6 @@
 -- Diagnose a term submitted by a student. Deprecated (see diagnose service).
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Service.Submit
    ( submit, Result(..), tResult

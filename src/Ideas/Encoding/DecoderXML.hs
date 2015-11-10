@@ -12,7 +12,6 @@
 -- Services using XML notation
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Encoding.DecoderXML
    ( XMLDecoder, xmlDecoder

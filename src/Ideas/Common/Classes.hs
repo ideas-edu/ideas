@@ -11,7 +11,6 @@
 -- Type classes and instances.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Classes
    ( -- * Type class Apply

@@ -11,7 +11,6 @@
 -- Exports most from package Common
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Library
    ( module Export

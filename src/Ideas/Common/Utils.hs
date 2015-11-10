@@ -12,7 +12,6 @@
 -- A collection of general utility functions
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Utils
    ( Some(..), ShowString(..), readInt, readM

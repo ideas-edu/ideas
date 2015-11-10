@@ -12,7 +12,6 @@
 -- Diagnose a term submitted by a student
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Service.Diagnose
    ( Diagnosis(..), tDiagnosis, diagnose

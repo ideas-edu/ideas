@@ -11,7 +11,6 @@
 -- Parameterized traversals based on the strategy language.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Strategy.Traversal
    ( -- * Parameterized traversals

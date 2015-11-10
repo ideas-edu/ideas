@@ -12,7 +12,6 @@
 -- and the steps)
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Derivation
    ( -- * Data type

@@ -11,7 +11,6 @@
 -- Main module for feedback services
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Main.Default
    ( defaultMain, defaultCGI

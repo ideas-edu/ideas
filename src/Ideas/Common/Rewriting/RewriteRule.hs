@@ -11,7 +11,6 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Rewriting.RewriteRule
    ( -- * Supporting type class

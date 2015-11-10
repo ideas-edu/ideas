@@ -9,7 +9,6 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Rule.Recognizer
    ( -- * data type and type class

@@ -17,7 +17,6 @@
 -- operation.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Strategy.Prefix
    ( -- * Prefix

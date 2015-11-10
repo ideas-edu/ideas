@@ -11,7 +11,6 @@
 -- Services using JSON notation
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Encoding.ModeJSON (processJSON) where
 

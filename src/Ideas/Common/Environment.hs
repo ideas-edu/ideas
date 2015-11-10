@@ -12,7 +12,6 @@
 -- References, bindings, and heterogenous environments
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Environment
    ( -- * Reference

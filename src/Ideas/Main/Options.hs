@@ -11,7 +11,6 @@
 -- Options and command-line flags for services
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Main.Options
    ( Flag(..), getFlags

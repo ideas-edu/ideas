@@ -12,7 +12,6 @@
 -- are remove/reinsert, collapse/expand, and hide/reveal.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Strategy.Configuration
    ( StrategyCfg, byName, ConfigAction(..)

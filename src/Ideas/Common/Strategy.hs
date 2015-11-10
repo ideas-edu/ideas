@@ -15,7 +15,6 @@
 -- of the underlying modules.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Strategy
    ( -- * Data types and type classes

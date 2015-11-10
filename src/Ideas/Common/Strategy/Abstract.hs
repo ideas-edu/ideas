@@ -12,7 +12,6 @@
 -- Abstract data type for a 'Strategy' and a 'LabeledStrategy'.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Strategy.Abstract
    ( -- * Strategy data type

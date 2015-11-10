@@ -11,7 +11,6 @@
 -- This module defines extra combinators.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Strategy.Derived
    ( -- * General combinators

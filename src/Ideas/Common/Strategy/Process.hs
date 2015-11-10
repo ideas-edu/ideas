@@ -13,7 +13,6 @@
 -- calculus.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Strategy.Process
    ( Process, eqProcessBy, menu, withMenu

@@ -9,7 +9,6 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Algebra.FieldLaws
    ( -- * Semi-ring laws

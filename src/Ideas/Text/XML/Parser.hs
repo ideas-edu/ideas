@@ -13,7 +13,6 @@
 --    http://www.w3.org/TR/2006/REC-xml-20060816
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Text.XML.Parser (document, extParsedEnt, extSubset) where
 

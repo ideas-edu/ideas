@@ -12,7 +12,6 @@
 -- State monad for environments
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Rule.EnvironmentMonad
    ( -- * Environment Monad

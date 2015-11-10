@@ -11,7 +11,6 @@
 -- Services using XML notation
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Encoding.ModeXML (processXML) where
 

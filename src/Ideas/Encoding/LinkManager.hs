@@ -12,7 +12,6 @@
 -- Manages links to information
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Encoding.LinkManager
    ( LinkManager(..)

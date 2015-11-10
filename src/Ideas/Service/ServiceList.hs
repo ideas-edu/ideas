@@ -9,7 +9,6 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Service.ServiceList (serviceList, metaServiceList) where
 

@@ -11,7 +11,6 @@
 -- Locations that correspond to the labels in a strategy
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Strategy.Location
    ( checkLocation, subTaskLocation, nextTaskLocation

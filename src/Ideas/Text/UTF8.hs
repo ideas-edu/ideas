@@ -11,7 +11,6 @@
 -- Support for the UTF8 encoding
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Text.UTF8
    ( encode, encodeM, decode, decodeM

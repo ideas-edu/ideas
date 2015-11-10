@@ -12,7 +12,6 @@
 -- functions defined elsewhere.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Text.XML
    ( XML, Attr, AttrList, Element(..), InXML(..)

@@ -11,7 +11,6 @@
 -- Simple parser for feedback scripts
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Service.FeedbackScript.Parser
    ( parseScript, parseScriptSafe, Script

@@ -13,7 +13,6 @@
 -- in Interactive Exercise Assistants"
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.View
    ( Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)

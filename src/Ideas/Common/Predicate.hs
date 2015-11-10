@@ -12,7 +12,6 @@
 -- Representation for predicates
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Predicate
    ( -- * Predicate representation

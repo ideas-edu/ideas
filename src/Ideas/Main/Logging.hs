@@ -12,7 +12,6 @@
 -- Facilities to create a log database
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Main.Logging
    ( Record(..), addRequest, addState

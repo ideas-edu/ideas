@@ -13,7 +13,6 @@
 -- derivation.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Service.State
    ( -- * Exercise state

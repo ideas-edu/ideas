@@ -9,7 +9,6 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Service.DomainReasoner
    ( DomainReasoner(..), tDomainReasoner, newDomainReasoner

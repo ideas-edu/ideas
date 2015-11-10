@@ -10,7 +10,6 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Traversal.Utils
    ( -- * Update type class

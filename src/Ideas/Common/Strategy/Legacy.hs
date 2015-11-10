@@ -11,7 +11,6 @@
 -- Legacy strategy combinators (before the Functor-Applicative-Monad proposal)
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Strategy.Legacy where
 

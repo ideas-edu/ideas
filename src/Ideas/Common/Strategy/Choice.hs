@@ -13,7 +13,6 @@
 -- alternatives.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Strategy.Choice
    ( -- * Choice type class

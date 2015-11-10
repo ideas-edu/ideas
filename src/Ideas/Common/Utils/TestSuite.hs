@@ -14,7 +14,6 @@
 -- is a monoid.
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Common.Utils.TestSuite
    ( -- * TestSuite

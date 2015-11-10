@@ -11,7 +11,6 @@
 -- Utility functions for parsing with Parsec library
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Text.Parsing
    ( module Export

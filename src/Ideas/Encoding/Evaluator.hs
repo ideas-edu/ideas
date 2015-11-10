@@ -10,7 +10,6 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
---  $Id$
 
 module Ideas.Encoding.Evaluator (Evaluator(..), evalService) where
 

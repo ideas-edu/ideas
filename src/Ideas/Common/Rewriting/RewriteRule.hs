@@ -76,6 +76,9 @@ instance Different a => Different [a] where
 instance Different Char where
    different = ('a', 'b')
 
+instance Different Term where
+   different = (TNum 0, TNum 1)
+
 class (IsTerm a, Show a) => RuleBuilder t a | t -> a where
    buildRuleSpec  :: Int -> t -> RuleSpec Term
 

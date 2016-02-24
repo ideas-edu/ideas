@@ -1,4 +1,4 @@
 language: haskell
-ghc: 7.8
+ghc: 7.10
 before_script: 
   - make revision

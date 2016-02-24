@@ -21,6 +21,8 @@ module Ideas.Text.XML.Document
    , prettyXML, prettyElement
    ) where
 
+import Prelude hiding ((<$>))
+
 import Text.PrettyPrint.Leijen
 
 type Name = String

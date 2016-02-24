@@ -16,7 +16,6 @@ module Ideas.Encoding.ModeXML (processXML) where
 
 import Control.Exception
 import Control.Monad
-import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Common.Utils (Some(..), timedSeconds)
 import Ideas.Encoding.DecoderXML
@@ -29,8 +28,7 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import Ideas.Text.HTML
 import Ideas.Text.XML
-import Prelude hiding (catch)
-import System.IO.Error hiding (catch)
+import System.IO.Error
 
 processXML :: Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
 processXML maxTime cgiBin dr logRef input = do

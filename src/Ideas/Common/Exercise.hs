@@ -60,6 +60,7 @@ import Ideas.Common.View
 import System.Random
 import Test.QuickCheck hiding (label)
 import Test.QuickCheck.Gen
+import Test.QuickCheck.Random (QCGen)
 import qualified Data.Map as M
 import qualified Ideas.Common.Strategy as S
 
@@ -347,12 +348,12 @@ getProperty key ex = M.lookup key (properties ex) >>= fromDynamic
 
 -- | Makes a random exercise generator from a QuickCheck generator; the exercise
 -- generator ignores the difficulty level. See the 'randomExercise' field.
-simpleGenerator :: Gen a -> Maybe (StdGen -> Maybe Difficulty -> a)
+simpleGenerator :: Gen a -> Maybe (QCGen -> Maybe Difficulty -> a)
 simpleGenerator = useGenerator . const
 
 -- | Makes a random exercise generator based on a QuickCheck generator for a
 -- particular difficulty level. See the 'randomExercise' field.
-useGenerator :: (Maybe Difficulty -> Gen a) -> Maybe (StdGen -> Maybe Difficulty -> a)
+useGenerator :: (Maybe Difficulty -> Gen a) -> Maybe (QCGen -> Maybe Difficulty -> a)
 useGenerator makeGen = Just (\rng -> rec rng . makeGen)
  where
    rec rng (MkGen f) = a

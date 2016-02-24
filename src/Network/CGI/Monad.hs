@@ -27,15 +27,13 @@ module Network.CGI.Monad (
   throwCGI, catchCGI, tryCGI, handleExceptionCGI,
  ) where
 
-import Control.Applicative (Applicative(..))
 import Control.Exception as Exception (SomeException)
 import Control.Monad (liftM)
 import Control.Monad.Catch (MonadCatch, MonadThrow, MonadMask, throwM, catch, try, mask, uninterruptibleMask)
-import Control.Monad.Error (MonadError(..))
+import Control.Monad.Except (MonadError(..))
 import Control.Monad.Reader (ReaderT(..), asks)
 import Control.Monad.Trans (MonadTrans, MonadIO, liftIO, lift)
 import Control.Monad.Writer (WriterT(..), tell)
-import Prelude hiding (catch)
 -- #if MIN_VERSION_base(4,7,0)
 -- import Data.Typeable
 -- #else

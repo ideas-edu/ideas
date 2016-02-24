@@ -35,11 +35,10 @@ import Control.Monad
 import Data.Function
 import Data.Generics.Str
 import Data.Maybe
-import Ideas.Common.Algebra.Group
 import Ideas.Common.Traversal.Iterator
 import Ideas.Common.Traversal.Utils
 import Ideas.Common.Utils.Uniplate
-import Test.QuickCheck hiding (Str)
+import Test.QuickCheck
 
 ---------------------------------------------------------------
 -- Navigator type class

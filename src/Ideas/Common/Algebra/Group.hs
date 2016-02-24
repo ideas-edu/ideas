@@ -25,10 +25,8 @@ module Ideas.Common.Algebra.Group
 
 import Control.Applicative
 import Control.Monad (liftM2)
-import Data.Foldable (Foldable)
 import Data.Maybe
 import Data.Monoid
-import Data.Traversable (Traversable, traverse)
 import Ideas.Common.Classes
 import qualified Data.Set as S
 

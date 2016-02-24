@@ -36,7 +36,7 @@ import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Combinators
 import Ideas.Common.Traversal.Navigator
-import Prelude hiding (repeat, not)
+import Prelude hiding (repeat, not, traverse)
 import qualified Prelude
 
 ----------------------------------------------------------------------

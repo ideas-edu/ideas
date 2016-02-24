@@ -35,7 +35,6 @@ import Ideas.Service.Request
 import Ideas.Service.ServiceList
 import Ideas.Service.Types (Service)
 import Network.CGI
-import Prelude hiding (catch)
 import System.IO
 import System.IO.Error (ioeGetErrorString)
 import qualified Ideas.Main.Logging as Log

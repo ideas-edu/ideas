@@ -23,7 +23,7 @@ module Ideas.Common.Rule.EnvironmentMonad
    , envMonadRefs, envMonadFunctionRefs
    ) where
 
-import Control.Applicative (Applicative(..), Alternative(..))
+import Control.Applicative (Alternative(..))
 import Control.Monad
 import Data.Maybe
 import Data.Typeable

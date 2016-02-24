@@ -23,7 +23,6 @@ module Ideas.Service.FeedbackScript.Run
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Data.Monoid
 import Ideas.Common.Library hiding (ready, Environment)
 import Ideas.Service.BasicServices
 import Ideas.Service.Diagnose

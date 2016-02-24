@@ -33,7 +33,6 @@ module Ideas.Common.Rule.Abstract
 
 import Control.Arrow
 import Control.Monad
-import Data.Monoid
 import Ideas.Common.Classes
 import Ideas.Common.Environment
 import Ideas.Common.Id

@@ -28,7 +28,7 @@ module Ideas.Common.Algebra.GroupLaws
    , leftDistributiveFor, rightDistributiveFor
    ) where
 
-import Data.Monoid
+import Prelude hiding ((<*>))
 import Ideas.Common.Algebra.Group
 import Ideas.Common.Algebra.Law
 

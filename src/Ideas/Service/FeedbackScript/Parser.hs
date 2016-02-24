@@ -24,7 +24,6 @@ import Data.Monoid
 import Ideas.Common.Id
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Text.Parsing
-import Prelude hiding (catch)
 import System.Directory
 import System.FilePath
 

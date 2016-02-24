@@ -19,7 +19,6 @@ module Ideas.Common.Rule.Recognizer
 
 import Control.Monad
 import Data.Maybe
-import Data.Monoid
 import Ideas.Common.Environment
 import Ideas.Common.Rule.EnvironmentMonad
 import Ideas.Common.Rule.Transformation

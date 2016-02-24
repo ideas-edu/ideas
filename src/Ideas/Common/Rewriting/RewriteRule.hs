@@ -26,7 +26,6 @@ module Ideas.Common.Rewriting.RewriteRule
    ) where
 
 import Data.Maybe
-import Data.Monoid
 import Ideas.Common.Classes
 import Ideas.Common.Environment
 import Ideas.Common.Id

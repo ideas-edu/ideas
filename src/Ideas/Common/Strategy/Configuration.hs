@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- Copyright 2015, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -21,7 +22,6 @@ module Ideas.Common.Strategy.Configuration
    ) where
 
 import Data.Char
-import Data.Monoid
 import Ideas.Common.Classes
 import Ideas.Common.CyclicTree hiding (label)
 import Ideas.Common.Id

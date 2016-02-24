@@ -21,7 +21,6 @@ module Ideas.Common.Rewriting.Substitution
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Data.Monoid
 import Ideas.Common.Rewriting.Term
 import Ideas.Common.Utils.TestSuite
 import Ideas.Common.Utils.Uniplate

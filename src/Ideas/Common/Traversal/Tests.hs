@@ -22,7 +22,7 @@ import Ideas.Common.Traversal.Navigator
 import Ideas.Common.Traversal.Utils
 import Ideas.Common.Utils.TestSuite
 import Ideas.Common.Utils.Uniplate
-import Test.QuickCheck
+import Test.QuickCheck hiding ((===))
 
 testIterator :: (Show a, Eq a, Iterator a) => String -> Gen a -> TestSuite
 testIterator s gen = suite (s ++ " Iterator")

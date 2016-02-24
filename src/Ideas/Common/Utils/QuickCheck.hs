@@ -25,7 +25,6 @@ module Ideas.Common.Utils.QuickCheck
 
 import Control.Arrow
 import Control.Monad
-import Data.Monoid
 import Data.Ratio
 import Test.QuickCheck
 

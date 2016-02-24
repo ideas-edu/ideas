@@ -27,9 +27,7 @@ module Ideas.Common.CyclicTree
 
 import Control.Applicative
 import Control.Monad
-import Data.Foldable (Foldable, foldMap)
 import Data.List (intercalate)
-import Data.Traversable (Traversable, traverse, sequenceA)
 import Ideas.Common.Classes
 import Ideas.Common.Id
 import Test.QuickCheck hiding (label)

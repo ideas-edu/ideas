@@ -16,7 +16,7 @@ module Ideas.Common.Strategy.Legacy where
 
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Combinators
-import qualified Prelude
+import qualified Prelude ()
 
 infixr 2 <%>, <@>
 infixr 3 <|>

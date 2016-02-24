@@ -31,7 +31,6 @@ import Control.Monad
 import Data.List (intercalate)
 import Ideas.Common.Classes
 import Ideas.Common.Environment
-import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Process

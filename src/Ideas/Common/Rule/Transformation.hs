@@ -33,7 +33,6 @@ module Ideas.Common.Rule.Transformation
 
 import Control.Arrow
 import Data.Maybe
-import Data.Monoid
 import Data.Typeable
 import Ideas.Common.Classes
 import Ideas.Common.Context

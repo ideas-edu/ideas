@@ -21,7 +21,6 @@ module Ideas.Service.FeedbackScript.Syntax
 import Data.Char
 import Data.List
 import Data.Maybe
-import Data.Monoid
 import Ideas.Common.Library
 import Ideas.Common.Utils.Uniplate
 

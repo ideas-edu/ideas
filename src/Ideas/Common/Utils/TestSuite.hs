@@ -46,7 +46,6 @@ import Data.List
 import Data.Maybe
 import Data.Monoid
 import Data.Time
-import Prelude hiding (catch)
 import System.IO
 import Test.QuickCheck hiding (Result)
 import qualified Data.Sequence as S

@@ -56,6 +56,7 @@ data Encoding = EncHTML      -- html page as output
               | EncString    -- encode terms as strings
               | EncCompact   -- compact ouput
               | EncPretty    -- pretty output
+              | EncJSON      -- encode terms in JSON
  deriving Eq
 
 instance Show Encoding where
@@ -65,6 +66,7 @@ instance Show Encoding where
    show EncString   = "string"
    show EncCompact  = "compact"
    show EncPretty   = "pretty"
+   show EncJSON     = "json"
 
 htmlOutput :: Request -> Bool
 htmlOutput = (EncHTML `elem`) . encoding
@@ -79,7 +81,16 @@ compactOutput req =
    xs = encoding req
 
 useOpenMath :: Request -> Bool
-useOpenMath r = all (`notElem` encoding r) [EncString, EncHTML]
+useOpenMath r = 
+   case dataformat r of
+      JSON -> False
+      XML  -> all (`notElem` encoding r) [EncString, EncHTML]
+
+useJSONTerm :: Request -> Bool
+useJSONTerm r = 
+   case dataformat r of
+      JSON -> EncJSON `elem` encoding r
+      XML  -> False
 
 useLogging :: Request -> Bool
 useLogging = (EncHTML `notElem`) . encoding
@@ -99,4 +110,5 @@ readEncoding = mapM (f . map toLower) . splitsWithElem '+'
    f "string"   = return EncString
    f "compact"  = return EncCompact
    f "pretty"   = return EncPretty
+   f "json"     = return EncJSON
    f s          = fail $ "Invalid encoding: " ++ s

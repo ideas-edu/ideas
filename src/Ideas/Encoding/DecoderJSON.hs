@@ -141,9 +141,12 @@ decodeContext = do
    liftM (inContext ex) decodeTerm
 
 decodeTerm :: JSONDecoder a a
-decodeTerm = do
-   ex <- getExercise
-   decoderFor $ \json ->
+decodeTerm = withJSONTerm $ \b -> getExercise >>= decoderFor . f b
+ where
+   f True ex json = 
+      let Just v = hasTermView ex
+      in matchM v (jsonToTerm json)
+   f False ex json =
       case json of
          String s -> either fail return (parser ex s)
-         _        -> fail "Expecting a string when reading a term"
+         _ -> fail "Expecting a string when reading a term"

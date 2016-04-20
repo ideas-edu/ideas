@@ -15,7 +15,9 @@ module Ideas.Encoding.Encoder
    ( -- * Converter type class
      Converter(..)
    , getExercise, getStdGen, getScript, getRequest
-   , withExercise, withOpenMath, (//)
+   , withExercise, withOpenMath, withJSONTerm, (//)
+     -- * JSON terms
+   , termToJSON, jsonToTerm, jsonTermView
      -- * Options
    , Options, simpleOptions, makeOptions
      -- * Encoder datatype
@@ -41,9 +43,12 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Parser (parseScriptSafe, Script)
 import Ideas.Service.Request
 import Ideas.Service.Types
+import Ideas.Text.JSON hiding (String)
 import Ideas.Text.XML
 import System.Random (newStdGen, mkStdGen, StdGen)
 import qualified Control.Category as C
+import qualified Ideas.Text.JSON as JSON
+import qualified Ideas.Common.Rewriting.Term as Term
 
 -------------------------------------------------------------------
 -- Converter type class
@@ -70,10 +75,60 @@ withExercise = (getExercise >>=)
 withOpenMath :: (Converter f, Monad (f a s)) => (Bool -> f a s t) -> f a s t
 withOpenMath = (liftM useOpenMath getRequest >>=)
 
+withJSONTerm :: (Converter f, Monad (f a s)) => (Bool -> f a s t) -> f a s t
+withJSONTerm = (liftM useJSONTerm getRequest >>=)
+
 (//) :: (Converter f, Monad (f a s2)) => f a s t -> s -> f a s2 t
 p // a = do
    xs <- fromOptions id
    run p xs a
+
+-------------------------------------------------------------------
+-- JSON terms
+
+termToJSON :: Term -> JSON
+termToJSON term = 
+   case term of
+      TVar s    -> JSON.String s
+      TCon s [] 
+         | s == trueSymbol  -> Boolean True
+         | s == falseSymbol -> Boolean False
+         | s == nullSymbol  -> Null
+      TCon s ts 
+         | s == objectSymbol -> Object (f ts)
+         | otherwise -> Object [("_apply", Array (JSON.String (show s):map termToJSON ts))]
+      TList xs  -> Array (map termToJSON xs)
+      TNum n    -> Number (I n)
+      TFloat d  -> Number (D d)
+      TMeta n   -> Object [("_meta", Number (I (toInteger n)))]
+ where
+   f [] = []
+   f (TVar s:x:xs) = (s, termToJSON x) : f xs
+   f _ = error "termToJSON"
+
+jsonToTerm :: JSON -> Term
+jsonToTerm json = 
+   case json of
+      Number (I n)  -> TNum n
+      Number (D d)  -> TFloat d
+      JSON.String s -> TVar s
+      Boolean b     -> Term.symbol  (if b then trueSymbol else falseSymbol)
+      Array xs      -> TList (map jsonToTerm xs)
+      Object [("_meta", Number (I n))] -> TMeta (fromInteger n)
+      Object [("_apply", Array (JSON.String s:xs))] -> TCon (newSymbol s) (map jsonToTerm xs)
+      Object xs     -> TCon objectSymbol (concatMap f xs)
+      Null          -> Term.symbol nullSymbol
+ where
+   f (s, x) = [TVar s, jsonToTerm x]
+     
+jsonTermView :: InJSON a => View Term a
+jsonTermView = makeView (fromJSON . termToJSON) (jsonToTerm . toJSON)
+      
+trueSymbol, falseSymbol, nullSymbol, objectSymbol :: Symbol
+trueSymbol   = newSymbol "true"
+falseSymbol  = newSymbol "false"
+nullSymbol   = newSymbol "null"
+objectSymbol = newSymbol "object"
 
 -------------------------------------------------------------------
 -- Options

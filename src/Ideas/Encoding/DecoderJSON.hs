@@ -48,7 +48,7 @@ decodeType tp =
          liftM Left  (decodeType t1) `mplus`
          liftM Right (decodeType t2)
       Unit         -> return ()
-      Const StdGen -> getStdGen
+      Const QCGen  -> getQCGen
       Const Script -> getScript
       Const t      -> symbol >>= \a -> decodeConst t // a
       _ -> fail $ "No support for argument type: " ++ show tp

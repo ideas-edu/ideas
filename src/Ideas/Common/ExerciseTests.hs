@@ -25,19 +25,19 @@ import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Utils.TestSuite
 import Ideas.Common.View
-import System.Random
 import Test.QuickCheck
+import Test.QuickCheck.Random
 
 ---------------------------------------------------------------
 -- Checks for an exercise
 
 checkExercise :: Exercise a -> IO ()
 checkExercise ex = do
-   stdgen <- getStdGen
-   runTestSuite True (exerciseTestSuite stdgen ex)
+   qcgen <- newQCGen 
+   runTestSuite True (exerciseTestSuite qcgen ex)
 
-exerciseTestSuite :: StdGen -> Exercise a -> TestSuite
-exerciseTestSuite stdgen ex = suite ("Exercise " ++ show (exerciseId ex)) $
+exerciseTestSuite :: QCGen -> Exercise a -> TestSuite
+exerciseTestSuite qcgen ex = suite ("Exercise " ++ show (exerciseId ex)) $
    [ assertTrue "exercise terms defined" (not (null xs))
    , assertTrue "equivalence implemented" $
         let eq a b = equivalence ex (inContext ex a) (inContext ex b)
@@ -45,7 +45,7 @@ exerciseTestSuite stdgen ex = suite ("Exercise " ++ show (exerciseId ex)) $
    , assertTrue "similarity implemented" $
         let sim a b = similarity ex (inContext ex a) (inContext ex b)
         in length (nubBy sim xs) > 1
-   , checkExamples stdgen ex
+   , checkExamples qcgen ex
    ] ++
    case testGenerator ex of
       Nothing  -> []
@@ -72,7 +72,7 @@ exerciseTestSuite stdgen ex = suite ("Exercise " ++ show (exerciseId ex)) $
          showAsGen = showAs (prettyPrinter ex) gen
  where
    xs | isJust (randomExercise ex) =
-           take 10 (randomTerms stdgen ex Nothing)
+           take 10 (randomTerms qcgen ex Nothing)
       | otherwise = map snd (examples ex)
 
 data ShowAs a = S {showS :: a -> String, fromS :: a}
@@ -102,15 +102,15 @@ propRule eq r gen =
    forAll (elements xs) $ \b ->
    a `eq` b
 
-checkExamples :: StdGen -> Exercise a -> TestSuite
-checkExamples stdgen ex
+checkExamples :: QCGen -> Exercise a -> TestSuite
+checkExamples qcgen ex
    | null xs   = mempty
    | otherwise = suite "Examples" $
-        concatMap (checksForTerm True stdgen ex) xs
+        concatMap (checksForTerm True qcgen ex) xs
  where
    xs = map snd (examples ex)
 
-checksForTerm :: Bool -> StdGen -> Exercise a -> a -> [TestSuite]
+checksForTerm :: Bool -> QCGen -> Exercise a -> a -> [TestSuite]
 checksForTerm leftMost _ ex a =
    concat
    -- Left-most derivation
@@ -119,7 +119,7 @@ checksForTerm leftMost _ ex a =
            Nothing -> [assertTrue ("no derivation for " ++ prettyPrinter ex a) False]
       | leftMost
       ] {- ++
-   case randomDerivation stdgen tree of
+   case randomDerivation qcgen tree of
       Just d  -> checksForDerivation ex d
       Nothing -> []
  where

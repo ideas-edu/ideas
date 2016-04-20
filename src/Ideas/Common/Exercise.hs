@@ -118,7 +118,7 @@ data Exercise a =
      -- | A finite list of examples, each with an assigned difficulty.
    , examples :: Examples a
      -- | A generator for random exercises of a certain difficulty.
-   , randomExercise :: Maybe (StdGen -> Maybe Difficulty -> a)
+   , randomExercise :: Maybe (QCGen -> Maybe Difficulty -> a)
      -- | An exercise generator for testing purposes (including corner cases).
    , testGenerator  :: Maybe (Gen a)
      -- | Conversion to and from the (generic) 'Term' datatype. Needed for
@@ -364,7 +364,7 @@ useGenerator makeGen = Just (\rng -> rec rng . makeGen)
 -- | Returns a random exercise of a certain difficulty with some random
 -- number generator. The field 'randomExercise' is used; if this is not
 -- defined (i.e., Nothing), one of the examples is used instead.
-randomTerm :: StdGen -> Exercise a -> Maybe Difficulty -> Maybe a
+randomTerm :: QCGen -> Exercise a -> Maybe Difficulty -> Maybe a
 randomTerm rng ex mdif =
    case randomExercise ex of
       Just f  -> return (f rng mdif)
@@ -377,7 +377,7 @@ randomTerm rng ex mdif =
          i = fst (randomR (0, length xs - 1) rng)
 
 -- | Returns a list of randomly generated terms of a certain difficulty.
-randomTerms :: StdGen -> Exercise a -> Maybe Difficulty -> [a]
+randomTerms :: QCGen -> Exercise a -> Maybe Difficulty -> [a]
 randomTerms rng ex mdif = rec rng
  where
    rec a = maybe id (:) (randomTerm a ex mdif) (rec (snd (next a)))

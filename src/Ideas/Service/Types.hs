@@ -22,7 +22,7 @@ module Ideas.Service.Types
    , tEnvironment, tLocation, tRule, tUnit, tTuple3, tTuple4, tTuple5, tPair
    , tStrategy, tTree, tState, tBool, tMaybe, tString, tList
    , tId, tService, tSomeExercise, tText, tDifficulty, tUserId ,tContext
-   , tDerivation, tError, (.->), tIO, tExercise, tTestSuiteResult, tStdGen
+   , tDerivation, tError, (.->), tIO, tExercise, tTestSuiteResult, tQCGen
    , tScript, tExamples, tStrategyCfg, tInt
      -- * Searching a typed value
    , findValuesOfType
@@ -38,6 +38,7 @@ import Ideas.Common.Utils
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
 import System.Random
+import Test.QuickCheck.Random (QCGen)
 import qualified Ideas.Common.Utils.TestSuite as TestSuite
 
 -----------------------------------------------------------------------------
@@ -99,7 +100,7 @@ instance Equal (Const a) where
    equal Environment Environment = Just id
    equal SomeExercise SomeExercise = Just id
    equal Text        Text        = Just id
-   equal StdGen      StdGen      = Just id
+   equal QCGen       QCGen       = Just id
    equal Result      Result      = Just id
    equal _           _           = Nothing
 
@@ -148,7 +149,7 @@ data Const a t where
    StratCfg     :: Const a StrategyCfg
    Environment  :: Const a Environment
    Text         :: Const a Text
-   StdGen       :: Const a StdGen
+   QCGen        :: Const a QCGen
    Result       :: Const a TestSuite.Result
    SomeExercise :: Const a (Some Exercise)
    -- basic types
@@ -206,7 +207,7 @@ instance Show (TypedValue (Const a)) where
          StratCfg         -> show val
          Environment      -> show val
          Text             -> show val
-         StdGen           -> show val
+         QCGen            -> show val
          Result           -> show val
          Bool             -> map toLower (show val)
          Int              -> show val
@@ -228,7 +229,7 @@ instance ShowF (Const a) where
    showF StratCfg     = "StrategyConfiguration"
    showF Environment  = "Environment"
    showF Text         = "TextMessage"
-   showF StdGen       = "StdGen"
+   showF QCGen        = "QCGen"
    showF Result       = "TestSuiteResult"
    showF SomeExercise = "Exercise"
    showF Bool         = "Bool"
@@ -337,8 +338,8 @@ tDifficulty = Tag "Difficulty" (Iso (f <-> show) tString)
 tUserId :: Type a String
 tUserId = Tag "UserId" tString
 
-tStdGen :: Type a StdGen
-tStdGen = Const StdGen
+tQCGen :: Type a QCGen
+tQCGen = Const QCGen
 
 tExamples :: Type a (Examples (Context a))
 tExamples = tList (tPair tDifficulty tContext)

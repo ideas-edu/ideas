@@ -139,7 +139,7 @@ generateS :: Service
 generateS = makeService "basic.generate"
    "Given an exercise code and a difficulty level (optional), this service \
    \returns an initial state with a freshly generated expression." $
-   generate ::: tStdGen .-> tExercise .-> tMaybe tDifficulty .-> tMaybe tUserId .-> tIO tState
+   generate ::: tQCGen .-> tExercise .-> tMaybe tDifficulty .-> tMaybe tUserId .-> tIO tState
 
 createS :: Service
 createS = makeService "basic.create"
@@ -320,7 +320,7 @@ examplederivationsS = makeService "meta.examplederivations"
 testreportS :: Service
 testreportS = makeService "meta.testreport"
    "Show test report for an exercise." $
-   (\stdgen -> runTestSuiteResult False . exerciseTestSuite stdgen) ::: tStdGen .-> tExercise .-> tIO tTestSuiteResult
+   (\qcgen -> runTestSuiteResult False . exerciseTestSuite qcgen) ::: tQCGen .-> tExercise .-> tIO tTestSuiteResult
 
 logS :: Service
 logS = makeService "meta.log"

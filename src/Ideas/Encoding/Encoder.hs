@@ -14,7 +14,7 @@
 module Ideas.Encoding.Encoder
    ( -- * Converter type class
      Converter(..)
-   , getExercise, getStdGen, getScript, getRequest
+   , getExercise, getQCGen, getScript, getRequest
    , withExercise, withOpenMath, withJSONTerm, (//)
      -- * JSON terms
    , termToJSON, jsonToTerm, jsonTermView
@@ -46,6 +46,7 @@ import Ideas.Service.Types
 import Ideas.Text.JSON hiding (String)
 import Ideas.Text.XML
 import System.Random (newStdGen, mkStdGen, StdGen)
+import Test.QuickCheck.Random
 import qualified Control.Category as C
 import qualified Ideas.Text.JSON as JSON
 import qualified Ideas.Common.Rewriting.Term as Term
@@ -60,8 +61,8 @@ class Converter f where
 getExercise :: Converter f => f a s (Exercise a)
 getExercise = fromOptions exercise
 
-getStdGen :: Converter f => f a s StdGen
-getStdGen = fromOptions stdGen
+getQCGen :: Converter f => f a s QCGen
+getQCGen = fromOptions qcGen
 
 getScript :: Converter f => f a s Script
 getScript = fromOptions script
@@ -136,14 +137,14 @@ objectSymbol = newSymbol "object"
 data Options a = Options
    { exercise :: Exercise a -- the current exercise
    , request  :: Request    -- meta-information about the request
-   , stdGen   :: StdGen     -- random number generator
+   , qcGen    :: QCGen      -- random number generator
    , script   :: Script     -- feedback script
    }
 
 simpleOptions :: Exercise a -> Options a
 simpleOptions ex =
    let req = emptyRequest {encoding = [EncHTML]}
-   in Options ex req (mkStdGen 0) mempty
+   in Options ex req (mkQCGen 0) mempty
 
 makeOptions :: DomainReasoner -> Request -> IO (Some Options)
 makeOptions dr req = do
@@ -157,11 +158,11 @@ makeOptions dr req = do
              Nothing
                 | getId ex == mempty -> return mempty
                 | otherwise          -> defaultScript dr (getId ex)
-   stdgen <- newStdGen
+   qcgen <- newQCGen
    return $ Some Options
       { exercise = ex
       , request  = req
-      , stdGen   = stdgen
+      , qcGen    = qcgen
       , script   = scr
       }
 

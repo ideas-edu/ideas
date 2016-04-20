@@ -25,11 +25,11 @@ import Ideas.Common.Traversal.Navigator (downs, navigateTo)
 import Ideas.Common.Utils (fst3)
 import Ideas.Service.State
 import Ideas.Service.Types
-import System.Random
+import Test.QuickCheck.Random
 import qualified Ideas.Common.Classes as Apply
 import qualified Ideas.Common.Library as Library
 
-generate :: StdGen -> Exercise a -> Maybe Difficulty -> Maybe String -> IO (State a)
+generate :: QCGen -> Exercise a -> Maybe Difficulty -> Maybe String -> IO (State a)
 generate rng ex md userId =
    case randomTerm rng ex md of
       Just a  -> startState ex userId a

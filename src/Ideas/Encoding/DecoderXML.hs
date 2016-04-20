@@ -60,7 +60,7 @@ xmlDecoder tp =
             Environment -> decodeArgEnvironment
             Location    -> decodeLocation
             StratCfg    -> decodeConfiguration
-            StdGen      -> getStdGen
+            QCGen       -> getQCGen
             Script      -> getScript
             Exercise    -> getExercise
             Id          -> -- improve!

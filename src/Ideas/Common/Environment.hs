@@ -71,6 +71,8 @@ instance Reference Term
 instance Reference Char where
    makeRefList n = Ref (newId n) id Just variableView
 
+instance Reference ShowString
+
 instance Reference a => Reference [a] where
    makeRef = makeRefList
 

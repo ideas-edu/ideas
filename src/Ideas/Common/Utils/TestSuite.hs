@@ -153,7 +153,6 @@ runTestSuiteResult chattyIO ts = do
    result <- runner ref chattyIO ts
    newline ref
    return result
- where
 
 runner :: IORef Int -> Bool -> TestSuite -> IO Result
 runner ref chattyIO = runTS

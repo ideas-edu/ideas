@@ -29,14 +29,13 @@ module Ideas.Encoding.Encoder
    , makeDecoder, decoderFor
    , split, symbol, setInput
      -- re-export
-   , module Data.Monoid, module Control.Applicative
-   , module Control.Arrow
+   , module Export
    ) where
 
-import Control.Applicative hiding (Const)
-import Control.Arrow
+import Control.Applicative as Export hiding (Const)
+import Control.Arrow as Export
 import Control.Monad
-import Data.Monoid
+import Data.Monoid as Export
 import Ideas.Common.Library hiding (exerciseId, symbol)
 import Ideas.Common.Utils (Some(..))
 import Ideas.Service.DomainReasoner
@@ -45,7 +44,6 @@ import Ideas.Service.Request
 import Ideas.Service.Types
 import Ideas.Text.JSON hiding (String)
 import Ideas.Text.XML
-import System.Random (newStdGen, mkStdGen, StdGen)
 import Test.QuickCheck.Random
 import qualified Control.Category as C
 import qualified Ideas.Text.JSON as JSON
@@ -189,7 +187,7 @@ instance Monad (Encoder a s) where
    return a = Enc $ \_ _ -> return a
    fail s   = Enc $ \_ _ -> fail s
    p >>= f  = Enc $ \xs s -> do
-      (a) <- runEnc p xs s
+      a <- runEnc p xs s
       runEnc (f a) xs s
 
 instance MonadPlus (Encoder a s) where

@@ -59,7 +59,7 @@ xmlRequest cgiBin xml = do
               Just s  -> readEncoding s
               Nothing -> return []
    return emptyRequest
-      { serviceId      = fmap newId $ findAttribute "service" xml
+      { serviceId      = newId <$> findAttribute "service" xml
       , exerciseId     = extractExerciseId xml
       , source         = findAttribute "source" xml
       , cgiBinary      = cgiBin

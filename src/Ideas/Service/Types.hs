@@ -37,7 +37,6 @@ import Ideas.Common.Library
 import Ideas.Common.Utils
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
-import System.Random
 import Test.QuickCheck.Random (QCGen)
 import qualified Ideas.Common.Utils.TestSuite as TestSuite
 

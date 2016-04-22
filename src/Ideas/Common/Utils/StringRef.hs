@@ -37,6 +37,7 @@ data StringRef = S !Int
 
 type HashTable = IM.IntMap [String]
 
+{-# NOINLINE tableRef #-}
 tableRef :: IORef HashTable
 tableRef = unsafePerformIO (newIORef IM.empty)
 

@@ -73,12 +73,12 @@ allsame []     = True
 allsame (x:xs) = all (==x) xs
 
 fixpoint :: Eq a => (a -> a) -> a -> a
-fixpoint f = stop . iterate f
+fixpoint f = rec . iterate f
  where
-   stop []           = error "Ideas.Common.Utils: empty list"
-   stop (x:xs)
+   rec [] = error "Ideas.Common.Utils: empty list"
+   rec (x:xs)
       | x == head xs = x
-      | otherwise    = stop xs
+      | otherwise    = rec xs
 
 splitAtElem :: Eq a => a -> [a] -> Maybe ([a], [a])
 splitAtElem c s =

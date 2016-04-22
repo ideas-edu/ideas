@@ -138,6 +138,7 @@ decodeEnvironment = decoderFor $ \json ->
       _         -> fail $ "invalid context: " ++ show json
  where
    add (k, String s) = return . insertRef (makeRef k) s
+   add (k, Number n) = return . insertRef (makeRef k) (show n)
    add _             = fail "invalid item in context"
 
 decodeContext :: JSONDecoder a (Context a)

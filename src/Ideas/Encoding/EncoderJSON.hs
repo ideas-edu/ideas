@@ -107,7 +107,7 @@ encodeState = encoderFor $ \st ->
        make pp env = Array $
           [ String $ showId (exercise st)
           , String $ if withoutPrefix st
-                     then "NoPrefix"
+                     then "no prefix"
                      else show (statePrefix st)
           , pp
           , env

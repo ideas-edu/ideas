@@ -18,6 +18,7 @@ module Ideas.Encoding.DecoderJSON
    ) where
 
 import Control.Monad
+import Data.Char
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, symbol)
 import Ideas.Common.Traversal.Navigator
@@ -100,7 +101,7 @@ decodeState = do
             let loc = envToLoc env
                 ctx = navigateTowards loc $ deleteRef locRef $
                          setEnvironment env $ inContext ex a
-                prfx = replayPaths pts (strategy ex) ctx
+                prfx = pts (strategy ex) ctx
             case rest of
                [] -> return $ makeState ex prfx ctx
                [Array [String user, String session, String startterm]] ->
@@ -118,12 +119,16 @@ envToLoc env = toLocation $ fromMaybe [] $ locRef ? env >>= readM
 locRef :: Ref String
 locRef = makeRef "location"
 
-decodePaths :: JSONDecoder a [Path]
+decodePaths :: JSONDecoder a (LabeledStrategy (Context a) -> Context a -> Prefix (Context a))
 decodePaths =
    decoderFor $ \json ->
       case json of
-         String p -> readPaths p
+         String p 
+            | p ~= "noprefix" -> return (\_ _ -> noPrefix)
+            | otherwise       -> liftM replayPaths (readPaths p)
          _ -> fail "invalid prefixes"
+ where
+   x ~= y = filter isAlphaNum (map toLower x) == y
 
 decodeEnvironment :: JSONDecoder a Environment
 decodeEnvironment = decoderFor $ \json ->

@@ -16,6 +16,7 @@ module Ideas.Encoding.ModeJSON (processJSON) where
 
 import Control.Monad
 import Data.Char
+import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (Some(..), timedSeconds)
 import Ideas.Encoding.DecoderJSON
@@ -66,6 +67,7 @@ jsonRequest cgiBin json = do
    srv  <- stringOption  "method"      json newId
    src  <- stringOption  "source"      json id
    rinf <- stringOption  "requestinfo" json id
+   seed <- stringOptionM "randomseed"  json (defaultSeed cgiBin) (return . readM)
    enc  <- stringOptionM "encoding"    json [] readEncoding
    sch  <- stringOptionM "logging"     json Nothing (liftM Just . readSchema)
    return emptyRequest
@@ -75,9 +77,16 @@ jsonRequest cgiBin json = do
       , cgiBinary   = cgiBin
       , requestInfo = rinf
       , logSchema   = sch
+      , randomSeed  = seed
       , dataformat  = JSON
       , encoding    = enc
       }
+
+-- Use a fixed seed for random number generation for command-line invocations
+defaultSeed :: Maybe String -> Maybe Int
+defaultSeed cgiBin
+   | isJust cgiBin = Nothing
+   | otherwise     = Just 2805 -- magic number
 
 stringOption :: Monad m => String -> JSON -> (String -> a) -> m (Maybe a)
 stringOption attr json f = stringOptionM attr json Nothing (return . Just . f)

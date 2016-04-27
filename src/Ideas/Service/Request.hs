@@ -26,13 +26,14 @@ data Request = Request
    , requestInfo    :: Maybe String
    , cgiBinary      :: Maybe String
    , logSchema      :: Maybe Schema
+   , randomSeed     :: Maybe Int
    , dataformat     :: DataFormat
    , encoding       :: [Encoding]
    }
 
 emptyRequest :: Request
 emptyRequest = Request Nothing Nothing Nothing Nothing
-                       Nothing Nothing Nothing XML []
+                       Nothing Nothing Nothing Nothing XML []
 
 data Schema = V1 | V2 | NoLogging deriving (Show, Eq)
 

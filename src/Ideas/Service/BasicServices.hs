@@ -29,20 +29,20 @@ import Test.QuickCheck.Random
 import qualified Ideas.Common.Classes as Apply
 import qualified Ideas.Common.Library as Library
 
-generate :: QCGen -> Exercise a -> Maybe Difficulty -> Maybe String -> IO (State a)
+generate :: QCGen -> Exercise a -> Maybe Difficulty -> Maybe String -> Either String (State a)
 generate rng ex md userId =
    case randomTerm rng ex md of
-      Just a  -> startState ex userId a
-      Nothing -> fail "No random term"
+      Just a  -> Right $ startState rng ex userId a
+      Nothing -> Left "No random term"
 
-create :: Exercise a -> String -> Maybe String -> IO (State a)
-create ex input userId =
+create :: QCGen -> Exercise a -> String -> Maybe String -> Either String (State a)
+create rng ex input userId =
    case parser ex input of
       Left err -> fail err
       Right a
-         | evalPredicate (Library.ready ex) a -> fail "Is ready"
-         | evalPredicate (Library.suitable ex) a -> startState ex userId a
-         | otherwise -> fail "Not suitable"
+         | evalPredicate (Library.ready ex) a -> Left "Is ready"
+         | evalPredicate (Library.suitable ex) a -> Right $ startState rng ex userId a
+         | otherwise -> Left "Not suitable"
 
 -- TODO: add a location to each step
 solution :: Maybe StrategyCfg -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))

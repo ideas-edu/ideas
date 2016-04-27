@@ -15,7 +15,7 @@ module Ideas.Main.BlackBoxTests (blackBoxTests) where
 import Control.Monad
 import Data.Char
 import Data.List
-import Ideas.Common.Utils (useFixedStdGen, snd3)
+import Ideas.Common.Utils (snd3)
 import Ideas.Common.Utils.TestSuite
 import Ideas.Encoding.ModeJSON
 import Ideas.Encoding.ModeXML
@@ -50,7 +50,6 @@ doBlackBoxTest :: DomainReasoner -> DataFormat -> FilePath -> TestSuite
 doBlackBoxTest dr format path =
    assertMessageIO (stripDirectoryPart path) $ do
       -- Comparing output with expected output
-      useFixedStdGen -- fix the random number generator
       withFile path ReadMode $ \h1 -> do
          hSetBinaryMode h1 True
          txt <- hGetContents h1

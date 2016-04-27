@@ -19,7 +19,7 @@ module Ideas.Common.Utils
    , cartesian, distinct, allsame
    , fixpoint
    , splitAtElem, splitsWithElem
-   , useFixedStdGen, timedSeconds
+   , timedSeconds
    , fst3, snd3, thd3
    , headM, findIndexM
    , elementAt, changeAt, replaceAt
@@ -28,7 +28,6 @@ module Ideas.Common.Utils
 
 import Data.Char
 import Data.List
-import System.Random
 import Data.Typeable
 import System.Timeout
 
@@ -91,11 +90,6 @@ splitsWithElem c s =
    case splitAtElem c s of
       Just (xs, ys) -> xs : splitsWithElem c ys
       Nothing       -> [s]
-
--- | Use a fixed standard "random" number generator. This generator is
--- accessible by calling System.Random.getStdGen
-useFixedStdGen :: IO ()
-useFixedStdGen = setStdGen (mkStdGen 280578) {- magic number -}
 
 timedSeconds :: Int -> IO a -> IO a
 timedSeconds n m = timeout (n * 10^(6 :: Int)) m >>=

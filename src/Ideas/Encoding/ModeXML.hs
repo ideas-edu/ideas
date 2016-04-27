@@ -66,9 +66,16 @@ xmlRequest cgiBin xml = do
       , requestInfo    = findAttribute "requestinfo" xml
       , logSchema      = findAttribute "logging" xml >>= readSchema
       , feedbackScript = findAttribute "script" xml
+      , randomSeed     = defaultSeed cgiBin $ 
+                            findAttribute "randomseed" xml >>= readM
       , dataformat     = XML
       , encoding       = enc
       }
+
+-- Use a fixed seed for random number generation for command-line invocations
+defaultSeed :: Maybe String -> Maybe Int -> Maybe Int
+defaultSeed Nothing Nothing = Just 2805 -- magic number
+defaultSeed _ m = m
 
 xmlReply :: DomainReasoner -> LogRef -> Request -> XML -> IO XML
 xmlReply dr logRef request xml = do

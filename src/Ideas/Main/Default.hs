@@ -22,7 +22,7 @@ module Ideas.Main.Default
 import Control.Exception
 import Control.Monad
 import Data.Maybe
-import Ideas.Common.Utils (useFixedStdGen, Some(..))
+import Ideas.Common.Utils (Some(..))
 import Ideas.Common.Utils.TestSuite
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
@@ -100,7 +100,6 @@ inputOrDefault = do
 defaultCommandLine :: DomainReasoner -> [Flag] -> IO ()
 defaultCommandLine dr flags = do
    hSetBinaryMode stdout True
-   useFixedStdGen -- always use a predictable "random" number generator
    mapM_ doAction flags
  where
    doAction flag =

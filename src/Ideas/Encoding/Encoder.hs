@@ -142,7 +142,8 @@ data Options a = Options
 simpleOptions :: Exercise a -> Options a
 simpleOptions ex =
    let req = emptyRequest {encoding = [EncHTML]}
-   in Options ex req (mkQCGen 0) mempty
+       gen = mkQCGen 0
+   in Options ex req gen mempty
 
 makeOptions :: DomainReasoner -> Request -> IO (Some Options)
 makeOptions dr req = do
@@ -156,11 +157,11 @@ makeOptions dr req = do
              Nothing
                 | getId ex == mempty -> return mempty
                 | otherwise          -> defaultScript dr (getId ex)
-   qcgen <- newQCGen
+   gen <- maybe newQCGen (return . mkQCGen) (randomSeed req)
    return $ Some Options
       { exercise = ex
       , request  = req
-      , qcGen    = qcgen
+      , qcGen    = gen
       , script   = scr
       }
 

@@ -22,7 +22,6 @@ module Ideas.Service.State
    , withoutPrefix, stateLabels, suitable, finished, firsts, microsteps
    ) where
 
-import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
@@ -30,6 +29,7 @@ import Ideas.Common.Library hiding (suitable, ready, (:~>))
 import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.Symbol
+import Test.QuickCheck.Random
 import System.Random
 
 data State a = State
@@ -96,14 +96,15 @@ emptyStateContext ex ca =
 emptyState :: Exercise a -> a -> State a
 emptyState ex = emptyStateContext ex . inContext ex
 
-startState :: Exercise a -> Maybe String -> a -> IO (State a)
-startState ex userId a = do
-   sid <- newSessionId
-   return (emptyStateContext ex (inContext ex a))
-      { stateUser      = userId
-      , stateSession   = Just sid
-      , stateStartTerm = Just (prettyPrinter ex a)
-      }
+startState :: QCGen -> Exercise a -> Maybe String -> a -> State a
+startState gen ex userId a = st
+   { stateUser      = userId
+   , stateSession   = Just sid
+   , stateStartTerm = Just (prettyPrinter ex a)
+   }
+ where
+   st  = emptyStateContext ex (inContext ex a)
+   sid = newSessionId gen
 
 -- Restart the strategy: make sure that the new state has a prefix
 -- When resetting the prefix, also make sure that the context is refreshed
@@ -136,10 +137,8 @@ stateLabels st = map make (prefixPaths (statePrefix st))
       in nub (mapMaybe isEnterRule xs) \\ mapMaybe isExitRule xs
 
 -- | Produces a 80 bit random number, represented as 20 hexadecimal digits
-newSessionId :: IO String
-newSessionId = replicateM 20 $ do
-   n <- randomRIO (0 :: Int, 15)
-   return (hex n)
+newSessionId :: QCGen -> String
+newSessionId = map hex . take 20 . randomRs (0 :: Int, 15)
  where
    hex :: Int -> Char
    hex n | n < 10    = chr (n+48)

@@ -58,7 +58,7 @@ xmlEncoder =
            Tag "RulesInfo" _ ->
               withExercise $ \ex ->
               withOpenMath $ \useOM ->
-                 pure (rulesInfoXML ex (buildTerm useOM ex))
+                 pure (rulesInfoXML ex (buildExpression useOM ex))
            Tag "elem" t ->
               tag "elem" (xmlEncoder // (val ::: t))
            -- special cases for lists
@@ -89,6 +89,7 @@ xmlEncoderConst = encoderFor $ \tv@(val ::: tp) ->
       Context      -> encodeContext // val
       Location     -> encodeLocation // val
       Environment  -> encodeEnvironment // val
+      Term         -> builder (toXML (toOMOBJ val))
       Text         -> encodeText // val
       Bool         -> string (showBool val)
       _            -> text tv
@@ -103,7 +104,7 @@ encodeState = encoderFor $ \st -> element "state"
 
 encodeContext :: XMLEncoder a (Context a)
 encodeContext = withOpenMath $ \useOM -> exerciseEncoder $ \ex ctx ->
-   maybe (error "encodeContext") (buildTerm useOM ex) (fromContext ctx)
+   maybe (error "encodeContext") (buildExpression useOM ex) (fromContext ctx)
    <>
    let values = bindings (withLoc ctx)
        loc    = fromLocation (location ctx)
@@ -121,8 +122,8 @@ encodeContext = withOpenMath $ \useOM -> exerciseEncoder $ \ex ctx ->
          | tb <- values
          ]
 
-buildTerm :: BuildXML b => Bool -> Exercise a -> a -> b
-buildTerm useOM ex
+buildExpression :: BuildXML b => Bool -> Exercise a -> a -> b
+buildExpression useOM ex
    | useOM     = either msg (builder . toXML) . toOpenMath ex
    | otherwise = tag "expr" . string . prettyPrinter ex
  where
@@ -176,7 +177,7 @@ encodeText = encoderFor $ \txt ->
          TextTerm a -> fromMaybe (text item) $ do
             v <- hasTermView ex
             b <- match v a
-            return (buildTerm useOM ex b)
+            return (buildExpression useOM ex b)
          _ -> text item
 
 encodeMessage :: XMLEncoder a FeedbackText.Message

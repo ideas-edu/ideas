@@ -62,6 +62,7 @@ decodeConst tp =
       Exercise    -> getExercise
       Environment -> decodeEnvironment
       Location    -> decodeLocation
+      Term        -> decoderFor (return . jsonToTerm)
       Int         -> decoderFor fromJSON
       Tp.String   -> decoderFor fromJSON
       Id          -> decodeId
@@ -96,7 +97,7 @@ decodeState = do
          Array [a] -> setInput a >> decodeState
          Array (String _code : pref : term : jsonContext : rest) -> do
             pts  <- decodePaths       // pref
-            a    <- decodeTerm        // term
+            a    <- decodeExpression  // term
             env  <- decodeEnvironment // jsonContext
             let loc = envToLoc env
                 ctx = navigateTowards loc $ deleteRef locRef $
@@ -144,10 +145,10 @@ decodeEnvironment = decoderFor $ \json ->
 decodeContext :: JSONDecoder a (Context a)
 decodeContext = do
    ex <- getExercise
-   liftM (inContext ex) decodeTerm
+   liftM (inContext ex) decodeExpression
 
-decodeTerm :: JSONDecoder a a
-decodeTerm = withJSONTerm $ \b -> getExercise >>= decoderFor . f b
+decodeExpression :: JSONDecoder a a
+decodeExpression = withJSONTerm $ \b -> getExercise >>= decoderFor . f b
  where
    f True ex json = 
       let Just v = hasTermView ex

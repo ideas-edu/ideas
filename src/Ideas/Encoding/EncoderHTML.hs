@@ -103,6 +103,7 @@ encodeConst lm dr = encoderFor $ \tv@(val ::: tp) ->
       State       -> exerciseHeader lm <> (encodeState lm dr // val)
       Location    -> text val
       Environment -> text val
+      Term        -> text val
       Context     -> encodeContext // val
       String      -> string val
       Result      -> exerciseHeader lm <> encodeResult lm val

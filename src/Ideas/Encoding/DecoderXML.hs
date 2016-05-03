@@ -58,6 +58,7 @@ xmlDecoder tp =
             Context     -> decodeContext
             Rule        -> decodeRule
             Environment -> decodeArgEnvironment
+            Term        -> decoderFor (fromXML >=> fromOMOBJ)
             Location    -> decodeLocation
             StratCfg    -> decodeConfiguration
             QCGen       -> getQCGen
@@ -105,7 +106,7 @@ decodePaths = do
 decodeContext :: XMLDecoder a (Context a)
 decodeContext = do
    ex   <- getExercise
-   expr <- decodeTerm
+   expr <- decodeExpression
    env  <- decodeEnvironment
    let ctx    = setEnvironment env (inContext ex expr)
        locRef = makeRef "location"
@@ -116,8 +117,8 @@ decodeContext = do
       Nothing ->
          return ctx
 
-decodeTerm :: XMLDecoder a a
-decodeTerm = withOpenMath f
+decodeExpression :: XMLDecoder a a
+decodeExpression = withOpenMath f
  where
    f True  = decodeOMOBJ
    f False = decodeChild "expr" $ do

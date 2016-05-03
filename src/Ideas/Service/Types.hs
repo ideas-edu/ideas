@@ -20,7 +20,7 @@ module Ideas.Service.Types
    , Equal(..), ShowF(..), equalM
      -- * Constructing types
    , tEnvironment, tLocation, tRule, tUnit, tTuple3, tTuple4, tTuple5, tPair
-   , tStrategy, tTree, tState, tBool, tMaybe, tString, tList
+   , tTerm, tStrategy, tTree, tState, tBool, tMaybe, tString, tList
    , tId, tService, tSomeExercise, tText, tDifficulty, tUserId ,tContext
    , tDerivation, tError, (.->), tIO, tExercise, tTestSuiteResult, tQCGen
    , tScript, tExamples, tStrategyCfg, tInt
@@ -97,6 +97,7 @@ instance Equal (Const a) where
    equal Script      Script      = Just id
    equal StratCfg    StratCfg    = Just id
    equal Environment Environment = Just id
+   equal Term        Term        = Just id
    equal SomeExercise SomeExercise = Just id
    equal Text        Text        = Just id
    equal QCGen       QCGen       = Just id
@@ -147,6 +148,7 @@ data Const a t where
    Script       :: Const a Script
    StratCfg     :: Const a StrategyCfg
    Environment  :: Const a Environment
+   Term         :: Const a Term
    Text         :: Const a Text
    QCGen        :: Const a QCGen
    Result       :: Const a TestSuite.Result
@@ -205,6 +207,7 @@ instance Show (TypedValue (Const a)) where
          Script           -> show val
          StratCfg         -> show val
          Environment      -> show val
+         Term             -> show val
          Text             -> show val
          QCGen            -> show val
          Result           -> show val
@@ -227,6 +230,7 @@ instance ShowF (Const a) where
    showF Script       = "Script"
    showF StratCfg     = "StrategyConfiguration"
    showF Environment  = "Environment"
+   showF Term         = "Term"
    showF Text         = "TextMessage"
    showF QCGen        = "QCGen"
    showF Result       = "TestSuiteResult"
@@ -328,6 +332,9 @@ tTuple5 t1 t2 t3 t4 t5 = Iso (f <-> g) (Pair t1 (Pair t2 (Pair t3 (Pair t4 t5)))
 
 tEnvironment :: Type a Environment
 tEnvironment = Const Environment
+
+tTerm :: Type a Term
+tTerm = Const Term
 
 tDifficulty :: Type a Difficulty
 tDifficulty = Tag "Difficulty" (Iso (f <-> show) tString)

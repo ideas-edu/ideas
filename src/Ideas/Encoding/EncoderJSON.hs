@@ -76,6 +76,7 @@ jsonEncodeConst = encoderFor $ \(val ::: tp) ->
       Context      -> encodeContext // val
       Location     -> pure (toJSON (show val))
       Environment  -> encodeEnvironment // val
+      Term         -> pure (termToJSON val)
       Text         -> pure (toJSON (show val))
       Int          -> pure (toJSON val)
       Bool         -> pure (toJSON val)

@@ -54,7 +54,8 @@ Library
   hs-source-dirs:    src
   Build-Depends:     base >= 4.2 && < 5, 
                      mtl == 2.2.*,
-                     QuickCheck >= 2.4.1 && < 2.8, 
+                     QuickCheck >= 2.4.1 && < 2.8,
+                     cgi >= 3001.3.0.0,
                      Diff,
                      containers, 
                      random, 
@@ -192,14 +193,6 @@ Library
     Ideas.Text.XML.Interface
     Ideas.Text.XML.Parser
     Ideas.Text.XML.Unicode
-
-  Other-modules:
-    Network.CGI
-    Network.CGI.Accept
-    Network.CGI.Compat
-    Network.CGI.Cookie
-    Network.CGI.Monad
-    Network.CGI.Protocol
 
 --------------------------------------------------------------------------------
 

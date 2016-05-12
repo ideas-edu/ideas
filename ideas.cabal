@@ -52,26 +52,19 @@ Library
 
   ghc-options:       -Wall
   hs-source-dirs:    src
-  Build-Depends:     base >= 4.2 && < 5, 
-                     mtl == 2.2.*,
-                     QuickCheck >= 2.4.1 && < 2.8,
-                     cgi >= 3001.3.0.0,
-                     Diff,
-                     containers, 
-                     random, 
-                     uniplate, 
-                     time, 
-                     filepath,
-                     directory,
-                     parsec,
-                     wl-pprint,
-                     array,
-                     exceptions,
-                     multipart,
-                     bytestring,
-                     old-time,
-                     old-locale,
-                     xhtml
+  Build-Depends:     
+     base >= 4.2 && < 5,
+     cgi >= 3001.3.0.0,
+     QuickCheck >= 2.4.1 && < 2.8,
+     Diff,
+     containers,
+     directory, 
+     filepath, 
+     parsec, 
+     random,
+     time, 
+     uniplate, 
+     wl-pprint
 
   if flag(network-uri)
     build-depends: network-uri >= 2.6, network >= 2.6

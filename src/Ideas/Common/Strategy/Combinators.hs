@@ -15,8 +15,8 @@
 
 module Ideas.Common.Strategy.Combinators where
 
-import Data.Array
 import Data.Graph
+import Data.Maybe
 import Data.List ((\\))
 import Ideas.Common.CyclicTree hiding (label)
 import Ideas.Common.Id
@@ -24,7 +24,7 @@ import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.StrategyTree
-import Ideas.Common.Utils (fst3)
+import Ideas.Common.Utils (fst3, thd3)
 import Prelude hiding (not, repeat, fail, sequence)
 import qualified Ideas.Common.Strategy.Choice as Choice
 import qualified Ideas.Common.Strategy.Derived as Derived
@@ -171,17 +171,19 @@ exhaustive = declN $ "exhaustive" .=. Nary Derived.exhaustive
 
 -- Graph to strategy ----------------------
 
-type DependencyGraph node key = (Graph, Vertex -> (node, key, [key]), key -> Maybe Vertex)
+type DependencyGraph node key = [(node, key, [key])]
 
 -- | Create a strategy from a dependency graph with strategies as nodes
 -- Does not check for cycles
-dependencyGraph:: IsStrategy f => DependencyGraph (f a) key -> Strategy a
-dependencyGraph (graph, vertex2data, _) = g2s []
+dependencyGraph:: (IsStrategy f, Ord key) => DependencyGraph (f a) key -> Strategy a
+dependencyGraph = make . graphFromEdges
+ where
+   make (graph, vertex2data, key2data) = rec []
     where
-        g2s seen
-            | null reachables   = succeed
-            | otherwise         = choice $ map makePath reachables
-            where
-               reachables      = filter isReachable $ vertices graph \\ seen
-               isReachable     = null . (\\ seen) . (graph!)
-               makePath vertex = (fst3 . vertex2data) vertex .*. g2s (vertex:seen)
+      rec seen
+         | null reachables = succeed
+         | otherwise       = choice $ map makePath reachables
+       where
+         reachables  = filter isReachable $ vertices graph \\ seen
+         isReachable = null . (\\ seen) . mapMaybe key2data . thd3 . vertex2data
+         makePath v  = fst3 (vertex2data v) .*. rec (v:seen)

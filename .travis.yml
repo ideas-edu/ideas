@@ -5,8 +5,9 @@
 notifications:
   email:
     recipients:
-      - agerdes@me.com
+      - J.T.Jeuring@uu.nl
       - Bastiaan.Heeren@ou.nl
+      - agerdes@me.com
     on_success: always
     on_failure: always
 

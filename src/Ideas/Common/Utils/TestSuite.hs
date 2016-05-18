@@ -96,6 +96,8 @@ usePropertyWith s args =
             message "no expected failure"
          GaveUp {numTests = i} ->
             warning ("passed only " ++ show i ++ " tests")
+         InsufficientCoverage {numTests = i} -> 
+            warning ("only performed " ++ show i ++ " tests")
 
 assertTrue :: String -> Bool -> TestSuite
 assertTrue s = assertIO s . return

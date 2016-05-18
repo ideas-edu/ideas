@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 -----------------------------------------------------------------------------
--- Copyright 2015, Ideas project team. This file is distributed under the
+-- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -46,8 +46,8 @@ import Ideas.Text.JSON hiding (String)
 import Ideas.Text.XML
 import Test.QuickCheck.Random
 import qualified Control.Category as C
-import qualified Ideas.Text.JSON as JSON
 import qualified Ideas.Common.Rewriting.Term as Term
+import qualified Ideas.Text.JSON as JSON
 
 -------------------------------------------------------------------
 -- Converter type class
@@ -86,14 +86,14 @@ p // a = do
 -- JSON terms
 
 termToJSON :: Term -> JSON
-termToJSON term = 
+termToJSON term =
    case term of
       TVar s    -> JSON.String s
-      TCon s [] 
+      TCon s []
          | s == trueSymbol  -> Boolean True
          | s == falseSymbol -> Boolean False
          | s == nullSymbol  -> Null
-      TCon s ts 
+      TCon s ts
          | s == objectSymbol -> Object (f ts)
          | otherwise -> Object [("_apply", Array (JSON.String (show s):map termToJSON ts))]
       TList xs  -> Array (map termToJSON xs)
@@ -106,7 +106,7 @@ termToJSON term =
    f _ = error "termToJSON"
 
 jsonToTerm :: JSON -> Term
-jsonToTerm json = 
+jsonToTerm json =
    case json of
       Number (I n)  -> TNum n
       Number (D d)  -> TFloat d
@@ -119,10 +119,10 @@ jsonToTerm json =
       Null          -> Term.symbol nullSymbol
  where
    f (s, x) = [TVar s, jsonToTerm x]
-     
+
 jsonTermView :: InJSON a => View Term a
 jsonTermView = makeView (fromJSON . termToJSON) (jsonToTerm . toJSON)
-      
+
 trueSymbol, falseSymbol, nullSymbol, objectSymbol :: Symbol
 trueSymbol   = newSymbol "true"
 falseSymbol  = newSymbol "false"

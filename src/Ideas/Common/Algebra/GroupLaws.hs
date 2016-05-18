@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2015, Ideas project team. This file is distributed under the
+-- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -28,9 +28,9 @@ module Ideas.Common.Algebra.GroupLaws
    , leftDistributiveFor, rightDistributiveFor
    ) where
 
-import Prelude hiding ((<*>))
 import Ideas.Common.Algebra.Group
 import Ideas.Common.Algebra.Law
+import Prelude hiding ((<*>))
 
 --------------------------------------------------------
 -- Monoids

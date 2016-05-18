@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2015, Ideas project team. This file is distributed under the
+-- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -27,7 +27,7 @@ import Control.Monad
 import Data.List (intersperse)
 import Data.Maybe
 import Ideas.Text.Parsing hiding (string, char)
-import System.IO.Error 
+import System.IO.Error
 import Test.QuickCheck
 import Text.PrettyPrint.Leijen hiding ((<$>))
 import qualified Ideas.Text.UTF8 as UTF8

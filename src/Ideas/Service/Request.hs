@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2015, Ideas project team. This file is distributed under the
+-- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -82,13 +82,13 @@ compactOutput req =
    xs = encoding req
 
 useOpenMath :: Request -> Bool
-useOpenMath r = 
+useOpenMath r =
    case dataformat r of
       JSON -> False
       XML  -> all (`notElem` encoding r) [EncString, EncHTML]
 
 useJSONTerm :: Request -> Bool
-useJSONTerm r = 
+useJSONTerm r =
    case dataformat r of
       JSON -> EncJSON `elem` encoding r
       XML  -> False

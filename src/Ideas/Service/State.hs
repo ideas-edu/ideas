@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
--- Copyright 2015, Ideas project team. This file is distributed under the
+-- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -29,8 +29,8 @@ import Ideas.Common.Library hiding (suitable, ready, (:~>))
 import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.Symbol
-import Test.QuickCheck.Random
 import System.Random
+import Test.QuickCheck.Random
 
 data State a = State
    { exercise       :: Exercise a

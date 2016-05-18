@@ -1,6 +1,6 @@
 {-# LANGUAGE ExistentialQuantification, DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
--- Copyright 2015, Ideas project team. This file is distributed under the
+-- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -39,7 +39,7 @@ data ShowString = ShowString { fromShowString :: String }
 instance Show ShowString where
    show = fromShowString
 
-instance Read ShowString where 
+instance Read ShowString where
    readsPrec n s = [ (ShowString x, y) | (x, y) <- readsPrec n s ]
 
 readInt :: String -> Maybe Int

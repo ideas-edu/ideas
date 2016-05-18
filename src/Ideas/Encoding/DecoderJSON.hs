@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
--- Copyright 2015, Ideas project team. This file is distributed under the
+-- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -124,7 +124,7 @@ decodePaths :: JSONDecoder a (LabeledStrategy (Context a) -> Context a -> Prefix
 decodePaths =
    decoderFor $ \json ->
       case json of
-         String p 
+         String p
             | p ~= "noprefix" -> return (\_ _ -> noPrefix)
             | otherwise       -> liftM replayPaths (readPaths p)
          _ -> fail "invalid prefixes"
@@ -150,7 +150,7 @@ decodeContext = do
 decodeExpression :: JSONDecoder a a
 decodeExpression = withJSONTerm $ \b -> getExercise >>= decoderFor . f b
  where
-   f True ex json = 
+   f True ex json =
       let Just v = hasTermView ex
       in matchM v (jsonToTerm json)
    f False ex json =

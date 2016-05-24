@@ -41,7 +41,7 @@ header =
 
 versionText :: String
 versionText =
-  "version " ++ ideasVersion ++ ", revision " ++ show ideasRevision ++
+  "version " ++ ideasVersion ++ ", revision " ++ ideasRevision ++
   ", logging " ++ (if logEnabled then "enabled" else "disabled")
 
 helpText :: String
@@ -49,10 +49,10 @@ helpText = usageInfo header options
 
 fullVersion :: String
 fullVersion = "version " ++ ideasVersion ++ " (revision "
-           ++ show ideasRevision ++ ", " ++ ideasLastChanged ++ ")"
+           ++ ideasRevision ++ ", " ++ ideasLastChanged ++ ")"
 
 shortVersion :: String
-shortVersion = ideasVersion ++ " (" ++ show ideasRevision ++ ")"
+shortVersion = ideasVersion ++ " (" ++ ideasRevision ++ ")"
 
 options :: [OptDescr Flag]
 options =

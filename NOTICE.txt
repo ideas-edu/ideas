@@ -34,4 +34,5 @@ AUTHORS
 
 CREDITS
 
-   Harrie Passier, Arthur van Leeuwen, Josje Lodder, Hieke Keuning
+   Harrie Passier, Arthur van Leeuwen, Josje Lodder, Hieke Keuning, 
+   Marcell van Geest, Jordy van Dortmont

@@ -8,6 +8,7 @@ Changelog ideas-1.4 => ideas.1.5
 * requests can fix the random seed
 * added Term to service types, encoders and decoders
 * JSON-Int can be used for decoded environments
+* new implementation for interleave and atomic prefix combinators (more lazy)
 * bug fix: "no prefix" now handled by json decoder
 
 

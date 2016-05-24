@@ -18,7 +18,7 @@ module Ideas.Common.Strategy.Derived
      permute, many, many1, replicate, option, try
    , repeat, repeat1, exhaustive
      -- * Process-specific combinators
-   , atomic, (<%>), interleave, concurrent
+   , atomic, (<%>), interleave
    , (<@>), (!*>), inits, filterP, hide
    ) where
 
@@ -56,9 +56,11 @@ split2 op1 op2 = withMenu f
 
 -- atomic prefix
 (!*>) :: AtomicSymbol a => Process a -> Process a -> Process a
-a !*> p = split op (atomic a) p
+a !*> p = atomicOpen ~> a .*. withMenu op (single atomicClose) p
  where
-   op b q = atomic (a .*. b) .*. q
+   op b q
+      | b == atomicOpen = q
+      | otherwise       = b ~> atomicClose ~> q
 
 filterP :: (a -> Bool) -> Process a -> Process a
 filterP cond = fold (\a q -> if cond a then a ~> q else empty) done
@@ -72,23 +74,28 @@ atomic p = atomicOpen ~> (p .*. single atomicClose)
 interleave :: (AtomicSymbol a, LabelSymbol a) => [Process a] -> Process a
 interleave xs = if null xs then done else foldr1 (<%>) xs
 
+-- interleaving
 (<%>) :: (AtomicSymbol a, LabelSymbol a) => Process a -> Process a -> Process a
-(<%>) = concurrent (not . isEnterSymbol)
-
-concurrent :: AtomicSymbol a => (a -> Bool) -> Process a -> Process a -> Process a
-concurrent switch = normal
+p <%> q =
+   bothAreDone p q .|. ((p %>> q) .|. (q %>> p))
  where
-   normal p q = stepBoth q p .|. (stepRight q p .|. stepRight p q)
+   bothAreDone = withMenu stop2 . withMenu stop2 done
+   stop2 _ _   = empty
 
-   stepBoth  = withMenu stop2 . withMenu stop2 done
-   stop2 _ _ = empty
-
-   stepRight p = split2 op1 op2 empty
+-- left-interleaving
+(%>>) :: (AtomicSymbol a, LabelSymbol a) => Process a -> Process a -> Process a
+p %>> q = rec (0 :: Int) p
+ where
+   rec n = withMenu op empty
     where
-      op1 a q2
-         | switch a  = a ~> normal p q2
-         | otherwise = a ~> stepRight p q2
-      op2 q1 q2 = q1 .*. normal p q2
+      op a = a ~> rest
+       where
+         next | a == atomicOpen  = n+1
+              | a == atomicClose = n-1
+              | otherwise        = n
+         rest | isEnterSymbol a  = rec next
+              | next > 0         = rec next
+              | otherwise        = (<%> q)
 
 -- | Allows all permutations of the list
 permute :: (Choice a, Sequence a) => [a] -> a

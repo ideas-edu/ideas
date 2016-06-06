@@ -134,9 +134,12 @@ fromBuilder m =
 escape :: String -> String
 escape = concatMap f
  where
-   f '<' = "&lt;"
-   f '>' = "&gt;"
-   f '&' = "&amp;"
+   f '<'  = "&lt;"
+   f '>'  = "&gt;"
+   f '&'  = "&amp;"
+   f '"'  = "&quot;"
+   f '\'' = "&apos;"
+   f '\n' = "&#10;"
    f c   = [c]
 
 trim :: String -> String

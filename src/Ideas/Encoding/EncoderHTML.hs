@@ -424,7 +424,7 @@ encodeExampleList lm = exerciseEncoder $ \ex pairs -> mconcat $
       munless (isStatic lm) (
          let st = emptyStateContext ex x
          in spanClass "statelink" $ linkToState lm st $ external lm)
-      <> spanClass "term" (string (prettyPrinterContext ex x))
+      <> htmlContext False ex x
 
 external :: BuildXML a => LinkManager -> a
 external lm = element "img"
@@ -457,17 +457,21 @@ htmlDerivation lm = exerciseEncoder $ \ex d ->
              , showEnv env1 -- local environment
              , showEnv env2 -- global environment (diff)
              ]
-       textLines = mconcat . intersperse br . map string . lines
-       forTerm a =
-          divClass "term" $ textLines $ prettyPrinterContext ex a
+       forTerm = htmlContext True ex
    in htmlDerivationWith before forStep forTerm (diffEnvironment d)
 
 htmlState :: LinkManager -> HTMLEncoder a (State a)
 htmlState lm = makeEncoder $ \state ->
    para $ divClass "state" $
       stateLink lm state
-      <> divClass "term" (string $ prettyPrinterContext (exercise state) (stateContext state))
+      <> htmlContext True (exercise state) (stateContext state)
       <> string "ready: " <> bool (finished state)
+
+htmlContext :: Bool -> Exercise a -> Context a -> HTMLBuilder
+htmlContext useDiv ex = f "term" . textLines . prettyPrinterContext ex
+ where
+   textLines = mconcat . intersperse br . map string . lines
+   f = if useDiv then divClass else spanClass
 
 stateLink :: LinkManager -> State a -> HTMLBuilder
 stateLink lm st

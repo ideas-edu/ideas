@@ -132,7 +132,7 @@ check = toStrategy . checkRule "check"
 --   strategy only succeeds if this is not the case (otherwise it fails).
 not :: IsStrategy f => f a -> Strategy a
 not = decl1 $ "not" .=. Unary (\x ->
-   Sequence.single $ checkRule "core.not" $ null . runProcess x)
+   Sequence.single $ LeafRule $ checkRule "core.not" $ null . runProcess x)
 
 -- | Repeat a strategy zero or more times (greedy version of 'many')
 repeat :: IsStrategy f => f a -> Strategy a

@@ -30,6 +30,7 @@ module Ideas.Common.Strategy.Abstract
    , toStrategyTree, onStrategyTree
      -- * Strategy declarations
    , useDecl, decl0, decl1, decl2, declN
+   , dynamic -- !!!!!
    ) where
 
 import Data.Foldable (toList)
@@ -99,7 +100,7 @@ instance IsStrategy LabeledStrategy where
   toStrategy (LS info (S t)) = S (Tree.label info t)
 
 instance IsStrategy Rule where
-   toStrategy = S . leaf
+   toStrategy = S . leaf . LeafRule
 
 instance IsStrategy RewriteRule where
    toStrategy = toStrategy . ruleRewrite
@@ -184,7 +185,10 @@ derivationList cmpRule s a0 = rec a0 (toPrefix s)
 
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]
-rulesInStrategy s = [ r | r <- toList (toStrategyTree s), isMajor r ]
+rulesInStrategy s = concatMap f (toList (toStrategyTree s))
+ where
+   f (LeafRule r) | isMajor r = [r]
+   f _ = []
 
 instance LiftView LabeledStrategy where
    liftViewIn = mapRules . liftViewIn
@@ -197,7 +201,9 @@ mapRules :: (Rule a -> Rule b) -> LabeledStrategy a -> LabeledStrategy b
 mapRules f (LS n s) = LS n (mapRulesS f s)
 
 mapRulesS :: (Rule a -> Rule b) -> Strategy a -> Strategy b
-mapRulesS f = S . fmap f . unS
+mapRulesS f = S . fmap g . unS
+ where
+   g (LeafRule r)  = LeafRule (f r)
 
 -- | Use a function as do-after hook for all rules in a labeled strategy, but
 -- also use the function beforehand
@@ -219,12 +225,8 @@ toStrategyTree = unS . toStrategy
 onStrategyTree :: IsStrategy f => (StrategyTree a -> StrategyTree a) -> f a -> Strategy a
 onStrategyTree f = S . f . toStrategyTree
 
-getProcess :: IsStrategy f => f a -> Process (Rule a)
-getProcess = foldUnwind emptyAlg
-   { fNode  = fromNary . combinator
-   , fLeaf  = single
-   , fLabel = \l p -> enterRule l ~> p .*. (exitRule l ~> done)
-   } . toStrategyTree
+getProcess :: IsStrategy f => f a -> Process (Leaf a)
+getProcess = treeToProcess . toStrategyTree
 
 -------------------------
 
@@ -242,3 +244,6 @@ declN = liftSn . fromNary . useDecl
 
 useDecl :: Arity f => Decl f -> f (Strategy a)
 useDecl = liftIso (S <-> unS) . applyDecl
+
+dynamic :: (IsId n, IsStrategy f) => n -> (a -> f a) -> Strategy a
+dynamic n f = S $ leaf $ LeafDyn (newId n) (toStrategyTree . f)

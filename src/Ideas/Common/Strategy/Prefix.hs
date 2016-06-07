@@ -35,6 +35,7 @@ import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence
+import Ideas.Common.Strategy.StrategyTree
 import Ideas.Common.Utils (splitsWithElem, readM)
 
 --------------------------------------------------------------------------------
@@ -72,25 +73,27 @@ noPrefix :: Prefix a
 noPrefix = Prefix [] empty
 
 -- | Make a prefix from a core strategy and a start term.
-makePrefix :: Process (Rule a) -> a -> Prefix a
+makePrefix :: Process (Leaf a) -> a -> Prefix a
 makePrefix = snd . replayProcess emptyPath
 
 -- | Construct a prefix by replaying a path in a core strategy: the third
 -- argument is the current term.
-replayProcess :: Path -> Process (Rule a) -> ([Rule a], a -> Prefix a)
+replayProcess :: Path -> Process (Leaf a) -> ([Rule a], a -> Prefix a)
 replayProcess (Path is) = replay [] is
  where
    replay acc []     p = (reverse acc, createPrefix p)
    replay acc (n:ns) p =
       case getByIndex n (menu p) of
-         Just (a, r) -> replay (a:acc) ns r
+         Just (LeafRule r, q)  -> replay (r:acc) ns q
+         Just (LeafDyn _ s, q) -> replay acc (n:ns) (treeToProcess (s (error "dynamic")) .*. q)
          _ -> ([], const noPrefix)
 
    createPrefix p = Prefix [Path is] . flip (rec []) p
 
    rec ns a = cut . onMenuWithIndex f doneMenu . menu
     where
-      f n r p = choice
+      f n (LeafDyn _ s) p = rec (n:ns) a (treeToProcess (s a) .*. p)
+      f n (LeafRule r) p = choice
          [ r ?~> (b, env, mk b)
          | (b, env) <- transApply (transformation r) a
          ]

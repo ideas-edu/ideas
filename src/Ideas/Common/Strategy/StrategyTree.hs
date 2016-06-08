@@ -29,6 +29,7 @@ import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.CyclicTree
 import Ideas.Common.Id
+import Ideas.Common.Rewriting.Term (Term)
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Symbol
 import Ideas.Common.Strategy.Choice
@@ -43,7 +44,7 @@ infix 1 .=.
 type StrategyTree a = CyclicTree (Decl Nary) (Leaf a)
 
 data Leaf a = LeafRule (Rule a) 
-            | LeafDyn Id (a -> StrategyTree a)
+            | LeafDyn Id (View Term a) (a -> StrategyTree a)
 
 instance Show (Leaf a) where
    show = showId
@@ -52,32 +53,32 @@ instance Eq (Leaf a) where
    x == y = getId x == getId y
 
 instance HasId (Leaf a) where 
-   getId      (LeafRule r)  = getId r
-   getId      (LeafDyn n _) = n
-   changeId f (LeafRule r)  = LeafRule (changeId f r)
-   changeId f (LeafDyn n s) = LeafDyn (changeId f n) s
+   getId      (LeafRule r)     = getId r
+   getId      (LeafDyn n _ _)  = n
+   changeId f (LeafRule r)     = LeafRule (changeId f r)
+   changeId f (LeafDyn n tv s) = LeafDyn (changeId f n) tv s
    
 instance AtomicSymbol (Leaf a) where
    atomicOpen  = LeafRule atomicOpen
    atomicClose = LeafRule atomicClose
    
 instance LabelSymbol (Leaf a) where
-   isEnterSymbol (LeafRule r)  = isEnterSymbol r
-   isEnterSymbol (LeafDyn _ _) = False
+   isEnterSymbol (LeafRule r)    = isEnterSymbol r
+   isEnterSymbol (LeafDyn _ _ _) = False
    
 instance Minor (Leaf a) where
-   isMinor    (LeafRule r)  = isMinor r
-   isMinor    (LeafDyn _ _) = False
-   setMinor b (LeafRule r)     = LeafRule (setMinor b r)
-   setMinor _ lf@(LeafDyn _ _) = lf
+   isMinor    (LeafRule r)    = isMinor r
+   isMinor    (LeafDyn _ _ _) = False
+   setMinor b (LeafRule r)       = LeafRule (setMinor b r)
+   setMinor _ lf@(LeafDyn _ _ _) = lf
 
 instance Apply Leaf where
-   applyAll (LeafRule r) a  = applyAll r a
-   applyAll (LeafDyn _ f) a = runProcess (treeToProcess (f a)) a
+   applyAll (LeafRule r) a    = applyAll r a
+   applyAll (LeafDyn _ _ f) a = runProcess (treeToProcess (f a)) a
 
 instance LiftView Leaf where
-   liftViewIn v (LeafRule r)  = LeafRule (liftViewIn v r)
-   liftViewIn v (LeafDyn n f) = LeafDyn n $ \a ->
+   liftViewIn v (LeafRule r)     = LeafRule (liftViewIn v r)
+   liftViewIn v (LeafDyn n tv f) = LeafDyn n (undefined tv) $ \a ->
       case match v a of
          Just (b, c) -> fmap (liftViewIn v) (f b)
          Nothing     -> error "LiftView Leaf"

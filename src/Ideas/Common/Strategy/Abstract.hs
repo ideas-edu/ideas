@@ -39,14 +39,13 @@ import Ideas.Common.CyclicTree hiding (label)
 import Ideas.Common.Derivation
 import Ideas.Common.Environment
 import Ideas.Common.Id
-import Ideas.Common.Rewriting (RewriteRule)
+import Ideas.Common.Rewriting (RewriteRule, IsTerm, termView)
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence (Sequence(..), ready)
 import Ideas.Common.Strategy.StrategyTree
-import Ideas.Common.Strategy.Symbol
 import Ideas.Common.View
 import Prelude hiding (sequence)
 import qualified Ideas.Common.CyclicTree as Tree
@@ -191,19 +190,20 @@ rulesInStrategy s = concatMap f (toList (toStrategyTree s))
    f _ = []
 
 instance LiftView LabeledStrategy where
-   liftViewIn = mapRules . liftViewIn
+   liftViewIn v (LS n s) = LS n (liftViewIn v s)
 
 instance LiftView Strategy where
-   liftViewIn = mapRulesS . liftViewIn
+   liftViewIn v = S . fmap (liftViewIn v) . toStrategyTree
 
 -- | Apply a function to all the rules that make up a labeled strategy
-mapRules :: (Rule a -> Rule b) -> LabeledStrategy a -> LabeledStrategy b
+mapRules :: (Rule a -> Rule a) -> LabeledStrategy a -> LabeledStrategy a
 mapRules f (LS n s) = LS n (mapRulesS f s)
 
-mapRulesS :: (Rule a -> Rule b) -> Strategy a -> Strategy b
-mapRulesS f = S . fmap g . unS
+mapRulesS :: (Rule a -> Rule a) -> Strategy a -> Strategy a
+mapRulesS f = S . fmap g . toStrategyTree
  where
-   g (LeafRule r)  = LeafRule (f r)
+   g (LeafRule r)     = LeafRule (f r)
+   g (LeafDyn n tv s) = LeafDyn n tv (fmap g . s)
 
 -- | Use a function as do-after hook for all rules in a labeled strategy, but
 -- also use the function beforehand
@@ -245,5 +245,5 @@ declN = liftSn . fromNary . useDecl
 useDecl :: Arity f => Decl f -> f (Strategy a)
 useDecl = liftIso (S <-> unS) . applyDecl
 
-dynamic :: (IsId n, IsStrategy f) => n -> (a -> f a) -> Strategy a
-dynamic n f = S $ leaf $ LeafDyn (newId n) (toStrategyTree . f)
+dynamic :: (IsId n, IsStrategy f, IsTerm a) => n -> (a -> f a) -> Strategy a
+dynamic n f = S $ leaf $ LeafDyn (newId n) termView (toStrategyTree . f)

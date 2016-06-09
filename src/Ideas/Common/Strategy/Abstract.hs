@@ -30,16 +30,16 @@ module Ideas.Common.Strategy.Abstract
    , toStrategyTree, onStrategyTree
      -- * Strategy declarations
    , useDecl, decl0, decl1, decl2, declN
-   , dynamic -- !!!!!
    ) where
 
 import Data.Foldable (toList)
+import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.CyclicTree hiding (label)
 import Ideas.Common.Derivation
 import Ideas.Common.Environment
 import Ideas.Common.Id
-import Ideas.Common.Rewriting (RewriteRule, IsTerm, termView)
+import Ideas.Common.Rewriting (RewriteRule)
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Prefix
@@ -103,6 +103,9 @@ instance IsStrategy Rule where
 
 instance IsStrategy RewriteRule where
    toStrategy = toStrategy . ruleRewrite
+
+instance IsStrategy Dynamic where
+   toStrategy = S . leaf . LeafDyn
 
 liftS :: IsStrategy f => (Strategy a -> Strategy a) -> f a -> Strategy a
 liftS f = f . toStrategy
@@ -200,10 +203,7 @@ mapRules :: (Rule a -> Rule a) -> LabeledStrategy a -> LabeledStrategy a
 mapRules f (LS n s) = LS n (mapRulesS f s)
 
 mapRulesS :: (Rule a -> Rule a) -> Strategy a -> Strategy a
-mapRulesS f = S . fmap g . toStrategyTree
- where
-   g (LeafRule r)     = LeafRule (f r)
-   g (LeafDyn n tv s) = LeafDyn n tv (fmap g . s)
+mapRulesS = onStrategyTree . mapRulesInTree
 
 -- | Use a function as do-after hook for all rules in a labeled strategy, but
 -- also use the function beforehand
@@ -244,6 +244,3 @@ declN = liftSn . fromNary . useDecl
 
 useDecl :: Arity f => Decl f -> f (Strategy a)
 useDecl = liftIso (S <-> unS) . applyDecl
-
-dynamic :: (IsId n, IsStrategy f, IsTerm a) => n -> (a -> f a) -> Strategy a
-dynamic n f = S $ leaf $ LeafDyn (newId n) termView (toStrategyTree . f)

@@ -40,7 +40,6 @@ import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.StrategyTree
 import Ideas.Common.Utils (splitsWithElem, readM)
-import Ideas.Common.View
 
 --------------------------------------------------------------------------------
 -- Prefix datatype
@@ -93,17 +92,19 @@ replayProcess (Path is) = fromMaybe ([], const noPrefix) . replay [] is
             (leaf, q) <- getByIndex n (menu p)
             case (leaf, ns) of
                (LeafRule r, _) -> replay (r:acc) ns q
-               (LeafDyn _ tv s, Input t:ns2) -> do
-                  a <- match tv t
-                  replay acc ns2 (treeToProcess (s a) .*. q)
+               (LeafDyn d, Input t:ns2) -> do
+                  a <- dynamicFromTerm d t
+                  replay acc ns2 (treeToProcess (a) .*. q)
                _ -> Nothing
 
    createPrefix p = Prefix [Path is] . flip (rec []) p
 
    rec ns a = cut . onMenuWithIndex f doneMenu . menu
     where
-      f n (LeafDyn _ tv s) p = 
-         rec (Input (build tv a):Index n:ns) a (treeToProcess (s a) .*. p)
+      f n (LeafDyn d) p = fromMaybe empty $ do
+         t <- dynamicToTerm d a
+         s <- dynamicFromTerm d t
+         return (rec (Input t:Index n:ns) a (treeToProcess s .*. p))
       f n (LeafRule r) p = choice
          [ r ?~> (b, env, mk b)
          | (b, env) <- transApply (transformation r) a

@@ -137,11 +137,11 @@ removeDecl :: Decl Unary
 removeDecl = "removed" .=. Unary (const empty)
 
 collapseDecl :: Decl Unary
-collapseDecl = "collapsed" .=. Unary (\a ->
-   case firsts a of
-      [(LeafRule r, _)] -> maybe empty (`collapseWith` a) (isEnterRule r)
-      _        -> empty)
+collapseDecl = "collapsed" .=. Unary f
  where
+   f a = case firsts a of
+            [(LeafRule r, _)] -> maybe empty (`collapseWith` a) (isEnterRule r)
+            _ -> empty
    collapseWith l =
       single . LeafRule . makeRule l . runProcess
 

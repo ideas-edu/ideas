@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes, ExistentialQuantification #-}
 -----------------------------------------------------------------------------
 -- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -16,20 +16,23 @@
 
 module Ideas.Common.Strategy.StrategyTree
    ( -- * StrategyTree type synonym
-     StrategyTree, Leaf(..), treeToProcess
+     StrategyTree, Leaf(..), treeToProcess, mapRulesInTree
      -- * Declarations (named combinators)
    , Decl, Combinator, associative, isAssociative, combinator
    ,  (.=.), applyDecl
+     -- * Dynamic strategies
+   , Dynamic, makeDynamic, dynamicToTerm, dynamicTree, dynamicFromTerm
      -- * Arities
    , Arity(..), Nullary(..), Unary(..), Binary(..), Nary(..)
    ) where
 
+import Control.Monad
 import Data.Function
 import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.CyclicTree
 import Ideas.Common.Id
-import Ideas.Common.Rewriting.Term (Term)
+import Ideas.Common.Rewriting.Term (Term, IsTerm(..))
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Symbol
 import Ideas.Common.Strategy.Choice
@@ -44,7 +47,7 @@ infix 1 .=.
 type StrategyTree a = CyclicTree (Decl Nary) (Leaf a)
 
 data Leaf a = LeafRule (Rule a) 
-            | LeafDyn Id (View Term a) (a -> StrategyTree a)
+            | LeafDyn  (Dynamic a)
 
 instance Show (Leaf a) where
    show = showId
@@ -53,35 +56,32 @@ instance Eq (Leaf a) where
    x == y = getId x == getId y
 
 instance HasId (Leaf a) where 
-   getId      (LeafRule r)     = getId r
-   getId      (LeafDyn n _ _)  = n
-   changeId f (LeafRule r)     = LeafRule (changeId f r)
-   changeId f (LeafDyn n tv s) = LeafDyn (changeId f n) tv s
+   getId      (LeafRule r) = getId r
+   getId      (LeafDyn d)  = getId d
+   changeId f (LeafRule r) = LeafRule (changeId f r)
+   changeId f (LeafDyn d)  = LeafDyn (changeId f d)
    
 instance AtomicSymbol (Leaf a) where
    atomicOpen  = LeafRule atomicOpen
    atomicClose = LeafRule atomicClose
    
 instance LabelSymbol (Leaf a) where
-   isEnterSymbol (LeafRule r)    = isEnterSymbol r
-   isEnterSymbol (LeafDyn _ _ _) = False
+   isEnterSymbol (LeafRule r) = isEnterSymbol r
+   isEnterSymbol (LeafDyn _)  = False
    
 instance Minor (Leaf a) where
-   isMinor    (LeafRule r)    = isMinor r
-   isMinor    (LeafDyn _ _ _) = False
-   setMinor b (LeafRule r)       = LeafRule (setMinor b r)
-   setMinor _ lf@(LeafDyn _ _ _) = lf
+   isMinor    (LeafRule r)   = isMinor r
+   isMinor    (LeafDyn _)    = False
+   setMinor b (LeafRule r)   = LeafRule (setMinor b r)
+   setMinor _ lf@(LeafDyn _) = lf
 
 instance Apply Leaf where
    applyAll (LeafRule r) a    = applyAll r a
-   applyAll (LeafDyn _ _ f) a = runProcess (treeToProcess (f a)) a
+   applyAll (LeafDyn d) a = applyAll d a
 
 instance LiftView Leaf where
-   liftViewIn v (LeafRule r)     = LeafRule (liftViewIn v r)
-   liftViewIn v (LeafDyn n tv f) = LeafDyn n (undefined tv) $ \a ->
-      case match v a of
-         Just (b, c) -> fmap (liftViewIn v) (f b)
-         Nothing     -> error "LiftView Leaf"
+   liftViewIn v (LeafRule r) = LeafRule (liftViewIn v r)
+   liftViewIn v (LeafDyn d)  = LeafDyn  (liftViewIn v d)
 
 treeToProcess :: StrategyTree a -> Process (Leaf a)
 treeToProcess = foldUnwind emptyAlg
@@ -89,6 +89,16 @@ treeToProcess = foldUnwind emptyAlg
    , fLeaf  = single
    , fLabel = \l p -> LeafRule (enterRule l) ~> p .*. (LeafRule (exitRule l) ~> done)
    }
+
+mapRulesInTree :: (Rule a -> Rule a) -> StrategyTree a -> StrategyTree a
+mapRulesInTree f = inTree
+ where
+   inTree = fmap inLeaf
+ 
+   inLeaf (LeafRule r) = LeafRule (f r)
+   inLeaf (LeafDyn d)  = LeafDyn (inDyn d)
+   
+   inDyn d = d { dynamicFromTerm = fmap inTree . dynamicFromTerm d }
 
 applyDecl :: Arity f => Decl f -> f (StrategyTree a)
 applyDecl d = toArity (node (d {combinator = op}) . make)
@@ -102,6 +112,33 @@ applyDecl d = toArity (node (d {combinator = op}) . make)
       case isNode a of
          Just (da, as) | getId da == getId d -> as
          _ -> [a]
+
+------------------------------------------------------------------------------
+
+data Dynamic a = Dyn 
+   { dynamicId       :: Id 
+   , dynamicToTerm   :: a -> Maybe Term
+   , dynamicFromTerm :: Term -> Maybe (StrategyTree a)
+   } 
+
+instance HasId (Dynamic a) where
+   getId = dynamicId
+   changeId f d = d { dynamicId = changeId f (dynamicId d) }
+
+instance Apply Dynamic where
+   applyAll d a = maybe [] ((`runProcess` a) . treeToProcess) (dynamicTree d a)
+
+instance LiftView Dynamic where
+   liftViewIn v d = d 
+      { dynamicToTerm   = fmap fst . match v >=> dynamicToTerm d
+      , dynamicFromTerm = fmap (fmap (liftViewIn v)) . dynamicFromTerm d
+      }
+
+makeDynamic :: (IsId n, IsTerm a) => n -> (a -> StrategyTree a) -> Dynamic a
+makeDynamic n f = Dyn (newId n) (Just . toTerm) (fmap f . fromTerm)
+
+dynamicTree :: Dynamic a -> a -> Maybe (StrategyTree a)
+dynamicTree d = dynamicToTerm d >=> dynamicFromTerm d
 
 ------------------------------------------------------------------------------
 

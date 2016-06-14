@@ -151,8 +151,9 @@ decodeExpression :: JSONDecoder a a
 decodeExpression = withJSONTerm $ \b -> getExercise >>= decoderFor . f b
  where
    f True ex json =
-      let Just v = hasTermView ex
-      in matchM v (jsonToTerm json)
+      case hasJSONView ex of
+         Just v  -> matchM v json
+         Nothing -> fail "JSON encoding not supported by exercise"
    f False ex json =
       case json of
          String s -> either fail return (parser ex s)

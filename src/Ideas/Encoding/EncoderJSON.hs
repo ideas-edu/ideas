@@ -94,12 +94,8 @@ encodeEnvironment = makeEncoder $ \env ->
 encodeContext :: JSONEncoder a (Context a)
 encodeContext = withJSONTerm (exerciseEncoder . f)
  where
-   f True ex ctx = fromMaybe Null $ do
-      v <- hasTermView ex
-      a <- fromContext ctx
-      return (termToJSON (build v a))
-   f False ex ctx =
-      String $ prettyPrinterContext ex ctx
+   f True  ex = fromMaybe Null . liftA2 build (hasJSONView ex) . fromContext
+   f False ex = String . prettyPrinterContext ex
 
 encodeState :: JSONEncoder a (State a)
 encodeState = encoderFor $ \st ->

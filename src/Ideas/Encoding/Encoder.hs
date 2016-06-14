@@ -17,7 +17,8 @@ module Ideas.Encoding.Encoder
    , getExercise, getQCGen, getScript, getRequest
    , withExercise, withOpenMath, withJSONTerm, (//)
      -- * JSON terms
-   , termToJSON, jsonToTerm, jsonTermView
+   , hasJSONView, addJSONView, jsonEncoding
+   , termToJSON, jsonToTerm
      -- * Options
    , Options, simpleOptions, makeOptions
      -- * Encoder datatype
@@ -85,6 +86,18 @@ p // a = do
 -------------------------------------------------------------------
 -- JSON terms
 
+jsonProperty :: Id
+jsonProperty = newId "json"
+
+hasJSONView :: Exercise a -> Maybe (View JSON a)
+hasJSONView = getPropertyF jsonProperty
+
+addJSONView :: View JSON a -> Exercise a -> Exercise a
+addJSONView = setPropertyF jsonProperty
+
+jsonEncoding :: InJSON a => Exercise a -> Exercise a
+jsonEncoding = addJSONView (makeView fromJSON toJSON)
+
 termToJSON :: Term -> JSON
 termToJSON term =
    case term of
@@ -119,9 +132,6 @@ jsonToTerm json =
       Null          -> Term.symbol nullSymbol
  where
    f (s, x) = [TVar s, jsonToTerm x]
-
-jsonTermView :: InJSON a => View Term a
-jsonTermView = makeView (fromJSON . termToJSON) (jsonToTerm . toJSON)
 
 trueSymbol, falseSymbol, nullSymbol, objectSymbol :: Symbol
 trueSymbol   = newSymbol "true"

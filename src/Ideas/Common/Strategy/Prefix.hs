@@ -28,13 +28,17 @@ module Ideas.Common.Strategy.Prefix
    ) where
 
 import Control.Monad
+import Data.Char
 import Data.List (intercalate)
+import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Environment
 import Ideas.Common.Rule
+import Ideas.Common.Rewriting.Term
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence
+import Ideas.Common.Strategy.StrategyTree
 import Ideas.Common.Utils (splitsWithElem, readM)
 
 --------------------------------------------------------------------------------
@@ -72,30 +76,41 @@ noPrefix :: Prefix a
 noPrefix = Prefix [] empty
 
 -- | Make a prefix from a core strategy and a start term.
-makePrefix :: Process (Rule a) -> a -> Prefix a
+makePrefix :: Process (Leaf a) -> a -> Prefix a
 makePrefix = snd . replayProcess emptyPath
 
 -- | Construct a prefix by replaying a path in a core strategy: the third
 -- argument is the current term.
-replayProcess :: Path -> Process (Rule a) -> ([Rule a], a -> Prefix a)
-replayProcess (Path is) = replay [] is
+replayProcess :: Path -> Process (Leaf a) -> ([Rule a], a -> Prefix a)
+replayProcess (Path is) = fromMaybe ([], const noPrefix) . replay [] is
  where
-   replay acc []     p = (reverse acc, createPrefix p)
-   replay acc (n:ns) p =
-      case getByIndex n (menu p) of
-         Just (a, r) -> replay (a:acc) ns r
-         _ -> ([], const noPrefix)
+   replay acc path p =
+      case path of
+         []         -> return (reverse acc, createPrefix p)
+         Input _:_  -> Nothing
+         Index n:ns -> do
+            (leaf, q) <- getByIndex n (menu p)
+            case (leaf, ns) of
+               (LeafRule r, _) -> replay (r:acc) ns q
+               (LeafDyn d, Input t:ns2) -> do
+                  a <- dynamicFromTerm d t
+                  replay acc ns2 (treeToProcess (a) .*. q)
+               _ -> Nothing
 
    createPrefix p = Prefix [Path is] . flip (rec []) p
 
    rec ns a = cut . onMenuWithIndex f doneMenu . menu
     where
-      f n r p = choice
+      f n (LeafDyn d) p = fromMaybe empty $ do
+         t <- dynamicToTerm d a
+         s <- dynamicFromTerm d t
+         return (rec (Input t:Index n:ns) a (treeToProcess s .*. p))
+      f n (LeafRule r) p = choice
          [ r ?~> (b, env, mk b)
          | (b, env) <- transApply (transformation r) a
          ]
        where
-         ms   = n:ns
+         ms   = Index n:ns
          path = Path (is ++ reverse ms)
          mk b = Prefix [path] (rec ms b p)
 
@@ -153,12 +168,26 @@ prefixPaths = getPaths
 -- Path
 
 -- | A path encodes a location in a strategy. Paths are represented as a list
--- of integers.
-newtype Path = Path [Int]
+-- of integers and terms (the latter act as input for the dynamic strategies).
+newtype Path = Path [PathItem]
    deriving Eq
+   
+data PathItem = Index Int | Input Term
+   deriving Eq
+   
+instance Show PathItem where
+   show (Index n) = show n
+   show (Input t) = show t
+
+instance Read PathItem where
+   readsPrec n s =
+      case dropWhile isSpace s of
+         s2@(c:_) | isDigit c -> map (mapFirst Index) (readsPrec n s2)
+         s2 -> map (mapFirst Input) (readsPrec n s2)
 
 instance Show Path where
    show (Path is) = show is
+   showList = (++) . intercalate ";" . map show
 
 -- | The empty path.
 emptyPath :: Path

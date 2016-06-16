@@ -50,11 +50,13 @@ htmlEncoderAt n dr = do
    req <- getRequest
    let lm = f (maybe staticLinks dynamicLinks (cgiBinary req))
        f  = if n==0 then id else linksUp n
-   makePage lm dr <$> encodeType lm dr
+   ex <- getExercise
+   makePage lm dr ex <$> encodeType lm dr
 
-makePage :: LinkManager -> DomainReasoner -> HTMLBuilder -> HTMLPage
-makePage lm dr a =
+makePage :: LinkManager -> DomainReasoner -> Exercise a -> HTMLBuilder -> HTMLPage
+makePage lm dr ex a =
    addCSS (urlForCSS lm "ideas.css") $
+   (if hasLatexEncoding ex then addScript mathJaxUrl else id) $
    htmlPage "Ideas: documentation pages" $ mconcat
       [ divClass "page-header" $ mconcat
            [ divClass  "ideas-logo" space
@@ -67,6 +69,10 @@ makePage lm dr a =
       , divClass "page-footer" $
            string (fullVersion dr)
       ]
+ where
+   mathJaxUrl = 
+      "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"
+
 
 encodeType :: LinkManager -> DomainReasoner -> HTMLEncoder a (TypedValue (Type a))
 encodeType lm dr =
@@ -468,10 +474,16 @@ htmlState lm = makeEncoder $ \state ->
       <> string "ready: " <> bool (finished state)
 
 htmlContext :: Bool -> Exercise a -> Context a -> HTMLBuilder
-htmlContext useDiv ex = f "term" . textLines . prettyPrinterContext ex
+htmlContext useDiv ex = f "term" . textLines . printer
  where
    textLines = mconcat . intersperse br . map string . lines
    f = if useDiv then divClass else spanClass
+   
+   inline s = "\\(" ++ s ++ "\\)"
+   printer 
+      | hasLatexEncoding ex = inline . latexPrinterContext ex
+      | otherwise = prettyPrinterContext ex
+   
 
 stateLink :: LinkManager -> State a -> HTMLBuilder
 stateLink lm st

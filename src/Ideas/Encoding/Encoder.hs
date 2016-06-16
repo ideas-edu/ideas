@@ -16,9 +16,12 @@ module Ideas.Encoding.Encoder
      Converter(..)
    , getExercise, getQCGen, getScript, getRequest
    , withExercise, withOpenMath, withJSONTerm, (//)
-     -- * JSON terms
+     -- * JSON support
    , hasJSONView, addJSONView, jsonEncoding
    , termToJSON, jsonToTerm
+     -- * Latex support
+   , hasLatexEncoding, latexPrinter, latexPrinterContext
+   , latexEncoding, latexEncodingWith
      -- * Options
    , Options, simpleOptions, makeOptions
      -- * Encoder datatype
@@ -36,6 +39,7 @@ module Ideas.Encoding.Encoder
 import Control.Applicative as Export hiding (Const)
 import Control.Arrow as Export
 import Control.Monad
+import Data.Maybe
 import Data.Monoid as Export
 import Ideas.Common.Library hiding (exerciseId, symbol)
 import Ideas.Common.Utils (Some(..))
@@ -44,6 +48,7 @@ import Ideas.Service.FeedbackScript.Parser (parseScriptSafe, Script)
 import Ideas.Service.Request
 import Ideas.Service.Types
 import Ideas.Text.JSON hiding (String)
+import Ideas.Text.Latex
 import Ideas.Text.XML
 import Test.QuickCheck.Random
 import qualified Control.Category as C
@@ -87,7 +92,7 @@ p // a = do
 -- JSON terms
 
 jsonProperty :: Id
-jsonProperty = newId "json"
+jsonProperty = describe "Support for JSON encoding" $ newId "json"
 
 hasJSONView :: Exercise a -> Maybe (View JSON a)
 hasJSONView = getPropertyF jsonProperty
@@ -138,6 +143,35 @@ trueSymbol   = newSymbol "true"
 falseSymbol  = newSymbol "false"
 nullSymbol   = newSymbol "null"
 objectSymbol = newSymbol "object"
+
+-------------------------------------------------------------------
+-- Latex support
+
+latexProperty :: Id
+latexProperty = describe "Support for LaTeX encoding" $ newId "latex"
+
+newtype F a = F { unF :: a -> String }
+
+getF :: Exercise a -> Maybe (F a)
+getF = getPropertyF latexProperty
+
+hasLatexEncoding :: Exercise a -> Bool
+hasLatexEncoding = isJust . getF
+
+-- | Uses exercise pretty-printer in case latex encoding is missing.
+latexPrinter :: Exercise a -> a -> String
+latexPrinter ex = maybe (prettyPrinter ex) unF (getF ex)
+
+-- | Uses exercise pretty-printer in case latex encoding is missing.
+latexPrinterContext :: Exercise a -> Context a -> String
+latexPrinterContext ex ctx = fromMaybe (prettyPrinterContext ex ctx) $ 
+   liftM2 unF (getF ex) (fromContext ctx)
+  
+latexEncoding :: ToLatex a => Exercise a -> Exercise a
+latexEncoding = latexEncodingWith toLatex
+
+latexEncodingWith :: (a -> String) -> Exercise a -> Exercise a
+latexEncodingWith = setPropertyF latexProperty . F
 
 -------------------------------------------------------------------
 -- Options

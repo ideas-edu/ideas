@@ -59,7 +59,7 @@ instance InXML HTMLPage where
               | css <- styleSheets page
               ]
          , mconcat
-              [ tag "script" ("src" .=. js)
+              [ element "script" ["src" .=. js, "type" .=. "text/javascript", string " "]
               | js <- scripts page
               ]
          ]

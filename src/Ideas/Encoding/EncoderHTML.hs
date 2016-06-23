@@ -481,7 +481,7 @@ htmlContext useDiv ex = f "term" . textLines . printer
    
    inline s = "\\(" ++ s ++ "\\)"
    printer 
-      | hasLatexEncoding ex = inline . latexPrinterContext ex
+      | hasLatexEncoding ex = inline . show . latexPrinterContext ex
       | otherwise = prettyPrinterContext ex
    
 

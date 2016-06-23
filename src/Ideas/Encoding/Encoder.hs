@@ -150,7 +150,7 @@ objectSymbol = newSymbol "object"
 latexProperty :: Id
 latexProperty = describe "Support for LaTeX encoding" $ newId "latex"
 
-newtype F a = F { unF :: a -> String }
+newtype F a = F { unF :: a -> Latex }
 
 getF :: Exercise a -> Maybe (F a)
 getF = getPropertyF latexProperty
@@ -159,18 +159,19 @@ hasLatexEncoding :: Exercise a -> Bool
 hasLatexEncoding = isJust . getF
 
 -- | Uses exercise pretty-printer in case latex encoding is missing.
-latexPrinter :: Exercise a -> a -> String
-latexPrinter ex = maybe (prettyPrinter ex) unF (getF ex)
+latexPrinter :: Exercise a -> a -> Latex
+latexPrinter ex = maybe (toLatex . prettyPrinter ex) unF (getF ex)
 
 -- | Uses exercise pretty-printer in case latex encoding is missing.
-latexPrinterContext :: Exercise a -> Context a -> String
-latexPrinterContext ex ctx = fromMaybe (prettyPrinterContext ex ctx) $ 
-   liftM2 unF (getF ex) (fromContext ctx)
-  
+latexPrinterContext :: Exercise a -> Context a -> Latex
+latexPrinterContext ex ctx = 
+   let def = toLatex (prettyPrinterContext ex ctx)
+   in fromMaybe def (liftM2 unF (getF ex) (fromContext ctx))
+
 latexEncoding :: ToLatex a => Exercise a -> Exercise a
 latexEncoding = latexEncodingWith toLatex
 
-latexEncodingWith :: (a -> String) -> Exercise a -> Exercise a
+latexEncodingWith :: (a -> Latex) -> Exercise a -> Exercise a
 latexEncodingWith = setPropertyF latexProperty . F
 
 -------------------------------------------------------------------

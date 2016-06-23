@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -13,21 +14,36 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Text.Latex
-   ( ToLatex(..) 
+   ( Latex, ToLatex(..), (<>)
    , array, commas, brackets, parens
+   , command
    ) where
 
 import Data.List
+import Data.Monoid
+import Data.String
 import Ideas.Common.Utils (ShowString)
+
+newtype Latex = L { showLatex :: String }
+
+instance Show Latex where
+   show = showLatex
+
+instance IsString Latex where
+   fromString = L
    
+instance Monoid Latex where
+   mempty = L []
+   L xs `mappend` L ys = L (mappend xs ys)
+
 class ToLatex a where
-   toLatex     :: a -> String
-   toLatexPrec :: Int -> a -> String
-   toLatexList :: [a] -> String
+   toLatex     :: a -> Latex
+   toLatexPrec :: Int -> a -> Latex
+   toLatexList :: [a] -> Latex
    -- default implementations
    toLatex     = toLatexPrec 0
    toLatexPrec = const toLatex
-   toLatexList = brackets . intercalate ", " . map toLatex
+   toLatexList = brackets . commas . map toLatex
    {-# MINIMAL toLatex | toLatexPrec #-}
 
 instance ToLatex a => ToLatex [a] where 
@@ -35,24 +51,29 @@ instance ToLatex a => ToLatex [a] where
    toLatexPrec = const toLatexList
 
 instance ToLatex a => ToLatex (Maybe a) where
-   toLatexPrec = maybe "" . toLatexPrec
+   toLatexPrec = maybe mempty . toLatexPrec
  
 instance ToLatex Char where
-   toLatex     = return
-   toLatexList = id
+   toLatex     = fromString . return
+   toLatexList = fromString
 
 instance ToLatex Int where
-   toLatex = show
+   toLatex = fromString . show
 
 instance ToLatex ShowString where
-   toLatex = show
+   toLatex = fromString . show
 
-commas :: [String] -> String
-commas = intercalate ",\\:"
+commas :: [Latex] -> Latex
+commas = mconcat . intersperse ",\\:"
 
-brackets, parens :: String -> String
-brackets s = "[" ++ s ++ "]"
-parens   s = "(" ++ s ++ ")"
+brackets, parens :: Latex -> Latex
+brackets s = "[" <> s <> "]"
+parens   s = "(" <> s <> ")"
 
-array :: String -> [String] -> String
-array s rows = "\\begin{array}{" ++ s ++ "}" ++ intercalate "\\\\" rows ++ "\\end{array}"
+array :: String -> [[Latex]] -> Latex
+array s rows = "\\begin{array}{" <> fromString s <> "}" 
+   <> mconcat (intersperse "\\\\" (map (mconcat . intersperse " & ") rows))
+   <> "\\end{array}"
+   
+command :: String -> Latex
+command s = toLatex ("\\" ++ s ++ " ")

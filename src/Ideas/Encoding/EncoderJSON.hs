@@ -204,11 +204,12 @@ encodeTree (Node r ts) =
 
 jsonTuple :: [JSON] -> JSON
 jsonTuple xs =
-   case mapM f xs of
+   case catMaybes <$> mapM f xs of
       Just ys | distinct (map fst ys) -> Object ys
       _ -> Array xs
  where
-   f (Object [p]) = Just p
+   f (Object [p]) = Just (Just p)
+   f Null = Just Nothing
    f _ = Nothing
 
 ruleShortInfo :: Rule a -> JSON

@@ -145,7 +145,7 @@ apply r loc env state
    ca = setLocation loc (stateContext state)
    applyOff  = -- scenario 2: off-strategy
       case transApplyWith env (transformation r) ca of
-         (new, _):_ -> Right (state {stateContext = new, statePrefix = noPrefix})
+         (new, _):_ -> Right (restart (state {stateContext = new, statePrefix = noPrefix}))
          []         -> Left ("Cannot apply " ++ show r)
 
 stepsremaining :: State a -> Either String Int

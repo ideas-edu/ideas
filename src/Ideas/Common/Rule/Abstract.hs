@@ -26,6 +26,7 @@ module Ideas.Common.Rule.Abstract
      -- * Rule properties
    , ruleSiblings, siblingOf
    , isRewriteRule, isRecognizer, doAfter
+   , addEnvironment
      -- * Recognizer
    , addRecognizer, addRecognizerBool
    , addTransRecognizer, addRecognizerEnvMonad
@@ -164,6 +165,9 @@ siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a
 doAfter f r = r {getTrans = getTrans r >>^ f }
+
+addEnvironment :: Environment -> Rule a -> Rule a
+addEnvironment env r = r { getTrans = transAddEnv env (getTrans r) }
 
 -----------------------------------------------------------
 --- Recognizer

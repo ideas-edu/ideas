@@ -20,7 +20,7 @@ module Ideas.Common.Rule.Transformation
      -- * Constructor functions
    , MakeTrans(..)
    , transPure, transMaybe, transList, transEnvMonad
-   , transRewrite, transRef
+   , transRewrite, transRef, transAddEnv
      -- * Lifting transformations
    , transUseEnvironment
    , transLiftView, transLiftViewIn
@@ -33,6 +33,7 @@ module Ideas.Common.Rule.Transformation
 
 import Control.Arrow
 import Data.Maybe
+import Data.Monoid
 import Data.Typeable
 import Ideas.Common.Classes
 import Ideas.Common.Context
@@ -58,6 +59,7 @@ data Trans a b where
    (:++:)   :: Trans a c -> Trans b d -> Trans (Either a b) (Either c d)
    Apply    :: Trans (Trans a b, a) b
    Append   :: Trans a b -> Trans a b -> Trans a b
+   AddEnv   :: Environment -> Trans a b -> Trans a b
 
 instance C.Category Trans where
    id  = arr id
@@ -124,6 +126,9 @@ transRewrite = Rewrite
 transRef :: Typeable a => Ref a -> Trans a a
 transRef = Ref
 
+transAddEnv :: Environment -> Trans a b -> Trans a b
+transAddEnv = AddEnv
+
 -----------------------------------------------------------
 --- Lifting transformations
 
@@ -180,6 +185,7 @@ transApplyWith env trans a =
       f :++: g   -> either (make Left f) (make Right g) a
       Apply      -> uncurry (transApplyWith env) a
       Append f g -> transApplyWith env f a ++ transApplyWith env g a
+      AddEnv e f -> transApplyWith (e <> env) f a
  where
    make :: (b -> c) -> Trans a b -> a -> [(c, Environment)]
    make f g = map (mapFirst f) . transApplyWith env g
@@ -216,4 +222,5 @@ descendTrans make trans =
       f :**: g   -> make f `mappend` make g
       f :++: g   -> make f `mappend` make g
       Append f g -> make f `mappend` make g
+      AddEnv _ f -> make f
       _          -> mempty

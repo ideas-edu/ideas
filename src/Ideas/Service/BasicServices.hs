@@ -146,7 +146,11 @@ apply r loc env state
    applyOff  = -- scenario 2: off-strategy
       case transApplyWith env (transformation r) ca of
          (new, _):_ -> Right (restart (state {stateContext = new, statePrefix = noPrefix}))
-         []         -> Left ("Cannot apply " ++ show r)
+         [] -> 
+            -- try to find a buggy rule
+            case [ br | br <- ruleset (exercise state), isBuggy br, not $ null $ transApplyWith env (transformation br) ca ] of
+               br:_ -> Left ("Buggy rule " ++ show br)
+               _    -> Left ("Cannot apply " ++ show r)
 
 stepsremaining :: State a -> Either String Int
 stepsremaining = mapSecond derivationLength . solution Nothing

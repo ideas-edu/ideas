@@ -20,6 +20,7 @@ module Ideas.Service.BasicServices
 import Control.Monad
 import Data.List
 import Data.Maybe
+import qualified Data.Set as S
 import Ideas.Common.Library hiding (applicable, apply, ready)
 import Ideas.Common.Traversal.Navigator (downs, navigateTo)
 import Ideas.Common.Utils (fst3)
@@ -148,9 +149,18 @@ apply r loc env state
          (new, _):_ -> Right (restart (state {stateContext = new, statePrefix = noPrefix}))
          [] -> 
             -- try to find a buggy rule
-            case [ br | br <- ruleset (exercise state), isBuggy br, not $ null $ transApplyWith env (transformation br) ca ] of
+            case siblingsFirst [ br | br <- ruleset (exercise state), isBuggy br, not $ null $ transApplyWith env (transformation br) ca ] of
                br:_ -> Left ("Buggy rule " ++ show br)
                _    -> Left ("Cannot apply " ++ show r)
+
+   siblingsFirst xs = ys ++ zs
+    where
+      (ys, zs) = partition (siblingInCommon r) xs
+
+siblingInCommon :: Rule a -> Rule a -> Bool
+siblingInCommon r1 r2 = not (S.null (getSiblings r1 `S.intersection` getSiblings r2))
+ where
+   getSiblings r = S.fromList (getId r : ruleSiblings r)
 
 stepsremaining :: State a -> Either String Int
 stepsremaining = mapSecond derivationLength . solution Nothing

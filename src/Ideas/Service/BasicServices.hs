@@ -150,8 +150,8 @@ apply r loc env state
          [] -> 
             -- try to find a buggy rule
             case siblingsFirst [ br | br <- ruleset (exercise state), isBuggy br, not $ null $ transApplyWith env (transformation br) ca ] of
-               br:_ -> Left ("Buggy rule " ++ show br)
-               _    -> Left ("Cannot apply " ++ show r)
+               []  -> Left ("Cannot apply " ++ show r)
+               brs -> Left ("Buggy rule " ++ intercalate "+" (map show brs))
 
    siblingsFirst xs = ys ++ zs
     where

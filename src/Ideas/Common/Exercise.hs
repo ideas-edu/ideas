@@ -201,7 +201,7 @@ isSuitable = evalPredicate . suitable
 
 -- | Returns a sorted list of rules, without duplicates.
 ruleset :: Exercise a -> [Rule (Context a)]
-ruleset ex = nub (sortBy compareId list)
+ruleset ex = nub (sortBy (ruleOrdering ex) list)
  where
    list = extraRules ex ++ rulesInStrategy (strategy ex)
 

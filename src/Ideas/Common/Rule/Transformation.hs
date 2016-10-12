@@ -22,7 +22,7 @@ module Ideas.Common.Rule.Transformation
    , transPure, transMaybe, transList, transEnvMonad
    , transRewrite, transRef, transAddEnv
      -- * Lifting transformations
-   , transUseEnvironment
+   , transUseEnvironment, transGetEnvironment
    , transLiftView, transLiftViewIn
    , transLiftContext, transLiftContextIn
    , makeTransLiftContext, makeTransLiftContext_
@@ -53,6 +53,7 @@ data Trans a b where
    Rewrite  :: RewriteRule a -> Trans a a
    EnvMonad :: (a -> EnvMonad b) -> Trans a b
    Ref      :: Typeable a => Ref a -> Trans a a
+   GetEnv   :: Trans a Environment
    UseEnv   :: Trans a b -> Trans (a, Environment) (b, Environment)
    (:>>:)   :: Trans a b -> Trans b c -> Trans a c
    (:**:)   :: Trans a c -> Trans b d -> Trans (a, b) (c, d)
@@ -132,6 +133,9 @@ transAddEnv = AddEnv
 -----------------------------------------------------------
 --- Lifting transformations
 
+transGetEnvironment :: Trans a Environment
+transGetEnvironment = GetEnv
+
 transUseEnvironment :: Trans a b -> Trans (a, Environment) (b, Environment)
 transUseEnvironment = UseEnv
 
@@ -174,6 +178,7 @@ transApplyWith env trans a =
       Ref ref    -> case ref ? env of
                        Just b  -> [(b, env)]
                        Nothing -> [(a, insertRef ref a env)]
+      GetEnv     -> return (env, env)
       UseEnv f   -> do (b, envb) <- transApplyWith (snd a) f (fst a)
                        return ((b, envb), env)
       f :>>: g   -> do (b, env1) <- transApplyWith env  f a

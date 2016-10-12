@@ -20,6 +20,7 @@ module Ideas.Common.Rule.Parameter
    ( ParamTrans
    , supplyParameters, supplyContextParameters
    , parameter1, parameter2, parameter3
+   , transLookup1, transLookup2, transLookup3
    ) where
 
 import Control.Arrow
@@ -29,6 +30,7 @@ import Ideas.Common.Id
 import Ideas.Common.Rule.EnvironmentMonad
 import Ideas.Common.Rule.Transformation
 import Ideas.Common.View
+import Data.Typeable
 
 -----------------------------------------------------------
 --- Bindables
@@ -38,12 +40,27 @@ type ParamTrans a b = Trans (a, b) b
 supplyParameters :: ParamTrans b a -> (a -> Maybe b) -> Transformation a
 supplyParameters f g = transMaybe g &&& identity >>> f
 
+transLookup1 :: Typeable a => Ref a -> (a -> Transformation b) -> Transformation b
+transLookup1 r1 f = lookupRef r1 (parameter1Ref r1 f)
+
+transLookup2 :: (Typeable a, Typeable b) => Ref a -> Ref b -> (a -> b -> Transformation c) -> Transformation c
+transLookup2 r1 r2 f = transLookup1 r1 $ transLookup1 r2 . f
+
+transLookup3 :: (Typeable a, Typeable b, Typeable c) => Ref a -> Ref b -> Ref c -> (a -> b -> c -> Transformation d) -> Transformation d
+transLookup3 r1 r2 r3 f = transLookup1 r1 $ transLookup2 r2 r3 . f
+
+lookupRef :: Typeable b => Ref b -> ParamTrans b a -> Transformation a
+lookupRef r f = ((transGetEnvironment >>> transMaybe (r ?)) &&& identity) >>> f
+
 supplyContextParameters :: ParamTrans b a -> (a -> EnvMonad b) -> Transformation (Context a)
 supplyContextParameters f g = transLiftContextIn $
    transUseEnvironment (transEnvMonad g &&& identity) >>> first f
 
+parameter1Ref :: Typeable a => Ref a -> (a -> Transformation b) -> ParamTrans a b
+parameter1Ref r f = first (transRef r >>> arr f) >>> app
+
 parameter1 :: (IsId n1, Reference a) => n1 -> (a -> Transformation b) -> ParamTrans a b
-parameter1 n1 f = first (bindValue n1 >>> arr f) >>> app
+parameter1 = parameter1Ref . makeRef
 
 parameter2 :: (IsId n1, IsId n2, Reference a, Reference b)
            => n1 -> n2 -> (a -> b -> Transformation c) -> ParamTrans (a, b) c

@@ -148,14 +148,24 @@ apply r loc env state
       case transApplyWith env (transformation r) ca of
          (new, _):_ -> Right (restart (state {stateContext = new, statePrefix = noPrefix}))
          [] -> 
-            -- try to find a buggy rule
-            case siblingsFirst [ br | br <- ruleset (exercise state), isBuggy br, not $ null $ transApplyWith env (transformation br) ca ] of
-               []  -> Left ("Cannot apply " ++ show r)
-               brs -> Left ("Buggy rule " ++ intercalate "+" (map show brs))
+            -- first check the environment (exercise-specific property)
+            case environmentCheck env of 
+               Just msg -> 
+                  Left msg
+               Nothing -> 
+                  -- try to find a buggy rule
+                  case siblingsFirst [ br | br <- ruleset (exercise state), isBuggy br, not $ null $ transApplyWith env (transformation br) ca ] of
+                     []  -> Left ("Cannot apply " ++ show r)
+                     brs -> Left ("Buggy rule " ++ intercalate "+" (map show brs))
 
    siblingsFirst xs = ys ++ zs
     where
       (ys, zs) = partition (siblingInCommon r) xs
+      
+   environmentCheck :: Environment -> Maybe String
+   environmentCheck env = do 
+      p <- getProperty "environment-check" (exercise state)
+      p env
 
 siblingInCommon :: Rule a -> Rule a -> Bool
 siblingInCommon r1 r2 = not (S.null (getSiblings r1 `S.intersection` getSiblings r2))

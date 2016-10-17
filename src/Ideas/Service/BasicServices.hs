@@ -39,7 +39,7 @@ generate rng ex md userId =
 create :: QCGen -> Exercise a -> String -> Maybe String -> Either String (State a)
 create rng ex input userId =
    case parser ex input of
-      Left err -> fail err
+      Left err -> Left err
       Right a
          | evalPredicate (Library.ready ex) a -> Left "Is ready"
          | evalPredicate (Library.suitable ex) a -> Right $ startState rng ex userId a

@@ -20,7 +20,7 @@ module Ideas.Common.Rule.Transformation
      -- * Constructor functions
    , MakeTrans(..)
    , transPure, transMaybe, transList, transEnvMonad
-   , transRewrite, transRef, transAddEnv
+   , transRewrite, transRef, transAddEnv, transAddEnv2
      -- * Lifting transformations
    , transUseEnvironment, transGetEnvironment
    , transLiftView, transLiftViewIn
@@ -61,6 +61,7 @@ data Trans a b where
    Apply    :: Trans (Trans a b, a) b
    Append   :: Trans a b -> Trans a b -> Trans a b
    AddEnv   :: Environment -> Trans a b -> Trans a b
+   AddEnv2  :: (a -> Maybe Environment) -> Trans a a
 
 instance C.Category Trans where
    id  = arr id
@@ -130,6 +131,9 @@ transRef = Ref
 transAddEnv :: Environment -> Trans a b -> Trans a b
 transAddEnv = AddEnv
 
+transAddEnv2 :: (a -> Maybe Environment) -> Transformation a
+transAddEnv2 = AddEnv2
+
 -----------------------------------------------------------
 --- Lifting transformations
 
@@ -191,6 +195,9 @@ transApplyWith env trans a =
       Apply      -> uncurry (transApplyWith env) a
       Append f g -> transApplyWith env f a ++ transApplyWith env g a
       AddEnv e f -> transApplyWith (e <> env) f a
+      AddEnv2 f  -> case f a of
+                       Just e  -> [(a, e <> env)]
+                       Nothing -> []
  where
    make :: (b -> c) -> Trans a b -> a -> [(c, Environment)]
    make f g = map (mapFirst f) . transApplyWith env g

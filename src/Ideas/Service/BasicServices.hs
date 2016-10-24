@@ -154,13 +154,17 @@ apply r loc env state
                   Left msg
                Nothing -> 
                   -- try to find a buggy rule
-                  case siblingsFirst [ br | br <- ruleset (exercise state), isBuggy br, not $ null $ transApplyWith env (transformation br) ca ] of
+                  case siblingsFirst [ (br, envOut) | br <- ruleset (exercise state), isBuggy br,  (_, envOut) <- transApplyWith env (transformation br) ca ] of
                      []  -> Left ("Cannot apply " ++ show r)
-                     brs -> Left ("Buggy rule " ++ intercalate "+" (map show brs))
+                     brs -> Left ("Buggy rule " ++ intercalate "+" (map pp brs))
+    where
+      pp (br, envOut)
+         | noBindings envOut = show br 
+         | otherwise         = show br ++ " {" ++ show envOut ++ "}"
 
    siblingsFirst xs = ys ++ zs
     where
-      (ys, zs) = partition (siblingInCommon r) xs
+      (ys, zs) = partition (siblingInCommon r . fst) xs
       
    environmentCheck :: Environment -> Maybe String
    environmentCheck env = do 

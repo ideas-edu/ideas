@@ -21,6 +21,7 @@ module Ideas.Common.Rule.Parameter
    , supplyParameters, supplyContextParameters
    , parameter1, parameter2, parameter3
    , transLookup1, transLookup2, transLookup3
+   , transLookupM1, transLookupM2, transLookupM3
    ) where
 
 import Control.Arrow
@@ -48,6 +49,15 @@ transLookup2 r1 r2 f = transLookup1 r1 $ transLookup1 r2 . f
 
 transLookup3 :: (Typeable a, Typeable b, Typeable c) => Ref a -> Ref b -> Ref c -> (a -> b -> c -> Transformation d) -> Transformation d
 transLookup3 r1 r2 r3 f = transLookup1 r1 $ transLookup2 r2 r3 . f
+
+transLookupM1 :: Typeable a => Ref a -> (Maybe a -> Transformation b) -> Transformation b
+transLookupM1 r1 f = ((transGetEnvironment >>> arr (f . (r1 ?))) &&& identity) >>> app
+
+transLookupM2 :: (Typeable a, Typeable b) => Ref a -> Ref b -> (Maybe a -> Maybe b -> Transformation c) -> Transformation c
+transLookupM2 r1 r2 f = transLookupM1 r1 $ transLookupM1 r2 . f
+
+transLookupM3 :: (Typeable a, Typeable b, Typeable c) => Ref a -> Ref b -> Ref c -> (Maybe a -> Maybe b -> Maybe c -> Transformation d) -> Transformation d
+transLookupM3 r1 r2 r3 f = transLookupM1 r1 $ transLookupM2 r2 r3 . f
 
 lookupRef :: Typeable b => Ref b -> ParamTrans b a -> Transformation a
 lookupRef r f = ((transGetEnvironment >>> transMaybe (r ?)) &&& identity) >>> f

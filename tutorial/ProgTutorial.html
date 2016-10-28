@@ -1,0 +1,183 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <link rel="stylesheet" href="Tutorial.css" type="text/css" />
+</head>
+<body>
+<div class="page-header">
+<div class="ideas-logo">
+<img src="ideas.png"/>
+</div>
+<div class="ounl-logo">
+<img src="ounl.png"/>
+</div>
+<p>  Ideas tutorial (version ?.?)</p>
+</div>
+<div class="page-content">
+
+<h1 id="making-a-domain-reasoner-for-programming">Making a domain reasoner for programming</h1>
+<p>This tutorial show a number of applications of the Ideas framework, demonstrated with an example for a programming tutor.</p>
+<p>We define a new module and specify a number of inputs that we need.</p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE DeriveDataTypeable, FlexibleInstances #-}</span>
+
+<span class="kw">module</span> <span class="dt">ProgTutorial</span> <span class="kw">where</span>
+
+<span class="kw">import </span><span class="dt">Ideas.Common.Library</span>
+<span class="kw">import </span><span class="dt">Ideas.Main.Default</span>
+<span class="kw">import </span><span class="dt">Data.Generics.Uniplate.DataOnly</span> (transformBi)
+<span class="kw">import </span><span class="dt">Data.Data</span></code></pre></div>
+<h2 id="defining-the-domain">Defining the domain</h2>
+<p>We start with defining data types for a simple imperative programming language that supports a conditional statements (If), loops (While), assignments and sequences of statements. The language supports integers and booleans, and a number of unary and binary operations.</p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Program</span> <span class="fu">=</span> <span class="dt">Program</span> [<span class="dt">Stat</span>] <span class="kw">deriving</span> (<span class="dt">Data</span>, <span class="dt">Typeable</span>, <span class="dt">Eq</span>, <span class="dt">Read</span>)
+
+<span class="kw">data</span> <span class="dt">Stat</span> <span class="fu">=</span> 
+       <span class="dt">If</span>       <span class="dt">Expr</span> <span class="dt">Stat</span>
+   <span class="fu">|</span>   <span class="dt">While</span>    <span class="dt">Expr</span> <span class="dt">Stat</span>
+   <span class="fu">|</span>   <span class="dt">Assign</span>   <span class="dt">Ident</span> <span class="dt">Expr</span>
+   <span class="fu">|</span>   <span class="dt">Seq</span>      [<span class="dt">Stat</span>]
+   <span class="kw">deriving</span> (<span class="dt">Data</span>, <span class="dt">Typeable</span>, <span class="dt">Eq</span>, <span class="dt">Read</span>)
+
+<span class="kw">data</span> <span class="dt">Expr</span> <span class="fu">=</span> 
+       <span class="dt">Add</span>      <span class="dt">Expr</span> <span class="dt">Expr</span> 
+   <span class="fu">|</span>   <span class="dt">Negate</span>   <span class="dt">Expr</span> 
+   <span class="fu">|</span>   <span class="dt">LitExpr</span>  <span class="dt">Literal</span> 
+   <span class="fu">|</span>   <span class="dt">Mult</span>     <span class="dt">Expr</span> <span class="dt">Expr</span>
+   <span class="fu">|</span>   <span class="dt">Not</span>      <span class="dt">Expr</span>
+   <span class="fu">|</span>   <span class="dt">Unknown</span>  <span class="dt">Int</span>
+   <span class="fu">|</span>   <span class="dt">Con</span>      <span class="dt">Int</span> <span class="co">-- tutorial</span>
+   <span class="kw">deriving</span> (<span class="dt">Data</span>, <span class="dt">Typeable</span>, <span class="dt">Eq</span>, <span class="dt">Read</span>)
+
+<span class="kw">data</span> <span class="dt">Ident</span> <span class="fu">=</span> <span class="dt">Ident</span> <span class="dt">String</span> <span class="kw">deriving</span> (<span class="dt">Data</span>, <span class="dt">Typeable</span>, <span class="dt">Eq</span>, <span class="dt">Read</span>)
+
+<span class="kw">data</span> <span class="dt">Literal</span> <span class="fu">=</span> 
+    <span class="dt">IntLit</span>   <span class="dt">Int</span> 
+ <span class="fu">|</span>  <span class="dt">BoolLit</span>  <span class="dt">Bool</span> 
+ <span class="kw">deriving</span> (<span class="dt">Data</span>, <span class="dt">Typeable</span>, <span class="dt">Eq</span>, <span class="dt">Read</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">Show</span> <span class="dt">Ident</span> <span class="kw">where</span>
+    show (<span class="dt">Ident</span> s) <span class="fu">=</span> s</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">Show</span> <span class="dt">Literal</span> <span class="kw">where</span>
+    show (<span class="dt">IntLit</span> i)  <span class="fu">=</span> show i
+    show (<span class="dt">BoolLit</span> b) <span class="fu">=</span> show b
+
+<span class="kw">instance</span> <span class="dt">Show</span> <span class="dt">Expr</span> <span class="kw">where</span>
+    show (<span class="dt">Add</span> x y)    <span class="fu">=</span> show x <span class="fu">++</span> <span class="st">&quot; + &quot;</span> <span class="fu">++</span> show y 
+    show (<span class="dt">Negate</span> x)   <span class="fu">=</span> <span class="st">&quot;-&quot;</span> <span class="fu">++</span> show x 
+    show (<span class="dt">LitExpr</span> l)  <span class="fu">=</span> show l 
+    show (<span class="dt">Mult</span> x y)   <span class="fu">=</span> show x <span class="fu">++</span> <span class="st">&quot; * &quot;</span> <span class="fu">++</span> show y 
+    show (<span class="dt">Not</span> x)      <span class="fu">=</span> <span class="st">&quot;!&quot;</span> <span class="fu">++</span> show x 
+    show (<span class="dt">Unknown</span> i)  <span class="fu">=</span> <span class="st">&quot;?&quot;</span>
+    show (<span class="dt">Con</span> x)      <span class="fu">=</span> show x <span class="co">-- tutorial</span>
+
+<span class="kw">instance</span> <span class="dt">Show</span> <span class="dt">Stat</span> <span class="kw">where</span>
+    show (<span class="dt">If</span> e s)     <span class="fu">=</span> <span class="st">&quot;if &quot;</span> <span class="fu">++</span> show e <span class="fu">++</span> <span class="st">&quot;\n\t&quot;</span> <span class="fu">++</span> show s
+    show (<span class="dt">While</span> e s)  <span class="fu">=</span> <span class="st">&quot;while &quot;</span> <span class="fu">++</span> show e <span class="fu">++</span> <span class="st">&quot;\n\t&quot;</span> <span class="fu">++</span> show s
+    show (<span class="dt">Assign</span> i e) <span class="fu">=</span> show i <span class="fu">++</span> <span class="st">&quot; = &quot;</span> <span class="fu">++</span> show e
+    show (<span class="dt">Seq</span> stats ) <span class="fu">=</span> unlines (map ((<span class="fu">++</span> <span class="st">&quot;;&quot;</span>) <span class="fu">.</span> show) stats)
+
+<span class="kw">instance</span> <span class="dt">Show</span> <span class="dt">Program</span> <span class="kw">where</span>
+    show (<span class="dt">Program</span> stats) <span class="fu">=</span> unlines (map ((<span class="fu">++</span> <span class="st">&quot;;&quot;</span>) <span class="fu">.</span> show) stats)</code></pre></div>
+<p><strong>Uniplate library</strong></p>
+<p><a href="http://community.haskell.org/~ndm/darcs/uniplate/uniplate.htm">Uniplate generics library</a></p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="co">{-!</span>
+<span class="co">deriving instance UniplateDirect Expr</span>
+<span class="co">deriving instance UniplateDirect Program</span>
+<span class="co">deriving instance UniplateDirect Stat</span>
+<span class="co">deriving instance UniplateDirect Ident</span>
+<span class="co">deriving instance UniplateDirect Literal</span>
+<span class="co">!-}</span></code></pre></div>
+<p>We define three statements and create a model program that is the sequence of these statements.</p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell">stat1, stat2,<span class="ot"> stat3 ::</span> <span class="dt">Stat</span>
+stat1 <span class="fu">=</span> <span class="dt">Assign</span> (<span class="dt">Ident</span> <span class="st">&quot;x&quot;</span>) (<span class="dt">LitExpr</span> (<span class="dt">IntLit</span> <span class="dv">5</span>))
+stat2 <span class="fu">=</span> <span class="dt">If</span> (<span class="dt">LitExpr</span> (<span class="dt">BoolLit</span> <span class="dt">True</span>)) stat1
+stat3 <span class="fu">=</span> <span class="dt">While</span> (<span class="dt">LitExpr</span> (<span class="dt">BoolLit</span> <span class="dt">False</span>)) stat2
+
+<span class="ot">model1 ::</span> <span class="dt">Program</span> 
+model1 <span class="fu">=</span> <span class="dt">Program</span> [stat1, stat2, stat3]</code></pre></div>
+<h2 id="creating-rules-to-build-a-program">Creating rules to build a program</h2>
+<p>A simple way to construct a program step by step is to append new statements to a program, starting with an empty program.</p>
+<p>We need a rule that can append a statement at the end of a program.</p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">appendStat ::</span> <span class="dt">Stat</span> <span class="ot">-&gt;</span> <span class="dt">Rule</span> <span class="dt">Program</span>
+appendStat s <span class="fu">=</span> describe <span class="st">&quot;Append a statement&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;p.append&quot;</span> (f s)
+   <span class="kw">where</span>
+<span class="ot">      f ::</span> <span class="dt">Stat</span> <span class="ot">-&gt;</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Program</span>
+      f s (<span class="dt">Program</span> stats) <span class="fu">=</span> <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Program</span> (stats <span class="fu">++</span> [s])</code></pre></div>
+<p>We need a model program to know what statements need to be appended. We generate the strategy dynamically with the model program as input.</p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">makeStrategy ::</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">LabeledStrategy</span> <span class="dt">Program</span>
+makeStrategy (<span class="dt">Program</span> stats) <span class="fu">=</span> label <span class="st">&quot;todo&quot;</span> <span class="fu">$</span> sequenceS (map appendStat stats)</code></pre></div>
+<p>We can now define programming exercises.</p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">makeProgExercise ::</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">Exercise</span> <span class="dt">Program</span>
+makeProgExercise model <span class="fu">=</span> progExercise { strategy <span class="fu">=</span> liftToContext (makeStrategy model)}
+
+<span class="ot">progExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Program</span>
+progExercise <span class="fu">=</span> emptyExercise
+   { exerciseId    <span class="fu">=</span> describe <span class="st">&quot;todo&quot;</span> <span class="fu">$</span>
+                        newId <span class="st">&quot;p.ex1&quot;</span>
+   , status        <span class="fu">=</span> <span class="dt">Experimental</span>
+   <span class="co">--, strategy      = liftToContext (makeStrategy model1)</span>
+   , prettyPrinter <span class="fu">=</span> show
+   , parser        <span class="fu">=</span> readM
+   <span class="co">--, equivalence   = withoutContext eqExpr</span>
+   <span class="co">--, ready         = predicate isCon</span>
+   <span class="co">--, examples      = level Easy [expr1] ++ level Medium [expr2]</span>
+   }</code></pre></div>
+<p>We can test this by printing the steps for building the model program.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">    <span class="dt">Main</span> <span class="fu">&gt;</span> printDerivation (makeProgExercise model1) (<span class="dt">Program</span> []) 
+    <span class="ot">=&gt;</span> p<span class="fu">.</span>append
+    x <span class="fu">=</span> <span class="dv">5</span>;</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">   <span class="ot">=&gt;</span> p<span class="fu">.</span>append
+x <span class="fu">=</span> <span class="dv">5</span>;
+<span class="kw">if</span> <span class="dt">True</span>
+   x <span class="fu">=</span> <span class="dv">5</span>;</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">   <span class="ot">=&gt;</span> p<span class="fu">.</span>append
+x <span class="fu">=</span> <span class="dv">5</span>;
+<span class="kw">if</span> <span class="dt">True</span>
+   x <span class="fu">=</span> <span class="dv">5</span>;
+while <span class="dt">False</span>
+   <span class="kw">if</span> <span class="dt">True</span>
+   x <span class="fu">=</span> <span class="dv">5</span>;</code></pre></div>
+<h2 id="refining-expressions-in-a-program">Refining expressions in a program</h2>
+<p>...</p>
+</body>
+</html>

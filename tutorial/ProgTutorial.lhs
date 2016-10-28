@@ -22,6 +22,7 @@ We define a new module and specify a number of inputs that we need.
 > import Ideas.Main.Default
 > import Data.Generics.Uniplate.DataOnly (transformBi)
 > import Data.Data
+> import Control.Monad.State
 
 Defining the domain
 -------------------
@@ -71,7 +72,7 @@ number of unary and binary operations.
 >     show (LitExpr l)  = show l 
 >     show (Mult x y)   = show x ++ " * " ++ show y 
 >     show (Not x)      = "!" ++ show x 
->     show (Unknown i)  = "?"
+>     show (Unknown i)  = "?" ++ show i
 >     show (Con x)      = show x -- tutorial
 >
 > instance Show Stat where
@@ -104,7 +105,7 @@ these statements.
 > stat3 = While (LitExpr (BoolLit False)) stat2
 > 
 > model1 :: Program 
-> model1 = Program [stat1, stat2, stat3]
+> model1 = Program [stat1, stat2, stat3, stat1]
 
 Creating rules to build a program
 ---------------------------------
@@ -130,26 +131,25 @@ We can now define programming exercises.
 
 > makeProgExercise :: Program -> Exercise Program
 > makeProgExercise model = progExercise { strategy = liftToContext (makeStrategy model)}
->
+
 > progExercise :: Exercise Program
 > progExercise = emptyExercise
->    { exerciseId    = describe "todo" $
->                         newId "p.ex1"
->    , status        = Experimental
->    --, strategy      = liftToContext (makeStrategy model1)
->    , prettyPrinter = show
->    , parser        = readM
->    --, equivalence   = withoutContext eqExpr
->    --, ready         = predicate isCon
->    --, examples      = level Easy [expr1] ++ level Medium [expr2]
->    }
-> 
+>   { exerciseId    = describe "todo" $
+>                        newId "p.ex1"
+>   , status        = Experimental
+>   --, strategy      = liftToContext (makeStrategy model1)
+>   , prettyPrinter = show
+>   , parser        = readM
+>   --, equivalence   = withoutContext eqExpr
+>   --, ready         = predicate isCon
+>   --, examples      = level Easy [expr1] ++ level Medium [expr2]
+>   }
 
 We can test this by printing the steps for building the model program.
 
-<     Main > printDerivation (makeProgExercise model1) (Program []) 
-<     => p.append
-<     x = 5;
+< Main > printDerivation (makeProgExercise model1) (Program []) 
+<    => p.append
+< x = 5;
 
 <    => p.append
 < x = 5;
@@ -167,4 +167,70 @@ We can test this by printing the steps for building the model program.
 Refining expressions in a program
 ---------------------------------
 
-...
+The Unknown constructor of the Expr data type can be used as a placeholder for
+expressions. The constructors contains an integer that uniquely identifies it.
+An Unknown (represented by a question mark) can be used by students
+if they do not know how to define the necessary expression yet. 
+
+We need a refine rule that can replace an Unknown by an expression. 
+
+> refineExpr :: Expr -> Int -> Rule Program
+> refineExpr expr i = describe "todo" $ makeRule "p.refine" (f expr i)
+>    where
+>       f :: Expr -> Int -> Program -> Maybe Program
+>       f expr i p = Just $ transformBi refine' p
+> 
+>       refine' e
+>          | unknownId e == Just i = expr 
+>          | otherwise             = e
+
+The following helper function is needed to find the question mark that needs
+to be replaced.
+
+> unknownId :: Expr -> Maybe Int
+> unknownId (Unknown i)   = Just i
+> unknownId _             = Nothing
+
+During the generation of the strategy we need to number the Unknown that are
+encountered. We use the State monad to keep track of the next number
+we may assign. 
+
+> type StrategyGenerator a = Int -> a -> State Int (LabeledStrategy Program)
+
+For the main data types of our domain (Program, Stat and Expr) we define an
+instance of GenStrategy.
+
+> type GenState a = State Int a
+> class GenStrategy a where
+>     genStrat :: StrategyGenerator a
+
+> instance GenStrategy Program where
+>    genStrat i (Program stats) = do
+>       s <- mapM (genStrat i) stats
+>       return $ label "todo" $ sequenceS s
+
+If a statement contains an expression, we first need to get the next available number.
+The first step of the strategy for this statement is to introduce the question mark.
+In the next step the question mark can be replaced by the actual expression.
+
+> instance GenStrategy Stat where
+>   genStrat loc (Assign i e) = do
+>       newId <- getNextNr
+>       return $ label "" $ appendStat (Assign i (Unknown newId)) .*. refineExpr e newId
+>   genStrat loc stat = return $ label "" $ appendStat stat
+
+> getNextNr :: State Int Int
+> getNextNr = do
+>     i <- get
+>     put (i+1)
+>     return i
+
+..
+
+> makeProgExercise2 :: Program -> Exercise Program
+> makeProgExercise2 model = progExercise { strategy = liftToContext (evalState (genStrat 0 model) 0)}
+
+Todo
+* other statements with expressions
+* expressions in expressions
+

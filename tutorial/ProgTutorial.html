@@ -67,7 +67,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="kw">import </span><span class="dt">Ideas.Common.Library</span>
 <span class="kw">import </span><span class="dt">Ideas.Main.Default</span>
 <span class="kw">import </span><span class="dt">Data.Generics.Uniplate.DataOnly</span> (transformBi)
-<span class="kw">import </span><span class="dt">Data.Data</span></code></pre></div>
+<span class="kw">import </span><span class="dt">Data.Data</span>
+<span class="kw">import </span><span class="dt">Control.Monad.State</span></code></pre></div>
 <h2 id="defining-the-domain">Defining the domain</h2>
 <p>We start with defining data types for a simple imperative programming language that supports a conditional statements (If), loops (While), assignments and sequences of statements. The language supports integers and booleans, and a number of unary and binary operations.</p>
 <div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Program</span> <span class="fu">=</span> <span class="dt">Program</span> [<span class="dt">Stat</span>] <span class="kw">deriving</span> (<span class="dt">Data</span>, <span class="dt">Typeable</span>, <span class="dt">Eq</span>, <span class="dt">Read</span>)
@@ -107,7 +108,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
     show (<span class="dt">LitExpr</span> l)  <span class="fu">=</span> show l 
     show (<span class="dt">Mult</span> x y)   <span class="fu">=</span> show x <span class="fu">++</span> <span class="st">&quot; * &quot;</span> <span class="fu">++</span> show y 
     show (<span class="dt">Not</span> x)      <span class="fu">=</span> <span class="st">&quot;!&quot;</span> <span class="fu">++</span> show x 
-    show (<span class="dt">Unknown</span> i)  <span class="fu">=</span> <span class="st">&quot;?&quot;</span>
+    show (<span class="dt">Unknown</span> i)  <span class="fu">=</span> <span class="st">&quot;?&quot;</span> <span class="fu">++</span> show i
     show (<span class="dt">Con</span> x)      <span class="fu">=</span> show x <span class="co">-- tutorial</span>
 
 <span class="kw">instance</span> <span class="dt">Show</span> <span class="dt">Stat</span> <span class="kw">where</span>
@@ -134,7 +135,7 @@ stat2 <span class="fu">=</span> <span class="dt">If</span> (<span class="dt">Lit
 stat3 <span class="fu">=</span> <span class="dt">While</span> (<span class="dt">LitExpr</span> (<span class="dt">BoolLit</span> <span class="dt">False</span>)) stat2
 
 <span class="ot">model1 ::</span> <span class="dt">Program</span> 
-model1 <span class="fu">=</span> <span class="dt">Program</span> [stat1, stat2, stat3]</code></pre></div>
+model1 <span class="fu">=</span> <span class="dt">Program</span> [stat1, stat2, stat3, stat1]</code></pre></div>
 <h2 id="creating-rules-to-build-a-program">Creating rules to build a program</h2>
 <p>A simple way to construct a program step by step is to append new statements to a program, starting with an empty program.</p>
 <p>We need a rule that can append a statement at the end of a program.</p>
@@ -148,24 +149,23 @@ appendStat s <span class="fu">=</span> describe <span class="st">&quot;Append a 
 makeStrategy (<span class="dt">Program</span> stats) <span class="fu">=</span> label <span class="st">&quot;todo&quot;</span> <span class="fu">$</span> sequenceS (map appendStat stats)</code></pre></div>
 <p>We can now define programming exercises.</p>
 <div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">makeProgExercise ::</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">Exercise</span> <span class="dt">Program</span>
-makeProgExercise model <span class="fu">=</span> progExercise { strategy <span class="fu">=</span> liftToContext (makeStrategy model)}
-
-<span class="ot">progExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Program</span>
+makeProgExercise model <span class="fu">=</span> progExercise { strategy <span class="fu">=</span> liftToContext (makeStrategy model)}</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">progExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Program</span>
 progExercise <span class="fu">=</span> emptyExercise
-   { exerciseId    <span class="fu">=</span> describe <span class="st">&quot;todo&quot;</span> <span class="fu">$</span>
-                        newId <span class="st">&quot;p.ex1&quot;</span>
-   , status        <span class="fu">=</span> <span class="dt">Experimental</span>
-   <span class="co">--, strategy      = liftToContext (makeStrategy model1)</span>
-   , prettyPrinter <span class="fu">=</span> show
-   , parser        <span class="fu">=</span> readM
-   <span class="co">--, equivalence   = withoutContext eqExpr</span>
-   <span class="co">--, ready         = predicate isCon</span>
-   <span class="co">--, examples      = level Easy [expr1] ++ level Medium [expr2]</span>
-   }</code></pre></div>
+  { exerciseId    <span class="fu">=</span> describe <span class="st">&quot;todo&quot;</span> <span class="fu">$</span>
+                       newId <span class="st">&quot;p.ex1&quot;</span>
+  , status        <span class="fu">=</span> <span class="dt">Experimental</span>
+  <span class="co">--, strategy      = liftToContext (makeStrategy model1)</span>
+  , prettyPrinter <span class="fu">=</span> show
+  , parser        <span class="fu">=</span> readM
+  <span class="co">--, equivalence   = withoutContext eqExpr</span>
+  <span class="co">--, ready         = predicate isCon</span>
+  <span class="co">--, examples      = level Easy [expr1] ++ level Medium [expr2]</span>
+  }</code></pre></div>
 <p>We can test this by printing the steps for building the model program.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">    <span class="dt">Main</span> <span class="fu">&gt;</span> printDerivation (makeProgExercise model1) (<span class="dt">Program</span> []) 
-    <span class="ot">=&gt;</span> p<span class="fu">.</span>append
-    x <span class="fu">=</span> <span class="dv">5</span>;</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span> <span class="fu">&gt;</span> printDerivation (makeProgExercise model1) (<span class="dt">Program</span> []) 
+   <span class="ot">=&gt;</span> p<span class="fu">.</span>append
+x <span class="fu">=</span> <span class="dv">5</span>;</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">   <span class="ot">=&gt;</span> p<span class="fu">.</span>append
 x <span class="fu">=</span> <span class="dv">5</span>;
 <span class="kw">if</span> <span class="dt">True</span>
@@ -178,6 +178,45 @@ while <span class="dt">False</span>
    <span class="kw">if</span> <span class="dt">True</span>
    x <span class="fu">=</span> <span class="dv">5</span>;</code></pre></div>
 <h2 id="refining-expressions-in-a-program">Refining expressions in a program</h2>
-<p>...</p>
+<p>The Unknown constructor of the Expr data type can be used as a placeholder for expressions. The constructors contains an integer that uniquely identifies it. An Unknown (represented by a question mark) can be used by students if they do not know how to define the necessary expression yet.</p>
+<p>We need a refine rule that can replace an Unknown by an expression.</p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">refineExpr ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Rule</span> <span class="dt">Program</span>
+refineExpr expr i <span class="fu">=</span> describe <span class="st">&quot;todo&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;p.refine&quot;</span> (f expr i)
+   <span class="kw">where</span>
+<span class="ot">      f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Program</span>
+      f expr i p <span class="fu">=</span> <span class="dt">Just</span> <span class="fu">$</span> transformBi refine&#39; p
+
+      refine&#39; e
+         <span class="fu">|</span> unknownId e <span class="fu">==</span> <span class="dt">Just</span> i <span class="fu">=</span> expr 
+         <span class="fu">|</span> otherwise             <span class="fu">=</span> e</code></pre></div>
+<p>The following helper function is needed to find the question mark that needs to be replaced.</p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">unknownId ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span>
+unknownId (<span class="dt">Unknown</span> i)   <span class="fu">=</span> <span class="dt">Just</span> i
+unknownId _             <span class="fu">=</span> <span class="dt">Nothing</span></code></pre></div>
+<p>During the generation of the strategy we need to number the Unknown that are encountered. We use the State monad to keep track of the next number we may assign.</p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">type</span> <span class="dt">StrategyGenerator</span> a <span class="fu">=</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">State</span> <span class="dt">Int</span> (<span class="dt">LabeledStrategy</span> <span class="dt">Program</span>)</code></pre></div>
+<p>For the main data types of our domain (Program, Stat and Expr) we define an instance of GenStrategy.</p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">type</span> <span class="dt">GenState</span> a <span class="fu">=</span> <span class="dt">State</span> <span class="dt">Int</span> a
+<span class="kw">class</span> <span class="dt">GenStrategy</span> a <span class="kw">where</span>
+<span class="ot">    genStrat ::</span> <span class="dt">StrategyGenerator</span> a</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">GenStrategy</span> <span class="dt">Program</span> <span class="kw">where</span>
+   genStrat i (<span class="dt">Program</span> stats) <span class="fu">=</span> <span class="kw">do</span>
+      s <span class="ot">&lt;-</span> mapM (genStrat i) stats
+      return <span class="fu">$</span> label <span class="st">&quot;todo&quot;</span> <span class="fu">$</span> sequenceS s</code></pre></div>
+<p>If a statement contains an expression, we first need to get the next available number. The first step of the strategy for this statement is to introduce the question mark. In the next step the question mark can be replaced by the actual expression.</p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">GenStrategy</span> <span class="dt">Stat</span> <span class="kw">where</span>
+  genStrat loc (<span class="dt">Assign</span> i e) <span class="fu">=</span> <span class="kw">do</span>
+      newId <span class="ot">&lt;-</span> getNextNr
+      return <span class="fu">$</span> label <span class="st">&quot;&quot;</span> <span class="fu">$</span> appendStat (<span class="dt">Assign</span> i (<span class="dt">Unknown</span> newId)) <span class="fu">.*.</span> refineExpr e newId
+  genStrat loc stat <span class="fu">=</span> return <span class="fu">$</span> label <span class="st">&quot;&quot;</span> <span class="fu">$</span> appendStat stat</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">getNextNr ::</span> <span class="dt">State</span> <span class="dt">Int</span> <span class="dt">Int</span>
+getNextNr <span class="fu">=</span> <span class="kw">do</span>
+    i <span class="ot">&lt;-</span> get
+    put (i<span class="fu">+</span><span class="dv">1</span>)
+    return i</code></pre></div>
+<p>..</p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">makeProgExercise2 ::</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">Exercise</span> <span class="dt">Program</span>
+makeProgExercise2 model <span class="fu">=</span> progExercise { strategy <span class="fu">=</span> liftToContext (evalState (genStrat <span class="dv">0</span> model) <span class="dv">0</span>)}</code></pre></div>
+<p>Todo * other statements with expressions * expressions in expressions</p>
 </body>
 </html>

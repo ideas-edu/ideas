@@ -22,6 +22,10 @@ module Ideas.Common.Rule.Parameter
    , parameter1, parameter2, parameter3
    , transLookup1, transLookup2, transLookup3
    , transLookupM1, transLookupM2, transLookupM3
+     -----
+   , inputWith, readRef, readRef2, readRef3
+   , outputWith, writeRef, writeRef2, writeRef3
+   , checkTrans
    ) where
 
 import Control.Arrow
@@ -82,3 +86,36 @@ parameter3 n1 n2 n3 f = first ((\(a, b, c) -> (a, (b, c))) ^>>
 
 bindValue :: Typeable a => Ref a -> Trans a a
 bindValue = transRef
+
+---------------------------------------------------------------------------
+
+inputWith :: Trans c i -> Trans (i, c) d -> Trans c d
+inputWith f g = (f &&& identity) >>> g
+
+outputWith :: Trans b c -> Trans a b -> Trans a c
+outputWith f g = f <<< g
+
+readRef :: Ref a -> Trans x a
+readRef r = transReadRefM r >>> transMaybe id
+
+readRef2 :: Ref a -> Ref b -> Trans x (a, b)
+readRef2 r1 r2 = readRef r1 &&& readRef r2
+
+readRef3 :: Ref a -> Ref b -> Ref c -> Trans x (a, b, c)
+readRef3 r1 r2 r3 = (readRef2 r1 r2) &&& readRef r3 >>> arr f
+ where
+   f ((a, b), c) = (a, b, c)
+
+writeRef :: Typeable a => Ref a -> Trans a ()
+writeRef r = arr Just >>> transWriteRefM r
+
+writeRef2 :: (Typeable a, Typeable b) => Ref a -> Ref b -> Trans (a, b) ()
+writeRef2 r1 r2 = (writeRef r1 *** writeRef r2) >>> arr fst
+
+writeRef3 :: (Typeable a, Typeable b, Typeable c) => Ref a -> Ref b -> Ref c -> Trans (a, b, c) ()
+writeRef3 r1 r2 r3 = arr f >>> (writeRef2 r1 r2 *** writeRef r3) >>> arr fst
+ where
+   f (a, b, c) = ((a, b), c)
+
+checkTrans :: Trans a x -> Trans a a
+checkTrans f = (f &&& identity) >>> arr snd

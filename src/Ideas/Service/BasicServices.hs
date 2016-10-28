@@ -20,6 +20,7 @@ module Ideas.Service.BasicServices
 import Control.Monad
 import Data.List
 import Data.Maybe
+import qualified Data.Set as S
 import Ideas.Common.Library hiding (applicable, apply, ready)
 import Ideas.Common.Traversal.Navigator (downs, navigateTo)
 import Ideas.Common.Utils (fst3)
@@ -38,7 +39,7 @@ generate rng ex md userId =
 create :: QCGen -> Exercise a -> String -> Maybe String -> Either String (State a)
 create rng ex input userId =
    case parser ex input of
-      Left err -> fail err
+      Left err -> Left err
       Right a
          | evalPredicate (Library.ready ex) a -> Left "Is ready"
          | evalPredicate (Library.suitable ex) a -> Right $ startState rng ex userId a
@@ -145,8 +146,35 @@ apply r loc env state
    ca = setLocation loc (stateContext state)
    applyOff  = -- scenario 2: off-strategy
       case transApplyWith env (transformation r) ca of
-         (new, _):_ -> Right (state {stateContext = new, statePrefix = noPrefix})
-         []         -> Left ("Cannot apply " ++ show r)
+         (new, _):_ -> Right (restart (state {stateContext = new, statePrefix = noPrefix}))
+         [] -> 
+            -- first check the environment (exercise-specific property)
+            case environmentCheck env of 
+               Just msg -> 
+                  Left msg
+               Nothing -> 
+                  -- try to find a buggy rule
+                  case siblingsFirst [ (br, envOut) | br <- ruleset (exercise state), isBuggy br,  (_, envOut) <- transApplyWith env (transformation br) ca ] of
+                     []  -> Left ("Cannot apply " ++ show r)
+                     brs -> Left ("Buggy rule " ++ intercalate "+" (map pp brs))
+    where
+      pp (br, envOut)
+         | noBindings envOut = show br 
+         | otherwise         = show br ++ " {" ++ show envOut ++ "}"
+
+   siblingsFirst xs = ys ++ zs
+    where
+      (ys, zs) = partition (siblingInCommon r . fst) xs
+      
+   environmentCheck :: Environment -> Maybe String
+   environmentCheck env = do 
+      p <- getProperty "environment-check" (exercise state)
+      p env
+
+siblingInCommon :: Rule a -> Rule a -> Bool
+siblingInCommon r1 r2 = not (S.null (getSiblings r1 `S.intersection` getSiblings r2))
+ where
+   getSiblings r = S.fromList (getId r : ruleSiblings r)
 
 stepsremaining :: State a -> Either String Int
 stepsremaining = mapSecond derivationLength . solution Nothing

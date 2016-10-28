@@ -33,6 +33,7 @@ module Ideas.Common.Strategy.Abstract
    ) where
 
 import Data.Foldable (toList)
+import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.CyclicTree hiding (label)
 import Ideas.Common.Derivation
@@ -45,7 +46,6 @@ import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence (Sequence(..), ready)
 import Ideas.Common.Strategy.StrategyTree
-import Ideas.Common.Strategy.Symbol
 import Ideas.Common.View
 import Prelude hiding (sequence)
 import qualified Ideas.Common.CyclicTree as Tree
@@ -99,10 +99,13 @@ instance IsStrategy LabeledStrategy where
   toStrategy (LS info (S t)) = S (Tree.label info t)
 
 instance IsStrategy Rule where
-   toStrategy = S . leaf
+   toStrategy = S . leaf . LeafRule
 
 instance IsStrategy RewriteRule where
    toStrategy = toStrategy . ruleRewrite
+
+instance IsStrategy Dynamic where
+   toStrategy = S . leaf . LeafDyn
 
 liftS :: IsStrategy f => (Strategy a -> Strategy a) -> f a -> Strategy a
 liftS f = f . toStrategy
@@ -184,20 +187,23 @@ derivationList cmpRule s a0 = rec a0 (toPrefix s)
 
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]
-rulesInStrategy s = [ r | r <- toList (toStrategyTree s), isMajor r ]
+rulesInStrategy s = concatMap f (toList (toStrategyTree s))
+ where
+   f (LeafRule r) | isMajor r = [r]
+   f _ = []
 
 instance LiftView LabeledStrategy where
-   liftViewIn = mapRules . liftViewIn
+   liftViewIn v (LS n s) = LS n (liftViewIn v s)
 
 instance LiftView Strategy where
-   liftViewIn = mapRulesS . liftViewIn
+   liftViewIn v = S . fmap (liftViewIn v) . toStrategyTree
 
 -- | Apply a function to all the rules that make up a labeled strategy
-mapRules :: (Rule a -> Rule b) -> LabeledStrategy a -> LabeledStrategy b
+mapRules :: (Rule a -> Rule a) -> LabeledStrategy a -> LabeledStrategy a
 mapRules f (LS n s) = LS n (mapRulesS f s)
 
-mapRulesS :: (Rule a -> Rule b) -> Strategy a -> Strategy b
-mapRulesS f = S . fmap f . unS
+mapRulesS :: (Rule a -> Rule a) -> Strategy a -> Strategy a
+mapRulesS = onStrategyTree . mapRulesInTree
 
 -- | Use a function as do-after hook for all rules in a labeled strategy, but
 -- also use the function beforehand
@@ -219,12 +225,8 @@ toStrategyTree = unS . toStrategy
 onStrategyTree :: IsStrategy f => (StrategyTree a -> StrategyTree a) -> f a -> Strategy a
 onStrategyTree f = S . f . toStrategyTree
 
-getProcess :: IsStrategy f => f a -> Process (Rule a)
-getProcess = foldUnwind emptyAlg
-   { fNode  = fromNary . combinator
-   , fLeaf  = single
-   , fLabel = \l p -> enterRule l ~> p .*. (exitRule l ~> done)
-   } . toStrategyTree
+getProcess :: IsStrategy f => f a -> Process (Leaf a)
+getProcess = treeToProcess . toStrategyTree
 
 -------------------------
 

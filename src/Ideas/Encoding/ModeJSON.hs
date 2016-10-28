@@ -51,7 +51,7 @@ extractExerciseId json =
       Array (hd:_) -> extractExerciseId hd
       _ -> fail "no code"
  where
-   p c = not (isAlphaNum c || isSpace c || c `elem` ".-")
+   p c = not (isAlphaNum c || isSpace c || c `elem` ".-_")
 
 addVersion :: String -> JSON -> JSON
 addVersion str json =

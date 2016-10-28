@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, DeriveDataTypeable #-}
+{-# LANGUAGE Rank2Types, DeriveDataTypeable, ExistentialQuantification #-}
 -----------------------------------------------------------------------------
 -- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -32,7 +32,7 @@ module Ideas.Common.Exercise
      -- * Type casting
    , useTypeable, castFrom, castTo
      -- * Exercise properties
-   , setProperty, getProperty
+   , setProperty, getProperty, setPropertyF, getPropertyF
      -- * Random generators
    , simpleGenerator, useGenerator, randomTerm, randomTerms
      -- * Derivations
@@ -42,7 +42,6 @@ module Ideas.Common.Exercise
 
 import Data.Char
 import Data.Data
-import Data.Dynamic
 import Data.List
 import Data.Maybe
 import Data.Ord
@@ -129,7 +128,7 @@ data Exercise a =
    , hasTypeable :: Maybe (IsTypeable a)
      -- | Extra exercise-specific properties, not used by the default
      -- feedback services.
-   , properties :: M.Map String Dynamic -- extra, domain-specific properties
+   , properties :: M.Map Id (Dynamic a) -- extra, domain-specific properties
    }
 
 instance Eq (Exercise a) where
@@ -202,7 +201,7 @@ isSuitable = evalPredicate . suitable
 
 -- | Returns a sorted list of rules, without duplicates.
 ruleset :: Exercise a -> [Rule (Context a)]
-ruleset ex = nub (sortBy compareId list)
+ruleset ex = nub (sortBy (ruleOrdering ex) list)
  where
    list = extraRules ex ++ rulesInStrategy (strategy ex)
 
@@ -310,8 +309,10 @@ withoutContext f a b = fromMaybe False (fromContextWith2 f a b)
 -----------------------------------------------------------------------------
 -- Type casting
 
-data IsTypeable a = IT (forall b . Typeable b => a -> Maybe b)
-                       (forall b . Typeable b => b -> Maybe a)
+data IsTypeable a = IT 
+   { getCastFrom :: forall b . Typeable b => a -> Maybe b
+   , getCastTo   :: forall b . Typeable b => b -> Maybe a
+   }
 
 -- | Encapsulates a type representation (use for 'hasTypeable' field).
 useTypeable :: Typeable a => Maybe (IsTypeable a)
@@ -320,28 +321,55 @@ useTypeable = Just (IT cast cast)
 -- | Cast from polymorphic type (to exercise-specific type).
 -- This only works if 'hasTypeable' contains the right type representation.
 castFrom :: Typeable b => Exercise a -> a -> Maybe b
-castFrom ex a = do
-   IT f _ <- hasTypeable ex
-   f a
+castFrom ex a = hasTypeable ex >>= (`getCastFrom` a)
 
 -- | Cast to polymorphic type (from exercise-specific type).
 -- This only works if 'hasTypeable' contains the right type representation.
 castTo :: Typeable b => Exercise a -> b -> Maybe a
-castTo ex a = do
-   IT _ g <- hasTypeable ex
-   g a
+castTo ex a = hasTypeable ex >>= (`getCastTo` a)
 
 -----------------------------------------------------------------------------
 -- Exercise-specific properties
 
 -- | Set an exercise-specific property (with a dynamic type)
-setProperty :: Typeable val => String -> val -> Exercise a -> Exercise a
-setProperty key a ex =
-   ex { properties = M.insert key (toDyn a) (properties ex) }
+setProperty :: (IsId n, Typeable val) => n -> val -> Exercise a -> Exercise a
+setProperty key a = insertProperty key (Dyn (cast a))
+
+-- | Set an exercise-specific property (with a dynamic type) that is 
+-- parameterized over the exercise term.
+setPropertyF :: (IsId n, Typeable f) => n -> f a -> Exercise a -> Exercise a
+setPropertyF key a = insertProperty key (DynF (castF a))
+
+insertProperty :: IsId n => n -> Dynamic a -> Exercise a -> Exercise a
+insertProperty key d ex =
+   ex { properties = M.insert (newId key) d (properties ex) }
 
 -- | Get an exercise-specific property (of a dynamic type)
-getProperty :: Typeable val => String -> Exercise a -> Maybe val
-getProperty key ex = M.lookup key (properties ex) >>= fromDynamic
+getProperty :: (IsId n, Typeable val) => n -> Exercise a -> Maybe val
+getProperty key ex = lookupProperty key ex >>= \d -> 
+   case d of 
+      Dyn m -> m
+      _     -> Nothing
+   
+-- | Get an exercise-specific property (of a dynamic type) that is 
+-- parameterized over the exercise term.
+getPropertyF :: (IsId n, Typeable f) => n -> Exercise a -> Maybe (f a)
+getPropertyF key ex = lookupProperty key ex >>= \d ->
+   case d of
+      DynF m -> m
+      _      -> Nothing
+
+lookupProperty :: IsId n => n -> Exercise a -> Maybe (Dynamic a)
+lookupProperty key = M.lookup (newId key) . properties
+
+-- | Values with a dynamic type that is parameterized over the exercise term.
+data Dynamic a = Dyn  (forall b . Typeable b => Maybe b)
+               | DynF (forall f . Typeable f => Maybe (f a))
+
+castF :: (Typeable f, Typeable g) => f a -> Maybe (g a)
+castF = fmap fromIdentity . gcast1 . Identity
+
+newtype Identity a = Identity { fromIdentity :: a}
 
 ---------------------------------------------------------------
 -- Random generators

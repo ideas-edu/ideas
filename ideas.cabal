@@ -1,5 +1,5 @@
 name:                   ideas
-version:                1.5
+version:                1.5.1
 synopsis:               Feedback services for intelligent tutoring systems
 homepage:               http://ideas.cs.uu.nl/www/
 description:
@@ -49,7 +49,7 @@ Library
   ghc-options:       -Wall
   hs-source-dirs:    src
   Build-Depends:     
-     base >= 4.2 && < 5,
+     base >= 4.8 && < 5,
      cgi >= 3001.3.0.0,
      QuickCheck >= 2.8,
      Diff,
@@ -156,6 +156,7 @@ Library
     Ideas.Service.Types
     Ideas.Text.HTML
     Ideas.Text.JSON
+    Ideas.Text.Latex
     Ideas.Text.OpenMath.Dictionary.Arith1
     Ideas.Text.OpenMath.Dictionary.Calculus1
     Ideas.Text.OpenMath.Dictionary.Fns1

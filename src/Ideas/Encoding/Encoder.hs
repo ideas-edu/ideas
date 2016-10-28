@@ -16,8 +16,12 @@ module Ideas.Encoding.Encoder
      Converter(..)
    , getExercise, getQCGen, getScript, getRequest
    , withExercise, withOpenMath, withJSONTerm, (//)
-     -- * JSON terms
-   , termToJSON, jsonToTerm, jsonTermView
+     -- * JSON support
+   , hasJSONView, addJSONView, jsonEncoding
+   , termToJSON, jsonToTerm
+     -- * Latex support
+   , hasLatexEncoding, latexPrinter, latexPrinterContext
+   , latexEncoding, latexEncodingWith
      -- * Options
    , Options, simpleOptions, makeOptions
      -- * Encoder datatype
@@ -35,6 +39,7 @@ module Ideas.Encoding.Encoder
 import Control.Applicative as Export hiding (Const)
 import Control.Arrow as Export
 import Control.Monad
+import Data.Maybe
 import Data.Monoid as Export
 import Ideas.Common.Library hiding (exerciseId, symbol)
 import Ideas.Common.Utils (Some(..))
@@ -43,6 +48,7 @@ import Ideas.Service.FeedbackScript.Parser (parseScriptSafe, Script)
 import Ideas.Service.Request
 import Ideas.Service.Types
 import Ideas.Text.JSON hiding (String)
+import Ideas.Text.Latex
 import Ideas.Text.XML
 import Test.QuickCheck.Random
 import qualified Control.Category as C
@@ -85,6 +91,18 @@ p // a = do
 -------------------------------------------------------------------
 -- JSON terms
 
+jsonProperty :: Id
+jsonProperty = describe "Support for JSON encoding" $ newId "json"
+
+hasJSONView :: Exercise a -> Maybe (View JSON a)
+hasJSONView = getPropertyF jsonProperty
+
+addJSONView :: View JSON a -> Exercise a -> Exercise a
+addJSONView = setPropertyF jsonProperty
+
+jsonEncoding :: InJSON a => Exercise a -> Exercise a
+jsonEncoding = addJSONView (makeView fromJSON toJSON)
+
 termToJSON :: Term -> JSON
 termToJSON term =
    case term of
@@ -120,14 +138,41 @@ jsonToTerm json =
  where
    f (s, x) = [TVar s, jsonToTerm x]
 
-jsonTermView :: InJSON a => View Term a
-jsonTermView = makeView (fromJSON . termToJSON) (jsonToTerm . toJSON)
-
 trueSymbol, falseSymbol, nullSymbol, objectSymbol :: Symbol
 trueSymbol   = newSymbol "true"
 falseSymbol  = newSymbol "false"
 nullSymbol   = newSymbol "null"
 objectSymbol = newSymbol "object"
+
+-------------------------------------------------------------------
+-- Latex support
+
+latexProperty :: Id
+latexProperty = describe "Support for LaTeX encoding" $ newId "latex"
+
+newtype F a = F { unF :: a -> Latex }
+
+getF :: Exercise a -> Maybe (F a)
+getF = getPropertyF latexProperty
+
+hasLatexEncoding :: Exercise a -> Bool
+hasLatexEncoding = isJust . getF
+
+-- | Uses exercise pretty-printer in case latex encoding is missing.
+latexPrinter :: Exercise a -> a -> Latex
+latexPrinter ex = maybe (toLatex . prettyPrinter ex) unF (getF ex)
+
+-- | Uses exercise pretty-printer in case latex encoding is missing.
+latexPrinterContext :: Exercise a -> Context a -> Latex
+latexPrinterContext ex ctx = 
+   let def = toLatex (prettyPrinterContext ex ctx)
+   in fromMaybe def (liftM2 unF (getF ex) (fromContext ctx))
+
+latexEncoding :: ToLatex a => Exercise a -> Exercise a
+latexEncoding = latexEncodingWith toLatex
+
+latexEncodingWith :: (a -> Latex) -> Exercise a -> Exercise a
+latexEncodingWith = setPropertyF latexProperty . F
 
 -------------------------------------------------------------------
 -- Options

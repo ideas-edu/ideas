@@ -3,6 +3,4 @@ extra-package-dbs: []
 packages:
 - '.'
 extra-deps:
-- cgi-3001.3.0.1
-- text-1.2.2.1
-resolver: lts-5.17
+resolver: lts-6.1

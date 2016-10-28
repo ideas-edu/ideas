@@ -20,7 +20,8 @@ module Ideas.Common.Rule.Transformation
      -- * Constructor functions
    , MakeTrans(..)
    , transPure, transMaybe, transList, transEnvMonad
-   , transRewrite, transRef
+   , transRewrite, transRef, transAddEnv, transAddEnv2
+   , transReadRefM, transWriteRefM
      -- * Lifting transformations
    , transUseEnvironment
    , transLiftView, transLiftViewIn
@@ -33,6 +34,7 @@ module Ideas.Common.Rule.Transformation
 
 import Control.Arrow
 import Data.Maybe
+import Data.Monoid
 import Data.Typeable
 import Ideas.Common.Classes
 import Ideas.Common.Context
@@ -50,15 +52,20 @@ data Trans a b where
    Zero     :: Trans a b
    List     :: (a -> [b]) -> Trans a b
    Rewrite  :: RewriteRule a -> Trans a a
-   EnvMonad :: (a -> EnvMonad b) -> Trans a b
-   Ref      :: Typeable a => Ref a -> Trans a a
-   UseEnv   :: Trans a b -> Trans (a, Environment) (b, Environment)
+   EnvMonad :: (a -> EnvMonad b) -> Trans a b -- ?
+   Ref      :: Typeable a => Ref a -> Trans a a -- ?
+   UseEnv   :: Trans a b -> Trans (a, Environment) (b, Environment) -- ?
    (:>>:)   :: Trans a b -> Trans b c -> Trans a c
    (:**:)   :: Trans a c -> Trans b d -> Trans (a, b) (c, d)
    (:++:)   :: Trans a c -> Trans b d -> Trans (Either a b) (Either c d)
-   Apply    :: Trans (Trans a b, a) b
+   Apply    :: Trans (Trans a b, a) b -- ?
    Append   :: Trans a b -> Trans a b -> Trans a b
+   AddEnv   :: Environment -> Trans a b -> Trans a b -- ?
+   AddEnv2  :: (a -> Maybe Environment) -> Trans a a -- ?
 
+   ReadRefM  :: Ref a -> Trans x (Maybe a)
+   WriteRefM :: Typeable a => Ref a -> Trans (Maybe a) ()
+   
 instance C.Category Trans where
    id  = arr id
    (.) = flip (:>>:)
@@ -124,6 +131,18 @@ transRewrite = Rewrite
 transRef :: Typeable a => Ref a -> Trans a a
 transRef = Ref
 
+transAddEnv :: Environment -> Trans a b -> Trans a b
+transAddEnv = AddEnv
+
+transAddEnv2 :: (a -> Maybe Environment) -> Transformation a
+transAddEnv2 = AddEnv2
+
+transReadRefM  :: Ref a -> Trans x (Maybe a)
+transReadRefM = ReadRefM
+
+transWriteRefM :: Typeable a => Ref a -> Trans (Maybe a) ()
+transWriteRefM = WriteRefM
+
 -----------------------------------------------------------
 --- Lifting transformations
 
@@ -180,6 +199,12 @@ transApplyWith env trans a =
       f :++: g   -> either (make Left f) (make Right g) a
       Apply      -> uncurry (transApplyWith env) a
       Append f g -> transApplyWith env f a ++ transApplyWith env g a
+      AddEnv e f -> transApplyWith (e <> env) f a
+      AddEnv2 f  -> case f a of
+                       Just e  -> [(a, e <> env)]
+                       Nothing -> []
+      ReadRefM r  -> [(r ? env, env)]
+      WriteRefM r -> [((), maybe (deleteRef r) (\x -> insertRef r x) a env)]
  where
    make :: (b -> c) -> Trans a b -> a -> [(c, Environment)]
    make f g = map (mapFirst f) . transApplyWith env g
@@ -193,9 +218,11 @@ getRewriteRules trans =
 instance HasRefs (Trans a b) where
    allRefs trans =
       case trans of
-         Ref r      -> [Some r]
-         EnvMonad f -> envMonadFunctionRefs f
-         _          -> descendTrans allRefs trans
+         Ref r       -> [Some r]
+         EnvMonad f  -> envMonadFunctionRefs f
+         ReadRefM r  -> [Some r]
+         WriteRefM r -> [Some r]
+         _           -> descendTrans allRefs trans
 
 isZeroTrans :: Trans a b -> Bool
 isZeroTrans = or . rec
@@ -211,9 +238,10 @@ isZeroTrans = or . rec
 descendTrans :: Monoid m => (forall x y . Trans x y -> m) -> Trans a b -> m
 descendTrans make trans =
    case trans of
-      UseEnv f   -> make f
-      f :>>: g   -> make f `mappend` make g
-      f :**: g   -> make f `mappend` make g
-      f :++: g   -> make f `mappend` make g
-      Append f g -> make f `mappend` make g
-      _          -> mempty
+      UseEnv f     -> make f
+      f :>>: g     -> make f `mappend` make g
+      f :**: g     -> make f `mappend` make g
+      f :++: g     -> make f `mappend` make g
+      Append f g   -> make f `mappend` make g
+      AddEnv _ f   -> make f
+      _            -> mempty

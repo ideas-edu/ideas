@@ -95,8 +95,14 @@ instance Uniplate Term where
 -- * Type class for conversion to/from terms
 
 class IsTerm a where
-   toTerm   :: a -> Term
-   fromTerm :: MonadPlus m => Term -> m a
+   toTerm       :: a -> Term
+   toTermList   :: [a] -> Term
+   fromTerm     :: MonadPlus m => Term -> m a
+   fromTermList :: MonadPlus m => Term -> m [a]
+   -- default implementation
+   toTermList   = TList . map toTerm
+   fromTermList (TList xs) = mapM fromTerm xs
+   fromTermList _ = fail "fromTermList: not a list"
 
 termView :: IsTerm a => View Term a
 termView = makeView fromTerm toTerm
@@ -137,13 +143,23 @@ instance IsTerm Double where
 
 instance IsTerm Char where
    toTerm c = TVar [c]
-   fromTerm (TVar [c]) = return c
-   fromTerm _          = fail "fromTerm"
-
+   toTermList = TVar
+   fromTerm (TVar [c])   = return c
+   fromTerm _            = fail "fromTerm: not a TVar"
+   fromTermList (TVar s) = return s
+   fromTermList _        = fail "fromTermList: not a TVar"
+   
 instance IsTerm a => IsTerm [a] where
-   toTerm = TList . map toTerm
-   fromTerm (TList xs) = mapM fromTerm xs
-   fromTerm _ = fail "fromTerm"
+   toTerm = toTermList
+   fromTerm = fromTermList
+
+nothingSymbol :: Symbol
+nothingSymbol = newSymbol "Nothing"
+
+instance IsTerm a => IsTerm (Maybe a) where
+   toTerm = maybe (symbol nothingSymbol) toTerm
+   fromTerm (TCon s []) | s == nothingSymbol = return Nothing
+   fromTerm t = liftM Just (fromTerm t) 
 
 fromTermM :: (Monad m, IsTerm a) => Term -> m a
 fromTermM = maybe (fail "fromTermM") return . fromTerm

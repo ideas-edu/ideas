@@ -21,6 +21,7 @@ import Data.Maybe
 import Ideas.Common.CyclicTree hiding (label)
 import Ideas.Common.Id
 import Ideas.Common.Rule
+import Ideas.Common.Rewriting (IsTerm)
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.StrategyTree
@@ -132,7 +133,7 @@ check = toStrategy . checkRule "check"
 --   strategy only succeeds if this is not the case (otherwise it fails).
 not :: IsStrategy f => f a -> Strategy a
 not = decl1 $ "not" .=. Unary (\x ->
-   Sequence.single $ checkRule "core.not" $ null . runProcess x)
+   Sequence.single $ LeafRule $ checkRule "core.not" $ null . runProcess x)
 
 -- | Repeat a strategy zero or more times (greedy version of 'many')
 repeat :: IsStrategy f => f a -> Strategy a
@@ -168,6 +169,10 @@ until p = while (Prelude.not . p)
 -- | Apply the strategies from the list exhaustively (until this is no longer possible)
 exhaustive :: IsStrategy f => [f a] -> Strategy a
 exhaustive = declN $ "exhaustive" .=. Nary Derived.exhaustive
+
+-- | The structure of a dynamic strategy depends on the current term
+dynamic :: (IsId n, IsStrategy f, IsTerm a) => n -> (a -> f a) -> Strategy a
+dynamic n f = toStrategy $ makeDynamic n (toStrategyTree . f)
 
 -- Graph to strategy ----------------------
 

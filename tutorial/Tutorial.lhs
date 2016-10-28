@@ -1,7 +1,7 @@
 <div class="page-header"> 
 <div class="ideas-logo"><img src="ideas.png"/></div>
 <div class="ounl-logo"><img src="ounl.png"/></div>
-&nbsp; Ideas tutorial (version 1.4)
+&nbsp; Ideas tutorial (version 1.5)
 </div>
 <div class="page-content">
 
@@ -12,8 +12,8 @@ This tutorial shows how to make a simple domain reasoner with the Ideas framewor
 We start by defining a minimal exercise and show how this can be compiled into an 
 application that can handle feedback requests. Make sure you have installed a 
 Haskell compiler and the cabal package manager 
-(see [Haskell Platform](http://www.haskell.org/platform/)): we strongly advise
-to use ghc version 7.8 (or Haskell Platform 2014.2.0.0) to work with our software.
+(see [Haskell Platform](http://www.haskell.org/platform/)): we advise
+to use ghc version 7.10 (or Haskell Platform 7.10.3) to work with our software.
 Get the latest version of the [ideas package](http://hackage.haskell.org/package/ideas) 
 from Hackage and install the library with the following command:
 
@@ -77,7 +77,7 @@ data type is used to indicate that the rule cannot be applied.
 >    f _ = Nothing
 
 Have a look at the type of the `makeRule` function in the 
-[documentation](http://ideas.cs.uu.nl/docs/latest/api/Common-Rule-Abstract.html#v:makeRule),
+[documentation](http://hackage.haskell.org/package/ideas-1.5/docs/Ideas-Common-Rule-Abstract.html#v:makeRule),
 and observe that the function
 is overloaded in both arguments. The first argument is the rule's identifier,
 which has to be part of the `IsId` type class. The `String` type is an instance
@@ -132,7 +132,7 @@ We can now make a minimal exercise that uses the `addOrNegate` strategy
 for solving: why we need to lift the strategy to a `Context` is explained in 
 step 2 of this tutorial. Exercises should have a unique identifier for 
 identification. We use `show` for pretty-printing expressions. See the 
-[documentation](http://ideas.cs.uu.nl/docs/latest/api/Common-Exercise.html) 
+[documentation](http://hackage.haskell.org/package/ideas-1.5/docs/Ideas-Common-Exercise.html#t:Exercise) 
 of the `Exercise` data type for the other components of an 
 exercise: `emptyExercise` provides sensible defaults so we do not have to 
 worry about these fields yet.
@@ -345,8 +345,9 @@ Running the executable with the `--help` flag gives the options.
 ~~~~
 $ Tutorial.exe --help
 IDEAS: Intelligent Domain-specific Exercise Assistants
-Copyright 2015, Open Universiteit Nederland
-version 1.4, revision 8775, logging disabled
+Copyright 2016, Open Universiteit Nederland
+version 1.5, revision cfe6d70796113f07095f803981e1d2cc222d4b8e, logging disabled
+
 
 Usage: ideas [OPTION]     (by default, CGI protocol)
 
@@ -376,7 +377,7 @@ The result of this request is:
 
 ~~~~ {#mycode .xml}
 $ Tutorial.exe --file=exerciselist.xml                                          
-<reply result="ok" version="1.4 (8775)">
+<reply result="ok" version="1.5 (cfe6d..)">
   <list>
     <elem exerciseid="eval.basic" description="Evaluate an expression (basic)" status="Experimental"/>
     <elem exerciseid="eval.full" description="Evaluate an expression (full)" status="Experimental"/>
@@ -403,7 +404,7 @@ mathematical objects. The result of this request is:
 
 ~~~~ {#mycode .xml}   
 $ Tutorial.exe --file=solution.xml
-<reply result="ok" version="1.4 (8775)">
+<reply result="ok" version="1.5 (cfe6d..)">
   <list>
     <elem ruleid="eval.negate">
       <expr>
@@ -447,5 +448,5 @@ Suggested exercises
 
 </div>
 <div class="page-footer">
-This tutorial is based on ideas-1.4. Last changed: October 2015
+This tutorial is based on ideas-1.5. Last changed: May 2016
 </div>

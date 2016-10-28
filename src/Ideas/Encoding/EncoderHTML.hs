@@ -50,11 +50,13 @@ htmlEncoderAt n dr = do
    req <- getRequest
    let lm = f (maybe staticLinks dynamicLinks (cgiBinary req))
        f  = if n==0 then id else linksUp n
-   makePage lm dr <$> encodeType lm dr
+   ex <- getExercise
+   makePage lm dr ex <$> encodeType lm dr
 
-makePage :: LinkManager -> DomainReasoner -> HTMLBuilder -> HTMLPage
-makePage lm dr a =
+makePage :: LinkManager -> DomainReasoner -> Exercise a -> HTMLBuilder -> HTMLPage
+makePage lm dr ex a =
    addCSS (urlForCSS lm "ideas.css") $
+   (if hasLatexEncoding ex then addScript mathJaxUrl else id) $
    htmlPage "Ideas: documentation pages" $ mconcat
       [ divClass "page-header" $ mconcat
            [ divClass  "ideas-logo" space
@@ -67,6 +69,10 @@ makePage lm dr a =
       , divClass "page-footer" $
            string (fullVersion dr)
       ]
+ where
+   mathJaxUrl = 
+      "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"
+
 
 encodeType :: LinkManager -> DomainReasoner -> HTMLEncoder a (TypedValue (Type a))
 encodeType lm dr =
@@ -424,7 +430,7 @@ encodeExampleList lm = exerciseEncoder $ \ex pairs -> mconcat $
       munless (isStatic lm) (
          let st = emptyStateContext ex x
          in spanClass "statelink" $ linkToState lm st $ external lm)
-      <> spanClass "term" (string (prettyPrinterContext ex x))
+      <> htmlContext False ex x
 
 external :: BuildXML a => LinkManager -> a
 external lm = element "img"
@@ -457,17 +463,27 @@ htmlDerivation lm = exerciseEncoder $ \ex d ->
              , showEnv env1 -- local environment
              , showEnv env2 -- global environment (diff)
              ]
-       textLines = mconcat . intersperse br . map string . lines
-       forTerm a =
-          divClass "term" $ textLines $ prettyPrinterContext ex a
+       forTerm = htmlContext True ex
    in htmlDerivationWith before forStep forTerm (diffEnvironment d)
 
 htmlState :: LinkManager -> HTMLEncoder a (State a)
 htmlState lm = makeEncoder $ \state ->
    para $ divClass "state" $
       stateLink lm state
-      <> divClass "term" (string $ prettyPrinterContext (exercise state) (stateContext state))
+      <> htmlContext True (exercise state) (stateContext state)
       <> string "ready: " <> bool (finished state)
+
+htmlContext :: Bool -> Exercise a -> Context a -> HTMLBuilder
+htmlContext useDiv ex = f "term" . textLines . printer
+ where
+   textLines = mconcat . intersperse br . map string . lines
+   f = if useDiv then divClass else spanClass
+   
+   inline s = "\\(" ++ s ++ "\\)"
+   printer 
+      | hasLatexEncoding ex = inline . show . latexPrinterContext ex
+      | otherwise = prettyPrinterContext ex
+   
 
 stateLink :: LinkManager -> State a -> HTMLBuilder
 stateLink lm st

@@ -27,7 +27,6 @@ module Ideas.Common.Rule.Parameter
 import Control.Arrow
 import Ideas.Common.Context
 import Ideas.Common.Environment
-import Ideas.Common.Id
 import Ideas.Common.Rule.EnvironmentMonad
 import Ideas.Common.Rule.Transformation
 import Ideas.Common.View
@@ -51,7 +50,7 @@ transLookup3 :: (Typeable a, Typeable b, Typeable c) => Ref a -> Ref b -> Ref c 
 transLookup3 r1 r2 r3 f = transLookup1 r1 $ transLookup2 r2 r3 . f
 
 transLookupM1 :: Typeable a => Ref a -> (Maybe a -> Transformation b) -> Transformation b
-transLookupM1 r1 f = ((transGetEnvironment >>> arr (f . (r1 ?))) &&& identity) >>> app
+transLookupM1 r1 f = ((transReadRefM r1 >>> arr f) &&& identity) >>> app
 
 transLookupM2 :: (Typeable a, Typeable b) => Ref a -> Ref b -> (Maybe a -> Maybe b -> Transformation c) -> Transformation c
 transLookupM2 r1 r2 f = transLookupM1 r1 $ transLookupM1 r2 . f
@@ -60,7 +59,7 @@ transLookupM3 :: (Typeable a, Typeable b, Typeable c) => Ref a -> Ref b -> Ref c
 transLookupM3 r1 r2 r3 f = transLookupM1 r1 $ transLookupM2 r2 r3 . f
 
 lookupRef :: Typeable b => Ref b -> ParamTrans b a -> Transformation a
-lookupRef r f = ((transGetEnvironment >>> transMaybe (r ?)) &&& identity) >>> f
+lookupRef r f = ((transReadRefM r >>> transMaybe id) &&& identity) >>> f
 
 supplyContextParameters :: ParamTrans b a -> (a -> EnvMonad b) -> Transformation (Context a)
 supplyContextParameters f g = transLiftContextIn $
@@ -69,19 +68,17 @@ supplyContextParameters f g = transLiftContextIn $
 parameter1Ref :: Typeable a => Ref a -> (a -> Transformation b) -> ParamTrans a b
 parameter1Ref r f = first (transRef r >>> arr f) >>> app
 
-parameter1 :: (IsId n1, Reference a) => n1 -> (a -> Transformation b) -> ParamTrans a b
-parameter1 = parameter1Ref . makeRef
+parameter1 :: Typeable a => Ref a -> (a -> Transformation b) -> ParamTrans a b
+parameter1 = parameter1Ref
 
-parameter2 :: (IsId n1, IsId n2, Reference a, Reference b)
-           => n1 -> n2 -> (a -> b -> Transformation c) -> ParamTrans (a, b) c
+parameter2 :: (Typeable a, Typeable b) => Ref a -> Ref b -> (a -> b -> Transformation c) -> ParamTrans (a, b) c
 parameter2 n1 n2 f = first (bindValue n1 *** bindValue n2 >>> arr (uncurry f)) >>> app
 
-parameter3 :: (IsId n1, IsId n2, IsId n3, Reference a, Reference b, Reference c)
-           => n1 -> n2 -> n3 -> (a -> b -> c -> Transformation d) -> ParamTrans (a, b, c) d
+parameter3 :: (Typeable a, Typeable b, Typeable c) => Ref a -> Ref b -> Ref c -> (a -> b -> c -> Transformation d) -> ParamTrans (a, b, c) d
 parameter3 n1 n2 n3 f = first ((\(a, b, c) -> (a, (b, c))) ^>>
    bindValue n1 *** (bindValue n2 *** bindValue n3) >>^
    (\(a, (b, c)) -> f a b c))
            >>> app
 
-bindValue :: (IsId n, Reference a) => n -> Trans a a
-bindValue = transRef . makeRef
+bindValue :: Typeable a => Ref a -> Trans a a
+bindValue = transRef

@@ -15,7 +15,7 @@
 
 module Ideas.Common.Environment
    ( -- * Reference
-     Ref, Reference(..)
+     Ref, Reference(..), mapRef
      -- * Binding
    , Binding, makeBinding
    , fromBinding, showValue, getTermValue
@@ -78,6 +78,14 @@ instance Reference a => Reference [a] where
    makeRef = makeRefList
 
 instance (Reference a, Reference b) => Reference (a, b)
+
+mapRef :: Typeable b => Isomorphism a b -> Ref a -> Ref b
+mapRef iso r = r
+   { printer = printer r . to iso
+   , parser  = fmap (from iso) . parser r
+   , refView = refView r >>> toView iso
+   , refCast = cast
+   }
 
 -----------------------------------------------------------
 -- Binding

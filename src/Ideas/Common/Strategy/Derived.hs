@@ -30,29 +30,19 @@ import Ideas.Common.Strategy.Symbol
 import Prelude hiding (sequence, replicate, repeat)
 import qualified Prelude
 
-split :: (AtomicSymbol a, Choice b)
-      => (Process a -> Process a -> b) -> b -> Process a -> b
-split op = split2 (op . single) op
-
--- Specialized version of split that also takes an operator for the special case
--- that the left part of the split is a single symbol.
-split2 :: (AtomicSymbol a, Choice b)
-       => (a -> Process a -> b) -> (Process a -> Process a -> b) -> b -> Process a -> b
-split2 op1 op2 = withMenu f
+split :: AtomicSymbol a => (a -> Bool) -> (Process a -> Process a) -> Process a -> Process a
+split skipCond cont = rec (0 :: Int)
  where
-   f a | a == atomicOpen = rec (op2 . (a ~>)) 1
-       | otherwise       = op1 a
-
-   rec acc n
-      | n == 0    = acc done
-      | otherwise = withMenu g empty
+   rec n = withMenu op empty
     where
-      g a = rec (acc . (a ~>)) (pm a n)
-
-   pm :: AtomicSymbol a => a -> Int -> Int
-   pm a | a == atomicOpen  = succ
-        | a == atomicClose = pred
-        | otherwise        = id
+      op a = a ~> rest
+       where
+         next | a == atomicOpen  = n+1
+              | a == atomicClose = n-1
+              | otherwise        = n
+         rest | skipCond a       = rec next
+              | next > 0         = rec next
+              | otherwise        = cont
 
 -- atomic prefix
 (!*>) :: AtomicSymbol a => Process a -> Process a -> Process a
@@ -81,21 +71,7 @@ p <%> q =
  where
    bothAreDone = withMenu stop2 . withMenu stop2 done
    stop2 _ _   = empty
-
--- left-interleaving
-(%>>) :: (AtomicSymbol a, LabelSymbol a) => Process a -> Process a -> Process a
-p %>> q = rec (0 :: Int) p
- where
-   rec n = withMenu op empty
-    where
-      op a = a ~> rest
-       where
-         next | a == atomicOpen  = n+1
-              | a == atomicClose = n-1
-              | otherwise        = n
-         rest | isEnterSymbol a  = rec next
-              | next > 0         = rec next
-              | otherwise        = (<%> q)
+   r %>> s     = split isEnterSymbol (<%> s) r
 
 -- | Allows all permutations of the list
 permute :: (Choice a, Sequence a) => [a] -> a
@@ -109,17 +85,13 @@ permute as
 
 -- Alternate combinator
 (<@>) :: AtomicSymbol a => Process a -> Process a -> Process a
-p0 <@> q0 = rec q0 p0
+p <@> q = bothOk p q .|. (p @>> q)
  where
-   rec q  = let op b r = b .*. rec r q
-            in split op (bothOk q)
-   bothOk = withMenu (\_ _ -> empty) done
+   bothOk  = withMenu (\_ _ -> empty) done
+   r @>> s = split (const False) (s <@>) r
 
 inits :: AtomicSymbol a => Process a -> Process a
-inits = rec
- where
-   rec p = done .|. split op empty p
-   op x  = (x .*.) . rec
+inits p = done .|. split (const False) inits p
 
 many :: (Sequence a, Fix a, Choice a) => a -> a
 many s = fix $ \x -> done .|. (s .*. x)

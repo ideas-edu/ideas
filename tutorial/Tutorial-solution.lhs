@@ -1,7 +1,7 @@
 <div class="page-header"> 
 <div class="ideas-logo"><img src="ideas.png"/></div>
 <div class="ounl-logo"><img src="ounl.png"/></div>
-&nbsp; Ideas tutorial (version 1.5)
+&nbsp; Ideas tutorial (version 1.5) - solutions to suggested exercices
 </div>
 <div class="page-content">
 

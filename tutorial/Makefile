@@ -10,9 +10,11 @@ ghci:
 
 install:
 	cp Tutorial.html $(INSTALLDIR)/index.html
+	cp Tutorial-solution.html $(INSTALLDIR)/Tutorial-solution.html
 	cp Tutorial.css $(INSTALLDIR)
 	cp ideas.png $(INSTALLDIR)
 	cp ounl.png $(INSTALLDIR)
 
 %.html: %.lhs
 	pandoc --from markdown+lhs --to html --css=Tutorial.css -o $@ $<
+	pandoc --from markdown+lhs --to html --css=Tutorial-solution.css -o $@ $<

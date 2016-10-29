@@ -9,12 +9,12 @@
 Making a domain reasoner for programming
 ========================================
 
-This tutorial show a number of applications of the Ideas framework, demonstrated
-with an example for a programming tutor. 
+This tutorial shows a number of applications of the Ideas framework, demonstrated
+by a domain reasoner for a programming tutor. 
 
 We define a new module and specify a number of inputs that we need. 
 
-> {-# LANGUAGE DeriveDataTypeable, FlexibleInstances #-}
+> {-# LANGUAGE DeriveDataTypeable #-}
 >
 > module ProgTutorial where
 > 
@@ -23,6 +23,7 @@ We define a new module and specify a number of inputs that we need.
 > import Data.Generics.Uniplate.DataOnly (transformBi)
 > import Data.Data
 > import Control.Monad.State
+> import Text.PrettyPrint.Leijen as P
 
 Defining the domain
 -------------------
@@ -31,7 +32,6 @@ We start with defining data types for a simple imperative programming language
 that supports a conditional statements (If), loops (While), assignments and
 sequences of statements. The language supports integers and booleans, and a
 number of unary and binary operations.
-
 
 > data Program = Program [Stat] deriving (Data, Typeable, Eq, Read)
 > 
@@ -43,15 +43,15 @@ number of unary and binary operations.
 >    deriving (Data, Typeable, Eq, Read)
 > 
 > data Expr = 
->        Add      Expr Expr 
->    |   Negate   Expr 
+>        Op       Expr BinOp Expr
 >    |   LitExpr  Literal 
->    |   Mult     Expr Expr
 >    |   Not      Expr
 >    |   Unknown  Int
->    |   Con      Int -- tutorial
+>    |   IdExpr   Ident
 >    deriving (Data, Typeable, Eq, Read)
 > 
+> data BinOp = Add | Mult | And | Or | Eqs deriving (Data, Typeable, Eq, Read)
+>    
 > data Ident = Ident String deriving (Data, Typeable, Eq, Read)
 > 
 > data Literal = 
@@ -59,34 +59,42 @@ number of unary and binary operations.
 >  |  BoolLit  Bool 
 >  deriving (Data, Typeable, Eq, Read)
 
-> instance Show Ident where
->     show (Ident s) = s
+To show code in a nice way we provide an instance of the
+<a href="http://hackage.haskell.org/package/wl-pprint">Pretty</a> class for each
+data type. 
 
-> instance Show Literal where
->     show (IntLit i)  = show i
->     show (BoolLit b) = show b
+> instance Pretty BinOp where
+>     pretty Add    = text "+"
+>     pretty Mult   = text "*" 
+>     pretty And    = text "AND" 
+>     pretty Or     = text "OR" 
+>     pretty Eqs    = text "=="
 >
-> instance Show Expr where
->     show (Add x y)    = show x ++ " + " ++ show y 
->     show (Negate x)   = "-" ++ show x 
->     show (LitExpr l)  = show l 
->     show (Mult x y)   = show x ++ " * " ++ show y 
->     show (Not x)      = "!" ++ show x 
->     show (Unknown i)  = "?" ++ show i
->     show (Con x)      = show x -- tutorial
+> instance Pretty Ident where
+>     pretty (Ident s) = text s
 >
-> instance Show Stat where
->     show (If e s)     = "if " ++ show e ++ "\n\t" ++ show s
->     show (While e s)  = "while " ++ show e ++ "\n\t" ++ show s
->     show (Assign i e) = show i ++ " = " ++ show e
->     show (Seq stats ) = unlines (map ((++ ";") . show) stats)
+> instance Pretty Literal where
+>     pretty (IntLit i)  = int i
+>     pretty (BoolLit b) = text (if b then "true" else "false")
 >
-> instance Show Program where
->     show (Program stats) = unlines (map ((++ ";") . show) stats)
+> instance Pretty Expr where
+>     pretty (Op x op y)  = pretty x P.<+> pretty op P.<+> pretty y
+>     pretty (LitExpr l)  = pretty l
+>     pretty (Not x)      = text "!" P.<+> pretty x 
+>     pretty (Unknown i)  = text "?" P.<+> pretty i
+>     pretty (IdExpr i)   = pretty i
+>
+> instance Pretty Stat where
+>     pretty (If e s)     = text "if" P.<+> pretty e P.<$> indent 4 (pretty s)
+>     pretty (While e s)  = text "while" P.<+> pretty e P.<$> indent 4 (pretty s)
+>     pretty (Assign i e) = pretty i P.<+> text "=" P.<+> pretty e P.<> semi
+>     pretty (Seq stats)  = vsep (map pretty stats)
+>
+> instance Pretty Program where
+>     pretty (Program stats) = vsep (map pretty stats)
 
-**Uniplate library**
-
-<a href="http://community.haskell.org/~ndm/darcs/uniplate/uniplate.htm">Uniplate generics library</a>
+We use the <a href="http://community.haskell.org/~ndm/darcs/uniplate/uniplate.htm">Uniplate
+generics library</a> and derive instances for each data type.
 
 > {-!
 > deriving instance UniplateDirect Expr
@@ -96,16 +104,36 @@ number of unary and binary operations.
 > deriving instance UniplateDirect Literal
 > !-}
 
-We define three statements and create a model program that is the sequence of
+We define some expressions and statements and create a model program that is the sequence of
 these statements.
 
-> stat1, stat2, stat3 :: Stat
+> stat1, stat2, stat3, stat4 :: Stat
 > stat1 = Assign (Ident "x") (LitExpr (IntLit 5))
-> stat2 = If (LitExpr (BoolLit True)) stat1
-> stat3 = While (LitExpr (BoolLit False)) stat2
+> stat2 = Assign (Ident "y") (LitExpr (IntLit 1))
+> stat3 = If cond1 (Seq [stat1, stat2])
+> stat4 = While cond2 stat3
+>
+> cond1, cond2 :: Expr
+> cond1 = Op (IdExpr (Ident "b")) Eqs (LitExpr (BoolLit True))
+> cond2 = Op (IdExpr (Ident "i")) Eqs (LitExpr (IntLit 10))
 > 
 > model1 :: Program 
-> model1 = Program [stat1, stat2, stat3, stat1]
+> model1 = Program [stat1, stat3, stat4, stat1]
+
+Printing this model shows the following code:
+
+~~~~{.java}
+Main> pretty model1
+x = 5;
+if b == true
+    x = 5;
+    y = 1;
+while i == 10
+    if b == True
+        x = 5;
+        y = 1;
+x = 5;
+~~~~
 
 Creating rules to build a program
 ---------------------------------
@@ -121,11 +149,11 @@ We need a rule that can append a statement at the end of a program.
 >       f :: Stat -> Program -> Maybe Program
 >       f s (Program stats) = Just $ Program (stats ++ [s])
 
-We need a model program to know what statements need to be appended. We generate
-the strategy dynamically with the model program as input.
+We need a model program to know what statements need to be appended. We dynamically generate
+the strategy with the model program as input.
 
 > makeStrategy :: Program -> LabeledStrategy Program
-> makeStrategy (Program stats) = label "todo" $ sequenceS (map appendStat stats)
+> makeStrategy (Program stats) = label "Example ex" $ sequenceS (map appendStat stats)
 
 We can now define programming exercises. 
 
@@ -138,7 +166,7 @@ We can now define programming exercises.
 >                        newId "p.ex1"
 >   , status        = Experimental
 >   --, strategy      = liftToContext (makeStrategy model1)
->   , prettyPrinter = show
+>   , prettyPrinter = show . pretty
 >   , parser        = readM
 >   --, equivalence   = withoutContext eqExpr
 >   --, ready         = predicate isCon

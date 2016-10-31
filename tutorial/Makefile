@@ -17,4 +17,4 @@ install:
 
 %.html: %.lhs
 	pandoc --from markdown+lhs --to html --css=Tutorial.css -o $@ $<
-	pandoc --from markdown+lhs --to html --css=Tutorial-solution.css -o $@ $<
+

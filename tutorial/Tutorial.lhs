@@ -446,6 +446,8 @@ Suggested exercises
     * Find the least common multiple of the denominators
     * Rewrite top-heavy fractions to mixed fractions (e.g. 17/14 becomes 1+3/14)
 
+We have developed [our own solution](http://ideas.science.uu.nl/tutorial/Tutorial-solution.html) to these exercises.
+
 </div>
 <div class="page-footer">
 This tutorial is based on ideas-1.5. Last changed: May 2016

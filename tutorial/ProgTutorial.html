@@ -66,18 +66,22 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <span class="kw">import </span><span class="dt">Ideas.Common.Library</span>
 <span class="kw">import </span><span class="dt">Ideas.Main.Default</span>
+<span class="kw">import qualified</span> <span class="dt">Ideas.Service.State</span> <span class="kw">as</span> <span class="dt">Ideas</span>
+<span class="kw">import </span><span class="dt">Ideas.Service.BasicServices</span> <span class="kw">as</span> <span class="dt">BS</span>
+<span class="kw">import </span><span class="dt">Ideas.Service.Diagnose</span>
 <span class="kw">import </span><span class="dt">Data.Generics.Uniplate.DataOnly</span> (transformBi)
 <span class="kw">import </span><span class="dt">Data.Data</span>
+<span class="kw">import </span><span class="dt">Data.Maybe</span>
 <span class="kw">import </span><span class="dt">Control.Monad.State</span>
 <span class="kw">import </span><span class="dt">Text.PrettyPrint.Leijen</span> <span class="kw">as</span> <span class="dt">P</span></code></pre></div>
 <h2 id="defining-the-domain">Defining the domain</h2>
-<p>We start with defining data types for a simple imperative programming language that supports a conditional statements (If), loops (While), assignments and sequences of statements. The language supports integers and booleans, and a number of unary and binary operations.</p>
+<p>We start with defining data types for a simple imperative programming language that supports conditional statements (If), loops (While), assignments and sequences of statements. The language supports integers and booleans, and a number of unary and binary operations.</p>
 <div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Program</span> <span class="fu">=</span> <span class="dt">Program</span> [<span class="dt">Stat</span>] <span class="kw">deriving</span> (<span class="dt">Data</span>, <span class="dt">Typeable</span>, <span class="dt">Eq</span>, <span class="dt">Read</span>)
 
 <span class="kw">data</span> <span class="dt">Stat</span> <span class="fu">=</span> 
        <span class="dt">If</span>       <span class="dt">Expr</span> <span class="dt">Stat</span>
    <span class="fu">|</span>   <span class="dt">While</span>    <span class="dt">Expr</span> <span class="dt">Stat</span>
-   <span class="fu">|</span>   <span class="dt">Assign</span>   <span class="dt">Ident</span> <span class="dt">Expr</span>
+   <span class="fu">|</span>   <span class="dt">Assign</span>   <span class="dt">String</span> <span class="dt">Expr</span>
    <span class="fu">|</span>   <span class="dt">Seq</span>      [<span class="dt">Stat</span>]
    <span class="kw">deriving</span> (<span class="dt">Data</span>, <span class="dt">Typeable</span>, <span class="dt">Eq</span>, <span class="dt">Read</span>)
 
@@ -85,28 +89,23 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
        <span class="dt">Op</span>       <span class="dt">Expr</span> <span class="dt">BinOp</span> <span class="dt">Expr</span>
    <span class="fu">|</span>   <span class="dt">LitExpr</span>  <span class="dt">Literal</span> 
    <span class="fu">|</span>   <span class="dt">Not</span>      <span class="dt">Expr</span>
-   <span class="fu">|</span>   <span class="dt">Unknown</span>  <span class="dt">Int</span>
-   <span class="fu">|</span>   <span class="dt">IdExpr</span>   <span class="dt">Ident</span>
+   <span class="fu">|</span>   <span class="dt">Hole</span>     <span class="dt">Int</span>
+   <span class="fu">|</span>   <span class="dt">Ident</span>    <span class="dt">String</span>
    <span class="kw">deriving</span> (<span class="dt">Data</span>, <span class="dt">Typeable</span>, <span class="dt">Eq</span>, <span class="dt">Read</span>)
 
-<span class="kw">data</span> <span class="dt">BinOp</span> <span class="fu">=</span> <span class="dt">Add</span> <span class="fu">|</span> <span class="dt">Mult</span> <span class="fu">|</span> <span class="dt">And</span> <span class="fu">|</span> <span class="dt">Or</span> <span class="fu">|</span> <span class="dt">Eqs</span> <span class="kw">deriving</span> (<span class="dt">Data</span>, <span class="dt">Typeable</span>, <span class="dt">Eq</span>, <span class="dt">Read</span>)
-   
-<span class="kw">data</span> <span class="dt">Ident</span> <span class="fu">=</span> <span class="dt">Ident</span> <span class="dt">String</span> <span class="kw">deriving</span> (<span class="dt">Data</span>, <span class="dt">Typeable</span>, <span class="dt">Eq</span>, <span class="dt">Read</span>)
+<span class="kw">data</span> <span class="dt">BinOp</span> <span class="fu">=</span> <span class="dt">Add</span> <span class="fu">|</span> <span class="dt">Mul</span> <span class="fu">|</span> <span class="dt">And</span> <span class="fu">|</span> <span class="dt">Or</span> <span class="fu">|</span> <span class="dt">Eqs</span> <span class="kw">deriving</span> (<span class="dt">Data</span>, <span class="dt">Typeable</span>, <span class="dt">Eq</span>, <span class="dt">Read</span>)
 
 <span class="kw">data</span> <span class="dt">Literal</span> <span class="fu">=</span> 
-    <span class="dt">IntLit</span>   <span class="dt">Int</span> 
- <span class="fu">|</span>  <span class="dt">BoolLit</span>  <span class="dt">Bool</span> 
- <span class="kw">deriving</span> (<span class="dt">Data</span>, <span class="dt">Typeable</span>, <span class="dt">Eq</span>, <span class="dt">Read</span>)</code></pre></div>
+       <span class="dt">IntLit</span>   <span class="dt">Int</span> 
+   <span class="fu">|</span>   <span class="dt">BoolLit</span>  <span class="dt">Bool</span> 
+   <span class="kw">deriving</span> (<span class="dt">Data</span>, <span class="dt">Typeable</span>, <span class="dt">Eq</span>, <span class="dt">Read</span>)</code></pre></div>
 <p>To show code in a nice way we provide an instance of the <a href="http://hackage.haskell.org/package/wl-pprint">Pretty</a> class for each data type.</p>
 <div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">Pretty</span> <span class="dt">BinOp</span> <span class="kw">where</span>
     pretty <span class="dt">Add</span>    <span class="fu">=</span> text <span class="st">&quot;+&quot;</span>
-    pretty <span class="dt">Mult</span>   <span class="fu">=</span> text <span class="st">&quot;*&quot;</span> 
+    pretty <span class="dt">Mul</span>    <span class="fu">=</span> text <span class="st">&quot;*&quot;</span> 
     pretty <span class="dt">And</span>    <span class="fu">=</span> text <span class="st">&quot;AND&quot;</span> 
     pretty <span class="dt">Or</span>     <span class="fu">=</span> text <span class="st">&quot;OR&quot;</span> 
     pretty <span class="dt">Eqs</span>    <span class="fu">=</span> text <span class="st">&quot;==&quot;</span>
-
-<span class="kw">instance</span> <span class="dt">Pretty</span> <span class="dt">Ident</span> <span class="kw">where</span>
-    pretty (<span class="dt">Ident</span> s) <span class="fu">=</span> text s
 
 <span class="kw">instance</span> <span class="dt">Pretty</span> <span class="dt">Literal</span> <span class="kw">where</span>
     pretty (<span class="dt">IntLit</span> i)  <span class="fu">=</span> int i
@@ -116,8 +115,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
     pretty (<span class="dt">Op</span> x op y)  <span class="fu">=</span> pretty x <span class="fu">P.&lt;+&gt;</span> pretty op <span class="fu">P.&lt;+&gt;</span> pretty y
     pretty (<span class="dt">LitExpr</span> l)  <span class="fu">=</span> pretty l
     pretty (<span class="dt">Not</span> x)      <span class="fu">=</span> text <span class="st">&quot;!&quot;</span> <span class="fu">P.&lt;+&gt;</span> pretty x 
-    pretty (<span class="dt">Unknown</span> i)  <span class="fu">=</span> text <span class="st">&quot;?&quot;</span> <span class="fu">P.&lt;+&gt;</span> pretty i
-    pretty (<span class="dt">IdExpr</span> i)   <span class="fu">=</span> pretty i
+    pretty (<span class="dt">Hole</span> i)     <span class="fu">=</span> text <span class="st">&quot;?&quot;</span>  <span class="co">-- P.&lt;+&gt; pretty i</span>
+    pretty (<span class="dt">Ident</span> s)   <span class="fu">=</span> pretty s
 
 <span class="kw">instance</span> <span class="dt">Pretty</span> <span class="dt">Stat</span> <span class="kw">where</span>
     pretty (<span class="dt">If</span> e s)     <span class="fu">=</span> text <span class="st">&quot;if&quot;</span> <span class="fu">P.&lt;+&gt;</span> pretty e <span class="fu">P.&lt;$&gt;</span> indent <span class="dv">4</span> (pretty s)
@@ -132,19 +131,20 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="co">deriving instance UniplateDirect Expr</span>
 <span class="co">deriving instance UniplateDirect Program</span>
 <span class="co">deriving instance UniplateDirect Stat</span>
-<span class="co">deriving instance UniplateDirect Ident</span>
 <span class="co">deriving instance UniplateDirect Literal</span>
 <span class="co">!-}</span></code></pre></div>
 <p>We define some expressions and statements and create a model program that is the sequence of these statements.</p>
 <div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell">stat1, stat2, stat3,<span class="ot"> stat4 ::</span> <span class="dt">Stat</span>
-stat1 <span class="fu">=</span> <span class="dt">Assign</span> (<span class="dt">Ident</span> <span class="st">&quot;x&quot;</span>) (<span class="dt">LitExpr</span> (<span class="dt">IntLit</span> <span class="dv">5</span>))
-stat2 <span class="fu">=</span> <span class="dt">Assign</span> (<span class="dt">Ident</span> <span class="st">&quot;y&quot;</span>) (<span class="dt">LitExpr</span> (<span class="dt">IntLit</span> <span class="dv">1</span>))
+stat1 <span class="fu">=</span> <span class="dt">Assign</span> <span class="st">&quot;x&quot;</span> (<span class="dt">LitExpr</span> (<span class="dt">IntLit</span> <span class="dv">5</span>))
+stat2 <span class="fu">=</span> <span class="dt">Assign</span> <span class="st">&quot;y&quot;</span> (<span class="dt">LitExpr</span> (<span class="dt">IntLit</span> <span class="dv">1</span>))
 stat3 <span class="fu">=</span> <span class="dt">If</span> cond1 (<span class="dt">Seq</span> [stat1, stat2])
 stat4 <span class="fu">=</span> <span class="dt">While</span> cond2 stat3
 
-cond1,<span class="ot"> cond2 ::</span> <span class="dt">Expr</span>
-cond1 <span class="fu">=</span> <span class="dt">Op</span> (<span class="dt">IdExpr</span> (<span class="dt">Ident</span> <span class="st">&quot;b&quot;</span>)) <span class="dt">Eqs</span> (<span class="dt">LitExpr</span> (<span class="dt">BoolLit</span> <span class="dt">True</span>))
-cond2 <span class="fu">=</span> <span class="dt">Op</span> (<span class="dt">IdExpr</span> (<span class="dt">Ident</span> <span class="st">&quot;i&quot;</span>)) <span class="dt">Eqs</span> (<span class="dt">LitExpr</span> (<span class="dt">IntLit</span> <span class="dv">10</span>))
+cond1, cond2, exp1,<span class="ot"> expSimple ::</span> <span class="dt">Expr</span>
+cond1     <span class="fu">=</span> <span class="dt">Op</span> (<span class="dt">Ident</span> <span class="st">&quot;b&quot;</span>) <span class="dt">Eqs</span> (<span class="dt">LitExpr</span> (<span class="dt">BoolLit</span> <span class="dt">True</span>))
+cond2     <span class="fu">=</span> <span class="dt">Op</span> (<span class="dt">Ident</span> <span class="st">&quot;i&quot;</span>) <span class="dt">Eqs</span> (<span class="dt">LitExpr</span> (<span class="dt">IntLit</span> <span class="dv">10</span>))
+exp1      <span class="fu">=</span> <span class="dt">Op</span> (<span class="dt">Op</span> (<span class="dt">Not</span> (<span class="dt">Ident</span> <span class="st">&quot;p&quot;</span>)) <span class="dt">And</span> (<span class="dt">Not</span> (<span class="dt">Ident</span> <span class="st">&quot;q&quot;</span>))) <span class="dt">Eqs</span> (<span class="dt">LitExpr</span> (<span class="dt">BoolLit</span> <span class="dt">True</span>))
+expSimple  <span class="fu">=</span> <span class="dt">Op</span> (<span class="dt">Ident</span> <span class="st">&quot;p&quot;</span>) <span class="dt">And</span> (<span class="dt">Ident</span> <span class="st">&quot;q&quot;</span>)
 
 <span class="ot">model1 ::</span> <span class="dt">Program</span> 
 model1 <span class="fu">=</span> <span class="dt">Program</span> [stat1, stat3, stat4, stat1]</code></pre></div>
@@ -163,28 +163,42 @@ x = <span class="dv">5</span>;</code></pre></div>
 <p>A simple way to construct a program step by step is to append new statements to a program, starting with an empty program.</p>
 <p>We need a rule that can append a statement at the end of a program.</p>
 <div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">appendStat ::</span> <span class="dt">Stat</span> <span class="ot">-&gt;</span> <span class="dt">Rule</span> <span class="dt">Program</span>
-appendStat s <span class="fu">=</span> describe <span class="st">&quot;Append a statement&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;p.append&quot;</span> (f s)
+appendStat s <span class="fu">=</span> describe (<span class="st">&quot;Append a statement: &quot;</span> <span class="fu">++</span> show (pretty s)) <span class="fu">$</span> makeRule <span class="st">&quot;p.append&quot;</span> (f s)
    <span class="kw">where</span>
 <span class="ot">      f ::</span> <span class="dt">Stat</span> <span class="ot">-&gt;</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Program</span>
       f s (<span class="dt">Program</span> stats) <span class="fu">=</span> <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Program</span> (stats <span class="fu">++</span> [s])</code></pre></div>
-<p>We need a model program to know what statements need to be appended. We dynamically generate the strategy with the model program as input.</p>
+<p>We need a model program to know what statements need to be appended. We dynamically generate the strategy with the model program as input. We use sequenceS, which is an alias for the sequence strategy combinator. Note that using the sequence combinator means that we do not allow adding statements in a different order, even though this might be allowed for some statements.</p>
 <div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">makeStrategy ::</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">LabeledStrategy</span> <span class="dt">Program</span>
-makeStrategy (<span class="dt">Program</span> stats) <span class="fu">=</span> label <span class="st">&quot;Example ex&quot;</span> <span class="fu">$</span> sequenceS (map appendStat stats)</code></pre></div>
+makeStrategy (<span class="dt">Program</span> stats) <span class="fu">=</span> label <span class="st">&quot;Example exercise&quot;</span> <span class="fu">$</span> sequenceS (map appendStat stats)</code></pre></div>
 <p>We can now define programming exercises.</p>
 <div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">makeProgExercise ::</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">Exercise</span> <span class="dt">Program</span>
-makeProgExercise model <span class="fu">=</span> progExercise { strategy <span class="fu">=</span> liftToContext (makeStrategy model)}</code></pre></div>
-<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">progExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Program</span>
-progExercise <span class="fu">=</span> emptyExercise
-  { exerciseId    <span class="fu">=</span> describe <span class="st">&quot;todo&quot;</span> <span class="fu">$</span>
-                       newId <span class="st">&quot;p.ex1&quot;</span>
-  , status        <span class="fu">=</span> <span class="dt">Experimental</span>
-  <span class="co">--, strategy      = liftToContext (makeStrategy model1)</span>
-  , prettyPrinter <span class="fu">=</span> show <span class="fu">.</span> pretty
-  , parser        <span class="fu">=</span> readM
-  <span class="co">--, equivalence   = withoutContext eqExpr</span>
-  <span class="co">--, ready         = predicate isCon</span>
-  <span class="co">--, examples      = level Easy [expr1] ++ level Medium [expr2]</span>
-  }</code></pre></div>
+makeProgExercise model <span class="fu">=</span> (progExercise <span class="st">&quot;&quot;</span>) { strategy <span class="fu">=</span> liftToContext (makeStrategy model)}</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">progExercise ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Exercise</span> <span class="dt">Program</span>
+progExercise exDesc <span class="fu">=</span> emptyExercise
+    { exerciseId    <span class="fu">=</span> describe exDesc <span class="fu">$</span> newId <span class="st">&quot;p.ex&quot;</span>
+    , status        <span class="fu">=</span> <span class="dt">Experimental</span>
+    , prettyPrinter <span class="fu">=</span> show <span class="fu">.</span> pretty
+    , parser        <span class="fu">=</span> readM
+    , similarity    <span class="fu">=</span> withoutContext (<span class="fu">==</span>)
+    , equivalence   <span class="fu">=</span> withoutContext (<span class="fu">==</span>)
+    <span class="co">--, ready         = predicate isCon</span>
+    <span class="co">--, examples      = level Easy [expr1] ++ level Medium [expr2]</span>
+    }</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">refineExercise ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Exercise</span> <span class="dt">Expr</span>
+refineExercise exDesc <span class="fu">=</span> emptyExercise
+    { exerciseId    <span class="fu">=</span> describe exDesc <span class="fu">$</span> newId <span class="st">&quot;p.r.ex&quot;</span>
+    , status        <span class="fu">=</span> <span class="dt">Experimental</span>
+    , prettyPrinter <span class="fu">=</span> show <span class="fu">.</span> pretty
+    , parser        <span class="fu">=</span> readM
+    , similarity    <span class="fu">=</span> withoutContext (<span class="fu">==</span>)
+    , equivalence   <span class="fu">=</span> withoutContext (<span class="fu">&lt;==&gt;</span>)
+    <span class="co">--, ready         = predicate isCon</span>
+    <span class="co">--, examples      = level Easy [expr1] ++ level Medium [expr2]</span>
+    }</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">(&lt;==&gt;) ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+(<span class="dt">Hole</span> _) <span class="fu">&lt;==&gt;</span> _ <span class="fu">=</span> <span class="dt">True</span>
+_ <span class="fu">&lt;==&gt;</span> (<span class="dt">Hole</span> _)  <span class="fu">=</span> <span class="dt">True</span>
+x <span class="fu">&lt;==&gt;</span> y  <span class="fu">=</span> x <span class="fu">==</span> y   </code></pre></div>
 <p>We can test this by printing the steps for building the model program.</p>
 <div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Main</span> <span class="fu">&gt;</span> printDerivation (makeProgExercise model1) (<span class="dt">Program</span> []) 
    <span class="ot">=&gt;</span> p<span class="fu">.</span>append
@@ -200,23 +214,26 @@ x <span class="fu">=</span> <span class="dv">5</span>;
 while <span class="dt">False</span>
    <span class="kw">if</span> <span class="dt">True</span>
    x <span class="fu">=</span> <span class="dv">5</span>;</code></pre></div>
+<p>Note that <em>nested</em> statements are not built up step by step in this simple example.</p>
 <h2 id="refining-expressions-in-a-program">Refining expressions in a program</h2>
-<p>The Unknown constructor of the Expr data type can be used as a placeholder for expressions. The constructors contains an integer that uniquely identifies it. An Unknown (represented by a question mark) can be used by students if they do not know how to define the necessary expression yet.</p>
-<p>We need a refine rule that can replace an Unknown by an expression.</p>
-<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">refineExpr ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Rule</span> <span class="dt">Program</span>
-refineExpr expr i <span class="fu">=</span> describe <span class="st">&quot;todo&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;p.refine&quot;</span> (f expr i)
+<p>The Hole constructor of the Expr data type can be used as a placeholder for expressions. The constructor contains an integer that uniquely identifies it. A Hole (represented by a question mark) can be used by students if they do not know how to define the necessary expression yet.</p>
+<p>We need a refine rule that can replace an Hole by an expression.</p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="co">-- refineExpr :: Expr -&gt; Int -&gt; Rule Program</span>
+refineExpr expr i <span class="fu">=</span> describe (<span class="st">&quot;refine expression &quot;</span> <span class="fu">++</span> show (pretty expr)) <span class="fu">$</span> makeRule ruleId (f expr i)
    <span class="kw">where</span>
-<span class="ot">      f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Program</span>
+      <span class="co">--f :: Expr -&gt; Int -&gt; Program -&gt; Maybe Program</span>
       f expr i p <span class="fu">=</span> <span class="dt">Just</span> <span class="fu">$</span> transformBi refine&#39; p
 
       refine&#39; e
-         <span class="fu">|</span> unknownId e <span class="fu">==</span> <span class="dt">Just</span> i <span class="fu">=</span> expr 
-         <span class="fu">|</span> otherwise             <span class="fu">=</span> e</code></pre></div>
+         <span class="fu">|</span> holeId e <span class="fu">==</span> <span class="dt">Just</span> i <span class="fu">=</span> expr 
+         <span class="fu">|</span> otherwise             <span class="fu">=</span> e
+
+      ruleId <span class="fu">=</span> <span class="st">&quot;p.refine&quot;</span> <span class="fu">++</span> show i</code></pre></div>
 <p>The following helper function is needed to find the question mark that needs to be replaced.</p>
-<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">unknownId ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span>
-unknownId (<span class="dt">Unknown</span> i)   <span class="fu">=</span> <span class="dt">Just</span> i
-unknownId _             <span class="fu">=</span> <span class="dt">Nothing</span></code></pre></div>
-<p>During the generation of the strategy we need to number the Unknown that are encountered. We use the State monad to keep track of the next number we may assign.</p>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">holeId ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span>
+holeId (<span class="dt">Hole</span> i)   <span class="fu">=</span> <span class="dt">Just</span> i
+holeId _          <span class="fu">=</span> <span class="dt">Nothing</span></code></pre></div>
+<p>During the generation of the strategy we need to number the Hole that are encountered. We use the State monad to keep track of the next number we may assign.</p>
 <div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">type</span> <span class="dt">StrategyGenerator</span> a <span class="fu">=</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">State</span> <span class="dt">Int</span> (<span class="dt">LabeledStrategy</span> <span class="dt">Program</span>)</code></pre></div>
 <p>For the main data types of our domain (Program, Stat and Expr) we define an instance of GenStrategy.</p>
 <div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">type</span> <span class="dt">GenState</span> a <span class="fu">=</span> <span class="dt">State</span> <span class="dt">Int</span> a
@@ -230,16 +247,82 @@ unknownId _             <span class="fu">=</span> <span class="dt">Nothing</span
 <div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">GenStrategy</span> <span class="dt">Stat</span> <span class="kw">where</span>
   genStrat loc (<span class="dt">Assign</span> i e) <span class="fu">=</span> <span class="kw">do</span>
       newId <span class="ot">&lt;-</span> getNextNr
-      return <span class="fu">$</span> label <span class="st">&quot;&quot;</span> <span class="fu">$</span> appendStat (<span class="dt">Assign</span> i (<span class="dt">Unknown</span> newId)) <span class="fu">.*.</span> refineExpr e newId
+      return <span class="fu">$</span> label <span class="st">&quot;&quot;</span> <span class="fu">$</span> appendStat (<span class="dt">Assign</span> i (<span class="dt">Hole</span> newId)) <span class="fu">.*.</span> refineExpr e newId
   genStrat loc stat <span class="fu">=</span> return <span class="fu">$</span> label <span class="st">&quot;&quot;</span> <span class="fu">$</span> appendStat stat</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="co">--instance GenStrategy Expr where</span>
+<span class="ot">genStratE ::</span> <span class="dt">Data</span> a <span class="ot">=&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">State</span> <span class="dt">Int</span> (<span class="dt">LabeledStrategy</span> a)
+genStratE loc expr <span class="fu">=</span> <span class="kw">case</span> expr <span class="kw">of</span>
+    <span class="dt">Not</span> e <span class="ot">-&gt;</span> <span class="kw">do</span>
+        (newId, s) <span class="ot">&lt;-</span> idAndS e
+        return <span class="fu">$</span> label <span class="st">&quot;&quot;</span> <span class="fu">$</span> refineExpr (<span class="dt">Not</span> (<span class="dt">Hole</span> newId)) loc <span class="fu">.*.</span> s
+    <span class="dt">Op</span> e1 op e2 <span class="ot">-&gt;</span> <span class="kw">do</span>
+        (newId1, s1) <span class="ot">&lt;-</span> idAndS e1
+        (newId2, s2) <span class="ot">&lt;-</span> idAndS e2
+        return <span class="fu">$</span> label <span class="st">&quot;&quot;</span> <span class="fu">$</span> refineExpr (<span class="dt">Op</span> (<span class="dt">Hole</span> newId1) op (<span class="dt">Hole</span> newId2)) loc <span class="fu">.*.</span> label <span class="st">&quot;refine left or right&quot;</span> (s1 <span class="fu">.%.</span> s2)
+    _ <span class="ot">-&gt;</span> <span class="kw">do</span>
+        return <span class="fu">$</span> label <span class="st">&quot;&quot;</span> <span class="fu">$</span> refineExpr expr loc
+    <span class="kw">where</span>
+        idAndS expr <span class="fu">=</span> <span class="kw">do</span>    
+            newId <span class="ot">&lt;-</span> getNextNr
+            s <span class="ot">&lt;-</span> genStratE newId expr
+            return (newId, s)</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">getNextNr ::</span> <span class="dt">State</span> <span class="dt">Int</span> <span class="dt">Int</span>
 getNextNr <span class="fu">=</span> <span class="kw">do</span>
     i <span class="ot">&lt;-</span> get
     put (i<span class="fu">+</span><span class="dv">1</span>)
     return i</code></pre></div>
-<p>..</p>
+<p>The other statements, such as If and While, and some expressions also contain expressions.</p>
+<p><strong>Exercise</strong>: Expand the genStrat instance for Stat.</p>
+<p><strong>Exercise</strong>: Implement the genStrat instance for Expr.</p>
 <div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">makeProgExercise2 ::</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">Exercise</span> <span class="dt">Program</span>
-makeProgExercise2 model <span class="fu">=</span> progExercise { strategy <span class="fu">=</span> liftToContext (evalState (genStrat <span class="dv">0</span> model) <span class="dv">0</span>)}</code></pre></div>
-<p>Todo * other statements with expressions * expressions in expressions</p>
+makeProgExercise2 model <span class="fu">=</span> (progExercise <span class="st">&quot;&quot;</span>) { strategy <span class="fu">=</span> liftToContext (evalState (genStrat <span class="dv">0</span> model) <span class="dv">0</span>)}</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">makeRefineEx ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Exercise</span> <span class="dt">Expr</span>
+makeRefineEx model <span class="fu">=</span> (refineExercise <span class="st">&quot;refine&quot;</span>) 
+    { strategy <span class="fu">=</span> liftToContext (evalState (genStratE (<span class="fu">-</span><span class="dv">1</span>) model) <span class="dv">0</span>)}</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">startExpr ::</span> <span class="dt">Expr</span>
+startExpr <span class="fu">=</span> <span class="dt">Hole</span> (<span class="fu">-</span><span class="dv">1</span>)</code></pre></div>
+<h2 id="generating-hints">Generating hints</h2>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">emptyProgram ::</span> <span class="dt">Program</span>
+emptyProgram <span class="fu">=</span> <span class="dt">Program</span> []</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">askHint ::</span> <span class="dt">Exercise</span> a <span class="ot">-&gt;</span> <span class="dt">Ideas.State</span> a <span class="ot">-&gt;</span> <span class="dt">String</span>
+askHint ex state <span class="fu">=</span> <span class="kw">case</span> BS.onefirst state <span class="kw">of</span>
+    (<span class="dt">Left</span> errM)                     <span class="ot">-&gt;</span> errM
+    <span class="dt">Right</span> ((rule, loc, env), state) <span class="ot">-&gt;</span> show (description rule)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">startExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">Ideas.State</span> <span class="dt">Program</span>
+startExercise ex <span class="fu">=</span> Ideas.emptyState ex emptyProgram</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">checkProgress ::</span> <span class="dt">Exercise</span> a <span class="ot">-&gt;</span> <span class="dt">Ideas.State</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Diagnosis</span> a
+checkProgress ex state p <span class="fu">=</span> diagnose state (inContext ex p) <span class="dt">Nothing</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">doRefineEx ::</span> <span class="dt">IO</span> ()
+doRefineEx <span class="fu">=</span> <span class="kw">do</span>
+    <span class="kw">let</span> ex    <span class="fu">=</span> makeRefineEx expSimple
+        state <span class="fu">=</span> Ideas.emptyState ex startExpr
+    exLoop ex state
+    <span class="kw">where</span>
+        exLoop ex state <span class="fu">=</span> <span class="kw">do</span>
+            input <span class="ot">&lt;-</span> getLine
+            <span class="kw">case</span> input <span class="kw">of</span> 
+                <span class="st">&quot;q&quot;</span> <span class="ot">-&gt;</span> return ()
+                _   <span class="ot">-&gt;</span> <span class="kw">do</span>
+                   <span class="kw">let</span> diag <span class="fu">=</span> checkProgress ex state (read<span class="ot"> input ::</span> <span class="dt">Expr</span>)
+                   print diag
+                   <span class="kw">if</span> isJust (newState&#39; diag) <span class="kw">then</span> <span class="kw">do</span>
+                       <span class="kw">let</span> newState <span class="fu">=</span> fromJust <span class="fu">$</span> newState&#39; diag
+                           hint     <span class="fu">=</span> askHint ex newState    
+                       putStrLn <span class="fu">$</span> <span class="st">&quot;Hint &quot;</span> <span class="fu">++</span> hint
+                       exLoop ex newState
+                   <span class="kw">else</span> <span class="kw">do</span>
+                       putStrLn <span class="st">&quot;Try again&quot;</span>
+                       exLoop ex state</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">newState&#39; ::</span> <span class="dt">Diagnosis</span> a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (<span class="dt">Ideas.State</span> a)
+newState&#39; diagnosis <span class="fu">=</span>
+   <span class="kw">case</span> diagnosis <span class="kw">of</span>
+      <span class="dt">Buggy</span> _ _        <span class="ot">-&gt;</span> <span class="dt">Nothing</span>
+      <span class="dt">NotEquivalent</span> _  <span class="ot">-&gt;</span> <span class="dt">Nothing</span>
+      <span class="dt">Similar</span>  _ s     <span class="ot">-&gt;</span> <span class="dt">Just</span> s
+      <span class="dt">WrongRule</span> _ s _  <span class="ot">-&gt;</span> <span class="dt">Just</span> s
+      <span class="dt">Expected</span> _ s _   <span class="ot">-&gt;</span> <span class="dt">Just</span> s
+      <span class="dt">Detour</span>   _ s _ _ <span class="ot">-&gt;</span> <span class="dt">Just</span> s
+      <span class="dt">Correct</span>  _ s     <span class="ot">-&gt;</span> <span class="dt">Just</span> s
+      <span class="dt">Unknown</span>  _ s     <span class="ot">-&gt;</span> <span class="dt">Just</span> s</code></pre></div>
 </body>
 </html>

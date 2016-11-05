@@ -33,7 +33,7 @@ Defining the domain
 -------------------
 
 We start with defining data types for a simple imperative programming language
-that supports a conditional statements (If), loops (While), assignments and
+that supports conditional statements (If), loops (While), assignments and
 sequences of statements. The language supports integers and booleans, and a
 number of unary and binary operations.
 
@@ -57,9 +57,9 @@ number of unary and binary operations.
 > data BinOp = Add | Mul | And | Or | Eqs deriving (Data, Typeable, Eq, Read)
 > 
 > data Literal = 
->     IntLit   Int 
->  |  BoolLit  Bool 
->  deriving (Data, Typeable, Eq, Read)
+>        IntLit   Int 
+>    |   BoolLit  Bool 
+>    deriving (Data, Typeable, Eq, Read)
 
 To show code in a nice way we provide an instance of the
 <a href="http://hackage.haskell.org/package/wl-pprint">Pretty</a> class for each
@@ -150,7 +150,7 @@ We need a rule that can append a statement at the end of a program.
 >       f s (Program stats) = Just $ Program (stats ++ [s])
 
 We need a model program to know what statements need to be appended. We dynamically generate
-the strategy with the model program as input. We use the sequenceS, which is an alias for the
+the strategy with the model program as input. We use sequenceS, which is an alias for the
 sequence strategy combinator. Note that using the sequence combinator means that we do not allow
 adding statements in a different order, even though this might be allowed for some statements.
 
@@ -217,7 +217,7 @@ Refining expressions in a program
 
 The Hole constructor of the Expr data type can be used as a placeholder for
 expressions. The constructor contains an integer that uniquely identifies it.
-An Hole (represented by a question mark) can be used by students
+A Hole (represented by a question mark) can be used by students
 if they do not know how to define the necessary expression yet. 
 
 We need a refine rule that can replace an Hole by an expression. 

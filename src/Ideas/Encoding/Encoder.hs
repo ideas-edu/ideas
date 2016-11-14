@@ -63,10 +63,10 @@ class Converter f where
    run  :: Monad m => f a s t -> Options a -> s -> m t
 
 getExercise :: Converter f => f a s (Exercise a)
-getExercise = fromOptions exercise
+getExercise = fromOptions (fromMaybe emptyExercise . exercise)
 
 getQCGen :: Converter f => f a s QCGen
-getQCGen = fromOptions qcGen
+getQCGen = fromOptions (fromMaybe (mkQCGen 0) . qcGen)
 
 getScript :: Converter f => f a s Script
 getScript = fromOptions script
@@ -178,37 +178,48 @@ latexEncodingWith = setPropertyF latexProperty . F
 -- Options
 
 data Options a = Options
-   { exercise :: Exercise a -- the current exercise
-   , request  :: Request    -- meta-information about the request
-   , qcGen    :: QCGen      -- random number generator
-   , script   :: Script     -- feedback script
+   { exercise :: Maybe (Exercise a)  -- the current exercise
+   , request  :: Request     -- meta-information about the request
+   , qcGen    :: Maybe QCGen -- random number generator
+   , script   :: Script      -- feedback script
    }
+
+instance Monoid (Options a) where
+   mempty = Options Nothing mempty Nothing mempty
+   mappend x y = Options
+      { exercise = make exercise
+      , request  = request x <> request y
+      , qcGen    = make qcGen
+      , script   = script x <> script y
+      }
+    where
+      make f = maybe (f y) Just (f x)
 
 simpleOptions :: Exercise a -> Options a
 simpleOptions ex =
-   let req = emptyRequest {encoding = [EncHTML]}
-       gen = mkQCGen 0
-   in Options ex req gen mempty
+   let req = mempty {encoding = [EncHTML]}
+   in Options (Just ex) req Nothing mempty
 
 makeOptions :: DomainReasoner -> Request -> IO (Some Options)
 makeOptions dr req = do
-   Some ex  <-
-      case exerciseId req of
-         Just code -> findExercise dr code
-         Nothing   -> return (Some emptyExercise)
-
-   scr <- case feedbackScript req of
-             Just s -> parseScriptSafe s
-             Nothing
-                | getId ex == mempty -> return mempty
-                | otherwise          -> defaultScript dr (getId ex)
    gen <- maybe newQCGen (return . mkQCGen) (randomSeed req)
-   return $ Some Options
-      { exercise = ex
-      , request  = req
-      , qcGen    = gen
-      , script   = scr
-      }
+   case exerciseId req of
+      Just code -> do
+         Some ex <- findExercise dr code
+         scr <- case feedbackScript req of
+                   Just s  -> parseScriptSafe s
+                   Nothing -> defaultScript dr (getId ex)
+         return $ Some Options
+            { exercise = Just ex
+            , request  = req
+            , qcGen    = Just gen
+            , script   = scr
+            }
+      Nothing -> 
+         return $ Some mempty
+            { request = req
+            , qcGen   = Just gen
+            }
 
 -------------------------------------------------------------------
 -- Encoder datatype

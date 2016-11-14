@@ -58,7 +58,7 @@ xmlRequest cgiBin xml = do
    enc  <- case findAttribute "encoding" xml of
               Just s  -> readEncoding s
               Nothing -> return []
-   return emptyRequest
+   return mempty
       { serviceId      = newId <$> findAttribute "service" xml
       , exerciseId     = extractExerciseId xml
       , source         = findAttribute "source" xml
@@ -68,7 +68,7 @@ xmlRequest cgiBin xml = do
       , feedbackScript = findAttribute "script" xml
       , randomSeed     = defaultSeed cgiBin $
                             findAttribute "randomseed" xml >>= readM
-      , dataformat     = XML
+      , dataformat     = Just XML
       , encoding       = enc
       }
 

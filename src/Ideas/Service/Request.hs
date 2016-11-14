@@ -27,13 +27,27 @@ data Request = Request
    , cgiBinary      :: Maybe String
    , logSchema      :: Maybe Schema
    , randomSeed     :: Maybe Int
-   , dataformat     :: DataFormat
+   , dataformat     :: Maybe DataFormat -- default: XML
    , encoding       :: [Encoding]
    }
 
-emptyRequest :: Request
-emptyRequest = Request Nothing Nothing Nothing Nothing
-                       Nothing Nothing Nothing Nothing XML []
+instance Monoid Request where 
+   mempty = Request Nothing Nothing Nothing Nothing
+                    Nothing Nothing Nothing Nothing Nothing []
+   mappend x y = Request
+      { serviceId      = make serviceId
+      , exerciseId     = make exerciseId
+      , source         = make source
+      , feedbackScript = make feedbackScript
+      , requestInfo    = make requestInfo
+      , cgiBinary      = make cgiBinary
+      , logSchema      = make logSchema
+      , randomSeed     = make randomSeed
+      , dataformat     = make dataformat
+      , encoding       = encoding x <> encoding y
+      }
+    where
+      make f = maybe (f y) Just (f x)
 
 data Schema = V1 | V2 | NoLogging deriving (Show, Eq)
 
@@ -84,14 +98,14 @@ compactOutput req =
 useOpenMath :: Request -> Bool
 useOpenMath r =
    case dataformat r of
-      JSON -> False
-      XML  -> all (`notElem` encoding r) [EncString, EncHTML]
+      Just JSON -> False
+      _ -> all (`notElem` encoding r) [EncString, EncHTML]
 
 useJSONTerm :: Request -> Bool
 useJSONTerm r =
    case dataformat r of
-      JSON -> EncJSON `elem` encoding r
-      XML  -> False
+      Just JSON -> EncJSON `elem` encoding r
+      _ -> False
 
 useLogging :: Request -> Bool
 useLogging = (EncHTML `notElem`) . encoding

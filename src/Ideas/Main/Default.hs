@@ -142,7 +142,7 @@ process dr logRef cgiBin input = do
  `catch` \ioe -> do
    let msg = "Error: " ++ ioeGetErrorString ioe
    Log.changeLog logRef (\r -> r { Log.errormsg = msg })
-   return (emptyRequest, msg, "text/plain")
+   return (mempty, msg, "text/plain")
  where
    run XML  = processXML
    run JSON = processJSON

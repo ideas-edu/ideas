@@ -70,7 +70,7 @@ jsonRequest cgiBin json = do
    seed <- stringOptionM "randomseed"  json (defaultSeed cgiBin) (return . readM)
    enc  <- stringOptionM "encoding"    json [] readEncoding
    sch  <- stringOptionM "logging"     json Nothing (liftM Just . readSchema)
-   return emptyRequest
+   return mempty
       { serviceId   = srv
       , exerciseId  = exId
       , source      = src
@@ -78,7 +78,7 @@ jsonRequest cgiBin json = do
       , requestInfo = rinf
       , logSchema   = sch
       , randomSeed  = seed
-      , dataformat  = JSON
+      , dataformat  = Just JSON
       , encoding    = enc
       }
 

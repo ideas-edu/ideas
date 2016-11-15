@@ -19,7 +19,7 @@ import Control.Monad
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Common.Utils (Some(..), timedSeconds)
 import Ideas.Encoding.DecoderXML
-import Ideas.Encoding.Encoder (Options, noExercise, makeOptions)
+import Ideas.Encoding.Encoder (Options, makeOptions)
 import Ideas.Encoding.EncoderHTML
 import Ideas.Encoding.EncoderXML
 import Ideas.Encoding.Evaluator
@@ -30,7 +30,7 @@ import Ideas.Text.HTML
 import Ideas.Text.XML
 import System.IO.Error
 
-processXML :: Some Options -> Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
+processXML :: Options -> Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
 processXML options maxTime cgiBin dr logRef input = do
    xml  <- either fail return (parseXML input)
    req  <- xmlRequest cgiBin xml
@@ -77,20 +77,24 @@ defaultSeed :: Maybe String -> Maybe Int -> Maybe Int
 defaultSeed Nothing Nothing = Just 2805 -- magic number
 defaultSeed _ m = m
 
-xmlReply :: Some Options -> DomainReasoner -> LogRef -> Request -> XML -> IO XML
-xmlReply (Some opt1) dr logRef request xml = do
+xmlReply :: Options -> DomainReasoner -> LogRef -> Request -> XML -> IO XML
+xmlReply opt1 dr logRef request xml = do
    srv <- case serviceId request of
              Just a  -> findService dr a
              Nothing -> fail "No service"
+   
+   Some ex <- case exerciseId request of
+                 Just a  -> findExercise dr a
+                 Nothing -> return (Some emptyExercise)
 
-   Some opt2 <- makeOptions dr request
-   let options = noExercise opt1 <> opt2
-
+   opt2 <- makeOptions dr ex request   
+   let options = opt1 <> opt2
+ 
    if htmlOutput request
       -- HTML evaluator
-      then liftM toXML $ evalService logRef options (htmlEvaluator dr) srv xml
+      then liftM toXML $ evalService logRef ex options (htmlEvaluator dr) srv xml
       -- xml evaluator
-      else liftM resultOk $ evalService logRef options xmlEvaluator srv xml
+      else liftM resultOk $ evalService logRef ex options xmlEvaluator srv xml
 
 extractExerciseId :: Monad m => XML -> m Id
 extractExerciseId = liftM newId . findAttribute "exerciseid"

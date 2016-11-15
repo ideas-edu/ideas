@@ -20,7 +20,7 @@ import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (Some(..), timedSeconds)
 import Ideas.Encoding.DecoderJSON
-import Ideas.Encoding.Encoder (Options, noExercise, makeOptions)
+import Ideas.Encoding.Encoder (Options, makeOptions)
 import Ideas.Encoding.EncoderJSON
 import Ideas.Encoding.Evaluator
 import Ideas.Main.Logging (LogRef, changeLog, errormsg)
@@ -28,7 +28,7 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import Ideas.Text.JSON
 
-processJSON :: Some Options -> Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
+processJSON :: Options -> Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
 processJSON options maxTime cgiBin dr logRef input = do
    json <- either fail return (parseJSON input)
    req  <- jsonRequest cgiBin json
@@ -98,11 +98,15 @@ stringOptionM attr json a f =
       Just _  -> fail $ "Invalid value for " ++ attr ++ " (expecting string)"
       Nothing -> return a
 
-myHandler :: Some Options -> DomainReasoner -> LogRef -> Request -> RPCHandler
-myHandler (Some opt1) dr logRef request fun json = do
+myHandler :: Options -> DomainReasoner -> LogRef -> Request -> RPCHandler
+myHandler opt1 dr logRef request fun json = do
    srv <- findService dr (newId fun)
-   Some opt2 <- makeOptions dr request
-   evalService logRef (noExercise opt1 <> opt2) jsonEvaluator srv json
+   Some ex <- case exerciseId request of
+                 Just a  -> findExercise dr a
+                 Nothing -> return (Some emptyExercise)
+   opt2 <- makeOptions dr ex request
+   let options = opt1 <> opt2
+   evalService logRef ex options jsonEvaluator srv json
 
 jsonEvaluator :: Evaluator a JSON JSON
 jsonEvaluator = Evaluator jsonDecoder jsonEncoder

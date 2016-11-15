@@ -36,16 +36,16 @@ logType logRef res tp f =
       []   -> return ()
       hd:_ -> changeLog logRef (f hd)
 
-evalService :: LogRef -> Options a -> Evaluator a b c -> Service -> b -> IO c
-evalService logRef opts f srv b = do
-   res <- eval opts f b (serviceFunction srv)
+evalService :: LogRef -> Exercise a -> Options -> Evaluator a b c -> Service -> b -> IO c
+evalService logRef ex opts f srv b = do
+   res <- eval ex opts f b (serviceFunction srv)
    logType logRef res tState addState
    logType logRef res tRule $ \rl r -> r {ruleid = showId rl}
    logType logRef res tDiagnosis $ \d r -> r {serviceinfo = show d}
    return (evalResult res)
 
-eval :: Options a -> Evaluator a b c -> b -> TypedValue (Type a) -> IO (EvalResult a c)
-eval opts (Evaluator dec enc) b = rec
+eval :: Exercise a -> Options -> Evaluator a b c -> b -> TypedValue (Type a) -> IO (EvalResult a c)
+eval ex opts (Evaluator dec enc) b = rec
  where
    rec tv@(val ::: tp) =
       case tp of
@@ -56,7 +56,7 @@ eval opts (Evaluator dec enc) b = rec
          t1 :-> t2 :-> t3 ->
             rec (uncurry val ::: Pair t1 t2 :-> t3)
          t1 :-> t2 -> do
-            a   <- run (dec t1) opts b
+            a   <- run (dec t1) ex opts b
             res <- rec (val a ::: t2)
             return res { inputValues = (a ::: t1) : inputValues res }
          -- perform IO
@@ -64,5 +64,5 @@ eval opts (Evaluator dec enc) b = rec
             a <- val
             rec (a ::: t)
          _ -> do
-            c <- run enc opts tv
+            c <- run enc ex opts tv
             return $ EvalResult [] tv c

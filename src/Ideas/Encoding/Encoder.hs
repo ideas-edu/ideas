@@ -23,7 +23,7 @@ module Ideas.Encoding.Encoder
    , hasLatexEncoding, latexPrinter, latexPrinterContext
    , latexEncoding, latexEncodingWith
      -- * Options
-   , Options, simpleOptions, makeOptions, noExercise, optionBaseUrl
+   , Options, simpleOptions, makeOptions, optionBaseUrl
      -- * Encoder datatype
    , Encoder, TypedEncoder
    , makeEncoder, encoderFor, exerciseEncoder
@@ -42,7 +42,6 @@ import Control.Monad
 import Data.Maybe
 import Data.Monoid as Export
 import Ideas.Common.Library hiding (exerciseId, symbol)
-import Ideas.Common.Utils (Some(..))
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Parser (parseScriptSafe, Script)
 import Ideas.Service.Request
@@ -59,11 +58,12 @@ import qualified Ideas.Text.JSON as JSON
 -- Converter type class
 
 class Converter f where
-   fromOptions :: (Options a -> t) -> f a s t
-   run  :: Monad m => f a s t -> Options a -> s -> m t
+   fromExercise :: (Exercise a -> t) -> f a s t
+   fromOptions  :: (Options -> t) -> f a s t
+   run :: Monad m => f a s t -> Exercise a -> Options -> s -> m t
 
 getExercise :: Converter f => f a s (Exercise a)
-getExercise = fromOptions (fromMaybe emptyExercise . exercise)
+getExercise = fromExercise id
 
 getBaseUrl :: Converter f => f a s String
 getBaseUrl = fromOptions (fromMaybe "http://ideas.cs.uu.nl/" . baseUrl)
@@ -88,8 +88,9 @@ withJSONTerm = (liftM useJSONTerm getRequest >>=)
 
 (//) :: (Converter f, Monad (f a s2)) => f a s t -> s -> f a s2 t
 p // a = do
-   xs <- fromOptions id
-   run p xs a
+   opts <- fromOptions id
+   ex   <- getExercise
+   run p ex opts a
 
 -------------------------------------------------------------------
 -- JSON terms
@@ -180,19 +181,17 @@ latexEncodingWith = setPropertyF latexProperty . F
 -------------------------------------------------------------------
 -- Options
 
-data Options a = Options
-   { exercise :: Maybe (Exercise a)  -- the current exercise
-   , request  :: Request      -- meta-information about the request
+data Options = Options
+   { request  :: Request      -- meta-information about the request
    , qcGen    :: Maybe QCGen  -- random number generator
    , script   :: Script       -- feedback script
    , baseUrl  :: Maybe String -- for html-encoder's css and image files
    }
 
-instance Monoid (Options a) where
-   mempty = Options Nothing mempty Nothing mempty Nothing
+instance Monoid Options where
+   mempty = Options mempty Nothing mempty Nothing
    mappend x y = Options
-      { exercise = make exercise
-      , request  = request x <> request y
+      { request  = request x <> request y
       , qcGen    = make qcGen
       , script   = script x <> script y
       , baseUrl  = make baseUrl
@@ -200,45 +199,30 @@ instance Monoid (Options a) where
     where
       make f = maybe (f y) Just (f x)
 
--- sets exercise to Nothing, which allows the type parameter to change
-noExercise :: Options a -> Options b
-noExercise o = o {exercise = Nothing}
-
-simpleOptions :: Exercise a -> Options a
-simpleOptions ex =
+simpleOptions :: Options
+simpleOptions =
    let req = mempty {encoding = [EncHTML]}
-   in Options (Just ex) req Nothing mempty Nothing
+   in Options req Nothing mempty Nothing
 
-optionBaseUrl :: String -> Options a
+optionBaseUrl :: String -> Options
 optionBaseUrl base = mempty {baseUrl = Just base}
 
-makeOptions :: DomainReasoner -> Request -> IO (Some Options)
-makeOptions dr req = do
+makeOptions :: DomainReasoner -> Exercise a -> Request -> IO Options
+makeOptions dr ex req = do
    gen <- maybe newQCGen (return . mkQCGen) (randomSeed req)
-   case exerciseId req of
-      Just code -> do
-         Some ex <- findExercise dr code
-         scr <- case feedbackScript req of
-                   Just s  -> parseScriptSafe s
-                   Nothing -> defaultScript dr (getId ex)
-         return $ Some Options
-            { exercise = Just ex
-            , request  = req
-            , qcGen    = Just gen
-            , script   = scr
-            , baseUrl  = Nothing
-            }
-      Nothing -> 
-         return $ Some mempty
-            { request = req
-            , qcGen   = Just gen
-            , baseUrl = Nothing
-            }
+   scr <- case feedbackScript req of
+             Just s  -> parseScriptSafe s
+             Nothing -> defaultScript dr (getId ex)
+   return $ mempty
+      { request  = req
+      , qcGen    = Just gen
+      , script   = scr
+      }
 
 -------------------------------------------------------------------
 -- Encoder datatype
 
-newtype Encoder a s t = Enc { runEnc :: Options a -> s -> Error t }
+newtype Encoder a s t = Enc { runEnc :: (Exercise a, Options) -> s -> Error t }
 
 type TypedEncoder a = Encoder a (TypedValue (Type a))
 
@@ -274,8 +258,9 @@ instance Applicative (Encoder a s) where
    (<*>) = liftM2 ($)
 
 instance Converter Encoder where
-   fromOptions f = Enc $ \xs _ -> return (f xs)
-   run f xs = runErrorM . runEnc f xs
+   fromExercise f = Enc $ \(ex, _) _ -> return (f ex)
+   fromOptions  f = Enc $ \(_, opts) _ -> return (f opts)
+   run f ex opts  = runErrorM . runEnc f (ex, opts)
 
 instance Monoid t => Monoid (Encoder a s t) where
    mempty  = pure mempty
@@ -312,7 +297,7 @@ encodeTyped p t = (p, t) <?> fail "Types do not match"
 -------------------------------------------------------------------
 -- Decoder datatype
 
-newtype Decoder a s t = Dec { runDec :: Options a -> s -> Error (t, s) }
+newtype Decoder a s t = Dec { runDec :: (Exercise a, Options) -> s -> Error (t, s) }
 
 type TypedDecoder a s = forall t . Type a t -> Decoder a s t
 
@@ -346,8 +331,9 @@ put :: s -> Decoder a s ()
 put s = Dec $ \_ _ -> return ((), s)
 
 instance Converter Decoder where
-   fromOptions f = Dec $ \xs s -> return (f xs, s)
-   run f xs = liftM fst . runErrorM . runDec f xs
+   fromExercise f = Dec $ \(ex, _) s -> return (f ex, s)
+   fromOptions  f = Dec $ \(_, opts) s -> return (f opts, s)
+   run f ex opts  = liftM fst . runErrorM . runDec f (ex, opts)
 
 split :: (s -> Either String (t, s)) -> Decoder a s t
 split f = get >>= either fail (\(a, s2) -> put s2 >> return a) . f

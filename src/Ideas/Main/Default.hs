@@ -41,9 +41,9 @@ import System.IO.Error (ioeGetErrorString)
 import qualified Ideas.Main.Logging as Log
 
 defaultMain :: DomainReasoner -> IO ()
-defaultMain = defaultMainWith (Some mempty)
+defaultMain = defaultMainWith mempty
 
-defaultMainWith :: Some Options -> DomainReasoner -> IO ()
+defaultMainWith :: Options -> DomainReasoner -> IO ()
 defaultMainWith options dr = do
    flags <- getFlags
    if null flags
@@ -51,7 +51,7 @@ defaultMainWith options dr = do
       else defaultCommandLine options dr flags
 
 -- Invoked as a cgi binary
-defaultCGI :: Some Options -> DomainReasoner -> IO ()
+defaultCGI :: Options -> DomainReasoner -> IO ()
 defaultCGI options dr = runCGI $ handleErrors $ do
    -- create a record for logging
    logRef  <- liftIO Log.newLogRef
@@ -101,7 +101,7 @@ inputOrDefault = do
       return (isJust maybeAcceptCT && not (null xs))
 
 -- Invoked from command-line with flags
-defaultCommandLine :: Some Options -> DomainReasoner -> [Flag] -> IO ()
+defaultCommandLine :: Options -> DomainReasoner -> [Flag] -> IO ()
 defaultCommandLine options dr flags = do
    hSetBinaryMode stdout True
    mapM_ doAction flags
@@ -139,7 +139,7 @@ defaultCommandLine options dr flags = do
          AnalyzeScript file -> parseAndAnalyzeScript dr file
          PrintLog           -> return ()
 
-process :: Some Options -> DomainReasoner -> Log.LogRef -> Maybe String -> String -> IO (Request, String, String)
+process :: Options -> DomainReasoner -> Log.LogRef -> Maybe String -> String -> IO (Request, String, String)
 process options dr logRef cgiBin input = do
    format <- discoverDataFormat input
    run format options (Just 5) cgiBin dr logRef input

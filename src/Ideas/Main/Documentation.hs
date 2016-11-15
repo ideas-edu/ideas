@@ -51,7 +51,7 @@ makeDocumentation dr dir = do
    makeEx ex f = make ex (f lm ex)
    make ex url tv = do
       let enc = htmlEncoderAt (pathLevel url) dr
-      html <- run enc (simpleOptions ex) tv
+      html <- run enc ex simpleOptions tv
       safeWrite (dir </> url) (showHTML html)
 
 safeWrite :: FilePath -> String -> IO ()

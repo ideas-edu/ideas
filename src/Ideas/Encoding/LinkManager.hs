@@ -130,12 +130,12 @@ linkToDerivation = linkWith . urlForDerivation
 ---------------------------------------------------------------------
 -- Dynamic links
 
-dynamicLinks :: String -> LinkManager
-dynamicLinks cgiBinary = LinkManager
+dynamicLinks :: String -> String -> LinkManager
+dynamicLinks base cgiBinary = LinkManager
    { isStatic        = False
    , urlForRequest   = prefix
-   , urlForCSS       = ("http://ideas.cs.uu.nl/css/" ++)
-   , urlForImage     = ("http://ideas.cs.uu.nl/images/" ++)
+   , urlForCSS       = (\s -> base ++ "css/" ++ s)
+   , urlForImage     = (\s -> base ++ "images/" ++ s)
    , urlForIndex     = url $ simpleRequest "index"
    , urlForExercises = url $ simpleRequest "exerciselist"
    , urlForServices  = url $ simpleRequest "servicelist"

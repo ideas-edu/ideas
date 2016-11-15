@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Main.Default
-   ( defaultMain, defaultCGI
+   ( defaultMain, defaultMainWith, defaultCGI
      -- extra exports
    , Some(..), serviceList, metaServiceList, Service
    , module Ideas.Service.DomainReasoner
@@ -30,6 +30,7 @@ import Ideas.Main.BlackBoxTests
 import Ideas.Main.Documentation
 import Ideas.Main.Options hiding (fullVersion)
 import Ideas.Service.DomainReasoner
+import Ideas.Encoding.Encoder (Options)
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.Request
 import Ideas.Service.ServiceList
@@ -40,15 +41,18 @@ import System.IO.Error (ioeGetErrorString)
 import qualified Ideas.Main.Logging as Log
 
 defaultMain :: DomainReasoner -> IO ()
-defaultMain dr = do
+defaultMain = defaultMainWith (Some mempty)
+
+defaultMainWith :: Some Options -> DomainReasoner -> IO ()
+defaultMainWith options dr = do
    flags <- getFlags
    if null flags
-      then defaultCGI dr
-      else defaultCommandLine dr flags
+      then defaultCGI options dr
+      else defaultCommandLine options dr flags
 
 -- Invoked as a cgi binary
-defaultCGI :: DomainReasoner -> IO ()
-defaultCGI dr = runCGI $ handleErrors $ do
+defaultCGI :: Some Options -> DomainReasoner -> IO ()
+defaultCGI options dr = runCGI $ handleErrors $ do
    -- create a record for logging
    logRef  <- liftIO Log.newLogRef
    -- query environment
@@ -57,7 +61,7 @@ defaultCGI dr = runCGI $ handleErrors $ do
    input   <- inputOrDefault
    -- process request
    (req, txt, ctp) <- liftIO $
-      process dr logRef (Just cgiBin) input
+      process options dr logRef (Just cgiBin) input
    -- log request to database
    when (useLogging req) $ liftIO $ do
       Log.changeLog logRef $ \r -> Log.addRequest req r
@@ -97,8 +101,8 @@ inputOrDefault = do
       return (isJust maybeAcceptCT && not (null xs))
 
 -- Invoked from command-line with flags
-defaultCommandLine :: DomainReasoner -> [Flag] -> IO ()
-defaultCommandLine dr flags = do
+defaultCommandLine :: Some Options -> DomainReasoner -> [Flag] -> IO ()
+defaultCommandLine options dr flags = do
    hSetBinaryMode stdout True
    mapM_ doAction flags
  where
@@ -112,7 +116,7 @@ defaultCommandLine dr flags = do
             withBinaryFile file ReadMode $ \h -> do
                logRef <- liftIO Log.newLogRef
                input  <- hGetContents h
-               (req, txt, _) <- process dr logRef Nothing input
+               (req, txt, _) <- process options dr logRef Nothing input
                putStrLn txt
                when (PrintLog `elem` flags) $ do
                   Log.changeLog logRef $ \r -> Log.addRequest req r
@@ -135,10 +139,10 @@ defaultCommandLine dr flags = do
          AnalyzeScript file -> parseAndAnalyzeScript dr file
          PrintLog           -> return ()
 
-process :: DomainReasoner -> Log.LogRef -> Maybe String -> String -> IO (Request, String, String)
-process dr logRef cgiBin input = do
+process :: Some Options -> DomainReasoner -> Log.LogRef -> Maybe String -> String -> IO (Request, String, String)
+process options dr logRef cgiBin input = do
    format <- discoverDataFormat input
-   run format (Just 5) cgiBin dr logRef input
+   run format options (Just 5) cgiBin dr logRef input
  `catch` \ioe -> do
    let msg = "Error: " ++ ioeGetErrorString ioe
    Log.changeLog logRef (\r -> r { Log.errormsg = msg })

@@ -15,7 +15,7 @@ module Ideas.Main.BlackBoxTests (blackBoxTests) where
 import Control.Monad
 import Data.Char
 import Data.List
-import Ideas.Common.Utils (snd3)
+import Ideas.Common.Utils (Some(..), snd3)
 import Ideas.Common.Utils.TestSuite
 import Ideas.Encoding.ModeJSON
 import Ideas.Encoding.ModeXML
@@ -53,9 +53,10 @@ doBlackBoxTest dr format path =
       withFile path ReadMode $ \h1 -> do
          hSetBinaryMode h1 True
          txt <- hGetContents h1
+         let options = Some mempty
          out  <- case format of
-                    JSON -> liftM snd3 (processJSON Nothing Nothing dr noLogRef txt)
-                    XML  -> liftM snd3 (processXML  Nothing Nothing dr noLogRef txt)
+                    JSON -> liftM snd3 (processJSON options Nothing Nothing dr noLogRef txt)
+                    XML  -> liftM snd3 (processXML  options Nothing Nothing dr noLogRef txt)
          withFile expPath ReadMode $ \h2 -> do
             hSetBinaryMode h2 True
             expt <- hGetContents h2

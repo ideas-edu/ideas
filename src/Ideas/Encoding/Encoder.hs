@@ -14,7 +14,7 @@
 module Ideas.Encoding.Encoder
    ( -- * Converter type class
      Converter(..)
-   , getExercise, getQCGen, getScript, getRequest
+   , getExercise, getBaseUrl, getQCGen, getScript, getRequest
    , withExercise, withOpenMath, withJSONTerm, (//)
      -- * JSON support
    , hasJSONView, addJSONView, jsonEncoding
@@ -23,7 +23,7 @@ module Ideas.Encoding.Encoder
    , hasLatexEncoding, latexPrinter, latexPrinterContext
    , latexEncoding, latexEncodingWith
      -- * Options
-   , Options, simpleOptions, makeOptions
+   , Options, simpleOptions, makeOptions, noExercise, optionBaseUrl
      -- * Encoder datatype
    , Encoder, TypedEncoder
    , makeEncoder, encoderFor, exerciseEncoder
@@ -64,6 +64,9 @@ class Converter f where
 
 getExercise :: Converter f => f a s (Exercise a)
 getExercise = fromOptions (fromMaybe emptyExercise . exercise)
+
+getBaseUrl :: Converter f => f a s String
+getBaseUrl = fromOptions (fromMaybe "http://ideas.cs.uu.nl/" . baseUrl)
 
 getQCGen :: Converter f => f a s QCGen
 getQCGen = fromOptions (fromMaybe (mkQCGen 0) . qcGen)
@@ -179,26 +182,35 @@ latexEncodingWith = setPropertyF latexProperty . F
 
 data Options a = Options
    { exercise :: Maybe (Exercise a)  -- the current exercise
-   , request  :: Request     -- meta-information about the request
-   , qcGen    :: Maybe QCGen -- random number generator
-   , script   :: Script      -- feedback script
+   , request  :: Request      -- meta-information about the request
+   , qcGen    :: Maybe QCGen  -- random number generator
+   , script   :: Script       -- feedback script
+   , baseUrl  :: Maybe String -- for html-encoder's css and image files
    }
 
 instance Monoid (Options a) where
-   mempty = Options Nothing mempty Nothing mempty
+   mempty = Options Nothing mempty Nothing mempty Nothing
    mappend x y = Options
       { exercise = make exercise
       , request  = request x <> request y
       , qcGen    = make qcGen
       , script   = script x <> script y
+      , baseUrl  = make baseUrl
       }
     where
       make f = maybe (f y) Just (f x)
 
+-- sets exercise to Nothing, which allows the type parameter to change
+noExercise :: Options a -> Options b
+noExercise o = o {exercise = Nothing}
+
 simpleOptions :: Exercise a -> Options a
 simpleOptions ex =
    let req = mempty {encoding = [EncHTML]}
-   in Options (Just ex) req Nothing mempty
+   in Options (Just ex) req Nothing mempty Nothing
+
+optionBaseUrl :: String -> Options a
+optionBaseUrl base = mempty {baseUrl = Just base}
 
 makeOptions :: DomainReasoner -> Request -> IO (Some Options)
 makeOptions dr req = do
@@ -214,11 +226,13 @@ makeOptions dr req = do
             , request  = req
             , qcGen    = Just gen
             , script   = scr
+            , baseUrl  = Nothing
             }
       Nothing -> 
          return $ Some mempty
             { request = req
             , qcGen   = Just gen
+            , baseUrl = Nothing
             }
 
 -------------------------------------------------------------------

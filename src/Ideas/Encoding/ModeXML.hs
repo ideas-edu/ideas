@@ -19,7 +19,7 @@ import Control.Monad
 import Ideas.Common.Library hiding (exerciseId, (:=))
 import Ideas.Common.Utils (Some(..), timedSeconds)
 import Ideas.Encoding.DecoderXML
-import Ideas.Encoding.Encoder (makeOptions)
+import Ideas.Encoding.Encoder (Options, noExercise, makeOptions)
 import Ideas.Encoding.EncoderHTML
 import Ideas.Encoding.EncoderXML
 import Ideas.Encoding.Evaluator
@@ -30,11 +30,11 @@ import Ideas.Text.HTML
 import Ideas.Text.XML
 import System.IO.Error
 
-processXML :: Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
-processXML maxTime cgiBin dr logRef input = do
+processXML :: Some Options -> Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
+processXML options maxTime cgiBin dr logRef input = do
    xml  <- either fail return (parseXML input)
    req  <- xmlRequest cgiBin xml
-   resp <- maybe id timedSeconds maxTime (xmlReply dr logRef req xml)
+   resp <- maybe id timedSeconds maxTime (xmlReply options dr logRef req xml)
     `catch` handler
    let showXML | compactOutput req = compactXML
                | otherwise = show
@@ -77,13 +77,14 @@ defaultSeed :: Maybe String -> Maybe Int -> Maybe Int
 defaultSeed Nothing Nothing = Just 2805 -- magic number
 defaultSeed _ m = m
 
-xmlReply :: DomainReasoner -> LogRef -> Request -> XML -> IO XML
-xmlReply dr logRef request xml = do
+xmlReply :: Some Options -> DomainReasoner -> LogRef -> Request -> XML -> IO XML
+xmlReply (Some opt1) dr logRef request xml = do
    srv <- case serviceId request of
              Just a  -> findService dr a
              Nothing -> fail "No service"
 
-   Some options <- makeOptions dr request
+   Some opt2 <- makeOptions dr request
+   let options = noExercise opt1 <> opt2
 
    if htmlOutput request
       -- HTML evaluator

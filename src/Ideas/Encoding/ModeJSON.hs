@@ -20,7 +20,7 @@ import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Common.Utils (Some(..), timedSeconds)
 import Ideas.Encoding.DecoderJSON
-import Ideas.Encoding.Encoder (makeOptions)
+import Ideas.Encoding.Encoder (Options, noExercise, makeOptions)
 import Ideas.Encoding.EncoderJSON
 import Ideas.Encoding.Evaluator
 import Ideas.Main.Logging (LogRef, changeLog, errormsg)
@@ -28,12 +28,12 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import Ideas.Text.JSON
 
-processJSON :: Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
-processJSON maxTime cgiBin dr logRef input = do
+processJSON :: Some Options -> Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
+processJSON options maxTime cgiBin dr logRef input = do
    json <- either fail return (parseJSON input)
    req  <- jsonRequest cgiBin json
    resp <- jsonRPC json $ \fun arg ->
-              maybe id timedSeconds maxTime (myHandler dr logRef req fun arg)
+              maybe id timedSeconds maxTime (myHandler options dr logRef req fun arg)
    unless (responseError resp == Null) $
       changeLog logRef (\r -> r {errormsg = show (responseError resp)})
    let f   = if compactOutput req then compactJSON else show
@@ -98,11 +98,11 @@ stringOptionM attr json a f =
       Just _  -> fail $ "Invalid value for " ++ attr ++ " (expecting string)"
       Nothing -> return a
 
-myHandler :: DomainReasoner -> LogRef -> Request -> RPCHandler
-myHandler dr logRef request fun json = do
+myHandler :: Some Options -> DomainReasoner -> LogRef -> Request -> RPCHandler
+myHandler (Some opt1) dr logRef request fun json = do
    srv <- findService dr (newId fun)
-   Some options <- makeOptions dr request
-   evalService logRef options jsonEvaluator srv json
+   Some opt2 <- makeOptions dr request
+   evalService logRef (noExercise opt1 <> opt2) jsonEvaluator srv json
 
 jsonEvaluator :: Evaluator a JSON JSON
 jsonEvaluator = Evaluator jsonDecoder jsonEncoder

@@ -47,8 +47,9 @@ htmlEncoder = htmlEncoderAt 0
 
 htmlEncoderAt :: Int -> DomainReasoner -> TypedEncoder a HTMLPage
 htmlEncoderAt n dr = do
-   req <- getRequest
-   let lm = f (maybe staticLinks dynamicLinks (cgiBinary req))
+   req  <- getRequest
+   base <- getBaseUrl
+   let lm = f (maybe staticLinks (dynamicLinks base) (cgiBinary req))
        f  = if n==0 then id else linksUp n
    ex <- getExercise
    makePage lm dr ex <$> encodeType lm dr

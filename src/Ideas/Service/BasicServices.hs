@@ -13,7 +13,7 @@
 module Ideas.Service.BasicServices
    ( -- * Basic Services
      stepsremaining, findbuggyrules, allfirsts, solution
-   , onefirst, applicable, allapplications, apply, generate, create
+   , onefirst, onefinal, applicable, allapplications, apply, generate, create
    , StepInfo, tStepInfo, exampleDerivations, recognizeRule
    ) where
 
@@ -102,6 +102,9 @@ onefirst state =
       Right (hd:_) -> Right hd
       Left msg     -> Left msg
 
+onefinal :: State a -> Either String (Context a)
+onefinal = either Left (Right . lastTerm) . solution Nothing
+
 applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =
    let p r = not (isBuggy r) && Apply.applicable r (setLocation loc (stateContext state))
@@ -149,7 +152,7 @@ apply r loc env state
          (new, _):_ -> Right (restart (state {stateContext = new, statePrefix = noPrefix}))
          [] -> 
             -- first check the environment (exercise-specific property)
-            case environmentCheck env of 
+            case environmentCheck of 
                Just msg -> 
                   Left msg
                Nothing -> 
@@ -166,8 +169,8 @@ apply r loc env state
     where
       (ys, zs) = partition (siblingInCommon r . fst) xs
       
-   environmentCheck :: Environment -> Maybe String
-   environmentCheck env = do 
+   environmentCheck :: Maybe String
+   environmentCheck = do 
       p <- getProperty "environment-check" (exercise state)
       p env
 

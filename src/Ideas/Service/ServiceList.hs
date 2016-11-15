@@ -31,7 +31,7 @@ import qualified Ideas.Service.Submit as Submit
 serviceList :: [Service]
 serviceList =
    -- basic services
-   [ solutionS, derivationS, allfirstsS, onefirstS
+   [ solutionS, derivationS, allfirstsS, onefirstS, onefinalS
    , equivalenceS, similarityS, suitableS, finishedS, readyS
    , stepsremainingS, allapplicationsS
    , applyS, generateS, createS, applicableS
@@ -81,6 +81,11 @@ onefirstS = makeService "basic.onefirst"
    \this rule are returned." $
    onefirst ::: tState .-> tString :|: Tag "elem" (tPair tStepInfo tState)
    -- special tag for (legacy) xml encoding
+
+onefinalS :: Service
+onefinalS = makeService "basic.onefinal" 
+   "Returns a final term, after taking zero or more steps, by applying the strategy." $
+   onefinal ::: tState .-> tError tContext
 
 equivalenceS :: Service
 equivalenceS = makeService "basic.equivalence"

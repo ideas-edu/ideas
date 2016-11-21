@@ -31,7 +31,7 @@ import Ideas.Text.JSON
 processJSON :: Options -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
 processJSON options dr logRef input = do
    json <- either fail return (parseJSON input)
-   req  <- jsonRequest (cgiBin options) json
+   req  <- jsonRequest options json
    resp <- jsonRPC json $ \fun arg ->
               maybe id timedSeconds (maxTime options) (myHandler options dr logRef req fun arg)
    unless (responseError resp == Null) $
@@ -61,20 +61,20 @@ addVersion str json =
  where
    info = ("version", String str)
 
-jsonRequest :: Monad m => Maybe String -> JSON -> m Request
-jsonRequest cgiBin json = do
+jsonRequest :: Monad m => Options -> JSON -> m Request
+jsonRequest options json = do
    let exId = lookupM "params" json >>= extractExerciseId
    srv  <- stringOption  "method"      json newId
    src  <- stringOption  "source"      json id
    rinf <- stringOption  "requestinfo" json id
-   seed <- stringOptionM "randomseed"  json (defaultSeed cgiBin) (return . readM)
+   seed <- stringOptionM "randomseed"  json (defaultSeed options) (return . readM)
    enc  <- stringOptionM "encoding"    json [] readEncoding
    sch  <- stringOptionM "logging"     json Nothing (liftM Just . readSchema)
    return mempty
       { serviceId   = srv
       , exerciseId  = exId
       , source      = src
-      , cgiBinary   = cgiBin
+      , cgiBinary   = cgiBin options
       , requestInfo = rinf
       , logSchema   = sch
       , randomSeed  = seed
@@ -83,10 +83,10 @@ jsonRequest cgiBin json = do
       }
 
 -- Use a fixed seed for random number generation for command-line invocations
-defaultSeed :: Maybe String -> Maybe Int
-defaultSeed cgiBin
-   | isJust cgiBin = Nothing
-   | otherwise     = Just 2805 -- magic number
+defaultSeed :: Options -> Maybe Int
+defaultSeed options
+   | isJust (cgiBin options) = Nothing
+   | otherwise = Just 2805 -- magic number
 
 stringOption :: Monad m => String -> JSON -> (String -> a) -> m (Maybe a)
 stringOption attr json f = stringOptionM attr json Nothing (return . Just . f)

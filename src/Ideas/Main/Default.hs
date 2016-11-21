@@ -27,6 +27,7 @@ import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
 import Ideas.Main.BlackBoxTests
 import Ideas.Main.Options hiding (fullVersion)
+import qualified Ideas.Main.Options as Options
 import Ideas.Service.DomainReasoner
 import Ideas.Encoding.Options (Options, maxTime, optionCgiBin)
 import Ideas.Service.FeedbackScript.Analysis
@@ -46,7 +47,7 @@ defaultMainWith options dr = do
    flags <- getFlags
    if null flags
       then defaultCGI options dr
-      else defaultCommandLine options dr flags
+      else defaultCommandLine options (addVersion dr) flags
 
 -- Invoked as a cgi binary
 defaultCGI :: Options -> DomainReasoner -> IO ()
@@ -126,7 +127,7 @@ defaultCommandLine options dr flags = do
                   Log.printLog logRef
          -- blackbox tests
          Test dir -> do
-            tests  <- blackBoxTests dr dir
+            tests  <- blackBoxTests (makeTestRunner dr) dir
             result <- runTestSuiteResult True tests
             printSummary result
          -- feedback scripts
@@ -137,7 +138,7 @@ defaultCommandLine options dr flags = do
 process :: Options -> DomainReasoner -> Log.LogRef -> String -> IO (Request, String, String)
 process options dr logRef input = do
    format <- discoverDataFormat input
-   run format options {maxTime = Just 5} dr logRef input
+   run format options {maxTime = Just 5} (addVersion dr) logRef input
  `catch` \ioe -> do
    let msg = "Error: " ++ ioeGetErrorString ioe
    Log.changeLog logRef (\r -> r { Log.errormsg = msg })
@@ -145,3 +146,16 @@ process options dr logRef input = do
  where
    run XML  = processXML
    run JSON = processJSON
+
+makeTestRunner :: DomainReasoner -> String -> IO String
+makeTestRunner dr input = do
+   (_, out, _) <- process mempty dr Log.noLogRef input
+   return out
+
+addVersion :: DomainReasoner -> DomainReasoner
+addVersion dr = dr
+   { version     = update version Options.shortVersion
+   , fullVersion = update fullVersion Options.fullVersion
+   }
+ where
+   update f s = if null (f dr) then s else f dr

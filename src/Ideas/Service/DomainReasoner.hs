@@ -14,7 +14,7 @@ module Ideas.Service.DomainReasoner
    ( DomainReasoner(..), tDomainReasoner, newDomainReasoner
    , exercisesSorted, servicesSorted
    , findExercise, findService
-   , defaultScript -- , readScript
+   , defaultScript
    ) where
 
 import Data.List
@@ -25,7 +25,6 @@ import Ideas.Common.Library
 import Ideas.Common.Utils.TestSuite
 import Ideas.Service.FeedbackScript.Parser
 import Ideas.Service.Types
-import qualified Ideas.Main.Options as Options
 
 -----------------------------------------------------------------------
 -- Domain Reasoner data type
@@ -74,11 +73,7 @@ tDomainReasoner = Tag "DomainReasoner" $ Iso (f <-> g) tp
              )
 
 newDomainReasoner :: IsId a => a -> DomainReasoner
-newDomainReasoner a = mempty
-   { reasonerId  = newId a
-   , version     = Options.shortVersion
-   , fullVersion = Options.fullVersion
-   }
+newDomainReasoner a = mempty {reasonerId  = newId a}
 
 -----------------------------------------------------------------------
 -- Domain Reasoner functions

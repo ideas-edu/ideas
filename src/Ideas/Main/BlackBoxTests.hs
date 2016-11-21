@@ -10,25 +10,21 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Main.BlackBoxTests (blackBoxTests) where
+module Ideas.Main.BlackBoxTests (blackBoxTests, TestRunner) where
 
 import Control.Monad
 import Data.Char
 import Data.List
-import Ideas.Common.Utils (snd3)
 import Ideas.Common.Utils.TestSuite
-import Ideas.Encoding.ModeJSON
-import Ideas.Encoding.ModeXML
-import Ideas.Main.Logging
-import Ideas.Service.DomainReasoner
-import Ideas.Service.Request
 import System.Directory
 import System.IO
 import qualified Data.Algorithm.Diff as Diff
 
+type TestRunner = String -> IO String
+
 -- Returns the number of tests performed
-blackBoxTests :: DomainReasoner -> String -> IO TestSuite
-blackBoxTests dr path = do
+blackBoxTests :: TestRunner -> String -> IO TestSuite
+blackBoxTests runner path = do
    -- analyse content
    xs0 <- getDirectoryContents path
    let (xml,  xs1) = partition (".xml"  `isSuffixOf`) xs0
@@ -36,26 +32,24 @@ blackBoxTests dr path = do
        xs3         = map (path </>) (filter ((/= ".") . take 1) xs2)
    -- recursively visit subdirectories
    subs <- filterM doesDirectoryExist xs3
-   rest <- mapM (blackBoxTests dr) subs
+   rest <- mapM (blackBoxTests runner) subs
    return $ suite ("Directory " ++ simplerDirectory path) $
-      [ doBlackBoxTest dr JSON (path </> x)
+      [ doBlackBoxTest runner (path </> x)
       | x <- json
       ] ++
-      [ doBlackBoxTest dr XML (path </> x)
+      [ doBlackBoxTest runner (path </> x)
       | x <- xml
       ] ++
       rest
 
-doBlackBoxTest :: DomainReasoner -> DataFormat -> FilePath -> TestSuite
-doBlackBoxTest dr format path =
+doBlackBoxTest :: TestRunner -> FilePath -> TestSuite
+doBlackBoxTest runner path =
    assertMessageIO (stripDirectoryPart path) $ do
       -- Comparing output with expected output
       withFile path ReadMode $ \h1 -> do
          hSetBinaryMode h1 True
          txt <- hGetContents h1
-         out  <- case format of
-                    JSON -> liftM snd3 (processJSON mempty dr noLogRef txt)
-                    XML  -> liftM snd3 (processXML  mempty dr noLogRef txt)
+         out <- runner txt
          withFile expPath ReadMode $ \h2 -> do
             hSetBinaryMode h2 True
             expt <- hGetContents h2

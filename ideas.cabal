@@ -136,7 +136,6 @@ Library
     Ideas.Encoding.StrategyInfo
     Ideas.Main.BlackBoxTests
     Ideas.Main.Default
-    Ideas.Main.Documentation
     Ideas.Main.Logging
     Ideas.Main.Options
     Ideas.Main.Revision

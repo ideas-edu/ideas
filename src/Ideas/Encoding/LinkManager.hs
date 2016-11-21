@@ -14,9 +14,9 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Encoding.LinkManager
-   ( LinkManager(..)
-   , dynamicLinks, stateToXML
-   , staticLinks, linksUp, pathLevel, (</>)
+   ( LinkManager(..), makeLinkManager
+   , stateToXML
+   -- , pathLevel, (</>)
      -- links to services and exercises
    , linkToIndex, linkToExercises, linkToServices, linkToService
      -- links to exercise information
@@ -41,7 +41,6 @@ data LinkManager = LinkManager
    { urlForCSS           :: String -> String
    , urlForImage         :: String -> String
    , urlForRequest       :: String
-   , isStatic            :: Bool
      -- links to services and exercises
    , urlForIndex         :: String
    , urlForExercises     :: String
@@ -131,10 +130,9 @@ linkToDerivation = linkWith . urlForDerivation
 ---------------------------------------------------------------------
 -- Dynamic links
 
-dynamicLinks :: String -> String -> LinkManager
-dynamicLinks base cgiBinary = LinkManager
-   { isStatic        = False
-   , urlForRequest   = prefix
+makeLinkManager :: String -> String -> LinkManager
+makeLinkManager base cgiBinary = LinkManager
+   { urlForRequest   = prefix
    , urlForCSS       = (\s -> base ++ "css/" ++ s)
    , urlForImage     = (\s -> base ++ "images/" ++ s)
    , urlForIndex     = url $ simpleRequest "index"
@@ -202,79 +200,3 @@ escapeInURL = concatMap f
    f '#' = "%23"
    f ';' = "%3B"
    f c   = [c]
-
----------------------------------------------------------------------
--- Static links
-
-staticLinks :: LinkManager
-staticLinks = LinkManager
-   { isStatic        = True
-   , urlForCSS       = id
-   , urlForImage     = id
-   , urlForRequest   = ""
-   , -- links to services and exercises
-     urlForIndex     = "index.html"
-   , urlForExercises = "exercises.html"
-   , urlForServices  = "services.html"
-   , urlForService   = \srv -> "services" </> idToFilePath srv
-     -- links to exercise information
-   , urlForExercise    = idToFilePath
-   , urlForStrategy    = idToFilePathWith "-strategy.html"
-   , urlForRules       = idToFilePathWith "-rules.html"
-   , urlForExamples    = idToFilePathWith "-examples.html"
-   , urlForDerivations = idToFilePathWith "-derivations.html"
-   , urlForRule        = \ex r -> idToFilePathWith ("/" ++ showId r ++ ".html") ex
-   , urlForTestReport  = idToFilePathWith "-testreport.html"
-     -- dynamic exercise information
-   , urlForRandomExample = \_ _ -> ""
-     -- dynamic state information
-   , urlForState        = const ""
-   , urlForFirsts       = const ""
-   , urlForApplications = const ""
-   , urlForDerivation   = const ""
-   , urlForMicrosteps   = const ""
-   }
-
-linksUp :: Int -> LinkManager -> LinkManager
-linksUp n lm = lm
-   { isStatic        = isStatic lm
-     -- links to services and exercises
-   , urlForIndex     = f0 urlForIndex
-   , urlForExercises = f0 urlForExercises
-   , urlForServices  = f0 urlForServices
-   , urlForService   = f1 urlForService
-     -- links to exercise information
-   , urlForExercise    = f1 urlForExercise
-   , urlForStrategy    = f1 urlForStrategy
-   , urlForRules       = f1 urlForRules
-   , urlForExamples    = f1 urlForExamples
-   , urlForDerivations = f1 urlForDerivations
-   , urlForRule        = f2 urlForRule
-     -- dynamic exercise information
-   , urlForRandomExample = f2 urlForRandomExample
-     -- dynamic state information
-   , urlForState        = f1 urlForState
-   , urlForFirsts       = f1 urlForFirsts
-   , urlForApplications = f1 urlForApplications
-   , urlForDerivation   = f1 urlForDerivation
-   , urlForMicrosteps   = f1 urlForMicrosteps
-   }
- where
-   f0 g   = pathUp n $ g lm
-   f1 g   = pathUp n . g lm
-   f2 g x = pathUp n . g lm x
-
-pathUp :: Int -> FilePath -> FilePath
-pathUp n file = concat (replicate n "../") ++ file
-
-pathLevel :: FilePath -> Int
-pathLevel = length . filter (=='/')
-
-idToFilePath :: HasId a => a -> FilePath
-idToFilePath = idToFilePathWith ".html"
-
-idToFilePathWith :: HasId a => String -> a -> FilePath
-idToFilePathWith suffix a = foldr (</>) (unqualified a ++ suffix) (qualifiers a)
-
-(</>) :: String -> FilePath -> FilePath
-x </> y = x ++ "/" ++ y

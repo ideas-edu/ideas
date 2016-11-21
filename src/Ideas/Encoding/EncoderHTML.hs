@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Encoding.EncoderHTML (htmlEncoder, htmlEncoderAt) where
+module Ideas.Encoding.EncoderHTML (htmlEncoder) where
 
 import Data.Char
 import Data.List
@@ -42,14 +42,10 @@ import System.IO.Unsafe
 type HTMLEncoder a t = Encoder a t HTMLBuilder
 
 htmlEncoder :: DomainReasoner -> TypedEncoder a HTMLPage
-htmlEncoder = htmlEncoderAt 0
-
-htmlEncoderAt :: Int -> DomainReasoner -> TypedEncoder a HTMLPage
-htmlEncoderAt n dr = do
+htmlEncoder dr = do
    req  <- getRequest
    base <- getBaseUrl
-   let lm = f (maybe staticLinks (dynamicLinks base) (cgiBinary req))
-       f  = if n==0 then id else linksUp n
+   let lm = makeLinkManager base (fromMaybe "" (cgiBinary req))
    ex <- getExercise
    makePage lm dr ex <$> encodeType lm dr
 
@@ -240,9 +236,7 @@ encodeExercise lm = makeEncoder $ \ex -> mconcat
                   ]
           | isJust (randomExercise ex)
           ] ++
-          [ para $ submitStateInfo lm ex
-          | not (isStatic lm)
-          ]
+          [ para $ submitStateInfo lm ex ]
    ]
  where
    generalInfo ex = keyValueTable
@@ -422,14 +416,13 @@ encodeExampleList :: LinkManager -> HTMLEncoder a [(Difficulty, Context a)]
 encodeExampleList lm = exerciseEncoder $ \ex pairs -> mconcat $
    h2 "Examples" :
    [ h3 (s ++ " (" ++ show (length xs) ++ ")")
-       <> (if isStatic lm then ul else mconcat) (map (make ex) xs)
+       <> mconcat (map (make ex) xs)
    | (_, s, xs) <- orderedGroupsWith show fst pairs
    ]
  where
    make ex (_, x) = para $
-      munless (isStatic lm) (
-         let st = emptyStateContext ex x
-         in spanClass "statelink" $ linkToState lm st $ external lm)
+      ( let st = emptyStateContext ex x
+        in spanClass "statelink" $ linkToState lm st $ external lm)
       <> htmlContext False ex x
 
 external :: BuildXML a => LinkManager -> a
@@ -486,10 +479,8 @@ htmlContext useDiv ex = f "term" . textLines . printer
    
 
 stateLink :: LinkManager -> State a -> HTMLBuilder
-stateLink lm st
-   | isStatic lm = mempty
-   | otherwise =
-        spanClass "derivation-statelink" $ linkToState lm st $ external lm
+stateLink lm st =
+   spanClass "derivation-statelink" $ linkToState lm st $ external lm
 
 encodeState :: LinkManager -> DomainReasoner -> HTMLEncoder a (State a)
 encodeState lm dr =

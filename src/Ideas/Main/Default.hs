@@ -26,7 +26,6 @@ import Ideas.Common.Utils.TestSuite
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
 import Ideas.Main.BlackBoxTests
-import Ideas.Main.Documentation
 import Ideas.Main.Options hiding (fullVersion)
 import Ideas.Service.DomainReasoner
 import Ideas.Encoding.Options (Options, maxTime, optionCgiBin)
@@ -130,9 +129,6 @@ defaultCommandLine options dr flags = do
             tests  <- blackBoxTests dr dir
             result <- runTestSuiteResult True tests
             printSummary result
-         -- generate documentation pages
-         MakePages dir ->
-            makeDocumentation dr dir
          -- feedback scripts
          MakeScriptFor s    -> makeScriptFor dr s
          AnalyzeScript file -> parseAndAnalyzeScript dr file

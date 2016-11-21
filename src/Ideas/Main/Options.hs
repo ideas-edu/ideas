@@ -25,8 +25,7 @@ import System.Environment
 import System.Exit
 
 data Flag = Version | Help | PrintLog
-          | InputFile String
-          | MakePages FilePath | Test FilePath
+          | InputFile String | Test FilePath
           | MakeScriptFor String | AnalyzeScript FilePath
    deriving Eq
 
@@ -59,16 +58,14 @@ options =
    , Option "?" ["help"]           (NoArg Help)     "show options"
    , Option ""  ["print-log"]      (NoArg PrintLog) "print log information (for debugging)"
    , Option "f" ["file"]           fileArg          "use input FILE as request"
-   , Option ""  ["make-pages"]     pagesArg         "generate pages for exercises and services"
    , Option ""  ["test"]           testArg          "run tests on directory (default: 'test')"
    , Option ""  ["make-script"]    makeScrArg       "generate feedback script for exercise"
    , Option ""  ["analyze-script"] analyzeScrArg    "analyze feedback script and report errors"
    ]
 
-fileArg, testArg, pagesArg, makeScrArg, analyzeScrArg :: ArgDescr Flag
+fileArg, testArg, makeScrArg, analyzeScrArg :: ArgDescr Flag
 fileArg       = ReqArg InputFile "FILE"
 testArg       = OptArg (Test . fromMaybe "test") "DIR"
-pagesArg      = OptArg (MakePages . fromMaybe "docs") "DIR"
 makeScrArg    = ReqArg MakeScriptFor "ID"
 analyzeScrArg = ReqArg AnalyzeScript "FILE"
 

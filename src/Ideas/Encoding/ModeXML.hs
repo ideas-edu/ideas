@@ -17,9 +17,9 @@ module Ideas.Encoding.ModeXML (processXML) where
 import Control.Exception
 import Control.Monad
 import Ideas.Common.Library hiding (exerciseId, (:=))
-import Ideas.Common.Utils (Some(..), timedSeconds)
+import Ideas.Common.Utils (timedSeconds)
 import Ideas.Encoding.DecoderXML
-import Ideas.Encoding.Encoder (Options, makeOptions)
+import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin)
 import Ideas.Encoding.EncoderHTML
 import Ideas.Encoding.EncoderXML
 import Ideas.Encoding.Evaluator
@@ -30,11 +30,11 @@ import Ideas.Text.HTML
 import Ideas.Text.XML
 import System.IO.Error
 
-processXML :: Options -> Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
-processXML options maxTime cgiBin dr logRef input = do
+processXML :: Options -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
+processXML options dr logRef input = do
    xml  <- either fail return (parseXML input)
-   req  <- xmlRequest cgiBin xml
-   resp <- maybe id timedSeconds maxTime (xmlReply options dr logRef req xml)
+   req  <- xmlRequest (cgiBin options) xml
+   resp <- maybe id timedSeconds (maxTime options) (xmlReply options dr logRef req xml)
     `catch` handler
    let showXML | compactOutput req = compactXML
                | otherwise = show
@@ -52,7 +52,7 @@ addVersion s xml =
    in xml { attributes = attributes xml ++ info }
 
 xmlRequest :: Monad m => Maybe String -> XML -> m Request
-xmlRequest cgiBin xml = do
+xmlRequest ms xml = do
    unless (name xml == "request") $
       fail "expected xml tag request"
    enc  <- case findAttribute "encoding" xml of
@@ -62,11 +62,11 @@ xmlRequest cgiBin xml = do
       { serviceId      = newId <$> findAttribute "service" xml
       , exerciseId     = extractExerciseId xml
       , source         = findAttribute "source" xml
-      , cgiBinary      = cgiBin
+      , cgiBinary      = ms
       , requestInfo    = findAttribute "requestinfo" xml
       , logSchema      = findAttribute "logging" xml >>= readSchema
       , feedbackScript = findAttribute "script" xml
-      , randomSeed     = defaultSeed cgiBin $
+      , randomSeed     = defaultSeed ms $
                             findAttribute "randomseed" xml >>= readM
       , dataformat     = Just XML
       , encoding       = enc

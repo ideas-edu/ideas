@@ -15,14 +15,13 @@
 module Ideas.Main.Default
    ( defaultMain, defaultMainWith, defaultCGI
      -- extra exports
-   , Some(..), serviceList, metaServiceList, Service
+   , serviceList, metaServiceList, Service
    , module Ideas.Service.DomainReasoner
    ) where
 
 import Control.Exception
 import Control.Monad
 import Data.Maybe
-import Ideas.Common.Utils (Some(..))
 import Ideas.Common.Utils.TestSuite
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
@@ -30,7 +29,7 @@ import Ideas.Main.BlackBoxTests
 import Ideas.Main.Documentation
 import Ideas.Main.Options hiding (fullVersion)
 import Ideas.Service.DomainReasoner
-import Ideas.Encoding.Encoder (Options)
+import Ideas.Encoding.Options (Options, maxTime, optionCgiBin)
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.Request
 import Ideas.Service.ServiceList
@@ -61,7 +60,7 @@ defaultCGI options dr = runCGI $ handleErrors $ do
    input   <- inputOrDefault
    -- process request
    (req, txt, ctp) <- liftIO $
-      process options dr logRef (Just cgiBin) input
+      process (options <> optionCgiBin cgiBin) dr logRef input
    -- log request to database
    when (useLogging req) $ liftIO $ do
       Log.changeLog logRef $ \r -> Log.addRequest req r
@@ -116,7 +115,7 @@ defaultCommandLine options dr flags = do
             withBinaryFile file ReadMode $ \h -> do
                logRef <- liftIO Log.newLogRef
                input  <- hGetContents h
-               (req, txt, _) <- process options dr logRef Nothing input
+               (req, txt, _) <- process options dr logRef input
                putStrLn txt
                when (PrintLog `elem` flags) $ do
                   Log.changeLog logRef $ \r -> Log.addRequest req r
@@ -139,10 +138,10 @@ defaultCommandLine options dr flags = do
          AnalyzeScript file -> parseAndAnalyzeScript dr file
          PrintLog           -> return ()
 
-process :: Options -> DomainReasoner -> Log.LogRef -> Maybe String -> String -> IO (Request, String, String)
-process options dr logRef cgiBin input = do
+process :: Options -> DomainReasoner -> Log.LogRef -> String -> IO (Request, String, String)
+process options dr logRef input = do
    format <- discoverDataFormat input
-   run format options (Just 5) cgiBin dr logRef input
+   run format options {maxTime = Just 5} dr logRef input
  `catch` \ioe -> do
    let msg = "Error: " ++ ioeGetErrorString ioe
    Log.changeLog logRef (\r -> r { Log.errormsg = msg })

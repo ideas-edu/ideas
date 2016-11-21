@@ -31,6 +31,7 @@ import Data.Maybe
 import Ideas.Common.Library
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.EncoderXML
+import Ideas.Encoding.Options
 import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Text.HTML
@@ -186,7 +187,7 @@ stateRequest s state =
 -- assume nothing goest wrong
 stateToXML :: State a -> XMLBuilder
 stateToXML st = fromMaybe (error "LinkManager: Invalid state") $
-   run encodeState (exercise st) simpleOptions st
+   run encodeState (exercise st) optionHtml st
 
 linkWith :: (a -> String) -> a -> HTMLBuilder -> HTMLBuilder
 linkWith f = link . escapeInURL . f

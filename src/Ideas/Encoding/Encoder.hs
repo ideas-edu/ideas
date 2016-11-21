@@ -22,8 +22,6 @@ module Ideas.Encoding.Encoder
      -- * Latex support
    , hasLatexEncoding, latexPrinter, latexPrinterContext
    , latexEncoding, latexEncodingWith
-     -- * Options
-   , Options, simpleOptions, makeOptions, optionBaseUrl
      -- * Encoder datatype
    , Encoder, TypedEncoder
    , makeEncoder, encoderFor, exerciseEncoder
@@ -42,8 +40,8 @@ import Control.Monad
 import Data.Maybe
 import Data.Monoid as Export
 import Ideas.Common.Library hiding (exerciseId, symbol)
-import Ideas.Service.DomainReasoner
-import Ideas.Service.FeedbackScript.Parser (parseScriptSafe, Script)
+import Ideas.Encoding.Options
+import Ideas.Service.FeedbackScript.Parser (Script)
 import Ideas.Service.Request
 import Ideas.Service.Types
 import Ideas.Text.JSON hiding (String)
@@ -177,47 +175,6 @@ latexEncoding = latexEncodingWith toLatex
 
 latexEncodingWith :: (a -> Latex) -> Exercise a -> Exercise a
 latexEncodingWith = setPropertyF latexProperty . F
-
--------------------------------------------------------------------
--- Options
-
-data Options = Options
-   { request  :: Request      -- meta-information about the request
-   , qcGen    :: Maybe QCGen  -- random number generator
-   , script   :: Script       -- feedback script
-   , baseUrl  :: Maybe String -- for html-encoder's css and image files
-   }
-
-instance Monoid Options where
-   mempty = Options mempty Nothing mempty Nothing
-   mappend x y = Options
-      { request  = request x <> request y
-      , qcGen    = make qcGen
-      , script   = script x <> script y
-      , baseUrl  = make baseUrl
-      }
-    where
-      make f = maybe (f y) Just (f x)
-
-simpleOptions :: Options
-simpleOptions =
-   let req = mempty {encoding = [EncHTML]}
-   in Options req Nothing mempty Nothing
-
-optionBaseUrl :: String -> Options
-optionBaseUrl base = mempty {baseUrl = Just base}
-
-makeOptions :: DomainReasoner -> Exercise a -> Request -> IO Options
-makeOptions dr ex req = do
-   gen <- maybe newQCGen (return . mkQCGen) (randomSeed req)
-   scr <- case feedbackScript req of
-             Just s  -> parseScriptSafe s
-             Nothing -> defaultScript dr (getId ex)
-   return $ mempty
-      { request  = req
-      , qcGen    = Just gen
-      , script   = scr
-      }
 
 -------------------------------------------------------------------
 -- Encoder datatype

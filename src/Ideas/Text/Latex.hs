@@ -22,7 +22,6 @@ module Ideas.Text.Latex
 import Data.List
 import Data.Monoid
 import Data.String
-import Ideas.Common.Utils (ShowString)
 
 newtype Latex = L { showLatex :: String }
 
@@ -58,9 +57,6 @@ instance ToLatex Char where
    toLatexList = fromString
 
 instance ToLatex Int where
-   toLatex = fromString . show
-
-instance ToLatex ShowString where
    toLatex = fromString . show
 
 commas :: [Latex] -> Latex

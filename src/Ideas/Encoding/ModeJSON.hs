@@ -18,9 +18,9 @@ import Control.Monad
 import Data.Char
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
-import Ideas.Common.Utils (Some(..), timedSeconds)
+import Ideas.Common.Utils (timedSeconds)
 import Ideas.Encoding.DecoderJSON
-import Ideas.Encoding.Encoder (Options, makeOptions)
+import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin)
 import Ideas.Encoding.EncoderJSON
 import Ideas.Encoding.Evaluator
 import Ideas.Main.Logging (LogRef, changeLog, errormsg)
@@ -28,12 +28,12 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import Ideas.Text.JSON
 
-processJSON :: Options -> Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
-processJSON options maxTime cgiBin dr logRef input = do
+processJSON :: Options -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
+processJSON options dr logRef input = do
    json <- either fail return (parseJSON input)
-   req  <- jsonRequest cgiBin json
+   req  <- jsonRequest (cgiBin options) json
    resp <- jsonRPC json $ \fun arg ->
-              maybe id timedSeconds maxTime (myHandler options dr logRef req fun arg)
+              maybe id timedSeconds (maxTime options) (myHandler options dr logRef req fun arg)
    unless (responseError resp == Null) $
       changeLog logRef (\r -> r {errormsg = show (responseError resp)})
    let f   = if compactOutput req then compactJSON else show

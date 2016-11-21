@@ -34,7 +34,6 @@ import Data.List
 import Data.Maybe
 import Data.Tree
 import Ideas.Common.Library
-import Ideas.Common.Utils
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
 import Test.QuickCheck.Random (QCGen)

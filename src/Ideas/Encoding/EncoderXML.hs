@@ -22,7 +22,6 @@ import Data.Char
 import Data.Maybe
 import Data.Monoid
 import Ideas.Common.Library hiding (exerciseId, (:=), alternatives)
-import Ideas.Common.Utils (Some(..))
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.OpenMathSupport
 import Ideas.Encoding.RulesInfo (rulesInfoXML)

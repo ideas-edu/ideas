@@ -54,8 +54,8 @@ doBlackBoxTest dr format path =
          hSetBinaryMode h1 True
          txt <- hGetContents h1
          out  <- case format of
-                    JSON -> liftM snd3 (processJSON mempty Nothing Nothing dr noLogRef txt)
-                    XML  -> liftM snd3 (processXML  mempty Nothing Nothing dr noLogRef txt)
+                    JSON -> liftM snd3 (processJSON mempty dr noLogRef txt)
+                    XML  -> liftM snd3 (processXML  mempty dr noLogRef txt)
          withFile expPath ReadMode $ \h2 -> do
             hSetBinaryMode h2 True
             expt <- hGetContents h2

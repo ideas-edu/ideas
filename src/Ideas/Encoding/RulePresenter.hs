@@ -15,7 +15,6 @@ module Ideas.Encoding.RulePresenter (ruleToHTML) where
 import Data.List
 import Data.Maybe
 import Ideas.Common.Library
-import Ideas.Common.Utils (Some(..))
 import Ideas.Text.HTML
 
 ruleToHTML :: Some Exercise -> Rule a -> HTMLBuilder

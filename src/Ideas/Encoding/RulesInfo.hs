@@ -16,7 +16,6 @@ module Ideas.Encoding.RulesInfo
 
 import Data.Char
 import Ideas.Common.Library
-import Ideas.Common.Utils (Some(..))
 import Ideas.Encoding.OpenMathSupport (toOMOBJ)
 import Ideas.Text.OpenMath.FMP
 import Ideas.Text.OpenMath.Object

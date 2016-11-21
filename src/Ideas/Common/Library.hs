@@ -15,6 +15,7 @@
 module Ideas.Common.Library
    ( module Export
    , failS, notS, repeatS, replicateS, sequenceS, untilS
+   , Some(..)
    ) where
 
 import Ideas.Common.Classes as Export
@@ -28,7 +29,7 @@ import Ideas.Common.Rewriting as Export
 import Ideas.Common.Rule as Export
 import Ideas.Common.Strategy as Export hiding (fail, not, repeat, replicate, sequence, until)
 import Ideas.Common.Traversal.Navigator as Export (Location, location, toLocation, fromLocation, arity, top)
-import Ideas.Common.Utils as Export (readM)
+import Ideas.Common.Utils as Export (readM, Some(..))
 import Ideas.Common.View as Export
 
 import qualified Ideas.Common.Strategy as S

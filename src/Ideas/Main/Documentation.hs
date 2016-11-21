@@ -17,7 +17,8 @@ module Ideas.Main.Documentation (makeDocumentation) where
 import Control.Monad
 import Ideas.Common.Library
 import Ideas.Common.Utils
-import Ideas.Encoding.Encoder (run, simpleOptions)
+import Ideas.Encoding.Encoder (run)
+import Ideas.Encoding.Options (optionHtml)
 import Ideas.Encoding.EncoderHTML
 import Ideas.Encoding.LinkManager
 import Ideas.Service.BasicServices
@@ -51,7 +52,7 @@ makeDocumentation dr dir = do
    makeEx ex f = make ex (f lm ex)
    make ex url tv = do
       let enc = htmlEncoderAt (pathLevel url) dr
-      html <- run enc ex simpleOptions tv
+      html <- run enc ex optionHtml tv
       safeWrite (dir </> url) (showHTML html)
 
 safeWrite :: FilePath -> String -> IO ()

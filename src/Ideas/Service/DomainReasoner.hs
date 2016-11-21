@@ -22,7 +22,6 @@ import Data.Maybe
 import Data.Monoid
 import Data.Ord
 import Ideas.Common.Library
-import Ideas.Common.Utils
 import Ideas.Common.Utils.TestSuite
 import Ideas.Service.FeedbackScript.Parser
 import Ideas.Service.Types

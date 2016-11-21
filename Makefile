@@ -88,6 +88,26 @@ clean:
 
 nolicense:
 	find src -name \*.hs -print0 | xargs --null grep -L "LICENSE"
+
+layered:
+	@grep -R import src/Ideas/Text | grep "Ideas.Common"    || true
+	@grep -R import src/Ideas/Text | grep "Ideas.Encoding" || true
+	@grep -R import src/Ideas/Text | grep "Ideas.Main"     || true
+	@grep -R import src/Ideas/Text | grep "Ideas.Service" || true
+	
+	@grep -R import src/Ideas/Common | grep "Ideas.Text" || true
+	@grep -R import src/Ideas/Common | grep "Ideas.Encoding" || true
+	@grep -R import src/Ideas/Common | grep "Ideas.Main" || true
+	@grep -R import src/Ideas/Common | grep "Ideas.Service" || true
+	
+	@grep -R import src/Ideas/Service | grep "Ideas.Text" || true
+	@grep -R import src/Ideas/Service | grep "Ideas.Encoding" || true
+	@grep -R import src/Ideas/Service | grep "Ideas.Main" || true
+	
+	@grep -R import src/Ideas/Encoding | grep "Ideas.Main" || true
+	
+	@grep -R import src/Ideas/Main | grep "Ideas.Text" || true
+	@grep -R import src/Ideas/Main | grep "Ideas.Common" || true
 	
 noid:
 	find src -name \*.hs -print0 | xargs --null grep -L '$$Id'

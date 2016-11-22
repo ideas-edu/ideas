@@ -8,12 +8,12 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Options and command-line flags for services
+-- Command-Line Options
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Main.Options
-   ( Flag(..), getFlags
+module Ideas.Main.CmdLineOptions
+   ( CmdLineOption(..), getCmdLineOptions
    , versionText, helpText, shortVersion, fullVersion
    ) where
 
@@ -24,10 +24,11 @@ import System.Console.GetOpt
 import System.Environment
 import System.Exit
 
-data Flag = Version | Help | PrintLog
-          | InputFile String | Test FilePath
-          | MakeScriptFor String | AnalyzeScript FilePath
-   deriving Eq
+data CmdLineOption 
+   = Version | Help | PrintLog
+   | InputFile String | Test FilePath
+   | MakeScriptFor String | AnalyzeScript FilePath
+ deriving Eq
 
 header :: String
 header =
@@ -52,7 +53,7 @@ fullVersion = "version " ++ ideasVersion ++ " (revision "
 shortVersion :: String
 shortVersion = ideasVersion ++ " (" ++ ideasRevision ++ ")"
 
-options :: [OptDescr Flag]
+options :: [OptDescr CmdLineOption]
 options =
    [ Option []  ["version"]        (NoArg Version)  "show version number"
    , Option "?" ["help"]           (NoArg Help)     "show options"
@@ -63,14 +64,14 @@ options =
    , Option ""  ["analyze-script"] analyzeScrArg    "analyze feedback script and report errors"
    ]
 
-fileArg, testArg, makeScrArg, analyzeScrArg :: ArgDescr Flag
+fileArg, testArg, makeScrArg, analyzeScrArg :: ArgDescr CmdLineOption
 fileArg       = ReqArg InputFile "FILE"
 testArg       = OptArg (Test . fromMaybe "test") "DIR"
 makeScrArg    = ReqArg MakeScriptFor "ID"
 analyzeScrArg = ReqArg AnalyzeScript "FILE"
 
-getFlags :: IO [Flag]
-getFlags = do
+getCmdLineOptions :: IO [CmdLineOption]
+getCmdLineOptions = do
    args <- getArgs
    case getOpt Permute options args of
       (flags, [], []) -> return flags

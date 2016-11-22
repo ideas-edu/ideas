@@ -26,8 +26,8 @@ import Ideas.Utils.TestSuite
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
 import Ideas.Utils.BlackBoxTests
-import Ideas.Main.Options hiding (fullVersion)
-import qualified Ideas.Main.Options as Options
+import Ideas.Main.CmdLineOptions hiding (fullVersion)
+import qualified Ideas.Main.CmdLineOptions as Options
 import Ideas.Service.DomainReasoner
 import Ideas.Encoding.Options (Options, maxTime, optionCgiBin)
 import Ideas.Service.FeedbackScript.Analysis
@@ -44,10 +44,10 @@ defaultMain = defaultMainWith mempty
 
 defaultMainWith :: Options -> DomainReasoner -> IO ()
 defaultMainWith options dr = do
-   flags <- getFlags
-   if null flags
+   cmdLineOptions <- getCmdLineOptions
+   if null cmdLineOptions
       then defaultCGI options dr
-      else defaultCommandLine options (addVersion dr) flags
+      else defaultCommandLine options (addVersion dr) cmdLineOptions
 
 -- Invoked as a cgi binary
 defaultCGI :: Options -> DomainReasoner -> IO ()
@@ -100,13 +100,13 @@ inputOrDefault = do
       return (isJust maybeAcceptCT && not (null xs))
 
 -- Invoked from command-line with flags
-defaultCommandLine :: Options -> DomainReasoner -> [Flag] -> IO ()
-defaultCommandLine options dr flags = do
+defaultCommandLine :: Options -> DomainReasoner -> [CmdLineOption] -> IO ()
+defaultCommandLine options dr cmdLineOptions = do
    hSetBinaryMode stdout True
-   mapM_ doAction flags
+   mapM_ doAction cmdLineOptions
  where
-   doAction flag =
-      case flag of
+   doAction cmdLineOption =
+      case cmdLineOption of
          -- information
          Version -> putStrLn ("IDEAS, " ++ versionText)
          Help    -> putStrLn helpText
@@ -117,7 +117,7 @@ defaultCommandLine options dr flags = do
                input  <- hGetContents h
                (req, txt, _) <- process options dr logRef input
                putStrLn txt
-               when (PrintLog `elem` flags) $ do
+               when (PrintLog `elem` cmdLineOptions) $ do
                   Log.changeLog logRef $ \r -> Log.addRequest req r
                      { Log.ipaddress = "command-line"
                      , Log.version   = shortVersion

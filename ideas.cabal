@@ -129,7 +129,7 @@ Library
     Ideas.Encoding.StrategyInfo
     Ideas.Main.Default
     Ideas.Service.Logging
-    Ideas.Main.Options
+    Ideas.Main.CmdLineOptions
     Ideas.Main.Revision
     Ideas.Service.BasicServices
     Ideas.Service.Diagnose

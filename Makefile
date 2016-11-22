@@ -100,7 +100,6 @@ layered:
 	@grep -R import src/Ideas/Text | grep "Ideas.Encoding" || true
 	@grep -R import src/Ideas/Text | grep "Ideas.Main"     || true
 	@grep -R import src/Ideas/Text | grep "Ideas.Service" || true
-	@grep -R import src/Ideas/Text | grep "Ideas.Utils" || true
 	
 	@grep -R import src/Ideas/Common | grep "Ideas.Text" || true
 	@grep -R import src/Ideas/Common | grep "Ideas.Encoding" || true

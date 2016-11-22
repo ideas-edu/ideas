@@ -21,7 +21,7 @@ module Ideas.Text.XML.Interface
 import Control.Arrow
 import Data.Char (chr, ord)
 import Data.Maybe
-import Ideas.Text.Parsing (parseSimple)
+import Ideas.Utils.Parsing (parseSimple)
 import Ideas.Text.XML.Document (Name, prettyElement)
 import Ideas.Text.XML.Parser (document)
 import Ideas.Text.XML.Unicode (decoding)

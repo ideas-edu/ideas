@@ -21,7 +21,7 @@ import Control.Monad
 import Data.Char (toUpper, ord, isSpace)
 import Data.List (foldl') -- '
 import Data.Maybe (catMaybes)
-import Ideas.Text.Parsing hiding (digit, letter, space)
+import Ideas.Utils.Parsing hiding (digit, letter, space)
 import Ideas.Text.XML.Document hiding (versionInfo, name, content)
 import Ideas.Text.XML.Unicode
 import Prelude hiding (seq)

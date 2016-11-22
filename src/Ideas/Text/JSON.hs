@@ -26,7 +26,7 @@ import Control.Exception
 import Control.Monad
 import Data.List (intersperse)
 import Data.Maybe
-import Ideas.Text.Parsing hiding (string, char)
+import Ideas.Utils.Parsing hiding (string, char)
 import System.IO.Error
 import Test.QuickCheck
 import Text.PrettyPrint.Leijen hiding ((<$>))

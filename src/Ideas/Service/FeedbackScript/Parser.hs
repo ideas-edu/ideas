@@ -23,7 +23,7 @@ import Data.List
 import Data.Monoid
 import Ideas.Common.Id
 import Ideas.Service.FeedbackScript.Syntax
-import Ideas.Text.Parsing
+import Ideas.Utils.Parsing
 import System.Directory
 import System.FilePath
 

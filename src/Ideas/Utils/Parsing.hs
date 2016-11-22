@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Text.Parsing
+module Ideas.Utils.Parsing
    ( module Export
    , (<*>), (*>), (<*), (<$>), (<$), (<**>)
    , parseSimple, complete, skip, (<..>), ranges, stopOn

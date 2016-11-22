@@ -170,7 +170,7 @@ Library
     Ideas.Text.OpenMath.Object
     Ideas.Text.OpenMath.Symbol
     Ideas.Text.OpenMath.Tests
-    Ideas.Text.Parsing
+    Ideas.Utils.Parsing
     Ideas.Text.UTF8
     Ideas.Text.XML
     Ideas.Text.XML.Document

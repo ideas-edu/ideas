@@ -25,7 +25,7 @@ import Data.Maybe
 import Ideas.Common.Utils.TestSuite
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
-import Ideas.Main.BlackBoxTests
+import Ideas.Common.Utils.BlackBoxTests
 import Ideas.Main.Options hiding (fullVersion)
 import qualified Ideas.Main.Options as Options
 import Ideas.Service.DomainReasoner
@@ -127,7 +127,7 @@ defaultCommandLine options dr flags = do
                   Log.printLog logRef
          -- blackbox tests
          Test dir -> do
-            tests  <- blackBoxTests (makeTestRunner dr) dir
+            tests  <- blackBoxTests (makeTestRunner dr) ["xml", "json"] dir
             result <- runTestSuiteResult True tests
             printSummary result
          -- feedback scripts

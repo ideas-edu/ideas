@@ -115,6 +115,7 @@ Library
     Ideas.Common.Traversal.Tests
     Ideas.Common.Traversal.Utils
     Ideas.Common.Utils
+    Ideas.Common.Utils.BlackBoxTests
     Ideas.Common.Utils.QuickCheck
     Ideas.Common.Utils.StringRef
     Ideas.Common.Utils.TestSuite
@@ -134,7 +135,6 @@ Library
     Ideas.Encoding.RulePresenter
     Ideas.Encoding.RulesInfo
     Ideas.Encoding.StrategyInfo
-    Ideas.Main.BlackBoxTests
     Ideas.Main.Default
     Ideas.Main.Logging
     Ideas.Main.Options

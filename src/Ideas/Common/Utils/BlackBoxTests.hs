@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Main.BlackBoxTests (blackBoxTests, TestRunner) where
+module Ideas.Common.Utils.BlackBoxTests (blackBoxTests, TestRunner) where
 
 import Control.Monad
 import Data.Char
@@ -23,24 +23,21 @@ import qualified Data.Algorithm.Diff as Diff
 type TestRunner = String -> IO String
 
 -- Returns the number of tests performed
-blackBoxTests :: TestRunner -> String -> IO TestSuite
-blackBoxTests runner path = do
-   -- analyse content
-   xs0 <- getDirectoryContents path
-   let (xml,  xs1) = partition (".xml"  `isSuffixOf`) xs0
-       (json, xs2) = partition (".json" `isSuffixOf`) xs1
-       xs3         = map (path </>) (filter ((/= ".") . take 1) xs2)
-   -- recursively visit subdirectories
-   subs <- filterM doesDirectoryExist xs3
-   rest <- mapM (blackBoxTests runner) subs
-   return $ suite ("Directory " ++ simplerDirectory path) $
-      [ doBlackBoxTest runner (path </> x)
-      | x <- json
-      ] ++
-      [ doBlackBoxTest runner (path </> x)
-      | x <- xml
-      ] ++
-      rest
+blackBoxTests :: TestRunner -> [String] -> String -> IO TestSuite
+blackBoxTests runner exts = rec
+ where 
+    rec path = do
+      -- analyse content
+      xs0 <- getDirectoryContents path
+      let (files, xs1) = partition (`elemExts` exts) xs0
+          xs2          = map (path </>) (filter ((/= ".") . take 1) xs1)
+      -- recursively visit subdirectories
+      subs <- filterM doesDirectoryExist xs2
+      rest <- mapM rec subs
+      return $ suite ("Directory " ++ simplerDirectory path) $
+         [ doBlackBoxTest runner (path </> x)
+         | x <- files
+         ] ++ rest
 
 doBlackBoxTest :: TestRunner -> FilePath -> TestSuite
 doBlackBoxTest runner path =
@@ -64,6 +61,9 @@ doBlackBoxTest runner path =
  where
    expPath = baseOf path ++ ".exp"
    baseOf  = reverse . drop 1 . dropWhile (/= '.') . reverse
+
+elemExts :: FilePath -> [String] -> Bool
+elemExts s = any (\xs -> ('.':xs)  `isSuffixOf` s)
 
 force :: String -> IO ()
 force s | sum (map ord s) >= 0 = return ()

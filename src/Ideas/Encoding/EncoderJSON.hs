@@ -17,7 +17,7 @@ module Ideas.Encoding.EncoderJSON (jsonEncoder) where
 
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
-import Ideas.Common.Utils (distinct)
+import Ideas.Utils.Prelude (distinct)
 import Ideas.Encoding.Encoder hiding (symbol)
 import Ideas.Service.State
 import Ideas.Service.Types hiding (String)

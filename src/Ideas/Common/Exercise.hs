@@ -54,7 +54,7 @@ import Ideas.Common.Predicate
 import Ideas.Common.Rewriting
 import Ideas.Common.Rule
 import Ideas.Common.Strategy hiding (not, fail, repeat, replicate)
-import Ideas.Common.Utils (ShowString(..))
+import Ideas.Utils.Prelude (ShowString(..))
 import Ideas.Common.View
 import System.Random
 import Test.QuickCheck hiding (label)

@@ -41,7 +41,7 @@ import Ideas.Common.Context
 import Ideas.Common.Environment
 import Ideas.Common.Rewriting
 import Ideas.Common.Rule.EnvironmentMonad
-import Ideas.Common.Utils
+import Ideas.Utils.Prelude
 import Ideas.Common.View
 import qualified Control.Category as C
 

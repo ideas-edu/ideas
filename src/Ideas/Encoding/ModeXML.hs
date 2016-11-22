@@ -17,13 +17,13 @@ module Ideas.Encoding.ModeXML (processXML) where
 import Control.Exception
 import Control.Monad
 import Ideas.Common.Library hiding (exerciseId, (:=))
-import Ideas.Common.Utils (timedSeconds)
+import Ideas.Utils.Prelude (timedSeconds)
 import Ideas.Encoding.DecoderXML
 import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin)
 import Ideas.Encoding.EncoderHTML
 import Ideas.Encoding.EncoderXML
 import Ideas.Encoding.Evaluator
-import Ideas.Main.Logging (LogRef, changeLog, errormsg)
+import Ideas.Service.Logging (LogRef, changeLog, errormsg)
 import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import Ideas.Text.HTML

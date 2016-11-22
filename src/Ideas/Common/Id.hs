@@ -50,8 +50,8 @@ import Data.List
 import Data.Monoid
 import Data.Ord
 import Ideas.Common.Classes
-import Ideas.Common.Utils (splitsWithElem)
-import Ideas.Common.Utils.StringRef
+import Ideas.Utils.Prelude (splitsWithElem)
+import Ideas.Utils.StringRef
 import Test.QuickCheck
 
 ---------------------------------------------------------------------

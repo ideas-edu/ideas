@@ -90,10 +90,17 @@ nolicense:
 	find src -name \*.hs -print0 | xargs --null grep -L "LICENSE"
 
 layered:
+	@grep -R import src/Ideas/Utils | grep "Ideas.Common"    || true
+	@grep -R import src/Ideas/Utils | grep "Ideas.Encoding" || true
+	@grep -R import src/Ideas/Utils | grep "Ideas.Main"     || true
+	@grep -R import src/Ideas/Utils | grep "Ideas.Service" || true
+	@grep -R import src/Ideas/Utils | grep "Ideas.Text" || true
+
 	@grep -R import src/Ideas/Text | grep "Ideas.Common"    || true
 	@grep -R import src/Ideas/Text | grep "Ideas.Encoding" || true
 	@grep -R import src/Ideas/Text | grep "Ideas.Main"     || true
 	@grep -R import src/Ideas/Text | grep "Ideas.Service" || true
+	@grep -R import src/Ideas/Text | grep "Ideas.Utils" || true
 	
 	@grep -R import src/Ideas/Common | grep "Ideas.Text" || true
 	@grep -R import src/Ideas/Common | grep "Ideas.Encoding" || true

@@ -15,7 +15,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Common.Utils.StringRef
+module Ideas.Utils.StringRef
    ( StringRef, stringRef, toString, tableStatus
    ) where
 

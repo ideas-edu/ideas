@@ -21,7 +21,7 @@ import Control.Monad
 import Data.Char
 import Data.List
 import Ideas.Common.Library
-import Ideas.Common.Utils.Uniplate
+import Ideas.Utils.Uniplate
 import Ideas.Text.OpenMath.Dictionary.Arith1
 import Ideas.Text.OpenMath.Dictionary.Fns1
 import Ideas.Text.OpenMath.Object

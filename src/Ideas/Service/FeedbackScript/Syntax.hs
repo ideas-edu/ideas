@@ -22,7 +22,7 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import Ideas.Common.Library
-import Ideas.Common.Utils.Uniplate
+import Ideas.Utils.Uniplate
 
 newtype Script = S { scriptDecls :: [Decl] }
 

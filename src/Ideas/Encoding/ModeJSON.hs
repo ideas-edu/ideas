@@ -18,12 +18,12 @@ import Control.Monad
 import Data.Char
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
-import Ideas.Common.Utils (timedSeconds)
+import Ideas.Utils.Prelude (timedSeconds)
 import Ideas.Encoding.DecoderJSON
 import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin)
 import Ideas.Encoding.EncoderJSON
 import Ideas.Encoding.Evaluator
-import Ideas.Main.Logging (LogRef, changeLog, errormsg)
+import Ideas.Service.Logging (LogRef, changeLog, errormsg)
 import Ideas.Service.DomainReasoner
 import Ideas.Service.Request
 import Ideas.Text.JSON

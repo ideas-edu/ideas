@@ -31,7 +31,7 @@ import Data.List
 import Data.Typeable
 import Ideas.Common.Id
 import Ideas.Common.Rewriting.Term
-import Ideas.Common.Utils
+import Ideas.Utils.Prelude
 import Ideas.Common.View
 import qualified Data.Map as M
 

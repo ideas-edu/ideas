@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Common.Utils.QuickCheck
+module Ideas.Utils.QuickCheck
    ( module Test.QuickCheck
      -- * Data type
    , ArbGen, generator, generators

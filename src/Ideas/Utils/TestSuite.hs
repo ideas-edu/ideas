@@ -15,7 +15,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Common.Utils.TestSuite
+module Ideas.Utils.TestSuite
    ( -- * TestSuite
      TestSuite, module Data.Monoid
    , suite, useProperty, usePropertyWith

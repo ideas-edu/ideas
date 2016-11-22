@@ -24,7 +24,7 @@ import Ideas.Common.Rewriting.Term
 import Ideas.Common.Rewriting.Unification
 import Ideas.Common.Traversal.Navigator
 import Ideas.Common.Traversal.Utils
-import Ideas.Common.Utils.Uniplate hiding (rewriteM)
+import Ideas.Utils.Uniplate hiding (rewriteM)
 
 normalForm :: [RewriteRule a] -> Term -> Term
 normalForm rs = run []

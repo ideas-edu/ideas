@@ -32,7 +32,7 @@ import Ideas.Common.Id
 import Ideas.Common.Rewriting.Substitution
 import Ideas.Common.Rewriting.Term
 import Ideas.Common.Rewriting.Unification
-import Ideas.Common.Utils.Uniplate (descend)
+import Ideas.Utils.Uniplate (descend)
 import Ideas.Common.View hiding (match)
 import qualified Data.IntSet as IS
 import qualified Data.Map as M

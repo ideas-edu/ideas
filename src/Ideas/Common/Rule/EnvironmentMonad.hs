@@ -28,7 +28,7 @@ import Control.Monad
 import Data.Maybe
 import Data.Typeable
 import Ideas.Common.Environment
-import Ideas.Common.Utils
+import Ideas.Utils.Prelude
 import System.IO.Unsafe
 import qualified Control.Exception as C
 

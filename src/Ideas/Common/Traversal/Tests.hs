@@ -20,8 +20,8 @@ import Data.Maybe
 import Ideas.Common.Traversal.Iterator
 import Ideas.Common.Traversal.Navigator
 import Ideas.Common.Traversal.Utils
-import Ideas.Common.Utils.TestSuite
-import Ideas.Common.Utils.Uniplate
+import Ideas.Utils.TestSuite
+import Ideas.Utils.Uniplate
 import Test.QuickCheck hiding ((===))
 
 testIterator :: (Show a, Eq a, Iterator a) => String -> Gen a -> TestSuite

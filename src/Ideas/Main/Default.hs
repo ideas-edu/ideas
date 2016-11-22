@@ -22,10 +22,10 @@ module Ideas.Main.Default
 import Control.Exception
 import Control.Monad
 import Data.Maybe
-import Ideas.Common.Utils.TestSuite
+import Ideas.Utils.TestSuite
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
-import Ideas.Common.Utils.BlackBoxTests
+import Ideas.Utils.BlackBoxTests
 import Ideas.Main.Options hiding (fullVersion)
 import qualified Ideas.Main.Options as Options
 import Ideas.Service.DomainReasoner
@@ -37,7 +37,7 @@ import Ideas.Service.Types (Service)
 import Network.CGI
 import System.IO
 import System.IO.Error (ioeGetErrorString)
-import qualified Ideas.Main.Logging as Log
+import qualified Ideas.Service.Logging as Log
 
 defaultMain :: DomainReasoner -> IO ()
 defaultMain = defaultMainWith mempty

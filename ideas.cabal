@@ -114,12 +114,12 @@ Library
     Ideas.Common.Traversal.Navigator
     Ideas.Common.Traversal.Tests
     Ideas.Common.Traversal.Utils
-    Ideas.Common.Utils
-    Ideas.Common.Utils.BlackBoxTests
-    Ideas.Common.Utils.QuickCheck
-    Ideas.Common.Utils.StringRef
-    Ideas.Common.Utils.TestSuite
-    Ideas.Common.Utils.Uniplate
+    Ideas.Utils.Prelude
+    Ideas.Utils.BlackBoxTests
+    Ideas.Utils.QuickCheck
+    Ideas.Utils.StringRef
+    Ideas.Utils.TestSuite
+    Ideas.Utils.Uniplate
     Ideas.Common.View
     Ideas.Encoding.DecoderJSON
     Ideas.Encoding.DecoderXML
@@ -136,7 +136,7 @@ Library
     Ideas.Encoding.RulesInfo
     Ideas.Encoding.StrategyInfo
     Ideas.Main.Default
-    Ideas.Main.Logging
+    Ideas.Service.Logging
     Ideas.Main.Options
     Ideas.Main.Revision
     Ideas.Service.BasicServices

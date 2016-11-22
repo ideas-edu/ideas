@@ -18,7 +18,7 @@ module Ideas.Service.ProblemDecomposition
 import Data.Maybe
 import Ideas.Common.Library
 import Ideas.Common.Strategy.Symbol
-import Ideas.Common.Utils (fst3)
+import Ideas.Utils.Prelude (fst3)
 import Ideas.Service.State
 import Ideas.Service.Types
 

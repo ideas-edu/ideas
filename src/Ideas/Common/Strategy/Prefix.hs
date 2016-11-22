@@ -39,7 +39,7 @@ import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.StrategyTree
-import Ideas.Common.Utils (splitsWithElem, readM)
+import Ideas.Utils.Prelude (splitsWithElem, readM)
 
 --------------------------------------------------------------------------------
 -- Prefix datatype

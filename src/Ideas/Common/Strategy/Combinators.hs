@@ -25,7 +25,7 @@ import Ideas.Common.Rewriting (IsTerm)
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.StrategyTree
-import Ideas.Common.Utils (fst3, thd3)
+import Ideas.Utils.Prelude (fst3, thd3)
 import Prelude hiding (not, repeat, fail, sequence)
 import qualified Ideas.Common.Strategy.Choice as Choice
 import qualified Ideas.Common.Strategy.Derived as Derived

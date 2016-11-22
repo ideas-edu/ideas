@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Main.Logging
+module Ideas.Service.Logging
    ( Record(..), addRequest, addState
    , LogRef, newLogRef, noLogRef, changeLog
    , logEnabled, logRecord, printLog

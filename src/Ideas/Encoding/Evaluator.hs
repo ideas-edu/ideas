@@ -16,7 +16,7 @@ module Ideas.Encoding.Evaluator (Evaluator(..), evalService) where
 import Ideas.Common.Library
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.Options
-import Ideas.Main.Logging
+import Ideas.Service.Logging
 import Ideas.Service.Diagnose
 import Ideas.Service.Types
 

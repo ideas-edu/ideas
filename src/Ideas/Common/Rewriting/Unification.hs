@@ -21,7 +21,7 @@ import Data.Maybe
 import Ideas.Common.Rewriting.AC (pairingsMatchA)
 import Ideas.Common.Rewriting.Substitution
 import Ideas.Common.Rewriting.Term
-import Ideas.Common.Utils.TestSuite
+import Ideas.Utils.TestSuite
 import qualified Data.Map as M
 
 -----------------------------------------------------------

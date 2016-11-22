@@ -38,9 +38,9 @@ import Data.Data
 import Data.Function
 import Data.Maybe
 import Ideas.Common.Id
-import Ideas.Common.Utils (ShowString(..))
-import Ideas.Common.Utils.QuickCheck
-import Ideas.Common.Utils.Uniplate
+import Ideas.Utils.Prelude (ShowString(..))
+import Ideas.Utils.QuickCheck
+import Ideas.Utils.Uniplate
 import Ideas.Common.View
 import qualified Data.IntSet as IS
 import qualified Data.Set as S

@@ -10,12 +10,12 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Common.Utils.BlackBoxTests (blackBoxTests, TestRunner) where
+module Ideas.Utils.BlackBoxTests (blackBoxTests, TestRunner) where
 
 import Control.Monad
 import Data.Char
 import Data.List
-import Ideas.Common.Utils.TestSuite
+import Ideas.Utils.TestSuite
 import System.Directory
 import System.IO
 import qualified Data.Algorithm.Diff as Diff

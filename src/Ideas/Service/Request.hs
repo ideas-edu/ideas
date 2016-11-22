@@ -16,7 +16,7 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
-import Ideas.Common.Utils
+import Ideas.Utils.Prelude
 
 data Request = Request
    { serviceId      :: Maybe Id

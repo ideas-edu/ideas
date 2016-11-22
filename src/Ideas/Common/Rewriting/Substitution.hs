@@ -22,8 +22,8 @@ import Control.Monad
 import Data.List
 import Data.Maybe
 import Ideas.Common.Rewriting.Term
-import Ideas.Common.Utils.TestSuite
-import Ideas.Common.Utils.Uniplate
+import Ideas.Utils.TestSuite
+import Ideas.Utils.Uniplate
 import Test.QuickCheck
 import qualified Data.IntMap as IM
 import qualified Data.IntSet as IS

@@ -14,7 +14,7 @@ module Ideas.Service.ServiceList (serviceList, metaServiceList) where
 
 import Ideas.Common.ExerciseTests
 import Ideas.Common.Library hiding (apply, applicable, suitable, ready)
-import Ideas.Common.Utils.TestSuite hiding (Message)
+import Ideas.Utils.TestSuite hiding (Message)
 import Ideas.Service.BasicServices
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackText

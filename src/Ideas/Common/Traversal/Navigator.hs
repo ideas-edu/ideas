@@ -37,7 +37,7 @@ import Data.Generics.Str
 import Data.Maybe
 import Ideas.Common.Traversal.Iterator
 import Ideas.Common.Traversal.Utils
-import Ideas.Common.Utils.Uniplate
+import Ideas.Utils.Uniplate
 import Test.QuickCheck
 
 ---------------------------------------------------------------

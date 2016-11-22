@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Common.Utils
+module Ideas.Utils.Prelude
    ( Some(..), ShowString(..), readInt, readM
    , subsets, isSubsetOf
    , cartesian, distinct, allsame

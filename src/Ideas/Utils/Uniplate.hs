@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Common.Utils.Uniplate
+module Ideas.Utils.Uniplate
    ( -- * Uniplate type class and utility functions
      Uniplate
    , children, contexts, descend, descendM, holes, para

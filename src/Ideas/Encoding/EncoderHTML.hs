@@ -21,7 +21,7 @@ import Data.Maybe
 import Data.Ord
 import Ideas.Common.Library hiding (alternatives)
 import Ideas.Common.Strategy.Symbol
-import Ideas.Common.Utils.TestSuite
+import Ideas.Utils.TestSuite
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.LinkManager
 import Ideas.Encoding.RulePresenter

@@ -22,7 +22,7 @@ module Ideas.Service.FeedbackScript.Analysis
 import Data.Either
 import Data.List
 import Ideas.Common.Library
-import Ideas.Common.Utils.Uniplate
+import Ideas.Utils.Uniplate
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Parser
 import Ideas.Service.FeedbackScript.Run

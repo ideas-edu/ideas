@@ -23,7 +23,7 @@ import Data.Maybe
 import qualified Data.Set as S
 import Ideas.Common.Library hiding (applicable, apply, ready)
 import Ideas.Common.Traversal.Navigator (downs, navigateTo)
-import Ideas.Common.Utils (fst3)
+import Ideas.Utils.Prelude (fst3)
 import Ideas.Service.State
 import Ideas.Service.Types
 import Test.QuickCheck.Random

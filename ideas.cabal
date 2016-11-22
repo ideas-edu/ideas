@@ -63,14 +63,6 @@ Library
      wl-pprint
 
   Exposed-modules:
-    Ideas.Common.Algebra.Boolean
-    Ideas.Common.Algebra.BooleanLaws
-    Ideas.Common.Algebra.Field
-    Ideas.Common.Algebra.FieldLaws
-    Ideas.Common.Algebra.Group
-    Ideas.Common.Algebra.GroupLaws
-    Ideas.Common.Algebra.Law
-    Ideas.Common.Algebra.SmartGroup
     Ideas.Common.Classes
     Ideas.Common.Context
     Ideas.Common.CyclicTree

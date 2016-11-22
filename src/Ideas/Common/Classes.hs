@@ -23,6 +23,9 @@ module Ideas.Common.Classes
    , BiFunctor(biMap, mapFirst, mapSecond), mapBoth
      -- * Type class Fix
    , Fix(..)
+     -- * Boolean Algebra
+   , BoolValue(..), Boolean(..)
+   , ands, ors, implies, equivalent
      -- * Buggy and Minor properties
    , Buggy(..), Minor(..)
    ) where
@@ -120,6 +123,60 @@ class Fix a where
   fix :: (a -> a) -> a
   -- default implementation
   fix f = let a = f a in a
+
+--------------------------------------------------------
+-- Boolean algebra
+
+-- Minimal complete definitions: (true/false, or fromBool) and isTrue/isFalse
+class BoolValue a where
+   true     :: a
+   false    :: a
+   fromBool :: Bool -> a
+   isTrue   :: a -> Bool
+   isFalse  :: a -> Bool
+   -- default definitions
+   true  = fromBool True
+   false = fromBool False
+   fromBool b = if b then true else false
+
+class BoolValue a => Boolean a where
+   (<&&>)     :: a -> a -> a
+   (<||>)     :: a -> a -> a
+   complement :: a -> a
+
+instance BoolValue Bool where
+   fromBool = id
+   isTrue   = id
+   isFalse  = not
+
+instance BoolValue b => BoolValue (a -> b) where
+   fromBool x = const (fromBool x)
+   isTrue  = error "not implemented"
+   isFalse = error "not implemented"
+
+instance Boolean Bool where
+   (<&&>)     = (&&)
+   (<||>)     = (||)
+   complement = not
+
+instance Boolean b => Boolean (a -> b) where
+   f <&&> g   = \x -> f x <&&> g x
+   f <||> g   = \x -> f x <||> g x
+   complement = (.) complement
+
+ands :: Boolean a => [a] -> a -- or use mconcat with And monoid
+ands xs | null xs   = true
+        | otherwise = foldr1 (<&&>) xs
+
+ors :: Boolean a => [a] -> a
+ors xs | null xs   = false
+       | otherwise = foldr1 (<||>) xs
+
+implies :: Boolean a => a -> a -> a
+implies a b = complement a <||> b
+
+equivalent :: Boolean a => a -> a -> a
+equivalent a b = (a <&&> b) <||> (complement a <&&> complement b)
 
 -----------------------------------------------------------
 -- Buggy and Minor properties

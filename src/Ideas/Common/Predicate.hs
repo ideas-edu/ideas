@@ -22,7 +22,7 @@ module Ideas.Common.Predicate
    , ands, ors, implies, equivalent
    ) where
 
-import Ideas.Common.Algebra.Boolean
+import Ideas.Common.Classes
 import Ideas.Common.Id
 import Ideas.Common.View
 

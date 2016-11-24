@@ -23,7 +23,7 @@ module Ideas.Common.Strategy.Configuration
 
 import Data.Char
 import Ideas.Common.Classes
-import Ideas.Common.CyclicTree hiding (label)
+import Ideas.Common.Strategy.CyclicTree hiding (label)
 import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
@@ -33,7 +33,7 @@ import Ideas.Common.Strategy.Process hiding (fold)
 import Ideas.Common.Strategy.Sequence
 import Ideas.Common.Strategy.StrategyTree
 import Ideas.Common.Strategy.Symbol
-import qualified Ideas.Common.CyclicTree as Tree
+import qualified Ideas.Common.Strategy.CyclicTree as Tree
 
 ---------------------------------------------------------------------
 -- Types and constructors

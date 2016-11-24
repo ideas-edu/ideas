@@ -65,7 +65,7 @@ Library
   Exposed-modules:
     Ideas.Common.Classes
     Ideas.Common.Context
-    Ideas.Common.CyclicTree
+    Ideas.Common.Strategy.CyclicTree
     Ideas.Common.Derivation
     Ideas.Common.DerivationTree
     Ideas.Common.Environment

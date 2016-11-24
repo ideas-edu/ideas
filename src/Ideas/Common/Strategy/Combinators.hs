@@ -18,7 +18,7 @@ module Ideas.Common.Strategy.Combinators where
 import Data.Graph
 import Data.List ((\\))
 import Data.Maybe
-import Ideas.Common.CyclicTree hiding (label)
+import Ideas.Common.Strategy.CyclicTree hiding (label)
 import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Rewriting (IsTerm)

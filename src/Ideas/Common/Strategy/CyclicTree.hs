@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Common.CyclicTree
+module Ideas.Common.Strategy.CyclicTree
    ( -- * Data type
      CyclicTree
      -- * Constructor functions

@@ -35,7 +35,7 @@ module Ideas.Common.Strategy.Abstract
 import Data.Foldable (toList)
 import Data.Maybe
 import Ideas.Common.Classes
-import Ideas.Common.CyclicTree hiding (label)
+import Ideas.Common.Strategy.CyclicTree hiding (label)
 import Ideas.Common.Derivation
 import Ideas.Common.Environment
 import Ideas.Common.Id
@@ -48,7 +48,7 @@ import Ideas.Common.Strategy.Sequence (Sequence(..), ready)
 import Ideas.Common.Strategy.StrategyTree
 import Ideas.Common.View
 import Prelude hiding (sequence)
-import qualified Ideas.Common.CyclicTree as Tree
+import qualified Ideas.Common.Strategy.CyclicTree as Tree
 
 -----------------------------------------------------------
 --- Strategy data-type

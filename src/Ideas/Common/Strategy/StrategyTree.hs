@@ -30,7 +30,7 @@ import Control.Monad
 import Data.Function
 import Data.Maybe
 import Ideas.Common.Classes
-import Ideas.Common.CyclicTree
+import Ideas.Common.Strategy.CyclicTree
 import Ideas.Common.Id
 import Ideas.Common.Rewriting.Term (Term, IsTerm(..))
 import Ideas.Common.Rule

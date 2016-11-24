@@ -18,7 +18,7 @@ module Ideas.Main.CmdLineOptions
    ) where
 
 import Data.Maybe
-import Ideas.Service.Logging (logEnabled)
+import Ideas.Encoding.Logging (logEnabled)
 import Ideas.Main.Revision
 import System.Console.GetOpt
 import System.Environment

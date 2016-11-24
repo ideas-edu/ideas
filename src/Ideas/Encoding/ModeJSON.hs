@@ -23,9 +23,9 @@ import Ideas.Encoding.DecoderJSON
 import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin)
 import Ideas.Encoding.EncoderJSON
 import Ideas.Encoding.Evaluator
-import Ideas.Service.Logging (LogRef, changeLog, errormsg)
+import Ideas.Encoding.Logging (LogRef, changeLog, errormsg)
 import Ideas.Service.DomainReasoner
-import Ideas.Service.Request
+import Ideas.Encoding.Request
 import Ideas.Text.JSON
 
 processJSON :: Options -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)

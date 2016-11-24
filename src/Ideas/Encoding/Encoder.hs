@@ -42,7 +42,7 @@ import Data.Monoid as Export
 import Ideas.Common.Library hiding (exerciseId, symbol)
 import Ideas.Encoding.Options
 import Ideas.Service.FeedbackScript.Parser (Script)
-import Ideas.Service.Request
+import Ideas.Encoding.Request
 import Ideas.Service.Types
 import Ideas.Text.JSON hiding (String)
 import Ideas.Text.Latex

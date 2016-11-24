@@ -22,22 +22,22 @@ module Ideas.Main.Default
 import Control.Exception
 import Control.Monad
 import Data.Maybe
-import Ideas.Utils.TestSuite
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
-import Ideas.Utils.BlackBoxTests
-import Ideas.Main.CmdLineOptions hiding (fullVersion)
-import qualified Ideas.Main.CmdLineOptions as Options
-import Ideas.Service.DomainReasoner
 import Ideas.Encoding.Options (Options, maxTime, optionCgiBin)
+import Ideas.Encoding.Request
+import Ideas.Main.CmdLineOptions hiding (fullVersion)
+import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Analysis
-import Ideas.Service.Request
 import Ideas.Service.ServiceList
 import Ideas.Service.Types (Service)
+import Ideas.Utils.BlackBoxTests
+import Ideas.Utils.TestSuite
 import Network.CGI
 import System.IO
 import System.IO.Error (ioeGetErrorString)
-import qualified Ideas.Service.Logging as Log
+import qualified Ideas.Encoding.Logging as Log
+import qualified Ideas.Main.CmdLineOptions as Options
 
 defaultMain :: DomainReasoner -> IO ()
 defaultMain = defaultMainWith mempty

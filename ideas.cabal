@@ -128,7 +128,7 @@ Library
     Ideas.Encoding.RulesInfo
     Ideas.Encoding.StrategyInfo
     Ideas.Main.Default
-    Ideas.Service.Logging
+    Ideas.Encoding.Logging
     Ideas.Main.CmdLineOptions
     Ideas.Main.Revision
     Ideas.Service.BasicServices
@@ -140,7 +140,7 @@ Library
     Ideas.Service.FeedbackScript.Syntax
     Ideas.Service.FeedbackText
     Ideas.Service.ProblemDecomposition
-    Ideas.Service.Request
+    Ideas.Encoding.Request
     Ideas.Service.ServiceList
     Ideas.Service.State
     Ideas.Service.Submit

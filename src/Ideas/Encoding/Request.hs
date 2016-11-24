@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Service.Request where
+module Ideas.Encoding.Request where
 
 import Data.Char
 import Data.List

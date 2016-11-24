@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Service.Logging
+module Ideas.Encoding.Logging
    ( Record(..), addRequest, addState
    , LogRef, newLogRef, noLogRef, changeLog
    , logEnabled, logRecord, printLog
@@ -22,9 +22,9 @@ module Ideas.Service.Logging
 import Data.IORef
 import Data.Maybe
 import Data.Time
-import Ideas.Service.Request (Request, Schema(..))
+import Ideas.Encoding.Request (Request, Schema(..))
 import Ideas.Service.State
-import qualified Ideas.Service.Request as R
+import qualified Ideas.Encoding.Request as R
 
 #ifdef DB
 import Data.List

@@ -30,7 +30,7 @@ import Ideas.Encoding.StrategyInfo
 import Ideas.Service.BasicServices
 import Ideas.Service.Diagnose
 import Ideas.Service.DomainReasoner
-import Ideas.Service.Request
+import Ideas.Encoding.Request
 import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Text.HTML

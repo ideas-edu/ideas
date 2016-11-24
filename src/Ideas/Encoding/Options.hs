@@ -20,7 +20,7 @@ import Data.Monoid
 import Ideas.Common.Library (Exercise, getId)
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Parser (parseScriptSafe, Script)
-import Ideas.Service.Request
+import Ideas.Encoding.Request
 import Test.QuickCheck.Random
 
 -------------------------------------------------------------------

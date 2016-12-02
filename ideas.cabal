@@ -124,6 +124,7 @@ Library
     Ideas.Encoding.ModeJSON
     Ideas.Encoding.ModeXML
     Ideas.Encoding.OpenMathSupport
+    Ideas.Encoding.Options
     Ideas.Encoding.RulePresenter
     Ideas.Encoding.RulesInfo
     Ideas.Encoding.StrategyInfo

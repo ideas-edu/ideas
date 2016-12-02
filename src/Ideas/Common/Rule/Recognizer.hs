@@ -14,13 +14,11 @@ module Ideas.Common.Rule.Recognizer
    ( -- * data type and type class
      Recognizable(..), Recognizer
      -- * Constructor functions
-   , makeRecognizer, makeRecognizerEnvMonad, makeRecognizerTrans
+   , makeRecognizer, makeRecognizerTrans
    ) where
 
-import Control.Monad
 import Data.Maybe
 import Ideas.Common.Environment
-import Ideas.Common.Rule.EnvironmentMonad
 import Ideas.Common.Rule.Transformation
 import Ideas.Common.View
 
@@ -58,10 +56,8 @@ instance HasRefs (Recognizer a) where
 --- Constructor functions
 
 makeRecognizer :: (a -> a -> Bool) -> Recognizer a
-makeRecognizer eq = makeRecognizerEnvMonad $ \a b -> guard (eq a b)
-
-makeRecognizerEnvMonad :: (a -> a -> EnvMonad ()) -> Recognizer a
-makeRecognizerEnvMonad = makeRecognizerTrans . makeTrans . uncurry
+makeRecognizer eq = makeRecognizerTrans $ transMaybe $ \(x, y) -> 
+   if eq x y then Just () else Nothing
 
 makeRecognizerTrans :: Trans (a, a) () -> Recognizer a
 makeRecognizerTrans = R

@@ -84,7 +84,6 @@ Library
     Ideas.Common.Rewriting.Unification
     Ideas.Common.Rule
     Ideas.Common.Rule.Abstract
-    Ideas.Common.Rule.EnvironmentMonad
     Ideas.Common.Rule.Parameter
     Ideas.Common.Rule.Recognizer
     Ideas.Common.Rule.Transformation

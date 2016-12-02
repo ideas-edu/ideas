@@ -19,7 +19,7 @@ module Ideas.Common.Rule.Transformation
      Transformation, Trans
      -- * Constructor functions
    , MakeTrans(..)
-   , transPure, transMaybe, transList, transEnvMonad
+   , transPure, transMaybe, transList
    , transRewrite, transRef
    , transReadRefM, transWriteRefM
      -- * Lifting transformations
@@ -34,16 +34,22 @@ module Ideas.Common.Rule.Transformation
 
 import Control.Arrow
 import Data.Maybe
-import Data.Monoid
 import Data.Typeable
 import Ideas.Common.Classes
 import Ideas.Common.Context
 import Ideas.Common.Environment
 import Ideas.Common.Rewriting
-import Ideas.Common.Rule.EnvironmentMonad
 import Ideas.Utils.Prelude
 import Ideas.Common.View
 import qualified Control.Category as C
+
+instance Functor (Trans a) where
+   fmap f t = t >>> arr f
+
+instance Applicative (Trans a) where
+   pure    = transPure . const
+   s <*> t = (s &&& t) >>> arr (uncurry ($))
+--instance Alternative (Trans a)
 
 -----------------------------------------------------------
 --- Trans data type and instances
@@ -52,13 +58,10 @@ data Trans a b where
    Zero     :: Trans a b
    List     :: (a -> [b]) -> Trans a b
    Rewrite  :: RewriteRule a -> Trans a a
-   EnvMonad :: (a -> EnvMonad b) -> Trans a b -- ?
-   Ref      :: Typeable a => Ref a -> Trans a a -- ?
-   UseEnv   :: Trans a b -> Trans (a, Environment) (b, Environment) -- ?
+   UseEnv   :: Trans a b -> Trans (a, Environment) (b, Environment)
    (:>>:)   :: Trans a b -> Trans b c -> Trans a c
    (:**:)   :: Trans a c -> Trans b d -> Trans (a, b) (c, d)
    (:++:)   :: Trans a c -> Trans b d -> Trans (Either a b) (Either c d)
-   Apply    :: Trans (Trans a b, a) b -- ?
    Append   :: Trans a b -> Trans a b -> Trans a b
 
    ReadRefM  :: Ref a -> Trans x (Maybe a)
@@ -85,9 +88,6 @@ instance ArrowChoice Trans where
    left f  = f :++: identity
    right f = identity :++: f
 
-instance ArrowApply Trans where
-   app = Apply
-
 instance Monoid (Trans a b) where
    mempty  = zeroArrow
    mappend = (<+>)
@@ -108,9 +108,6 @@ instance MakeTrans Maybe where
 instance MakeTrans [] where
    makeTrans = transList
 
-instance MakeTrans EnvMonad where
-   makeTrans = transEnvMonad
-
 transPure :: (a -> b) -> Trans a b
 transPure f = transList (return . f)
 
@@ -120,17 +117,17 @@ transMaybe f = transList (maybeToList . f)
 transList :: (a -> [b]) -> Trans a b
 transList = List
 
-transEnvMonad :: (a -> EnvMonad b) -> Trans a b
-transEnvMonad = EnvMonad
-
 transRewrite :: RewriteRule a -> Trans a a
 transRewrite = Rewrite
 
 transRef :: Typeable a => Ref a -> Trans a a
-transRef = Ref
+transRef r = (identity &&& transReadRefM r) >>> arr (uncurry fromMaybe) >>> transWriteRefE r
 
 transReadRefM  :: Ref a -> Trans x (Maybe a)
 transReadRefM = ReadRefM
+
+transWriteRefE :: Typeable a => Ref a -> Trans a a
+transWriteRefE r = ((arr Just >>> transWriteRefM r) &&& identity) >>> arr snd
 
 transWriteRefM :: Typeable a => Ref a -> Trans (Maybe a) ()
 transWriteRefM = WriteRefM
@@ -176,20 +173,15 @@ transApplyWith env trans a =
       Zero       -> []
       List f     -> [ (b, env) | b <- f a ]
       Rewrite r  -> [ (b, env) | b <- applyAll r a ]
-      EnvMonad f -> runEnvMonad (f a) env
-      Ref ref    -> case ref ? env of
-                       Just b  -> [(b, env)]
-                       Nothing -> [(a, insertRef ref a env)]
       UseEnv f   -> do (b, envb) <- transApplyWith (snd a) f (fst a)
                        return ((b, envb), env)
       f :>>: g   -> do (b, env1) <- transApplyWith env  f a
                        (c, env2) <- transApplyWith env1 g b
                        return (c, env2)
       f :**: g   -> do (b, env1) <- transApplyWith env f (fst a)
-                       (c, env2) <- transApplyWith env g (snd a)
-                       return ((b, c), env2 `mappend` env1)
+                       (c, env2) <- transApplyWith env1 g (snd a)
+                       return ((b, c), env2)
       f :++: g   -> either (make Left f) (make Right g) a
-      Apply      -> uncurry (transApplyWith env) a
       Append f g -> transApplyWith env f a ++ transApplyWith env g a
       ReadRefM r  -> [(r ? env, env)]
       WriteRefM r -> [((), maybe (deleteRef r) (\x -> insertRef r x) a env)]
@@ -206,8 +198,6 @@ getRewriteRules trans =
 instance HasRefs (Trans a b) where
    allRefs trans =
       case trans of
-         Ref r       -> [Some r]
-         EnvMonad f  -> envMonadFunctionRefs f
          ReadRefM r  -> [Some r]
          WriteRefM r -> [Some r]
          _           -> descendTrans allRefs trans

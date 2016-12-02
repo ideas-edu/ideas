@@ -28,7 +28,7 @@ module Ideas.Common.Rule.Abstract
    , isRewriteRule, isRecognizer, doAfter
      -- * Recognizer
    , addRecognizer, addRecognizerBool
-   , addTransRecognizer, addRecognizerEnvMonad
+   , addTransRecognizer
    ) where
 
 import Control.Arrow
@@ -37,7 +37,6 @@ import Ideas.Common.Classes
 import Ideas.Common.Environment
 import Ideas.Common.Id
 import Ideas.Common.Rewriting
-import Ideas.Common.Rule.EnvironmentMonad
 import Ideas.Common.Rule.Recognizer
 import Ideas.Common.Rule.Transformation
 import Ideas.Common.View
@@ -173,9 +172,6 @@ addRecognizer a r = r {getRecognizer = a `mappend` getRecognizer r}
 
 addRecognizerBool :: (a -> a -> Bool) -> Rule a -> Rule a
 addRecognizerBool eq = addRecognizer (makeRecognizer eq)
-
-addRecognizerEnvMonad :: (a -> a -> EnvMonad ()) -> Rule a -> Rule a
-addRecognizerEnvMonad = addRecognizer . makeRecognizerEnvMonad
 
 addTransRecognizer :: (a -> a -> Bool) -> Rule a -> Rule a
 addTransRecognizer eq r = flip addRecognizer r $

@@ -13,7 +13,6 @@
 module Ideas.Common.Rule (module Export) where
 
 import Ideas.Common.Rule.Abstract as Export
-import Ideas.Common.Rule.EnvironmentMonad as Export
 import Ideas.Common.Rule.Parameter as Export
 import Ideas.Common.Rule.Recognizer as Export
 import Ideas.Common.Rule.Transformation as Export

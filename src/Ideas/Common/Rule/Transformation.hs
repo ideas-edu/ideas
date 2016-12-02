@@ -20,7 +20,7 @@ module Ideas.Common.Rule.Transformation
      -- * Constructor functions
    , MakeTrans(..)
    , transPure, transMaybe, transList, transEnvMonad
-   , transRewrite, transRef, transAddEnv, transAddEnv2
+   , transRewrite, transRef
    , transReadRefM, transWriteRefM
      -- * Lifting transformations
    , transUseEnvironment
@@ -60,8 +60,6 @@ data Trans a b where
    (:++:)   :: Trans a c -> Trans b d -> Trans (Either a b) (Either c d)
    Apply    :: Trans (Trans a b, a) b -- ?
    Append   :: Trans a b -> Trans a b -> Trans a b
-   AddEnv   :: Environment -> Trans a b -> Trans a b -- ?
-   AddEnv2  :: (a -> Maybe Environment) -> Trans a a -- ?
 
    ReadRefM  :: Ref a -> Trans x (Maybe a)
    WriteRefM :: Typeable a => Ref a -> Trans (Maybe a) ()
@@ -131,12 +129,6 @@ transRewrite = Rewrite
 transRef :: Typeable a => Ref a -> Trans a a
 transRef = Ref
 
-transAddEnv :: Environment -> Trans a b -> Trans a b
-transAddEnv = AddEnv
-
-transAddEnv2 :: (a -> Maybe Environment) -> Transformation a
-transAddEnv2 = AddEnv2
-
 transReadRefM  :: Ref a -> Trans x (Maybe a)
 transReadRefM = ReadRefM
 
@@ -199,10 +191,6 @@ transApplyWith env trans a =
       f :++: g   -> either (make Left f) (make Right g) a
       Apply      -> uncurry (transApplyWith env) a
       Append f g -> transApplyWith env f a ++ transApplyWith env g a
-      AddEnv e f -> transApplyWith (e <> env) f a
-      AddEnv2 f  -> case f a of
-                       Just e  -> [(a, e <> env)]
-                       Nothing -> []
       ReadRefM r  -> [(r ? env, env)]
       WriteRefM r -> [((), maybe (deleteRef r) (\x -> insertRef r x) a env)]
  where
@@ -243,5 +231,4 @@ descendTrans make trans =
       f :**: g     -> make f `mappend` make g
       f :++: g     -> make f `mappend` make g
       Append f g   -> make f `mappend` make g
-      AddEnv _ f   -> make f
       _            -> mempty

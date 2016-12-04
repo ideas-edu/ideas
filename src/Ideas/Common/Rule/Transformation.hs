@@ -19,9 +19,10 @@ module Ideas.Common.Rule.Transformation
      Transformation, Trans
      -- * Constructor functions
    , MakeTrans(..)
-   , transPure, transMaybe, transList
-   , transRewrite
-   , transRef, transReadRefM, transWriteRefM
+   , transPure, transMaybe, transList, transGuard, transRewrite
+     -- * Reading and writing (with references)
+   , readRef, readRefDefault, readRefMaybe
+   , writeRef, writeRef_, writeRefMaybe
      -- * Lifting transformations
    , transUseEnvironment
    , transLiftView, transLiftViewIn
@@ -32,6 +33,7 @@ module Ideas.Common.Rule.Transformation
    ) where
 
 import Control.Arrow
+import Control.Applicative
 import Data.Maybe
 import Data.Typeable
 import Ideas.Common.Classes
@@ -91,7 +93,10 @@ instance Functor (Trans a) where
 instance Applicative (Trans a) where
    pure    = transPure . const
    s <*> t = (s &&& t) >>> arr (uncurry ($))
---instance Alternative (Trans a)
+   
+instance Alternative (Trans a) where
+   empty = zeroArrow
+   (<|>) = (<+>)
 
 -----------------------------------------------------------
 --- Constructor functions
@@ -116,23 +121,35 @@ transMaybe f = transList (maybeToList . f)
 transList :: (a -> [b]) -> Trans a b
 transList = List
 
+transGuard :: (a -> Bool) -> Trans a a
+transGuard p = transMaybe $ \x -> if p x then Just x else Nothing
+
 transRewrite :: RewriteRule a -> Trans a a
 transRewrite = Rewrite
 
-transRef :: Typeable a => Ref a -> Trans a a
-transRef r = (identity &&& transReadRefM r) >>> arr (uncurry fromMaybe) >>> transWriteRefE r
+-----------------------------------------------------------
+-- Reading and writing (with references)
 
-transReadRefM  :: Ref a -> Trans x (Maybe a)
-transReadRefM = ReadRefM
+readRef :: Ref a -> Trans x a
+readRef r = readRefMaybe r >>> transMaybe id
 
-transWriteRefE :: Typeable a => Ref a -> Trans a a
-transWriteRefE r = ((arr Just >>> transWriteRefM r) &&& identity) >>> arr snd
+readRefDefault :: a -> Ref a -> Trans x a
+readRefDefault a r = readRefMaybe r >>> arr (fromMaybe a)
 
-transWriteRefM :: Typeable a => Ref a -> Trans (Maybe a) ()
-transWriteRefM = WriteRefM
+readRefMaybe  :: Ref a -> Trans x (Maybe a)
+readRefMaybe = ReadRefM
+
+writeRef :: Typeable a => Ref a -> Trans a a
+writeRef r = (identity &&& writeRef_ r) >>> arr fst
+
+writeRef_ :: Typeable a => Ref a -> Trans a ()
+writeRef_ r = arr Just >>> writeRefMaybe r
+
+writeRefMaybe :: Typeable a => Ref a -> Trans (Maybe a) ()
+writeRefMaybe = WriteRefM
 
 -----------------------------------------------------------
---- Lifting transformations
+-- Lifting transformations
 
 transUseEnvironment :: Trans a b -> Trans (a, Environment) (b, Environment)
 transUseEnvironment = UseEnv

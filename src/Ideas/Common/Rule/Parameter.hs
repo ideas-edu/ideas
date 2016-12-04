@@ -25,9 +25,11 @@ module Ideas.Common.Rule.Parameter
    , inputWith, readRef, readRef2, readRef3
    , outputWith, writeRef, writeRef2, writeRef3
    , checkTrans
+  -- , TransReader(..), TransWriter(..)
    ) where
 
 import Control.Arrow
+import Data.Maybe
 import Ideas.Common.Context
 import Ideas.Common.Environment
 import Ideas.Common.Rule.Transformation
@@ -55,6 +57,9 @@ supplyContextParameters :: ParamTrans b a -> Trans a b -> Transformation (Contex
 supplyContextParameters f g = transLiftContextIn $
    transUseEnvironment (g &&& identity) >>> first f
 
+transRef :: Typeable a => Ref a -> Trans a a
+transRef r = (identity &&& readRefMaybe r) >>> arr (uncurry fromMaybe) >>> writeRef r
+
 parameter1 :: Typeable a => Ref a -> ParamTrans a b -> ParamTrans a b
 parameter1 r1 f = first (transRef r1) >>> f
 
@@ -64,8 +69,6 @@ parameter2 r1 r2 f = first (transRef r1 *** transRef r2) >>> f
 parameter3 :: (Typeable a, Typeable b, Typeable c) => Ref a -> Ref b -> Ref c -> ParamTrans (a, b, c) d -> ParamTrans (a, b, c) d
 parameter3 r1 r2 r3 f = first (arr from3 >>> t >>> arr to3) >>> f
  where
-   from3 (x, y, z) = (x, (y, z))
-   to3 (x, (y, z)) = (x, y, z)
    t = transRef r1 *** (transRef r2 *** transRef r3)
 
 ---------------------------------------------------------------------------
@@ -76,27 +79,41 @@ inputWith f g = (f &&& identity) >>> g
 outputWith :: Trans b c -> Trans a b -> Trans a c
 outputWith f g = f <<< g
 
-readRef :: Ref a -> Trans x a
-readRef r = transReadRefM r >>> transMaybe id
-
 readRef2 :: Ref a -> Ref b -> Trans x (a, b)
 readRef2 r1 r2 = readRef r1 &&& readRef r2
 
 readRef3 :: Ref a -> Ref b -> Ref c -> Trans x (a, b, c)
-readRef3 r1 r2 r3 = (readRef2 r1 r2) &&& readRef r3 >>> arr f
- where
-   f ((a, b), c) = (a, b, c)
-
-writeRef :: Typeable a => Ref a -> Trans a ()
-writeRef r = arr Just >>> transWriteRefM r
+readRef3 r1 r2 r3 = readRef r1 &&& readRef2 r2 r3 >>> arr to3
 
 writeRef2 :: (Typeable a, Typeable b) => Ref a -> Ref b -> Trans (a, b) ()
-writeRef2 r1 r2 = (writeRef r1 *** writeRef r2) >>> arr fst
+writeRef2 r1 r2 = (writeRef_ r1 *** writeRef_ r2) >>> arr fst
 
 writeRef3 :: (Typeable a, Typeable b, Typeable c) => Ref a -> Ref b -> Ref c -> Trans (a, b, c) ()
-writeRef3 r1 r2 r3 = arr f >>> (writeRef2 r1 r2 *** writeRef r3) >>> arr fst
- where
-   f (a, b, c) = ((a, b), c)
+writeRef3 r1 r2 r3 = arr from3 >>> (writeRef_ r1 *** writeRef2 r2 r3) >>> arr fst
 
 checkTrans :: Trans a x -> Trans a a
 checkTrans f = (f &&& identity) >>> arr snd
+{-
+class TransReader a where
+   transReader :: Trans x a
+   
+instance (TransReader a, TransReader b) => TransReader (a, b) where
+   transReader = transReader &&& transReader
+
+instance (TransReader a, TransReader b, TransReader c) => TransReader (a, b, c) where
+   transReader = transReader &&& transReader &&& transReader >>> arr to3
+      
+class TransWriter a where
+   transWriter :: Trans a a
+   
+instance (TransWriter a, TransWriter b) => TransWriter (a, b) where
+   transWriter = transWriter *** transWriter
+   
+instance (TransWriter a, TransWriter b, TransWriter c) => TransWriter (a, b, c) where
+   transWriter = arr from3 >>> transWriter *** transWriter *** transWriter >>> arr to3 -}
+    
+from3 :: (a, b, c) -> (a, (b, c))
+from3 (a, b, c) = (a, (b, c))
+
+to3 :: (a, (b, c)) -> (a, b, c)
+to3 (a, (b, c)) = (a, b, c)

@@ -1,5 +1,5 @@
 name:                   ideas
-version:                1.5.1
+version:                1.5.2
 synopsis:               Feedback services for intelligent tutoring systems
 homepage:               http://ideas.cs.uu.nl/www/
 description:
@@ -65,7 +65,6 @@ Library
   Exposed-modules:
     Ideas.Common.Classes
     Ideas.Common.Context
-    Ideas.Common.Strategy.CyclicTree
     Ideas.Common.Derivation
     Ideas.Common.DerivationTree
     Ideas.Common.Environment
@@ -92,6 +91,7 @@ Library
     Ideas.Common.Strategy.Choice
     Ideas.Common.Strategy.Combinators
     Ideas.Common.Strategy.Configuration
+    Ideas.Common.Strategy.CyclicTree
     Ideas.Common.Strategy.Derived
     Ideas.Common.Strategy.Legacy
     Ideas.Common.Strategy.Location
@@ -105,12 +105,6 @@ Library
     Ideas.Common.Traversal.Navigator
     Ideas.Common.Traversal.Tests
     Ideas.Common.Traversal.Utils
-    Ideas.Utils.Prelude
-    Ideas.Utils.BlackBoxTests
-    Ideas.Utils.QuickCheck
-    Ideas.Utils.StringRef
-    Ideas.Utils.TestSuite
-    Ideas.Utils.Uniplate
     Ideas.Common.View
     Ideas.Encoding.DecoderJSON
     Ideas.Encoding.DecoderXML
@@ -120,15 +114,17 @@ Library
     Ideas.Encoding.EncoderXML
     Ideas.Encoding.Evaluator
     Ideas.Encoding.LinkManager
+    Ideas.Encoding.Logging
     Ideas.Encoding.ModeJSON
     Ideas.Encoding.ModeXML
     Ideas.Encoding.OpenMathSupport
+    Ideas.Encoding.Options
+    Ideas.Encoding.Request
     Ideas.Encoding.RulePresenter
     Ideas.Encoding.RulesInfo
     Ideas.Encoding.StrategyInfo
-    Ideas.Main.Default
-    Ideas.Encoding.Logging
     Ideas.Main.CmdLineOptions
+    Ideas.Main.Default
     Ideas.Main.Revision
     Ideas.Service.BasicServices
     Ideas.Service.Diagnose
@@ -139,7 +135,6 @@ Library
     Ideas.Service.FeedbackScript.Syntax
     Ideas.Service.FeedbackText
     Ideas.Service.ProblemDecomposition
-    Ideas.Encoding.Request
     Ideas.Service.ServiceList
     Ideas.Service.State
     Ideas.Service.Submit
@@ -161,13 +156,19 @@ Library
     Ideas.Text.OpenMath.Object
     Ideas.Text.OpenMath.Symbol
     Ideas.Text.OpenMath.Tests
-    Ideas.Utils.Parsing
     Ideas.Text.UTF8
     Ideas.Text.XML
     Ideas.Text.XML.Document
     Ideas.Text.XML.Interface
     Ideas.Text.XML.Parser
     Ideas.Text.XML.Unicode
+    Ideas.Utils.BlackBoxTests
+    Ideas.Utils.Parsing
+    Ideas.Utils.Prelude
+    Ideas.Utils.QuickCheck
+    Ideas.Utils.StringRef
+    Ideas.Utils.TestSuite
+    Ideas.Utils.Uniplate
 
 --------------------------------------------------------------------------------
 

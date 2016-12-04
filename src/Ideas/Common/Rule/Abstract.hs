@@ -25,7 +25,7 @@ module Ideas.Common.Rule.Abstract
    , idRule, checkRule, emptyRule
      -- * Rule properties
    , ruleSiblings, siblingOf
-   , isRewriteRule, isRecognizer, doAfter
+   , isRewriteRule, doAfter
      -- * Recognizer
    , addRecognizer, addRecognizerBool
    , addTransRecognizer
@@ -153,9 +153,6 @@ checkRule n p = minorRule n $ \a -> [ a | p a ]
 
 isRewriteRule :: Rule a -> Bool
 isRewriteRule = not . null . getRewriteRules . transformation
-
-isRecognizer :: Rule a -> Bool
-isRecognizer = isZeroTrans . transformation
 
 siblingOf :: HasId b => b -> Rule a -> Rule a
 siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }

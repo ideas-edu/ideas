@@ -20,16 +20,15 @@ module Ideas.Common.Rule.Transformation
      -- * Constructor functions
    , MakeTrans(..)
    , transPure, transMaybe, transList
-   , transRewrite, transRef
-   , transReadRefM, transWriteRefM
+   , transRewrite
+   , transRef, transReadRefM, transWriteRefM
      -- * Lifting transformations
    , transUseEnvironment
    , transLiftView, transLiftViewIn
    , transLiftContext, transLiftContextIn
-   , makeTransLiftContext, makeTransLiftContext_
      -- * Using transformations
    , transApply, transApplyWith
-   , getRewriteRules, isZeroTrans
+   , getRewriteRules
    ) where
 
 import Control.Arrow
@@ -43,16 +42,10 @@ import Ideas.Utils.Prelude
 import Ideas.Common.View
 import qualified Control.Category as C
 
-instance Functor (Trans a) where
-   fmap f t = t >>> arr f
-
-instance Applicative (Trans a) where
-   pure    = transPure . const
-   s <*> t = (s &&& t) >>> arr (uncurry ($))
---instance Alternative (Trans a)
-
 -----------------------------------------------------------
 --- Trans data type and instances
+
+type Transformation a = Trans a a
 
 data Trans a b where
    Zero     :: Trans a b
@@ -92,7 +85,13 @@ instance Monoid (Trans a b) where
    mempty  = zeroArrow
    mappend = (<+>)
 
-type Transformation a = Trans a a
+instance Functor (Trans a) where
+   fmap f t = t >>> arr f
+
+instance Applicative (Trans a) where
+   pure    = transPure . const
+   s <*> t = (s &&& t) >>> arr (uncurry ($))
+--instance Alternative (Trans a)
 
 -----------------------------------------------------------
 --- Constructor functions
@@ -153,14 +152,6 @@ transLiftContextIn = transLiftViewIn (contextView >>> (f <-> g))
    f (a, c)        = ((a, environment c), c)
    g ((a, env), c) = (a, setEnvironment env c)
 
--- | Overloaded variant of @transLiftContext@
-makeTransLiftContext :: MakeTrans f => (a -> f a) -> Transformation (Context a)
-makeTransLiftContext = transLiftContext . makeTrans
-
--- | Overloaded variant of @transLiftContext@; ignores result
-makeTransLiftContext_ :: MakeTrans f => (a -> f ()) -> Transformation (Context a)
-makeTransLiftContext_ f = transLiftContext (identity &&& makeTrans f >>> arr fst)
-
 -----------------------------------------------------------
 --- Using transformations
 
@@ -201,16 +192,6 @@ instance HasRefs (Trans a b) where
          ReadRefM r  -> [Some r]
          WriteRefM r -> [Some r]
          _           -> descendTrans allRefs trans
-
-isZeroTrans :: Trans a b -> Bool
-isZeroTrans = or . rec
- where
-   rec :: Trans a b -> [Bool]
-   rec trans =
-      case trans of
-         Zero       -> [True]
-         Append f g -> [isZeroTrans f && isZeroTrans g]
-         _          -> descendTrans rec trans
 
 -- General recursion function (existentially quantified)
 descendTrans :: Monoid m => (forall x y . Trans x y -> m) -> Trans a b -> m

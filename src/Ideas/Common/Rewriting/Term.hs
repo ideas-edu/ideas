@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS -fno-warn-orphans #-}
 -----------------------------------------------------------------------------
 -- Copyright 2016, Ideas project team. This file is distributed under the
@@ -84,7 +83,7 @@ data Term = TVar   String
           | TNum   Integer
           | TFloat Double
           | TMeta  Int
- deriving (Show, Read, Eq, Ord, Typeable)
+ deriving (Show, Read, Eq, Ord)
 
 instance Uniplate Term where
    uniplate (TCon x xs)   = plate (function x) ||* xs

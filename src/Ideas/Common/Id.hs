@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -45,7 +44,6 @@ module Ideas.Common.Id
 
 import Control.Monad
 import Data.Char
-import Data.Data
 import Data.List
 import Data.Monoid
 import Data.Ord
@@ -64,7 +62,6 @@ data Id = Id
    , idDescription :: String
    , idRef         :: !StringRef
    }
- deriving (Data, Typeable)
 
 instance Show Id where
    show = intercalate "." . idList

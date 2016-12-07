@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -19,7 +18,6 @@ import Data.Char
 import Data.Generics.Uniplate.Direct hiding (children)
 import Data.List (nub)
 import Data.Maybe
-import Data.Typeable
 import Ideas.Text.OpenMath.Symbol
 import Ideas.Text.XML
 
@@ -30,7 +28,7 @@ data OMOBJ = OMI Integer
            | OMS Symbol
            | OMA [OMOBJ]
            | OMBIND OMOBJ [String] OMOBJ
-   deriving (Show, Eq, Typeable)
+   deriving (Show, Eq)
 
 instance InXML OMOBJ where
    toXML   = omobj2xml

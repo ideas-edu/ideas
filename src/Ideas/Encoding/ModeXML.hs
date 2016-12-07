@@ -16,7 +16,7 @@ module Ideas.Encoding.ModeXML (processXML) where
 
 import Control.Exception
 import Control.Monad
-import Ideas.Common.Library hiding (exerciseId, (:=))
+import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Utils.Prelude (timedSeconds)
 import Ideas.Encoding.DecoderXML
 import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin)

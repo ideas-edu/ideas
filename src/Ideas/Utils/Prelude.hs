@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification, DeriveDataTypeable #-}
+{-# LANGUAGE ExistentialQuantification #-}
 -----------------------------------------------------------------------------
 -- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -28,13 +28,12 @@ module Ideas.Utils.Prelude
 
 import Data.Char
 import Data.List
-import Data.Typeable
 import System.Timeout
 
 data Some f = forall a . Some (f a)
 
 data ShowString = ShowString { fromShowString :: String }
-   deriving (Eq, Ord, Typeable)
+   deriving (Eq, Ord)
 
 instance Show ShowString where
    show = fromShowString

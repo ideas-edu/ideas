@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -30,7 +29,7 @@ import qualified Data.IntMap as IM
 -- StringRef datatype and instance declarations
 
 data StringRef = S !Int
-   deriving (Eq, Ord, Data, Typeable)
+   deriving (Eq, Ord)
 
 ----------------------------------------------------------------
 -- Hash table

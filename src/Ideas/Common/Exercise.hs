@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, DeriveDataTypeable, ExistentialQuantification #-}
+{-# LANGUAGE Rank2Types, ExistentialQuantification #-}
 -----------------------------------------------------------------------------
 -- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -41,7 +41,6 @@ module Ideas.Common.Exercise
    ) where
 
 import Data.Char
-import Data.Data
 import Data.List
 import Data.Maybe
 import Data.Ord
@@ -55,6 +54,7 @@ import Ideas.Common.Rewriting
 import Ideas.Common.Rule
 import Ideas.Common.Strategy hiding (not, fail, repeat, replicate)
 import Ideas.Utils.Prelude (ShowString(..))
+import Ideas.Utils.Typeable
 import Ideas.Common.View
 import System.Random
 import Test.QuickCheck hiding (label)
@@ -251,7 +251,7 @@ isPrivate = not . isPublic
 type Examples a = [(Difficulty, a)]
 
 data Difficulty = VeryEasy | Easy | Medium | Difficult | VeryDifficult
-   deriving (Eq, Ord, Enum, Data, Typeable)
+   deriving (Eq, Ord, Enum)
 
 instance Show Difficulty where
    show = (xs !!) . fromEnum
@@ -309,24 +309,12 @@ withoutContext f a b = fromMaybe False (fromContextWith2 f a b)
 -----------------------------------------------------------------------------
 -- Type casting
 
-data IsTypeable a = IT 
-   { getCastFrom :: forall b . Typeable b => a -> Maybe b
-   , getCastTo   :: forall b . Typeable b => b -> Maybe a
-   }
+instance HasTypeable Exercise where
+   getTypeable = hasTypeable
 
 -- | Encapsulates a type representation (use for 'hasTypeable' field).
 useTypeable :: Typeable a => Maybe (IsTypeable a)
-useTypeable = Just (IT cast cast)
-
--- | Cast from polymorphic type (to exercise-specific type).
--- This only works if 'hasTypeable' contains the right type representation.
-castFrom :: Typeable b => Exercise a -> a -> Maybe b
-castFrom ex a = hasTypeable ex >>= (`getCastFrom` a)
-
--- | Cast to polymorphic type (from exercise-specific type).
--- This only works if 'hasTypeable' contains the right type representation.
-castTo :: Typeable b => Exercise a -> b -> Maybe a
-castTo ex a = hasTypeable ex >>= (`getCastTo` a)
+useTypeable = Just typeable
 
 -----------------------------------------------------------------------------
 -- Exercise-specific properties

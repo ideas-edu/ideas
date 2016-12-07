@@ -1,7 +1,4 @@
-{-# LANGUAGE ExistentialQuantification, RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ExistentialQuantification #-}
 -----------------------------------------------------------------------------
 -- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -31,13 +28,12 @@ module Ideas.Common.Environment
 import Control.Monad
 import Data.Function
 import Data.List
-import Data.Typeable
 import Ideas.Common.Id
 import Ideas.Common.Rewriting.Term
 import Ideas.Utils.Prelude
+import Ideas.Utils.Typeable
 import Ideas.Common.View
 import qualified Data.Map as M
-import Unsafe.Coerce
 
 -----------------------------------------------------------
 -- Reference
@@ -61,20 +57,23 @@ instance HasId (Ref a) where
    getId = identifier
    changeId f d = d {identifier = f (identifier d)}
 
+instance HasTypeable Ref where
+   getTypeable = Just . refType
+
 -- | A type class for types as references
 class (IsTerm a, Typeable a, Show a, Read a) => Reference a where
    makeRef     :: IsId n => n -> Ref a
    makeRefList :: IsId n => n -> Ref [a]
    -- default implementation
-   makeRef n     = Ref (newId n) show readM termView makeIT
-   makeRefList n = Ref (newId n) show readM termView makeIT
+   makeRef n     = Ref (newId n) show readM termView typeable
+   makeRefList n = Ref (newId n) show readM termView typeable
 
 instance Reference Int
 
 instance Reference Term
 
 instance Reference Char where
-   makeRefList n = Ref (newId n) id Just variableView makeIT
+   makeRefList n = Ref (newId n) id Just variableView typeable
 
 instance Reference ShowString
 
@@ -88,7 +87,7 @@ mapRef iso r = r
    { printer = printer r . to iso
    , parser  = fmap (from iso) . parser r
    , refView = refView r >>> toView iso
-   , refType = makeIT
+   , refType = typeable
    }
 
 -----------------------------------------------------------
@@ -100,24 +99,24 @@ instance Show Binding where
    show a = showId a ++ "=" ++ showValue a
 
 instance Eq Binding where
-   (==) = let f (Binding ref a) = (getId ref, build (refView ref) a)
+   (==) = let f (Binding r a) = (getId r, build (refView r) a)
           in (==) `on` f
 
 instance HasId Binding where
-   getId (Binding ref _ ) = getId ref
-   changeId f (Binding ref a) = Binding (changeId f ref) a
+   getId (Binding r _ ) = getId r
+   changeId f (Binding r a) = Binding (changeId f r) a
 
 makeBinding :: Ref a -> a -> Binding
 makeBinding = Binding
 
 fromBinding :: Typeable a => Binding -> Maybe (Ref a, a)
-fromBinding (Binding ref a) = liftM2 (,) (gcastFrom (refType ref) ref) (castFrom (refType ref) a)
+fromBinding (Binding r a) = liftM2 (,) (gcastFrom r r) (castFrom r a)
 
 showValue :: Binding -> String
-showValue (Binding ref a) = printer ref a
+showValue (Binding r a) = printer r a
 
 getTermValue :: Binding -> Term
-getTermValue (Binding ref a) = build (refView ref) a
+getTermValue (Binding r a) = build (refView r) a
 
 -----------------------------------------------------------
 -- Heterogeneous environment
@@ -139,7 +138,7 @@ makeEnvironment :: [Binding] -> Environment
 makeEnvironment xs = Env $ M.fromList [ (getId a, a) | a <- xs ]
 
 singleBinding :: Ref a -> a -> Environment
-singleBinding ref = makeEnvironment . return . Binding ref
+singleBinding r = makeEnvironment . return . Binding r
 
 class HasEnvironment env where
    environment    :: env -> Environment
@@ -149,11 +148,11 @@ class HasEnvironment env where
    changeRef      :: Ref a -> (a -> a) -> env -> env
    -- default definitions
    deleteRef a = changeEnv (Env . M.delete (getId a) . envMap)
-   insertRef ref =
+   insertRef r =
       let f b = Env . M.insert (getId b) b . envMap
-      in changeEnv . f . Binding ref
-   changeRef ref f env  =
-      maybe id (insertRef ref . f) (ref ? env) env
+      in changeEnv . f . Binding r
+   changeRef r f env  =
+      maybe id (insertRef r . f) (r ? env) env
 
 -- local helper
 changeEnv :: HasEnvironment env => (Environment -> Environment) -> env -> env
@@ -185,36 +184,7 @@ noBindings = M.null . envMap . environment
 ref ? env = do
    let m = envMap (environment env)
    Binding r a <- M.lookup (getId ref) m
-   msum [ castBetween (refType r) (refType ref) a        -- typed value
-        , castFrom (refType r) a >>= parser ref          -- value as string
-        , castFrom (refType r) a >>= match (refView ref) -- value as term
+   msum [ castBetween r ref a                  -- typed value
+        , castFrom r a >>= parser ref          -- value as string
+        , castFrom r a >>= match (refView ref) -- value as term
         ]
-           
---
-           
-newtype IsTypeable a = IT TypeRep
-
-makeIT :: forall a . Typeable a => IsTypeable a
-makeIT = IT (typeRep (Proxy :: Proxy a))
-
-castFrom :: Typeable b => IsTypeable a -> a -> Maybe b
-castFrom t = castBetween t makeIT
-
---castTo :: Typeable a => IsTypeable b -> a -> Maybe b
---castTo = undefined
-
-castBetween :: IsTypeable a -> IsTypeable b -> a -> Maybe b
-castBetween (IT ta) (IT tb) a 
-   | ta == tb  = Just $ unsafeCoerce a
-   | otherwise = Nothing
-
-gcastFrom :: Typeable b => IsTypeable a -> f a -> Maybe (f b)
-gcastFrom t = gcastBetween t makeIT
-
-gcastBetween :: IsTypeable a -> IsTypeable b -> f a -> Maybe (f b)
-gcastBetween ta tb x = fmap (\Refl -> x) (eqIT ta tb)
-
-eqIT :: IsTypeable a -> IsTypeable b -> Maybe (a :~: b)
-eqIT (IT ta) (IT tb)
-   | ta == tb  = Just $ unsafeCoerce Refl
-   | otherwise = Nothing

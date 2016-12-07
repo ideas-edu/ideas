@@ -1,4 +1,7 @@
 {-# LANGUAGE ExistentialQuantification, RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeFamilies #-}
 -----------------------------------------------------------------------------
 -- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -34,6 +37,7 @@ import Ideas.Common.Rewriting.Term
 import Ideas.Utils.Prelude
 import Ideas.Common.View
 import qualified Data.Map as M
+import Unsafe.Coerce
 
 -----------------------------------------------------------
 -- Reference
@@ -44,7 +48,7 @@ data Ref a = Ref
    , printer    :: a -> String       -- Pretty-printer
    , parser     :: String -> Maybe a -- Parser
    , refView    :: View Term a       -- Conversion to/from term
-   , refCast    :: forall b . Typeable b => b -> Maybe a -- Wrapped 'cast' function
+   , refType    :: IsTypeable a
    }
 
 instance Show (Ref a) where
@@ -62,15 +66,15 @@ class (IsTerm a, Typeable a, Show a, Read a) => Reference a where
    makeRef     :: IsId n => n -> Ref a
    makeRefList :: IsId n => n -> Ref [a]
    -- default implementation
-   makeRef n     = Ref (newId n) show readM termView cast
-   makeRefList n = Ref (newId n) show readM termView cast
+   makeRef n     = Ref (newId n) show readM termView makeIT
+   makeRefList n = Ref (newId n) show readM termView makeIT
 
 instance Reference Int
 
 instance Reference Term
 
 instance Reference Char where
-   makeRefList n = Ref (newId n) id Just variableView cast
+   makeRefList n = Ref (newId n) id Just variableView makeIT
 
 instance Reference ShowString
 
@@ -84,13 +88,13 @@ mapRef iso r = r
    { printer = printer r . to iso
    , parser  = fmap (from iso) . parser r
    , refView = refView r >>> toView iso
-   , refCast = cast
+   , refType = makeIT
    }
 
 -----------------------------------------------------------
 -- Binding
 
-data Binding = forall a . Typeable a => Binding (Ref a) a
+data Binding = forall a . Binding (Ref a) a
 
 instance Show Binding where
    show a = showId a ++ "=" ++ showValue a
@@ -103,11 +107,11 @@ instance HasId Binding where
    getId (Binding ref _ ) = getId ref
    changeId f (Binding ref a) = Binding (changeId f ref) a
 
-makeBinding :: Typeable a => Ref a -> a -> Binding
+makeBinding :: Ref a -> a -> Binding
 makeBinding = Binding
 
 fromBinding :: Typeable a => Binding -> Maybe (Ref a, a)
-fromBinding (Binding ref a) = liftM2 (,) (gcast ref) (cast a)
+fromBinding (Binding ref a) = liftM2 (,) (gcastFrom (refType ref) ref) (castFrom (refType ref) a)
 
 showValue :: Binding -> String
 showValue (Binding ref a) = printer ref a
@@ -134,15 +138,15 @@ instance HasRefs Environment where
 makeEnvironment :: [Binding] -> Environment
 makeEnvironment xs = Env $ M.fromList [ (getId a, a) | a <- xs ]
 
-singleBinding :: Typeable a => Ref a -> a -> Environment
+singleBinding :: Ref a -> a -> Environment
 singleBinding ref = makeEnvironment . return . Binding ref
 
 class HasEnvironment env where
    environment    :: env -> Environment
    setEnvironment :: Environment -> env -> env
    deleteRef      :: Ref a -> env -> env
-   insertRef      :: Typeable a => Ref a -> a -> env -> env
-   changeRef      :: Typeable a => Ref a -> (a -> a) -> env -> env
+   insertRef      :: Ref a -> a -> env -> env
+   changeRef      :: Ref a -> (a -> a) -> env -> env
    -- default definitions
    deleteRef a = changeEnv (Env . M.delete (getId a) . envMap)
    insertRef ref =
@@ -180,8 +184,37 @@ noBindings = M.null . envMap . environment
 (?) :: HasEnvironment env => Ref a -> env -> Maybe a
 ref ? env = do
    let m = envMap (environment env)
-   Binding _ a <- M.lookup (getId ref) m
-   msum [ refCast ref a                  -- typed value
-        , cast a >>= parser ref          -- value as string
-        , cast a >>= match (refView ref) -- value as term
+   Binding r a <- M.lookup (getId ref) m
+   msum [ castBetween (refType r) (refType ref) a        -- typed value
+        , castFrom (refType r) a >>= parser ref          -- value as string
+        , castFrom (refType r) a >>= match (refView ref) -- value as term
         ]
+           
+--
+           
+newtype IsTypeable a = IT TypeRep
+
+makeIT :: forall a . Typeable a => IsTypeable a
+makeIT = IT (typeRep (Proxy :: Proxy a))
+
+castFrom :: Typeable b => IsTypeable a -> a -> Maybe b
+castFrom t = castBetween t makeIT
+
+--castTo :: Typeable a => IsTypeable b -> a -> Maybe b
+--castTo = undefined
+
+castBetween :: IsTypeable a -> IsTypeable b -> a -> Maybe b
+castBetween (IT ta) (IT tb) a 
+   | ta == tb  = Just $ unsafeCoerce a
+   | otherwise = Nothing
+
+gcastFrom :: Typeable b => IsTypeable a -> f a -> Maybe (f b)
+gcastFrom t = gcastBetween t makeIT
+
+gcastBetween :: IsTypeable a -> IsTypeable b -> f a -> Maybe (f b)
+gcastBetween ta tb x = fmap (\Refl -> x) (eqIT ta tb)
+
+eqIT :: IsTypeable a -> IsTypeable b -> Maybe (a :~: b)
+eqIT (IT ta) (IT tb)
+   | ta == tb  = Just $ unsafeCoerce Refl
+   | otherwise = Nothing

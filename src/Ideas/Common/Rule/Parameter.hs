@@ -34,7 +34,6 @@ import Ideas.Common.Context
 import Ideas.Common.Environment
 import Ideas.Common.Rule.Transformation
 import Ideas.Common.View
-import Data.Typeable
 
 transInput1 :: MakeTrans f => Ref x -> (x -> a -> f b) -> Trans a b
 transInput1 r1 f = inputWith (readRef r1) $ makeTrans $ \(x, p) -> f x p
@@ -51,22 +50,22 @@ transInput3 r1 r2 r3 f = inputWith (readRef3 r1 r2 r3) $ makeTrans $ \((x, y, z)
 type ParamTrans a b = Trans (a, b) b
 
 supplyParameters :: ParamTrans b a -> (a -> Maybe b) -> Transformation a
-supplyParameters f g = transMaybe g &&& identity >>> f
+supplyParameters f g = inputWith (transMaybe g) f
 
 supplyContextParameters :: ParamTrans b a -> Trans a b -> Transformation (Context a)
 supplyContextParameters f g = transLiftContextIn $
    transUseEnvironment (g &&& identity) >>> first f
 
-transRef :: Typeable a => Ref a -> Trans a a
+transRef :: Ref a -> Trans a a
 transRef r = (identity &&& readRefMaybe r) >>> arr (uncurry fromMaybe) >>> writeRef r
 
-parameter1 :: Typeable a => Ref a -> ParamTrans a b -> ParamTrans a b
+parameter1 :: Ref a -> ParamTrans a b -> ParamTrans a b
 parameter1 r1 f = first (transRef r1) >>> f
 
-parameter2 :: (Typeable a, Typeable b) => Ref a -> Ref b -> ParamTrans (a, b) c -> ParamTrans (a, b) c
+parameter2 :: Ref a -> Ref b -> ParamTrans (a, b) c -> ParamTrans (a, b) c
 parameter2 r1 r2 f = first (transRef r1 *** transRef r2) >>> f
 
-parameter3 :: (Typeable a, Typeable b, Typeable c) => Ref a -> Ref b -> Ref c -> ParamTrans (a, b, c) d -> ParamTrans (a, b, c) d
+parameter3 :: Ref a -> Ref b -> Ref c -> ParamTrans (a, b, c) d -> ParamTrans (a, b, c) d
 parameter3 r1 r2 r3 f = first (arr from3 >>> t >>> arr to3) >>> f
  where
    t = transRef r1 *** (transRef r2 *** transRef r3)
@@ -85,10 +84,10 @@ readRef2 r1 r2 = readRef r1 &&& readRef r2
 readRef3 :: Ref a -> Ref b -> Ref c -> Trans x (a, b, c)
 readRef3 r1 r2 r3 = readRef r1 &&& readRef2 r2 r3 >>> arr to3
 
-writeRef2 :: (Typeable a, Typeable b) => Ref a -> Ref b -> Trans (a, b) ()
+writeRef2 :: Ref a -> Ref b -> Trans (a, b) ()
 writeRef2 r1 r2 = (writeRef_ r1 *** writeRef_ r2) >>> arr fst
 
-writeRef3 :: (Typeable a, Typeable b, Typeable c) => Ref a -> Ref b -> Ref c -> Trans (a, b, c) ()
+writeRef3 :: Ref a -> Ref b -> Ref c -> Trans (a, b, c) ()
 writeRef3 r1 r2 r3 = arr from3 >>> (writeRef_ r1 *** writeRef2 r2 r3) >>> arr fst
 
 checkTrans :: Trans a x -> Trans a a

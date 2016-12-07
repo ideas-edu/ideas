@@ -35,7 +35,6 @@ module Ideas.Common.Rule.Transformation
 import Control.Arrow
 import Control.Applicative
 import Data.Maybe
-import Data.Typeable
 import Ideas.Common.Classes
 import Ideas.Common.Context
 import Ideas.Common.Environment
@@ -60,7 +59,7 @@ data Trans a b where
    Append   :: Trans a b -> Trans a b -> Trans a b
 
    ReadRefM  :: Ref a -> Trans x (Maybe a)
-   WriteRefM :: Typeable a => Ref a -> Trans (Maybe a) ()
+   WriteRefM :: Ref a -> Trans (Maybe a) ()
    
 instance C.Category Trans where
    id  = arr id
@@ -139,13 +138,13 @@ readRefDefault a r = readRefMaybe r >>> arr (fromMaybe a)
 readRefMaybe  :: Ref a -> Trans x (Maybe a)
 readRefMaybe = ReadRefM
 
-writeRef :: Typeable a => Ref a -> Trans a a
+writeRef :: Ref a -> Trans a a
 writeRef r = (identity &&& writeRef_ r) >>> arr fst
 
-writeRef_ :: Typeable a => Ref a -> Trans a ()
+writeRef_ :: Ref a -> Trans a ()
 writeRef_ r = arr Just >>> writeRefMaybe r
 
-writeRefMaybe :: Typeable a => Ref a -> Trans (Maybe a) ()
+writeRefMaybe :: Ref a -> Trans (Maybe a) ()
 writeRefMaybe = WriteRefM
 
 -----------------------------------------------------------

@@ -22,8 +22,10 @@ module Ideas.Common.Rule.Parameter
    , transInput1, transInput2, transInput3
    , parameter1, parameter2, parameter3
      -----
-   , inputWith, readRef, readRef2, readRef3
-   , outputWith, writeRef, writeRef2, writeRef3
+   , input, inputWith, inputT, inputWithT
+   , output, outputWith, outputT, outputWithT
+   , readRef, readRef2, readRef3
+   , writeRef, writeRef2, writeRef3, writeRef2_, writeRef3_
    , checkTrans
   -- , TransReader(..), TransWriter(..)
    ) where
@@ -36,47 +38,67 @@ import Ideas.Common.Rule.Transformation
 import Ideas.Common.View
 
 transInput1 :: MakeTrans f => Ref x -> (x -> a -> f b) -> Trans a b
-transInput1 r1 f = inputWith (readRef r1) $ makeTrans $ \(x, p) -> f x p
+transInput1 r1 f = inputT r1 makeTrans $ \p x -> f x p
 
 transInput2 :: MakeTrans f => Ref x -> Ref y -> (x -> y -> a -> f b) -> Trans a b
-transInput2 r1 r2 f = inputWith (readRef2 r1 r2) $ makeTrans $ \((x, y), p) -> f x y p
+transInput2 r1 r2 f = inputWithT (readRef2 r1 r2) makeTrans $ \p (x, y) -> f x y p
 
 transInput3 :: MakeTrans f => Ref x -> Ref y -> Ref z -> (x -> y -> z -> a -> f b) -> Trans a b
-transInput3 r1 r2 r3 f = inputWith (readRef3 r1 r2 r3) $ makeTrans $ \((x, y, z), p) -> f x y z p
+transInput3 r1 r2 r3 f = inputWithT (readRef3 r1 r2 r3) makeTrans $ \p (x, y, z) -> f x y z p
 
 -----------------------------------------------------------
 --- Bindables
 
-type ParamTrans a b = Trans (a, b) b
+type ParamTrans a b = Trans (b, a) b
 
 supplyParameters :: ParamTrans b a -> (a -> Maybe b) -> Transformation a
 supplyParameters f g = inputWith (transMaybe g) f
 
 supplyContextParameters :: ParamTrans b a -> Trans a b -> Transformation (Context a)
 supplyContextParameters f g = transLiftContextIn $
-   transUseEnvironment (g &&& identity) >>> first f
+   transUseEnvironment (identity &&& g) >>> first f
 
 transRef :: Ref a -> Trans a a
 transRef r = (identity &&& readRefMaybe r) >>> arr (uncurry fromMaybe) >>> writeRef r
 
 parameter1 :: Ref a -> ParamTrans a b -> ParamTrans a b
-parameter1 r1 f = first (transRef r1) >>> f
+parameter1 r1 f = second (transRef r1) >>> f
 
 parameter2 :: Ref a -> Ref b -> ParamTrans (a, b) c -> ParamTrans (a, b) c
-parameter2 r1 r2 f = first (transRef r1 *** transRef r2) >>> f
+parameter2 r1 r2 f = second (transRef r1 *** transRef r2) >>> f
 
 parameter3 :: Ref a -> Ref b -> Ref c -> ParamTrans (a, b, c) d -> ParamTrans (a, b, c) d
-parameter3 r1 r2 r3 f = first (arr from3 >>> t >>> arr to3) >>> f
+parameter3 r1 r2 r3 f = second (arr from3 >>> t >>> arr to3) >>> f
  where
    t = transRef r1 *** (transRef r2 *** transRef r3)
 
 ---------------------------------------------------------------------------
 
-inputWith :: Trans c i -> Trans (i, c) d -> Trans c d
-inputWith f g = (f &&& identity) >>> g
+input :: Ref i -> Trans (a, i) b -> Trans a b
+input = inputWith . readRef
 
-outputWith :: Trans b c -> Trans a b -> Trans a c
-outputWith f g = f <<< g
+inputWith :: Trans a i -> Trans (a, i) b -> Trans a b
+inputWith f g = (identity &&& f) >>> g
+
+inputT :: Ref i -> (((a, i) -> c) -> Trans (a, i) b) -> (a -> i -> c) -> Trans a b
+inputT = inputWithT . readRef
+
+inputWithT :: Trans a i -> (((a, i) -> c) -> Trans (a, i) b) -> (a -> i -> c) -> Trans a b
+inputWithT rt f g = inputWith rt (f (uncurry g))
+
+----
+
+output :: Ref o -> Trans a (b, o) -> Trans a b
+output = outputWith . writeRef
+
+outputWith :: Trans o x -> Trans a (b, o) -> Trans a b
+outputWith f g = g >>> second f >>> arr fst
+
+outputT :: Ref o -> (c -> Trans a (b, o)) -> c -> Trans a b
+outputT = outputWithT . writeRef
+
+outputWithT :: Trans o x -> (c -> Trans a (b, o)) -> c -> Trans a b
+outputWithT wt f c = f c >>> second wt >>> arr fst
 
 readRef2 :: Ref a -> Ref b -> Trans x (a, b)
 readRef2 r1 r2 = readRef r1 &&& readRef r2
@@ -84,11 +106,17 @@ readRef2 r1 r2 = readRef r1 &&& readRef r2
 readRef3 :: Ref a -> Ref b -> Ref c -> Trans x (a, b, c)
 readRef3 r1 r2 r3 = readRef r1 &&& readRef2 r2 r3 >>> arr to3
 
-writeRef2 :: Ref a -> Ref b -> Trans (a, b) ()
-writeRef2 r1 r2 = (writeRef_ r1 *** writeRef_ r2) >>> arr fst
+writeRef2 :: Ref a -> Ref b -> Trans (a, b) (a, b)
+writeRef2 r1 r2 = writeRef r1 *** writeRef r2
 
-writeRef3 :: Ref a -> Ref b -> Ref c -> Trans (a, b, c) ()
-writeRef3 r1 r2 r3 = arr from3 >>> (writeRef_ r1 *** writeRef2 r2 r3) >>> arr fst
+writeRef2_ :: Ref a -> Ref b -> Trans (a, b) ()
+writeRef2_ r1 r2 = writeRef2 r1 r2 >>> arr (const ())
+
+writeRef3 :: Ref a -> Ref b -> Ref c -> Trans (a, b, c) (a, b, c)
+writeRef3 r1 r2 r3 = arr from3 >>> writeRef r1 *** writeRef2 r2 r3 >>> arr to3
+
+writeRef3_ :: Ref a -> Ref b -> Ref c -> Trans (a, b, c) ()
+writeRef3_ r1 r2 r3 = writeRef3 r1 r2 r3 >>> arr (const ())
 
 checkTrans :: Trans a x -> Trans a a
 checkTrans f = (f &&& identity) >>> arr snd

@@ -17,6 +17,7 @@ module Ideas.Common.Rewriting.Term
    ( -- * Symbols
      Symbol, newSymbol
    , isAssociative, makeAssociative
+   , nothingSymbol, trueSymbol, falseSymbol
      -- * Terms
    , Term(..), IsTerm(..), termView
    , fromTermM, fromTermWith
@@ -33,7 +34,6 @@ module Ideas.Common.Rewriting.Term
    ) where
 
 import Control.Monad
-import Data.Data
 import Data.Function
 import Data.Maybe
 import Ideas.Common.Id
@@ -43,6 +43,7 @@ import Ideas.Utils.Uniplate
 import Ideas.Common.View
 import qualified Data.IntSet as IS
 import qualified Data.Set as S
+import qualified Data.Map as M
 
 -----------------------------------------------------------
 -- Symbols
@@ -147,12 +148,30 @@ instance IsTerm Char where
    fromTerm _            = fail "fromTerm: not a TVar"
    fromTermList (TVar s) = return s
    fromTermList _        = fail "fromTermList: not a TVar"
+
+instance IsTerm Bool where
+   toTerm True  = symbol trueSymbol
+   toTerm False = symbol falseSymbol
+   fromTerm (TCon s [])
+      | s == trueSymbol  = return True
+      | s == falseSymbol = return False
+   fromTerm _ = fail "fromTerm: not a Bool"
    
 instance IsTerm a => IsTerm [a] where
    toTerm = toTermList
    fromTerm = fromTermList
 
-nothingSymbol :: Symbol
+instance (IsTerm a, Ord a) => IsTerm (S.Set a) where
+   toTerm   = toTerm . S.toList
+   fromTerm = fmap S.fromList . fromTerm 
+
+instance (IsTerm a, IsTerm b, Ord a) => IsTerm (M.Map a b) where
+   toTerm   = toTerm . M.toList
+   fromTerm = fmap M.fromList . fromTerm 
+
+trueSymbol, falseSymbol, nothingSymbol :: Symbol
+trueSymbol    = newSymbol "true"
+falseSymbol   = newSymbol "false"
 nothingSymbol = newSymbol "Nothing"
 
 instance IsTerm a => IsTerm (Maybe a) where

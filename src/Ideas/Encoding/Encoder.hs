@@ -140,9 +140,7 @@ jsonToTerm json =
  where
    f (s, x) = [TVar s, jsonToTerm x]
 
-trueSymbol, falseSymbol, nullSymbol, objectSymbol :: Symbol
-trueSymbol   = newSymbol "true"
-falseSymbol  = newSymbol "false"
+nullSymbol, objectSymbol :: Symbol
 nullSymbol   = newSymbol "null"
 objectSymbol = newSymbol "object"
 

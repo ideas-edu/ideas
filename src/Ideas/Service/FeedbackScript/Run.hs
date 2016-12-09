@@ -125,12 +125,12 @@ feedbackDiagnosis diagnosis env =
    case diagnosis of
       SyntaxError s    -> const (makeText s)
       Buggy _ r        -> makeWrong "buggy"     env {recognized = Just r}
-      NotEquivalent s  -> makeNotEq s "noteq" env
+      NotEquivalent s  -> makeNotEq s "noteq"   env
       Expected _ _ r   -> makeOk    "ok"        env {recognized = Just r}
       WrongRule _ _ mr -> makeWrong "wrongrule" env {recognized = mr}
       Similar _ _      -> makeOk    "same"      env
       Detour _ _ _ r   -> makeOk    "detour"    env {recognized = Just r}
-      Correct _ _      -> makeOk    "unknown"   env
+      Correct _ _      -> makeOk    "correct"   env
       Unknown _ _      -> makeOk    "unknown"   env
  where
    makeOk    = makeDefault "Well done!"
@@ -160,7 +160,7 @@ make feedbackId env script = toText env script (TextRef feedbackId)
 
 feedbackIds :: [Id]
 feedbackIds = map newId
-   ["same", "noteq", "unknown", "ok", "buggy", "detour", "wrongrule", "hint", "step", "label"]
+   ["same", "noteq", "correct", "unknown", "ok", "buggy", "detour", "wrongrule", "hint", "step", "label"]
 
 attributeIds :: [Id]
 attributeIds =

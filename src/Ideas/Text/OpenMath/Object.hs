@@ -61,7 +61,9 @@ xml2omobj xmlTop =
             return (OMA ys)
 
          [] | name xml == "OMS" -> do
-            let mcd = findAttribute "cd" xml
+            let mcd = case findAttribute "cd" xml of
+                         Just "unknown" -> Nothing
+                         this -> this
             n <- findAttribute "name" xml
             return (OMS (mcd, n))
 

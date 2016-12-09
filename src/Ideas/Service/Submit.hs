@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Service.Submit
-   ( submit, Result(..), tResult
+   ( submit, Result(..), tResult, getState
    ) where
 
 import Data.Maybe
@@ -30,6 +30,15 @@ data Result a = Buggy  [Rule (Context a)]
               | Ok     [Rule (Context a)] (State a)  -- equivalent
               | Detour [Rule (Context a)] (State a)  -- equivalent
               | Unknown                   (State a)  -- equivalent
+
+getState :: Result a -> Maybe (State a)
+getState r =
+   case r of
+      Buggy _         -> Nothing
+      NotEquivalent _ -> Nothing
+      Ok _ s          -> Just s
+      Detour _ s      -> Just s
+      Unknown s       -> Just s
 
 fromDiagnose :: Diagnosis a -> Result a
 fromDiagnose diagnosis =

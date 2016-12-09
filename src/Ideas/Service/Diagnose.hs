@@ -15,6 +15,7 @@
 
 module Ideas.Service.Diagnose
    ( Diagnosis(..), tDiagnosis, diagnose
+   , getState, getStateAndReady
    , difference, differenceEqual
    ) where
 
@@ -58,19 +59,23 @@ instance Show (Diagnosis a) where
       f s xs
          | null xs   = s
          | otherwise = s ++ "(" ++ intercalate "," xs ++ ")"
-{-
-newState :: Diagnosis a -> Maybe (State a)
-newState diagnosis =
-   case diagnosis of
+         
+getState :: Diagnosis a -> Maybe (State a)
+getState = fmap fst . getStateAndReady
+
+getStateAndReady :: Diagnosis a -> Maybe (State a, Bool)
+getStateAndReady d =
+   case d of
+      SyntaxError _    -> Nothing
       Buggy _ _        -> Nothing
       NotEquivalent _  -> Nothing
-      Similar  _ s     -> Just s
-      WrongRule _ s _  -> Just s
-      Expected _ s _   -> Just s
-      Detour   _ s _ _ -> Just s
-      Correct  _ s     -> Just s
-      Unknown  _ s     -> Just s
--}
+      Similar b s      -> Just (s, b)
+      WrongRule b s _  -> Just (s, b)
+      Expected b s _   -> Just (s, b)
+      Detour b s _  _  -> Just (s, b)
+      Correct  b s     -> Just (s, b)
+      Unknown b s      -> Just (s, b)
+   
 ----------------------------------------------------------------
 -- The diagnose service
 

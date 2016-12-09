@@ -29,7 +29,6 @@ module Ideas.Common.Context
    , currentTerm, changeTerm, replaceInContext, currentInContext, changeInContext
    ) where
 
-import Control.Monad
 import Data.Maybe
 import Ideas.Common.Environment
 import Ideas.Common.Id
@@ -53,13 +52,13 @@ fromContext = maybe (fail "fromContext") return .
    currentNavigator . getNavigator . top
 
 fromContextWith :: Monad m => (a -> b) -> Context a -> m b
-fromContextWith f = liftM f . fromContext
+fromContextWith f = fmap f . fromContext
 
 fromContextWith2 :: Monad m => (a -> b -> c) -> Context a -> Context b -> m c
-fromContextWith2 f a b = liftM2 f (fromContext a) (fromContext b)
+fromContextWith2 f a b = f <$> fromContext a <*> fromContext b
 
 instance Eq a => Eq (Context a) where
-   x == y = fromMaybe False $ liftM2 (==) (fromContext x) (fromContext y)
+   x == y = fromMaybe False $ (==) <$> fromContext x <*> fromContext y
 
 instance Show a => Show (Context a) where
    show c@(C env a) =
@@ -103,8 +102,8 @@ data ContextNavigator a where
 
 liftCN :: Monad m => (forall b . Navigator b => b -> m b)
                   -> Context a -> m (Context a)
-liftCN f (C env (TermNav a)) = liftM (C env . TermNav) (f a)
-liftCN f (C env (Simple a))  = liftM (C env . Simple)  (f a)
+liftCN f (C env (TermNav a)) = (C env . TermNav) <$> f a
+liftCN f (C env (Simple a))  = (C env . Simple)  <$> f a
 liftCN _ (C _   (NoNav _))   = fail "noNavigator"
 
 navLocation :: ContextNavigator a -> Location
@@ -127,7 +126,7 @@ currentT (TermNav a) = Just (current a)
 currentT _           = Nothing
 
 changeT :: (Term -> Maybe Term) -> ContextNavigator a -> Maybe (ContextNavigator a)
-changeT f (TermNav a) = fmap TermNav (changeM f a)
+changeT f (TermNav a) = TermNav <$> changeM f a
 changeT _ _           = Nothing
 
 castT :: IsTerm b => ContextNavigator a -> Maybe (ContextNavigator b)
@@ -160,7 +159,7 @@ useC :: (LiftView f, IsTerm a, IsTerm b) => f (Context a) -> f (Context b)
 useC = liftViewIn (makeView f g)
  where
    f old@(C env a) = castT a >>= \b -> return (C env b, old)
-   g (C env a, old) = fromMaybe old (liftM (C env) (castT a))
+   g (C env a, old) = fromMaybe old (C env <$> castT a)
 
 currentTerm :: Context a -> Maybe Term
 currentTerm = currentT . getNavigator

@@ -53,8 +53,8 @@ newEnvironmentFor st motivationRule next = Env
   , recognized = Nothing
   , diffPair   = Nothing
   , before     = f st
-  , after      = liftM snd next >>= f
-  , afterText  = liftM snd next >>= g
+  , after      = fmap snd next >>= f
+  , afterText  = fmap snd next >>= g
   }
  where
   f s  = fmap (`build` stateTerm s) (hasTermView (exercise s))
@@ -72,7 +72,7 @@ eval :: Environment a -> Script -> Either Id Text -> Maybe Text
 eval env script = either (return . findIdRef) evalText
  where
    evalText :: Text -> Maybe Text
-   evalText = liftM mconcat . mapM unref . textItems
+   evalText = fmap mconcat . mapM unref . textItems
     where
       unref (TextRef a)
          | a == expectedId   = fmap (findIdRef . getId) (expected env)

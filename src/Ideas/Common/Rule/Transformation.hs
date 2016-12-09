@@ -191,7 +191,7 @@ transApplyWith env trans a =
       f :++: g   -> either (make Left f) (make Right g) a
       Append f g -> transApplyWith env f a ++ transApplyWith env g a
       ReadRefM r  -> [(r ? env, env)]
-      WriteRefM r -> [((), maybe (deleteRef r) (\x -> insertRef r x) a env)]
+      WriteRefM r -> [((), maybe (deleteRef r) (insertRef r) a env)]
  where
    make :: (b -> c) -> Trans a b -> a -> [(c, Environment)]
    make f g = map (mapFirst f) . transApplyWith env g

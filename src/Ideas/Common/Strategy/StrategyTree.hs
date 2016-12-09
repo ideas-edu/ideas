@@ -173,10 +173,10 @@ class Arity f where
    toArity :: ([a] -> a) -> f a
    liftIso :: Isomorphism a b -> f a -> f b
 
-data Nullary a = Nullary { fromNullary :: a }
-data Unary   a = Unary   { fromUnary   :: a -> a }
-data Binary  a = Binary  { fromBinary  :: a -> a -> a }
-data Nary    a = Nary    { fromNary    :: [a] -> a }
+newtype Nullary a = Nullary { fromNullary :: a }
+newtype Unary   a = Unary   { fromUnary   :: a -> a }
+newtype Binary  a = Binary  { fromBinary  :: a -> a -> a }
+newtype Nary    a = Nary    { fromNary    :: [a] -> a }
 
 instance Arity Nullary where
    listify (Nullary a) [] = Just a

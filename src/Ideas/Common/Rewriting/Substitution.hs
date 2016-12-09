@@ -91,7 +91,7 @@ s |-> term =
 infix 6 @+@
 
 (@+@) :: Substitution -> Substitution -> Maybe Substitution
-s1 @+@ s2 = liftM S $ foldM op (unS s1) $ IM.toList $ unS s2
+s1 @+@ s2 = fmap S $ foldM op (unS s1) $ IM.toList $ unS s2
  where
    op m (i, a) =
       case IM.lookup i m of

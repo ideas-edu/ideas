@@ -41,7 +41,7 @@ blackBoxTests runner exts = rec
 
 doBlackBoxTest :: TestRunner -> FilePath -> TestSuite
 doBlackBoxTest runner path =
-   assertMessageIO (stripDirectoryPart path) $ do
+   assertMessageIO (stripDirectoryPart path) $
       -- Comparing output with expected output
       withFile path ReadMode $ \h1 -> do
          hSetBinaryMode h1 True

@@ -34,15 +34,15 @@ arbOMOBJ = sized rec
       relation1List ++ transc1List
 
    rec 0 = frequency
-      [ (1, liftM OMI arbitrary)
-      , (1, liftM (\n -> OMF (fromInteger n / 1000)) arbitrary)
-      , (1, liftM OMV arbitrary)
+      [ (1, OMI <$> arbitrary)
+      , (1, (\n -> OMF (fromInteger n / 1000)) <*> arbitrary)
+      , (1, OMV <$> arbitrary)
       , (5, elements $ map OMS symbols)
       ]
    rec n = frequency
       [ (1, rec 0)
-      , (3, choose (1,4) >>= liftM OMA . (`replicateM` f))
-      , (1, liftM3 OMBIND f arbitrary f)
+      , (3, choose (1,4) >>= fmap OMA . (`replicateM` f))
+      , (1, OMBIND <$> f <*> arbitrary <*> f)
       ]
     where
       f = rec (n `div` 2)

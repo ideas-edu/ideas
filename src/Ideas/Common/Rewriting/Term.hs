@@ -118,18 +118,18 @@ instance IsTerm ShowString where
 
 instance (IsTerm a, IsTerm b) => IsTerm (a, b) where
    toTerm (a, b) = TList [toTerm a, toTerm b]
-   fromTerm (TList [a, b]) = liftM2 (,) (fromTerm a) (fromTerm b)
+   fromTerm (TList [a, b]) =  (,) <$> fromTerm a <*> fromTerm b
    fromTerm _              = fail "fromTerm"
 
 instance (IsTerm a, IsTerm b) => IsTerm (Either a b) where
    toTerm = either toTerm toTerm
    fromTerm expr =
-      liftM Left  (fromTerm expr) `mplus`
-      liftM Right (fromTerm expr)
+      fmap Left  (fromTerm expr) `mplus`
+      fmap Right (fromTerm expr)
 
 instance IsTerm Int where
    toTerm = TNum . fromIntegral
-   fromTerm = liftM fromInteger . fromTerm
+   fromTerm = fmap fromInteger . fromTerm
 
 instance IsTerm Integer where
    toTerm = TNum
@@ -177,7 +177,7 @@ nothingSymbol = newSymbol "Nothing"
 instance IsTerm a => IsTerm (Maybe a) where
    toTerm = maybe (symbol nothingSymbol) toTerm
    fromTerm (TCon s []) | s == nothingSymbol = return Nothing
-   fromTerm t = liftM Just (fromTerm t) 
+   fromTerm t = fmap Just (fromTerm t) 
 
 fromTermM :: (Monad m, IsTerm a) => Term -> m a
 fromTermM = maybe (fail "fromTermM") return . fromTerm

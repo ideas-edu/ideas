@@ -16,6 +16,7 @@ module Ideas.Encoding.Options
    , cgiBin, optionCgiBin, optionHtml
    ) where
 
+import Control.Applicative
 import Data.Monoid
 import Ideas.Common.Library (Exercise, getId)
 import Ideas.Service.DomainReasoner
@@ -50,7 +51,7 @@ instance Monoid Options where
       , maxTime  = make maxTime
       }
     where
-      make f = maybe (f y) Just (f x)
+      make f = f x <|> f y
 
 optionHtml :: Options
 optionHtml = mempty

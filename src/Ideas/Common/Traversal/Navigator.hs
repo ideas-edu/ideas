@@ -69,7 +69,7 @@ class Navigator a where
    childnr  :: a -> Int
    location :: a -> Location
    -- default definitions
-   downLast = liftM (fixp right) . down
+   downLast = fmap (fixp right) . down
    childnr  = pred . length . fixpl left
    location = toLocation . map childnr . drop 1 . reverse . fixpl up
 
@@ -173,7 +173,7 @@ instance Update PreOrder where
    update a = (unwrap a, wrap)
 
 instance Navigator a => Iterator (PreOrder a) where
-   previous = liftWrapper ((liftM rightMostLeaf . left) >|< up)
+   previous = liftWrapper ((fmap rightMostLeaf . left) >|< up)
    next     = let rec = right >|< (up >=> rec)
               in liftWrapper (down >|< rec)
    first    = mapWrapper top
@@ -249,10 +249,10 @@ instance Update Leafs where
 instance Navigator a => Iterator (Leafs a) where
    previous = liftWrapper $
       let rec = left >|< (up >=> rec)
-      in liftM rightMostLeaf . rec
+      in fmap rightMostLeaf . rec
    next = liftWrapper $
       let rec = right >|< (up >=> rec)
-      in liftM leftMostLeaf . rec
+      in fmap leftMostLeaf . rec
    first = mapWrapper (leftMostLeaf . top)
    final = mapWrapper (rightMostLeaf . top)
 
@@ -300,8 +300,8 @@ data StrIterator a = SI
    }
 
 instance Iterator (StrIterator a) where
-   next     (SI n a) = liftM (SI (n+1)) $ searchNext ok a
-   previous (SI n a) = liftM (SI (n-1)) $ searchPrevious ok a
+   next     (SI n a) = SI (n+1) <$> searchNext ok a
+   previous (SI n a) = SI (n-1) <$> searchPrevious ok a
    first    (SI _ a) = SI 0 $ safe (searchForward ok) (first a)
    final    (SI _ a) = finalSI $ safe (searchBackward ok) (final a)
    position          = posSI
@@ -350,8 +350,8 @@ instance Uniplate a => Navigator (UniplateNavigator a) where
    down     = downWith focusM
    downLast = downWith lastStrIterator
 
-   left  (U fs a) = liftM (U fs) (previous a)
-   right (U fs a) = liftM (U fs) (next a)
+   left  (U fs a) = U fs <$> previous a
+   right (U fs a) = U fs <$> next a
 
    childnr (U _ a) = position a
 
@@ -364,7 +364,7 @@ instance Uniplate a => Focus (UniplateNavigator a) where
    unfocus = current . top
 
 instance (Arbitrary a, Uniplate a) => Arbitrary (UniplateNavigator a) where
-   arbitrary = liftM focus arbitrary >>= genNav
+   arbitrary = fmap focus arbitrary >>= genNav
     where
       genNav a =
          case map genNav (downs a) of
@@ -373,7 +373,7 @@ instance (Arbitrary a, Uniplate a) => Arbitrary (UniplateNavigator a) where
 
 downWith :: Uniplate a => (Str a -> Maybe (StrIterator a))
                        -> UniplateNavigator a -> Maybe (UniplateNavigator a)
-downWith make (U fs a) = liftM (U (f:fs)) (make cs)
+downWith make (U fs a) = U (f:fs) <$> make cs
  where
    (cs, g) = uniplate (current a)
    f = (`replace` a) . g . unfocus

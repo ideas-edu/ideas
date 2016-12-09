@@ -46,9 +46,7 @@ castTo = castBetween typeable
 
 castBetween :: (HasTypeable f, HasTypeable g) => f a -> g b -> a -> Maybe b
 castBetween x y a = do
-   IT ta <- getTypeable x
-   IT tb <- getTypeable y
-   guard (ta == tb)
+   guardEq x y
    return $ unsafeCoerce a
 
 gcastFrom :: (HasTypeable f, Typeable b) => f a -> c a -> Maybe (c b)
@@ -62,7 +60,11 @@ gcastBetween ta tb x = fmap (\Refl -> x) (eqIT ta tb)
 
 eqIT :: (HasTypeable f, HasTypeable g) => f a -> g b -> Maybe (a :~: b)
 eqIT x y = do
+   guardEq x y
+   return $ unsafeCoerce Refl
+   
+guardEq :: (HasTypeable f, HasTypeable g) => f a -> g b -> Maybe ()
+guardEq x y = do
    IT ta <- getTypeable x
    IT tb <- getTypeable y
    guard (ta == tb)
-   return $ unsafeCoerce Refl

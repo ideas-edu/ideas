@@ -103,7 +103,7 @@ onefirst state =
       Left msg     -> Left msg
 
 onefinal :: State a -> Either String (Context a)
-onefinal = either Left (Right . lastTerm) . solution Nothing
+onefinal = fmap lastTerm . solution Nothing
 
 applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =

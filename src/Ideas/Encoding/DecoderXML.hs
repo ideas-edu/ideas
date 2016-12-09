@@ -43,14 +43,14 @@ xmlDecoder tp =
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
          | otherwise ->
               decodeChild s (xmlDecoder t)
-      Iso p t  -> liftM (from p) (xmlDecoder t)
+      Iso p t  -> from p <$> xmlDecoder t
       Pair t1 t2 -> do
          x <- xmlDecoder t1
          y <- xmlDecoder t2
          return (x, y)
       t1 :|: t2 ->
-         liftM Left  (xmlDecoder t1) `mplus`
-         liftM Right (xmlDecoder t2)
+         (Left  <$> xmlDecoder t1) `mplus`
+         (Right <$> xmlDecoder t2)
       Unit -> return ()
       Const ctp ->
          case ctp of
@@ -112,7 +112,7 @@ decodeContext = do
        locRef = makeRef "location"
    case locRef ? env of
       Just s  -> maybe (fail "invalid location") return $ do
-         loc <- liftM toLocation (readM s)
+         loc <- toLocation <$> readM s
          navigateTo loc (deleteRef locRef ctx)
       Nothing ->
          return ctx
@@ -159,8 +159,7 @@ decodeEnvironment =
 decodeConfiguration :: XMLDecoder a StrategyCfg
 decodeConfiguration = decodeChild "configuration" $
    decoderFor $ \xml ->
-      liftM mconcat $
-         mapM decodeAction (children xml)
+      mconcat <$> mapM decodeAction (children xml)
  where
    decodeAction item = do
       guard (null (children item))
@@ -170,7 +169,7 @@ decodeConfiguration = decodeChild "configuration" $
 
 decodeArgEnvironment :: XMLDecoder a Environment
 decodeArgEnvironment = decoderFor $
-   liftM makeEnvironment . mapM (decodeBinding //) . findChildren "argument"
+   fmap makeEnvironment . mapM (decodeBinding //) . findChildren "argument"
 
 decodeBinding :: XMLDecoder a Binding
 decodeBinding = decoderFor $ \xml -> do

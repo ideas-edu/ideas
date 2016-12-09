@@ -94,7 +94,7 @@ replayProcess (Path is) = fromMaybe ([], const noPrefix) . replay [] is
                (LeafRule r, _) -> replay (r:acc) ns q
                (LeafDyn d, Input t:ns2) -> do
                   a <- dynamicFromTerm d t
-                  replay acc ns2 (treeToProcess (a) .*. q)
+                  replay acc ns2 (treeToProcess a .*. q)
                _ -> Nothing
 
    createPrefix p = Prefix [Path is] . flip (rec []) p
@@ -194,7 +194,7 @@ emptyPath :: Path
 emptyPath = Path []
 
 readPath :: Monad m => String -> m Path
-readPath = liftM Path . readM
+readPath = fmap Path . readM
 
 readPaths :: Monad m => String -> m [Path]
 readPaths = mapM readPath . splitsWithElem ';'

@@ -48,7 +48,7 @@ instance Monoid StrategyCfg where
    mconcat xs = Cfg [ y | Cfg ys <- xs, y <- ys ]
    mappend (Cfg xs) (Cfg ys) = Cfg (xs ++ ys)
 
-data ConfigLocation = ByName Id
+newtype ConfigLocation = ByName Id
 
 instance Show ConfigLocation where
    show (ByName a) = show a

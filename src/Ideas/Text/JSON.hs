@@ -107,7 +107,7 @@ class InJSON a where
 
 instance InJSON Int where
    toJSON   = toJSON . toInteger
-   fromJSON = liftM fromInteger . fromJSON
+   fromJSON = fmap fromInteger . fromJSON
 
 instance InJSON Integer where
    toJSON                  = Number . I
@@ -138,17 +138,17 @@ instance InJSON a => InJSON [a] where
 
 instance (InJSON a, InJSON b) => InJSON (a, b) where
    toJSON (a, b)           = Array [toJSON a, toJSON b]
-   fromJSON (Array [a, b]) = liftM2 (,) (fromJSON a) (fromJSON b)
+   fromJSON (Array [a, b]) = (,) <$> fromJSON a <*> fromJSON b
    fromJSON _              = fail "expecting an array with 2 elements"
 
 instance (InJSON a, InJSON b, InJSON c) => InJSON (a, b, c) where
    toJSON (a, b, c)           = Array [toJSON a, toJSON b, toJSON c]
-   fromJSON (Array [a, b, c]) = liftM3 (,,) (fromJSON a) (fromJSON b) (fromJSON c)
+   fromJSON (Array [a, b, c]) = (,,) <$> fromJSON a <*> fromJSON b <*> fromJSON c
    fromJSON _                 = fail "expecting an array with 3 elements"
 
 instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
    toJSON (a, b, c, d)           = Array [toJSON a, toJSON b, toJSON c, toJSON d]
-   fromJSON (Array [a, b, c, d]) = liftM4 (,,,) (fromJSON a) (fromJSON b) (fromJSON c) (fromJSON d)
+   fromJSON (Array [a, b, c, d]) = (,,,) <$> fromJSON a <*> fromJSON b <*> fromJSON c <*> fromJSON d
    fromJSON _                    = fail "expecting an array with 4 elements"
 
 instance InJSON IOException where
@@ -270,13 +270,13 @@ instance Arbitrary JSON where
    arbitrary = sized arbJSON
 
 instance Arbitrary Number where
-   arbitrary = oneof [liftM I arbitrary, liftM (D . fromInteger) arbitrary]
+   arbitrary = oneof [I <$> arbitrary, (D . fromInteger) <$> arbitrary]
 
 arbJSON :: Int -> Gen JSON
 arbJSON n
    | n == 0 = oneof
-        [ liftM Number arbitrary, liftM String myStringGen
-        , liftM Boolean arbitrary, return Null
+        [ Number <$> arbitrary, String <$> myStringGen
+        , Boolean <$> arbitrary, return Null
         ]
    | otherwise = oneof
         [ arbJSON 0

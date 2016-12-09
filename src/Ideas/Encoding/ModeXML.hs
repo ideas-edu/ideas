@@ -92,12 +92,12 @@ xmlReply opt1 dr logRef request xml = do
  
    if htmlOutput request
       -- HTML evaluator
-      then liftM toXML $ evalService logRef ex options (htmlEvaluator dr) srv xml
+      then toXML <$> evalService logRef ex options (htmlEvaluator dr) srv xml
       -- xml evaluator
-      else liftM resultOk $ evalService logRef ex options xmlEvaluator srv xml
+      else resultOk <$> evalService logRef ex options xmlEvaluator srv xml
 
 extractExerciseId :: Monad m => XML -> m Id
-extractExerciseId = liftM newId . findAttribute "exerciseid"
+extractExerciseId = fmap newId . findAttribute "exerciseid"
 
 resultOk :: XMLBuilder -> XML
 resultOk body = makeXML "reply" $

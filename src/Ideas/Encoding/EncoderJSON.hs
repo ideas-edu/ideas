@@ -60,7 +60,7 @@ jsonEncoder = encoderFor $ \tv@(val ::: tp) ->
    tupleList (p ::: Tp.Pair t1 t2) =
       tupleList (fst p ::: t1) ++ tupleList (snd p ::: t2)
    tupleList (x ::: Tag s t)
-      | s `elem` ["Message"] = tupleList (x ::: t)
+      | s == "Message" = tupleList (x ::: t)
    tupleList (ev ::: (t1 :|: t2)) =
       either (\x -> tupleList (x ::: t1))
              (\x -> tupleList (x ::: t2)) ev
@@ -183,7 +183,7 @@ encodeDiagnosis = encoderFor $ \diagnosis ->
       Diagnose.Unknown b st ->
          make "unknown" [fromReady b, fromState st]
  where
-   make s = liftA (\xs -> Object [(s, Array xs)]) . sequence
+   make s = fmap (\xs -> Object [(s, Array xs)]) . sequence
    fromEnv env      = jsonEncoder // (env ::: tEnvironment)
    fromRule r       = pure (toJSON (showId r))
    fromMaybeRule mr = pure (maybe Null (toJSON . showId) mr)

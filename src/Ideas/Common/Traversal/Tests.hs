@@ -72,8 +72,8 @@ testNavigator s gen = suite (s ++ " Navigator")
         ]
 
    , suite "down/downLast"
-        [ prop gen "down; rightMost"       $  liftM rightMost . down === downLast
-        , prop gen "downLast; leftMost"    $  liftM leftMost . downLast === down
+        [ prop gen "down; rightMost"       $  fmap rightMost . down === downLast
+        , prop gen "downLast; leftMost"    $  fmap leftMost . downLast === down
         , prop gen "down is leftMost"      $  isNothing . (down >=> left)
         , prop gen "downLast is rightMost" $  isNothing . (downLast >=> right)
         ]
@@ -104,16 +104,16 @@ tests :: TestSuite
 tests =
    suite "Iterators"
       [ testIterator "List" listGen
-      , testIterator "Mirror"     $ liftM makeMirror     listGen
-      , testIterator "Leafs"      $ liftM makeLeafs      uniGen
-      , testIterator "PreOrder"   $ liftM makePreOrder   uniGen
-      , testIterator "PostOrder"  $ liftM makePostOrder  uniGen
-      , testIterator "Horizontal" $ liftM makeHorizontal uniGen
-      , testIterator "LevelOrder" $ liftM makeLevelOrder uniGen
+      , testIterator "Mirror"     $ makeMirror     <$> listGen
+      , testIterator "Leafs"      $ makeLeafs      <$> uniGen
+      , testIterator "PreOrder"   $ makePreOrder   <$> uniGen
+      , testIterator "PostOrder"  $ makePostOrder  <$> uniGen
+      , testIterator "Horizontal" $ makeHorizontal <$> uniGen
+      , testIterator "LevelOrder" $ makeLevelOrder <$> uniGen
       ] <>
    suite "Navigators"
       [ testNavigator "Uniplate" uniGen
-      , testNavigator "Mirror" $ liftM makeMirror uniGen
+      , testNavigator "Mirror" $ makeMirror <$> uniGen
       ]
 
 _go :: IO ()

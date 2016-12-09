@@ -133,8 +133,8 @@ linkToDerivation = linkWith . urlForDerivation
 makeLinkManager :: String -> String -> LinkManager
 makeLinkManager base cgiBinary = LinkManager
    { urlForRequest   = prefix
-   , urlForCSS       = (\s -> base ++ "css/" ++ s)
-   , urlForImage     = (\s -> base ++ "images/" ++ s)
+   , urlForCSS       = \s -> base ++ "css/" ++ s
+   , urlForImage     = \s -> base ++ "images/" ++ s
    , urlForIndex     = url $ simpleRequest "index"
    , urlForExercises = url $ simpleRequest "exerciselist"
    , urlForServices  = url $ simpleRequest "servicelist"

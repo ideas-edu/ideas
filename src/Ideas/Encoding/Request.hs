@@ -12,6 +12,7 @@
 
 module Ideas.Encoding.Request where
 
+import Control.Applicative
 import Data.Char
 import Data.List
 import Data.Maybe
@@ -47,7 +48,7 @@ instance Monoid Request where
       , encoding       = encoding x <> encoding y
       }
     where
-      make f = maybe (f y) Just (f x)
+      make f = f x <|> f y
 
 data Schema = V1 | V2 | NoLogging deriving (Show, Eq)
 

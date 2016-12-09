@@ -101,7 +101,7 @@ canonicalWith f = canonicalWithM (return . f)
 
 canonicalWithM :: IsView f => (b -> Maybe b) -> f a b -> a -> Maybe a
 canonicalWithM f view a =
-   match view a >>= liftM (build view) . f
+   match view a >>= fmap (build view) . f
 
 isCanonical :: (IsView f, Eq a) => f a b -> a -> Bool
 isCanonical = isCanonicalWith (==)

@@ -69,7 +69,7 @@ jsonRequest options json = do
    rinf <- stringOption  "requestinfo" json id
    seed <- stringOptionM "randomseed"  json (defaultSeed options) (return . readM)
    enc  <- stringOptionM "encoding"    json [] readEncoding
-   sch  <- stringOptionM "logging"     json Nothing (liftM Just . readSchema)
+   sch  <- stringOptionM "logging"     json Nothing (fmap Just . readSchema)
    return mempty
       { serviceId   = srv
       , exerciseId  = exId

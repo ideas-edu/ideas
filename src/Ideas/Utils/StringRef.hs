@@ -19,7 +19,6 @@ module Ideas.Utils.StringRef
    ) where
 
 import Data.Bits
-import Data.Data
 import Data.IORef
 import Data.List
 import System.IO.Unsafe

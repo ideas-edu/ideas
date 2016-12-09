@@ -49,7 +49,7 @@ generator (AG pairs) = sized rec
       make (r, (a, gf)) =
          let m  = round (fromInteger factor*r)
              xs = replicateM a $ rec $ n `div` 2
-         in (m, liftM2 ($) gf xs)
+         in (m, gf <*> xs)
 
 generators :: [ArbGen a] -> Gen a
 generators = generator . mconcat
@@ -58,7 +58,7 @@ generators = generator . mconcat
 -- Constructors
 
 arbGen :: Arbitrary b => (b -> a) -> ArbGen a
-arbGen f = newGen 0 (liftM (const . f) arbitrary)
+arbGen f = newGen 0 ((const . f) <$> arbitrary)
 
 constGen :: a -> ArbGen a
 constGen = pureGen 0 . const
@@ -70,7 +70,7 @@ unaryGen :: (a -> a) -> ArbGen a
 unaryGen f = pureGen 1 (f . head)
 
 unaryArbGen :: Arbitrary b => (b -> a -> a) -> ArbGen a
-unaryArbGen f = newGen 1 $ liftM (\a -> f a . head) arbitrary
+unaryArbGen f = newGen 1 $ (\a -> f a . head) <$> arbitrary
 
 unaryGens :: [a -> a] -> ArbGen a
 unaryGens = mconcat . map unaryGen
@@ -85,7 +85,7 @@ pureGen :: Int -> ([a] -> a) -> ArbGen a
 pureGen n = newGen n . return
 
 toArbGen :: Gen a -> ArbGen a
-toArbGen = newGen 0 . liftM const
+toArbGen = newGen 0 . fmap const
 
 newGen :: Int -> Gen ([a] -> a) -> ArbGen a
 newGen n f = AG [(1, (n, f))]

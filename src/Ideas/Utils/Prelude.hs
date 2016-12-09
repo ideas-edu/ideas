@@ -32,7 +32,7 @@ import System.Timeout
 
 data Some f = forall a . Some (f a)
 
-data ShowString = ShowString { fromShowString :: String }
+newtype ShowString = ShowString { fromShowString :: String }
    deriving (Eq, Ord)
 
 instance Show ShowString where

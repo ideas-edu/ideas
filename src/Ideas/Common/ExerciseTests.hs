@@ -54,7 +54,7 @@ exerciseTestSuite qcgen ex = suite ("Exercise " ++ show (exerciseId ex)) $
               checkParserPrettyEx ex . inContext ex . fromS
          , suite "Soundness non-buggy rules" $
                  let eq a b = equivalence ex (fromS a) (fromS b)
-                     myGen  = showAs (prettyPrinterContext ex) (liftM (inContext ex) gen)
+                     myGen  = showAs (prettyPrinterContext ex) (inContext ex <$> gen)
                      myView = makeView (Just . fromS) (S (prettyPrinterContext ex))
                      args   = stdArgs {maxSize = 10, maxSuccess = 10}
                  in [ usePropertyWith (showId r) args $
@@ -81,7 +81,7 @@ instance Show (ShowAs a) where
    show a = showS a (fromS a)
 
 showAs :: (a -> String) -> Gen a -> Gen (ShowAs a)
-showAs f = liftM (S f)
+showAs f = fmap (S f)
 
 -- check combination of parser and pretty-printer
 checkParserPretty :: (a -> a -> Bool) -> (String -> Either String a) -> (a -> String) -> a -> Bool

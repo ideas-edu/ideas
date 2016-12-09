@@ -72,8 +72,8 @@ fromOMOBJ = (>>= fromTerm) . rec
          OMI n  -> return (TNum n)
          OMF a  -> return (TFloat a)
          OMA xs -> case xs of
-                      OMS s:ys | s == OM.listSymbol -> liftM TList (mapM rec ys)
-                               | otherwise -> liftM (function (newSymbol s)) (mapM rec ys)
+                      OMS s:ys | s == OM.listSymbol -> TList <$> mapM rec ys
+                               | otherwise -> function (newSymbol s) <$> mapM rec ys
                       _ -> fail "Invalid OpenMath object"
          OMBIND binder xs body ->
             rec (OMA (binder:map OMV xs++[body]))

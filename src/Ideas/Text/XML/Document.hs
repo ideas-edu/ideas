@@ -32,7 +32,7 @@ data Attribute  = Name := AttValue
 
 data Reference = CharRef Int | EntityRef String
 
-data Parameter = Parameter String
+newtype Parameter = Parameter String
 
 data XMLDoc = XMLDoc
    { versionInfo :: Maybe String

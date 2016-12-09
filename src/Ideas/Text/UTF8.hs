@@ -35,11 +35,11 @@ decode = either error id . decodeM
 
 -- | Encode a string to UTF8 format (monadic)
 encodeM :: Monad m => String -> m String
-encodeM = liftM (map chr . concat) . mapM (toUTF8 . ord)
+encodeM = fmap (map chr . concat) . mapM (toUTF8 . ord)
 
 -- | Decode an UTF8 format string to unicode points (monadic)
 decodeM :: Monad m => String -> m String
-decodeM = liftM (map chr) . fromUTF8 . map ord
+decodeM = fmap (map chr) . fromUTF8 . map ord
 
 -- | Test whether the argument is a proper UTF8 string
 isUTF8 :: String -> Bool
@@ -110,7 +110,7 @@ propEncoding :: Property
 propEncoding = forAll (sized gen) valid
  where
    gen n = replicateM n someChar
-   someChar = liftM chr $ oneof
+   someChar = chr <$> oneof
       -- To get a nice distribution over the number of bytes used
       -- in the encoding
       [ choose (0, 127), choose (128, 2047)

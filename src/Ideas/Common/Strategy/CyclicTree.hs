@@ -59,7 +59,7 @@ instance Functor (CyclicTree d) where
 
 instance Applicative (CyclicTree d) where
    pure    = leaf
-   p <*> q = fold idAlg {fLeaf = (`fmap` q)} p
+   p <*> q = fold idAlg {fLeaf = (<$> q)} p
 
 instance Monad (CyclicTree d) where
    return = leaf
@@ -70,10 +70,10 @@ instance Foldable (CyclicTree d) where
 
 instance Traversable (CyclicTree d) where
    traverse f = fold emptyAlg
-      { fNode  = \a -> liftA (node a) . sequenceA
-      , fLeaf  = liftA leaf . f
-      , fLabel = liftA . label
-      , fRec   = liftA . Rec
+      { fNode  = \a -> fmap (node a) . sequenceA
+      , fLeaf  = fmap leaf . f
+      , fLabel = fmap . label
+      , fRec   = fmap . Rec
       , fVar   = pure . Var
       }
 
@@ -91,13 +91,13 @@ arbTree :: (Arbitrary a, Arbitrary b) => Int -> Gen (CyclicTree a b)
 arbTree = rec 0
  where
    rec vi 0 = frequency $
-      (3, liftM leaf arbitrary)
+      (3, leaf <$> arbitrary)
       : [ (1, elements (map Var [1..vi])) | vi > 0 ]
    rec vi n = frequency
-      [ (3, liftM2 node arbitrary ms)
+      [ (3, node <$> arbitrary <*> ms)
       , (2, rec vi 0)
-      , (1, liftM2 label genId m)
-      , (1, liftM (Rec (vi+1)) (rec (vi+1) (n `div` 2)))
+      , (1, label <$> genId <*> m)
+      , (1, Rec (vi+1) <$> rec (vi+1) (n `div` 2))
       ]
     where
       m = rec vi (n `div` 2)

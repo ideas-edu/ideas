@@ -46,7 +46,7 @@ changeM :: Update f => (a -> Maybe a) -> f a -> Maybe (f a)
 changeM = changeG
 
 changeG :: (Update f, Monad g) => (a -> g a) -> f a -> g (f a)
-changeG f a = liftM (`replace` a) (f (current a))
+changeG f a = (`replace` a) <$> f (current a)
 
 ---------------------------------------------------------------
 -- Focus type class
@@ -61,10 +61,10 @@ class Focus a where
    focusM = Just . focus
 
 liftFocus :: Focus a => (Unfocus a -> Maybe (Unfocus a)) -> a -> Maybe a
-liftFocus f = liftM focus . f . unfocus
+liftFocus f = fmap focus . f . unfocus
 
 unliftFocus :: Focus a => (a -> Maybe a) -> Unfocus a -> Maybe (Unfocus a)
-unliftFocus f = liftM unfocus . f . focus
+unliftFocus f = fmap unfocus . f . focus
 
 ---------------------------------------------------------------
 -- Wrapper type class
@@ -74,10 +74,10 @@ class Wrapper f where
    unwrap :: f a -> a
 
 liftWrapper :: (Monad m, Wrapper f) => (a -> m a) -> f a -> m (f a)
-liftWrapper f = liftM wrap . f . unwrap
+liftWrapper f = fmap wrap . f . unwrap
 
 unliftWrapper :: (Monad m, Wrapper f) => (f a -> m (f a)) -> a -> m a
-unliftWrapper f = liftM unwrap . f . wrap
+unliftWrapper f = fmap unwrap . f . wrap
 
 mapWrapper :: Wrapper f => (a -> a) -> f a -> f a
 mapWrapper f = wrap . f . unwrap

@@ -40,14 +40,14 @@ decodeType :: Type a t -> Decoder a [JSON] t
 decodeType tp =
    case tp of
       Tag _ t -> decodeType t
-      Iso p t -> liftM (from p) (decodeType t)
+      Iso p t -> from p <$> decodeType t
       Pair t1 t2 -> do
          a <- decodeType t1
          b <- decodeType t2
          return (a, b)
       t1 :|: t2 ->
-         liftM Left  (decodeType t1) `mplus`
-         liftM Right (decodeType t2)
+         (Left  <$> decodeType t1) `mplus`
+         (Right <$> decodeType t2)
       Unit         -> return ()
       Const QCGen  -> getQCGen
       Const Script -> getScript
@@ -86,7 +86,7 @@ decodeId = decoderFor $ \json ->
 decodeLocation :: JSONDecoder a Location
 decodeLocation = decoderFor $ \json ->
    case json of
-      String s -> liftM toLocation (readM s)
+      String s -> toLocation <$> readM s
       _        -> fail "expecting a string for a location"
 
 decodeState :: JSONDecoder a (State a)
@@ -126,7 +126,7 @@ decodePaths =
       case json of
          String p
             | p ~= "noprefix" -> return (\_ _ -> noPrefix)
-            | otherwise       -> liftM replayPaths (readPaths p)
+            | otherwise       -> replayPaths <$> readPaths p
          _ -> fail "invalid prefixes"
  where
    x ~= y = filter isAlphaNum (map toLower x) == y
@@ -145,7 +145,7 @@ decodeEnvironment = decoderFor $ \json ->
 decodeContext :: JSONDecoder a (Context a)
 decodeContext = do
    ex <- getExercise
-   liftM (inContext ex) decodeExpression
+   inContext ex <$> decodeExpression
 
 decodeExpression :: JSONDecoder a a
 decodeExpression = withJSONTerm $ \b -> getExercise >>= decoderFor . f b

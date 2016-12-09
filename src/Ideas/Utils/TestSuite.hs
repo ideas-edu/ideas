@@ -84,7 +84,7 @@ useProperty = flip usePropertyWith stdArgs
 -- configuration (Args)
 usePropertyWith :: Testable prop => String -> Args -> prop -> TestSuite
 usePropertyWith s args =
-   makeTestSuite . Case s . liftM make . quickCheckWithResult args {chatty=False}
+   makeTestSuite . Case s . fmap make . quickCheckWithResult args {chatty=False}
  where
    make qc =
       case qc of
@@ -117,7 +117,7 @@ assertMessages s b xs = makeTestSuite . Case s $ return $
    if b then mempty else mconcat (map message xs)
 
 assertIO :: String -> IO Bool -> TestSuite
-assertIO s = makeTestSuite . Case s . liftM f
+assertIO s = makeTestSuite . Case s . fmap f
  where
    f b = if b then mempty else message "assertion failed"
 
@@ -139,7 +139,7 @@ changeMessages :: (Message -> Message) -> TestSuite -> TestSuite
 changeMessages f = changeTS
  where
    changeTS   (TS xs)     = TS (fmap changeTest xs)
-   changeTest (Case s io) = Case s (liftM f io)
+   changeTest (Case s io) = Case s (f <$> io)
    changeTest (Suite s t) = Suite s (changeTS t)
 
 ----------------------------------------------------------------
@@ -195,7 +195,7 @@ runner ref chattyIO = runTS
       handler = return . message . show
 
    addTest :: Result -> Test -> IO Result
-   addTest res t = liftM (res <>) (runTest t)
+   addTest res t = (res <>) <$> runTest t
 
 -- formatting helpers
 type WriteIO a = IORef Int -> IO a

@@ -79,10 +79,10 @@ withExercise :: (Converter f, Monad (f a s)) => (Exercise a -> f a s t) -> f a s
 withExercise = (getExercise >>=)
 
 withOpenMath :: (Converter f, Monad (f a s)) => (Bool -> f a s t) -> f a s t
-withOpenMath = (liftM useOpenMath getRequest >>=)
+withOpenMath = (fmap useOpenMath getRequest >>=)
 
 withJSONTerm :: (Converter f, Monad (f a s)) => (Bool -> f a s t) -> f a s t
-withJSONTerm = (liftM useJSONTerm getRequest >>=)
+withJSONTerm = (fmap useJSONTerm getRequest >>=)
 
 (//) :: (Converter f, Monad (f a s2)) => f a s t -> s -> f a s2 t
 p // a = do
@@ -166,7 +166,7 @@ latexPrinter ex = maybe (toLatex . prettyPrinter ex) unF (getF ex)
 latexPrinterContext :: Exercise a -> Context a -> Latex
 latexPrinterContext ex ctx = 
    let def = toLatex (prettyPrinterContext ex ctx)
-   in fromMaybe def (liftM2 unF (getF ex) (fromContext ctx))
+   in fromMaybe def (unF <$> getF ex <*> fromContext ctx)
 
 latexEncoding :: ToLatex a => Exercise a -> Exercise a
 latexEncoding = latexEncodingWith toLatex
@@ -189,28 +189,30 @@ instance Arrow (Encoder a) where
    arr   f = Enc $ \_ -> return . f
    first f = Enc $ \xs (a, b) -> runEnc f xs a >>= \c -> return (c, b)
 
+instance Functor (Encoder a s) where
+   fmap f p = Enc $ \xs s -> f <$> runEnc p xs s
+
+instance Applicative (Encoder a s) where
+   pure a  = Enc $ \_ _ -> return a
+   p <*> q = Enc $ \xs s -> do
+      f <- runEnc p xs s
+      f <$> runEnc q xs s
+
 instance Alternative (Encoder a s) where
-   empty = mzero
-   (<|>) = mplus
+   empty = fail "Encoder: emptu"
+   p <|> q = Enc $ \xs s ->
+      runEnc p xs s <|> runEnc q xs s
 
 instance Monad (Encoder a s) where
-   return a = Enc $ \_ _ -> return a
+   return   = pure
    fail s   = Enc $ \_ _ -> fail s
    p >>= f  = Enc $ \xs s -> do
       a <- runEnc p xs s
       runEnc (f a) xs s
 
 instance MonadPlus (Encoder a s) where
-   mzero = fail "Decoder: mzero"
-   mplus p q = Enc $ \xs s ->
-      runEnc p xs s `mplus` runEnc q xs s
-
-instance Functor (Encoder a s) where
-   fmap = liftM
-
-instance Applicative (Encoder a s) where
-   pure  = return
-   (<*>) = liftM2 ($)
+   mzero = fail "Encoder: mzero"
+   mplus = (<|>)
 
 instance Converter Encoder where
    fromExercise f = Enc $ \(ex, _) _ -> return (f ex)
@@ -225,7 +227,7 @@ instance BuildXML t => BuildXML (Encoder a s t) where
    n .=. s   = pure (n .=. s)
    unescaped = pure . unescaped
    builder   = pure . builder
-   tag       = liftA . tag
+   tag       = fmap . tag
 
 makeEncoder :: (s -> t) -> Encoder a s t
 makeEncoder = arr
@@ -256,8 +258,21 @@ newtype Decoder a s t = Dec { runDec :: (Exercise a, Options) -> s -> Error (t, 
 
 type TypedDecoder a s = forall t . Type a t -> Decoder a s t
 
+instance Functor (Decoder a s) where
+   fmap f p = Dec $ \xs s -> mapFirst f <$> runDec p xs s
+
+instance Applicative (Decoder a s) where
+   pure a  = Dec $ \_ s -> return (a, s)
+   p <*> q = Dec $ \xs s1 -> do
+      (f, s2) <- runDec p xs s1
+      mapFirst f <$> runDec q xs s2
+
+instance Alternative (Decoder a s) where
+   empty   = fail "Decoder: empty"
+   p <|> q = Dec $ \xs s -> runDec p xs s <|> runDec q xs s
+
 instance Monad (Decoder a s) where
-   return a = Dec $ \_ s -> return (a, s)
+   return   = pure
    fail s   = Dec $ \_ _ -> fail s
    p >>= f  = Dec $ \xs s1 -> do
       (a, s2) <- runDec p xs s1
@@ -265,19 +280,7 @@ instance Monad (Decoder a s) where
 
 instance MonadPlus (Decoder a s) where
    mzero = fail "Decoder: mzero"
-   mplus p q = Dec $ \xs s ->
-      runDec p xs s `mplus` runDec q xs s
-
-instance Functor (Decoder a s) where
-   fmap = liftM
-
-instance Applicative (Decoder a s) where
-   pure  = return
-   (<*>) = liftM2 ($)
-
-instance Alternative (Decoder a s) where
-   empty = fail "Decoder: empty"
-   (<|>) = mplus
+   mplus = (<|>)
 
 get :: Decoder a s s
 get = Dec $ \_ s -> return (s, s)
@@ -288,7 +291,7 @@ put s = Dec $ \_ _ -> return ((), s)
 instance Converter Decoder where
    fromExercise f = Dec $ \(ex, _) s -> return (f ex, s)
    fromOptions  f = Dec $ \(_, opts) s -> return (f opts, s)
-   run f ex opts  = liftM fst . runErrorM . runDec f (ex, opts)
+   run f ex opts  = fmap fst . runErrorM . runDec f (ex, opts)
 
 split :: (s -> Either String (t, s)) -> Decoder a s t
 split f = get >>= either fail (\(a, s2) -> put s2 >> return a) . f
@@ -314,28 +317,32 @@ decoderFor f = get >>= f
 newtype Error a = Error { runError :: Either String a }
 
 instance Functor Error where
-   fmap = (<$>)
+   fmap f = Error . fmap f . runError
 
 instance Applicative Error where
-   pure  = return
-   (<*>) = ap
+   pure    = Error . Right
+   p <*> q = Error $
+      case (runError p, runError q) of
+         (Left s, _)  -> Left s
+         (_, Left s)  -> Left s
+         (Right f, Right x) -> Right (f x)
 
 instance Alternative Error where
-   empty = mzero
-   (<|>) = mplus
-
-instance Monad Error where
-   fail    = Error . Left
-   return  = Error . Right
-   m >>= f = Error $ either Left (runError . f) (runError m)
-
-instance MonadPlus Error where
-   mzero     = fail "mzero"
-   mplus p q = Error $
+   empty   = Error (Left "empty")
+   p <|> q = Error $
       case (runError p, runError q) of
          (Right a, _) -> Right a
          (_, Right a) -> Right a
          (Left s, _)  -> Left s
+
+instance Monad Error where
+   fail    = Error . Left
+   return  = pure
+   m >>= f = Error $ either Left (runError . f) (runError m)
+
+instance MonadPlus Error where
+   mzero = fail "mzero"
+   mplus = (<|>)
 
 runErrorM :: Monad m => Error a -> m a
 runErrorM = either fail return . runError

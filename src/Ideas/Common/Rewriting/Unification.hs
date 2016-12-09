@@ -141,7 +141,7 @@ safeZipWith :: (a -> b -> c) -> [a] -> [b] -> Maybe [c]
 safeZipWith f = rec
  where
    rec []     []     = Just []
-   rec (a:as) (b:bs) = liftM (f a b:) (rec as bs)
+   rec (a:as) (b:bs) = fmap (f a b:) (rec as bs)
    rec _      _      = Nothing
 
 products :: [[Substitution]] -> [Substitution]

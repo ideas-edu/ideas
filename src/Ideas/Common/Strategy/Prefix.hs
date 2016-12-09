@@ -27,7 +27,6 @@ module Ideas.Common.Strategy.Prefix
    , Path, emptyPath, readPath, readPaths
    ) where
 
-import Control.Monad
 import Data.Char
 import Data.List (intercalate)
 import Data.Maybe

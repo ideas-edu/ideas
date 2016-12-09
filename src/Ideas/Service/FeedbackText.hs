@@ -65,8 +65,8 @@ onefirsttext script old event =
 -- indicates whether the student is allowed to continue (True), or forced
 -- to go back to the previous state (False)
 submittext :: Script -> State a -> String -> (Message, State a)
-submittext script old input =
-   case parser ex input of
+submittext script old txt =
+   case parser ex txt of
       Left msg -> (M (Just False) (TextString msg), old)
       Right a  -> feedbacktext script old (inContext ex a) Nothing
  where
@@ -86,8 +86,8 @@ feedbacktext script old new motivationId =
       Unknown _ s     -> (msg False, s)
  where
    diagnosis = diagnose old new motivationId
-   output    = feedbackDiagnosis diagnosis env script
-   msg b     = M (Just b) output
+   out       = feedbackDiagnosis diagnosis env script
+   msg b     = M (Just b) out
    ex        = exercise old
    motivationRule = motivationId >>= getRule ex
    env = (newEnvironment old motivationRule)

@@ -31,8 +31,8 @@ import Ideas.Text.XML
 import System.IO.Error
 
 processXML :: Options -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
-processXML options dr logRef input = do
-   xml  <- either fail return (parseXML input)
+processXML options dr logRef txt = do
+   xml  <- either fail return (parseXML txt)
    req  <- xmlRequest (cgiBin options) xml
    resp <- maybe id timedSeconds (maxTime options) (xmlReply options dr logRef req xml)
     `catch` handler

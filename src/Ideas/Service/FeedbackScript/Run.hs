@@ -20,7 +20,6 @@ module Ideas.Service.FeedbackScript.Run
    , eval
    ) where
 
-import Control.Monad
 import Data.List
 import Data.Maybe
 import Ideas.Common.Library hiding (ready, Environment)

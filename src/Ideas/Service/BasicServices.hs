@@ -37,8 +37,8 @@ generate rng ex md userId =
       Nothing -> Left "No random term"
 
 create :: QCGen -> Exercise a -> String -> Maybe String -> Either String (State a)
-create rng ex input userId =
-   case parser ex input of
+create rng ex txt userId =
+   case parser ex txt of
       Left err -> Left err
       Right a
          | evalPredicate (Library.ready ex) a -> Left "Is ready"

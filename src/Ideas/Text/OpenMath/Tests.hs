@@ -35,7 +35,7 @@ arbOMOBJ = sized rec
 
    rec 0 = frequency
       [ (1, OMI <$> arbitrary)
-      , (1, (\n -> OMF (fromInteger n / 1000)) <*> arbitrary)
+      , (1, (\n -> OMF (fromInteger n / 1000)) <$> arbitrary)
       , (1, OMV <$> arbitrary)
       , (5, elements $ map OMS symbols)
       ]

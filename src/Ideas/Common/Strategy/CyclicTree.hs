@@ -25,7 +25,6 @@ module Ideas.Common.Strategy.CyclicTree
    , emptyAlg, monoidAlg
    ) where
 
-import Control.Applicative
 import Control.Monad
 import Data.List (intercalate)
 import Ideas.Common.Classes

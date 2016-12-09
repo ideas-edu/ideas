@@ -29,8 +29,8 @@ import Ideas.Encoding.Request
 import Ideas.Text.JSON
 
 processJSON :: Options -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
-processJSON options dr logRef input = do
-   json <- either fail return (parseJSON input)
+processJSON options dr logRef txt = do
+   json <- either fail return (parseJSON txt)
    req  <- jsonRequest options json
    resp <- jsonRPC json $ \fun arg ->
               maybe id timedSeconds (maxTime options) (myHandler options dr logRef req fun arg)

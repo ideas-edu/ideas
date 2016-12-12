@@ -87,11 +87,11 @@ instance Monoid (Trans a b) where
    mappend = (<+>)
 
 instance Functor (Trans a) where
-   fmap f t = t >>> arr f
+   fmap f t = t >>^ f
 
 instance Applicative (Trans a) where
    pure    = transPure . const
-   s <*> t = (s &&& t) >>> arr (uncurry ($))
+   s <*> t = (s &&& t) >>^ uncurry ($)
    
 instance Alternative (Trans a) where
    empty = zeroArrow
@@ -133,16 +133,16 @@ readRef :: Ref a -> Trans x a
 readRef r = readRefMaybe r >>> transMaybe id
 
 readRefDefault :: a -> Ref a -> Trans x a
-readRefDefault a r = readRefMaybe r >>> arr (fromMaybe a)
+readRefDefault a r = readRefMaybe r >>^ fromMaybe a
 
 readRefMaybe  :: Ref a -> Trans x (Maybe a)
 readRefMaybe = ReadRefM
 
 writeRef :: Ref a -> Trans a a
-writeRef r = (identity &&& writeRef_ r) >>> arr fst
+writeRef r = (identity &&& writeRef_ r) >>^ fst
 
 writeRef_ :: Ref a -> Trans a ()
-writeRef_ r = arr Just >>> writeRefMaybe r
+writeRef_ r = Just ^>> writeRefMaybe r
 
 writeRefMaybe :: Ref a -> Trans (Maybe a) ()
 writeRefMaybe = WriteRefM
@@ -157,7 +157,7 @@ transLiftView :: View a b -> Transformation b -> Transformation a
 transLiftView v = transLiftViewIn (v &&& identity)
 
 transLiftViewIn :: View a (b, c) -> Transformation b -> Transformation a
-transLiftViewIn v f = makeTrans (match v) >>> first f >>> arr (build v)
+transLiftViewIn v f = makeTrans (match v) >>> first f >>^ build v
 
 transLiftContext :: Transformation a -> Transformation (Context a)
 transLiftContext = transLiftContextIn . transUseEnvironment

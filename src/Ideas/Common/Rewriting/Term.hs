@@ -37,13 +37,13 @@ import Control.Monad
 import Data.Function
 import Data.Maybe
 import Ideas.Common.Id
+import Ideas.Common.View
 import Ideas.Utils.Prelude (ShowString(..))
 import Ideas.Utils.QuickCheck
 import Ideas.Utils.Uniplate
-import Ideas.Common.View
 import qualified Data.IntSet as IS
-import qualified Data.Set as S
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 -----------------------------------------------------------
 -- Symbols
@@ -156,18 +156,18 @@ instance IsTerm Bool where
       | s == trueSymbol  = return True
       | s == falseSymbol = return False
    fromTerm _ = fail "fromTerm: not a Bool"
-   
+
 instance IsTerm a => IsTerm [a] where
    toTerm = toTermList
    fromTerm = fromTermList
 
 instance (IsTerm a, Ord a) => IsTerm (S.Set a) where
    toTerm   = toTerm . S.toList
-   fromTerm = fmap S.fromList . fromTerm 
+   fromTerm = fmap S.fromList . fromTerm
 
 instance (IsTerm a, IsTerm b, Ord a) => IsTerm (M.Map a b) where
    toTerm   = toTerm . M.toList
-   fromTerm = fmap M.fromList . fromTerm 
+   fromTerm = fmap M.fromList . fromTerm
 
 trueSymbol, falseSymbol, nothingSymbol :: Symbol
 trueSymbol    = newSymbol "true"
@@ -177,7 +177,7 @@ nothingSymbol = newSymbol "Nothing"
 instance IsTerm a => IsTerm (Maybe a) where
    toTerm = maybe (symbol nothingSymbol) toTerm
    fromTerm (TCon s []) | s == nothingSymbol = return Nothing
-   fromTerm t = fmap Just (fromTerm t) 
+   fromTerm t = fmap Just (fromTerm t)
 
 fromTermM :: (Monad m, IsTerm a) => Term -> m a
 fromTermM = maybe (fail "fromTermM") return . fromTerm

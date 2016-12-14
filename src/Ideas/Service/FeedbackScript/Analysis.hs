@@ -22,11 +22,11 @@ module Ideas.Service.FeedbackScript.Analysis
 import Data.Either
 import Data.List
 import Ideas.Common.Library
-import Ideas.Utils.Uniplate
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Parser
 import Ideas.Service.FeedbackScript.Run
 import Ideas.Service.FeedbackScript.Syntax
+import Ideas.Utils.Uniplate
 
 makeScriptFor :: IsId a => DomainReasoner -> a -> IO ()
 makeScriptFor dr exId = do

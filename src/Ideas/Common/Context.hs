@@ -35,8 +35,8 @@ import Ideas.Common.Id
 import Ideas.Common.Rewriting
 import Ideas.Common.Traversal.Navigator
 import Ideas.Common.Traversal.Utils
-import Ideas.Utils.Uniplate
 import Ideas.Common.View hiding (left, right)
+import Ideas.Utils.Uniplate
 
 ----------------------------------------------------------
 -- Abstract data type

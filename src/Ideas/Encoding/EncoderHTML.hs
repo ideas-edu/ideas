@@ -21,22 +21,22 @@ import Data.Maybe
 import Data.Ord
 import Ideas.Common.Library hiding (alternatives)
 import Ideas.Common.Strategy.Symbol
-import Ideas.Utils.TestSuite
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.LinkManager
+import Ideas.Encoding.Request
 import Ideas.Encoding.RulePresenter
 import Ideas.Encoding.RulesInfo
 import Ideas.Encoding.StrategyInfo
 import Ideas.Service.BasicServices
 import Ideas.Service.Diagnose
 import Ideas.Service.DomainReasoner
-import Ideas.Encoding.Request
 import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Text.HTML
 import Ideas.Text.OpenMath.FMP
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
+import Ideas.Utils.TestSuite
 import System.IO.Unsafe
 
 type HTMLEncoder a t = Encoder a t HTMLBuilder
@@ -66,9 +66,8 @@ makePage lm dr ex a =
            string (fullVersion dr)
       ]
  where
-   mathJaxUrl = 
+   mathJaxUrl =
       "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"
-
 
 encodeType :: LinkManager -> DomainReasoner -> HTMLEncoder a (TypedValue (Type a))
 encodeType lm dr =
@@ -471,12 +470,11 @@ htmlContext useDiv ex = f "term" . textLines . printer
  where
    textLines = mconcat . intersperse br . map string . lines
    f = if useDiv then divClass else spanClass
-   
+
    inline s = "\\(" ++ s ++ "\\)"
-   printer 
+   printer
       | hasLatexEncoding ex = inline . show . latexPrinterContext ex
       | otherwise = prettyPrinterContext ex
-   
 
 stateLink :: LinkManager -> State a -> HTMLBuilder
 stateLink lm st =

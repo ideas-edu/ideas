@@ -18,9 +18,9 @@ module Ideas.Service.ProblemDecomposition
 import Data.Maybe
 import Ideas.Common.Library
 import Ideas.Common.Strategy.Symbol
-import Ideas.Utils.Prelude (fst3)
 import Ideas.Service.State
 import Ideas.Service.Types
+import Ideas.Utils.Prelude (fst3)
 
 problemDecomposition :: Maybe Id -> State a -> Maybe (Answer a) -> Either String (Reply a)
 problemDecomposition msloc state maybeAnswer

@@ -20,13 +20,13 @@ module Ideas.Service.BasicServices
 import Control.Monad
 import Data.List
 import Data.Maybe
-import qualified Data.Set as S
 import Ideas.Common.Library hiding (applicable, apply, ready)
 import Ideas.Common.Traversal.Navigator (downs, navigateTo)
-import Ideas.Utils.Prelude (fst3)
 import Ideas.Service.State
 import Ideas.Service.Types
+import Ideas.Utils.Prelude (fst3)
 import Test.QuickCheck.Random
+import qualified Data.Set as S
 import qualified Ideas.Common.Classes as Apply
 import qualified Ideas.Common.Library as Library
 
@@ -150,27 +150,27 @@ apply r loc env state
    applyOff  = -- scenario 2: off-strategy
       case transApplyWith env (transformation r) ca of
          (new, _):_ -> Right (restart (state {stateContext = new, statePrefix = noPrefix}))
-         [] -> 
+         [] ->
             -- first check the environment (exercise-specific property)
-            case environmentCheck of 
-               Just msg -> 
+            case environmentCheck of
+               Just msg ->
                   Left msg
-               Nothing -> 
+               Nothing ->
                   -- try to find a buggy rule
                   case siblingsFirst [ (br, envOut) | br <- ruleset (exercise state), isBuggy br,  (_, envOut) <- transApplyWith env (transformation br) ca ] of
                      []  -> Left ("Cannot apply " ++ show r)
                      brs -> Left ("Buggy rule " ++ intercalate "+" (map pp brs))
     where
       pp (br, envOut)
-         | noBindings envOut = show br 
+         | noBindings envOut = show br
          | otherwise         = show br ++ " {" ++ show envOut ++ "}"
 
    siblingsFirst xs = ys ++ zs
     where
       (ys, zs) = partition (siblingInCommon r . fst) xs
-      
+
    environmentCheck :: Maybe String
-   environmentCheck = do 
+   environmentCheck = do
       p <- getProperty "environment-check" (exercise state)
       p env
 

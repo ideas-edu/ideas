@@ -59,7 +59,7 @@ instance Show (Diagnosis a) where
       f s xs
          | null xs   = s
          | otherwise = s ++ "(" ++ intercalate "," xs ++ ")"
-         
+
 getState :: Diagnosis a -> Maybe (State a)
 getState = fmap fst . getStateAndReady
 
@@ -75,7 +75,7 @@ getStateAndReady d =
       Detour b s _  _  -> Just (s, b)
       Correct  b s     -> Just (s, b)
       Unknown b s      -> Just (s, b)
-   
+
 ----------------------------------------------------------------
 -- The diagnose service
 

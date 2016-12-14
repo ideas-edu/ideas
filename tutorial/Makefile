@@ -1,4 +1,4 @@
-default: Tutorial.html
+default: Tutorial.html Tutorial.exe
 
 IDEASDIR   = ../../tags/ideas-1.2
 SRCDIR     = $(IDEASDIR)/src
@@ -18,3 +18,5 @@ install:
 %.html: %.lhs
 	pandoc --from markdown+lhs --to html --css=Tutorial.css -o $@ $<
 
+Tutorial.exe:
+	ghc --make -i../src -hidir ../out -odir ../out Tutorial.lhs -o Tutorial.exe

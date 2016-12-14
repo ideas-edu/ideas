@@ -30,9 +30,9 @@ import Data.Function
 import Data.List
 import Ideas.Common.Id
 import Ideas.Common.Rewriting.Term
+import Ideas.Common.View
 import Ideas.Utils.Prelude
 import Ideas.Utils.Typeable
-import Ideas.Common.View
 import qualified Data.Map as M
 
 -----------------------------------------------------------

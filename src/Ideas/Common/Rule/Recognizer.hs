@@ -56,7 +56,7 @@ instance HasRefs (Recognizer a) where
 --- Constructor functions
 
 makeRecognizer :: (a -> a -> Bool) -> Recognizer a
-makeRecognizer eq = makeRecognizerTrans $ transMaybe $ \(x, y) -> 
+makeRecognizer eq = makeRecognizerTrans $ transMaybe $ \(x, y) ->
    if eq x y then Just () else Nothing
 
 makeRecognizerTrans :: Trans (a, a) () -> Recognizer a

@@ -35,13 +35,13 @@ module Ideas.Common.Strategy.Abstract
 import Data.Foldable (toList)
 import Data.Maybe
 import Ideas.Common.Classes
-import Ideas.Common.Strategy.CyclicTree hiding (label)
 import Ideas.Common.Derivation
 import Ideas.Common.Environment
 import Ideas.Common.Id
 import Ideas.Common.Rewriting (RewriteRule)
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
+import Ideas.Common.Strategy.CyclicTree hiding (label)
 import Ideas.Common.Strategy.Prefix
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence (Sequence(..), ready)

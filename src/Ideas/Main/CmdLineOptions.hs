@@ -24,7 +24,7 @@ import System.Console.GetOpt
 import System.Environment
 import System.Exit
 
-data CmdLineOption 
+data CmdLineOption
    = Version | Help | PrintLog
    | InputFile String | Test FilePath
    | MakeScriptFor String | AnalyzeScript FilePath

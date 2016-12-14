@@ -17,11 +17,11 @@ module Ideas.Encoding.EncoderJSON (jsonEncoder) where
 
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
-import Ideas.Utils.Prelude (distinct)
 import Ideas.Encoding.Encoder hiding (symbol)
 import Ideas.Service.State
 import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
+import Ideas.Utils.Prelude (distinct)
 import qualified Ideas.Service.Diagnose as Diagnose
 import qualified Ideas.Service.Submit as Submit
 import qualified Ideas.Service.Types as Tp

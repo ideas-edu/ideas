@@ -22,9 +22,9 @@ import Data.Maybe
 import Data.Monoid
 import Data.Ord
 import Ideas.Common.Library
-import Ideas.Utils.TestSuite
 import Ideas.Service.FeedbackScript.Parser
 import Ideas.Service.Types
+import Ideas.Utils.TestSuite
 
 -----------------------------------------------------------------------
 -- Domain Reasoner data type

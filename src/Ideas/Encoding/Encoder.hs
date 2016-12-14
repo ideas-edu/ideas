@@ -41,8 +41,8 @@ import Data.Maybe
 import Data.Monoid as Export
 import Ideas.Common.Library hiding (exerciseId, symbol)
 import Ideas.Encoding.Options
-import Ideas.Service.FeedbackScript.Parser (Script)
 import Ideas.Encoding.Request
+import Ideas.Service.FeedbackScript.Parser (Script)
 import Ideas.Service.Types
 import Ideas.Text.JSON hiding (String)
 import Ideas.Text.Latex
@@ -164,7 +164,7 @@ latexPrinter ex = maybe (toLatex . prettyPrinter ex) unF (getF ex)
 
 -- | Uses exercise pretty-printer in case latex encoding is missing.
 latexPrinterContext :: Exercise a -> Context a -> Latex
-latexPrinterContext ex ctx = 
+latexPrinterContext ex ctx =
    let def = toLatex (prettyPrinterContext ex ctx)
    in fromMaybe def (unF <$> getF ex <*> fromContext ctx)
 

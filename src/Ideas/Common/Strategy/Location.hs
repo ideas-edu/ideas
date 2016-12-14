@@ -18,9 +18,9 @@ module Ideas.Common.Strategy.Location
    ) where
 
 import Data.Maybe
-import Ideas.Common.Strategy.CyclicTree
 import Ideas.Common.Id
 import Ideas.Common.Strategy.Abstract
+import Ideas.Common.Strategy.CyclicTree
 
 -----------------------------------------------------------
 --- Strategy locations

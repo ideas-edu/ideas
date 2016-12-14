@@ -15,7 +15,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Utils.Typeable 
+module Ideas.Utils.Typeable
    ( IsTypeable, typeable
    , HasTypeable(..)
    , castFrom, castTo, castBetween
@@ -26,12 +26,12 @@ module Ideas.Utils.Typeable
 import Control.Monad
 import Data.Typeable
 import Unsafe.Coerce
-         
+
 newtype IsTypeable a = IT TypeRep
 
 class HasTypeable f where
    getTypeable :: f a -> Maybe (IsTypeable a)
- 
+
 instance HasTypeable IsTypeable where
    getTypeable = Just
 
@@ -62,7 +62,7 @@ eqIT :: (HasTypeable f, HasTypeable g) => f a -> g b -> Maybe (a :~: b)
 eqIT x y = do
    guardEq x y
    return $ unsafeCoerce Refl
-   
+
 guardEq :: (HasTypeable f, HasTypeable g) => f a -> g b -> Maybe ()
 guardEq x y = do
    IT ta <- getTypeable x

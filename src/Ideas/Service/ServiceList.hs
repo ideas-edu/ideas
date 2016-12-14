@@ -14,13 +14,13 @@ module Ideas.Service.ServiceList (serviceList, metaServiceList) where
 
 import Ideas.Common.ExerciseTests
 import Ideas.Common.Library hiding (apply, applicable, suitable, ready)
-import Ideas.Utils.TestSuite hiding (Message)
 import Ideas.Service.BasicServices
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackText
 import Ideas.Service.ProblemDecomposition (problemDecomposition)
 import Ideas.Service.State
 import Ideas.Service.Types
+import Ideas.Utils.TestSuite hiding (Message)
 import qualified Ideas.Service.Diagnose as Diagnose
 import qualified Ideas.Service.ProblemDecomposition as ProblemDecomposition
 import qualified Ideas.Service.Submit as Submit
@@ -83,7 +83,7 @@ onefirstS = makeService "basic.onefirst"
    -- special tag for (legacy) xml encoding
 
 onefinalS :: Service
-onefinalS = makeService "basic.onefinal" 
+onefinalS = makeService "basic.onefinal"
    "Returns a final term, after taking zero or more steps, by applying the strategy." $
    onefinal ::: tState .-> tError tContext
 

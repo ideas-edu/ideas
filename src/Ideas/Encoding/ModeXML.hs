@@ -17,17 +17,17 @@ module Ideas.Encoding.ModeXML (processXML) where
 import Control.Exception
 import Control.Monad
 import Ideas.Common.Library hiding (exerciseId)
-import Ideas.Utils.Prelude (timedSeconds)
 import Ideas.Encoding.DecoderXML
-import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin)
 import Ideas.Encoding.EncoderHTML
 import Ideas.Encoding.EncoderXML
 import Ideas.Encoding.Evaluator
 import Ideas.Encoding.Logging (LogRef, changeLog, errormsg)
-import Ideas.Service.DomainReasoner
+import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin)
 import Ideas.Encoding.Request
+import Ideas.Service.DomainReasoner
 import Ideas.Text.HTML
 import Ideas.Text.XML
+import Ideas.Utils.Prelude (timedSeconds)
 import System.IO.Error
 
 processXML :: Options -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
@@ -82,14 +82,14 @@ xmlReply opt1 dr logRef request xml = do
    srv <- case serviceId request of
              Just a  -> findService dr a
              Nothing -> fail "No service"
-   
+
    Some ex <- case exerciseId request of
                  Just a  -> findExercise dr a
                  Nothing -> return (Some emptyExercise)
 
-   opt2 <- makeOptions dr ex request   
+   opt2 <- makeOptions dr ex request
    let options = opt1 <> opt2
- 
+
    if htmlOutput request
       -- HTML evaluator
       then toXML <$> evalService logRef ex options (htmlEvaluator dr) srv xml

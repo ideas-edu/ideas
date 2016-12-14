@@ -23,11 +23,11 @@ module Ideas.Common.Strategy.Configuration
 
 import Data.Char
 import Ideas.Common.Classes
-import Ideas.Common.Strategy.CyclicTree hiding (label)
 import Ideas.Common.Id
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Choice
+import Ideas.Common.Strategy.CyclicTree hiding (label)
 import Ideas.Common.Strategy.Derived (repeat1)
 import Ideas.Common.Strategy.Process hiding (fold)
 import Ideas.Common.Strategy.Sequence

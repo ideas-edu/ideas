@@ -32,7 +32,7 @@ data Request = Request
    , encoding       :: [Encoding]
    }
 
-instance Monoid Request where 
+instance Monoid Request where
    mempty = Request Nothing Nothing Nothing Nothing
                     Nothing Nothing Nothing Nothing Nothing []
    mappend x y = Request

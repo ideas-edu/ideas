@@ -32,8 +32,8 @@ import Data.List (intercalate)
 import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Environment
-import Ideas.Common.Rule
 import Ideas.Common.Rewriting.Term
+import Ideas.Common.Rule
 import Ideas.Common.Strategy.Choice
 import Ideas.Common.Strategy.Process
 import Ideas.Common.Strategy.Sequence
@@ -170,10 +170,10 @@ prefixPaths = getPaths
 -- of integers and terms (the latter act as input for the dynamic strategies).
 newtype Path = Path [PathItem]
    deriving Eq
-   
+
 data PathItem = Index Int | Input Term
    deriving Eq
-   
+
 instance Show PathItem where
    show (Index n) = show n
    show (Input t) = show t

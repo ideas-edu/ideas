@@ -17,7 +17,7 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Common.Rule.Parameter
-   ( -- * Reading inputs 
+   ( -- * Reading inputs
      input, inputWith
    , transInput1, transInput2, transInput3, transInputWith
    , readRef2, readRef3
@@ -75,16 +75,16 @@ output = outputWith . writeRef
 outputWith :: Trans o x -> Trans a (b, o) -> Trans a b
 outputWith f g = g >>> second f >>^ fst
 
-outputOnly :: Ref o -> Trans a o -> Trans a a 
+outputOnly :: Ref o -> Trans a o -> Trans a a
 outputOnly = outputOnlyWith . writeRef
 
-outputOnly2 :: Ref o1 -> Ref o2 -> Trans a (o1, o2) -> Trans a a 
+outputOnly2 :: Ref o1 -> Ref o2 -> Trans a (o1, o2) -> Trans a a
 outputOnly2 r1 = outputOnlyWith . writeRef2 r1
 
-outputOnly3 :: Ref o1 -> Ref o2 -> Ref o3 -> Trans a (o1, o2, o3) -> Trans a a 
+outputOnly3 :: Ref o1 -> Ref o2 -> Ref o3 -> Trans a (o1, o2, o3) -> Trans a a
 outputOnly3 r1 r2 = outputOnlyWith . writeRef3 r1 r2
 
-outputOnlyWith :: Trans o x -> Trans a o -> Trans a a 
+outputOnlyWith :: Trans o x -> Trans a o -> Trans a a
 outputOnlyWith f g = ((g >>> f) &&& identity) >>^ snd
 
 writeRef2 :: Ref a -> Ref b -> Trans (a, b) (a, b)
@@ -124,7 +124,7 @@ supplyParameters f g = transLiftContextIn $
 
 -----------------------------------------------------------------
 -- helpers
-    
+
 from3 :: (a, b, c) -> (a, (b, c))
 from3 (a, b, c) = (a, (b, c))
 

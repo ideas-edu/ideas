@@ -30,7 +30,7 @@ instance Show Latex where
 
 instance IsString Latex where
    fromString = L
-   
+
 instance Monoid Latex where
    mempty = L []
    L xs `mappend` L ys = L (mappend xs ys)
@@ -45,13 +45,13 @@ class ToLatex a where
    toLatexList = brackets . commas . map toLatex
    {-# MINIMAL toLatex | toLatexPrec #-}
 
-instance ToLatex a => ToLatex [a] where 
+instance ToLatex a => ToLatex [a] where
    toLatex     = toLatexList
    toLatexPrec = const toLatexList
 
 instance ToLatex a => ToLatex (Maybe a) where
    toLatexPrec = maybe mempty . toLatexPrec
- 
+
 instance ToLatex Char where
    toLatex     = fromString . return
    toLatexList = fromString
@@ -67,9 +67,9 @@ brackets s = "[" <> s <> "]"
 parens   s = "(" <> s <> ")"
 
 array :: String -> [[Latex]] -> Latex
-array s rows = "\\begin{array}{" <> fromString s <> "}" 
+array s rows = "\\begin{array}{" <> fromString s <> "}"
    <> mconcat (intersperse "\\\\" (map (mconcat . intersperse " & ") rows))
    <> "\\end{array}"
-   
+
 command :: String -> Latex
 command s = toLatex ("\\" ++ s ++ " ")

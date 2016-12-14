@@ -1,7 +1,7 @@
 <div class="page-header"> 
 <div class="ideas-logo"><img src="ideas.png"/></div>
 <div class="ounl-logo"><img src="ounl.png"/></div>
-&nbsp; Ideas tutorial (version 1.5)
+&nbsp; Ideas tutorial (version 1.6)
 </div>
 <div class="page-content">
 
@@ -77,7 +77,7 @@ data type is used to indicate that the rule cannot be applied.
 >    f _ = Nothing
 
 Have a look at the type of the `makeRule` function in the 
-[documentation](http://hackage.haskell.org/package/ideas-1.5/docs/Ideas-Common-Rule-Abstract.html#v:makeRule),
+[documentation](http://hackage.haskell.org/package/ideas-1.6/docs/Ideas-Common-Rule-Abstract.html#v:makeRule),
 and observe that the function
 is overloaded in both arguments. The first argument is the rule's identifier,
 which has to be part of the `IsId` type class. The `String` type is an instance
@@ -132,7 +132,7 @@ We can now make a minimal exercise that uses the `addOrNegate` strategy
 for solving: why we need to lift the strategy to a `Context` is explained in 
 step 2 of this tutorial. Exercises should have a unique identifier for 
 identification. We use `show` for pretty-printing expressions. See the 
-[documentation](http://hackage.haskell.org/package/ideas-1.5/docs/Ideas-Common-Exercise.html#t:Exercise) 
+[documentation](http://hackage.haskell.org/package/ideas-1.6/docs/Ideas-Common-Exercise.html#t:Exercise) 
 of the `Exercise` data type for the other components of an 
 exercise: `emptyExercise` provides sensible defaults so we do not have to 
 worry about these fields yet.
@@ -346,7 +346,7 @@ Running the executable with the `--help` flag gives the options.
 $ Tutorial.exe --help
 IDEAS: Intelligent Domain-specific Exercise Assistants
 Copyright 2016, Open Universiteit Nederland
-version 1.5, revision cfe6d70796113f07095f803981e1d2cc222d4b8e, logging disabled
+version 1.6, revision b550ad9.., logging disabled
 
 
 Usage: ideas [OPTION]     (by default, CGI protocol)
@@ -356,7 +356,6 @@ Options:
   -?       --help                 show options
            --print-log            print log information (for debugging)
   -f FILE  --file=FILE            use input FILE as request
-           --make-pages[=DIR]     generate pages for exercises and services
            --test[=DIR]           run tests on directory (default: 'test')
            --make-script=ID       generate feedback script for exercise
            --analyze-script=FILE  analyze feedback script and report errors
@@ -377,7 +376,7 @@ The result of this request is:
 
 ~~~~ {#mycode .xml}
 $ Tutorial.exe --file=exerciselist.xml                                          
-<reply result="ok" version="1.5 (cfe6d..)">
+<reply result="ok" version="1.6 (b550ad9..)">
   <list>
     <elem exerciseid="eval.basic" description="Evaluate an expression (basic)" status="Experimental"/>
     <elem exerciseid="eval.full" description="Evaluate an expression (full)" status="Experimental"/>
@@ -404,7 +403,7 @@ mathematical objects. The result of this request is:
 
 ~~~~ {#mycode .xml}   
 $ Tutorial.exe --file=solution.xml
-<reply result="ok" version="1.5 (cfe6d..)">
+<reply result="ok" version="1.6 (b550ad9..)">
   <list>
     <elem ruleid="eval.negate">
       <expr>
@@ -450,5 +449,5 @@ We have developed [our own solution](http://ideas.science.uu.nl/tutorial/Tutoria
 
 </div>
 <div class="page-footer">
-This tutorial is based on ideas-1.5. Last changed: May 2016
+This tutorial is based on ideas-1.6. Last changed: December 2016
 </div>

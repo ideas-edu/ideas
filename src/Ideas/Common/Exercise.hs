@@ -53,9 +53,9 @@ import Ideas.Common.Predicate
 import Ideas.Common.Rewriting
 import Ideas.Common.Rule
 import Ideas.Common.Strategy hiding (not, fail, repeat, replicate)
+import Ideas.Common.View
 import Ideas.Utils.Prelude (ShowString(..))
 import Ideas.Utils.Typeable
-import Ideas.Common.View
 import System.Random
 import Test.QuickCheck hiding (label)
 import Test.QuickCheck.Gen
@@ -323,7 +323,7 @@ useTypeable = Just typeable
 setProperty :: (IsId n, Typeable val) => n -> val -> Exercise a -> Exercise a
 setProperty key a = insertProperty key (Dyn (cast a))
 
--- | Set an exercise-specific property (with a dynamic type) that is 
+-- | Set an exercise-specific property (with a dynamic type) that is
 -- parameterized over the exercise term.
 setPropertyF :: (IsId n, Typeable f) => n -> f a -> Exercise a -> Exercise a
 setPropertyF key a = insertProperty key (DynF (castF a))
@@ -334,12 +334,12 @@ insertProperty key d ex =
 
 -- | Get an exercise-specific property (of a dynamic type)
 getProperty :: (IsId n, Typeable val) => n -> Exercise a -> Maybe val
-getProperty key ex = lookupProperty key ex >>= \d -> 
-   case d of 
+getProperty key ex = lookupProperty key ex >>= \d ->
+   case d of
       Dyn m -> m
       _     -> Nothing
-   
--- | Get an exercise-specific property (of a dynamic type) that is 
+
+-- | Get an exercise-specific property (of a dynamic type) that is
 -- parameterized over the exercise term.
 getPropertyF :: (IsId n, Typeable f) => n -> Exercise a -> Maybe (f a)
 getPropertyF key ex = lookupProperty key ex >>= \d ->

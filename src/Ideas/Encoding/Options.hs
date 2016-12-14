@@ -19,9 +19,9 @@ module Ideas.Encoding.Options
 import Control.Applicative
 import Data.Monoid
 import Ideas.Common.Library (Exercise, getId)
+import Ideas.Encoding.Request
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Parser (parseScriptSafe, Script)
-import Ideas.Encoding.Request
 import Test.QuickCheck.Random
 
 -------------------------------------------------------------------

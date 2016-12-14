@@ -30,14 +30,14 @@ import Control.Monad
 import Data.Function
 import Data.Maybe
 import Ideas.Common.Classes
-import Ideas.Common.Strategy.CyclicTree
 import Ideas.Common.Id
 import Ideas.Common.Rewriting.Term (Term, IsTerm(..))
 import Ideas.Common.Rule
-import Ideas.Common.Strategy.Symbol
 import Ideas.Common.Strategy.Choice
-import Ideas.Common.Strategy.Sequence
+import Ideas.Common.Strategy.CyclicTree
 import Ideas.Common.Strategy.Process
+import Ideas.Common.Strategy.Sequence
+import Ideas.Common.Strategy.Symbol
 import Ideas.Common.View
 
 infix 1 .=.
@@ -46,29 +46,29 @@ infix 1 .=.
 
 type StrategyTree a = CyclicTree (Decl Nary) (Leaf a)
 
-data Leaf a = LeafRule (Rule a) 
+data Leaf a = LeafRule (Rule a)
             | LeafDyn  (Dynamic a)
 
 instance Show (Leaf a) where
    show = showId
-   
+
 instance Eq (Leaf a) where
    x == y = getId x == getId y
 
-instance HasId (Leaf a) where 
+instance HasId (Leaf a) where
    getId      (LeafRule r) = getId r
    getId      (LeafDyn d)  = getId d
    changeId f (LeafRule r) = LeafRule (changeId f r)
    changeId f (LeafDyn d)  = LeafDyn (changeId f d)
-   
+
 instance AtomicSymbol (Leaf a) where
    atomicOpen  = LeafRule atomicOpen
    atomicClose = LeafRule atomicClose
-   
+
 instance LabelSymbol (Leaf a) where
    isEnterSymbol (LeafRule r) = isEnterSymbol r
    isEnterSymbol (LeafDyn _)  = False
-   
+
 instance Minor (Leaf a) where
    isMinor    (LeafRule r)   = isMinor r
    isMinor    (LeafDyn _)    = False
@@ -94,10 +94,10 @@ mapRulesInTree :: (Rule a -> Rule a) -> StrategyTree a -> StrategyTree a
 mapRulesInTree f = inTree
  where
    inTree = fmap inLeaf
- 
+
    inLeaf (LeafRule r) = LeafRule (f r)
    inLeaf (LeafDyn d)  = LeafDyn (inDyn d)
-   
+
    inDyn d = d { dynamicFromTerm = fmap inTree . dynamicFromTerm d }
 
 applyDecl :: Arity f => Decl f -> f (StrategyTree a)
@@ -115,11 +115,11 @@ applyDecl d = toArity (node (d {combinator = op}) . make)
 
 ------------------------------------------------------------------------------
 
-data Dynamic a = Dyn 
-   { dynamicId       :: Id 
+data Dynamic a = Dyn
+   { dynamicId       :: Id
    , dynamicToTerm   :: a -> Maybe Term
    , dynamicFromTerm :: Term -> Maybe (StrategyTree a)
-   } 
+   }
 
 instance HasId (Dynamic a) where
    getId = dynamicId
@@ -129,7 +129,7 @@ instance Apply Dynamic where
    applyAll d a = maybe [] ((`runProcess` a) . treeToProcess) (dynamicTree d a)
 
 instance LiftView Dynamic where
-   liftViewIn v d = d 
+   liftViewIn v d = d
       { dynamicToTerm   = fmap fst . match v >=> dynamicToTerm d
       , dynamicFromTerm = fmap (fmap (liftViewIn v)) . dynamicFromTerm d
       }

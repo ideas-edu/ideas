@@ -25,7 +25,7 @@ type TestRunner = String -> IO String
 -- Returns the number of tests performed
 blackBoxTests :: TestRunner -> [String] -> String -> IO TestSuite
 blackBoxTests runner exts = rec
- where 
+ where
     rec path = do
       -- analyse content
       xs0 <- getDirectoryContents path

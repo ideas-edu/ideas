@@ -23,8 +23,8 @@ import Ideas.Common.Environment
 import Ideas.Common.Exercise
 import Ideas.Common.Id
 import Ideas.Common.Rule
-import Ideas.Utils.TestSuite
 import Ideas.Common.View
+import Ideas.Utils.TestSuite
 import Test.QuickCheck
 import Test.QuickCheck.Random
 

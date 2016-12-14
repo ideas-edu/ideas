@@ -1,15 +1,15 @@
 Changelog ideas-1.5 => ideas.1.6
 
-* dynamic strategy combinator (that uses current term)
+* dynamic strategy combinator that uses the current object/term
 * more instances for IsTerm (Maybe, Bool, Map, Set)
 * exercise-specific properties (that can be parameterized over its type)
-* support for encoding exercise terms in JSON (using exercise property)
-* basic support for Latex (in html output) and MathJax
-* extended 'apply' feedback service (with buggy rules and restarts)
+* support for encoding exercise terms in JSON (using an exercise property)
+* basic support for Latex and MathJax (in html output)
+* extended 'apply' feedback service with buggy rules and restarts
 * redesigned (parameterized) transformations
-* reimplemented strategy combinator split (based on %>>)
+* reimplemented strategy combinator split, based on %>>
 * new function defaultMainWith, which takes options
-* added 'onefinal' feedback service (which returns a final term in context)
+* added 'onefinal' feedback service, which returns a final term in context
 * layered design for sub-directories: renaming/moving some modules 
   (e.g. Ideas.Utils.Prelude)
 * Typeable constraint now properly encapsulated in Ref type

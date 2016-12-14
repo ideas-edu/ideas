@@ -32,15 +32,15 @@ module Ideas.Common.Rule.Transformation
    , getRewriteRules
    ) where
 
-import Control.Arrow
 import Control.Applicative
+import Control.Arrow
 import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Context
 import Ideas.Common.Environment
 import Ideas.Common.Rewriting
-import Ideas.Utils.Prelude
 import Ideas.Common.View
+import Ideas.Utils.Prelude
 import qualified Control.Category as C
 
 -----------------------------------------------------------
@@ -60,7 +60,7 @@ data Trans a b where
 
    ReadRefM  :: Ref a -> Trans x (Maybe a)
    WriteRefM :: Ref a -> Trans (Maybe a) ()
-   
+
 instance C.Category Trans where
    id  = arr id
    (.) = flip (:>>:)
@@ -92,7 +92,7 @@ instance Functor (Trans a) where
 instance Applicative (Trans a) where
    pure    = transPure . const
    s <*> t = (s &&& t) >>^ uncurry ($)
-   
+
 instance Alternative (Trans a) where
    empty = zeroArrow
    (<|>) = (<+>)

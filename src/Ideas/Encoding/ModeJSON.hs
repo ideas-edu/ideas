@@ -18,15 +18,15 @@ import Control.Monad
 import Data.Char
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
-import Ideas.Utils.Prelude (timedSeconds)
 import Ideas.Encoding.DecoderJSON
-import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin)
 import Ideas.Encoding.EncoderJSON
 import Ideas.Encoding.Evaluator
 import Ideas.Encoding.Logging (LogRef, changeLog, errormsg)
-import Ideas.Service.DomainReasoner
+import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin)
 import Ideas.Encoding.Request
+import Ideas.Service.DomainReasoner
 import Ideas.Text.JSON
+import Ideas.Utils.Prelude (timedSeconds)
 
 processJSON :: Options -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
 processJSON options dr logRef txt = do

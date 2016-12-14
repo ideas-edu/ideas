@@ -29,8 +29,8 @@ import Ideas.Common.Rewriting as Export
 import Ideas.Common.Rule as Export
 import Ideas.Common.Strategy as Export hiding (fail, not, repeat, replicate, sequence, until)
 import Ideas.Common.Traversal.Navigator as Export (Location, location, toLocation, fromLocation, arity, top)
-import Ideas.Utils.Prelude as Export (readM, Some(..))
 import Ideas.Common.View as Export
+import Ideas.Utils.Prelude as Export (readM, Some(..))
 
 import qualified Ideas.Common.Strategy as S
 

@@ -4,3 +4,6 @@ src/Ideas/Main/Revision.hs
 *.swp
 docs/compile.txt
 .stack-work/
+tutorial/Tutorial.hi
+tutorial/Tutorial.exe
+tutorial/Tutorial.o

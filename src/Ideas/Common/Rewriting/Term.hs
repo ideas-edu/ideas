@@ -39,7 +39,7 @@ import Data.Maybe
 import Ideas.Common.Id
 import Ideas.Common.View
 import Ideas.Utils.Prelude (ShowString(..))
-import Ideas.Utils.QuickCheck
+import Ideas.Utils.QuickCheck hiding (function)
 import Ideas.Utils.Uniplate
 import qualified Data.IntSet as IS
 import qualified Data.Map as M

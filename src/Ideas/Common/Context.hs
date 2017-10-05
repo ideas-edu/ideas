@@ -41,7 +41,7 @@ import Ideas.Utils.Uniplate
 ----------------------------------------------------------
 -- Abstract data type
 
--- | Abstract data type for a context: a context stores an envrionent.
+-- | Abstract data type for a context: a context stores an environment.
 data Context a = C
    { getEnvironment :: Environment
    , getNavigator   :: ContextNavigator a

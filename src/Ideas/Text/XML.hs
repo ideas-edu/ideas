@@ -25,10 +25,13 @@ module Ideas.Text.XML
 import Control.Monad
 import Data.Char
 import Data.Foldable (toList)
+import Data.List
 import Data.Monoid
+import Data.String
 import Ideas.Text.XML.Interface hiding (parseXML)
 import System.IO
 import qualified Data.Sequence as Seq
+import qualified Data.Map as M
 import qualified Ideas.Text.XML.Interface as I
 
 ----------------------------------------------------------------

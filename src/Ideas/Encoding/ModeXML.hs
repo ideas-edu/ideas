@@ -38,8 +38,9 @@ processXML options dr logRef txt = do
     `catch` handler
    let showXML | compactOutput req = compactXML
                | otherwise = show
+       showHtmlDoc doc = "<!DOCTYPE html>" ++ compactXML doc
    if htmlOutput req
-      then return (req, showXML resp, "text/html")
+      then return (req, showHtmlDoc resp, "text/html")
       else let out = addVersion (version dr) resp
            in return (req, showXML out, "application/xml")
  where

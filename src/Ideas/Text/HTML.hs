@@ -15,7 +15,7 @@
 
 module Ideas.Text.HTML
    ( HTMLPage, HTMLBuilder
-   , addCSS, addScript, showHTML
+   , addCSS, addScript, addStyle, showHTML
    , string, text
    , htmlPage, link
    , h1, h2, h3, h4, h5, h6
@@ -43,6 +43,7 @@ data HTMLPage = HTMLPage
    { title       :: String
    , styleSheets :: [FilePath]
    , scripts     :: [FilePath]
+   , styleTxts   :: [String]
    , htmlContent :: HTMLBuilder
    }
 
@@ -57,6 +58,10 @@ instance InXML HTMLPage where
                    , "type" .=. "text/css"
                    ]
               | css <- styleSheets page
+              ]
+         , mconcat 
+              [ tag "style" (unescaped txt)
+              | txt <- styleTxts page
               ]
          , mconcat
               [ element "script" ["src" .=. js, "type" .=. "text/javascript", string " "]
@@ -75,9 +80,12 @@ addCSS css page = page { styleSheets = css : styleSheets page }
 addScript :: FilePath -> HTMLPage -> HTMLPage
 addScript js page = page { scripts = js : scripts page }
 
+addStyle :: String -> HTMLPage -> HTMLPage
+addStyle txt page = page { styleTxts = txt : styleTxts page }
+
 -- html helper functions
 htmlPage :: String -> HTMLBuilder -> HTMLPage
-htmlPage s = HTMLPage s [] []
+htmlPage s = HTMLPage s [] [] []
 
 link :: BuildXML a => String -> a -> a
 link url body = tag "a" $

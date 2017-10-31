@@ -25,6 +25,7 @@ module Ideas.Encoding.LinkManager
      -- links to state information (dynamic)
    , linkToState, linkToFirsts, linkToApplications, linkToDerivation
    , linkToMicrosteps
+   , escapeInURL
    ) where
 
 import Data.Maybe

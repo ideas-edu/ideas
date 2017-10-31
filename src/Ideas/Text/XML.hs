@@ -75,7 +75,7 @@ ignoreLayout (Element n as xs) =
 ----------------------------------------------------------------
 -- XML builders
 
-infix 3 .=.
+infix 7 .=.
 
 class Monoid a => BuildXML a where
    (.=.)     :: String -> String -> a   -- attribute
@@ -95,9 +95,15 @@ class Monoid a => BuildXML a where
 
 data XMLBuilder = BS (Seq.Seq Attr) (Seq.Seq (Either String Element))
 
--- local helper
+-- local helper: merge attributes, but preserve order
 fromBS :: XMLBuilder -> (AttrList, Content)
-fromBS (BS as elts) = (toList as, toList elts)
+fromBS (BS as elts) = (attrList, toList elts)
+ where
+   attrMap = foldr add M.empty as
+   add (k := v) = M.insertWith (\x y -> x ++ " " ++ y) k v
+   attrList = nubBy eqKey (map make (toList as))
+   make (k := _) = k := M.findWithDefault "" k attrMap
+   eqKey (k1 := _) (k2 := _) = k1 == k2
 
 instance Monoid XMLBuilder where
    mempty = BS mempty mempty
@@ -109,6 +115,9 @@ instance BuildXML XMLBuilder where
    unescaped = BS mempty . Seq.singleton . Left
    builder   = BS mempty . Seq.singleton . Right
    tag s     = builder . uncurry (Element s) . fromBS
+
+instance IsString XMLBuilder where
+   fromString = string
 
 makeXML :: String -> XMLBuilder -> XML
 makeXML s = uncurry (Element s) . fromBS

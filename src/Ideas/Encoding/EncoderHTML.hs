@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- Copyright 2016, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -19,9 +19,9 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Ord
-import Ideas.Common.Library hiding (alternatives)
+import Ideas.Common.Library hiding (alternatives, left, right, collapse, Medium)
 import Ideas.Common.Strategy.Symbol
-import Ideas.Encoding.Encoder
+import Ideas.Encoding.Encoder hiding (left, right)
 import Ideas.Encoding.LinkManager
 import Ideas.Encoding.Request
 import Ideas.Encoding.RulePresenter
@@ -32,10 +32,13 @@ import Ideas.Service.Diagnose
 import Ideas.Service.DomainReasoner
 import Ideas.Service.State
 import Ideas.Service.Types
-import Ideas.Text.HTML
+import Ideas.Text.HTML hiding (table, keyValueTable)
+import Ideas.Text.HTML.W3CSS hiding (tag, ul, top, table, content)
+import qualified Ideas.Text.HTML.W3CSS as W3
 import Ideas.Text.OpenMath.FMP
 import Ideas.Text.OpenMath.Object
-import Ideas.Text.XML
+import Ideas.Text.XML hiding (content)
+import Ideas.Text.HTML.Templates
 import Ideas.Utils.TestSuite
 import System.IO.Unsafe
 
@@ -49,35 +52,75 @@ htmlEncoder dr = do
    ex <- getExercise
    makePage lm dr ex <$> encodeType lm dr
 
+theme a = w3class "w3-theme" a
+themeL1 a = w3class "w3-theme-l1"	a
+themeL3 a = w3class "w3-theme-l3" a
+themeL5 a = w3class "w3-theme-l4" a
+--themeD3 = w3class "w3-theme-d3" 
+textTheme a = w3class "w3-text-theme" a
+borderTheme a = w3class "w3-border-theme" a -- ??
+
 makePage :: LinkManager -> DomainReasoner -> Exercise a -> HTMLBuilder -> HTMLPage
-makePage lm dr ex a =
-   addCSS (urlForCSS lm "ideas.css") $
+makePage lm dr ex body =
    (if hasLatexEncoding ex then addScript mathJaxUrl else id) $
-   htmlPage "Ideas: documentation pages" $ mconcat
-      [ divClass "page-header" $ mconcat
-           [ divClass  "ideas-logo" space
-           , divClass  "ounl-logo"  space
-           , spanClass "menuitem"   $ linkToIndex lm $ string "Index"
-           , spanClass "menuitem"   $ linkToExercises lm $ string "Exercises"
-           , spanClass "menuitem"   $ linkToServices lm  $ string "Services"
-           ]
-      , divClass "page-content" a
-      , divClass "page-footer" $
-           string (fullVersion dr)
-      ]
+   addCSS "2007-chili-pepper.css" $ 
+   webpage myWebPage
  where
    mathJaxUrl =
       "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"
 
+   myWebPage = WebPage 
+      { title       = "Ideas: documentation pages"
+      , menuButtons = 
+           [ Button "http://ideas.cs.uu.nl/ " themeL1 (fontAwesome "lightbulb-o" <> tag "span" (fontSize Large " I") <> tag "span" (fontSize Medium "DEAS"))
+           , Button (urlForIndex lm)     (hover White) "Index"
+           , Button (urlForExercises lm) (hover White) $ ("Exercises " <> nrBadge (length (exercises dr)))
+           , Button (urlForServices lm)  (hover White) $ "Services " <> nrBadge (length (services dr))
+           ]
+      , menuStyle   = theme . fontSize Large
+      , iconBarsStyle = hover White . fontSize Large . themeL1
+      , sideWidth = 150
+      , sideHeader  = tag "h4" $ barItem $ bold $ textTheme "Exercise"
+      , sideButtons = 
+           let mk f s = Button (f lm ex) (hover Black) s 
+           in if getId ex == mempty then [] else
+              [ mk urlForExercise    "Information"
+              , mk urlForStrategy    "Strategy"
+              , mk urlForRules       "Rules"
+              , mk urlForExamples    "Examples"
+              , mk urlForDerivations "Derivations"
+              , mk urlForTestReport  "Test report"
+              ]
+      , sideStyle = themeL3 . fontSize Medium
+      , iconCloseStyle = fontSize XL . hover Black
+      , content = body
+      , footer = italic $ string $ fullVersion dr
+      , footerStyle = themeL1
+      }
+
+nrBadge :: BuildXML a => Int -> a
+nrBadge = badge . background Red . fontSize Small . text
+
+table :: BuildXML a => Bool -> [[a]] -> a
+table hasHeader = tableAll . mconcat . zipWith f (hasHeader : repeat False)
+ where
+   f header = tag "tr" . mconcat . map cell
+    where
+      cell | header    = tag "th"
+           | otherwise = tag "td"
+
+keyValueTable :: BuildXML a => [(String, a)] -> a
+keyValueTable = table False . map (\(s, a) -> [string s, a])
+
 encodeType :: LinkManager -> DomainReasoner -> HTMLEncoder a (TypedValue (Type a))
 encodeType lm dr =
    (encodeIndex, tDomainReasoner) <?>
-   (exerciseHeader lm <> htmlDiagnosis lm dr, tDiagnosis) <?>
-   (exerciseHeader lm <> encodeExampleList lm, tList (tPair tDifficulty tContext)) <?>
-   (exerciseHeader lm <> htmlFirsts lm, tList (tPair tStepInfo tState)) <?>
-   (exerciseHeader lm <> htmlAllApplications lm, tList (tTuple3 tRule tLocation tState)) <?>
-   (exerciseHeader lm <> encodeDerivation lm, tDerivation (tPair tRule tEnvironment) tContext) <?>
-   (exerciseHeader lm <> encodeDerivationList lm, tList (tDerivation (tPair tRule tEnvironment) tContext)) <?>
+   (exerciseHeader (htmlDiagnosis lm dr), tDiagnosis) <?>
+   (exerciseHeader (encodeExampleList lm), tList (tPair tDifficulty tContext)) <?>
+   (exerciseHeader (htmlFirsts lm), tList (tPair tStepInfo tState)) <?>
+   (exerciseHeader (htmlAllApplications lm), tList (tTuple3 tRule tLocation tState)) <?>
+   (exerciseHeader (encodeDerivation lm), tDerivation (tPair tRule tEnvironment) tContext) <?>
+   (exerciseHeader (encodeDerivationList lm), tList (tDerivation (tPair tRule tEnvironment) tContext)) <?>
    encoderFor (\(val ::: tp) ->
         case tp of
            Iso iso t  -> encodeType lm dr // (to iso val ::: t)
@@ -89,7 +132,7 @@ encodeType lm dr =
                             Right x -> encodeType lm dr // (x ::: t2)
            List (Const Service) -> encodeServiceList lm // val
            List (Const SomeExercise) -> encodeExerciseList lm // val
-           List (Const Rule) -> exerciseHeader lm <> encodeRuleList lm // val
+           List (Const Rule) -> exerciseHeader (encodeRuleList lm // val)
            List t -> ul [ encodeType lm dr // (x ::: t) | x <- val ]
            Const t -> encodeConst lm dr // (val ::: t)
            _ -> string $ "unknown: " ++ show tp)
@@ -98,16 +141,16 @@ encodeConst :: LinkManager -> DomainReasoner -> HTMLEncoder a (TypedValue (Const
 encodeConst lm dr = encoderFor $ \tv@(val ::: tp) ->
    case tp of
       Service     -> encodeService // val
-      Exercise    -> exerciseHeader lm <> encodeExercise lm // val
-      Strategy    -> exerciseHeader lm <> encodeStrategy // val
+      Exercise    -> exerciseHeader (encodeExercise lm // val)
+      Strategy    -> exerciseHeader (encodeStrategy // val)
       Rule        -> encodeRule // val
-      State       -> exerciseHeader lm <> (encodeState lm dr // val)
+      State       -> exerciseHeader (encodeState lm dr // val)
       Location    -> text val
       Environment -> text val
       Term        -> text val
       Context     -> encodeContext // val
       String      -> string val
-      Result      -> exerciseHeader lm <> encodeResult lm val
+      Result      -> exerciseHeader (encodeResult lm val)
       _           -> text tv
 
 encodeContext :: HTMLEncoder a (Context a)
@@ -116,13 +159,7 @@ encodeContext = exerciseEncoder $ \ex ->
 
 encodeIndex :: HTMLEncoder a DomainReasoner
 encodeIndex = makeEncoder $ \dr -> mconcat
-   [ h1 $ "Domain reasoner " ++ showId dr
-   , htmlDescription dr
-   , keyValueTable
-        [ ("version", string $ fullVersion dr)
-        , ("exercises", text $ length $ exercises dr)
-        , ("services", text $ length $ services dr)
-        ]
+   [ htmlDescription "Domain reasoner" dr
    , munless (null $ aliases dr) $
         h2 "Exercise aliases" <>
         table True (
@@ -185,10 +222,9 @@ orderedGroupsWith showf get =
 
 encodeService :: HTMLEncoder a Service
 encodeService = makeEncoder $ \srv -> mconcat
-   [ h1 $ "Service " ++ showId srv
+   [ htmlDescription "Service" srv
    , mwhen (serviceDeprecated srv) $
         para $ spanClass "warning" $ string "Warning: this service is deprecated"
-   , htmlDescription srv
    , case serviceFunction srv of
         _ ::: tp ->
            let (xs, ys) = inputOutputTypes tp
@@ -238,8 +274,8 @@ encodeExercise lm = makeEncoder $ \ex -> mconcat
           [ para $ submitStateInfo lm ex ]
    ]
  where
-   generalInfo ex = keyValueTable
-      [ ("Code",   ttText (showId ex))
+   generalInfo ex = container $ panel $ left $ keyValueTable
+      [ ("Code",   string $ showId ex)
       , ("Status", text $ status ex)
       , ("Strategy", linkToStrategy lm ex $ string (showId $ strategy ex))
       , ("Rules", text nrOfSoundRules)
@@ -253,26 +289,11 @@ encodeExercise lm = makeEncoder $ \ex -> mconcat
       (nrOfBuggyRules, nrOfSoundRules) =
          mapBoth length (partition isBuggy (ruleset ex))
 
-exerciseHeader :: LinkManager -> HTMLEncoder a b
-exerciseHeader lm = withExercise $ \ex -> mconcat
-   [ exerciseMenu lm
-   , h1 $ "Exercise " ++ showId ex
-   , pure $ htmlDescription ex
+exerciseHeader :: HTMLEncoder a b -> HTMLEncoder a b
+exerciseHeader body = withExercise $ \ex -> tag "div" $ mconcat 
+   [ pure (htmlDescription "Exercise" ex) 
+   , body
    ]
-
-exerciseMenu :: LinkManager -> HTMLEncoder a b
-exerciseMenu lm = divClass "menubox" $
-   bold (string "Exercise") <>
-   ul [ with linkToExercise    "information"
-      , with linkToStrategy "   strategy"
-      , with linkToRules       "rules"
-      , with linkToExamples    "examples"
-      , with linkToDerivations "derivations"
-      , with linkToTestReport  "test report"
-      ]
- where
-   with f s = withExercise $ \ex ->
-      pure $ f lm ex (string s)
 
 encodeStrategy :: HTMLEncoder a (Strategy (Context a))
 encodeStrategy = exerciseEncoder $ \ex s -> mconcat
@@ -369,7 +390,7 @@ encodeRuleList lm = exerciseEncoder $ \ex rs ->
                 , string "Used", string "Siblings", string "Rewrite rule"
                 ]
        used = rulesInStrategy (strategy ex)
-       f r  = [ linkToRule lm ex r $ ttText (showId r)
+       f r  = [ linkToRule lm ex r $ string $ showId r
               , text $ length $ getRefs r
               , bool $ r `elem` used
               , string $ intercalate ", " $ map show $ ruleSiblings r
@@ -386,8 +407,7 @@ encodeRuleList lm = exerciseEncoder $ \ex rs ->
 
 encodeRule :: HTMLEncoder a (Rule (Context a))
 encodeRule = exerciseEncoder $ \ex r -> mconcat
-   [ h1 $ "Rule " ++ showId r
-   , htmlDescription r
+   [ htmlDescription "Rule" r
    , let commas  = string . intercalate ", "
          idList  = commas . map showId
          refList = commas . map show . getRefIds
@@ -415,18 +435,13 @@ encodeExampleList :: LinkManager -> HTMLEncoder a [(Difficulty, Context a)]
 encodeExampleList lm = exerciseEncoder $ \ex pairs -> mconcat $
    h2 "Examples" :
    [ h3 (s ++ " (" ++ show (length xs) ++ ")")
-       <> mconcat (map (make ex) xs)
+       <> (W3.ulWith hoverable $ map (make ex) xs)
    | (_, s, xs) <- orderedGroupsWith show fst pairs
    ]
  where
-   make ex (_, x) = para $
-      ( let st = emptyStateContext ex x
-        in spanClass "statelink" $ linkToState lm st $ external lm)
-      <> htmlContext False ex x
-
-external :: BuildXML a => LinkManager -> a
-external lm = element "img"
-   ["src" .=. urlForImage lm "external.png", "width" .=. "15"]
+   make ex (_, x) =
+      let st = emptyStateContext ex x
+      in button (escapeInURL (urlForState lm st)) (htmlContext False ex x)
 
 encodeDerivation :: LinkManager -> HTMLEncoder a (Derivation (Rule (Context a), Environment) (Context a))
 encodeDerivation lm =
@@ -448,8 +463,8 @@ htmlDerivation lm = exerciseEncoder $ \ex d ->
                 Just True -> mempty
                 _ -> spanClass "error" (string "Final term is not finished")
        forStep ((r, env1), env2) =
-          let showEnv e = munless (noBindings e) $ string $ ", " ++ show e in
-          spanClass "derivation-step" $ mconcat
+          let showEnv e = munless (noBindings e) $ string $ "," ++ show e in
+          container $ marginPos CenterLeft $ mconcat 
              [ unescaped "&#8658; "
              , linkToRule lm ex r $ string $ showId r
              , showEnv env1 -- local environment
@@ -460,7 +475,7 @@ htmlDerivation lm = exerciseEncoder $ \ex d ->
 
 htmlState :: LinkManager -> HTMLEncoder a (State a)
 htmlState lm = makeEncoder $ \state ->
-   para $ divClass "state" $
+   para $ container $ background LightGray $ para $
       stateLink lm state
       <> htmlContext True (exercise state) (stateContext state)
       <> string "ready: " <> bool (finished state)
@@ -471,14 +486,15 @@ htmlContext useDiv ex = f "term" . textLines . printer
    textLines = mconcat . intersperse br . map string . lines
    f = if useDiv then divClass else spanClass
 
-   inline s = "\\(" ++ s ++ "\\)"
+   inline s = "\\(" ++ s ++ "\\)" :: String
    printer
       | hasLatexEncoding ex = inline . show . latexPrinterContext ex
       | otherwise = prettyPrinterContext ex
 
 stateLink :: LinkManager -> State a -> HTMLBuilder
 stateLink lm st =
-   spanClass "derivation-statelink" $ linkToState lm st $ external lm
+   container $ right $ linkToState lm st $ 
+   tag "span" $ textTheme $ fontAwesome "external-link"
 
 encodeState :: LinkManager -> DomainReasoner -> HTMLEncoder a (State a)
 encodeState lm dr =
@@ -509,7 +525,7 @@ useAllFirsts dr = unsafePerformIO . useAllFirstsIO dr
 
 useAllFirstsIO :: DomainReasoner -> State a -> IO (Either String [(StepInfo a, State a)])
 useAllFirstsIO dr st = do
-   srv <- findService dr (newId "allfirsts")
+   srv <- findService dr (newId ("allfirsts" :: String))
    case serviceFunction srv of
       f ::: tp -> do
          conv <- equalM tp (tState .-> tError (tList (tPair tStepInfo tState)))
@@ -547,7 +563,7 @@ htmlStep r =
 
 htmlDerivationWith :: HTMLBuilder -> (s -> HTMLBuilder) -> (t -> HTMLBuilder) -> Derivation s t -> HTMLBuilder
 htmlDerivationWith before forStep forTerm d =
-   divClass "derivation" $ mconcat $
+   container $ background LightGray $ para $ mconcat $
       before : forTerm (firstTerm d) :
          [ forStep s <> forTerm a | (_, s, a) <- triples d ]
 
@@ -599,11 +615,13 @@ htmlDiagnosis lm dr = encoderFor $ \diagnosis ->
       Unknown _ s ->
          h2 "Unknown" <> encodeState lm dr // s
 
-htmlDescription :: HasId a => a -> HTMLBuilder
-htmlDescription a = munless (null (description a)) $
-   para $
-      bold (string "Description") <> br
-      <> spanClass "description" (string (description a))
+htmlDescription :: HasId a => String -> a -> HTMLBuilder
+htmlDescription tp a = munless (null (description a)) $
+   para $ panel $ barPos CenterLeft $ borderTheme $ background LightGray $ para $ mconcat
+      [ bold $ string $ tp ++ " " ++ showId a
+      , br
+      , italic $ string $ description a
+      ]
 
 submitForm :: HTMLBuilder -> HTMLBuilder
 submitForm this = element "form"

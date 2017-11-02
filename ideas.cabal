@@ -1,5 +1,5 @@
 name:                   ideas
-version:                1.6
+version:                1.6.1
 synopsis:               Feedback services for intelligent tutoring systems
 homepage:               http://ideas.cs.uu.nl/www/
 description:
@@ -140,6 +140,8 @@ Library
     Ideas.Service.Submit
     Ideas.Service.Types
     Ideas.Text.HTML
+    Ideas.Text.HTML.Templates
+    Ideas.Text.HTML.W3CSS
     Ideas.Text.JSON
     Ideas.Text.Latex
     Ideas.Text.OpenMath.Dictionary.Arith1

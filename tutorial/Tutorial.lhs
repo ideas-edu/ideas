@@ -262,13 +262,16 @@ We can now print worked-out solutions for `expr1` and `expr2`. Note that
 <    => eval.add
 < Con 6
 
-Step 3: equivalence and ready
+Step 3: equivalence, similarity and ready
 ---------------------------------------
 
 For diagnosing a student step, we have to define which expressions are 
-semantically equivalent. When left undefined in an exercise, all expressions 
-are equivalent, which is not very helpful. For the `Expr` data type, we specify
-that two values are equivalent when they evaluate to the same `Int` value.
+semantically equivalent (have the same value after evaluation), and which 
+expressions are similar (syntactically equal, or slightly more flexible, 
+for example taking commutativity of `Add` into account). When left 
+undefined in an exercise, all expressions are equivalent and similar, 
+which is not very helpful. For the `Expr` data type, we specify that 
+two values are equivalent when they evaluate to the same `Int` value.
 
 > eqExpr :: Expr -> Expr -> Bool
 > eqExpr x y = eval x == eval y
@@ -299,6 +302,7 @@ two example expressions (of a certain difficulty).
 >    , navigation    = termNavigator
 >    , parser        = readM
 >    , equivalence   = withoutContext eqExpr
+>    , similarity    = withoutContext (==)
 >    , ready         = predicate isCon
 >    , examples      = level Easy [expr1] ++ level Medium [expr2]
 >    }

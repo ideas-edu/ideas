@@ -220,7 +220,7 @@ expressions. The constructor contains an integer that uniquely identifies it.
 A Hole (represented by a question mark) can be used by students
 if they do not know how to define the necessary expression yet. 
 
-We need a refine rule that can replace an Hole by an expression. 
+We need a refine rule that can replace a Hole by an expression. 
 
 > -- refineExpr :: Expr -> Int -> Rule Program
 > refineExpr expr i = describe ("refine expression " ++ show (pretty expr)) $ makeRule ruleId (f expr i)
@@ -230,7 +230,7 @@ We need a refine rule that can replace an Hole by an expression.
 > 
 >       refine' e
 >          | holeId e == Just i = expr 
->          | otherwise             = e
+>          | otherwise          = e
 >
 >       ruleId = "p.refine" ++ show i
 
@@ -241,7 +241,7 @@ to be replaced.
 > holeId (Hole i)   = Just i
 > holeId _          = Nothing
 
-During the generation of the strategy we need to number the Hole that are
+During the generation of the strategy we need to number the Holes that are
 encountered. We use the State monad to keep track of the next number
 we may assign. 
 

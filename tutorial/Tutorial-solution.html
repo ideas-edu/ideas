@@ -221,6 +221,7 @@ evalExercise <span class="fu">=</span> emptyExercise
    , navigation    <span class="fu">=</span> termNavigator
    , parser        <span class="fu">=</span> readM
    , equivalence   <span class="fu">=</span> withoutContext eqExpr
+   , similarity    <span class="fu">=</span> withoutContext (<span class="fu">==</span>)
    , ready         <span class="fu">=</span> predicate isConOrAddDivOrDiv
    , examples      <span class="fu">=</span> level <span class="dt">Easy</span> [expr1] <span class="fu">++</span> level <span class="dt">Medium</span> [expr2] <span class="fu">++</span> level <span class="dt">Medium</span> [expr3]
    }

@@ -211,6 +211,7 @@ An expression is in `normal' form if it is a Con, a non-top heavy division, or t
 >    , navigation    = termNavigator
 >    , parser        = readM
 >    , equivalence   = withoutContext eqExpr
+>    , similarity    = withoutContext (==)
 >    , ready         = predicate isConOrAddDivOrDiv
 >    , examples      = level Easy [expr1] ++ level Medium [expr2] ++ level Medium [expr3]
 >    }

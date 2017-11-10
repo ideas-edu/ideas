@@ -50,16 +50,19 @@ Library
   hs-source-dirs:    src
   Build-Depends:     
      base >= 4.8 && < 5,
-     cgi >= 3001.3.0.0,
+     bytestring,
      QuickCheck >= 2.8,
      Diff,
      containers,
      directory, 
      filepath, 
+     http-types,
      parsec, 
      random,
      time, 
      uniplate, 
+     wai,
+     wai-extra,
      wl-pprint
 
   Exposed-modules:

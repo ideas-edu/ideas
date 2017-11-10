@@ -21,7 +21,10 @@ module Ideas.Main.Default
 
 import Control.Exception
 import Control.Monad
+import Data.ByteString (ByteString, unpack)
+import Data.Char
 import Data.Maybe
+import Data.String
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
 import Ideas.Encoding.Options (Options, maxTime, optionCgiBin)
@@ -33,11 +36,14 @@ import Ideas.Service.ServiceList
 import Ideas.Service.Types (Service)
 import Ideas.Utils.BlackBoxTests
 import Ideas.Utils.TestSuite
-import Network.CGI
+import Network.HTTP.Types
+import Network.Wai hiding (Request)
 import System.IO
 import System.IO.Error (ioeGetErrorString)
 import qualified Ideas.Encoding.Logging as Log
 import qualified Ideas.Main.CmdLineOptions as Options
+import qualified Network.Wai as CGI
+import qualified Network.Wai.Handler.CGI as CGI
 
 defaultMain :: DomainReasoner -> IO ()
 defaultMain = defaultMainWith mempty
@@ -51,37 +57,53 @@ defaultMainWith options dr = do
 
 -- Invoked as a cgi binary
 defaultCGI :: Options -> DomainReasoner -> IO ()
-defaultCGI options dr = runCGI $ handleErrors $ do
+defaultCGI options dr = CGI.run $ \req respond -> do 
    -- create a record for logging
-   logRef  <- liftIO Log.newLogRef
+   logRef  <- Log.newLogRef
    -- query environment
-   addr    <- remoteAddr       -- the IP address of the remote host
-   cgiBin  <- scriptName       -- get name of binary
-   input   <- inputOrDefault
+   let query  = queryString req
+       script = fromMaybe "" (cgiScriptName req) -- get name of binary
+       addr   = fromMaybe "" (remoteAddr req)    -- the IP address of the remote host
+   input   <- inputOrDefault query
    -- process request
-   (req, txt, ctp) <- liftIO $
-      process (options <> optionCgiBin cgiBin) dr logRef input
+   (preq, txt, ctp) <-
+      process (options <> optionCgiBin script) dr logRef input
    -- log request to database
-   when (useLogging req) $ liftIO $ do
-      Log.changeLog logRef $ \r -> Log.addRequest req r
+   when (useLogging preq) $ do
+      Log.changeLog logRef $ \r -> Log.addRequest preq r
          { Log.ipaddress = addr
          , Log.version   = shortVersion
          , Log.input     = input
          , Log.output    = txt
          }
-      Log.logRecord (getSchema req) logRef
+      Log.logRecord (getSchema preq) logRef
 
    -- write header and output
-   setHeader "Content-type" ctp
-   -- Cross-Origin Resource Sharing (CORS) prevents browser warnings
-   -- about cross-site scripting
-   setHeader "Access-Control-Allow-Origin" "*"
-   output txt
+   respond $ responseLBS
+      status200
+      [ (fromString "Content-Type", fromString ctp)
+        -- Cross-Origin Resource Sharing (CORS) prevents browser warnings
+        -- about cross-site scripting
+      , (fromString "Access-Control-Allow-Origin", fromString "*")
+      ]
+      (fromString txt)
 
-inputOrDefault :: CGI String
-inputOrDefault = do
+cgiScriptName :: CGI.Request -> Maybe String
+cgiScriptName = fmap fromByteString . lookup (fromString "CGI-Script-Name") . requestHeaders
+
+remoteAddr :: CGI.Request -> Maybe String
+remoteAddr _ = Nothing
+
+getInput :: Query -> String -> Maybe String
+getInput query s = fmap fromByteString (join (lookup (fromString s) query))
+
+fromByteString :: ByteString -> String
+fromByteString = map (chr . fromEnum) . unpack
+
+inputOrDefault :: Query -> IO String
+inputOrDefault query = do
    inHtml <- acceptsHTML
-   ms     <- getInput "input" -- read variable 'input'
+   let ms = getInput query "input" -- read variable 'input'
    case ms of
       Just s -> return s
       Nothing
@@ -92,12 +114,14 @@ inputOrDefault = do
    defaultBrowser :: String
    defaultBrowser = "<request service='index' encoding='html'/>"
 
-   acceptsHTML :: CGI Bool
+   acceptsHTML :: IO Bool
    acceptsHTML = do
+      {-
       maybeAcceptCT <- requestAccept
       let htmlCT = ContentType "text" "html" []
           xs = negotiate [htmlCT] maybeAcceptCT
-      return (isJust maybeAcceptCT && not (null xs))
+      return (isJust maybeAcceptCT && not (null xs)) -}
+      return False 
 
 -- Invoked from command-line with flags
 defaultCommandLine :: Options -> DomainReasoner -> [CmdLineOption] -> IO ()
@@ -113,7 +137,7 @@ defaultCommandLine options dr cmdLineOptions = do
          -- process input file
          InputFile file ->
             withBinaryFile file ReadMode $ \h -> do
-               logRef <- liftIO Log.newLogRef
+               logRef <- Log.newLogRef
                input  <- hGetContents h
                (req, txt, _) <- process options dr logRef input
                putStrLn txt

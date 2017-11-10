@@ -44,7 +44,7 @@ import System.IO.Error (ioeGetErrorString)
 import qualified Ideas.Encoding.Logging as Log
 import qualified Ideas.Main.CmdLineOptions as Options
 import qualified Network.Wai as CGI
-import qualified Network.Wai.Handler.CGI as CGI
+import qualified Ideas.Main.CGI as CGI
 
 defaultMain :: DomainReasoner -> IO ()
 defaultMain = defaultMainWith mempty

@@ -50,19 +50,22 @@ Library
   hs-source-dirs:    src
   Build-Depends:     
      base >= 4.8 && < 5,
+     blaze-builder,
      bytestring,
+     case-insensitive,
      QuickCheck >= 2.8,
      Diff,
      containers,
      directory, 
      filepath, 
      http-types,
+     network,
      parsec, 
      random,
+     streaming-commons,
      time, 
      uniplate, 
      wai,
-     wai-extra,
      wl-pprint
 
   Exposed-modules:
@@ -126,6 +129,7 @@ Library
     Ideas.Encoding.RulePresenter
     Ideas.Encoding.RulesInfo
     Ideas.Encoding.StrategyInfo
+    Ideas.Main.CGI
     Ideas.Main.CmdLineOptions
     Ideas.Main.Default
     Ideas.Main.Revision

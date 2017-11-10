@@ -36,6 +36,7 @@ import Ideas.Service.ServiceList
 import Ideas.Service.Types (Service)
 import Ideas.Utils.BlackBoxTests
 import Ideas.Utils.TestSuite
+import Ideas.Utils.Prelude
 import Network.HTTP.Types
 import Network.Wai hiding (Request)
 import System.IO
@@ -61,10 +62,9 @@ defaultCGI options dr = CGI.run $ \req respond -> do
    -- create a record for logging
    logRef  <- Log.newLogRef
    -- query environment
-   let query  = queryString req
-       script = fromMaybe "" (cgiScriptName req) -- get name of binary
-       addr   = fromMaybe "" (remoteAddr req)    -- the IP address of the remote host
-   input   <- inputOrDefault query
+   let script = fromMaybe "" (findHeader "CGI-Script-Name" req) -- get name of binary
+       addr   = fromMaybe "" (findHeader "REMOTE_ADDR" req)     -- the IP address of the remote host
+   input   <- inputOrDefault req
    -- process request
    (preq, txt, ctp) <-
       process (options <> optionCgiBin script) dr logRef input
@@ -88,40 +88,22 @@ defaultCGI options dr = CGI.run $ \req respond -> do
       ]
       (fromString txt)
 
-cgiScriptName :: CGI.Request -> Maybe String
-cgiScriptName = fmap fromByteString . lookup (fromString "CGI-Script-Name") . requestHeaders
-
-remoteAddr :: CGI.Request -> Maybe String
-remoteAddr _ = Nothing
-
-getInput :: Query -> String -> Maybe String
-getInput query s = fmap fromByteString (join (lookup (fromString s) query))
-
-fromByteString :: ByteString -> String
-fromByteString = map (chr . fromEnum) . unpack
-
-inputOrDefault :: Query -> IO String
-inputOrDefault query = do
-   inHtml <- acceptsHTML
-   let ms = getInput query "input" -- read variable 'input'
-   case ms of
-      Just s -> return s
-      Nothing
-         | inHtml    -> return defaultBrowser
-         | otherwise -> fail "environment variable 'input' is empty"
+inputOrDefault :: CGI.Request -> IO String
+inputOrDefault req =
+   let query  = queryString req
+       inHtml = acceptsHTML
+   in case getInput query "input" of
+         Just s -> return s
+         Nothing
+            | inHtml    -> return defaultBrowser
+            | otherwise -> fail "environment variable 'input' is empty"
  where
    -- Invoked from browser
    defaultBrowser :: String
    defaultBrowser = "<request service='index' encoding='html'/>"
 
-   acceptsHTML :: IO Bool
-   acceptsHTML = do
-      {-
-      maybeAcceptCT <- requestAccept
-      let htmlCT = ContentType "text" "html" []
-          xs = negotiate [htmlCT] maybeAcceptCT
-      return (isJust maybeAcceptCT && not (null xs)) -}
-      return False 
+   acceptsHTML :: Bool
+   acceptsHTML = "text/html" `elem` accepts req
 
 -- Invoked from command-line with flags
 defaultCommandLine :: Options -> DomainReasoner -> [CmdLineOption] -> IO ()
@@ -183,3 +165,17 @@ addVersion dr = dr
    }
  where
    update f s = if null (f dr) then s else f dr
+   
+-- local helper functions
+
+findHeader :: String -> CGI.Request -> Maybe String
+findHeader s = fmap fromByteString . lookup (fromString s) . requestHeaders
+
+getInput :: Query -> String -> Maybe String
+getInput query s = fmap fromByteString (join (lookup (fromString s) query))
+
+accepts :: CGI.Request -> [String]
+accepts = maybe [] (splitsWithElem ',') . findHeader "Accept"
+
+fromByteString :: ByteString -> String
+fromByteString = map (chr . fromEnum) . unpack

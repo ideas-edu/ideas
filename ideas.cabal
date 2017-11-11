@@ -70,6 +70,7 @@ Library
 
   Exposed-modules:
     Ideas.Common.Classes
+    Ideas.Common.Constraint
     Ideas.Common.Context
     Ideas.Common.Derivation
     Ideas.Common.DerivationTree

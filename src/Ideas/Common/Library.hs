@@ -19,6 +19,7 @@ module Ideas.Common.Library
    ) where
 
 import Ideas.Common.Classes as Export
+import Ideas.Common.Constraint as Export hiding (Result(..))
 import Ideas.Common.Context as Export
 import Ideas.Common.Derivation as Export
 import Ideas.Common.Environment as Export

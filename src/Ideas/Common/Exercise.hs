@@ -45,6 +45,7 @@ import Data.List
 import Data.Maybe
 import Data.Ord
 import Ideas.Common.Classes
+import Ideas.Common.Constraint
 import Ideas.Common.Context
 import Ideas.Common.Derivation
 import Ideas.Common.Environment
@@ -110,6 +111,9 @@ data Exercise a =
      -- rule can be used (e.g. feedback services onefirst and derivation; other
      -- feedback services return all possible rules).
    , ruleOrdering :: Rule (Context a) -> Rule (Context a) -> Ordering
+     -- | Constraints for constraint-based tutors. A constraint contains a
+     -- relevance condition and a satisfaction condition.
+   , constraints  :: [Constraint (Context a)]
      -- | A navigator is needed for traversing the expression and for using the
      -- traversal strategy combinators. By default, an exercise has no
      -- navigator.
@@ -164,6 +168,7 @@ emptyExercise = NewExercise
    , properties     = M.empty
      -- strategies and rules
    , strategy       = label "Fail" S.fail
+   , constraints    = [] 
    , navigation     = noNavigator
    , canBeRestarted = True
    , extraRules     = []

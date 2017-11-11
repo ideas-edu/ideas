@@ -103,7 +103,7 @@ makePage lm dr ex body =
       }
 
 nrBadge :: BuildXML a => Int -> a
-nrBadge = badge . background Red . fontSize Small . text
+nrBadge = badge . themeL1 . fontSize Small . text
 
 table :: BuildXML a => Bool -> [[a]] -> a
 table hasHeader = tableAll . mconcat . zipWith f (hasHeader : repeat False)
@@ -511,18 +511,20 @@ encodeState lm dr =
       in mconcat
          [ h2 "Feedback"
          , submitDiagnose lm state
-         , ul [ case xs of
-                   Right (hd:_) -> linkToState lm (snd hd) $ string "onefirst"
+         , tag "p" $ padding Small  $ mconcat [ case xs of
+                   Right (hd:_) -> linkToState lm (snd hd) $ serviceButton $ string "onefirst"
                    _ -> string "(no onefirst)"
-              , linkToFirsts lm state $ string $ "allfirsts (" ++ show n ++ ")"
-              , linkToApplications lm state $ string "allapplications"
-              , linkToDerivation lm state $ string "derivation"
-              , linkToMicrosteps lm state $ string "microsteps"
-              ]
+              , linkToFirsts lm state $ serviceButton $ string $ "allfirsts (" ++ show n ++ ")" 
+              , linkToApplications lm state $ serviceButton $ string "allapplications"
+              , linkToDerivation lm state $ serviceButton $ string "derivation"
+              , linkToMicrosteps lm state $ serviceButton $ string "microsteps"
+           ]   
          , munless (noBindings state) $
               h2 "Environment" <> text (environment state)
          , encodePrefix state (statePrefix state)
          ])
+     where
+       serviceButton = themeL1  . W3.w3class "w3-button"
 
 -- use allfirsts service of domain reasoner, instead of calling the service
 -- directly. Note that the service can be redefined (e.g. for the Ask-Elle tutor)
@@ -630,9 +632,14 @@ htmlDescription tp a = munless (null (description a)) $
       ]
 
 submitForm :: HTMLBuilder -> HTMLBuilder
-submitForm this = form $ mconcat [termInput mempty, this, submitBtn mempty]
+submitForm this = form . padding Tiny $ mconcat 
+  [ para $ mconcat [termLabel, termInput mempty]
+  , this
+  , para $ submitBtn mempty
+  ]
  where
    form      = tag "form"  . ("name" .=. "myform" <>) . ("method" .=. "post" <>) . ("onsubmit" .=. "return submitTerm()" <>) . w3class "w3-container" 
+   termLabel = tag "label" $ tag "b" "Input:"
    termInput = tag "input" . ("name" .=. "myterm" <>) . ("type" .=. "text" <>) . border . W3.input
    submitBtn = tag "input" . ("value" .=. "Submit" <>) . ("type" .=. "submit" <>) . themeL1 . W3.w3class "w3-button"
 

@@ -14,7 +14,7 @@
 
 module Ideas.Common.Constraint
   ( Constraint, makeConstraint
-  , isRelevant, isSatisfied, getResult
+  , isRelevant, isSatisfied, isViolated, getResult
   , Result(..), relevance
   ) where
 
@@ -63,6 +63,13 @@ isSatisfied p a =
    case getResult p a of
       Ok _ -> True
       _    -> False
+      
+-- | Satisfaction condition
+isViolated :: Constraint a -> a -> Maybe String 
+isViolated p a = 
+   case getResult p a of
+      Error s -> Just s
+      _       -> Nothing
 
 ---------------------------------------------------------------------------
 -- Result

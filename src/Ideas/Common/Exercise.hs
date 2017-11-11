@@ -21,7 +21,7 @@ module Ideas.Common.Exercise
      Exercise(..), emptyExercise, makeExercise
      -- * Convenience functions
    , prettyPrinterContext, isReady, isSuitable
-   , ruleset, getRule, ruleOrderingWith
+   , ruleset, getRule, ruleOrderingWith, violations
      -- * Status
    , Status(..), isPublic, isPrivate
      -- * Examples
@@ -230,6 +230,14 @@ ruleOrderingWith bs r1 r2 =
       (Just _,  Nothing) -> LT
       (Nothing, Just _ ) -> GT
       (Nothing, Nothing) -> compareId r1 r2
+
+-- | Get all constraint violations
+violations :: Exercise a -> Context a -> [(Id, String)]
+violations ex ctx = 
+   [ (getId c, msg) 
+   | c <- constraints ex
+   , msg <- maybeToList (isViolated c ctx)
+   ]
 
 -----------------------------------------------------------------------------
 -- Status

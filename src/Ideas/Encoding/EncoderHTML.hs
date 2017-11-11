@@ -42,6 +42,7 @@ import Ideas.Text.HTML.Templates
 import Ideas.Utils.TestSuite
 import System.IO.Unsafe
 
+
 type HTMLEncoder a t = Encoder a t HTMLBuilder
 
 htmlEncoder :: DomainReasoner -> TypedEncoder a HTMLPage
@@ -60,10 +61,12 @@ themeL5 a = w3class "w3-theme-l4" a
 textTheme a = w3class "w3-text-theme" a
 borderTheme a = w3class "w3-border-theme" a -- ??
 
+
 makePage :: LinkManager -> DomainReasoner -> Exercise a -> HTMLBuilder -> HTMLPage
 makePage lm dr ex body =
    (if hasLatexEncoding ex then addScript mathJaxUrl else id) $
-   addCSS "2007-chili-pepper.css" $ 
+   -- addCSS "http://ideas.cs.uu.nl/css/2007-chili-pepper.css" $ 
+   addCSS (urlForCSS lm "2007-chili-pepper.css") $
    webpage myWebPage
  where
    mathJaxUrl =
@@ -435,9 +438,10 @@ encodeRule = exerciseEncoder $ \ex r -> mconcat
 
 encodeExampleList :: LinkManager -> HTMLEncoder a [(Difficulty, Context a)]
 encodeExampleList lm = exerciseEncoder $ \ex pairs -> mconcat $
-   h2 "Examples" :
-   [ h3 (s ++ " (" ++ show (length xs) ++ ")")
-       <> (W3.ulWith hoverable $ map (make ex) xs)
+   h2 "Examples" : 
+   [  container . third $
+       h3 (s ++ " (" ++ show (length xs) ++ ")")
+       <> (W3.ulWith hoverable $ map ((fontAwesome "hand-o-right" <>) . padding Small . make ex) xs)
    | (_, s, xs) <- orderedGroupsWith show fst pairs
    ]
  where
@@ -626,14 +630,11 @@ htmlDescription tp a = munless (null (description a)) $
       ]
 
 submitForm :: HTMLBuilder -> HTMLBuilder
-submitForm this = element "form"
-   [ "name"     .=. "myform"
-   , "onsubmit" .=. "return submitTerm()"
-   , "method"   .=. "post"
-   , this
-   , element "input" ["type" .=. "text", "name" .=. "myterm"]
-   , element "input" ["type"  .=. "submit", "value" .=. "Submit"]
-   ]
+submitForm this = form $ mconcat [termInput mempty, this, submitBtn mempty]
+ where
+   form      = tag "form"  . ("name" .=. "myform" <>) . ("method" .=. "post" <>) . ("onsubmit" .=. "return submitTerm()" <>) . w3class "w3-container" 
+   termInput = tag "input" . ("name" .=. "myterm" <>) . ("type" .=. "text" <>) . border . W3.input
+   submitBtn = tag "input" . ("value" .=. "Submit" <>) . ("type" .=. "submit" <>) . themeL1 . W3.w3class "w3-button"
 
 -- stateinfo service
 submitStateInfo :: LinkManager -> Exercise a -> HTMLBuilder
@@ -644,9 +645,9 @@ submitStateInfo lm ex =
    request = "<request service='stateinfo' exerciseid='" ++ showId ex
           ++ "' encoding='html'><state><expr>\" + getTerm() + \"</expr></state></request>"
 
--- diagnose service
+-- diagnose service *here*
 submitDiagnose :: LinkManager -> State a -> HTMLBuilder
-submitDiagnose lm st = submitForm mempty <> submitRequest lm request
+submitDiagnose lm st = submitForm mempty <> submitRequest lm request 
  where
    request = "<request service='diagnose' exerciseid='" ++ showId (exercise st)
           ++ "' encoding='html'>" ++ ststr ++ "<expr>\"  + getTerm() + \"</expr></request>"

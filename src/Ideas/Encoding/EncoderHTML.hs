@@ -87,6 +87,7 @@ makePage lm dr ex body =
               [ mk urlForExercise    "Information"
               , mk urlForStrategy    "Strategy"
               , mk urlForRules       "Rules"
+              , mk urlForConstraints "Constraints"
               , mk urlForExamples    "Examples"
               , mk urlForDerivations "Derivations"
               , mk urlForTestReport  "Test report"
@@ -279,6 +280,7 @@ encodeExercise lm = makeEncoder $ \ex -> mconcat
       , ("Status", text $ status ex)
       , ("Strategy", linkToStrategy lm ex $ string (showId $ strategy ex))
       , ("Rules", text nrOfSoundRules)
+      , ("Constraints", text (length (constraints ex)))
       , ("Buggy rules", text nrOfBuggyRules)
       , ("OpenMath support", bool $ isJust $ hasTermView ex)
       , ("Restartable strategy", bool $ canBeRestarted ex)

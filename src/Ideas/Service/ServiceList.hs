@@ -46,7 +46,7 @@ metaServiceList :: DomainReasoner -> [Service]
 metaServiceList dr =
    [ indexS dr, servicelistS dr, serviceinfoS dr, exerciselistS dr
    , rulelistS, ruleinfoS, rulesinfoS, strategyinfoS, exerciseinfoS
-   , stateinfoS, examplederivationsS, testreportS, logS
+   , constraintlistS, stateinfoS, examplederivationsS, testreportS, logS
    ]
 
 ------------------------------------------------------
@@ -305,6 +305,11 @@ exerciseinfoS :: Service
 exerciseinfoS = makeService "meta.exerciseinfo"
    "Exercise information" $
    id ::: tExercise .-> tExercise
+
+constraintlistS :: Service
+constraintlistS = makeService "meta.constraintlist"
+   "Returns list of constraints" $
+   constraints ::: tExercise .-> tList tConstraint
 
 stateinfoS :: Service
 stateinfoS = makeService "meta.stateinfo"

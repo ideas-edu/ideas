@@ -19,7 +19,8 @@ module Ideas.Service.Types
    , TypeRep(..), Const(..), Type, TypedValue(..)
    , Equal(..), ShowF(..), equalM
      -- * Constructing types
-   , tEnvironment, tLocation, tRule, tUnit, tTuple3, tTuple4, tTuple5, tPair
+   , tEnvironment, tLocation, tRule, tConstraint
+   , tUnit, tTuple3, tTuple4, tTuple5, tPair
    , tTerm, tStrategy, tTree, tState, tBool, tMaybe, tString, tList
    , tId, tService, tSomeExercise, tText, tDifficulty, tUserId ,tContext
    , tDerivation, tError, (.->), tIO, tExercise, tTestSuiteResult, tQCGen
@@ -89,7 +90,8 @@ instance Equal (Const a) where
    equal Exercise    Exercise    = Just id
    equal Strategy    Strategy    = Just id
    equal State       State       = Just id
-   equal Rule         Rule       = Just id
+   equal Rule        Rule        = Just id
+   equal Constraint  Constraint  = Just id
    equal Context     Context     = Just id
    equal Id          Id          = Just id
    equal Location    Location    = Just id
@@ -140,6 +142,7 @@ data Const a t where
    Strategy     :: Const a (Strategy (Context a))
    State        :: Const a (State a)
    Rule         :: Const a (Rule (Context a))
+   Constraint   :: Const a (Constraint (Context a))
    Context      :: Const a (Context a)
    -- other types
    Id           :: Const a Id
@@ -198,6 +201,7 @@ instance Show (TypedValue (Const a)) where
          Exercise         -> showId val
          Strategy         -> show val
          Rule             -> showId val
+         Constraint       -> showId val
          Id               -> showId val
          SomeExercise     -> case val of Some ex -> showId ex
          State            -> show val
@@ -223,6 +227,7 @@ instance ShowF (Const a) where
    showF Strategy     = "Strategy"
    showF State        = "State"
    showF Rule         = "Rule"
+   showF Constraint   = "Constraint"
    showF Context      = "Context"
    showF Id           = "Id"
    showF Location     = "Location"
@@ -307,6 +312,9 @@ tInt = Const Int
 
 tRule :: Type a (Rule (Context a))
 tRule = Const Rule
+
+tConstraint :: Type a (Constraint (Context a))
+tConstraint = Const Constraint
 
 tLocation :: Type a Location
 tLocation = Const Location

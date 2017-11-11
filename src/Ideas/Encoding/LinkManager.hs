@@ -51,6 +51,7 @@ data LinkManager = LinkManager
    , urlForExercise      :: forall a . Exercise a -> String
    , urlForStrategy      :: forall a . Exercise a -> String
    , urlForRules         :: forall a . Exercise a -> String
+   , urlForConstraints   :: forall a . Exercise a -> String
    , urlForExamples      :: forall a . Exercise a -> String
    , urlForDerivations   :: forall a . Exercise a -> String
    , urlForRule          :: forall a . Exercise a -> Rule (Context a) -> String
@@ -144,6 +145,7 @@ makeLinkManager base cgiBinary = LinkManager
    , urlForExercise    = url . exerciseRequest "exerciseinfo"
    , urlForStrategy    = url . exerciseRequest "strategyinfo"
    , urlForRules       = url . exerciseRequest "rulelist"
+   , urlForConstraints = url . exerciseRequest "constraintlist"
    , urlForTestReport  = url . exerciseRequest "testreport"
    , urlForExamples    = url . exerciseRequest "examples"
    , urlForDerivations = url . exerciseRequest "examplederivations"

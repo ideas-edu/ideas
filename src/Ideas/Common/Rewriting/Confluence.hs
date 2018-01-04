@@ -16,6 +16,7 @@ module Ideas.Common.Rewriting.Confluence
    , Config, defaultConfig, showTerm, complexity, termEquality
    ) where
 
+import Data.List
 import Data.Maybe
 import Ideas.Common.Id
 import Ideas.Common.Rewriting.RewriteRule
@@ -78,7 +79,7 @@ superImpose r1 r2 = rec (uniplateNav lhs1)
 
 criticalPairs :: [RewriteRule a] -> [(Term, Pair a, Pair a)]
 criticalPairs rs =
-   [ (a, (r1, b1), (r2, b2))
+   [ (renumber a, (r1, renumber b1), (r2, renumber b2))
    | r1       <- rs
    , r2       <- rs
    , na <- superImpose r1 r2
@@ -86,6 +87,10 @@ criticalPairs rs =
    , let a = unfocus na
    , b1 <- rewriteTerm r1 a
    , b2 <- map unfocus (changeG (rewriteTerm r2) na)
+   , let is  = nub (concatMap metaVars [a, b1, b2])
+         sub = zip is [0..]
+         renumber (TMeta i) = TMeta (fromMaybe i (lookup i sub))
+         renumber t = descend renumber t
    ]
 
 noDiamondPairs :: Config -> [RewriteRule a] -> [(Term, Triple a, Triple a)]
@@ -133,25 +138,25 @@ defaultConfig = Config show (const 0) (==)
 
 ----------------------------------------------------
 -- Example
-{-
-r1, r2, r3, r4, r5 :: RewriteRule SLogic
-r1 = rewriteRule "R1" $ \p q r -> p :||: (q :||: r) :~> (p :||: q) :||: r
-r2 = rewriteRule "R2" $ \p q   -> p :||: q :~> q :||: p
-r3 = rewriteRule "R3" $ \p     -> p :||: p :~> p
-r4 = rewriteRule "R4" $ \p     -> p :||: T :~> T
-r5 = rewriteRule "R5" $ \p     -> p :||: F :~> p
 
-this = [r1, r2, r3, r4, r5, r6]
-go = reportPairs $ noDiamondPairs this
-
-r6 :: RewriteRule SLogic
-r6 = rewriteRule "R6" $ \p -> p :||: T :~> F
-
-r1, r2, r3 :: RewriteRule Expr
-r1 = rewriteRule "a1" $ \a -> 0+a :~> a
-r2 = rewriteRule "a3" $ \a b c -> a+(b+c) :~> (a+b)+c
-r3 = rewriteRule "a2" $ \a -> a+0 :~> a
-
-go = do -- putStrLn $ unlines $ map show $ criticalPairs [r1,r2]
-        checkConfluence [r1,r2,r3]
--}
+_go :: IO ()
+_go = checkConfluence [r1, r2, r3]
+ where 
+   r1, r2, r3 :: RewriteRule Term
+   r1 = makeRewriteRule "a1" $ \a -> plus (TNum 0) a :~> a
+   r2 = makeRewriteRule "a2" $ \a b c -> plus a (plus b c) :~> plus (plus a b) c
+   r3 = makeRewriteRule "a3" $ \a -> plus a (TNum 0) :~> a
+   
+   plus :: Term -> Term -> Term
+   plus x y = TCon (newSymbol "plus") [x, y]
+        
+_go2 :: IO ()
+_go2 = checkConfluence [r1,r2,r3]
+ where 
+   -- example 7.7 in Baader-Nipkow
+   r1, r2,r3  :: RewriteRule Term
+   r1 = makeRewriteRule "a1" $ \x y z -> f(f(x,y),z) :~> f(x,f(y,z))
+   r2 = makeRewriteRule "a2" $ \x -> f(x,x) :~> x
+   r3 = makeRewriteRule "a3" $ \x y -> f(f(x,y),x) :~> x
+   
+   f(x,y) = TCon (newSymbol "f") [x,y]

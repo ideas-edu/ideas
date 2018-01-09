@@ -28,7 +28,6 @@ import Ideas.Service.DomainReasoner
 import Ideas.Text.HTML
 import Ideas.Text.XML
 import Ideas.Utils.Prelude (timedSeconds)
-import System.IO.Error
 
 processXML :: Options -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
 processXML options dr logRef txt = do
@@ -44,8 +43,8 @@ processXML options dr logRef txt = do
       else let out = addVersion (version dr) resp
            in return (req, showXML out, "application/xml")
  where
-   handler :: IOException -> IO XML
-   handler = resultError logRef . ioeGetErrorString
+   handler :: SomeException -> IO XML
+   handler = resultError logRef . show
 
 addVersion :: String -> XML -> XML
 addVersion s xml =

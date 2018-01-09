@@ -40,7 +40,6 @@ import Ideas.Utils.Prelude
 import Network.HTTP.Types
 import Network.Wai hiding (Request)
 import System.IO
-import System.IO.Error (ioeGetErrorString)
 import qualified Ideas.Encoding.Logging as Log
 import qualified Ideas.Main.CmdLineOptions as Options
 import qualified Network.Wai as CGI
@@ -145,8 +144,8 @@ process :: Options -> DomainReasoner -> Log.LogRef -> String -> IO (Request, Str
 process options dr logRef input = do
    format <- discoverDataFormat input
    run format options {maxTime = Just 5} (addVersion dr) logRef input
- `catch` \ioe -> do
-   let msg = "Error: " ++ ioeGetErrorString ioe
+ `catch` \e -> do
+   let msg = "Error: " ++ show (e :: SomeException)
    Log.changeLog logRef (\r -> r { Log.errormsg = msg })
    return (mempty, msg, "text/plain")
  where

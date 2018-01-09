@@ -27,7 +27,6 @@ import Control.Monad
 import Data.List (intersperse)
 import Data.Maybe
 import Ideas.Utils.Parsing hiding (string, char)
-import System.IO.Error
 import Test.QuickCheck
 import Text.PrettyPrint.Leijen hiding ((<$>))
 import qualified Ideas.Text.UTF8 as UTF8
@@ -151,11 +150,6 @@ instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
    fromJSON (Array [a, b, c, d]) = (,,,) <$> fromJSON a <*> fromJSON b <*> fromJSON c <*> fromJSON d
    fromJSON _                    = fail "expecting an array with 4 elements"
 
-instance InJSON IOException where
-   toJSON     = toJSON . ioeGetErrorString
-   fromJSON (String s) = return (userError s)
-   fromJSON _ = fail "excepting a string"
-
 --------------------------------------------------------
 -- Parser
 
@@ -260,8 +254,8 @@ jsonRPC input rpc =
          return (okResponse json (requestId req))
        `catch` handler req
  where
-   handler :: RPCRequest -> IOException -> IO RPCResponse
-   handler req e = return (errorResponse (toJSON e) (requestId req))
+   handler :: RPCRequest -> SomeException -> IO RPCResponse
+   handler req e = return (errorResponse (toJSON (show e)) (requestId req))
 
 --------------------------------------------------------
 -- Testing parser/pretty-printer

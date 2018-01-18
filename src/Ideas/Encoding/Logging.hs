@@ -129,8 +129,8 @@ logRecord  :: Schema -> LogRef -> IO ()
 logEnabled = True
 logRecord schema logRef =
    case schema of
-      V1 -> connectSqlite3 "service.db"  >>= logRecordWith V1 logRef
-      V2 -> connectSqlite3 "requests.db" >>= logRecordWith V2 logRef
+      V1 -> logRecordWith "service.db" V1 logRef
+      V2 -> logRecordWith "service.db" V2 logRef
       NoLogging -> return ()
 #else
 -- without logging
@@ -165,8 +165,10 @@ values_v2 r =
       , get errormsg, get serviceinfo, get ruleid, get input, get output
       ]
 
-logRecordWith :: IConnection c => Schema -> LogRef -> c -> IO ()
-logRecordWith schema logRef conn = do
+logRecordWith :: FilePath -> Schema -> LogRef -> IO ()
+logRecordWith file schema logRef = do
+   -- connect to database
+   conn <- connectSqlite3 file
    -- calculate duration
    r   <- getRecord logRef
    end <- getCurrentTime

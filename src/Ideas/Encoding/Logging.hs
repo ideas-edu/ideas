@@ -29,7 +29,7 @@ import qualified Ideas.Encoding.Request as R
 #ifdef DB
 import Data.List
 import Database.HDBC
-import Database.HDBC.Sqlite3 (connectSqlite3)
+import Database.HDBC.Sqlite3 (connectSqlite3, setBusyTimeout)
 #endif
 
 type Diff = NominalDiffTime
@@ -169,6 +169,7 @@ logRecordWith :: FilePath -> Schema -> LogRef -> IO ()
 logRecordWith file schema logRef = do
    -- connect to database
    conn <- connectSqlite3 file
+   setBusyTimeout conn 200 -- milliseconds
    -- calculate duration
    r   <- getRecord logRef
    end <- getCurrentTime
@@ -178,7 +179,7 @@ logRecordWith file schema logRef = do
    -- close the connection to the database
    disconnect conn
  `catchSql` \err ->
-   putStrLn $ "Error in logging to database: " ++ show err
+   return ()
 
 insertRecord :: IConnection c => Schema -> Record -> c ->  IO ()
 insertRecord schema r conn =

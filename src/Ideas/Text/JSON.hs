@@ -31,6 +31,7 @@ import Test.QuickCheck
 import Text.PrettyPrint.Leijen hiding ((<$>))
 import qualified Ideas.Text.UTF8 as UTF8
 import qualified Text.ParserCombinators.Parsec.Token as P
+import System.IO.Error
 
 data JSON
    = Number  Number        -- integer, real, or floating point
@@ -255,7 +256,9 @@ jsonRPC input rpc =
        `catch` handler req
  where
    handler :: RPCRequest -> SomeException -> IO RPCResponse
-   handler req e = return (errorResponse (toJSON (show e)) (requestId req))
+   handler req e = 
+      let msg = maybe (show e) ioeGetErrorString (fromException e)
+      in return $ errorResponse (toJSON msg) (requestId req)
 
 --------------------------------------------------------
 -- Testing parser/pretty-printer

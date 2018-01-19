@@ -25,6 +25,8 @@ import qualified Data.Map as M
 rulesInfoXML :: Exercise a -> (a -> XMLBuilder) -> XMLBuilder
 rulesInfoXML ex enc = mconcat (map ruleInfoXML (ruleset ex))
  where
+   exampleMap = collectExamples ex
+   
    ruleInfoXML r = element "rule"
       [ "name"        .=. showId r
       , "buggy"       .=. f (isBuggy r)
@@ -48,7 +50,7 @@ rulesInfoXML ex enc = mconcat (map ruleInfoXML (ruleset ex))
                 ]
       -- Examples
       , mconcat [ element "example" [enc a, enc b]
-                | let pairs = M.findWithDefault [] (getId r) (collectExamples ex)
+                | let pairs = M.findWithDefault [] (getId r) exampleMap
                 , (a, b) <- take 3 pairs
                 ]
       ]

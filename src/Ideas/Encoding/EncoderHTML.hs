@@ -53,15 +53,6 @@ htmlEncoder dr = do
    ex <- getExercise
    makePage lm dr ex <$> encodeType lm dr
 
-theme a = w3class "w3-theme" a
-themeL1 a = w3class "w3-theme-l1"	a
-themeL3 a = w3class "w3-theme-l3" a
-themeL5 a = w3class "w3-theme-l4" a
---themeD3 = w3class "w3-theme-d3" 
-textTheme a = w3class "w3-text-theme" a
-borderTheme a = w3class "w3-border-theme" a -- ??
-
-
 makePage :: LinkManager -> DomainReasoner -> Exercise a -> HTMLBuilder -> HTMLPage
 makePage lm dr ex body =
    (if hasLatexEncoding ex then addScript mathJaxUrl else id) $
@@ -75,13 +66,13 @@ makePage lm dr ex body =
    myWebPage = WebPage 
       { title       = "Ideas: documentation pages"
       , menuButtons = 
-           [ Button "http://ideas.cs.uu.nl/ " themeL1 (fontAwesome "lightbulb-o" <> tag "span" (fontSize Large " I") <> tag "span" (fontSize Medium "DEAS"))
+           [ Button "http://ideas.cs.uu.nl/ " (theme L1) (fontAwesome "lightbulb-o" <> tag "span" (fontSize Large " I") <> tag "span" (fontSize Medium "DEAS"))
            , Button (urlForIndex lm)     (hover White) "Index"
            , Button (urlForExercises lm) (hover White) $ ("Exercises " <> nrBadge (length (exercises dr)))
            , Button (urlForServices lm)  (hover White) $ "Services " <> nrBadge (length (services dr))
            ]
-      , menuStyle   = theme . fontSize Large
-      , iconBarsStyle = hover White . fontSize Large . themeL1
+      , menuStyle   = theme_ . fontSize Large
+      , iconBarsStyle = hover White . fontSize Large . theme L1
       , sideWidth = 150
       , sideHeader  = tag "h4" $ barItem $ bold $ textTheme "Exercise"
       , sideButtons = 
@@ -95,23 +86,23 @@ makePage lm dr ex body =
               , mk urlForDerivations "Derivations"
               , mk urlForTestReport  "Test report"
               ]
-      , sideStyle = themeL3 . fontSize Medium
+      , sideStyle = theme L3 . fontSize Medium
       , iconCloseStyle = fontSize XL . hover Black
       , content = body
       , footer = italic $ string $ fullVersion dr
-      , footerStyle = themeL1
+      , footerStyle = theme L1
       }
 
 nrBadge :: BuildXML a => Int -> a
-nrBadge = badge . themeL1 . fontSize Small . text
+nrBadge = badge . theme L1 . fontSize Small . text
 
 table :: BuildXML a => Bool -> [[a]] -> a
 table hasHeader = tableAll . mconcat . zipWith f (hasHeader : repeat False)
  where
-   f header = tag "tr" . mconcat . map cell
+   f header = tag "tr" . mconcat . map makeCell
     where
-      cell | header    = tag "th"
-           | otherwise = tag "td"
+      makeCell | header    = tag "th"
+               | otherwise = tag "td"
 
 keyValueTable :: BuildXML a => [(String, a)] -> a
 keyValueTable = table False . map (\(s, a) -> [string s, a])
@@ -524,7 +515,7 @@ encodeState lm dr =
          , encodePrefix state (statePrefix state)
          ])
      where
-       serviceButton = themeL1  . W3.w3class "w3-button"
+       serviceButton = theme L1  . W3.w3class "w3-button"
 
 -- use allfirsts service of domain reasoner, instead of calling the service
 -- directly. Note that the service can be redefined (e.g. for the Ask-Elle tutor)
@@ -641,7 +632,7 @@ submitForm this = form . padding Tiny $ mconcat
    form      = tag "form"  . ("name" .=. "myform" <>) . ("method" .=. "post" <>) . ("onsubmit" .=. "return submitTerm()" <>) . w3class "w3-container" 
    termLabel = tag "label" $ tag "b" "Input:"
    termInput = tag "input" . ("name" .=. "myterm" <>) . ("type" .=. "text" <>) . border . W3.input
-   submitBtn = tag "input" . ("value" .=. "Submit" <>) . ("type" .=. "submit" <>) . themeL1 . W3.w3class "w3-button"
+   submitBtn = tag "input" . ("value" .=. "Submit" <>) . ("type" .=. "submit" <>) . theme L1 . W3.w3class "w3-button"
 
 -- stateinfo service
 submitStateInfo :: LinkManager -> Exercise a -> HTMLBuilder

@@ -600,3 +600,20 @@ barPos p = w3classIf (onTop p)    "w3-topbar"
          . w3classIf (onLeft p)   "w3-leftbar"
          . w3classIf (onBottom p) "w3-bottombar"
          . w3classIf (onRight p)  "w3-rightbar"
+      
+--------------------------------------------------------------------------------
+-- * Color themes
+         
+data ColorTheme 
+   = L1 | L2 | L3 | L4 | L5 -- light
+   | D1 | D2 | D3 | D4 | D5 -- dark
+ deriving Show
+
+-- standard color theme
+theme_, textTheme, borderTheme :: BuildXML a => a -> a
+theme_      = w3class "w3-theme"
+textTheme   = w3class "w3-text-theme"
+borderTheme = w3class "w3-border-theme"
+ 
+theme :: BuildXML a => ColorTheme -> a -> a
+theme = w3class . ("w3-theme-" ++) . map toLower . show

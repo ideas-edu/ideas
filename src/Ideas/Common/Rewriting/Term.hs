@@ -211,7 +211,7 @@ instance WithFunctions Term where
    getFunction _           = fail "Ideas.Common.Rewriting.getFunction"
 
 isSymbol :: WithFunctions a => Symbol -> a -> Bool
-isSymbol s = maybe False (==s) . getSymbol
+isSymbol s = (== Just s) . getSymbol
 
 isFunction :: (WithFunctions a, Monad m) => Symbol -> a -> m [a]
 isFunction s a =

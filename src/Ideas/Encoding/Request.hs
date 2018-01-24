@@ -53,7 +53,7 @@ instance Monoid Request where
 data Schema = V1 | V2 | NoLogging deriving (Show, Eq)
 
 getSchema :: Request -> Schema
-getSchema = fromMaybe V1 . logSchema -- log schema V1 is the default
+getSchema = fromMaybe V2 . logSchema -- log schema V2 is the default
 
 readSchema :: Monad m => String -> m Schema
 readSchema s0

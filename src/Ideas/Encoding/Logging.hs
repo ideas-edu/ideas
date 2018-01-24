@@ -129,8 +129,8 @@ logRecord  :: Schema -> LogRef -> IO ()
 logEnabled = True
 logRecord schema logRef =
    case schema of
-      V1 -> logRecordWith "service.db" V1 logRef
-      V2 -> logRecordWith "service.db" V2 logRef
+      V1 -> logRecordWith "service.db"  V1 logRef
+      V2 -> logRecordWith "requests.db" V2 logRef
       NoLogging -> return ()
 #else
 -- without logging

@@ -88,14 +88,13 @@ defaultCGI options dr = CGI.run $ \req respond -> do
       (fromString txt)
 
 inputOrDefault :: CGI.Request -> IO String
-inputOrDefault req =
-   let query  = queryString req
-       inHtml = acceptsHTML
-   in case getInput query "input" of
-         Just s -> return s
-         Nothing
-            | inHtml    -> return defaultBrowser
-            | otherwise -> fail "environment variable 'input' is empty"
+inputOrDefault req = do
+   maybeInput <- inputFromRequest req
+   case maybeInput of
+      Just s -> return s
+      Nothing
+         | acceptsHTML -> return defaultBrowser
+         | otherwise   -> fail "environment variable 'input' is empty"
  where
    -- Invoked from browser
    defaultBrowser :: String
@@ -170,8 +169,18 @@ addVersion dr = dr
 findHeader :: String -> CGI.Request -> Maybe String
 findHeader s = fmap fromByteString . lookup (fromString s) . requestHeaders
 
-getInput :: Query -> String -> Maybe String
-getInput query s = fmap fromByteString (join (lookup (fromString s) query))
+inputFromRequest :: CGI.Request -> IO (Maybe String)
+inputFromRequest req = 
+   -- first try query string (for GET requests) ...
+   case inputFromQuery (queryString req) of
+      Just s  -> return (Just s)
+      Nothing -> do
+         -- ... then try request body (for POST requests)
+         body <- requestBody req
+         return (inputFromQuery (parseQuery body))
+
+inputFromQuery :: Query -> Maybe String
+inputFromQuery = fmap fromByteString . join . lookup (fromString "input")
 
 accepts :: CGI.Request -> [String]
 accepts = maybe [] (splitsWithElem ',') . findHeader "Accept"

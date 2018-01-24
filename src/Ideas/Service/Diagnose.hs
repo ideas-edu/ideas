@@ -16,10 +16,9 @@
 module Ideas.Service.Diagnose
    ( Diagnosis(..), tDiagnosis, diagnose
    , getState, getStateAndReady
-   , difference, differenceEqual
+   , difference
    ) where
 
-import Data.Function
 import Data.List (intercalate, sortBy)
 import Data.Maybe
 import Ideas.Common.Library hiding (ready)
@@ -135,10 +134,9 @@ diagnose state new motivationId
       , (_, env) <- recognizeRule ex r sub1 sub2
       ]
     where
-      diff = if searchForBuggy then difference else differenceEqual
       (sub1, sub2) = fromMaybe (stateContext state, new) $ do
          newTerm <- fromContext new
-         (a, b)  <- diff ex (stateTerm state) newTerm
+         (a, b)  <- difference ex (stateTerm state) newTerm
          return (inContext ex a, inContext ex b)
 
 ----------------------------------------------------------------
@@ -175,13 +173,6 @@ difference :: Exercise a -> a -> a -> Maybe (a, a)
 difference ex a b = do
    v <- hasTermView ex
    Diff.differenceWith v a b
-
--- Used by the FP tutor
-differenceEqual :: Exercise a -> a -> a -> Maybe (a, a)
-differenceEqual ex a b = do
-   v <- hasTermView ex
-   let simpleEq = equivalence ex `on` inContext ex
-   Diff.differenceEqualWith v simpleEq a b
 
 ----------------------------------------------------------------
 -- Compare answer sets (and search for missing parts/incorrect parts)

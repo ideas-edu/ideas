@@ -13,10 +13,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Common.Rewriting.Difference
-   ( difference, differenceEqual
-   , differenceWith, differenceEqualWith
-   ) where
+module Ideas.Common.Rewriting.Difference (difference, differenceWith) where
 
 import Control.Monad
 import Data.Function
@@ -24,35 +21,16 @@ import Data.Maybe
 import Ideas.Common.Rewriting.Term
 import Ideas.Common.View
 
-differenceWith :: View Term a -> a -> a -> Maybe (a, a)
-differenceWith = diff (\_ _ -> True)
-
-differenceEqualWith :: View Term a -> (a -> a -> Bool) -> a -> a -> Maybe (a, a)
-differenceEqualWith v eq p q = guard (eq p q) >> diff eq v p q
-
 difference :: IsTerm a => a -> a -> Maybe (a, a)
-difference = diff (\_ _ -> True) termView
+difference = differenceWith termView
 
--- | This function returns the difference, except that the
--- returned terms should be logically equivalent. Nothing can signal that
--- there is no difference, or that the terms to start with are not equivalent.
-differenceEqual :: IsTerm a => (a -> a -> Bool) -> a -> a -> Maybe (a, a)
-differenceEqual eq p q = do
-   guard (eq p q)
-   diff eq termView p q
-
-collectSym :: Symbol -> Term -> [Term]
-collectSym s a = maybe [a] (uncurry ((++) `on` collectSym s)) (isBinary s a)
-
--- local implementation function
-diff :: (a -> a -> Bool) -> View Term a -> a -> a -> Maybe (a, a)
-diff eq v a b = do
-   let eqT x y = fromMaybe False $ liftM2 eq (match v x) (match v y)
-   (t1, t2) <- diffTerm eqT (build v a) (build v b)
+differenceWith :: View Term a -> a -> a -> Maybe (a, a)
+differenceWith v a b = do
+   (t1, t2) <- diffTerm (build v a) (build v b)
    liftM2 (,) (match v t1) (match v t2)
 
-diffTerm :: (Term -> Term -> Bool) -> Term -> Term -> Maybe (Term, Term)
-diffTerm eq = rec
+diffTerm :: Term -> Term -> Maybe (Term, Term)
+diffTerm = rec
  where
    rec p q =
       case (getFunction p, getFunction q) of
@@ -70,18 +48,19 @@ diffTerm eq = rec
               [p] -> Just p
               _   -> Nothing
 
-   diffA s = curry (make . rev . f . rev . f)
+   diffA s list1 list2 = curry (make . rev . f . rev . f) list1 list2
     where
       f (p:ps, q:qs) | not (null ps || null qs) &&
-                       isNothing (rec p q) &&
-                       equal ps qs =
+                       isNothing (rec p q) =
          f (ps, qs)
       f pair = pair
 
-      equal     = eq `on` builder
       rev       = reverse *** reverse
       builder   = foldr1 (binary s)
       make pair =
          case pair of
             ([p], [q]) -> rec p q
-            (ps, qs)   -> Just (builder ps, builder qs)
+            (_, _)     -> Just (builder list1, builder list2)
+            
+collectSym :: Symbol -> Term -> [Term]
+collectSym s a = maybe [a] (uncurry ((++) `on` collectSym s)) (isBinary s a)

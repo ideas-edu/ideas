@@ -29,38 +29,30 @@ differenceWith v a b = do
    (t1, t2) <- diffTerm (build v a) (build v b)
    liftM2 (,) (match v t1) (match v t2)
 
+-- returns a result if the terms are different
 diffTerm :: Term -> Term -> Maybe (Term, Term)
-diffTerm = rec
+diffTerm p q =
+   case (getFunctionA p, getFunctionA q) of
+      (Just (s1, ps), Just (s2, qs))
+         | s1 == s2  -> diffList ps qs
+         | otherwise -> here
+      _  | p == q    -> Nothing
+         | otherwise -> here
  where
-   rec p q =
-      case (getFunction p, getFunction q) of
-         (Just (s1, ps), Just (s2, qs))
-            | s1 /= s2         -> Just (p, q)
-            | isAssociative s1 -> (diffA s1 `on` collectSym s1) p q
-            | otherwise        -> diffList ps qs
-         _  | p == q           -> Nothing
-            | otherwise        -> Just (p, q)
-
+   here = Just (p, q)
+ 
    diffList xs ys
-      | length xs /= length ys = Nothing
+      | length xs /= length ys = here
       | otherwise =
-           case catMaybes (zipWith rec xs ys) of
-              [p] -> Just p
-              _   -> Nothing
-
-   diffA s list1 list2 = curry (make . rev . f . rev . f) list1 list2
-    where
-      f (p:ps, q:qs) | not (null ps || null qs) &&
-                       isNothing (rec p q) =
-         f (ps, qs)
-      f pair = pair
-
-      rev       = reverse *** reverse
-      builder   = foldr1 (binary s)
-      make pair =
-         case pair of
-            ([p], [q]) -> rec p q
-            (_, _)     -> Just (builder list1, builder list2)
+           case catMaybes (zipWith diffTerm xs ys) of
+              []    -> Nothing
+              [one] -> Just one
+              _     -> here
             
-collectSym :: Symbol -> Term -> [Term]
+getFunctionA :: (Monad m, WithFunctions a) => a -> m (Symbol, [a])
+getFunctionA a = f <$> getFunction a
+ where
+   f (s, xs) = (s, if isAssociative s then collectSym s a else xs)
+            
+collectSym :: WithFunctions a => Symbol -> a -> [a]
 collectSym s a = maybe [a] (uncurry ((++) `on` collectSym s)) (isBinary s a)

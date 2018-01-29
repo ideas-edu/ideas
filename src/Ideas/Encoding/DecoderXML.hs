@@ -34,6 +34,10 @@ type XMLDecoder a = Decoder a XML
 xmlDecoder :: TypedDecoder a XML
 xmlDecoder tp =
    case tp of
+      Tag s (Const String) -> 
+         decodeChild s decodeData
+       `mplus`
+         decodeAttribute s
       Tag s t
          | s == "answer" ->
               decodeChild "answer" (xmlDecoder t)
@@ -44,6 +48,12 @@ xmlDecoder tp =
          | otherwise ->
               decodeChild s (xmlDecoder t)
       Iso p t  -> from p <$> xmlDecoder t
+      List t -> do 
+         x  <- xmlDecoder t 
+         xs <- xmlDecoder (List t)
+         return (x:xs)
+       `mplus` 
+         return []
       Pair t1 t2 -> do
          x <- xmlDecoder t1
          y <- xmlDecoder t2
@@ -67,6 +77,7 @@ xmlDecoder tp =
             Id          -> -- improve!
                            decodeChild "location" $
                               makeDecoder (newId . getData)
+            String      -> decodeData
             _ -> fail $ "No support for argument type in XML: " ++ show tp
       _ -> fail $ "No support for argument type in XML: " ++ show tp
 
@@ -187,6 +198,12 @@ decodeBinding = decoderFor $ \xml -> do
    termBinding :: String -> Term -> Binding
    termBinding = makeBinding . makeRef
 
+decodeData :: XMLDecoder a String
+decodeData = split $ \xml ->
+   case content xml of
+      Left s:rest -> Right (s, xml {content = rest})
+      _           -> Left "Could not find data"
+
 decodeChild :: String -> XMLDecoder a b -> XMLDecoder a b
 decodeChild s m = split f >>= (m //)
  where
@@ -194,3 +211,11 @@ decodeChild s m = split f >>= (m //)
    f xml = case break p (content xml) of
               (xs, Right y:ys) -> Right (y, xml { content = xs ++ ys })
               _ -> Left $ "Could not find child " ++ s
+              
+decodeAttribute :: String -> XMLDecoder a String
+decodeAttribute s = split $ \xml -> 
+   case break p (attributes xml) of
+      (xs, (_ := val):ys) -> Right (val, xml {attributes = xs ++ ys })
+      _ -> Left $ "Could not find attribute " ++ s
+ where
+   p (n := _) = n == s

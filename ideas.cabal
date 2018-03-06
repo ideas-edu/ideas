@@ -62,7 +62,7 @@ Library
      network,
      parsec, 
      random,
-     streaming-commons,
+     streaming-commons < 0.2,
      time, 
      uniplate, 
      wai,

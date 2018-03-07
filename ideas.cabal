@@ -62,9 +62,9 @@ Library
      network,
      parsec,
      random,
-     streaming-commons >= 0.1.18 && < 0.2.0,
+     streaming-commons < 0.2,
      time,
-     uniplate,
+     uniplate, 
      wai,
      wl-pprint
 
@@ -152,6 +152,7 @@ Library
     Ideas.Text.HTML.W3CSS
     Ideas.Text.JSON
     Ideas.Text.Latex
+    Ideas.Text.MathML
     Ideas.Text.OpenMath.Dictionary.Arith1
     Ideas.Text.OpenMath.Dictionary.Calculus1
     Ideas.Text.OpenMath.Dictionary.Fns1

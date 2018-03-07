@@ -24,7 +24,7 @@ module Ideas.Service.Types
    , tTerm, tStrategy, tTree, tState, tBool, tMaybe, tString, tList
    , tId, tService, tSomeExercise, tText, tDifficulty, tUserId ,tContext
    , tDerivation, tError, (.->), tIO, tExercise, tTestSuiteResult, tQCGen
-   , tScript, tExamples, tStrategyCfg, tInt
+   , tScript, tExamples, tStrategyCfg, tMathML, tInt
      -- * Searching a typed value
    , findValuesOfType
    ) where
@@ -37,6 +37,7 @@ import Data.Tree
 import Ideas.Common.Library
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
+import Ideas.Text.MathML
 import Test.QuickCheck.Random (QCGen)
 import qualified Ideas.Utils.TestSuite as TestSuite
 
@@ -86,6 +87,7 @@ instance Equal (Const a) where
    equal Int         Int         = Just id
    equal Bool        Bool        = Just id
    equal String      String      = Just id
+   equal MathML      MathML      = Just id
    equal Service     Service     = Just id
    equal Exercise    Exercise    = Just id
    equal Strategy    Strategy    = Just id
@@ -155,6 +157,7 @@ data Const a t where
    QCGen        :: Const a QCGen
    Result       :: Const a TestSuite.Result
    SomeExercise :: Const a (Some Exercise)
+   MathML       :: Const a MathML
    -- basic types
    Bool         :: Const a Bool
    Int          :: Const a Int
@@ -214,6 +217,7 @@ instance Show (TypedValue (Const a)) where
          Text             -> show val
          QCGen            -> show val
          Result           -> show val
+         MathML           -> show val
          Bool             -> map toLower (show val)
          Int              -> show val
          String           -> val
@@ -239,6 +243,7 @@ instance ShowF (Const a) where
    showF QCGen        = "QCGen"
    showF Result       = "TestSuiteResult"
    showF SomeExercise = "Exercise"
+   showF MathML       = "MathML"
    showF Bool         = "Bool"
    showF Int          = "Int"
    showF String       = "String"
@@ -303,6 +308,9 @@ tExercise = Const Exercise
 
 tContext :: Type a (Context a)
 tContext = Const Context
+
+tMathML :: Type a MathML
+tMathML = Const MathML
 
 tBool :: Type a Bool
 tBool = Const Bool

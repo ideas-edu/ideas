@@ -27,6 +27,7 @@ import Ideas.Encoding.Request
 import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Text.OpenMath.Object
+import Ideas.Text.MathML
 import Ideas.Text.XML
 
 type XMLDecoder a = Decoder a XML
@@ -77,6 +78,7 @@ xmlDecoder tp =
             Id          -> -- improve!
                            decodeChild "location" $
                               makeDecoder (newId . getData)
+            MathML      -> decodeMathML
             String      -> decodeData
             _ -> fail $ "No support for argument type in XML: " ++ show tp
       _ -> fail $ "No support for argument type in XML: " ++ show tp
@@ -143,6 +145,9 @@ decodeOMOBJ = decodeChild "OMOBJ" $ decoderFor $ \xml -> do
    case fromOpenMath ex omobj of
       Just a  -> return a
       Nothing -> fail "Invalid OpenMath object for this exercise"
+
+decodeMathML :: XMLDecoder a MathML
+decodeMathML = decodeChild "math" $ decoderFor fromXML
 
 decodeEnvironment :: XMLDecoder a Environment
 decodeEnvironment =

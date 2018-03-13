@@ -45,7 +45,6 @@ data MathML = MRow [MathML]
             | MTableRow
             | MLabeledTableRow
             | MTableData
-
    deriving (Show, Eq)
 {-
 from: https://www.w3.org/TR/MathML2/chapter3.html#presm.mn @ 3.2.1
@@ -135,19 +134,3 @@ mathml2xml = makeXML "math" . rec
          MTableRow         -> element "mtr" []
          MLabeledTableRow  -> element "mlabeledtr" []
          MTableData        -> element "mtd" []
-
-
-
-
-
-
-
-
-
-
-fromRight :: Either a b -> b
-fromRight (Right b) = b
-fromRight _ = error "fromRight"
-
-example :: XML
-example = fromRight $ parseXML "<math><mrow><ms>Hi</ms><mo>+</mo><mi>x</mi><mroot><mn>2</mn><mn>4</mn></mroot><mfenced open=\"{\" close=\"}\"><mrow><mn>3</mn><mo>*</mo><mi>z</mi></mrow></mfenced></mrow></math>"

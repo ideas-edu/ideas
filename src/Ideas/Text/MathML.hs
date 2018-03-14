@@ -73,6 +73,7 @@ xml2mathml xmlTop = rec xmlTop
        Element "mn" _ [Left s] -> return (MNumber s)
        Element "mo" _ [Left s] -> return (MOperator s)
        Element "ms" _ [Left s] -> return (MString s)
+       Element "mtext" _ [] -> return (MText "")
        Element "mtext" _ [Left s] -> return (MText s)
        Element "mroot" _ [Right c, Right d] -> MRoot <$> rec c <*> rec d
        Element "msup" _ [Right c, Right d] -> MSup <$> rec c <*> rec d

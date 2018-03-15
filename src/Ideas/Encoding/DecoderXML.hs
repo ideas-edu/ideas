@@ -26,8 +26,8 @@ import Ideas.Encoding.OpenMathSupport
 import Ideas.Encoding.Request
 import Ideas.Service.State
 import Ideas.Service.Types
-import Ideas.Text.OpenMath.Object
 import Ideas.Text.MathML
+import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
 
 type XMLDecoder a = Decoder a XML
@@ -35,7 +35,7 @@ type XMLDecoder a = Decoder a XML
 xmlDecoder :: TypedDecoder a XML
 xmlDecoder tp =
    case tp of
-      Tag s (Const String) -> 
+      Tag s (Const String) ->
          decodeChild s decodeData
        `mplus`
          decodeAttribute s
@@ -49,11 +49,11 @@ xmlDecoder tp =
          | otherwise ->
               decodeChild s (xmlDecoder t)
       Iso p t  -> from p <$> xmlDecoder t
-      List t -> do 
-         x  <- xmlDecoder t 
+      List t -> do
+         x  <- xmlDecoder t
          xs <- xmlDecoder (List t)
          return (x:xs)
-       `mplus` 
+       `mplus`
          return []
       Pair t1 t2 -> do
          x <- xmlDecoder t1
@@ -147,7 +147,7 @@ decodeOMOBJ = decodeChild "OMOBJ" $ decoderFor $ \xml -> do
       Nothing -> fail "Invalid OpenMath object for this exercise"
 
 decodeMathML :: XMLDecoder a MathML
-decodeMathML = decodeChild "math" $ decoderFor fromXML
+decodeMathML = decodeFirstChild "math" $ decoderFor fromXML
 
 decodeEnvironment :: XMLDecoder a Environment
 decodeEnvironment =
@@ -216,9 +216,16 @@ decodeChild s m = split f >>= (m //)
    f xml = case break p (content xml) of
               (xs, Right y:ys) -> Right (y, xml { content = xs ++ ys })
               _ -> Left $ "Could not find child " ++ s
-              
+
+decodeFirstChild :: String -> XMLDecoder a b -> XMLDecoder a b
+decodeFirstChild s m = split f >>= (m //)
+ where
+   f xml = case content xml of
+              Right y:ys | name y == s -> Right (y, xml { content = ys })
+              _ -> Left $ "Could not find first child " ++ s
+
 decodeAttribute :: String -> XMLDecoder a String
-decodeAttribute s = split $ \xml -> 
+decodeAttribute s = split $ \xml ->
    case break p (attributes xml) of
       (xs, (_ := val):ys) -> Right (val, xml {attributes = xs ++ ys })
       _ -> Left $ "Could not find attribute " ++ s

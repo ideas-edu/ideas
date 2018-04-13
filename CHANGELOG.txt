@@ -1,3 +1,19 @@
+Changelog ideas-1.6 => ideas.1.7
+
+* replacing network.cgi package by WAI
+* adding support for MathML
+* adding constraints (to exercises) for constraint-based tutoring
+* adding support for W3CSS (css classes and templates)
+* restyling html output
+* set busy timeout on database connection (when logging requests)
+* changing name of logging database for v2 schema, and make v2 the default
+* improving performance of rulesinfo service
+* merging duplicate attributes in xml/html
+* simplifying the computation of the difference between terms
+* extending xml-encoder with cases for lists, attributes and content data
+* adding missing strategy combinators preference and orelse
+* adding instances for type class Different
+
 Changelog ideas-1.5 => ideas.1.6
 
 * dynamic strategy combinator that uses the current object/term

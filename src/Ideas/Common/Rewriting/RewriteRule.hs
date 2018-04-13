@@ -72,11 +72,42 @@ class Different a where
 instance Different a => Different [a] where
    different = ([], [fst different])
 
+instance Different Int where
+   different = (0, 1)
+
+instance Different Integer where
+   different = (0, 1)
+
+instance Different Double where
+   different = (0, 1)
+
+instance Different Float where
+   different = (0, 1)
+   
+instance Different Rational where
+   different = (0, 1)
+
+instance Different Bool where
+   different = (True, False)
+
 instance Different Char where
    different = ('a', 'b')
 
 instance Different Term where
    different = (TNum 0, TNum 1)
+
+instance (Different a, Different b) => Different (a, b) where
+   different = 
+      let (a1, a2) = different
+          (b1, b2) = different
+      in ((a1, b1), (a2, b2))
+
+instance (Different a, Different b, Different c) => Different (a, b, c) where
+   different = 
+      let (a1, a2) = different
+          (b1, b2) = different
+          (c1, c2) = different
+      in ((a1, b1, c1), (a2, b2, c2))
 
 class (IsTerm a, Show a) => RuleBuilder t a | t -> a where
    buildRuleSpec  :: Int -> t -> RuleSpec Term

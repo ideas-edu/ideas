@@ -26,7 +26,8 @@ module Ideas.Common.Strategy
      -- ** Basic combinators
    , (.*.), (.|.), (.%.), (.@.), (!~>)
    , succeed, fail, atomic, label, inits
-   , sequence, choice, alternatives, interleave, permute
+   , sequence, choice, preference, orelse
+   , alternatives, interleave, permute
      -- ** EBNF combinators
    , many, many1, replicate, option
      -- ** Negation and greedy combinators

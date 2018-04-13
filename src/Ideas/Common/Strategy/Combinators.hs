@@ -86,6 +86,14 @@ sequence = Sequence.sequence . map toStrategy
 choice :: IsStrategy f => [f a] -> Strategy a
 choice = Choice.choice . map toStrategy
 
+-- | Combines a list of strategies with left-preference
+preference :: IsStrategy f => [f a] -> Strategy a
+preference = Choice.preference . map toStrategy
+
+-- | Combines a list of strategies with left-biased choice
+orelse :: IsStrategy f => [f a] -> Strategy a
+orelse = Choice.orelse . map toStrategy
+
 -- | Merges a list of strategies (in parallel)
 interleave :: IsStrategy f => [f a] -> Strategy a
 interleave = declN $ associative (interleaveId .=. Nary Derived.interleave)

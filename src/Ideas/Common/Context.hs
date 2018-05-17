@@ -64,7 +64,7 @@ instance Show a => Show (Context a) where
    show c@(C env a) =
       let rest | noBindings env = ""
                | otherwise      = "  {" ++ show env ++ "}"
-      in maybe "??" show (currentNavigator a) ++
+      in maybe (maybe "??" show (currentT a)) show (currentNavigator a) ++
          " @ " ++ show (location c) ++ rest
 
 instance Navigator (Context a) where

@@ -20,7 +20,7 @@ import System.IO (Handle)
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy as L
 import qualified Data.CaseInsensitive as CI
-import qualified Data.Streaming.Blaze as Blaze
+import qualified Data.Streaming.ByteString.Builder as Blaze
 import qualified Data.String as String
 import qualified Network.HTTP.Types as H
 import qualified System.IO
@@ -97,7 +97,7 @@ runGeneric vars inputH outputH xsendfile app = do
                 return ResponseReceived
             _ -> do
                 let (s, hs, wb) = responseToStream res
-                (blazeRecv, blazeFinish) <- Blaze.newBlazeRecv Blaze.defaultStrategy
+                (blazeRecv, blazeFinish) <- Blaze.newByteStringBuilderRecv Blaze.defaultStrategy
                 wb $ \b -> do
                     let sendBuilder builder = do
                             popper <- blazeRecv builder

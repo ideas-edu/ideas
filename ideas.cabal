@@ -50,7 +50,7 @@ Library
   hs-source-dirs:    src
   Build-Depends:
      base >= 4.8 && < 5,
-     blaze-builder,
+     blaze-builder >= 0.4,
      bytestring,
      case-insensitive,
      QuickCheck >= 2.8,

@@ -65,7 +65,7 @@ instance Uniplate MathML where
 -- conversion functions: XML <-> MathML
 
 xml2mathml :: XML -> Either String MathML
-xml2mathml xmlTop = rec xmlTop
+xml2mathml = rec
  where
    rec xml = case xml of
        Element "mrow" _ _ -> MRow <$> mapM rec (children xml)

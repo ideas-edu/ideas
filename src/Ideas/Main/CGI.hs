@@ -58,12 +58,9 @@ runGeneric vars inputH outputH xsendfile app = do
         qstring = lookup' "QUERY_STRING" vars
         contentLength = safeRead 0 $ lookup' "CONTENT_LENGTH" vars
         remoteHost' =
-            case lookup "REMOTE_ADDR" vars of
-                Just x -> x
-                Nothing ->
-                    case lookup "REMOTE_HOST" vars of
-                        Just x -> x
-                        Nothing -> ""
+            let s = fromMaybe "" (lookup "REMOTE_HOST" vars)
+            in fromMaybe s (lookup "REMOTE_ADDR" vars)
+
         isSecure' =
             case map toLower $ lookup' "SERVER_PROTOCOL" vars of
                 "https" -> True
@@ -129,7 +126,7 @@ runGeneric vars inputH outputH xsendfile app = do
         ]
     sfBuilder s hs sf fp = mconcat
         [ headers s hs
-        , header $ (fromByteString sf, fromString fp)
+        , header (fromByteString sf, fromString fp)
         , fromChar '\n'
         , fromByteString sf
         , fromByteString " not supported"

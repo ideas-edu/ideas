@@ -68,7 +68,7 @@ makePage lm dr ex body =
       , menuButtons =
            [ Button "http://ideas.cs.uu.nl/ " (theme L1) (fontAwesome "lightbulb-o" <> tag "span" (fontSize Large " I") <> tag "span" (fontSize Medium "DEAS"))
            , Button (urlForIndex lm)     (hover White) "Index"
-           , Button (urlForExercises lm) (hover White) $ ("Exercises " <> nrBadge (length (exercises dr)))
+           , Button (urlForExercises lm) (hover White) $ "Exercises " <> nrBadge (length (exercises dr))
            , Button (urlForServices lm)  (hover White) $ "Services " <> nrBadge (length (services dr))
            ]
       , menuStyle   = theme_ . fontSize Large
@@ -76,7 +76,7 @@ makePage lm dr ex body =
       , sideWidth = 150
       , sideHeader  = tag "h4" $ barItem $ bold $ textTheme "Exercise"
       , sideButtons =
-           let mk f s = Button (f lm ex) (hover Black) s
+           let mk f = Button (f lm ex) (hover Black)
            in if getId ex == mempty then [] else
               [ mk urlForExercise    "Information"
               , mk urlForStrategy    "Strategy"
@@ -433,7 +433,7 @@ encodeExampleList lm = exerciseEncoder $ \ex pairs -> mconcat $
    h2 "Examples" :
    [  container . third $
        h3 (s ++ " (" ++ show (length xs) ++ ")")
-       <> (W3.ulWith hoverable $ map ((fontAwesome "hand-o-right" <>) . padding Small . make ex) xs)
+       <> W3.ulWith hoverable (map ((fontAwesome "hand-o-right" <>) . padding Small . make ex) xs)
    | (_, s, xs) <- orderedGroupsWith show fst pairs
    ]
  where

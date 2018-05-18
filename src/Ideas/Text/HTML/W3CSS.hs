@@ -8,8 +8,8 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A minimal interface for using W3.CSS, a modern CSS framework with built-in 
--- responsiveness. 
+-- A minimal interface for using W3.CSS, a modern CSS framework with built-in
+-- responsiveness.
 -- See https://www.w3schools.com/w3css/
 --
 -----------------------------------------------------------------------------

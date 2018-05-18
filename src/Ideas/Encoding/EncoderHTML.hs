@@ -23,6 +23,7 @@ import Ideas.Common.Library hiding (alternatives, left, right, collapse, Medium)
 import Ideas.Common.Strategy.Symbol
 import Ideas.Encoding.Encoder hiding (left, right)
 import Ideas.Encoding.LinkManager
+import Ideas.Encoding.Logging
 import Ideas.Encoding.Request
 import Ideas.Encoding.RulePresenter
 import Ideas.Encoding.RulesInfo
@@ -155,6 +156,7 @@ encodeContext = exerciseEncoder $ \ex ->
 encodeIndex :: HTMLEncoder a DomainReasoner
 encodeIndex = makeEncoder $ \dr -> mconcat
    [ htmlDescription "Domain reasoner" dr
+   , panel $ right $ string "Logging: " <> bool logEnabled
    , munless (null $ aliases dr) $
         h2 "Exercise aliases" <>
         table True (

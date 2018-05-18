@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2016, Ideas project team. This file is distributed under the
+-- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -33,7 +33,7 @@ data CmdLineOption
 header :: String
 header =
    "IDEAS: Intelligent Domain-specific Exercise Assistants\n" ++
-   "Copyright 2016, Open Universiteit Nederland\n" ++
+   "Copyright 2018, Open Universiteit Nederland\n" ++
    versionText ++
    "\n\nUsage: ideas [OPTION]     (by default, CGI protocol)\n" ++
    "\nOptions:"

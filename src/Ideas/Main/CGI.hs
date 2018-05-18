@@ -2,28 +2,28 @@
 -- Original source: https://hackage.haskell.org/package/wai-extra-3.0.20.0/docs/Network-Wai-Handler-CGI.html
 module Ideas.Main.CGI (run) where
 
-import Network.Wai
-import Network.Wai.Internal
-import Network.Socket (getAddrInfo, addrAddress)
-import Data.IORef
-import Data.Maybe (fromMaybe)
-import qualified Data.ByteString.Char8 as B
-import qualified Data.ByteString.Lazy as L
-import Control.Arrow ((***))
-import Data.Char (toLower)
-import qualified System.IO
-import qualified Data.String as String
 import Blaze.ByteString.Builder (fromByteString, toLazyByteString, flush)
 import Blaze.ByteString.Builder.Char8 (fromChar, fromString)
+import Control.Arrow ((***))
+import Control.Monad (unless, void)
 import Data.ByteString.Lazy.Internal (defaultChunkSize)
-import System.IO (Handle)
+import Data.Char (toLower)
+import Data.Function (fix)
+import Data.IORef
+import Data.Maybe (fromMaybe)
 import Network.HTTP.Types (Status (..), hRange, hContentType, hContentLength)
-import qualified Network.HTTP.Types as H
+import Network.Socket (getAddrInfo, addrAddress)
+import Network.Wai
+import Network.Wai.Internal
+import System.Environment (getEnvironment)
+import System.IO (Handle)
+import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.Lazy as L
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Streaming.Blaze as Blaze
-import Data.Function (fix)
-import Control.Monad (unless, void)
-import System.Environment (getEnvironment)
+import qualified Data.String as String
+import qualified Network.HTTP.Types as H
+import qualified System.IO
 
 safeRead :: Read a => a -> String -> a
 safeRead d s =

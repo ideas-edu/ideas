@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2016, Ideas project team. This file is distributed under the
+-- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -40,7 +40,7 @@ diffTerm p q =
          | otherwise -> here
  where
    here = Just (p, q)
- 
+
    diffList xs ys
       | length xs /= length ys = here
       | otherwise =
@@ -48,11 +48,11 @@ diffTerm p q =
               []    -> Nothing
               [one] -> Just one
               _     -> here
-            
+
 getFunctionA :: (Monad m, WithFunctions a) => a -> m (Symbol, [a])
 getFunctionA a = f <$> getFunction a
  where
    f (s, xs) = (s, if isAssociative s then collectSym s a else xs)
-            
+
 collectSym :: WithFunctions a => Symbol -> a -> [a]
 collectSym s a = maybe [a] (uncurry ((++) `on` collectSym s)) (isBinary s a)

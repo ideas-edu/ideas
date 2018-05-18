@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2016, Ideas project team. This file is distributed under the
+-- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -26,7 +26,7 @@ rulesInfoXML :: Exercise a -> (a -> XMLBuilder) -> XMLBuilder
 rulesInfoXML ex enc = mconcat (map ruleInfoXML (ruleset ex))
  where
    exampleMap = collectExamples ex
-   
+
    ruleInfoXML r = element "rule"
       [ "name"        .=. showId r
       , "buggy"       .=. f (isBuggy r)

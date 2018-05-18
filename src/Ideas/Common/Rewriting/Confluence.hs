@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2016, Ideas project team. This file is distributed under the
+-- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -141,22 +141,22 @@ defaultConfig = Config show (const 0) (==)
 
 _go :: IO ()
 _go = checkConfluence [r1, r2, r3]
- where 
+ where
    r1, r2, r3 :: RewriteRule Term
    r1 = makeRewriteRule "a1" $ \a -> plus (TNum 0) a :~> a
    r2 = makeRewriteRule "a2" $ \a b c -> plus a (plus b c) :~> plus (plus a b) c
    r3 = makeRewriteRule "a3" $ \a -> plus a (TNum 0) :~> a
-   
+
    plus :: Term -> Term -> Term
    plus x y = TCon (newSymbol "plus") [x, y]
-        
+
 _go2 :: IO ()
 _go2 = checkConfluence [r1,r2,r3]
- where 
+ where
    -- example 7.7 in Baader-Nipkow
    r1, r2,r3  :: RewriteRule Term
    r1 = makeRewriteRule "a1" $ \x y z -> f(f(x,y),z) :~> f(x,f(y,z))
    r2 = makeRewriteRule "a2" $ \x -> f(x,x) :~> x
    r3 = makeRewriteRule "a3" $ \x y -> f(f(x,y),x) :~> x
-   
+
    f(x,y) = TCon (newSymbol "f") [x,y]

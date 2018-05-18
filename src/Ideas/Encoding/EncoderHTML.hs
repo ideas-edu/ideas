@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs, OverloadedStrings #-}
 -----------------------------------------------------------------------------
--- Copyright 2016, Ideas project team. This file is distributed under the
+-- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -34,15 +34,14 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Text.HTML hiding (table, keyValueTable)
+import Ideas.Text.HTML.Templates
 import Ideas.Text.HTML.W3CSS hiding (tag, ul, top, table, content)
-import qualified Ideas.Text.HTML.W3CSS as W3
 import Ideas.Text.OpenMath.FMP
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML hiding (content)
-import Ideas.Text.HTML.Templates
 import Ideas.Utils.TestSuite
 import System.IO.Unsafe
-
+import qualified Ideas.Text.HTML.W3CSS as W3
 
 type HTMLEncoder a t = Encoder a t HTMLBuilder
 
@@ -57,16 +56,16 @@ htmlEncoder dr = do
 makePage :: LinkManager -> DomainReasoner -> Exercise a -> HTMLBuilder -> HTMLPage
 makePage lm dr ex body =
    (if hasLatexEncoding ex then addScript mathJaxUrl else id) $
-   -- addCSS "http://ideas.cs.uu.nl/css/2007-chili-pepper.css" $ 
+   -- addCSS "http://ideas.cs.uu.nl/css/2007-chili-pepper.css" $
    addCSS (urlForCSS lm "2007-chili-pepper.css") $
    webpage myWebPage
  where
    mathJaxUrl =
       "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"
 
-   myWebPage = WebPage 
+   myWebPage = WebPage
       { title       = "Ideas: documentation pages"
-      , menuButtons = 
+      , menuButtons =
            [ Button "http://ideas.cs.uu.nl/ " (theme L1) (fontAwesome "lightbulb-o" <> tag "span" (fontSize Large " I") <> tag "span" (fontSize Medium "DEAS"))
            , Button (urlForIndex lm)     (hover White) "Index"
            , Button (urlForExercises lm) (hover White) $ ("Exercises " <> nrBadge (length (exercises dr)))
@@ -76,8 +75,8 @@ makePage lm dr ex body =
       , iconBarsStyle = hover White . fontSize Large . theme L1
       , sideWidth = 150
       , sideHeader  = tag "h4" $ barItem $ bold $ textTheme "Exercise"
-      , sideButtons = 
-           let mk f s = Button (f lm ex) (hover Black) s 
+      , sideButtons =
+           let mk f s = Button (f lm ex) (hover Black) s
            in if getId ex == mempty then [] else
               [ mk urlForExercise    "Information"
               , mk urlForStrategy    "Strategy"
@@ -288,8 +287,8 @@ encodeExercise lm = makeEncoder $ \ex -> mconcat
          mapBoth length (partition isBuggy (ruleset ex))
 
 exerciseHeader :: HTMLEncoder a b -> HTMLEncoder a b
-exerciseHeader body = withExercise $ \ex -> tag "div" $ mconcat 
-   [ pure (htmlDescription "Exercise" ex) 
+exerciseHeader body = withExercise $ \ex -> tag "div" $ mconcat
+   [ pure (htmlDescription "Exercise" ex)
    , body
    ]
 
@@ -431,7 +430,7 @@ encodeRule = exerciseEncoder $ \ex r -> mconcat
 
 encodeExampleList :: LinkManager -> HTMLEncoder a [(Difficulty, Context a)]
 encodeExampleList lm = exerciseEncoder $ \ex pairs -> mconcat $
-   h2 "Examples" : 
+   h2 "Examples" :
    [  container . third $
        h3 (s ++ " (" ++ show (length xs) ++ ")")
        <> (W3.ulWith hoverable $ map ((fontAwesome "hand-o-right" <>) . padding Small . make ex) xs)
@@ -463,7 +462,7 @@ htmlDerivation lm = exerciseEncoder $ \ex d ->
                 _ -> spanClass "error" (string "Final term is not finished")
        forStep ((r, env1), env2) =
           let showEnv e = munless (noBindings e) $ string $ "," ++ show e in
-          container $ marginPos CenterLeft $ mconcat 
+          container $ marginPos CenterLeft $ mconcat
              [ unescaped "&#8658; "
              , linkToRule lm ex r $ string $ showId r
              , showEnv env1 -- local environment
@@ -492,7 +491,7 @@ htmlContext useDiv ex = f "term" . textLines . printer
 
 stateLink :: LinkManager -> State a -> HTMLBuilder
 stateLink lm st =
-   container $ right $ linkToState lm st $ 
+   container $ right $ linkToState lm st $
    tag "span" $ textTheme $ fontAwesome "external-link"
 
 encodeState :: LinkManager -> DomainReasoner -> HTMLEncoder a (State a)
@@ -507,11 +506,11 @@ encodeState lm dr =
          , tag "p" $ padding Small  $ mconcat [ case xs of
                    Right (hd:_) -> linkToState lm (snd hd) $ serviceButton $ string "onefirst"
                    _ -> string "(no onefirst)"
-              , linkToFirsts lm state $ serviceButton $ string $ "allfirsts (" ++ show n ++ ")" 
+              , linkToFirsts lm state $ serviceButton $ string $ "allfirsts (" ++ show n ++ ")"
               , linkToApplications lm state $ serviceButton $ string "allapplications"
               , linkToDerivation lm state $ serviceButton $ string "derivation"
               , linkToMicrosteps lm state $ serviceButton $ string "microsteps"
-           ]   
+           ]
          , munless (noBindings state) $
               h2 "Environment" <> text (environment state)
          , encodePrefix state (statePrefix state)
@@ -625,13 +624,13 @@ htmlDescription tp a = munless (null (description a)) $
       ]
 
 submitForm :: HTMLBuilder -> HTMLBuilder
-submitForm this = form . padding Tiny $ mconcat 
+submitForm this = form . padding Tiny $ mconcat
   [ para $ mconcat [termLabel, termInput mempty]
   , this
   , para $ submitBtn mempty
   ]
  where
-   form      = tag "form"  . ("name" .=. "myform" <>) . ("method" .=. "post" <>) . ("onsubmit" .=. "return submitTerm()" <>) . w3class "w3-container" 
+   form      = tag "form"  . ("name" .=. "myform" <>) . ("method" .=. "post" <>) . ("onsubmit" .=. "return submitTerm()" <>) . w3class "w3-container"
    termLabel = tag "label" $ tag "b" "Input:"
    termInput = tag "input" . ("name" .=. "myterm" <>) . ("type" .=. "text" <>) . border . W3.input
    submitBtn = tag "input" . ("value" .=. "Submit" <>) . ("type" .=. "submit" <>) . theme L1 . W3.w3class "w3-button"
@@ -647,7 +646,7 @@ submitStateInfo lm ex =
 
 -- diagnose service *here*
 submitDiagnose :: LinkManager -> State a -> HTMLBuilder
-submitDiagnose lm st = submitForm mempty <> submitRequest lm request 
+submitDiagnose lm st = submitForm mempty <> submitRequest lm request
  where
    request = "<request service='diagnose' exerciseid='" ++ showId (exercise st)
           ++ "' encoding='html'>" ++ ststr ++ "<expr>\"  + getTerm() + \"</expr></request>"

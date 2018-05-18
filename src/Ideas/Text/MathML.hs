@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2016, Ideas project team. This file is distributed under the
+-- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -101,7 +101,6 @@ xml2mathml xmlTop = rec xmlTop
    impliedMRow :: [Either String Element] -> Either String MathML
    impliedMRow [Right r] = rec r
    impliedMRow xs = MRow <$> mapM rec (rights xs)
-
 
 mathml2xml :: MathML -> XML
 mathml2xml = makeXML "math" . rec

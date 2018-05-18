@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2016, Ideas project team. This file is distributed under the
+-- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -27,11 +27,11 @@ import Control.Monad
 import Data.List (intersperse)
 import Data.Maybe
 import Ideas.Utils.Parsing hiding (string, char)
+import System.IO.Error
 import Test.QuickCheck
 import Text.PrettyPrint.Leijen hiding ((<$>))
 import qualified Ideas.Text.UTF8 as UTF8
 import qualified Text.ParserCombinators.Parsec.Token as P
-import System.IO.Error
 
 data JSON
    = Number  Number        -- integer, real, or floating point
@@ -256,7 +256,7 @@ jsonRPC input rpc =
        `catch` handler req
  where
    handler :: RPCRequest -> SomeException -> IO RPCResponse
-   handler req e = 
+   handler req e =
       let msg = maybe (show e) ioeGetErrorString (fromException e)
       in return $ errorResponse (toJSON msg) (requestId req)
 

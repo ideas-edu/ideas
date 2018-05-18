@@ -1,6 +1,6 @@
 {-# LANGUAGE Rank2Types, ExistentialQuantification #-}
 -----------------------------------------------------------------------------
--- Copyright 2016, Ideas project team. This file is distributed under the
+-- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -168,7 +168,7 @@ emptyExercise = NewExercise
    , properties     = M.empty
      -- strategies and rules
    , strategy       = label "Fail" S.fail
-   , constraints    = [] 
+   , constraints    = []
    , navigation     = noNavigator
    , canBeRestarted = True
    , extraRules     = []
@@ -233,8 +233,8 @@ ruleOrderingWith bs r1 r2 =
 
 -- | Get all constraint violations
 violations :: Exercise a -> Context a -> [(Id, String)]
-violations ex ctx = 
-   [ (getId c, msg) 
+violations ex ctx =
+   [ (getId c, msg)
    | c <- constraints ex
    , msg <- maybeToList (isViolated c ctx)
    ]

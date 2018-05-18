@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2016, Ideas project team. This file is distributed under the
+-- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -59,7 +59,7 @@ instance InXML HTMLPage where
                    ]
               | css <- styleSheets page
               ]
-         , mconcat 
+         , mconcat
               [ tag "style" (unescaped txt)
               | txt <- styleTxts page
               ]

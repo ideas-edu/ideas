@@ -1,7 +1,7 @@
 {-# LANGUAGE ExistentialQuantification, MultiParamTypeClasses,
        FunctionalDependencies, FlexibleInstances, UndecidableInstances #-}
 -----------------------------------------------------------------------------
--- Copyright 2016, Ideas project team. This file is distributed under the
+-- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -83,7 +83,7 @@ instance Different Double where
 
 instance Different Float where
    different = (0, 1)
-   
+
 instance Different Rational where
    different = (0, 1)
 
@@ -97,13 +97,13 @@ instance Different Term where
    different = (TNum 0, TNum 1)
 
 instance (Different a, Different b) => Different (a, b) where
-   different = 
+   different =
       let (a1, a2) = different
           (b1, b2) = different
       in ((a1, b1), (a2, b2))
 
 instance (Different a, Different b, Different c) => Different (a, b, c) where
-   different = 
+   different =
       let (a1, a2) = different
           (b1, b2) = different
           (c1, c2) = different

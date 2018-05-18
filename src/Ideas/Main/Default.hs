@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2016, Ideas project team. This file is distributed under the
+-- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -35,15 +35,15 @@ import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.ServiceList
 import Ideas.Service.Types (Service)
 import Ideas.Utils.BlackBoxTests
-import Ideas.Utils.TestSuite
 import Ideas.Utils.Prelude
+import Ideas.Utils.TestSuite
 import Network.HTTP.Types
 import Network.Wai hiding (Request)
 import System.IO
 import qualified Ideas.Encoding.Logging as Log
+import qualified Ideas.Main.CGI as CGI
 import qualified Ideas.Main.CmdLineOptions as Options
 import qualified Network.Wai as CGI
-import qualified Ideas.Main.CGI as CGI
 
 defaultMain :: DomainReasoner -> IO ()
 defaultMain = defaultMainWith mempty
@@ -57,7 +57,7 @@ defaultMainWith options dr = do
 
 -- Invoked as a cgi binary
 defaultCGI :: Options -> DomainReasoner -> IO ()
-defaultCGI options dr = CGI.run $ \req respond -> do 
+defaultCGI options dr = CGI.run $ \req respond -> do
    -- create a record for logging
    logRef  <- Log.newLogRef
    -- query environment
@@ -163,14 +163,14 @@ addVersion dr = dr
    }
  where
    update f s = if null (f dr) then s else f dr
-   
+
 -- local helper functions
 
 findHeader :: String -> CGI.Request -> Maybe String
 findHeader s = fmap fromByteString . lookup (fromString s) . requestHeaders
 
 inputFromRequest :: CGI.Request -> IO (Maybe String)
-inputFromRequest req = 
+inputFromRequest req =
    -- first try query string (for GET requests) ...
    case inputFromQuery (queryString req) of
       Just s  -> return (Just s)

@@ -1,4 +1,4 @@
-Copyright 2016 Ideas project team
+Copyright 2018 Ideas project team
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -35,4 +35,4 @@ AUTHORS
 CREDITS
 
    Harrie Passier, Arthur van Leeuwen, Josje Lodder, Hieke Keuning, 
-   Marcell van Geest, Jordy van Dortmont
+   Marcell van Geest, Jordy van Dortmont, Jorn van Wijk

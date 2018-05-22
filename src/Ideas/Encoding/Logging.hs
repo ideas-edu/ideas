@@ -178,7 +178,7 @@ logRecordWith file schema logRef = do
    insertRecord schema r {responsetime = diff} conn
    -- close the connection to the database
    disconnect conn
- `catchSql` \err ->
+ `catchSql` \_ ->
    return ()
 
 insertRecord :: IConnection c => Schema -> Record -> c ->  IO ()

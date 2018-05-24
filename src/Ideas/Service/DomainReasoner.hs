@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -19,7 +20,10 @@ module Ideas.Service.DomainReasoner
 
 import Data.List
 import Data.Maybe
+#if !(MIN_VERSION_base(4,8,0))
 import Data.Monoid
+#endif
+import Data.Semigroup as Sem
 import Data.Ord
 import Ideas.Common.Library
 import Ideas.Service.FeedbackScript.Parser
@@ -41,9 +45,8 @@ data DomainReasoner = DR
    , fullVersion :: String
    }
 
-instance Monoid DomainReasoner where
-   mempty = DR mempty mempty mempty mempty mempty mempty mempty mempty mempty
-   mappend c1 c2 = DR
+instance Sem.Semigroup DomainReasoner where
+   c1 <> c2 = DR
       { reasonerId  = reasonerId c1  <> reasonerId c2
       , exercises   = exercises c1   <> exercises c2
       , services    = services c1    <> services c2
@@ -54,6 +57,10 @@ instance Monoid DomainReasoner where
       , version     = version c1     <> version c2
       , fullVersion = fullVersion c1 <> fullVersion c2
       }
+
+instance Monoid DomainReasoner where
+   mempty  = DR mempty mempty mempty mempty mempty mempty mempty mempty mempty
+   mappend = (<>)
 
 instance HasId DomainReasoner where
    getId = reasonerId

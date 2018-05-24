@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs, Rank2Types #-}
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -35,6 +36,10 @@ module Ideas.Common.Rule.Transformation
 import Control.Applicative
 import Control.Arrow
 import Data.Maybe
+#if !(MIN_VERSION_base(4,8,0))
+import Data.Monoid
+#endif
+import Data.Semigroup as Sem
 import Ideas.Common.Classes
 import Ideas.Common.Context
 import Ideas.Common.Environment
@@ -82,9 +87,12 @@ instance ArrowChoice Trans where
    left f  = f :++: identity
    right f = identity :++: f
 
+instance Sem.Semigroup (Trans a b) where
+   (<>) = (<+>)
+
 instance Monoid (Trans a b) where
    mempty  = zeroArrow
-   mappend = (<+>)
+   mappend = (<>)
 
 instance Functor (Trans a) where
    fmap f t = t >>^ f

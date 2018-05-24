@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -19,14 +20,20 @@ module Ideas.Text.XML
    , parseXML, parseXMLFile, compactXML, findAttribute
    , children, Attribute(..), fromBuilder, findChild, findChildren, getData
    , BuildXML(..)
-   , module Data.Monoid, munless, mwhen
+#if !(MIN_VERSION_base(4,8,0))
+   , module Data.Monoid
+#endif
+   , munless, mwhen
    ) where
 
 import Control.Monad
 import Data.Char
 import Data.Foldable (toList)
 import Data.List
+#if !(MIN_VERSION_base(4,8,0))
 import Data.Monoid
+#endif
+import Data.Semigroup as Sem
 import Data.String
 import Ideas.Text.XML.Interface hiding (parseXML)
 import System.IO
@@ -105,10 +112,13 @@ fromBS (BS as elts) = (attrList, toList elts)
    make (k := _) = k := M.findWithDefault "" k attrMap
    eqKey (k1 := _) (k2 := _) = k1 == k2
 
-instance Monoid XMLBuilder where
-   mempty = BS mempty mempty
-   mappend (BS as1 elts1) (BS as2 elts2) =
+instance Sem.Semigroup XMLBuilder where
+  BS as1 elts1 <> BS as2 elts2 =
       BS (as1 <> as2) (elts1 <> elts2)
+
+instance Monoid XMLBuilder where
+   mempty  = BS mempty mempty
+   mappend = (<>)
 
 instance BuildXML XMLBuilder where
    n .=. s   = BS (Seq.singleton (n := escapeAttr s)) mempty

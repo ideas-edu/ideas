@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -25,6 +26,10 @@ module Ideas.Utils.QuickCheck
 
 import Control.Arrow
 import Control.Monad
+#if !(MIN_VERSION_base(4,8,0))
+import Data.Monoid
+#endif
+import Data.Semigroup as Sem
 import Data.Ratio
 import Test.QuickCheck
 
@@ -33,9 +38,12 @@ import Test.QuickCheck
 
 newtype ArbGen a = AG [(Rational, (Int, Gen ([a] -> a)))]
 
+instance Sem.Semigroup (ArbGen a) where
+   AG xs <> AG ys = AG (xs <> ys)
+
 instance Monoid (ArbGen a) where
-   mempty = AG mempty
-   AG xs `mappend` AG ys = AG (xs `mappend` ys)
+   mempty  = AG mempty
+   mappend = (<>)
 
 generator :: ArbGen a -> Gen a
 generator (AG pairs) = sized rec

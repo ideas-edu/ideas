@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -38,7 +39,10 @@ import Control.Applicative as Export hiding (Const)
 import Control.Arrow as Export
 import Control.Monad
 import Data.Maybe
+#if !(MIN_VERSION_base(4,8,0))
 import Data.Monoid as Export
+#endif
+import Data.Semigroup as Sem
 import Ideas.Common.Library hiding (exerciseId, symbol)
 import Ideas.Encoding.Options
 import Ideas.Encoding.Request
@@ -219,9 +223,12 @@ instance Converter Encoder where
    fromOptions  f = Enc $ \(_, opts) _ -> return (f opts)
    run f ex opts  = runErrorM . runEnc f (ex, opts)
 
+instance Sem.Semigroup t => Sem.Semigroup (Encoder a s t) where
+   (<>) = liftA2 (<>)
+
 instance Monoid t => Monoid (Encoder a s t) where
    mempty  = pure mempty
-   mappend = liftA2 (<>)
+   mappend = (<>)
 
 instance BuildXML t => BuildXML (Encoder a s t) where
    n .=. s   = pure (n .=. s)

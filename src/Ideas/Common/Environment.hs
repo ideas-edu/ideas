@@ -1,4 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -28,6 +29,10 @@ module Ideas.Common.Environment
 import Control.Monad
 import Data.Function
 import Data.List
+#if !(MIN_VERSION_base(4,8,0))
+import Data.Monoid
+#endif
+import Data.Semigroup as Sem
 import Ideas.Common.Id
 import Ideas.Common.Rewriting.Term
 import Ideas.Common.View
@@ -127,9 +132,12 @@ newtype Environment = Env { envMap :: M.Map Id Binding }
 instance Show Environment where
    show = intercalate ", " . map show . bindings
 
+instance Sem.Semigroup Environment where
+   a <> b = Env (envMap a `mappend` envMap b) -- left has presedence
+
 instance Monoid Environment where
-   mempty = Env mempty
-   mappend a b = Env (envMap a `mappend` envMap b) -- left has presedence
+   mempty  = Env mempty
+   mappend = (<>)
 
 instance HasRefs Environment where
    allRefs env = [ Some ref | Binding ref _ <- bindings env ]

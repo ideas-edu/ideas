@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -22,6 +23,10 @@ module Ideas.Common.Strategy.Configuration
    ) where
 
 import Data.Char
+#if !(MIN_VERSION_base(4,8,0))
+import Data.Monoid
+#endif
+import Data.Semigroup as Sem
 import Ideas.Common.Classes
 import Ideas.Common.Id
 import Ideas.Common.Rule
@@ -43,10 +48,13 @@ newtype StrategyCfg = Cfg [(ConfigLocation, ConfigAction)]
 instance Show StrategyCfg where
    show (Cfg xs) = show xs
 
+instance Sem.Semigroup StrategyCfg where
+   (Cfg xs) <> (Cfg ys) = Cfg (xs ++ ys)
+
 instance Monoid StrategyCfg where
    mempty  = Cfg []
    mconcat xs = Cfg [ y | Cfg ys <- xs, y <- ys ]
-   mappend (Cfg xs) (Cfg ys) = Cfg (xs ++ ys)
+   mappend = (<>)
 
 newtype ConfigLocation = ByName Id
 

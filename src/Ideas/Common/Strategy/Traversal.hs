@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -30,7 +31,10 @@ module Ideas.Common.Strategy.Traversal
    , ruleUp, ruleDown, ruleDownLast, ruleLeft, ruleRight
    ) where
 
+#if !(MIN_VERSION_base(4,8,0))
 import Data.Monoid
+#endif
+import qualified Data.Semigroup as Sem
 import Ideas.Common.Classes
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
@@ -106,9 +110,12 @@ data Info a = Info
 
 newtype Option a = O { unO :: Info a -> Info a }
 
+instance Sem.Semigroup (Option a) where
+   O f <> O g = O (f . g)
+
 instance Monoid (Option a) where
-   mempty            = O id
-   O f `mappend` O g = O (f . g)
+   mempty  = O id
+   mappend = (<>)
 
 fromOptions :: [Option a] -> Info a
 fromOptions xs = unO (mconcat xs) (Info VisitOne Choice [] True False)

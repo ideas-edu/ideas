@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -17,7 +18,10 @@
 
 module Ideas.Utils.TestSuite
    ( -- * TestSuite
-     TestSuite, module Data.Monoid
+     TestSuite
+#if !(MIN_VERSION_base(4,8,0))
+   , module Data.Monoid
+#endif
    , suite, useProperty, usePropertyWith
    , assertTrue, assertNull, assertEquals, assertIO
    , assertMessage, assertMessageIO
@@ -44,7 +48,10 @@ import Data.Foldable (toList)
 import Data.IORef
 import Data.List
 import Data.Maybe
+#if !(MIN_VERSION_base(4,8,0))
 import Data.Monoid
+#endif
+import Data.Semigroup as Sem
 import Data.Time
 import System.IO
 import Test.QuickCheck hiding (Result)
@@ -58,9 +65,12 @@ newtype TestSuite = TS (S.Seq Test)
 data Test = Case  String (IO Message)
           | Suite String TestSuite
 
+instance Sem.Semigroup TestSuite where
+   TS xs <> TS ys = TS (xs <> ys)
+
 instance Monoid TestSuite where
-   mempty = TS mempty
-   TS xs `mappend` TS ys = TS (xs <> ys)
+   mempty  = TS mempty
+   mappend = (<>)
 
 tests :: TestSuite -> [Test]
 tests (TS xs) = toList xs
@@ -243,9 +253,8 @@ instance Show Result where
       ", warnings: " ++ show (nrOfWarnings result) ++
       ", "           ++ show (diffTime result)     ++ ")"
 
-instance Monoid Result where
-   mempty = Result mempty mempty 0 0 0 0 mempty
-   x `mappend` y = Result
+instance Sem.Semigroup Result where
+   x <> y = Result
       { suites       = suites x <> suites y
       , cases        = cases x  <> cases y
       , diffTime     = diffTime x     + diffTime y
@@ -254,6 +263,10 @@ instance Monoid Result where
       , nrOfErrors   = nrOfErrors x   + nrOfErrors y
       , resultRating = resultRating x <> resultRating y
       }
+
+instance Monoid Result where
+   mempty  = Result mempty mempty 0 0 0 0 mempty
+   mappend = (<>)
 
 instance HasStatus Result where
    getStatus r | nrOfErrors r   > 0 = Error
@@ -352,9 +365,12 @@ instance Show Message where
          | null (messageLines a) = "ok"
          | otherwise             = ""
 
+instance Sem.Semigroup Message where
+   M s r xs <> M t q ys = M (s <> t) (r <> q) (xs <> ys)
+
 instance Monoid Message where
-   mempty = M mempty mempty mempty
-   M s r xs `mappend` M t q ys = M (s <> t) (r <> q) (xs <> ys)
+   mempty  = M mempty mempty mempty
+   mappend = (<>)
 
 instance HasStatus Message where
    getStatus = messageStatus
@@ -375,9 +391,12 @@ warning = M Warning mempty . return
 data Status = Ok | Warning | Error
    deriving (Eq, Ord)
 
+instance Sem.Semigroup Status where
+   (<>) = max
+
 instance Monoid Status where
    mempty  = Ok
-   mappend = max
+   mappend = (<>)
 
 class HasStatus a where
    getStatus :: a -> Status
@@ -393,9 +412,12 @@ isError   = (== Error)   . getStatus
 data Rating = Rating !Int | MaxRating
    deriving (Eq, Ord)
 
+instance Sem.Semigroup Rating where
+   (<>) = min
+
 instance Monoid Rating where
    mempty  = MaxRating
-   mappend = min
+   mappend = (<>)
 
 class HasRating a where
    rating :: a -> Maybe Int

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -18,6 +19,10 @@ module Ideas.Common.Rule.Recognizer
    ) where
 
 import Data.Maybe
+#if !(MIN_VERSION_base(4,8,0))
+import Data.Monoid
+#endif
+import Data.Semigroup as Sem
 import Ideas.Common.Environment
 import Ideas.Common.Rule.Transformation
 import Ideas.Common.View
@@ -42,9 +47,12 @@ instance LiftView Recognizer where
       let f = fmap fst . match v
       in R $ makeTrans f *** makeTrans f >>> unR r
 
+instance Sem.Semigroup (Recognizer a) where
+   f <> g = R $ unR f `mappend` unR g
+
 instance Monoid (Recognizer a) where
-   mempty      = R mempty
-   mappend f g = R $ unR f `mappend` unR g
+   mempty  = R mempty
+   mappend = (<>)
 
 instance Recognizable Recognizer where
    recognizer = id

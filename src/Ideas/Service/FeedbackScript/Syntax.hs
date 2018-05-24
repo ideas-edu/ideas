@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -21,6 +22,10 @@ module Ideas.Service.FeedbackScript.Syntax
 import Data.Char
 import Data.List
 import Data.Maybe
+#if !(MIN_VERSION_base(4,8,0))
+import Data.Monoid
+#endif
+import Data.Semigroup as Sem
 import Ideas.Common.Library
 import Ideas.Utils.Uniplate
 
@@ -102,13 +107,19 @@ instance Show Text where
    showList xs ys =
       foldr (combine . show) ys (concatMap textItems xs)
 
+instance Sem.Semigroup Script where
+   s <> t = makeScript (scriptDecls s ++ scriptDecls t)
+
 instance Monoid Script where
-   mempty = makeScript []
-   mappend s t = makeScript (scriptDecls s ++ scriptDecls t)
+   mempty  = makeScript []
+   mappend = (<>)
+
+instance Sem.Semigroup Text where
+   (<>) = (:<>:)
 
 instance Monoid Text where
    mempty  = TextEmpty
-   mappend = (:<>:)
+   mappend = (<>)
 
 instance Uniplate Condition where
    uniplate (CondNot a) = plate CondNot |* a

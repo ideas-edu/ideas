@@ -68,6 +68,9 @@ Library
      wai,
      wl-pprint
 
+  if !impl(ghc >= 8.0)
+    Build-Depends: semigroups == 0.18.*
+
   Exposed-modules:
     Ideas.Common.Classes
     Ideas.Common.Constraint

@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -19,9 +18,7 @@
 module Ideas.Utils.TestSuite
    ( -- * TestSuite
      TestSuite
-#if !(MIN_VERSION_base(4,8,0))
    , module Data.Monoid
-#endif
    , suite, useProperty, usePropertyWith
    , assertTrue, assertNull, assertEquals, assertIO
    , assertMessage, assertMessageIO
@@ -48,9 +45,7 @@ import Data.Foldable (toList)
 import Data.IORef
 import Data.List
 import Data.Maybe
-#if !(MIN_VERSION_base(4,8,0))
 import Data.Monoid
-#endif
 import Data.Semigroup as Sem
 import Data.Time
 import System.IO

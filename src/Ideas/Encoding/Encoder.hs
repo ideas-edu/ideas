@@ -1,5 +1,4 @@
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -39,9 +38,7 @@ import Control.Applicative as Export hiding (Const)
 import Control.Arrow as Export
 import Control.Monad
 import Data.Maybe
-#if !(MIN_VERSION_base(4,8,0))
 import Data.Monoid as Export
-#endif
 import Data.Semigroup as Sem
 import Ideas.Common.Library hiding (exerciseId, symbol)
 import Ideas.Encoding.Options

@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -20,9 +19,7 @@ module Ideas.Text.XML
    , parseXML, parseXMLFile, compactXML, findAttribute
    , children, Attribute(..), fromBuilder, findChild, findChildren, getData
    , BuildXML(..)
-#if !(MIN_VERSION_base(4,8,0))
    , module Data.Monoid
-#endif
    , munless, mwhen
    ) where
 
@@ -30,9 +27,7 @@ import Control.Monad
 import Data.Char
 import Data.Foldable (toList)
 import Data.List
-#if !(MIN_VERSION_base(4,8,0))
 import Data.Monoid
-#endif
 import Data.Semigroup as Sem
 import Data.String
 import Ideas.Text.XML.Interface hiding (parseXML)

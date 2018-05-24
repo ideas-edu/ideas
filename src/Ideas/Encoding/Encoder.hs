@@ -32,13 +32,13 @@ module Ideas.Encoding.Encoder
    , split, symbol, setInput
      -- re-export
    , module Export
+   , (<>)
    ) where
 
 import Control.Applicative as Export hiding (Const)
 import Control.Arrow as Export
 import Control.Monad
 import Data.Maybe
-import Data.Monoid as Export
 import Data.Semigroup as Sem
 import Ideas.Common.Library hiding (exerciseId, symbol)
 import Ideas.Encoding.Options

@@ -29,7 +29,6 @@ module Ideas.Encoding.LinkManager
    ) where
 
 import Data.Maybe
-import Data.Semigroup ((<>))
 import Ideas.Common.Library
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.EncoderXML

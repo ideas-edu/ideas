@@ -30,7 +30,7 @@ module Ideas.Common.Strategy.Traversal
    , ruleUp, ruleDown, ruleDownLast, ruleLeft, ruleRight
    ) where
 
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import qualified Data.Semigroup as Sem
 import Data.Semigroup ((<>))
 import Ideas.Common.Classes

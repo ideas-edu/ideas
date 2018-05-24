@@ -30,7 +30,7 @@ module Ideas.Common.Strategy.Prefix
 import Data.Char
 import Data.List (intercalate)
 import Data.Maybe
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Ideas.Common.Classes
 import Ideas.Common.Environment

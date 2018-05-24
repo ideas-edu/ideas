@@ -19,6 +19,7 @@ module Ideas.Utils.TestSuite
    ( -- * TestSuite
      TestSuite
    , module Data.Monoid
+   , (<>)
    , suite, useProperty, usePropertyWith
    , assertTrue, assertNull, assertEquals, assertIO
    , assertMessage, assertMessageIO
@@ -45,7 +46,7 @@ import Data.Foldable (toList)
 import Data.IORef
 import Data.List
 import Data.Maybe
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Data.Time
 import System.IO

@@ -20,6 +20,7 @@ module Ideas.Text.XML
    , children, Attribute(..), fromBuilder, findChild, findChildren, getData
    , BuildXML(..)
    , module Data.Monoid
+   , (<>)
    , munless, mwhen
    ) where
 
@@ -27,7 +28,7 @@ import Control.Monad
 import Data.Char
 import Data.Foldable (toList)
 import Data.List
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Data.String
 import Ideas.Text.XML.Interface hiding (parseXML)

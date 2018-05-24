@@ -21,7 +21,7 @@ module Ideas.Service.FeedbackScript.Syntax
 import Data.Char
 import Data.List
 import Data.Maybe
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Ideas.Common.Library
 import Ideas.Utils.Uniplate

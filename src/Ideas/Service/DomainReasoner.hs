@@ -19,7 +19,7 @@ module Ideas.Service.DomainReasoner
 
 import Data.List
 import Data.Maybe
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Data.Ord
 import Ideas.Common.Library

@@ -35,7 +35,7 @@ import Control.Monad
 import Data.Function
 import Data.Generics.Str
 import Data.Maybe
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Ideas.Common.Traversal.Iterator
 import Ideas.Common.Traversal.Utils

@@ -17,7 +17,7 @@ module Ideas.Encoding.Options
    ) where
 
 import Control.Applicative
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Ideas.Common.Library (Exercise, getId)
 import Ideas.Encoding.Request

@@ -17,6 +17,7 @@ module Ideas.Encoding.ModeJSON (processJSON) where
 import Control.Monad
 import Data.Char
 import Data.Maybe
+import Data.Semigroup ((<>))
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.DecoderJSON
 import Ideas.Encoding.EncoderJSON

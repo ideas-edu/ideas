@@ -24,6 +24,7 @@ import Data.List
 #if !(MIN_VERSION_base(4,8,0))
 import Data.Monoid
 #endif
+import Data.Semigroup ((<>))
 import Ideas.Common.Id
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Utils.Parsing

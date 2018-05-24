@@ -20,7 +20,8 @@ module Ideas.Text.Latex
    ) where
 
 import Data.List
-import Data.Monoid
+import Data.Monoid hiding ((<>))
+import Data.Semigroup as Sem
 import Data.String
 
 newtype Latex = L { showLatex :: String }
@@ -31,9 +32,12 @@ instance Show Latex where
 instance IsString Latex where
    fromString = L
 
+instance Sem.Semigroup Latex where
+   L xs <> L ys = L (xs <> ys)
+
 instance Monoid Latex where
-   mempty = L []
-   L xs `mappend` L ys = L (mappend xs ys)
+   mempty  = L []
+   mappend = (<>)
 
 class ToLatex a where
    toLatex     :: a -> Latex

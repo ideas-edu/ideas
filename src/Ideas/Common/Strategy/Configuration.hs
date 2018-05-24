@@ -22,6 +22,8 @@ module Ideas.Common.Strategy.Configuration
    ) where
 
 import Data.Char
+import Data.Monoid hiding ((<>))
+import Data.Semigroup as Sem
 import Ideas.Common.Classes
 import Ideas.Common.Id
 import Ideas.Common.Rule
@@ -43,10 +45,13 @@ newtype StrategyCfg = Cfg [(ConfigLocation, ConfigAction)]
 instance Show StrategyCfg where
    show (Cfg xs) = show xs
 
+instance Sem.Semigroup StrategyCfg where
+   (Cfg xs) <> (Cfg ys) = Cfg (xs ++ ys)
+
 instance Monoid StrategyCfg where
    mempty  = Cfg []
    mconcat xs = Cfg [ y | Cfg ys <- xs, y <- ys ]
-   mappend (Cfg xs) (Cfg ys) = Cfg (xs ++ ys)
+   mappend = (<>)
 
 newtype ConfigLocation = ByName Id
 

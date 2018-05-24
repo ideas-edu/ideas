@@ -32,13 +32,14 @@ module Ideas.Encoding.Encoder
    , split, symbol, setInput
      -- re-export
    , module Export
+   , (<>)
    ) where
 
 import Control.Applicative as Export hiding (Const)
 import Control.Arrow as Export
 import Control.Monad
 import Data.Maybe
-import Data.Monoid as Export
+import Data.Semigroup as Sem
 import Ideas.Common.Library hiding (exerciseId, symbol)
 import Ideas.Encoding.Options
 import Ideas.Encoding.Request
@@ -219,9 +220,12 @@ instance Converter Encoder where
    fromOptions  f = Enc $ \(_, opts) _ -> return (f opts)
    run f ex opts  = runErrorM . runEnc f (ex, opts)
 
+instance Sem.Semigroup t => Sem.Semigroup (Encoder a s t) where
+   (<>) = liftA2 (<>)
+
 instance Monoid t => Monoid (Encoder a s t) where
    mempty  = pure mempty
-   mappend = liftA2 (<>)
+   mappend = liftA2 mappend
 
 instance BuildXML t => BuildXML (Encoder a s t) where
    n .=. s   = pure (n .=. s)

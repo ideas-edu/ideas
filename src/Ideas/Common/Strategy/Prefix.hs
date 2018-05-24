@@ -30,6 +30,8 @@ module Ideas.Common.Strategy.Prefix
 import Data.Char
 import Data.List (intercalate)
 import Data.Maybe
+import Data.Monoid hiding ((<>))
+import Data.Semigroup as Sem
 import Ideas.Common.Classes
 import Ideas.Common.Environment
 import Ideas.Common.Rewriting.Term
@@ -51,9 +53,12 @@ data Prefix a = Prefix
 instance Show (Prefix a) where
    show = intercalate ";" . map show . prefixPaths
 
+instance Sem.Semigroup (Prefix a) where
+   (Prefix xs p) <> (Prefix ys q) = Prefix (xs ++ ys) (p .|. q)
+
 instance Monoid (Prefix a) where
-   mempty = noPrefix
-   mappend (Prefix xs p) (Prefix ys q) = Prefix (xs ++ ys) (p .|. q)
+   mempty  = noPrefix
+   mappend = (<>)
 
 instance Firsts (Prefix a) where
    type Elem (Prefix a) = (Rule a, a, Environment)

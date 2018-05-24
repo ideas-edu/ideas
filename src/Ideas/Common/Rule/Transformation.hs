@@ -35,6 +35,8 @@ module Ideas.Common.Rule.Transformation
 import Control.Applicative
 import Control.Arrow
 import Data.Maybe
+import Data.Monoid hiding ((<>))
+import Data.Semigroup as Sem
 import Ideas.Common.Classes
 import Ideas.Common.Context
 import Ideas.Common.Environment
@@ -82,9 +84,12 @@ instance ArrowChoice Trans where
    left f  = f :++: identity
    right f = identity :++: f
 
+instance Sem.Semigroup (Trans a b) where
+   (<>) = (<+>)
+
 instance Monoid (Trans a b) where
    mempty  = zeroArrow
-   mappend = (<+>)
+   mappend = (<>)
 
 instance Functor (Trans a) where
    fmap f t = t >>^ f

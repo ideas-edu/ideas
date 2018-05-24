@@ -32,7 +32,7 @@ module Ideas.Text.HTML
 
 import Data.Char
 import Data.List
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Ideas.Text.XML
 import Prelude hiding (div)
 import qualified Ideas.Text.XML as XML

@@ -25,6 +25,8 @@ module Ideas.Utils.QuickCheck
 
 import Control.Arrow
 import Control.Monad
+import Data.Monoid hiding ((<>))
+import Data.Semigroup as Sem
 import Data.Ratio
 import Test.QuickCheck
 
@@ -33,9 +35,12 @@ import Test.QuickCheck
 
 newtype ArbGen a = AG [(Rational, (Int, Gen ([a] -> a)))]
 
+instance Sem.Semigroup (ArbGen a) where
+   AG xs <> AG ys = AG (xs <> ys)
+
 instance Monoid (ArbGen a) where
-   mempty = AG mempty
-   AG xs `mappend` AG ys = AG (xs `mappend` ys)
+   mempty  = AG mempty
+   mappend = (<>)
 
 generator :: ArbGen a -> Gen a
 generator (AG pairs) = sized rec

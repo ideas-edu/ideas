@@ -19,14 +19,17 @@ module Ideas.Text.XML
    , parseXML, parseXMLFile, compactXML, findAttribute
    , children, Attribute(..), fromBuilder, findChild, findChildren, getData
    , BuildXML(..)
-   , module Data.Monoid, munless, mwhen
+   , module Data.Monoid
+   , (<>)
+   , munless, mwhen
    ) where
 
 import Control.Monad
 import Data.Char
 import Data.Foldable (toList)
 import Data.List
-import Data.Monoid
+import Data.Monoid hiding ((<>))
+import Data.Semigroup as Sem
 import Data.String
 import Ideas.Text.XML.Interface hiding (parseXML)
 import System.IO
@@ -77,7 +80,7 @@ ignoreLayout (Element n as xs) =
 
 infix 7 .=.
 
-class Monoid a => BuildXML a where
+class (Sem.Semigroup a, Monoid a) => BuildXML a where
    (.=.)     :: String -> String -> a   -- attribute
    unescaped :: String -> a             -- parsed character data (unescaped!)
    builder   :: Element -> a            -- (named) xml element
@@ -105,10 +108,13 @@ fromBS (BS as elts) = (attrList, toList elts)
    make (k := _) = k := M.findWithDefault "" k attrMap
    eqKey (k1 := _) (k2 := _) = k1 == k2
 
-instance Monoid XMLBuilder where
-   mempty = BS mempty mempty
-   mappend (BS as1 elts1) (BS as2 elts2) =
+instance Sem.Semigroup XMLBuilder where
+  BS as1 elts1 <> BS as2 elts2 =
       BS (as1 <> as2) (elts1 <> elts2)
+
+instance Monoid XMLBuilder where
+   mempty  = BS mempty mempty
+   mappend = (<>)
 
 instance BuildXML XMLBuilder where
    n .=. s   = BS (Seq.singleton (n := escapeAttr s)) mempty

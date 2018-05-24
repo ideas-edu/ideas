@@ -17,7 +17,8 @@ module Ideas.Encoding.Options
    ) where
 
 import Control.Applicative
-import Data.Monoid
+import Data.Monoid hiding ((<>))
+import Data.Semigroup as Sem
 import Ideas.Common.Library (Exercise, getId)
 import Ideas.Encoding.Request
 import Ideas.Service.DomainReasoner
@@ -41,9 +42,8 @@ data Options = Options
    , maxTime  :: Maybe Int    -- timeout for services, in seconds
    }
 
-instance Monoid Options where
-   mempty = Options mempty Nothing mempty Nothing Nothing
-   mappend x y = Options
+instance Sem.Semigroup Options where
+   x <> y = Options
       { request  = request x <> request y
       , qcGen    = make qcGen
       , script   = script x <> script y
@@ -52,6 +52,10 @@ instance Monoid Options where
       }
     where
       make f = f x <|> f y
+
+instance Monoid Options where
+   mempty  = Options mempty Nothing mempty Nothing Nothing
+   mappend = (<>)
 
 optionHtml :: Options
 optionHtml = mempty

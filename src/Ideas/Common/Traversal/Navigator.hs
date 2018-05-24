@@ -35,6 +35,8 @@ import Control.Monad
 import Data.Function
 import Data.Generics.Str
 import Data.Maybe
+import Data.Monoid hiding ((<>))
+import Data.Semigroup as Sem
 import Ideas.Common.Traversal.Iterator
 import Ideas.Common.Traversal.Utils
 import Ideas.Utils.Uniplate
@@ -49,9 +51,12 @@ newtype Location = L { fromLocation :: [Int] }
 instance Show Location where
    show = show . fromLocation
 
+instance Sem.Semigroup Location where
+   L xs <> L ys = L (xs ++ ys)
+
 instance Monoid Location where
-   mempty = L []
-   L xs `mappend` L ys = L (xs ++ ys)
+   mempty  = L []
+   mappend = (<>)
 
 toLocation :: [Int] -> Location
 toLocation = L

@@ -20,7 +20,7 @@ module Ideas.Encoding.EncoderXML
 
 import Data.Char
 import Data.Maybe
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Ideas.Common.Library hiding (exerciseId, alternatives)
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.OpenMathSupport

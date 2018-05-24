@@ -21,6 +21,8 @@ module Ideas.Service.FeedbackScript.Syntax
 import Data.Char
 import Data.List
 import Data.Maybe
+import Data.Monoid hiding ((<>))
+import Data.Semigroup as Sem
 import Ideas.Common.Library
 import Ideas.Utils.Uniplate
 
@@ -102,13 +104,19 @@ instance Show Text where
    showList xs ys =
       foldr (combine . show) ys (concatMap textItems xs)
 
+instance Sem.Semigroup Script where
+   s <> t = makeScript (scriptDecls s ++ scriptDecls t)
+
 instance Monoid Script where
-   mempty = makeScript []
-   mappend s t = makeScript (scriptDecls s ++ scriptDecls t)
+   mempty  = makeScript []
+   mappend = (<>)
+
+instance Sem.Semigroup Text where
+   (<>) = (:<>:)
 
 instance Monoid Text where
    mempty  = TextEmpty
-   mappend = (:<>:)
+   mappend = (<>)
 
 instance Uniplate Condition where
    uniplate (CondNot a) = plate CondNot |* a

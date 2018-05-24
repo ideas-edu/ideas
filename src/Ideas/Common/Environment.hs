@@ -28,6 +28,8 @@ module Ideas.Common.Environment
 import Control.Monad
 import Data.Function
 import Data.List
+import Data.Monoid hiding ((<>))
+import Data.Semigroup as Sem
 import Ideas.Common.Id
 import Ideas.Common.Rewriting.Term
 import Ideas.Common.View
@@ -127,9 +129,12 @@ newtype Environment = Env { envMap :: M.Map Id Binding }
 instance Show Environment where
    show = intercalate ", " . map show . bindings
 
+instance Sem.Semigroup Environment where
+   a <> b = Env (envMap a `mappend` envMap b) -- left has presedence
+
 instance Monoid Environment where
-   mempty = Env mempty
-   mappend a b = Env (envMap a `mappend` envMap b) -- left has presedence
+   mempty  = Env mempty
+   mappend = (<>)
 
 instance HasRefs Environment where
    allRefs env = [ Some ref | Binding ref _ <- bindings env ]

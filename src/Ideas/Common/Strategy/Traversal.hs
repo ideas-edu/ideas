@@ -30,7 +30,9 @@ module Ideas.Common.Strategy.Traversal
    , ruleUp, ruleDown, ruleDownLast, ruleLeft, ruleRight
    ) where
 
-import Data.Monoid
+import Data.Monoid hiding ((<>))
+import qualified Data.Semigroup as Sem
+import Data.Semigroup ((<>))
 import Ideas.Common.Classes
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract
@@ -106,9 +108,12 @@ data Info a = Info
 
 newtype Option a = O { unO :: Info a -> Info a }
 
+instance Sem.Semigroup (Option a) where
+   O f <> O g = O (f . g)
+
 instance Monoid (Option a) where
-   mempty            = O id
-   O f `mappend` O g = O (f . g)
+   mempty  = O id
+   mappend = (<>)
 
 fromOptions :: [Option a] -> Info a
 fromOptions xs = unO (mconcat xs) (Info VisitOne Choice [] True False)

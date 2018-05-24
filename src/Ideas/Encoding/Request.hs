@@ -16,6 +16,8 @@ import Control.Applicative
 import Data.Char
 import Data.List
 import Data.Maybe
+import Data.Monoid hiding ((<>))
+import Data.Semigroup as Sem
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Utils.Prelude
 
@@ -32,10 +34,8 @@ data Request = Request
    , encoding       :: [Encoding]
    }
 
-instance Monoid Request where
-   mempty = Request Nothing Nothing Nothing Nothing
-                    Nothing Nothing Nothing Nothing Nothing []
-   mappend x y = Request
+instance Sem.Semigroup Request where
+   x <> y = Request
       { serviceId      = make serviceId
       , exerciseId     = make exerciseId
       , source         = make source
@@ -49,6 +49,11 @@ instance Monoid Request where
       }
     where
       make f = f x <|> f y
+
+instance Monoid Request where
+   mempty = Request Nothing Nothing Nothing Nothing
+                    Nothing Nothing Nothing Nothing Nothing []
+   mappend = (<>)
 
 data Schema = V1 | V2 | NoLogging deriving (Show, Eq)
 

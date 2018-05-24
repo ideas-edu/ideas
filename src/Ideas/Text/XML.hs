@@ -23,7 +23,6 @@ module Ideas.Text.XML
 #if !(MIN_VERSION_base(4,8,0))
    , module Data.Monoid
 #endif
-   , (<>)
    , munless, mwhen
    ) where
 

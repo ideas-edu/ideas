@@ -17,6 +17,7 @@ module Ideas.Common.Traversal.Tests
 
 import Control.Monad
 import Data.Maybe
+import Data.Semigroup as Sem
 import Ideas.Common.Traversal.Iterator
 import Ideas.Common.Traversal.Navigator
 import Ideas.Common.Traversal.Utils

@@ -43,7 +43,6 @@ module Ideas.Common.Id
 #if !(MIN_VERSION_base(4,8,0))
    , module Data.Monoid
 #endif
-   , (<>)
    ) where
 
 import Control.Monad

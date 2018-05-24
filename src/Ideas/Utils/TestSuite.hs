@@ -22,7 +22,6 @@ module Ideas.Utils.TestSuite
 #if !(MIN_VERSION_base(4,8,0))
    , module Data.Monoid
 #endif
-   , (<>)
    , suite, useProperty, usePropertyWith
    , assertTrue, assertNull, assertEquals, assertIO
    , assertMessage, assertMessageIO

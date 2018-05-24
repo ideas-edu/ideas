@@ -19,7 +19,6 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Ord
-import Data.Semigroup ((<>))
 import Ideas.Common.Library hiding (alternatives, left, right, collapse, Medium)
 import Ideas.Common.Strategy.Symbol
 import Ideas.Encoding.Encoder hiding (left, right)

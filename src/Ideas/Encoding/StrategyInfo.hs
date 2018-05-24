@@ -14,7 +14,7 @@
 
 module Ideas.Encoding.StrategyInfo (strategyToXML) where
 
-import Data.Semigroup as Sem
+import Data.Semigroup ((<>))
 import Ideas.Common.Id
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Configuration

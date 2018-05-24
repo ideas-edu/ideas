@@ -35,6 +35,7 @@ module Ideas.Common.Strategy.Traversal
 import Data.Monoid
 #endif
 import qualified Data.Semigroup as Sem
+import Data.Semigroup ((<>))
 import Ideas.Common.Classes
 import Ideas.Common.Rule
 import Ideas.Common.Strategy.Abstract

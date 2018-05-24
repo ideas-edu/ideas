@@ -24,6 +24,7 @@ import Data.Maybe
 #if !(MIN_VERSION_base(4,8,0))
 import Data.Monoid
 #endif
+import Data.Semigroup ((<>))
 import Ideas.Common.Library hiding (exerciseId, alternatives)
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.OpenMathSupport

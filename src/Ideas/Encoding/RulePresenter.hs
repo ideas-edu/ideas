@@ -14,6 +14,7 @@ module Ideas.Encoding.RulePresenter (ruleToHTML) where
 
 import Data.List
 import Data.Maybe
+import Data.Semigroup ((<>))
 import Ideas.Common.Library
 import Ideas.Text.HTML
 

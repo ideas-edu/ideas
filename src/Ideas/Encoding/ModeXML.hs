@@ -16,6 +16,7 @@ module Ideas.Encoding.ModeXML (processXML) where
 
 import Control.Exception
 import Control.Monad
+import Data.Semigroup ((<>))
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.DecoderXML
 import Ideas.Encoding.EncoderHTML

@@ -228,7 +228,7 @@ instance Sem.Semigroup t => Sem.Semigroup (Encoder a s t) where
 
 instance Monoid t => Monoid (Encoder a s t) where
    mempty  = pure mempty
-   mappend = (<>)
+   mappend = liftA2 mappend
 
 instance BuildXML t => BuildXML (Encoder a s t) where
    n .=. s   = pure (n .=. s)

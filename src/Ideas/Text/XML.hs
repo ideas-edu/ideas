@@ -80,7 +80,7 @@ ignoreLayout (Element n as xs) =
 
 infix 7 .=.
 
-class Monoid a => BuildXML a where
+class (Sem.Semigroup a, Monoid a) => BuildXML a where
    (.=.)     :: String -> String -> a   -- attribute
    unescaped :: String -> a             -- parsed character data (unescaped!)
    builder   :: Element -> a            -- (named) xml element

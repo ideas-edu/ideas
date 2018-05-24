@@ -40,12 +40,13 @@ module Ideas.Common.Id
    , Identify(..)
      -- re-export
    , module Data.Monoid
+   , (<>)
    ) where
 
 import Control.Monad
 import Data.Char
 import Data.List
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Data.Ord
 import Data.Semigroup as Sem
 import Ideas.Common.Classes

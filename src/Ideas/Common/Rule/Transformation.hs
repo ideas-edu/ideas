@@ -35,7 +35,7 @@ module Ideas.Common.Rule.Transformation
 import Control.Applicative
 import Control.Arrow
 import Data.Maybe
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Ideas.Common.Classes
 import Ideas.Common.Context

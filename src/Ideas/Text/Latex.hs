@@ -20,7 +20,7 @@ module Ideas.Text.Latex
    ) where
 
 import Data.List
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Data.String
 

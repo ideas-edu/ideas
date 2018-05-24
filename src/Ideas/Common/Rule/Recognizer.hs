@@ -18,7 +18,7 @@ module Ideas.Common.Rule.Recognizer
    ) where
 
 import Data.Maybe
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Ideas.Common.Environment
 import Ideas.Common.Rule.Transformation

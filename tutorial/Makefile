@@ -1,4 +1,4 @@
-default: Tutorial.html Tutorial.exe
+default: Tutorial.html Tutorial-solution.html Tutorial.exe
 
 IDEASDIR   = ../../tags/ideas-1.2
 SRCDIR     = $(IDEASDIR)/src
@@ -16,7 +16,7 @@ install:
 	cp ounl.png $(INSTALLDIR)
 
 %.html: %.lhs
-	pandoc --from markdown+lhs --to html --css=Tutorial.css -o $@ $<
+	pandoc --from markdown+lhs --to html -o $@ $<
 
 Tutorial.exe:
 	ghc --make -i../src -hidir ../out -odir ../out Tutorial.lhs -o Tutorial.exe

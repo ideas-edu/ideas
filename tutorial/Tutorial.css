@@ -1,162 +1,72 @@
-/* http://www.colorschemedesigner.com/#3u11Tw0w0w0w0 */
+h1, h2, h3, h4 { color: #9b2335; }
 
-/* ---------------------------------------------------------------
-   General 
-*/
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; position: absolute; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
 
-body {
-   margin: 10px;
-   background-color: #64A8D1;
-   color:            black;
-   font-family:      sans-serif;
-}
+div.sourceCode { 
+   background-color: #F4F4F4; 
+   margin-left: 30pt; 
+   margin-right: 30pt; 
+   padding: 5Pt; 
+   border-style: dashed; 
+   border-width: 1pt; 
+} 
 
-h1, h2, h3, h4, h5, h6 {
-   color: #0969A2;
-}
+code { background-color: #F4F4F4; }
 
-a:link, a:visited
-  { color:            #03436A;
-    text-decoration:  underline;
-  }
-  
-a:hover 
-  { color: #FF0000;
-  }
+pre.sourceCode { margin: 0; }
 
-ul {
-   list-style-type: square;
-   padding-left: 20;
-   margin-top: 5;
-   margin-bottom: 5;
-}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #d02020; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #000000; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #000000; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
 
-/* ---------------------------------------------------------------
-   Header with menu, content, footer
-*/
+.w3-theme-l5 {color:#000 !important; background-color:#fbeff1 !important}
+.w3-theme-l4 {color:#000 !important; background-color:#f3cbd1 !important}
+.w3-theme-l3 {color:#000 !important; background-color:#e796a2 !important}
+.w3-theme-l2 {color:#fff !important; background-color:#db6274 !important}
+.w3-theme-l1 {color:#fff !important; background-color:#ce2f47 !important}
+.w3-theme-d1 {color:#fff !important; background-color:#8a1f2f !important}
+.w3-theme-d2 {color:#fff !important; background-color:#7b1c2a !important}
+.w3-theme-d3 {color:#fff !important; background-color:#6c1825 !important}
+.w3-theme-d4 {color:#fff !important; background-color:#5c1520 !important}
+.w3-theme-d5 {color:#fff !important; background-color:#4d111a !important}
 
-div.page-header, div.page-footer, div.page-content {
-   background-color: #FFFFFF;
-   border-width: 1px;
-   border-style: solid;
-   border-color: #03436A;
-}
+.w3-theme-light {color:#000 !important; background-color:#fbeff1 !important}
+.w3-theme-dark {color:#fff !important; background-color:#4d111a !important}
+.w3-theme-action {color:#fff !important; background-color:#4d111a !important}
 
-div.page-content {
-   padding: 10px;
-}
+.w3-theme {color:#fff !important; background-color:#9b2335 !important}
+.w3-text-theme {color:#9b2335 !important}
+.w3-border-theme {border-color:#9b2335 !important}
 
-div.page-header {
-   text-align: center; 
-   padding-top:      20px;
-   padding-bottom:   20px;
-   margin-bottom:    10px;
-   font-size:        x-large;
-   color: #0969A2;
-}
-
-div.page-footer {
-   text-align: center;
-   padding-top:      5px;
-   padding-bottom:   5px;
-   margin-top:       10px;
-   font-style:       italic;
-}
-
-span.menuitem {
-   background-color: #03436A;
-   padding-left: 15px;
-   padding-right: 15px;
-   padding-top: 5px;
-   padding-bottom: 5px;
-   margin: 15px;
-}
-
-div.ideas-logo {
-   float: left;
-   margin-left: 20px;
-   margin-top: -12px;
-}
-
-div.ounl-logo {
-   float: right;
-   margin-right: 20px;
-   margin-top: -15px;
-}
-
-.menuitem a:link, .menuitem a:visited, .menuitem a:hover {
-   color: white;
-   font-weight: bold;
-}
-
-/* ---------------------------------------------------------------
-   Tables
-*/
-
-table {
-   border-collapse:collapse;
-}
-
-table, th, td {
-   border: 1px solid #03436A;
-}
-
-td {
-   vertical-align:top;
-   padding-top: 2px;
-   padding-bottom: 2px;
-   padding-left: 5px;
-   padding-right: 5px;
-}
-
-tr.top-row {
-   background-color: #03436A;
-   color: white;
-   font-weight: bold;
-}
-
-tr.even-row {
-   background-color: rgb(216, 233, 244);
-}
-
-tr.odd-row {
-   background-color: rgb(255, 255, 255);
-}
-
-span.table-key {
-	font-weight: bold;
-}
-
-/* ---------------------------------------------------------------
-   Errors and warnings
-*/
-
-div.error, span.error {
-   color: rgb(255,0,0);
-   font-weight: bold;
-}
-
-div.warning, span.warning {
-   color: rgb(255,64,0);
-   font-weight: bold;
-}
-
-pre, code { background-color: #f8f8f8; }
-pre { margin-left: 30px; margin-right: 30px; padding: 5px; 
-	    border-width: 1px; border-style: solid; border-color: #e8e8e8; }
-
-code > span.kw { color: #0000FF; font-weight: bold; } /* keywords */
-code > span.co { color: #A0A0A0; font-style: italic; } /* comment */
-code > span.st { color: #29C21D; font-style: italic; } /* string */
-code > span.ch { color: #29C21D; } /* char */
-code > span.dv { color: #29C21D; } /* num */
-code > span.dt { color: #902000; } /* upper-case */
-code > span.ot { color: #000000; } /* type signature */
-code > span.fu { color: #0000FF; } /* = */
-
-
-code > span.bn { color: #ff0000; }
-code > span.fl { color: #ff0000; }
-code > span.al { color: #ff0000; font-weight: bold; }
-
-code > span.er { color: #ff0000; font-weight: bold; }
+.w3-hover-theme:hover {color:#fff !important; background-color:#9b2335 !important}
+.w3-hover-text-theme {color:#9b2335 !important}
+.w3-hover-border-theme:hover {border-color:#9b2335 !important}

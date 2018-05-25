@@ -1,9 +1,15 @@
-<div class="page-header"> 
-<div class="ideas-logo"><img src="ideas.png"/></div>
-<div class="ounl-logo"><img src="ounl.png"/></div>
-&nbsp; Ideas tutorial (version 1.6)
+<html>
+<title>Ideas tutorial</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css" />
+<link rel="stylesheet" href="Tutorial.css" />
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+<body>
+<div class="w3-container w3-theme w3-padding">
+<div class="w3-left w3-padding w3-large">Ideas tutorial (version 1.7)</div>
+<div class="w3-right w3-padding w3-xlarge"><a href="http://ideas.cs.uu.nl/"><i class="fas fa-home"></i></a></div>
 </div>
-<div class="page-content">
+<div class="w3-container w3-margin">
 
 Making a domain reasoner
 ========================
@@ -13,14 +19,17 @@ We start by defining a minimal exercise and show how this can be compiled into a
 application that can handle feedback requests. Make sure you have installed a 
 Haskell compiler and the cabal package manager 
 (see [Haskell Platform](http://www.haskell.org/platform/)): we advise
-to use ghc version 7.10 (or Haskell Platform 7.10.3) to work with our software.
+to use one of the following versions of ghc to work with our software: ghc 7.10 
+(or Haskell Platform 7.10.3), ghc 8.0.2, ghc 8.2.2, or ghc 8.4.2.
 Get the latest version of the [ideas package](http://hackage.haskell.org/package/ideas) 
 from Hackage and install the library with the following command:
 
 ~~~~~~~~
-cabal install ideas
+cabal install ideas -f -logging
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+The `-logging` flag installs the package without support for logging: enabling
+logging would require installing `sqlite3` for HDBC.
 We can now start writing a new Haskell module and import some modules from the 
 Ideas package.
 
@@ -77,7 +86,7 @@ data type is used to indicate that the rule cannot be applied.
 >    f _ = Nothing
 
 Have a look at the type of the `makeRule` function in the 
-[documentation](http://hackage.haskell.org/package/ideas-1.6/docs/Ideas-Common-Rule-Abstract.html#v:makeRule),
+[documentation](http://hackage.haskell.org/package/ideas-1.7/docs/Ideas-Common-Rule-Abstract.html#v:makeRule),
 and observe that the function
 is overloaded in both arguments. The first argument is the rule's identifier,
 which has to be part of the `IsId` type class. The `String` type is an instance
@@ -132,7 +141,7 @@ We can now make a minimal exercise that uses the `addOrNegate` strategy
 for solving: why we need to lift the strategy to a `Context` is explained in 
 step 2 of this tutorial. Exercises should have a unique identifier for 
 identification. We use `show` for pretty-printing expressions. See the 
-[documentation](http://hackage.haskell.org/package/ideas-1.6/docs/Ideas-Common-Exercise.html#t:Exercise) 
+[documentation](http://hackage.haskell.org/package/ideas-1.7/docs/Ideas-Common-Exercise.html#t:Exercise) 
 of the `Exercise` data type for the other components of an 
 exercise: `emptyExercise` provides sensible defaults so we do not have to 
 worry about these fields yet.
@@ -349,9 +358,8 @@ Running the executable with the `--help` flag gives the options.
 ~~~~
 $ Tutorial.exe --help
 IDEAS: Intelligent Domain-specific Exercise Assistants
-Copyright 2016, Open Universiteit Nederland
-version 1.6, revision b550ad9.., logging disabled
-
+Copyright 2018, Open Universiteit Nederland
+version 1.7, revision 40c006.., logging disabled
 
 Usage: ideas [OPTION]     (by default, CGI protocol)
 
@@ -380,7 +388,7 @@ The result of this request is:
 
 ~~~~ {#mycode .xml}
 $ Tutorial.exe --file=exerciselist.xml                                          
-<reply result="ok" version="1.6 (b550ad9..)">
+<reply result="ok" version="1.7 (40c006..)">
   <list>
     <elem exerciseid="eval.basic" description="Evaluate an expression (basic)" status="Experimental"/>
     <elem exerciseid="eval.full" description="Evaluate an expression (full)" status="Experimental"/>
@@ -407,7 +415,7 @@ mathematical objects. The result of this request is:
 
 ~~~~ {#mycode .xml}   
 $ Tutorial.exe --file=solution.xml
-<reply result="ok" version="1.6 (b550ad9..)">
+<reply result="ok" version="1.7 (40c006..)">
   <list>
     <elem ruleid="eval.negate">
       <expr>
@@ -449,9 +457,10 @@ Suggested exercises
     * Find the least common multiple of the denominators
     * Rewrite top-heavy fractions to mixed fractions (e.g. 17/14 becomes 1+3/14)
 
-We have developed [our own solution](http://ideas.science.uu.nl/tutorial/Tutorial-solution.html) to these exercises.
+We have developed [our own solution](Tutorial-solution.html) to these exercises.
 
 </div>
-<div class="page-footer">
-This tutorial is based on ideas-1.6. Last changed: December 2016
+<div class="w3-container w3-theme">
+<i>This tutorial is based on ideas-1.7. Last changed: May 2018</i>
 </div>
+</body></html>

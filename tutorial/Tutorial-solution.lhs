@@ -1,9 +1,15 @@
-<div class="page-header"> 
-<div class="ideas-logo"><img src="ideas.png"/></div>
-<div class="ounl-logo"><img src="ounl.png"/></div>
-&nbsp; Ideas tutorial (version 1.5) - solutions to suggested exercices
+<html>
+<title>Ideas tutorial</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css" />
+<link rel="stylesheet" href="Tutorial.css" />
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+<body>
+<div class="w3-container w3-theme w3-padding">
+<div class="w3-left w3-padding w3-large">Ideas tutorial (version 1.7)</div>
+<div class="w3-right w3-padding w3-xlarge"><a href="http://ideas.cs.uu.nl/"><i class="fas fa-home"></i></a></div>
 </div>
-<div class="page-content">
+<div class="w3-container w3-margin">
 
 Solutions to suggested exercises
 ================================
@@ -60,7 +66,7 @@ We add some examples in which we use multiplication and division.
 > expr7 = Mul (Div (Div (Con 3) (Con 4)) (Con 7)) (Div (Con 1) (Div (Con 2) (Con 3))) 
 >                                                                           -- ((3/4)/7)*(1/(2/3)
 
-We copy the negateRule and addRule from the tutorial,
+We copy the `negateRule` and `addRule` from the tutorial,
 
 > negateRule :: Rule Expr
 > negateRule = describe "Negate number" $ makeRule "eval.negate" f
@@ -97,7 +103,7 @@ Multiplication distributes over addition. This can be viewed as pushing multipli
 >    f _                  =  Nothing
 
 When we evaluate an expression, we no longer return an integer, but an expression in which divisions still may appear. 
-Alternatively, we can use the type Ratio as the result type, but that might look slightly less attractive when there are no divisions in the argument.
+Alternatively, we can use the type `Ratio` as the result type, but that might look slightly less attractive when there are no divisions in the argument.
 
 We introduce a number of rules that push divisions as far as possible upwards.
 
@@ -126,8 +132,8 @@ We introduce a number of rules that push divisions as far as possible upwards.
 >    f (Mul x (Div v w))          =  Just $ Div (Mul x v) w
 >    f _                          =  Nothing
 
-The divDivRule is the only rule where Div is not pushed to top-level. These are
-the standard rules for calculating divisions of divisions. Since the Mul and Add
+The `divDivRule` is the only rule where `Div` is not pushed to top-level. These are
+the standard rules for calculating divisions of divisions. Since the `Mul` and `Add`
 rules do not produce divisions of divisions, there is no risk for a loop in the
 final evaluation strategy.
 
@@ -141,8 +147,8 @@ final evaluation strategy.
 >    f _                          =  Nothing
 
 I have two simplification rules for divisions; the topHeavyRule splits a
-division into an addition and a division. I cannot combine the topHeavyRule with
-the other division rules (in particular: divAdd) since evaluation will loop
+division into an addition and a division. I cannot combine the `topHeavyRule` with
+the other division rules (in particular: `divAdd`) since evaluation will loop
 otherwise.
 
 > divSimplificationRule :: Rule Expr
@@ -164,28 +170,28 @@ otherwise.
 >      | x > y  =  Just $ Add (Con (div x y)) (Div (Con (mod x y)) (Con y))
 >    f _ = Nothing
 
-allEvaluationRules is the strategy that combines all rules that move multiplications downwards, and divisions upwards, and evaluates all expressions with constants. 
-I do not apply divSimplificationRule, but this could be done.
+`allEvaluationRules` is the strategy that combines all rules that move multiplications downwards, and divisions upwards, and evaluates all expressions with constants. 
+I do not apply `divSimplificationRule`, but this could be done.
 
 > allEvaluationRules :: LabeledStrategy Expr
 > allEvaluationRules = label "all rules" $
 >    negateRule .|. addRule .|. mulRule .|. mulAddRule .|. divNegateRule .|. divAddRule .|. divMulRule .|. divDivRule 
 >    -- .|. divSimplificationRule this simplification can also be done during evaluation
 
-allSimplificationRules is the strategy that combines all simplification rules.
+`allSimplificationRules` is the strategy that combines all simplification rules.
 
 > allSimplificationRules :: LabeledStrategy Expr
 > allSimplificationRules = label "all rules" $
 >    topHeavyRule .|. divSimplificationRule .|. addRule
 
-Evaluation consists of applying allEvaluationRules as often as possible, resulting in pushing divisions up as much as possible, followed by applying
-allSimplificationRules, which simplifies the divisions, replaces top heavy divisions by additions, and does some additional simplications using the addRule in the resulting expression.
+Evaluation consists of applying `allEvaluationRules` as often as possible, resulting in pushing divisions up as much as possible, followed by applying
+`allSimplificationRules`, which simplifies the divisions, replaces top heavy divisions by additions, and does some additional simplications using the `addRule` in the resulting expression.
 
 > evalStrategy :: LabeledStrategy (Context Expr)
 > evalStrategy = label "eval" $
 >    repeatS (somewhere (liftToContext allEvaluationRules)) .*. repeatS (somewhere (liftToContext allSimplificationRules))
 
-Evaluation has been extended with a case for Mul, but not for Div. 
+Evaluation has been extended with a case for `Mul`, but not for `Div`. 
 
 > eval :: Expr -> Int
 > eval (Add x y)  = eval x + eval y
@@ -193,7 +199,7 @@ Evaluation has been extended with a case for Mul, but not for Div.
 > eval (Negate x) = -eval x
 > eval (Con x)    = x 
 
-An expression is in `normal' form if it is a Con, a non-top heavy division, or the addition of a constant and a division.
+An expression is in normal form if it is a `Con`, a non-top heavy division, or the addition of a constant and a division.
 
 > isConOrAddDivOrDiv                          :: Expr -> Bool
 > isConOrAddDivOrDiv (Con _)                  =  True
@@ -232,6 +238,7 @@ An expression is in `normal' form if it is a Con, a non-top heavy division, or t
 > main = defaultMain dr
 
 </div>
-<div class="page-footer">
-This tutorial is based on ideas-1.5. Last changed: October 2016
+<div class="w3-container w3-theme">
+<i>This tutorial is based on ideas-1.7. Last changed: May 2018</i>
 </div>
+</body></html>

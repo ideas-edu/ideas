@@ -16,7 +16,7 @@ install:
 	cp ounl.png $(INSTALLDIR)
 
 %.html: %.lhs
-	pandoc --from markdown+lhs --to html -o $@ $<
+	pandoc --from markdown+lhs --to html --template=template.html -o $@ $<
 
 Tutorial.exe:
 	ghc --make -i../src -hidir ../out -odir ../out Tutorial.lhs -o Tutorial.exe

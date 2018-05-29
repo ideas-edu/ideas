@@ -1,16 +1,3 @@
-<html>
-<title>Ideas tutorial</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css" />
-<link rel="stylesheet" href="Tutorial.css" />
-<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
-<body>
-<div class="w3-container w3-theme w3-padding">
-<div class="w3-left w3-padding w3-large">Ideas tutorial (version 1.7)</div>
-<div class="w3-right w3-padding w3-xlarge"><a href="http://ideas.cs.uu.nl/"><i class="fas fa-home"></i></a></div>
-</div>
-<div class="w3-container w3-margin">
-
 Making a domain reasoner
 ========================
 
@@ -167,7 +154,7 @@ because it shows a worked-out example and not just the final answer.
 <    => eval.add
 < Con 8
 
-Step 2: adding traverals
+Step 2: adding traversals
 ------------------------
 
 For arithmetic expressions we want to apply the rules `somewhere`, i.e., 
@@ -458,9 +445,3 @@ Suggested exercises
     * Rewrite top-heavy fractions to mixed fractions (e.g. 17/14 becomes 1+3/14)
 
 We have developed [our own solution](Tutorial-solution.html) to these exercises.
-
-</div>
-<div class="w3-container w3-theme">
-<i>This tutorial is based on ideas-1.7. Last changed: May 2018</i>
-</div>
-</body></html>

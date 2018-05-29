@@ -1,19 +1,20 @@
+<!DOCTYPE html>
 <html>
-<title>
-Ideas tutorial
-</title>
+<head>
+<title>Ideas tutorial</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css" /> <link rel="stylesheet" href="Tutorial.css" /> <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css" />
+<link rel="stylesheet" href="Tutorial.css" />
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+</head>
 <body>
 <div class="w3-container w3-theme w3-padding">
-<div class="w3-left w3-padding w3-large">
-Ideas tutorial (version 1.7)
-</div>
-<div class="w3-right w3-padding w3-xlarge">
-<a href="http://ideas.cs.uu.nl/"><i class="fas fa-home"></i></a>
-</div>
+<div class="w3-left w3-padding w3-large">Ideas tutorial (version 1.7)</div>
+<div class="w3-right w3-padding w3-xlarge"><a href="http://ideas.cs.uu.nl/"><i class="fas fa-home"></i></a></div>
 </div>
 <div class="w3-container w3-margin">
+
 <h1 id="making-a-domain-reasoner">Making a domain reasoner</h1>
 <p>This tutorial shows how to make a simple domain reasoner with the Ideas framework. We start by defining a minimal exercise and show how this can be compiled into an application that can handle feedback requests. Make sure you have installed a Haskell compiler and the cabal package manager (see <a href="http://www.haskell.org/platform/">Haskell Platform</a>): we advise to use one of the following versions of ghc to work with our software: ghc 7.10 (or Haskell Platform 7.10.3), ghc 8.0.2, ghc 8.2.2, or ghc 8.4.2. Get the latest version of the <a href="http://hackage.haskell.org/package/ideas">ideas package</a> from Hackage and install the library with the following command:</p>
 <pre><code>cabal install ideas -f -logging</code></pre>
@@ -89,7 +90,7 @@ Ideas tutorial (version 1.7)
 <a class="sourceLine" id="cb11-2" data-line-number="2"><span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>)</a>
 <a class="sourceLine" id="cb11-3" data-line-number="3">   <span class="ot">=&gt;</span> eval<span class="fu">.</span>add</a>
 <a class="sourceLine" id="cb11-4" data-line-number="4"><span class="dt">Con</span> <span class="dv">8</span></a></code></pre></div>
-<h2 id="step-2-adding-traverals">Step 2: adding traverals</h2>
+<h2 id="step-2-adding-traversals">Step 2: adding traversals</h2>
 <p>For arithmetic expressions we want to apply the rules <code>somewhere</code>, i.e., possibly also to the sub-expressions. We want to use traversal functions such as <code>somewhere</code> in our strategy definitions, but this is only possible if we know the structure of the terms we want to traverse. We use a zipper data structure for keeping a point of focus. Instead of defining a zipper on the <code>Expr</code> data type, we define a translation to the <code>Term</code> data type in the Ideas library and use a zipper on <code>Term</code>s. Besides the zipper, some more untyped, generic functions are offered for the <code>Term</code> data type.</p>
 <p>Two symbols are defined for the two constructors of <code>Expr</code>.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb12-1" data-line-number="1">addSymbol,<span class="ot"> negateSymbol ::</span> <span class="dt">Symbol</span></a>
@@ -268,9 +269,9 @@ Options:
 </ul></li>
 </ul>
 <p>We have developed <a href="Tutorial-solution.html">our own solution</a> to these exercises.</p>
+
 </div>
-<div class="w3-container w3-theme">
-<p><i>This tutorial is based on ideas-1.7. Last changed: May 2018</i></p>
+<div class="w3-container w3-theme w3-padding">
+<i>This tutorial is based on ideas-1.7. Last changed: May 2018</i>
 </div>
-</body>
-</html>
+</body></html>

@@ -1,16 +1,3 @@
-<html>
-<title>Ideas tutorial</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css" />
-<link rel="stylesheet" href="Tutorial.css" />
-<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
-<body>
-<div class="w3-container w3-theme w3-padding">
-<div class="w3-left w3-padding w3-large">Ideas tutorial (version 1.7)</div>
-<div class="w3-right w3-padding w3-xlarge"><a href="http://ideas.cs.uu.nl/"><i class="fas fa-home"></i></a></div>
-</div>
-<div class="w3-container w3-margin">
-
 Solutions to suggested exercises
 ================================
 
@@ -236,9 +223,3 @@ An expression is in normal form if it is a `Con`, a non-top heavy division, or t
 >
 > main :: IO ()
 > main = defaultMain dr
-
-</div>
-<div class="w3-container w3-theme">
-<i>This tutorial is based on ideas-1.7. Last changed: May 2018</i>
-</div>
-</body></html>

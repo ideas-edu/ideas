@@ -49,6 +49,7 @@ import Data.Maybe
 import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Data.Time
+import Ideas.Utils.Prelude (getDiffTime)
 import System.IO
 import Test.QuickCheck hiding (Result)
 import qualified Data.Sequence as S
@@ -426,13 +427,6 @@ instance HasRating Rating where
 
 -----------------------------------------------------
 -- Utility function
-
-getDiffTime :: IO a -> IO (a, NominalDiffTime)
-getDiffTime action = do
-   t0 <- getCurrentTime
-   a  <- action
-   t1 <- getCurrentTime
-   return (a, diffUTCTime t1 t0)
 
 returnStrict :: Monad m => a -> m a
 returnStrict a = a `seq` return a

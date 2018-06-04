@@ -17,8 +17,10 @@ module Ideas.Encoding.Logging
    ( Record(..), addRequest, addState
    , LogRef, newLogRef, noLogRef, changeLog
    , logEnabled, logRecord, printLog
+   , selectFrom
    ) where
 
+import Data.Char
 import Data.IORef
 import Data.Maybe
 import Data.Time
@@ -124,6 +126,7 @@ printLog logRef = do
 
 logEnabled :: Bool
 logRecord  :: Schema -> LogRef -> IO ()
+selectFrom :: FilePath -> String -> [String] -> IO [[String]]
 
 #ifdef DB
 logEnabled = True
@@ -134,8 +137,9 @@ logRecord schema logRef =
       NoLogging -> return ()
 #else
 -- without logging
-logEnabled    = False
-logRecord _ _ = return ()
+logEnabled       = False
+logRecord _ _    = return ()
+selectFrom _ _ _ = return []
 #endif
 
 --------------------------------------------------------------------------------
@@ -187,4 +191,15 @@ insertRecord schema r conn =
        pars = "(" ++ intercalate "," (replicate (length cols) "?") ++ ")"
        stm  = "INSERT INTO " ++ nameOfTable schema ++ " VALUES " ++ pars
    in run conn stm cols >> commit conn
+   
+selectFrom database table columns = do
+   let sql    = "SELECT " ++ commas (map safe columns) ++ " from " ++ safe table
+       commas = intercalate ","
+       safe   = filter isAlphaNum
+   con  <- connectSqlite3 database
+   stat <- prepare con sql
+   _    <- execute stat []
+   rows <- map (map fromSql) <$> fetchAllRows' stat
+   disconnect con
+   return rows
 #endif

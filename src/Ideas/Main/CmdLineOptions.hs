@@ -26,7 +26,7 @@ import System.Exit
 
 data CmdLineOption
    = Version | Help | PrintLog
-   | InputFile String | Test FilePath
+   | InputFile String | Rerun String | Test FilePath
    | MakeScriptFor String | AnalyzeScript FilePath
  deriving Eq
 
@@ -59,13 +59,15 @@ options =
    , Option "?" ["help"]           (NoArg Help)     "show options"
    , Option ""  ["print-log"]      (NoArg PrintLog) "print log information (for debugging)"
    , Option "f" ["file"]           fileArg          "use input FILE as request"
+   , Option ""  ["rerun"]          rerunArg         "rerun inputs from database"
    , Option ""  ["test"]           testArg          "run tests on directory (default: 'test')"
    , Option ""  ["make-script"]    makeScrArg       "generate feedback script for exercise"
    , Option ""  ["analyze-script"] analyzeScrArg    "analyze feedback script and report errors"
    ]
 
-fileArg, testArg, makeScrArg, analyzeScrArg :: ArgDescr CmdLineOption
+fileArg, rerunArg, testArg, makeScrArg, analyzeScrArg :: ArgDescr CmdLineOption
 fileArg       = ReqArg InputFile "FILE"
+rerunArg      = ReqArg Rerun "DATABASE"
 testArg       = OptArg (Test . fromMaybe "test") "DIR"
 makeScrArg    = ReqArg MakeScriptFor "ID"
 analyzeScrArg = ReqArg AnalyzeScript "FILE"

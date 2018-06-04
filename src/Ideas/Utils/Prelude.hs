@@ -19,7 +19,7 @@ module Ideas.Utils.Prelude
    , cartesian, distinct, allsame
    , fixpoint
    , splitAtElem, splitsWithElem
-   , timedSeconds
+   , timedSeconds, getDiffTime
    , fst3, snd3, thd3
    , headM, findIndexM
    , elementAt, changeAt, replaceAt
@@ -28,6 +28,7 @@ module Ideas.Utils.Prelude
 
 import Data.Char
 import Data.List
+import Data.Time
 import System.Timeout
 
 data Some f = forall a . Some (f a)
@@ -93,6 +94,13 @@ splitsWithElem c s =
 timedSeconds :: Int -> IO a -> IO a
 timedSeconds n m = timeout (n * 10^(6 :: Int)) m >>=
    maybe (fail ("Timeout after " ++ show n ++ " seconds")) return
+
+getDiffTime :: IO a -> IO (a, NominalDiffTime)
+getDiffTime action = do
+   t0 <- getCurrentTime
+   a  <- action
+   t1 <- getCurrentTime
+   return (a, diffUTCTime t1 t0)
 
 fst3 :: (a, b, c) -> a
 fst3 (x, _, _) = x

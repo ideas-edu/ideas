@@ -116,6 +116,8 @@ defaultCommandLine options dr cmdLineOptions = do
          Version -> putStrLn ("IDEAS, " ++ versionText)
          Help    -> putStrLn helpText
          -- process input file
+         Rerun database -> 
+            processDatabase dr database
          InputFile file ->
             withBinaryFile file ReadMode $ \h -> do
                logRef <- Log.newLogRef
@@ -139,6 +141,15 @@ defaultCommandLine options dr cmdLineOptions = do
          MakeScriptFor s    -> makeScriptFor dr s
          AnalyzeScript file -> parseAndAnalyzeScript dr file
          PrintLog           -> return ()
+
+processDatabase :: DomainReasoner -> FilePath -> IO ()
+processDatabase dr database = do
+   rows <- Log.selectFrom database "requests" ["input"]
+   (_, time) <- getDiffTime $ forM_ rows $ \row -> do
+      txt <- headM row
+      (_, out, _) <- process mempty dr Log.noLogRef txt
+      putStrLn out
+   putStrLn $ "processed " ++ show (length rows) ++ " requests in " ++ show time
 
 process :: Options -> DomainReasoner -> Log.LogRef -> String -> IO (Request, String, String)
 process options dr logRef input = do

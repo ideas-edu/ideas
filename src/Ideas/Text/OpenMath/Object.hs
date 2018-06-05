@@ -30,8 +30,10 @@ data OMOBJ = OMI Integer
            | OMBIND OMOBJ [String] OMOBJ
    deriving (Show, Eq)
 
+instance ToXML OMOBJ where
+   toXML = omobj2xml
+
 instance InXML OMOBJ where
-   toXML   = omobj2xml
    fromXML = either fail return . xml2omobj
 
 instance Uniplate OMOBJ where

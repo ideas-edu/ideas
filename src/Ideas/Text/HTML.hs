@@ -47,7 +47,7 @@ data HTMLPage = HTMLPage
    , htmlContent :: HTMLBuilder
    }
 
-instance InXML HTMLPage where
+instance ToXML HTMLPage where
    toXML page = makeXML "html" $
       element "head"
          [ tag "title" (string (title page))
@@ -69,7 +69,6 @@ instance InXML HTMLPage where
               ]
          ]
       <> tag "body" (htmlContent page)
-   fromXML _ = fail "HTMLPage.fromXML"
 
 showHTML :: HTMLPage -> String
 showHTML = compactXML . toXML

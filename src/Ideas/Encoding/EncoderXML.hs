@@ -88,7 +88,7 @@ xmlEncoderConst = encoderFor $ \tv@(val ::: tp) ->
       Context      -> encodeContext // val
       Location     -> encodeLocation // val
       Environment  -> encodeEnvironment // val
-      Term         -> builder (toXML (toOMOBJ val))
+      Term         -> builderXML (toOMOBJ val)
       Text         -> encodeText // val
       Bool         -> string (showBool val)
       _            -> text tv
@@ -123,7 +123,7 @@ encodeContext = withOpenMath $ \useOM -> exerciseEncoder $ \ex ctx ->
 
 buildExpression :: BuildXML b => Bool -> Exercise a -> a -> b
 buildExpression useOM ex
-   | useOM     = either msg (builder . toXML) . toOpenMath ex
+   | useOM     = either msg builderXML . toOpenMath ex
    | otherwise = tag "expr" . string . prettyPrinter ex
  where
    msg s = error ("Error encoding term in OpenMath: " ++ s)

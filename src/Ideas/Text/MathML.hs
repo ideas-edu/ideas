@@ -51,8 +51,10 @@ from: https://www.w3.org/TR/MathML2/chapter3.html#presm.mn @ 3.2.1
 Conversely, since mn is a presentation element, there are a few situations where it may desirable to include arbitrary text in the content of an mn that should merely render as a numeric literal
 -}
 
+instance ToXML MathML where
+   toXML = mathml2xml
+
 instance InXML MathML where
-   toXML   = mathml2xml
    fromXML = either fail return . xml2mathml
 
 instance Uniplate MathML where

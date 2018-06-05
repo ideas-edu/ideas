@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Text.HTML
-   ( HTMLPage, HTMLBuilder
+   ( ToHTML(..), HTMLPage, HTMLBuilder
    , addCSS, addScript, addStyle, showHTML
    , string, text
    , htmlPage, link
@@ -38,6 +38,18 @@ import Prelude hiding (div)
 import qualified Ideas.Text.XML as XML
 
 type HTMLBuilder = XMLBuilder
+
+class ToHTML a where
+   toHTML     :: a -> HTMLBuilder
+   listToHTML :: [a] -> HTMLBuilder
+   -- default definitions
+   listToHTML = mconcat . map toHTML
+
+instance (ToHTML a, ToHTML b) => ToHTML (Either a b) where
+   toHTML = either toHTML toHTML
+
+instance (ToHTML a) => ToHTML (Maybe a) where
+   toHTML = maybe mempty toHTML
 
 data HTMLPage = HTMLPage
    { title       :: String

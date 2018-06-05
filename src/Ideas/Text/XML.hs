@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Text.XML
-   ( XML, Attr, AttrList, Element(..), InXML(..)
+   ( XML, Attr, AttrList, Element(..), ToXML(..), builderXML, InXML(..)
    , XMLBuilder, makeXML
    , parseXML, parseXMLFile, compactXML, findAttribute
    , children, Attribute(..), fromBuilder, findChild, findChildren, getData
@@ -45,13 +45,18 @@ type XML      = Element
 type Attr     = Attribute  -- (String, String)
 type AttrList = Attributes -- [Attr]
 
-class InXML a where
-   toXML       :: a -> XML
-   listToXML   :: [a] -> XML
-   fromXML     :: Monad m => XML -> m a
-   listFromXML :: Monad m => XML -> m [a]
+class ToXML a where
+   toXML     :: a -> XML
+   listToXML :: [a] -> XML
    -- default definitions
    listToXML = Element "list" [] . map (Right . toXML)
+   
+builderXML :: (ToXML a, BuildXML b) => a -> b
+builderXML = builder . toXML
+   
+class ToXML a => InXML a where
+   fromXML     :: Monad m => XML -> m a
+   listFromXML :: Monad m => XML -> m [a]
    listFromXML xml
       | name xml == "list" && null (attributes xml) =
            mapM fromXML (children xml)

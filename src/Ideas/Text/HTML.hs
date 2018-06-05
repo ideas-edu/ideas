@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Text.HTML
-   ( HTMLPage, HTMLBuilder
+   ( ToHTML(..), HTMLPage, HTMLBuilder
    , addCSS, addScript, addStyle, showHTML
    , string, text
    , htmlPage, link
@@ -39,6 +39,18 @@ import qualified Ideas.Text.XML as XML
 
 type HTMLBuilder = XMLBuilder
 
+class ToHTML a where
+   toHTML     :: a -> HTMLBuilder
+   listToHTML :: [a] -> HTMLBuilder
+   -- default definitions
+   listToHTML = mconcat . map toHTML
+
+instance (ToHTML a, ToHTML b) => ToHTML (Either a b) where
+   toHTML = either toHTML toHTML
+
+instance (ToHTML a) => ToHTML (Maybe a) where
+   toHTML = maybe mempty toHTML
+
 data HTMLPage = HTMLPage
    { title       :: String
    , styleSheets :: [FilePath]
@@ -47,7 +59,7 @@ data HTMLPage = HTMLPage
    , htmlContent :: HTMLBuilder
    }
 
-instance InXML HTMLPage where
+instance ToXML HTMLPage where
    toXML page = makeXML "html" $
       element "head"
          [ tag "title" (string (title page))
@@ -69,7 +81,6 @@ instance InXML HTMLPage where
               ]
          ]
       <> tag "body" (htmlContent page)
-   fromXML _ = fail "HTMLPage.fromXML"
 
 showHTML :: HTMLPage -> String
 showHTML = compactXML . toXML

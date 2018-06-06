@@ -126,7 +126,7 @@ printLog logRef = do
 
 logEnabled :: Bool
 logRecord  :: Schema -> LogRef -> IO ()
-selectFrom :: FilePath -> String -> [String] -> IO [[String]]
+selectFrom :: FilePath -> String -> [String] -> ([String] -> IO a) -> IO [a]
 
 #ifdef DB
 logEnabled = True
@@ -137,9 +137,9 @@ logRecord schema logRef =
       NoLogging -> return ()
 #else
 -- without logging
-logEnabled       = False
-logRecord _ _    = return ()
-selectFrom _ _ _ = return []
+logEnabled         = False
+logRecord _ _      = return ()
+selectFrom _ _ _ _ = return []
 #endif
 
 --------------------------------------------------------------------------------
@@ -192,14 +192,15 @@ insertRecord schema r conn =
        stm  = "INSERT INTO " ++ nameOfTable schema ++ " VALUES " ++ pars
    in run conn stm cols >> commit conn
    
-selectFrom database table columns = do
+selectFrom database table columns f = do
    let sql    = "SELECT " ++ commas (map safe columns) ++ " from " ++ safe table
        commas = intercalate ","
        safe   = filter isAlphaNum
    con  <- connectSqlite3 database
    stat <- prepare con sql
    _    <- execute stat []
-   rows <- map (map fromSql) <$> fetchAllRows' stat
+   rows <- fetchAllRows stat
+   xs   <- mapM (f . map fromSql) rows
    disconnect con
-   return rows
+   return xs
 #endif

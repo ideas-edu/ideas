@@ -144,12 +144,13 @@ defaultCommandLine options dr cmdLineOptions = do
 
 processDatabase :: DomainReasoner -> FilePath -> IO ()
 processDatabase dr database = do
-   rows <- Log.selectFrom database "requests" ["input"]
-   (_, time) <- getDiffTime $ forM_ rows $ \row -> do
-      txt <- headM row
-      (_, out, _) <- process mempty dr Log.noLogRef txt
-      putStrLn out
-   putStrLn $ "processed " ++ show (length rows) ++ " requests in " ++ show time
+   (n, time) <- getDiffTime $ do
+      rows <- Log.selectFrom database "requests" ["input"] $ \row -> do
+         txt <- headM row
+         (_, out, _) <- process mempty dr Log.noLogRef txt
+         putStrLn out
+      return (length rows)
+   putStrLn $ "processed " ++ show n ++ " requests in " ++ show time
 
 process :: Options -> DomainReasoner -> Log.LogRef -> String -> IO (Request, String, String)
 process options dr logRef input = do

@@ -15,7 +15,7 @@
 
 module Ideas.Text.XML
    ( XML, Attr, AttrList, Element(..), ToXML(..), builderXML, InXML(..)
-   , XMLBuilder, makeXML
+   , XMLBuilder, isEmptyBuilder, makeXML
    , parseXML, parseXMLFile, compactXML, findAttribute
    , children, Attribute(..), fromBuilder, findChild, findChildren, getData
    , BuildXML(..)
@@ -50,7 +50,13 @@ class ToXML a where
    listToXML :: [a] -> XML
    -- default definitions
    listToXML = Element "list" [] . map (Right . toXML)
-   
+
+instance ToXML () where
+   toXML _ = makeXML "Unit" mempty
+
+instance ToXML a => ToXML (Maybe a) where
+  toXML = maybe (makeXML "Nothing" mempty) toXML
+
 builderXML :: (ToXML a, BuildXML b) => a -> b
 builderXML = builder . toXML
    
@@ -102,6 +108,9 @@ class (Sem.Semigroup a, Monoid a) => BuildXML a where
    emptyTag s = tag s mempty
 
 data XMLBuilder = BS (Seq.Seq Attr) (Seq.Seq (Either String Element))
+
+isEmptyBuilder :: XMLBuilder -> Bool
+isEmptyBuilder (BS as elts) = Seq.null as && Seq.null elts
 
 -- local helper: merge attributes, but preserve order
 fromBS :: XMLBuilder -> (AttrList, Content)

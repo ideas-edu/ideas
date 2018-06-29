@@ -50,6 +50,7 @@ import Data.Monoid hiding ((<>))
 import Data.Ord
 import Data.Semigroup as Sem
 import Ideas.Common.Classes
+import Ideas.Text.HTML
 import Ideas.Utils.Prelude (splitsWithElem)
 import Ideas.Utils.StringRef
 import Test.QuickCheck
@@ -92,6 +93,9 @@ instance Arbitrary Id where
                return $ newId xs)
       , (1, liftM2 mappend arbitrary arbitrary)
       ]
+
+instance ToHTML Id where
+   toHTML = text
 
 -- | Type class 'IsId' for constructing identifiers. Examples are
 -- @newId \"algebra.equation\"@, @newId (\"a\", \"b\", \"c\")@, and @newId ()@

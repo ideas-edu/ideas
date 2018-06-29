@@ -20,7 +20,8 @@ module Ideas.Text.HTML
    , htmlPage, link
    , h1, h2, h3, h4, h5, h6
    , preText, ul, table, keyValueTable
-   , image, space, spaces, highlightXML
+   , image, space, spaces, (<#>), spaced
+   , highlightXML
    , para, ttText, hr, br, pre, bullet
    , divClass, spanClass
      -- HTML generic attributes
@@ -36,6 +37,7 @@ import Data.Monoid hiding ((<>))
 import Ideas.Text.XML
 import Prelude hiding (div)
 import qualified Ideas.Text.XML as XML
+import qualified Data.Map as M
 
 type HTMLBuilder = XMLBuilder
 
@@ -43,13 +45,40 @@ class ToHTML a where
    toHTML     :: a -> HTMLBuilder
    listToHTML :: [a] -> HTMLBuilder
    -- default definitions
-   listToHTML = mconcat . map toHTML
+   listToHTML = ul . map toHTML
+
+instance ToHTML a => ToHTML [a] where
+   toHTML = listToHTML
 
 instance (ToHTML a, ToHTML b) => ToHTML (Either a b) where
    toHTML = either toHTML toHTML
 
 instance (ToHTML a) => ToHTML (Maybe a) where
    toHTML = maybe mempty toHTML
+
+instance ToHTML () where
+   toHTML _ = mempty
+
+instance (ToHTML a, ToHTML b) => ToHTML (a, b) where
+   toHTML (a, b) = toHTML a <#> toHTML b
+ 
+instance (ToHTML a, ToHTML b, ToHTML c) => ToHTML (a, b, c) where
+   toHTML (a, b, c) = toHTML a <#> toHTML b <#> toHTML c
+
+instance (ToHTML a, ToHTML b) => ToHTML (M.Map a b) where
+   toHTML = Ideas.Text.HTML.table False . map f . M.toList
+    where
+      f (a, b) = [toHTML a, toHTML b]
+
+instance ToHTML Int where
+   toHTML = text
+
+instance ToHTML Bool where
+   toHTML = text
+
+instance ToHTML Char where
+   toHTML     = string . return
+   listToHTML = string
 
 data HTMLPage = HTMLPage
    { title       :: String
@@ -129,17 +158,21 @@ ttText :: BuildXML a => String -> a
 ttText = tt . string
 
 ul :: BuildXML a => [a] -> a
-ul = element "ul" . map (tag "li")
+ul xs 
+   | null xs   = mempty
+   | otherwise = element "ul" (map (tag "li") xs)
 
 -- | First argument indicates whether the table has a header or not
 table :: BuildXML a => Bool -> [[a]] -> a
-table b rows = element "table" $
-   ("border" .=. "1") :
-   [ element "tr" $
-        ("class" .=. getClass i) :
-        [ tag "td" c | c <- row ]
-   | (i, row) <- zip [0::Int ..] rows
-   ]
+table b rows 
+   | null rows = mempty
+   | otherwise = element "table" $
+        ("border" .=. "1") :
+        [ element "tr" $
+             ("class" .=. getClass i) :
+             [ tag "td" c | c <- row ]
+        | (i, row) <- zip [0::Int ..] rows
+        ]
  where
    getClass i
       | i == 0 && b = "top-row"
@@ -157,6 +190,12 @@ spaces n = mconcat (replicate n space)
 space, bullet :: BuildXML a => a
 space  = XML.unescaped "&nbsp;"
 bullet = XML.unescaped "&#8226;"
+
+(<#>) :: BuildXML a => a -> a -> a
+x <#> y = x <> space <> y
+
+spaced :: BuildXML a => [a] -> a
+spaced = mconcat . intersperse space
 
 image :: BuildXML a => String -> a
 image n = tag "img" ("src" .=. n)

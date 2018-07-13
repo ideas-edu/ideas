@@ -12,7 +12,7 @@
 
 module Ideas.Service.BasicServices
    ( -- * Basic Services
-     stepsremaining, findbuggyrules, allfirsts, solution
+     stepsremaining, findbuggyrules, allfirsts, solution, solutionMaxSteps
    , onefirst, onefinal, applicable, allapplications, apply, generate, create
    , StepInfo, tStepInfo, exampleDerivations, recognizeRule
    ) where
@@ -47,7 +47,10 @@ create rng ex txt userId =
 
 -- TODO: add a location to each step
 solution :: Maybe StrategyCfg -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))
-solution mcfg state =
+solution = solutionMaxSteps 50
+
+solutionMaxSteps :: Int -> Maybe StrategyCfg -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))
+solutionMaxSteps maxSteps mcfg state =
    mapSecond (biMap (\(r, _, as) -> (r, as)) stateContext) $
    case mcfg of
       _ | withoutPrefix state -> Left "Prefix is required"
@@ -57,13 +60,12 @@ solution mcfg state =
       Just cfg | isEmptyPrefix prfx ->
          let newStrategy = configure cfg (strategy ex)
              newPrefix   = emptyPrefix newStrategy (stateContext state)
-         in rec timeout d0 state { statePrefix = newPrefix }
-      _ -> rec timeout d0 state
+         in rec maxSteps d0 state { statePrefix = newPrefix }
+      _ -> rec maxSteps d0 state
  where
    d0   = emptyDerivation state
    ex   = exercise state
    prfx = statePrefix state
-   timeout = 50 :: Int
 
    rec i acc st =
       case onefirst st of
@@ -72,7 +74,7 @@ solution mcfg state =
             | i <= 0    -> Left msg
             | otherwise -> rec (i-1) (acc `extend` ((r, l, as), newState)) newState
     where
-      msg = "Time out after " ++ show timeout ++ " steps. " ++
+      msg = "Time out after " ++ show maxSteps ++ " steps. " ++
             show (biMap fst3 (prettyPrinterContext ex . stateContext) acc)
 
 type StepInfo a = (Rule (Context a), Location, Environment) -- find a good place

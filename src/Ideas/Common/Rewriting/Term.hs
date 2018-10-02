@@ -121,6 +121,11 @@ instance (IsTerm a, IsTerm b) => IsTerm (a, b) where
    fromTerm (TList [a, b]) =  (,) <$> fromTerm a <*> fromTerm b
    fromTerm _              = fail "fromTerm"
 
+instance (IsTerm a, IsTerm b, IsTerm c) => IsTerm (a, b, c) where
+   toTerm (a, b, c) = TList [toTerm a, toTerm b, toTerm c]
+   fromTerm (TList [a, b, c]) = (,,) <$> fromTerm a <*> fromTerm b <*> fromTerm c
+   fromTerm _                 = fail "fromTerm"
+
 instance (IsTerm a, IsTerm b) => IsTerm (Either a b) where
    toTerm = either toTerm toTerm
    fromTerm expr =

@@ -53,7 +53,7 @@ Library
      blaze-builder >= 0.4,
      bytestring,
      case-insensitive,
-     QuickCheck >= 2.8 && < 2.12.6,
+     QuickCheck >= 2.8 && < 2.12,
      Diff,
      containers,
      directory,

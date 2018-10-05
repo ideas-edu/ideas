@@ -18,7 +18,7 @@ module Ideas.Common.Derivation
      Derivation
      -- * Constructing a derivation
    , emptyDerivation, prepend, extend
-   , merge, mergeStep
+   , merge, mergeBy, mergeStep
      -- * Conversion to/from list
    , derivationToList, derivationFromList
      -- * Querying a derivation
@@ -68,9 +68,13 @@ extend :: Derivation s a -> (s, a) -> Derivation s a
 extend (D a xs) p = D a (xs S.|> p)
 
 merge :: Eq a => Derivation s a -> Derivation s a -> Maybe (Derivation s a)
-merge d@(D a xs) (D b ys)
-   | lastTerm d == b = Just $ D a (xs <> ys)
+merge = mergeBy (==)
+
+mergeBy :: (a -> a -> Bool) -> Derivation s a -> Derivation s a -> Maybe (Derivation s a)
+mergeBy eq d@(D a xs) (D b ys)
+   | eq (lastTerm d) b = Just $ D a (xs <> ys)
    | otherwise = Nothing
+
 
 mergeStep :: Derivation s a -> s -> Derivation s a -> Derivation s a
 mergeStep (D a xs) s (D b ys) = D a (xs <> ((s, b) S.<| ys))

@@ -20,6 +20,7 @@ module Ideas.Service.BasicServices
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Ideas.Common.Examples
 import Ideas.Common.Library hiding (applicable, apply, ready)
 import Ideas.Common.Traversal.Navigator (downs, navigateTo)
 import Ideas.Service.State
@@ -206,4 +207,4 @@ recognizeRule ex r ca cb = rec (top ca)
       concatMap rec (downs x)
 
 exampleDerivations :: Exercise a -> Either String [Derivation (Rule (Context a), Environment) (Context a)]
-exampleDerivations ex = mapM (solution Nothing . emptyState ex . snd) (examples ex)
+exampleDerivations ex = mapM (solution Nothing . emptyState ex) (examplesAsList ex)

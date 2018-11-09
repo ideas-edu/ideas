@@ -169,9 +169,9 @@ exampleS = makeService "basic.example"
    f ::: tQCGen .-> tExercise .-> tInt .-> tMaybe tUserId .-> tError tState
  where
    f rng ex nr userId =
-      case drop nr (examples ex) of
-         []      -> Left "No such example"
-         (_,a):_ -> Right $ startState rng ex userId a
+      case drop nr (examplesAsList ex) of
+         []  -> Left "No such example"
+         a:_ -> Right $ startState rng ex userId a
 
 findbuggyrulesS :: Service
 findbuggyrulesS = makeService "basic.findbuggyrules"

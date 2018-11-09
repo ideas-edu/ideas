@@ -71,9 +71,9 @@ exerciseTestSuite qcgen ex = suite ("Exercise " ++ show (exerciseId ex)) $
        where
          showAsGen = showAs (prettyPrinter ex) gen
  where
-   xs | isJust (randomExercise ex) =
-           take 10 (randomTerms qcgen ex Nothing)
-      | otherwise = map snd (examples ex)
+   rs = randomTerms qcgen ex Nothing
+   xs | null rs   = examplesAsList ex
+      | otherwise = take 10 rs 
 
 data ShowAs a = S {showS :: a -> String, fromS :: a}
 
@@ -108,7 +108,7 @@ checkExamples qcgen ex
    | otherwise = suite "Examples" $
         concatMap (checksForTerm True qcgen ex) xs
  where
-   xs = map snd (examples ex)
+   xs = examplesAsList ex
 
 checksForTerm :: Bool -> QCGen -> Exercise a -> a -> [TestSuite]
 checksForTerm leftMost _ ex a =

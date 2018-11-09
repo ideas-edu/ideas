@@ -78,6 +78,7 @@ Library
     Ideas.Common.Derivation
     Ideas.Common.DerivationTree
     Ideas.Common.Environment
+    Ideas.Common.Examples
     Ideas.Common.Exercise
     Ideas.Common.ExerciseTests
     Ideas.Common.Id

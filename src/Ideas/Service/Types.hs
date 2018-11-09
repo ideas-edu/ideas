@@ -33,7 +33,8 @@ import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
-import Data.Tree
+import Data.Tree hiding (flatten)
+import Ideas.Common.Examples
 import Ideas.Common.Library
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
@@ -363,7 +364,10 @@ tQCGen :: Type a QCGen
 tQCGen = Const QCGen
 
 tExamples :: Type a (Examples (Context a))
-tExamples = tList (tPair tDifficulty tContext)
+tExamples = Iso (f <-> g) (tList (tPair tDifficulty tContext))
+ where
+   f = examplesWithDifficulty
+   g = map (first (fromMaybe Medium)) . allExamples -- use default difficulty
 
 tId :: Type a Id
 tId = Const Id

@@ -26,21 +26,20 @@ module Ideas.Common.Exercise
    , Status(..), isPublic, isPrivate
      -- * Examples
    , Examples, Difficulty(..), readDifficulty
-   , level, mapExamples, examplesContext
+   , examplesWithDifficulty, examplesContext, examplesAsList
+   , testGenerator
+   , randomTerm, randomTerms
      -- * Context
    , inContext, withoutContext
      -- * Type casting
    , useTypeable, castFrom, castTo
      -- * Exercise properties
    , setProperty, getProperty, setPropertyF, getPropertyF
-     -- * Random generators
-   , simpleGenerator, useGenerator, randomTerm, randomTerms
      -- * Derivations
    , showDerivation, showDerivations, printDerivation, printDerivations
    , diffEnvironment, defaultDerivation, allDerivations
    ) where
 
-import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Ord
@@ -49,6 +48,7 @@ import Ideas.Common.Constraint
 import Ideas.Common.Context
 import Ideas.Common.Derivation
 import Ideas.Common.Environment
+import Ideas.Common.Examples
 import Ideas.Common.Id
 import Ideas.Common.Predicate
 import Ideas.Common.Rewriting
@@ -120,10 +120,6 @@ data Exercise a =
    , navigation :: a -> ContextNavigator a
      -- | A finite list of examples, each with an assigned difficulty.
    , examples :: Examples a
-     -- | A generator for random exercises of a certain difficulty.
-   , randomExercise :: Maybe (QCGen -> Maybe Difficulty -> a)
-     -- | An exercise generator for testing purposes (including corner cases).
-   , testGenerator  :: Maybe (Gen a)
      -- | Conversion to and from the (generic) 'Term' datatype. Needed for
      -- representing the expression in the OpenMath standard.
    , hasTermView :: Maybe (View Term a)
@@ -173,10 +169,8 @@ emptyExercise = NewExercise
    , canBeRestarted = True
    , extraRules     = []
    , ruleOrdering   = compareId
-     -- testing and exercise generation
-   , testGenerator  = Nothing
-   , randomExercise = Nothing
-   , examples       = []
+     -- examples
+   , examples       = mempty
    }
 
 -- | In addition to the defaults of 'emptyExercise', this constructor sets
@@ -261,51 +255,44 @@ isPrivate = not . isPublic
 -----------------------------------------------------------------------------
 -- Examples
 
-type Examples a = [(Difficulty, a)]
-
-data Difficulty = VeryEasy | Easy | Medium | Difficult | VeryDifficult
-   deriving (Eq, Ord, Enum)
-
-instance Show Difficulty where
-   show = (xs !!) . fromEnum
-    where
-      xs = ["very_easy", "easy", "medium", "difficult", "very_difficult"]
-
-instance Read Difficulty where
-   readsPrec _ s =
-      case concatMap f txt of
-         "veryeasy"      -> [(VeryEasy, xs)]
-         "easy"          -> [(Easy, xs)]
-         "medium"        -> [(Medium, xs)]
-         "difficult"     -> [(Difficult, xs)]
-         "verydifficult" -> [(VeryDifficult, xs)]
-         _               -> []
-    where
-      (txt, xs) = span p (dropWhile isSpace s)
-      p c   = isAlpha c || c `elem` "_-"
-      f c   = [toLower c | c `notElem` "_-"]
-
--- | Parser for difficulty levels, which ignores non-alpha charactes (including
--- spaces) and upper/lower case distinction.
-readDifficulty :: String -> Maybe Difficulty
-readDifficulty s =
-   case filter p [VeryEasy .. VeryDifficult] of
-            [a] -> Just a
-            _   -> Nothing
- where
-   normal = filter isAlpha . map toLower
-   p = (== normal s) . normal . show
-
--- | Assigns a difficulty level to a list of expressions.
-level :: Difficulty -> [a] -> Examples a
-level = zip . repeat
-
-mapExamples :: (a -> b) -> Examples a -> Examples b
-mapExamples f = map (second f)
-
 -- | Returns the examples of an exercise class lifted to a context.
 examplesContext :: Exercise a -> Examples (Context a)
-examplesContext ex = mapExamples (inContext ex) (examples ex)
+examplesContext ex = fmap (inContext ex) (examples ex)
+
+examplesAsList :: Exercise a -> [a]
+examplesAsList = map snd . allExamples . examples
+
+fromGen :: QCGen -> Gen a -> a
+fromGen rng (MkGen f) = a
+ where
+   (sz, r) = randomR (0, 100) rng
+   a       = f r sz
+
+-- | Returns a random exercise of a certain difficulty with some random
+-- number generator. The field 'randomExercise' is used; if this is not
+-- defined (i.e., Nothing), one of the examples is used instead.
+randomTerm :: QCGen -> Exercise a -> Maybe Difficulty -> Maybe a
+randomTerm rng ex mdif =
+   case filter ((== mdif) . fst) (allRandoms (examples ex)) of
+      (_, g):_ -> Just (fromGen rng g)
+      []
+         | null xs   -> Nothing
+         | otherwise -> Just (snd (xs !! i))
+       where
+         xs = filter p (allExamples (examples ex)) -- improve
+         p (Just d, _) = maybe True (==d) mdif
+         p _ = False
+         i = fst (randomR (0, length xs - 1) rng)
+
+-- | Returns a list of randomly generated terms of a certain difficulty.
+randomTerms :: QCGen -> Exercise a -> Maybe Difficulty -> [a]
+randomTerms rng ex mdif = rec rng
+ where
+   rec a = maybe id (:) (randomTerm a ex mdif) (rec (snd (next a)))
+    
+-- | An exercise generator for testing purposes (including corner cases); first generator only.
+testGenerator :: Exercise a -> Maybe (Gen a)
+testGenerator = listToMaybe . allRandomTests . examples
 
 -----------------------------------------------------------------------------
 -- Context
@@ -371,45 +358,6 @@ castF :: (Typeable f, Typeable g) => f a -> Maybe (g a)
 castF = fmap fromIdentity . gcast1 . Identity
 
 newtype Identity a = Identity { fromIdentity :: a}
-
----------------------------------------------------------------
--- Random generators
-
--- | Makes a random exercise generator from a QuickCheck generator; the exercise
--- generator ignores the difficulty level. See the 'randomExercise' field.
-simpleGenerator :: Gen a -> Maybe (QCGen -> Maybe Difficulty -> a)
-simpleGenerator = useGenerator . const
-
--- | Makes a random exercise generator based on a QuickCheck generator for a
--- particular difficulty level. See the 'randomExercise' field.
-useGenerator :: (Maybe Difficulty -> Gen a) -> Maybe (QCGen -> Maybe Difficulty -> a)
-useGenerator makeGen = Just (\rng -> rec rng . makeGen)
- where
-   rec rng (MkGen f) = a
-    where
-      (size, r) = randomR (0, 100) rng
-      a         = f r size
-
--- | Returns a random exercise of a certain difficulty with some random
--- number generator. The field 'randomExercise' is used; if this is not
--- defined (i.e., Nothing), one of the examples is used instead.
-randomTerm :: QCGen -> Exercise a -> Maybe Difficulty -> Maybe a
-randomTerm rng ex mdif =
-   case randomExercise ex of
-      Just f  -> return (f rng mdif)
-      Nothing
-         | null xs   -> Nothing
-         | otherwise -> Just (snd (xs !! i))
-       where
-         xs = filter p (examples ex)
-         p (d, _) = maybe True (==d) mdif
-         i = fst (randomR (0, length xs - 1) rng)
-
--- | Returns a list of randomly generated terms of a certain difficulty.
-randomTerms :: QCGen -> Exercise a -> Maybe Difficulty -> [a]
-randomTerms rng ex mdif = rec rng
- where
-   rec a = maybe id (:) (randomTerm a ex mdif) (rec (snd (next a)))
 
 ---------------------------------------------------------------
 -- Derivations

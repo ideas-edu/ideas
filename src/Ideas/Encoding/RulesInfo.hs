@@ -66,7 +66,7 @@ rewriteRuleToFMP sound r
 type ExampleMap a = M.Map Id [(a, a)]
 
 collectExamples :: Exercise a -> ExampleMap a
-collectExamples ex = foldr (add . snd) M.empty (examples ex)
+collectExamples ex = foldr add M.empty (examplesAsList ex)
  where
    add a m = let f = foldr g m . maybe [] triples
                  g (x, (r, _), y) =

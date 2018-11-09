@@ -19,7 +19,8 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Ord
-import Ideas.Common.Library hiding (alternatives, left, right, collapse, Medium)
+import Ideas.Common.Examples (isEmpty, size, allRandoms)
+import Ideas.Common.Library hiding (alternatives, isEmpty, left, right, collapse, Medium)
 import Ideas.Common.Strategy.Symbol
 import Ideas.Encoding.Encoder hiding (left, right)
 import Ideas.Encoding.LinkManager
@@ -257,7 +258,7 @@ encodeExercise lm = makeEncoder $ \ex -> mconcat
    [ generalInfo ex
    , h2 "Example exercises"
    , ul $ [ para $ linkToExamples lm ex $ string "list of examples"
-          | not (null (examples ex))
+          | isEmpty (examples ex)
           ] ++
           [ para $ mconcat $
                string "generate exercise: " :
@@ -265,7 +266,7 @@ encodeExercise lm = makeEncoder $ \ex -> mconcat
                   [ linkToRandomExample lm ex d $ text d
                   | d <- [VeryEasy .. VeryDifficult]
                   ]
-          | isJust (randomExercise ex)
+          | not $ null $ allRandoms $ examples ex
           ] ++
           [ para $ submitStateInfo lm ex ]
    ]
@@ -279,8 +280,8 @@ encodeExercise lm = makeEncoder $ \ex -> mconcat
       , ("Buggy rules", text nrOfBuggyRules)
       , ("OpenMath support", bool $ isJust $ hasTermView ex)
       , ("Restartable strategy", bool $ canBeRestarted ex)
-      , ("Exercise generator", bool $ isJust $ randomExercise ex)
-      , ("Examples", text $ length $ examples ex)
+      , ("Exercise generator", bool $ not $ null $ allRandoms $ examples ex)
+      , ("Examples", text $ size $ examples ex)
       ]
     where
       (nrOfBuggyRules, nrOfSoundRules) =

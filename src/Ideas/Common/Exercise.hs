@@ -26,9 +26,8 @@ module Ideas.Common.Exercise
    , Status(..), isPublic, isPrivate
      -- * Examples
    , Examples, Difficulty(..), readDifficulty
-   , examplesWithDifficulty, examplesContext, examplesAsList
-   , testGenerator
-   , randomTerm, randomTerms
+   , examplesFor, examplesWithDifficulty, examplesContext, examplesAsList
+   , testGenerator, randomTerm, randomTerms
      -- * Context
    , inContext, withoutContext
      -- * Type casting

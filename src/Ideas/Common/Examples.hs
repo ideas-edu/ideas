@@ -22,7 +22,8 @@ module Ideas.Common.Examples
    ( -- * Examples type 
      Examples
      -- * Constructing examples  
-   , example, exampleList, examplesWithDifficulty, random, group, forTesting
+   , example, exampleList, examplesFor, examplesWithDifficulty
+   , random, group, forTesting
      -- * Assigning difficulty
    , difficulty, veryEasy, easy, medium, difficult, veryDifficult
      -- * Transformations and queries 
@@ -76,7 +77,11 @@ example = single . Example Nothing
 exampleList :: [a] -> Examples a
 exampleList = Examples [] . map (Example Nothing)
 
--- | List of examples with difficulty
+-- | List of examples with the same difficulty
+examplesFor :: Difficulty -> [a] -> Examples a
+examplesFor d = examplesWithDifficulty . zip (repeat d)
+
+-- | List of examples with their own difficulty
 examplesWithDifficulty :: [(Difficulty, a)] -> Examples a
 examplesWithDifficulty = Examples [] . map (uncurry (Example . Just))
 

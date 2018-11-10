@@ -26,7 +26,7 @@ import Data.Char
 import Data.Maybe
 import Data.Semigroup ((<>))
 import Data.String
-import Ideas.Encoding.ModeJSON (processJSON)
+import Ideas.Encoding.ModeJSON2 (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
 import Ideas.Encoding.Options (Options, maxTime, optionCgiBin)
 import Ideas.Encoding.Request

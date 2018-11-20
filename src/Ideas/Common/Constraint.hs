@@ -75,6 +75,7 @@ isViolated p a =
 -- Result
 
 data Result a = Irrelevant | Error String | Ok a
+   deriving Show
 
 instance Functor Result where
    fmap _ Irrelevant  = Irrelevant

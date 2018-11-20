@@ -75,6 +75,7 @@ jsonEncodeConst = encoderFor $ \(val ::: tp) ->
       Rule         -> pure (toJSON (showId val))
       Context      -> encodeContext // val
       Location     -> pure (toJSON (show val))
+      Constraint   -> pure (toJSON (show val))
       Environment  -> encodeEnvironment // val
       Term         -> pure (termToJSON val)
       Text         -> pure (toJSON (show val))

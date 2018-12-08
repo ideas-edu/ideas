@@ -20,10 +20,11 @@ module Ideas.Encoding.Logging
    , selectFrom
    ) where
 
+import Data.Char
 import Data.IORef
 import Data.Maybe
 import Data.Time
-import Ideas.Encoding.Options (Options)
+import Ideas.Encoding.Options (Options, loggingDB)
 import Ideas.Encoding.Request (Request, Schema(..))
 import Ideas.Service.State
 import qualified Ideas.Encoding.Request as R

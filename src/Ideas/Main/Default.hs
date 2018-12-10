@@ -24,7 +24,6 @@ import Control.Monad
 import Data.ByteString (ByteString, unpack)
 import Data.Char
 import Data.Maybe
-import Data.Semigroup ((<>))
 import Data.String
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
@@ -76,7 +75,7 @@ defaultCGI options dr = CGI.run $ \req respond -> do
          , Log.input     = input
          , Log.output    = txt
          }
-      Log.logRecord (getSchema preq) logRef
+      Log.logRecord (getSchema preq) logRef options
 
    -- write header and output
    respond $ responseLBS
@@ -116,7 +115,7 @@ defaultCommandLine options dr cmdLineOptions = do
          Version -> putStrLn ("IDEAS, " ++ versionText)
          Help    -> putStrLn helpText
          -- process input file
-         Rerun database -> 
+         Rerun database ->
             processDatabase dr database
          InputFile file ->
             withBinaryFile file ReadMode $ \h -> do

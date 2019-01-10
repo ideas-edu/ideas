@@ -27,7 +27,7 @@ import Data.Maybe
 import Data.String
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
-import Ideas.Encoding.Options (Options, maxTime, optionCgiBin)
+import Ideas.Encoding.Options (Options, maxTime, optionCgiBin, loggingDatabase)
 import Ideas.Encoding.Request
 import Ideas.Main.CmdLineOptions hiding (fullVersion)
 import Ideas.Service.DomainReasoner
@@ -75,7 +75,7 @@ defaultCGI options dr = CGI.run $ \req respond -> do
          , Log.input     = input
          , Log.output    = txt
          }
-      Log.logRecord (getSchema preq) logRef options
+      Log.logRecord (loggingDatabase options) (getSchema preq) logRef
 
    -- write header and output
    respond $ responseLBS

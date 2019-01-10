@@ -13,10 +13,11 @@
 module Ideas.Encoding.Options
    ( Options, makeOptions, optionBaseUrl
    , script, request, qcGen, baseUrl, maxTime, loggingDB
-   , cgiBin, optionCgiBin, optionHtml
+   , loggingDatabase, cgiBin, optionCgiBin, optionHtml
    ) where
 
 import Control.Applicative
+import Data.Maybe
 import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Ideas.Common.Library (Exercise, getId)
@@ -34,12 +35,15 @@ cgiBin = cgiBinary . request
 optionCgiBin :: String -> Options
 optionCgiBin s = mempty {request = mempty {cgiBinary = Just s}}
 
+loggingDatabase :: Options -> FilePath
+loggingDatabase = fromMaybe "requests.db" . loggingDB
+
 data Options = Options
-   { request  :: Request      -- meta-information about the request
-   , qcGen    :: Maybe QCGen  -- random number generator
-   , script   :: Script       -- feedback script
-   , baseUrl  :: Maybe String -- for html-encoder's css and image files
-   , maxTime  :: Maybe Int    -- timeout for services, in seconds
+   { request   :: Request      -- meta-information about the request
+   , qcGen     :: Maybe QCGen  -- random number generator
+   , script    :: Script       -- feedback script
+   , baseUrl   :: Maybe String -- for html-encoder's css and image files
+   , maxTime   :: Maybe Int    -- timeout for services, in seconds
    , loggingDB :: Maybe FilePath --name and locaton of logging database
    }
 

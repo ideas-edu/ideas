@@ -24,7 +24,6 @@ import Data.Char
 import Data.IORef
 import Data.Maybe
 import Data.Time
-import Ideas.Encoding.Options (Options, loggingDB)
 import Ideas.Encoding.Request (Request, Schema(..))
 import Ideas.Service.State
 import qualified Ideas.Encoding.Request as R
@@ -126,18 +125,16 @@ printLog logRef = do
 --------------------------------------------------------------------------------
 
 logEnabled :: Bool
-logRecord  :: Schema -> LogRef -> Options -> IO ()
+logRecord  :: FilePath -> Schema -> LogRef -> IO ()
 selectFrom :: FilePath -> String -> [String] -> ([String] -> IO a) -> IO [a]
 
 #ifdef DB
 logEnabled = True
-logRecord schema logRef options =
+logRecord database schema logRef =
    case schema of
-      V1 -> logRecordWith "service.db"  V1 logRef
-      V2 -> logRecordWith (dbpath (loggingDB options)) V2 logRef
+      V1 -> logRecordWith database V1 logRef
+      V2 -> logRecordWith database V2 logRef
       NoLogging -> return ()
-   where dbpath (Just path) = path
-         dbpath Nothing     = "requests.db"
 #else
 -- without logging
 logEnabled         = False

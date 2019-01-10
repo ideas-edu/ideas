@@ -24,6 +24,7 @@ import Data.Char
 import Data.IORef
 import Data.Maybe
 import Data.Time
+import Ideas.Encoding.Options (Options, loggingDB)
 import Ideas.Encoding.Request (Request, Schema(..))
 import Ideas.Service.State
 import qualified Ideas.Encoding.Request as R
@@ -125,20 +126,22 @@ printLog logRef = do
 --------------------------------------------------------------------------------
 
 logEnabled :: Bool
-logRecord  :: Schema -> LogRef -> IO ()
+logRecord  :: Schema -> LogRef -> Options -> IO ()
 selectFrom :: FilePath -> String -> [String] -> ([String] -> IO a) -> IO [a]
 
 #ifdef DB
 logEnabled = True
-logRecord schema logRef =
+logRecord schema logRef options =
    case schema of
       V1 -> logRecordWith "service.db"  V1 logRef
-      V2 -> logRecordWith "requests.db" V2 logRef
+      V2 -> logRecordWith (dbpath (loggingDB options)) V2 logRef
       NoLogging -> return ()
+   where dbpath (Just path) = path
+         dbpath Nothing     = "requests.db"
 #else
 -- without logging
 logEnabled         = False
-logRecord _ _      = return ()
+logRecord _ _ _    = return ()
 selectFrom _ _ _ _ = return []
 #endif
 
@@ -191,7 +194,7 @@ insertRecord schema r conn =
        pars = "(" ++ intercalate "," (replicate (length cols) "?") ++ ")"
        stm  = "INSERT INTO " ++ nameOfTable schema ++ " VALUES " ++ pars
    in run conn stm cols >> commit conn
-   
+
 selectFrom database table columns f = do
    let sql    = "SELECT " ++ commas (map safe columns) ++ " from " ++ safe table
        commas = intercalate ","

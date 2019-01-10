@@ -12,7 +12,7 @@
 
 module Ideas.Encoding.Options
    ( Options, makeOptions, optionBaseUrl
-   , script, request, qcGen, baseUrl, maxTime
+   , script, request, qcGen, baseUrl, maxTime, loggingDB
    , cgiBin, optionCgiBin, optionHtml
    ) where
 
@@ -40,6 +40,7 @@ data Options = Options
    , script   :: Script       -- feedback script
    , baseUrl  :: Maybe String -- for html-encoder's css and image files
    , maxTime  :: Maybe Int    -- timeout for services, in seconds
+   , loggingDB :: Maybe FilePath --name and locaton of logging database
    }
 
 instance Sem.Semigroup Options where
@@ -49,12 +50,13 @@ instance Sem.Semigroup Options where
       , script   = script x <> script y
       , baseUrl  = make baseUrl
       , maxTime  = make maxTime
+      , loggingDB = make loggingDB
       }
     where
       make f = f x <|> f y
 
 instance Monoid Options where
-   mempty  = Options mempty Nothing mempty Nothing Nothing
+   mempty  = Options mempty Nothing mempty Nothing Nothing Nothing
    mappend = (<>)
 
 optionHtml :: Options

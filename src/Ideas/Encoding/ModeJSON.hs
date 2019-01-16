@@ -105,7 +105,7 @@ myHandler opt1 dr logRef request fun json = do
    Some ex <- case exerciseId request of
                  Just a  -> findExercise dr a
                  Nothing -> return (Some emptyExercise)
-   opt2 <- makeOptions dr ex request
+   opt2 <- makeOptions dr request
    let options = opt1 <> opt2
    evalService logRef ex options jsonEvaluator srv json
 

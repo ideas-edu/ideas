@@ -66,7 +66,7 @@ defaultCGI options dr = CGI.run $ \req respond -> do
    input   <- inputOrDefault req
    -- process request
    (preq, txt, ctp) <-
-      process (options <> optionCgiBin script) dr logRef input
+      process (optionCgiBin script options) dr logRef input
    -- log request to database
    when (useLogging preq) $ do
       Log.changeLog logRef $ \r -> Log.addRequest preq r

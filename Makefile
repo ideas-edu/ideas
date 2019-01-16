@@ -24,7 +24,7 @@ HS-SOURCES = $(wildcard $(SRCDIR)/*/*.hs $(SRCDIR)/*/*/*.hs $(SRCDIR)/*/*/*/*.hs
 #---------------------------------------------------------------------------------------
 # GHC
 
-ghci: revision
+ghci:
 	$(GHCI) -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
 
 ideas: revision

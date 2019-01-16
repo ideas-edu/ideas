@@ -91,7 +91,7 @@ xmlReply opt1 dr logRef request xml = do
                  Just a  -> findExercise dr a
                  Nothing -> return (Some emptyExercise)
 
-   opt2 <- makeOptions dr ex request
+   opt2 <- makeOptions dr request
    let options = opt1 <> opt2
 
    if htmlOutput request

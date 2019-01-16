@@ -27,7 +27,7 @@ import Data.Maybe
 import Data.String
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
-import Ideas.Encoding.Options (Options, maxTime, optionCgiBin, loggingDatabase)
+import Ideas.Encoding.Options (Options, maxTime, optionCgiBin, loggingDatabase, logRef)
 import Ideas.Encoding.Request
 import Ideas.Main.CmdLineOptions hiding (fullVersion)
 import Ideas.Service.DomainReasoner
@@ -50,32 +50,34 @@ defaultMain = defaultMainWith mempty
 
 defaultMainWith :: Options -> DomainReasoner -> IO ()
 defaultMainWith options dr = do
+   -- create a record for logging (use only if not already provided)
+   ref <- Log.newLogRef
+   let newOptions = options {logRef = logRef options <> ref}
+   -- inspect command-line options
    cmdLineOptions <- getCmdLineOptions
    if null cmdLineOptions
-      then defaultCGI options dr
-      else defaultCommandLine options (addVersion dr) cmdLineOptions
+      then defaultCGI newOptions dr
+      else defaultCommandLine newOptions (addVersion dr) cmdLineOptions
 
 -- Invoked as a cgi binary
 defaultCGI :: Options -> DomainReasoner -> IO ()
 defaultCGI options dr = CGI.run $ \req respond -> do
-   -- create a record for logging
-   logRef  <- Log.newLogRef
    -- query environment
    let script = fromMaybe "" (findHeader "CGI-Script-Name" req) -- get name of binary
        addr   = fromMaybe "" (findHeader "REMOTE_ADDR" req)     -- the IP address of the remote host
    input   <- inputOrDefault req
    -- process request
    (preq, txt, ctp) <-
-      process (optionCgiBin script options) dr logRef input
+      process (optionCgiBin script options) dr (logRef options) input
    -- log request to database
    when (useLogging preq) $ do
-      Log.changeLog logRef $ \r -> Log.addRequest preq r
+      Log.changeLog (logRef options) $ \r -> Log.addRequest preq r
          { Log.ipaddress = addr
          , Log.version   = shortVersion
          , Log.input     = input
          , Log.output    = txt
          }
-      Log.logRecord (loggingDatabase options) (getSchema preq) logRef
+      Log.logRecord (loggingDatabase options) (getSchema preq) (logRef options)
 
    -- write header and output
    respond $ responseLBS
@@ -146,7 +148,7 @@ processDatabase dr database = do
    (n, time) <- getDiffTime $ do
       rows <- Log.selectFrom database "requests" ["input"] $ \row -> do
          txt <- headM row
-         (_, out, _) <- process mempty dr Log.noLogRef txt
+         (_, out, _) <- process mempty dr mempty txt
          putStrLn out
       return (length rows)
    putStrLn $ "processed " ++ show n ++ " requests in " ++ show time
@@ -165,7 +167,7 @@ process options dr logRef input = do
 
 makeTestRunner :: DomainReasoner -> String -> IO String
 makeTestRunner dr input = do
-   (_, out, _) <- process mempty dr Log.noLogRef input
+   (_, out, _) <- process mempty dr mempty input
    return out
 
 addVersion :: DomainReasoner -> DomainReasoner

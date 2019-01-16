@@ -15,7 +15,7 @@
 
 module Ideas.Encoding.Logging
    ( Record(..), addRequest, addState
-   , LogRef, newLogRef, noLogRef, changeLog
+   , LogRef, newLogRef, changeLog
    , logEnabled, logRecord, printLog
    , selectFrom
    ) where
@@ -23,6 +23,7 @@ module Ideas.Encoding.Logging
 import Data.Char
 import Data.IORef
 import Data.Maybe
+import Data.Semigroup as Sem
 import Data.Time
 import Ideas.Encoding.Request (Request, Schema(..))
 import Ideas.Service.State
@@ -102,8 +103,13 @@ addState st r = r
 
 newtype LogRef = L { mref :: Maybe (IORef Record) }
 
-noLogRef :: LogRef
-noLogRef = L Nothing
+instance Semigroup LogRef where
+   L Nothing <> r = r
+   r <> _         = r
+
+instance Monoid LogRef where
+   mempty  = L Nothing
+   mappend = (<>)
 
 newLogRef :: IO LogRef
 newLogRef = do

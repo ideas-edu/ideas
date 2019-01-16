@@ -12,7 +12,7 @@
 
 module Ideas.Encoding.Options
    ( Options, makeOptions, optionBaseUrl
-   , script, request, qcGen, baseUrl, maxTime, loggingDB
+   , script, request, qcGen, baseUrl, maxTime, loggingDB, logRef
    , loggingDatabase, cgiBin, optionCgiBin, optionHtml
    ) where
 
@@ -20,6 +20,7 @@ import Control.Applicative
 import Data.Maybe
 import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
+import Ideas.Encoding.Logging (LogRef)
 import Ideas.Encoding.Request
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Parser (parseScriptSafe, Script)
@@ -43,23 +44,25 @@ data Options = Options
    , script    :: Script         -- feedback script
    , baseUrl   :: Maybe String   -- for html-encoder's css and image files
    , maxTime   :: Maybe Int      -- timeout for services, in seconds
-   , loggingDB :: Maybe FilePath --name and locaton of logging database
+   , loggingDB :: Maybe FilePath -- name and locaton of logging database
+   , logRef    :: LogRef         -- reference for logging to database
    }
 
 instance Sem.Semigroup Options where
    x <> y = Options
-      { request  = request x <> request y
-      , qcGen    = make qcGen
-      , script   = script x <> script y
-      , baseUrl  = make baseUrl
-      , maxTime  = make maxTime
+      { request   = request x <> request y
+      , qcGen     = make qcGen
+      , script    = script x <> script y
+      , baseUrl   = make baseUrl
+      , maxTime   = make maxTime
       , loggingDB = make loggingDB
+      , logRef    = logRef x <> logRef y
       }
     where
       make f = f x <|> f y
 
 instance Monoid Options where
-   mempty  = Options mempty Nothing mempty Nothing Nothing Nothing
+   mempty  = Options mempty Nothing mempty Nothing Nothing Nothing mempty
    mappend = (<>)
 
 optionHtml :: Options -> Options

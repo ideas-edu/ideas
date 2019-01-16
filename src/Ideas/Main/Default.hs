@@ -27,7 +27,7 @@ import Data.Maybe
 import Data.String
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
-import Ideas.Encoding.Options (Options, maxTime, optionCgiBin, loggingDatabase, logRef)
+import Ideas.Encoding.Options (Options, maxTime, optionCgiBin, logRef)
 import Ideas.Encoding.Request
 import Ideas.Main.CmdLineOptions hiding (fullVersion)
 import Ideas.Service.DomainReasoner
@@ -51,7 +51,7 @@ defaultMain = defaultMainWith mempty
 defaultMainWith :: Options -> DomainReasoner -> IO ()
 defaultMainWith options dr = do
    -- create a record for logging (use only if not already provided)
-   ref <- Log.newLogRef
+   ref <- Log.defaultLogRef
    let newOptions = options {logRef = logRef options <> ref}
    -- inspect command-line options
    cmdLineOptions <- getCmdLineOptions
@@ -69,16 +69,16 @@ defaultCGI options dr = CGI.run $ \req respond -> do
    -- process request
    (preq, txt, ctp) <-
       process (optionCgiBin script options) dr input
+   -- store request in log reference
+   Log.changeLog (logRef options) $ \r -> Log.addRequest preq r
+      { Log.ipaddress = addr
+      , Log.version   = shortVersion
+      , Log.input     = input
+      , Log.output    = txt
+      }
    -- log request to database
-   when (useLogging preq) $ do
-      Log.changeLog (logRef options) $ \r -> Log.addRequest preq r
-         { Log.ipaddress = addr
-         , Log.version   = shortVersion
-         , Log.input     = input
-         , Log.output    = txt
-         }
-      Log.logRecord (loggingDatabase options) (getSchema preq) (logRef options)
-
+   when (useLogging preq) $
+      Log.logRecord (logRef options)
    -- write header and output
    respond $ responseLBS
       status200

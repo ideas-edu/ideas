@@ -68,7 +68,7 @@ defaultCGI options dr = CGI.run $ \req respond -> do
    input   <- inputOrDefault req
    -- process request
    (preq, txt, ctp) <-
-      process (optionCgiBin script options) dr (logRef options) input
+      process (optionCgiBin script options) dr input
    -- log request to database
    when (useLogging preq) $ do
       Log.changeLog (logRef options) $ \r -> Log.addRequest preq r
@@ -121,18 +121,17 @@ defaultCommandLine options dr cmdLineOptions = do
             processDatabase dr database
          InputFile file ->
             withBinaryFile file ReadMode $ \h -> do
-               logRef <- Log.newLogRef
                input  <- hGetContents h
-               (req, txt, _) <- process options dr logRef input
+               (req, txt, _) <- process options dr input
                putStrLn txt
                when (PrintLog `elem` cmdLineOptions) $ do
-                  Log.changeLog logRef $ \r -> Log.addRequest req r
+                  Log.changeLog (logRef options) $ \r -> Log.addRequest req r
                      { Log.ipaddress = "command-line"
                      , Log.version   = shortVersion
                      , Log.input     = input
                      , Log.output    = txt
                      }
-                  Log.printLog logRef
+                  Log.printLog (logRef options)
          -- blackbox tests
          Test dir -> do
             tests  <- blackBoxTests (makeTestRunner dr) ["xml", "json"] dir
@@ -148,18 +147,18 @@ processDatabase dr database = do
    (n, time) <- getDiffTime $ do
       rows <- Log.selectFrom database "requests" ["input"] $ \row -> do
          txt <- headM row
-         (_, out, _) <- process mempty dr mempty txt
+         (_, out, _) <- process mempty dr txt
          putStrLn out
       return (length rows)
    putStrLn $ "processed " ++ show n ++ " requests in " ++ show time
 
-process :: Options -> DomainReasoner -> Log.LogRef -> String -> IO (Request, String, String)
-process options dr logRef input = do
+process :: Options -> DomainReasoner -> String -> IO (Request, String, String)
+process options dr input = do
    format <- discoverDataFormat input
-   run format options {maxTime = Just 5} (addVersion dr) logRef input
+   run format options {maxTime = Just 5} (addVersion dr) input
  `catch` \e -> do
    let msg = "Error: " ++ show (e :: SomeException)
-   Log.changeLog logRef (\r -> r { Log.errormsg = msg })
+   Log.changeLog (logRef options) (\r -> r { Log.errormsg = msg })
    return (mempty, msg, "text/plain")
  where
    run XML  = processXML
@@ -167,7 +166,7 @@ process options dr logRef input = do
 
 makeTestRunner :: DomainReasoner -> String -> IO String
 makeTestRunner dr input = do
-   (_, out, _) <- process mempty dr mempty input
+   (_, out, _) <- process mempty dr input
    return out
 
 addVersion :: DomainReasoner -> DomainReasoner

@@ -21,8 +21,8 @@ import Ideas.Encoding.DecoderXML
 import Ideas.Encoding.EncoderHTML
 import Ideas.Encoding.EncoderXML
 import Ideas.Encoding.Evaluator
-import Ideas.Encoding.Logging (LogRef, changeLog, errormsg)
-import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin)
+import Ideas.Encoding.Logging (changeLog, errormsg)
+import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin, logRef)
 import Ideas.Encoding.Request
 import Ideas.Service.DomainReasoner
 import Ideas.Text.HTML
@@ -30,11 +30,11 @@ import Ideas.Text.XML
 import Ideas.Utils.Prelude (timedSeconds)
 import System.IO.Error
 
-processXML :: Options -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
-processXML options dr logRef txt = do
+processXML :: Options -> DomainReasoner -> String -> IO (Request, String, String)
+processXML options dr txt = do
    xml  <- either fail return (parseXML txt)
    req  <- xmlRequest (cgiBin options) xml
-   resp <- maybe id timedSeconds (maxTime options) (xmlReply options dr logRef req xml)
+   resp <- maybe id timedSeconds (maxTime options) (xmlReply options dr req xml)
     `catch` handler
    let showXML | compactOutput req = compactXML
                | otherwise = show
@@ -45,7 +45,7 @@ processXML options dr logRef txt = do
            in return (req, showXML out, "application/xml")
  where
    handler :: SomeException -> IO XML
-   handler e = resultError logRef $
+   handler e = resultError options $
       case fromException e of
          Just ioe -> ioeGetErrorString ioe
          Nothing  -> show e
@@ -81,8 +81,8 @@ defaultSeed :: Maybe String -> Maybe Int -> Maybe Int
 defaultSeed Nothing Nothing = Just 2805 -- magic number
 defaultSeed _ m = m
 
-xmlReply :: Options -> DomainReasoner -> LogRef -> Request -> XML -> IO XML
-xmlReply opt1 dr logRef request xml = do
+xmlReply :: Options -> DomainReasoner -> Request -> XML -> IO XML
+xmlReply opt1 dr request xml = do
    srv <- case serviceId request of
              Just a  -> findService dr a
              Nothing -> fail "No service"
@@ -96,9 +96,9 @@ xmlReply opt1 dr logRef request xml = do
 
    if htmlOutput request
       -- HTML evaluator
-      then toXML <$> evalService logRef ex options (htmlEvaluator dr) srv xml
+      then toXML <$> evalService ex options (htmlEvaluator dr) srv xml
       -- xml evaluator
-      else resultOk <$> evalService logRef ex options xmlEvaluator srv xml
+      else resultOk <$> evalService ex options xmlEvaluator srv xml
 
 extractExerciseId :: Monad m => XML -> m Id
 extractExerciseId = fmap newId . findAttribute "exerciseid"
@@ -108,9 +108,9 @@ resultOk body = makeXML "reply" $
    ("result" .=. "ok")
    <> body
 
-resultError :: LogRef -> String -> IO XML
-resultError logRef msg = do
-   changeLog logRef (\r -> r {errormsg = msg})
+resultError :: Options -> String -> IO XML
+resultError options msg = do
+   changeLog (logRef options) (\r -> r {errormsg = msg})
    return $ makeXML "reply" $
       ("result" .=. "error")
       <> tag "message" (string msg)

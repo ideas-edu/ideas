@@ -22,21 +22,21 @@ import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.DecoderJSON
 import Ideas.Encoding.EncoderJSON
 import Ideas.Encoding.Evaluator
-import Ideas.Encoding.Logging (LogRef, changeLog, errormsg)
-import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin)
+import Ideas.Encoding.Logging (changeLog, errormsg)
+import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin, logRef)
 import Ideas.Encoding.Request
 import Ideas.Service.DomainReasoner
 import Ideas.Text.JSON
 import Ideas.Utils.Prelude (timedSeconds)
 
-processJSON :: Options -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
-processJSON options dr logRef txt = do
+processJSON :: Options -> DomainReasoner -> String -> IO (Request, String, String)
+processJSON options dr txt = do
    json <- either fail return (parseJSON txt)
    req  <- jsonRequest options json
    resp <- jsonRPC json $ \fun arg ->
-              maybe id timedSeconds (maxTime options) (myHandler options dr logRef req fun arg)
+              maybe id timedSeconds (maxTime options) (myHandler options dr req fun arg)
    unless (responseError resp == Null) $
-      changeLog logRef (\r -> r {errormsg = show (responseError resp)})
+      changeLog (logRef options) (\r -> r {errormsg = show (responseError resp)})
    let f   = if compactOutput req then compactJSON else show
        out = addVersion (version dr) (toJSON resp)
    return (req, f out, "application/json")
@@ -99,15 +99,15 @@ stringOptionM attr json a f =
       Just _  -> fail $ "Invalid value for " ++ attr ++ " (expecting string)"
       Nothing -> return a
 
-myHandler :: Options -> DomainReasoner -> LogRef -> Request -> RPCHandler
-myHandler opt1 dr logRef request fun json = do
+myHandler :: Options -> DomainReasoner -> Request -> RPCHandler
+myHandler opt1 dr request fun json = do
    srv <- findService dr (newId fun)
    Some ex <- case exerciseId request of
                  Just a  -> findExercise dr a
                  Nothing -> return (Some emptyExercise)
    opt2 <- makeOptions dr request
    let options = opt1 <> opt2
-   evalService logRef ex options jsonEvaluator srv json
+   evalService ex options jsonEvaluator srv json
 
 jsonEvaluator :: Evaluator a JSON JSON
 jsonEvaluator = Evaluator jsonDecoder jsonEncoder

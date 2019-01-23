@@ -16,7 +16,7 @@
 module Ideas.Encoding.Logging
    ( Record(..), addRequest, addState
    , LogRef, makeLogRef, defaultLogRef, enableLogging, disableLogging
-   , changeLog, logEnabled, logRecord, printLog
+   , changeLog, logEnabled, logRecord, logRecordWith, printLog
    , selectFrom
    ) where
 
@@ -158,6 +158,9 @@ logEnabled = True
 logEnabled         = False
 logRecord _        = return ()
 selectFrom _ _ _ _ = return []
+
+logRecordWith :: LogRef -> c -> IO ()
+logRecordWith _ _ = return ()
 #endif
 
 --------------------------------------------------------------------------------
@@ -188,21 +191,28 @@ values_v2 r =
       ]
 
 logRecord NoRef  = return ()
-logRecord logRef@(LogRef file schema _) =
+logRecord logRef@(LogRef file _ _) =
    (whenLogging logRef) $ do
       -- connect to database
       conn <- connectSqlite3 file
       setBusyTimeout conn 200 -- milliseconds
-      -- calculate duration
-      r   <- getRecord logRef
-      end <- getCurrentTime
-      let diff = diffUTCTime end (time r)
-      -- insert data into database
-      insertRecord schema r {responsetime = diff} conn
+      logRecordWith logRef conn
       -- close the connection to the database
       disconnect conn
     `catchSql` \_ ->
       return ()
+
+logRecordWith :: IConnection c => LogRef -> c -> IO ()
+logRecordWith NoRef _  = return ()
+logRecordWith logRef@(LogRef _ schema _) conn = do
+   -- calculate duration
+   r   <- getRecord logRef
+   end <- getCurrentTime
+   let diff = diffUTCTime end (time r)
+   -- insert data into database
+   insertRecord schema r {responsetime = diff} conn
+ `catchSql` \_ ->
+   return ()
 
 insertRecord :: IConnection c => Schema -> Record -> c ->  IO ()
 insertRecord schema r conn =

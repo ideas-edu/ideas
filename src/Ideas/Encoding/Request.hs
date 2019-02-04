@@ -28,7 +28,7 @@ data Request = Request
    , feedbackScript :: Maybe String
    , requestInfo    :: Maybe String
    , cgiBinary      :: Maybe String
-   , logSchema      :: Maybe Schema
+   , logSchema      :: Maybe Schema     -- should be yes (default)/no
    , randomSeed     :: Maybe Int
    , dataformat     :: Maybe DataFormat -- default: XML
    , encoding       :: [Encoding]
@@ -56,9 +56,6 @@ instance Monoid Request where
    mappend = (<>)
 
 data Schema = V1 | V2 | NoLogging deriving (Show, Eq)
-
-getSchema :: Request -> Schema
-getSchema = fromMaybe V2 . logSchema -- log schema V2 is the default
 
 readSchema :: Monad m => String -> m Schema
 readSchema s0
@@ -114,7 +111,7 @@ useJSONTerm r =
       _ -> False
 
 useLogging :: Request -> Bool
-useLogging = (EncHTML `notElem`) . encoding
+useLogging r = EncHTML `notElem` encoding r && logSchema r /= Just NoLogging
 
 discoverDataFormat :: Monad m => String -> m DataFormat
 discoverDataFormat xs =

@@ -15,16 +15,18 @@
 
 module Ideas.Encoding.Logging
    ( Record(..), addRequest, addState
-   , LogRef, newLogRef, noLogRef, changeLog
-   , logEnabled, logRecord, printLog
+   , LogRef, makeLogRef, defaultLogRef, enableLogging, disableLogging
+   , changeLog, logEnabled, logRecord, logRecordWith, printLog
    , selectFrom
+   , getRecord
+   , getFilePath
    ) where
 
 import Data.Char
 import Data.IORef
 import Data.Maybe
+import Data.Semigroup (Semigroup(..))
 import Data.Time
-import Ideas.Encoding.Options (Options, loggingDB)
 import Ideas.Encoding.Request (Request, Schema(..))
 import Ideas.Service.State
 import qualified Ideas.Encoding.Request as R
@@ -40,8 +42,9 @@ type Time = UTCTime
 
 -- | The Record datatype is based on the Ideas Request Logging Schema version 2.
 data Record = Record
-   { -- request attributes
-     service      :: String  -- name of feedback service
+   { useLogging   :: Bool
+     -- request attributes
+   , service      :: String  -- name of feedback service
    , exerciseid   :: String  -- exercise identifier
    , source       :: String  -- tool/learning environment that makes request
    , script       :: String  -- name of feedback script (for textual feedback)
@@ -70,7 +73,7 @@ data Record = Record
  deriving Show
 
 record :: Record
-record = Record "" "" "" "" "" "" "" "" "" "" t0 0 "" "" "" "" "" "" "" ""
+record = Record True "" "" "" "" "" "" "" "" "" "" t0 0 "" "" "" "" "" "" "" ""
  where t0 = UTCTime (toEnum 0) 0
 
 makeRecord :: IO Record
@@ -101,22 +104,47 @@ addState st r = r
 
 ---------------------------------------------------------------------
 
-newtype LogRef = L { mref :: Maybe (IORef Record) }
+data LogRef = NoRef | LogRef FilePath Schema (IORef Record)
 
-noLogRef :: LogRef
-noLogRef = L Nothing
+instance Semigroup LogRef where
+   NoRef <> r = r
+   r <> _     = r
 
-newLogRef :: IO LogRef
-newLogRef = do
+instance Monoid LogRef where
+   mempty  = NoRef
+   mappend = (<>)
+
+defaultLogRef :: IO LogRef
+defaultLogRef = makeLogRef "requests.db" V2
+
+makeLogRef :: FilePath -> Schema -> IO LogRef
+makeLogRef file schema = do
    r   <- makeRecord
    ref <- newIORef r
-   return (L (Just ref))
+   return (LogRef file schema ref)
+
+enableLogging :: LogRef -> IO ()
+enableLogging = flip changeLog (\r -> r {useLogging = True})
+
+disableLogging :: LogRef -> IO ()
+disableLogging = flip changeLog (\r -> r {useLogging = False})
+
+whenLogging :: LogRef -> IO () -> IO ()
+whenLogging logRef m = do
+   r <- getRecord logRef
+   if useLogging r then m else return ()
 
 getRecord :: LogRef -> IO Record
-getRecord = maybe (return record) readIORef . mref
+getRecord NoRef          = return record
+getRecord (LogRef _ _ r) = readIORef r
+
+getFilePath :: LogRef -> Maybe FilePath
+getFilePath NoRef = Nothing
+getFilePath (LogRef fp _ _) = Just fp
 
 changeLog :: LogRef -> (Record -> Record) -> IO ()
-changeLog = maybe (\_ -> return ()) modifyIORef . mref
+changeLog NoRef          _ = return ()
+changeLog (LogRef _ _ r) f = modifyIORef r f
 
 printLog :: LogRef -> IO ()
 printLog logRef = do
@@ -126,23 +154,19 @@ printLog logRef = do
 --------------------------------------------------------------------------------
 
 logEnabled :: Bool
-logRecord  :: Schema -> LogRef -> Options -> IO ()
+logRecord  :: LogRef -> IO ()
 selectFrom :: FilePath -> String -> [String] -> ([String] -> IO a) -> IO [a]
 
 #ifdef DB
 logEnabled = True
-logRecord schema logRef options =
-   case schema of
-      V1 -> logRecordWith "service.db"  V1 logRef
-      V2 -> logRecordWith (dbpath (loggingDB options)) V2 logRef
-      NoLogging -> return ()
-   where dbpath (Just path) = path
-         dbpath Nothing     = "requests.db"
 #else
 -- without logging
 logEnabled         = False
-logRecord _ _ _    = return ()
+logRecord _        = return ()
 selectFrom _ _ _ _ = return []
+
+logRecordWith :: LogRef -> c -> IO ()
+logRecordWith _ _ = return ()
 #endif
 
 --------------------------------------------------------------------------------
@@ -172,19 +196,27 @@ values_v2 r =
       , get errormsg, get serviceinfo, get ruleid, get input, get output
       ]
 
-logRecordWith :: FilePath -> Schema -> LogRef -> IO ()
-logRecordWith file schema logRef = do
-   -- connect to database
-   conn <- connectSqlite3 file
-   setBusyTimeout conn 200 -- milliseconds
+logRecord NoRef  = return ()
+logRecord logRef@(LogRef file _ _) =
+   (whenLogging logRef) $ do
+      -- connect to database
+      conn <- connectSqlite3 file
+      setBusyTimeout conn 200 -- milliseconds
+      logRecordWith logRef conn
+      -- close the connection to the database
+      disconnect conn
+    `catchSql` \_ ->
+      return ()
+
+logRecordWith :: IConnection c => LogRef -> c -> IO ()
+logRecordWith NoRef _  = return ()
+logRecordWith logRef@(LogRef _ schema _) conn = do
    -- calculate duration
    r   <- getRecord logRef
    end <- getCurrentTime
    let diff = diffUTCTime end (time r)
    -- insert data into database
    insertRecord schema r {responsetime = diff} conn
-   -- close the connection to the database
-   disconnect conn
  `catchSql` \_ ->
    return ()
 

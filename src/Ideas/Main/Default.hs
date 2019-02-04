@@ -27,7 +27,7 @@ import Data.Maybe
 import Data.String
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
-import Ideas.Encoding.Options (Options, maxTime, optionCgiBin)
+import Ideas.Encoding.Options (Options, maxTime, optionCgiBin, logRef)
 import Ideas.Encoding.Request
 import Ideas.Main.CmdLineOptions hiding (fullVersion)
 import Ideas.Service.DomainReasoner
@@ -50,33 +50,35 @@ defaultMain = defaultMainWith mempty
 
 defaultMainWith :: Options -> DomainReasoner -> IO ()
 defaultMainWith options dr = do
+   -- create a record for logging (use only if not already provided)
+   ref <- Log.defaultLogRef
+   let newOptions = options {logRef = logRef options <> ref}
+   -- inspect command-line options
    cmdLineOptions <- getCmdLineOptions
    if null cmdLineOptions
-      then defaultCGI options dr
-      else defaultCommandLine options (addVersion dr) cmdLineOptions
+      then defaultCGI newOptions dr
+      else defaultCommandLine newOptions (addVersion dr) cmdLineOptions
 
 -- Invoked as a cgi binary
 defaultCGI :: Options -> DomainReasoner -> IO ()
 defaultCGI options dr = CGI.run $ \req respond -> do
-   -- create a record for logging
-   logRef  <- Log.newLogRef
    -- query environment
    let script = fromMaybe "" (findHeader "CGI-Script-Name" req) -- get name of binary
        addr   = fromMaybe "" (findHeader "REMOTE_ADDR" req)     -- the IP address of the remote host
    input   <- inputOrDefault req
    -- process request
    (preq, txt, ctp) <-
-      process (options <> optionCgiBin script) dr logRef input
+      process (optionCgiBin script options) dr input
+   -- store request in log reference
+   Log.changeLog (logRef options) $ \r -> Log.addRequest preq r
+      { Log.ipaddress = addr
+      , Log.version   = shortVersion
+      , Log.input     = input
+      , Log.output    = txt
+      }
    -- log request to database
-   when (useLogging preq) $ do
-      Log.changeLog logRef $ \r -> Log.addRequest preq r
-         { Log.ipaddress = addr
-         , Log.version   = shortVersion
-         , Log.input     = input
-         , Log.output    = txt
-         }
-      Log.logRecord (getSchema preq) logRef options
-
+   when (useLogging preq) $
+      Log.logRecord (logRef options)
    -- write header and output
    respond $ responseLBS
       status200
@@ -119,18 +121,17 @@ defaultCommandLine options dr cmdLineOptions = do
             processDatabase dr database
          InputFile file ->
             withBinaryFile file ReadMode $ \h -> do
-               logRef <- Log.newLogRef
                input  <- hGetContents h
-               (req, txt, _) <- process options dr logRef input
+               (req, txt, _) <- process options dr input
                putStrLn txt
                when (PrintLog `elem` cmdLineOptions) $ do
-                  Log.changeLog logRef $ \r -> Log.addRequest req r
+                  Log.changeLog (logRef options) $ \r -> Log.addRequest req r
                      { Log.ipaddress = "command-line"
                      , Log.version   = shortVersion
                      , Log.input     = input
                      , Log.output    = txt
                      }
-                  Log.printLog logRef
+                  Log.printLog (logRef options)
          -- blackbox tests
          Test dir -> do
             tests  <- blackBoxTests (makeTestRunner dr) ["xml", "json"] dir
@@ -146,18 +147,18 @@ processDatabase dr database = do
    (n, time) <- getDiffTime $ do
       rows <- Log.selectFrom database "requests" ["input"] $ \row -> do
          txt <- headM row
-         (_, out, _) <- process mempty dr Log.noLogRef txt
+         (_, out, _) <- process mempty dr txt
          putStrLn out
       return (length rows)
    putStrLn $ "processed " ++ show n ++ " requests in " ++ show time
 
-process :: Options -> DomainReasoner -> Log.LogRef -> String -> IO (Request, String, String)
-process options dr logRef input = do
+process :: Options -> DomainReasoner -> String -> IO (Request, String, String)
+process options dr input = do
    format <- discoverDataFormat input
-   run format options {maxTime = Just 5} (addVersion dr) logRef input
+   run format options {maxTime = Just 5} (addVersion dr) input
  `catch` \e -> do
    let msg = "Error: " ++ show (e :: SomeException)
-   Log.changeLog logRef (\r -> r { Log.errormsg = msg })
+   Log.changeLog (logRef options) (\r -> r { Log.errormsg = msg })
    return (mempty, msg, "text/plain")
  where
    run XML  = processXML
@@ -165,7 +166,7 @@ process options dr logRef input = do
 
 makeTestRunner :: DomainReasoner -> String -> IO String
 makeTestRunner dr input = do
-   (_, out, _) <- process mempty dr Log.noLogRef input
+   (_, out, _) <- process mempty dr input
    return out
 
 addVersion :: DomainReasoner -> DomainReasoner

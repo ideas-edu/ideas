@@ -31,18 +31,18 @@ data EvalResult a c = EvalResult
 values :: EvalResult a c -> [TypedValue (Type a)]
 values result = outputValue result : inputValues result
 
-logType :: LogRef -> EvalResult a c -> Type a b -> (b -> Record -> Record) -> IO ()
-logType logRef res tp f =
+logType :: Options -> EvalResult a c -> Type a b -> (b -> Record -> Record) -> IO ()
+logType opts res tp f =
    case concatMap (findValuesOfType tp) (values res) of
       []   -> return ()
-      hd:_ -> changeLog logRef (f hd)
+      hd:_ -> changeLog (logRef opts) (f hd)
 
-evalService :: LogRef -> Exercise a -> Options -> Evaluator a b c -> Service -> b -> IO c
-evalService logRef ex opts f srv b = do
+evalService :: Exercise a -> Options -> Evaluator a b c -> Service -> b -> IO c
+evalService ex opts f srv b = do
    res <- eval ex opts f b (serviceFunction srv)
-   logType logRef res tState addState
-   logType logRef res tRule $ \rl r -> r {ruleid = showId rl}
-   logType logRef res tDiagnosis $ \d r -> r {serviceinfo = show d}
+   logType opts res tState addState
+   logType opts res tRule $ \rl r -> r {ruleid = showId rl}
+   logType opts res tDiagnosis $ \d r -> r {serviceinfo = show d}
    return (evalResult res)
 
 eval :: Exercise a -> Options -> Evaluator a b c -> b -> TypedValue (Type a) -> IO (EvalResult a c)

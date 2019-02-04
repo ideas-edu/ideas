@@ -18,6 +18,8 @@ module Ideas.Encoding.Logging
    , LogRef, makeLogRef, defaultLogRef, enableLogging, disableLogging
    , changeLog, logEnabled, logRecord, logRecordWith, printLog
    , selectFrom
+   , getRecord
+   , getFilePath
    ) where
 
 import Data.Char
@@ -135,6 +137,10 @@ whenLogging logRef m = do
 getRecord :: LogRef -> IO Record
 getRecord NoRef          = return record
 getRecord (LogRef _ _ r) = readIORef r
+
+getFilePath :: LogRef -> Maybe FilePath
+getFilePath NoRef = Nothing
+getFilePath (LogRef fp _ _) = Just fp
 
 changeLog :: LogRef -> (Record -> Record) -> IO ()
 changeLog NoRef          _ = return ()

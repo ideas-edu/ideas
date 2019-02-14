@@ -87,7 +87,7 @@ jsonEncodeConst = encoderFor $ \(val ::: tp) ->
      Environment  -> encodeEnvironment // val
      Context      -> encodeContext // val
      State        -> encodeState // val
-     _ -> pure [(Nothing, toJSON (show tp))]
+     _            -> pure [(Nothing, toJSON (show tp))]
 
     {-
       SomeExercise -> case val of
@@ -216,11 +216,6 @@ encodeEnvironment :: JSONEncoder a Environment
 encodeEnvironment = makeEncoder $ \env ->
    let f a = Object [(showId a, String (showValue a))]
    in Object [("environment", Array [ f a | a <- bindings env ])]
-
-
-
-
-
 
 
 encodeDerivation :: JSONEncoder a (Derivation (Rule (Context a), Environment) (Context a))

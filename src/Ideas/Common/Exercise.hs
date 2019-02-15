@@ -225,9 +225,9 @@ ruleOrderingWith bs r1 r2 =
       (Nothing, Nothing) -> compareId r1 r2
 
 -- | Get all constraint violations
-violations :: Exercise a -> Context a -> [(Id, String)]
+violations :: Exercise a -> Context a -> [(Constraint (Context a), String)]
 violations ex ctx =
-   [ (getId c, msg)
+   [ (c, msg)
    | c <- constraints ex
    , msg <- maybeToList (isViolated c ctx)
    ]

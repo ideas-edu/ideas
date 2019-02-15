@@ -84,6 +84,7 @@ xmlEncoderConst = encoderFor $ \tv@(val ::: tp) ->
                          Some a -> exerciseInfo // a
       Strategy     -> builder (strategyToXML val)
       Rule         -> "ruleid" .=. show val
+      Constraint   -> "constraint" .=. show val
       State        -> encodeState // val
       Context      -> encodeContext // val
       Location     -> encodeLocation // val

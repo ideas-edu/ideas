@@ -63,7 +63,7 @@ data Test = Case  String (IO Message)
           | Suite String TestSuite
 
 instance Sem.Semigroup TestSuite where
-   TS xs <> TS ys = TS (xs S.>< ys)
+   TS xs <> TS ys = TS (xs <> ys)
 
 instance Monoid TestSuite where
    mempty  = TS mempty
@@ -252,8 +252,8 @@ instance Show Result where
 
 instance Sem.Semigroup Result where
    x <> y = Result
-      { suites       = suites x S.>< suites y
-      , cases        = cases x  S.>< cases y
+      { suites       = suites x <> suites y
+      , cases        = cases x  <> cases y
       , diffTime     = diffTime x     + diffTime y
       , nrOfTests    = nrOfTests x    + nrOfTests y
       , nrOfWarnings = nrOfWarnings x + nrOfWarnings y

@@ -124,7 +124,7 @@ fromBS (BS as elts) = (attrList, toList elts)
 
 instance Sem.Semigroup XMLBuilder where
   BS as1 elts1 <> BS as2 elts2 =
-      BS (as1 <> as2) (elts1 <> elts2)
+      BS (as1 Seq.>< as2) (elts1 Seq.>< elts2)
 
 instance Monoid XMLBuilder where
    mempty  = BS mempty mempty

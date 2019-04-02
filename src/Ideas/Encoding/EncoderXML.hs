@@ -92,6 +92,7 @@ xmlEncoderConst = encoderFor $ \tv@(val ::: tp) ->
       Term         -> builderXML (toOMOBJ val)
       Text         -> encodeText // val
       Bool         -> string (showBool val)
+      XML          -> builder val
       _            -> text tv
 
 encodeState :: XMLEncoder a (State a)

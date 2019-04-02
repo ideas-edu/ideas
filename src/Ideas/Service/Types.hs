@@ -24,7 +24,7 @@ module Ideas.Service.Types
    , tTerm, tStrategy, tTree, tState, tBool, tMaybe, tString, tList
    , tId, tService, tSomeExercise, tText, tDifficulty, tUserId ,tContext
    , tDerivation, tError, (.->), tIO, tExercise, tTestSuiteResult, tQCGen
-   , tScript, tExamples, tStrategyCfg, tMathML, tInt
+   , tScript, tExamples, tStrategyCfg, tMathML, tInt, tXML
      -- * Searching a typed value
    , findValuesOfType
    ) where
@@ -39,6 +39,7 @@ import Ideas.Common.Library
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
 import Ideas.Text.MathML
+import Ideas.Text.XML (XML)
 import Test.QuickCheck.Random (QCGen)
 import qualified Ideas.Utils.TestSuite as TestSuite
 
@@ -106,6 +107,7 @@ instance Equal (Const a) where
    equal Text        Text        = Just id
    equal QCGen       QCGen       = Just id
    equal Result      Result      = Just id
+   equal XML         XML         = Just id
    equal _           _           = Nothing
 
 infixr 5 :|:
@@ -159,6 +161,7 @@ data Const a t where
    Result       :: Const a TestSuite.Result
    SomeExercise :: Const a (Some Exercise)
    MathML       :: Const a MathML
+   XML          :: Const a XML
    -- basic types
    Bool         :: Const a Bool
    Int          :: Const a Int
@@ -219,6 +222,7 @@ instance Show (TypedValue (Const a)) where
          QCGen            -> show val
          Result           -> show val
          MathML           -> show val
+         XML              -> show val
          Bool             -> map toLower (show val)
          Int              -> show val
          String           -> val
@@ -245,6 +249,7 @@ instance ShowF (Const a) where
    showF Result       = "TestSuiteResult"
    showF SomeExercise = "Exercise"
    showF MathML       = "MathML"
+   showF XML          = "XML"
    showF Bool         = "Bool"
    showF Int          = "Int"
    showF String       = "String"
@@ -392,6 +397,9 @@ tTree t = Tag "Tree" $ Iso (f <-> g) (tPair t (tList (tTree t)))
 
 tTestSuiteResult :: Type a TestSuite.Result
 tTestSuiteResult = Const Result
+
+tXML :: Type a XML
+tXML = Const XML
 
 -------------------------------------
 

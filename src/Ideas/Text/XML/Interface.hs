@@ -14,7 +14,7 @@
 
 module Ideas.Text.XML.Interface
    ( Element(..), Content, Attribute(..), Attributes
-   , normalize, parseXML, compactXML
+   , normalize, parseXML, prettyXML, compactXML
    , children, findAttribute, findChildren, findChild, getData
    ) where
 
@@ -35,12 +35,15 @@ data Element = Element
  deriving Eq
 
 instance Show Element where
-   show = show . extend
+   show = compactXML
+
+prettyXML :: Element -> String
+prettyXML = show . prettyElement False . extend
 
 compactXML :: Element -> String
 compactXML = show . prettyElement True . extend
 
--- invariant: no two adjacent Lefts, no Left with empty string
+-- invariant: no two adjacent Lefts, no Left with empty string, valid tag/attribute names
 type Content = [Either String Element]
 
 type Attributes = [Attribute]

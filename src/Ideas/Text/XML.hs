@@ -16,7 +16,7 @@
 module Ideas.Text.XML
    ( XML, Attr, AttrList, Element(..), ToXML(..), builderXML, InXML(..)
    , XMLBuilder, isEmptyBuilder, makeXML
-   , parseXML, parseXMLFile, compactXML, trimXML, findAttribute
+   , parseXML, parseXMLFile, prettyXML, compactXML, trimXML, findAttribute
    , children, Attribute(..), fromBuilder, findChild, findChildren, getData
    , BuildXML(..)
    , module Data.Monoid
@@ -25,13 +25,15 @@ module Ideas.Text.XML
    ) where
 
 import Control.Monad
-import Data.Char
+import Data.Char (isSpace)
 import Data.Foldable (toList)
 import Data.List
 import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Data.String
 import Ideas.Text.XML.Interface
+import Ideas.Text.XML.Unicode
+import Ideas.Text.XML.Document (escape)
 import System.IO
 import qualified Data.Map as M
 import qualified Data.Sequence as Seq
@@ -79,10 +81,10 @@ trimXML :: XML -> XML
 trimXML (Element n as xs) = Element n (map trimAttribute as) (trimContent xs)
 
 trimContent :: Content -> Content
-trimContent content = 
-   case content of
+trimContent this = 
+   case this of
       Left s:rest -> mk s ++ f rest
-      _           -> f content
+      _           -> f this
  where
    f [] = []
    f [Left s]     = mk s
@@ -144,16 +146,26 @@ instance Monoid XMLBuilder where
    mappend = (<>)
 
 instance BuildXML XMLBuilder where
-   n .=. s     = BS (Seq.singleton (n := s)) mempty
+   n .=. s     = nameCheck n $ BS (Seq.singleton (n := s)) mempty
    unescaped s = BS mempty (if null s then mempty else Seq.singleton (Left s))
    builder     = BS mempty . Seq.singleton . Right
-   tag s       = builder . uncurry (Element s) . fromBS
+   tag n       = builder . uncurry (Element n) . fromBS . nameCheck n
 
 instance IsString XMLBuilder where
    fromString = string
 
+nameCheck :: String -> a -> a
+nameCheck s = if isName s then id else fail $ "Invalid name " ++ s
+
+isName :: String -> Bool
+isName []     = False
+isName (x:xs) = (isLetter x || x `elem` "_:") && all isNameChar xs
+
+isNameChar :: Char -> Bool 
+isNameChar c = any ($ c) [isLetter, isDigit, isCombiningChar, isExtender, (`elem` ".-_:")]
+
 makeXML :: String -> XMLBuilder -> XML
-makeXML s = uncurry (Element s) . fromBS
+makeXML s = uncurry (Element s) . fromBS . nameCheck s
 
 mwhen :: Monoid a => Bool -> a -> a
 mwhen True  a = a
@@ -162,30 +174,11 @@ mwhen False _ = mempty
 munless :: Monoid a => Bool -> a -> a
 munless = mwhen . not
 
-escapeAttr :: String -> String
-escapeAttr = concatMap f
- where
-   f '<' = "&lt;"
-   f '&' = "&amp;"
-   f '"' = "&quot;"
-   f c   = [c]
-
 fromBuilder :: XMLBuilder -> Maybe Element
 fromBuilder m =
    case fromBS m of
       ([], [Right a]) -> Just a
       _               -> Nothing
-
-escape :: String -> String
-escape = concatMap f
- where
-   f '<'  = "&lt;"
-   f '>'  = "&gt;"
-   f '&'  = "&amp;"
-   f '"'  = "&quot;"
-   f '\'' = "&apos;"
-   f '\n' = "&#10;" -- !!!!!!
-   f c   = [c]
 
 -------------------
 

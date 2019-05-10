@@ -18,7 +18,7 @@ module Ideas.Text.XML.Document
    , ContentSpec(..), CP(..), AttType(..), DefaultDecl(..), AttDef
    , EntityDef, AttValue, EntityValue, ExternalID(..), PublicID
    , Conditional(..), TextDecl, External
-   , prettyXML, prettyElement
+   , prettyXML, prettyElement, escape
    ) where
 
 import Prelude hiding ((<$>))
@@ -138,95 +138,6 @@ prettyElement compact (Element n as c)
                  ibody = (if compact then id else indent 2) body
              in openTag n as `op` ibody `op` closeTag n
 
-{-
-instance Show XMLDoc where
-   show doc = showXMLDecl doc ++ maybe "" show (dtd doc) ++ show (root doc)
-
-instance Show DTD where
-   show (DTD n mid ds) = "<!DOCTYPE " ++ unwords list ++ ">"
-    where
-      list = n : catMaybes [fmap show mid, showDecls ds]
-      showDecls xs
-         | null xs   = Nothing
-         | otherwise = Just $ "[" ++ concatMap show xs ++ "]"
-
-instance Show ExternalID where
-   show extID =
-      case extID of
-         System s   -> "SYSTEM " ++ doubleQuote s
-         Public p s -> unwords ["PUBLIC", doubleQuote p, doubleQuote s]
-
-instance Show DocTypeDecl where
-   show decl =
-      case decl of
-         ElementDecl n c  -> "<!ELEMENT " ++ n ++ " " ++ show c ++ ">"
-         AttListDecl n as -> "<!ATTLIST " ++ unwords (n:map showAttDef as) ++ ">"
-         EntityDecl b n e ->
-            let xs = ["%" | not b] ++ [n, showEntityDef e]
-            in "<!ENTITY " ++ unwords xs ++ ">"
-         NotationDecl n e ->
-            let f s = "PUBLIC " ++ doubleQuote s
-            in "<!NOTATION " ++ n ++ " " ++ either show f e ++ ">"
-         DTDParameter r   -> show r
-         DTDConditional c -> show c
-
-instance Show ContentSpec where
-   show cspec =
-      case cspec of
-         Empty -> "EMPTY"
-         Any   -> "ANY"
-         Mixed b ns ->
-            let txt = intercalate "|" ("#PCDATA":ns)
-            in parenthesize txt ++ (if b then "*" else "")
-         Children cp -> show cp
-
-instance Show CP where
-   show cp =
-      case cp of
-         Choice xs      -> parenthesize (intercalate "|" (map show xs))
-         Sequence xs    -> parenthesize (intercalate "," (map show xs))
-         QuestionMark c -> show c ++ "?"
-         Star c         -> show c ++ "*"
-         Plus c         -> show c ++ "+"
-         CPName n       -> n
-
-instance Show AttType where
-   show attType =
-      case attType of
-         IdType       -> "ID"
-         IdRefType    -> "IDREF"
-         IdRefsType   -> "IDREFS"
-         EntityType   -> "ENTITY"
-         EntitiesType -> "ENTITIES"
-         NmTokenType  -> "NMTOKEN"
-         NmTokensType -> "NMTOKENS"
-         StringType   -> "CDATA"
-         EnumerationType xs -> parenthesize (intercalate "|" xs)
-         NotationType xs    -> "NOTATION " ++ parenthesize (intercalate "|" xs)
-
-instance Show DefaultDecl where
-   show defaultDecl =
-      case defaultDecl of
-         Required -> "#REQUIRED"
-         Implied  -> "#IMPLIED"
-         Value v  -> showAttValue v
-         Fixed v  -> "#FIXED " ++ showAttValue v
-
-instance Show Conditional where
-   show conditional =
-      case conditional of
-         Include xs -> "<![INCLUDE[" ++ concatMap show xs ++ "]]>"
-         Ignore _ -> "" -- ToDO undefined -- [String]
-
-showXMLDecl :: XMLDoc -> String
-showXMLDecl doc
-   | isJust (versionInfo doc) = "<?xml " ++ unwords (catMaybes [s1,s2,s3]) ++ "?>"
-   | otherwise = ""
- where
-   s1 = fmap (\s -> "version=" ++ doubleQuote s) (versionInfo doc)
-   s2 = fmap (\s -> "encoding=" ++ doubleQuote s) (encoding doc)
-   s3 = fmap (\b -> "standalone=" ++ doubleQuote (if b then "yes" else "no")) (standalone doc)
--}
 openTag :: Name -> Attributes -> Doc
 openTag = prettyTag (char '<') (char '>')
 
@@ -241,25 +152,6 @@ prettyTag open close n as = open <> hsep (text n:map pretty as) <> close
 
 prettyAttValue :: AttValue -> Doc
 prettyAttValue = dquotes . hcat . map (either (text . escapeChar) pretty)
-
-{-
-showEntityValue :: EntityValue -> String
-showEntityValue = doubleQuote . concatMap (either f (either show show))
- where
-   f '"' = []
-   f c   = [c]
-
-showAttDef :: AttDef -> String
-showAttDef (s, tp, dd) = unwords [s, show tp, show dd]
-
-showEntityDef :: EntityDef -> String
-showEntityDef entityDef =
-   case entityDef of
-      Left ev -> showEntityValue ev
-      Right (eid, ms) -> show eid ++ maybe "" (" NDATA "++) ms
-
-parenthesize :: String -> String
-parenthesize s = "(" ++ s ++ ")" -}
 
 escape :: String -> String
 escape = concatMap escapeChar

@@ -209,14 +209,39 @@ spanClass n a = tag "span" (classA n <> a)
 -- A simple XML highlighter
 highlightXML :: Bool -> XML -> HTMLBuilder
 highlightXML nice
-   | nice      = builder . highlight . makeXML "pre" . string . prettyXML
-   | otherwise = builder . highlight . makeXML "tt"  . string . compactXML
+   | nice      = tag "pre" . f . prettyXML
+   | otherwise = tag "tt"  . f . compactXML
  where
-   highlight :: XML -> XML
-   highlight html = html {content = map (either (Left . f) Right) (content html)}
-
    -- find <
-   f :: String -> String
+   f :: String -> HTMLBuilder
+   f []           = mempty
+   f ('<':'/':xs) = g "</" [] xs
+   f ('<':xs)     = g "<"  [] xs
+   f (x:xs)       = string [x] <> f xs 
+
+   -- find >
+   g start acc []           = string (start ++ reverse acc)
+   g start acc ('/':'>':xs) = pp (start, reverse acc, "/>") <> f xs
+   g start acc ('>':xs)     = pp (start, reverse acc, ">")  <> f xs
+   g start acc (x:xs)       = g start (x:acc) xs
+
+   pp (start, info, end) = blue (string (start ++ as)) <> rec bs <> blue (string end)
+    where
+      (as, bs) = span isAlphaNum info
+
+      rec []       = mempty
+      rec ('=':xs) = orange (string "=") <> rec xs
+      rec ('"':xs) = case break (== '"') xs of
+                        (xs1, _:xs2) -> green (string ('"' : xs1 ++ ['"'])) <> rec xs2
+                        _ -> string ('"':xs)
+      rec (x:xs)   = string [x] <> rec xs
+
+   blue a   = tag "font" ("color" .=. "blue" <> a)
+   orange a = tag "font" ("color" .=. "orange" <> a)
+   green a  = tag "font" ("color" .=. "green" <> a)
+
+      {- 
+
    f [] = []
    f list@(x:xs)
       | "&lt;/" `isPrefixOf` list = -- close tag
@@ -234,7 +259,7 @@ highlightXML nice
       | "&gt;" `isPrefixOf` list =
            "</font>&gt;</font>" ++ f (drop 4 list)
       | x=='=' = "<font color='orange'>=</font>" ++ g xs
-      | otherwise = x : g xs
+      | otherwise = x : g xs -}
 
 -----------------------------------------------------------
 -- * HTML generic attributes

@@ -102,7 +102,7 @@ class (Sem.Semigroup a, Monoid a) => BuildXML a where
    element  :: String -> [a] -> a
    emptyTag :: String -> a
    -- implementations
-   string     = unescaped . escape
+   string     = unescaped -- . escape
    text       = string . show
    element s  = tag s . mconcat
    emptyTag s = tag s mempty
@@ -131,7 +131,7 @@ instance Monoid XMLBuilder where
    mappend = (<>)
 
 instance BuildXML XMLBuilder where
-   n .=. s   = BS (Seq.singleton (n := escapeAttr s)) mempty
+   n .=. s   = BS (Seq.singleton (n := s)) mempty
    unescaped = BS mempty . Seq.singleton . Left
    builder   = BS mempty . Seq.singleton . Right
    tag s     = builder . uncurry (Element s) . fromBS
@@ -171,8 +171,46 @@ escape = concatMap f
    f '&'  = "&amp;"
    f '"'  = "&quot;"
    f '\'' = "&apos;"
-   f '\n' = "&#10;"
+   f '\n' = "&#10;" -- !!!!!!
    f c   = [c]
 
 trim :: String -> String
 trim = dropWhile isSpace . reverse . dropWhile isSpace . reverse
+
+-------------------
+
+_runTests :: IO ()
+_runTests = do
+   forM_ [testDataP, testAttrP, testDataB, testAttrB] $ \f -> 
+      print $ map f tests
+   forM_ [mkPD, mkPA, mkBD, mkBA] $ \f -> 
+      print $ map (testXML . f) tests
+ where
+   tests :: [String]
+   tests = 
+      [ "input"
+      , "&lt;&gt;&amp;&quot;&apos;"
+      , "<>&'\""
+      , "p & q' => p"
+      , ""
+      , "   "
+      , "eerste \n\n derde regel"
+      ]
+
+   testDataP, testAttrP, testDataB, testAttrB :: String -> Bool
+   testDataP s = let xml = mkPD s in getData xml == s
+   testAttrP s = let xml = mkPA s in findAttribute "a" xml == Just s
+   testDataB s = let xml = mkBD s in getData xml == s
+   testAttrB s = let xml = mkBA s in findAttribute "a" xml == Just s
+
+   testXML :: XML -> Bool
+   testXML xml = 
+      case parseXML (compactXML xml) of
+         Left msg -> error msg
+         Right a  -> a == xml
+
+   mkPD, mkPA, mkBD, mkBA :: String -> XML
+   mkPD s = either error id $ parseXML $ "<a>" ++ escape s ++ "</a>"
+   mkPA s = either error id $ parseXML $ "<t a='" ++ escape s ++ "'/>"
+   mkBD s = makeXML "a" (string s)
+   mkBA s = makeXML "t" ("a".=. s)

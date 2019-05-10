@@ -32,6 +32,7 @@ data Element = Element
    , attributes :: Attributes
    , content    :: Content
    }
+ deriving Eq
 
 instance Show Element where
    show = show . extend
@@ -42,7 +43,9 @@ compactXML = show . prettyElement True . extend
 type Content = [Either String Element]
 
 type Attributes = [Attribute]
+
 data Attribute = Name := String
+ deriving Eq
 
 normalize :: D.XMLDoc -> Element
 normalize doc = toElement (D.root doc)

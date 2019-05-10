@@ -124,7 +124,7 @@ prettyXML :: Bool -> XML -> Doc
 prettyXML compact xml =
    case xml of
       Tagged e    -> prettyElement compact e
-      CharData s  -> text s
+      CharData s  -> text (escape s)
       CDATA s     -> text "<![CDATA[" <> text s <> text "]]>"
       Reference r -> pretty r
 
@@ -239,11 +239,9 @@ closeTag n = prettyTag (text "</") (char '>') n []
 prettyTag :: Doc -> Doc -> Name -> Attributes -> Doc
 prettyTag open close n as = open <> hsep (text n:map pretty as) <> close
 
-prettyAttValue :: AttValue -> Doc -- TODO: no double quotes allowed (should be escaped)
-prettyAttValue = dquotes . hcat . map (either f pretty)
- where
-   f '"' = empty
-   f c   = char c
+prettyAttValue :: AttValue -> Doc
+prettyAttValue = dquotes . hcat . map (either (text . escapeChar) pretty)
+
 {-
 showEntityValue :: EntityValue -> String
 showEntityValue = doubleQuote . concatMap (either f (either show show))
@@ -262,3 +260,16 @@ showEntityDef entityDef =
 
 parenthesize :: String -> String
 parenthesize s = "(" ++ s ++ ")" -}
+
+escape :: String -> String
+escape = concatMap escapeChar
+
+escapeChar :: Char -> String
+escapeChar c =
+   case c of
+      '<'  -> "&lt;"
+      '>'  -> "&gt;"
+      '&'  -> "&amp;"
+      '"'  -> "&quot;"
+      '\'' -> "&apos;"
+      _    -> [c]

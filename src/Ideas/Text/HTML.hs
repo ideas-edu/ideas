@@ -101,7 +101,7 @@ instance ToXML HTMLPage where
               | css <- styleSheets page
               ]
          , mconcat
-              [ tag "style" (unescaped txt)
+              [ tag "style" (string txt)
               | txt <- styleTxts page
               ]
          , mconcat
@@ -188,8 +188,8 @@ spaces :: BuildXML a => Int -> a
 spaces n = mconcat (replicate n space)
 
 space, bullet :: BuildXML a => a
-space  = XML.unescaped "&nbsp;"
-bullet = XML.unescaped "&#8226;"
+space  = XML.string [chr 160]  -- &nbsp;
+bullet = XML.string [chr 8226]
 
 (<#>) :: BuildXML a => a -> a -> a
 x <#> y = x <> space <> y
@@ -209,7 +209,7 @@ spanClass n a = tag "span" (classA n <> a)
 -- A simple XML highlighter
 highlightXML :: Bool -> XML -> HTMLBuilder
 highlightXML nice
-   | nice      = builder . highlight . makeXML "pre" . string . show
+   | nice      = builder . highlight . makeXML "pre" . string . prettyXML
    | otherwise = builder . highlight . makeXML "tt"  . string . compactXML
  where
    highlight :: XML -> XML

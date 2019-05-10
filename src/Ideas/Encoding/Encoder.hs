@@ -228,10 +228,10 @@ instance Monoid t => Monoid (Encoder a s t) where
    mappend = liftA2 mappend
 
 instance BuildXML t => BuildXML (Encoder a s t) where
-   n .=. s   = pure (n .=. s)
-   unescaped = pure . unescaped
-   builder   = pure . builder
-   tag       = fmap . tag
+   n .=. s = pure (n .=. s)
+   string  = pure . string
+   builder = pure . builder
+   tag     = fmap . tag
 
 makeEncoder :: (s -> t) -> Encoder a s t
 makeEncoder = arr

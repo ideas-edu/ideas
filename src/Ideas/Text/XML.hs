@@ -107,17 +107,15 @@ trimRight = reverse . trimLeft . reverse
 infix 7 .=.
 
 class (Sem.Semigroup a, Monoid a) => BuildXML a where
-   (.=.)     :: String -> String -> a   -- attribute
-   unescaped :: String -> a             -- parsed character data (unescaped!)
-   builder   :: Element -> a            -- (named) xml element
-   tag       :: String -> a -> a        -- tag (with content)
+   (.=.)    :: String -> String -> a   -- attribute
+   string   :: String -> a             -- (escaped) text
+   builder  :: Element -> a            -- (named) xml element
+   tag      :: String -> a -> a        -- tag (with content)
    -- functions with a default
-   string   :: String -> a -- escaped text
    text     :: Show s => s -> a -- escaped text with Show class
    element  :: String -> [a] -> a
    emptyTag :: String -> a
    -- implementations
-   string     = unescaped -- . escape
    text       = string . show
    element s  = tag s . mconcat
    emptyTag s = tag s mempty
@@ -146,10 +144,10 @@ instance Monoid XMLBuilder where
    mappend = (<>)
 
 instance BuildXML XMLBuilder where
-   n .=. s     = nameCheck n $ BS (Seq.singleton (n := s)) mempty
-   unescaped s = BS mempty (if null s then mempty else Seq.singleton (Left s))
-   builder     = BS mempty . Seq.singleton . Right
-   tag n       = builder . uncurry (Element n) . fromBS . nameCheck n
+   n .=. s  = nameCheck n $ BS (Seq.singleton (n := s)) mempty
+   string s = BS mempty (if null s then mempty else Seq.singleton (Left s))
+   builder  = BS mempty . Seq.singleton . Right
+   tag n    = builder . uncurry (Element n) . fromBS . nameCheck n
 
 instance IsString XMLBuilder where
    fromString = string

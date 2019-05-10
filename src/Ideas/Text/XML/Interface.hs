@@ -40,6 +40,7 @@ instance Show Element where
 compactXML :: Element -> String
 compactXML = show . prettyElement True . extend
 
+-- invariant: no two adjacent Lefts, no Left with empty string
 type Content = [Either String Element]
 
 type Attributes = [Attribute]

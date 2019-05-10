@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -18,8 +17,8 @@
 module Ideas.Text.XML.Parser (document, extParsedEnt, extSubset) where
 
 import Control.Monad
-import Data.Char (toUpper, ord, isSpace)
-import Data.List (foldl') -- '
+import Data.Char (toUpper, ord)
+import Data.List (foldl')
 import Data.Maybe (catMaybes)
 import Ideas.Text.XML.Document hiding (versionInfo, name, content)
 import Ideas.Text.XML.Unicode
@@ -132,7 +131,9 @@ attValue = doubleQuoted (p "<&\"") <|> singleQuoted (p "<&'")
 -- [11]   	SystemLiteral	   ::=   	('"' [^"]* '"') | ("'" [^']* "'")
 systemLiteral :: Parser String
 systemLiteral = doubleQuoted (p "\"") <|> singleQuoted (p "'")
- where p s = many (noneOf s)
+ where 
+   p :: String -> Parser String
+   p s = many (noneOf s)
 
 -- [12]   	PubidLiteral	   ::=   	'"' PubidChar* '"' | "'" (PubidChar - "'")* "'"
 pubidLiteral :: Parser String
@@ -349,7 +350,7 @@ content :: Parser Content
 content = chainr1 (fmap g charData) (fmap f ps)
  where
    f ma l r = l ++ maybe [] return ma ++ r
-   g s = [ CharData s | any (not . isSpace) s ]  -- quick fix, ignores layout
+   g s = [ CharData s | not (null s) ]
    ps  = try (fmap Just (choice (map try [fmap Tagged element, fmap Reference reference, cdSect]))
       <|> ((try pInstr <|> comment) >> return Nothing))
 

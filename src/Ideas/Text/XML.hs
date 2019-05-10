@@ -16,7 +16,7 @@
 module Ideas.Text.XML
    ( XML, Attr, AttrList, Element(..), ToXML(..), builderXML, InXML(..)
    , XMLBuilder, isEmptyBuilder, makeXML
-   , parseXML, parseXMLFile, compactXML, findAttribute
+   , parseXML, parseXMLFile, compactXML, trimXML, findAttribute
    , children, Attribute(..), fromBuilder, findChild, findChildren, getData
    , BuildXML(..)
    , module Data.Monoid
@@ -31,11 +31,10 @@ import Data.List
 import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Data.String
-import Ideas.Text.XML.Interface hiding (parseXML)
+import Ideas.Text.XML.Interface
 import System.IO
 import qualified Data.Map as M
 import qualified Data.Sequence as Seq
-import qualified Ideas.Text.XML.Interface as I
 
 ----------------------------------------------------------------
 -- Datatype definitions
@@ -76,15 +75,29 @@ parseXMLFile file =
    withBinaryFile file ReadMode $
       hGetContents >=> either fail return . parseXML
 
-parseXML :: String -> Either String XML
-parseXML input = do
-   xml <- I.parseXML input
-   return (ignoreLayout xml)
+trimXML :: XML -> XML
+trimXML (Element n as xs) = Element n (map trimAttribute as) (trimContent xs)
 
-ignoreLayout :: XML -> XML
-ignoreLayout (Element n as xs) =
-   let f = either (Left . trim) (Right . ignoreLayout)
-   in Element n as (map f xs)
+trimContent :: Content -> Content
+trimContent content = 
+   case content of
+      Left s:rest -> mk s ++ f rest
+      _           -> f content
+ where
+   f [] = []
+   f [Left s]     = mk s
+   f (Left s:xs)  = mk s ++ f xs
+   f (Right e:xs) = Right (trimXML e):f xs
+
+   mk s = [ Left a | let a = trim s, not (null a) ]
+
+trimAttribute :: Attribute -> Attribute
+trimAttribute (n := s) = n := trim s
+
+trim, trimLeft, trimRight :: String -> String
+trim      = trimLeft . trimRight
+trimLeft  = dropWhile isSpace
+trimRight = reverse . trimLeft . reverse
 
 ----------------------------------------------------------------
 -- XML builders
@@ -131,10 +144,10 @@ instance Monoid XMLBuilder where
    mappend = (<>)
 
 instance BuildXML XMLBuilder where
-   n .=. s   = BS (Seq.singleton (n := s)) mempty
-   unescaped = BS mempty . Seq.singleton . Left
-   builder   = BS mempty . Seq.singleton . Right
-   tag s     = builder . uncurry (Element s) . fromBS
+   n .=. s     = BS (Seq.singleton (n := s)) mempty
+   unescaped s = BS mempty (if null s then mempty else Seq.singleton (Left s))
+   builder     = BS mempty . Seq.singleton . Right
+   tag s       = builder . uncurry (Element s) . fromBS
 
 instance IsString XMLBuilder where
    fromString = string
@@ -174,18 +187,17 @@ escape = concatMap f
    f '\n' = "&#10;" -- !!!!!!
    f c   = [c]
 
-trim :: String -> String
-trim = dropWhile isSpace . reverse . dropWhile isSpace . reverse
-
 -------------------
 
 _runTests :: IO ()
 _runTests = do
    forM_ [testDataP, testAttrP, testDataB, testAttrB] $ \f -> 
-      print $ map f tests
+      pp $ map f tests
    forM_ [mkPD, mkPA, mkBD, mkBA] $ \f -> 
-      print $ map (testXML . f) tests
+      pp $ map (testXML . f) tests
  where
+   pp = putStrLn . map (\b -> if b then '.' else 'X')
+
    tests :: [String]
    tests = 
       [ "input"
@@ -207,7 +219,7 @@ _runTests = do
    testXML xml = 
       case parseXML (compactXML xml) of
          Left msg -> error msg
-         Right a  -> a == xml
+         Right a  -> if a == xml then True else error $ show (a, xml)
 
    mkPD, mkPA, mkBD, mkBA :: String -> XML
    mkPD s = either error id $ parseXML $ "<a>" ++ escape s ++ "</a>"

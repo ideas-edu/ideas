@@ -16,7 +16,7 @@
 module Ideas.Text.XML
    ( XML, Attr, AttrList, Element(..), ToXML(..), builderXML, InXML(..)
    , XMLBuilder, isEmptyBuilder, makeXML
-   , parseXML, parseXMLFile, compactXML, findAttribute
+   , parseXML, parseXMLFile, prettyXML, compactXML, trimXML, findAttribute
    , children, Attribute(..), fromBuilder, findChild, findChildren, getData
    , BuildXML(..)
    , module Data.Monoid
@@ -25,17 +25,18 @@ module Ideas.Text.XML
    ) where
 
 import Control.Monad
-import Data.Char
+import Data.Char (isSpace)
 import Data.Foldable (toList)
 import Data.List
 import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Data.String
-import Ideas.Text.XML.Interface hiding (parseXML)
+import Ideas.Text.XML.Interface
+import Ideas.Text.XML.Unicode
+import Ideas.Text.XML.Document (escape)
 import System.IO
 import qualified Data.Map as M
 import qualified Data.Sequence as Seq
-import qualified Ideas.Text.XML.Interface as I
 
 ----------------------------------------------------------------
 -- Datatype definitions
@@ -76,15 +77,29 @@ parseXMLFile file =
    withBinaryFile file ReadMode $
       hGetContents >=> either fail return . parseXML
 
-parseXML :: String -> Either String XML
-parseXML input = do
-   xml <- I.parseXML input
-   return (ignoreLayout xml)
+trimXML :: XML -> XML
+trimXML (Element n as xs) = Element n (map trimAttribute as) (trimContent xs)
 
-ignoreLayout :: XML -> XML
-ignoreLayout (Element n as xs) =
-   let f = either (Left . trim) (Right . ignoreLayout)
-   in Element n as (map f xs)
+trimContent :: Content -> Content
+trimContent this = 
+   case this of
+      Left s:rest -> mk s ++ f rest
+      _           -> f this
+ where
+   f [] = []
+   f [Left s]     = mk s
+   f (Left s:xs)  = mk s ++ f xs
+   f (Right e:xs) = Right (trimXML e):f xs
+
+   mk s = [ Left a | let a = trim s, not (null a) ]
+
+trimAttribute :: Attribute -> Attribute
+trimAttribute (n := s) = n := trim s
+
+trim, trimLeft, trimRight :: String -> String
+trim      = trimLeft . trimRight
+trimLeft  = dropWhile isSpace
+trimRight = reverse . trimLeft . reverse
 
 ----------------------------------------------------------------
 -- XML builders
@@ -92,17 +107,15 @@ ignoreLayout (Element n as xs) =
 infix 7 .=.
 
 class (Sem.Semigroup a, Monoid a) => BuildXML a where
-   (.=.)     :: String -> String -> a   -- attribute
-   unescaped :: String -> a             -- parsed character data (unescaped!)
-   builder   :: Element -> a            -- (named) xml element
-   tag       :: String -> a -> a        -- tag (with content)
+   (.=.)    :: String -> String -> a   -- attribute
+   string   :: String -> a             -- (escaped) text
+   builder  :: Element -> a            -- (named) xml element
+   tag      :: String -> a -> a        -- tag (with content)
    -- functions with a default
-   string   :: String -> a -- escaped text
    text     :: Show s => s -> a -- escaped text with Show class
    element  :: String -> [a] -> a
    emptyTag :: String -> a
    -- implementations
-   string     = unescaped . escape
    text       = string . show
    element s  = tag s . mconcat
    emptyTag s = tag s mempty
@@ -131,16 +144,26 @@ instance Monoid XMLBuilder where
    mappend = (<>)
 
 instance BuildXML XMLBuilder where
-   n .=. s   = BS (Seq.singleton (n := escapeAttr s)) mempty
-   unescaped = BS mempty . Seq.singleton . Left
-   builder   = BS mempty . Seq.singleton . Right
-   tag s     = builder . uncurry (Element s) . fromBS
+   n .=. s  = nameCheck n $ BS (Seq.singleton (n := s)) mempty
+   string s = BS mempty (if null s then mempty else Seq.singleton (Left s))
+   builder  = BS mempty . Seq.singleton . Right
+   tag n    = builder . uncurry (Element n) . fromBS . nameCheck n
 
 instance IsString XMLBuilder where
    fromString = string
 
+nameCheck :: String -> a -> a
+nameCheck s = if isName s then id else fail $ "Invalid name " ++ s
+
+isName :: String -> Bool
+isName []     = False
+isName (x:xs) = (isLetter x || x `elem` "_:") && all isNameChar xs
+
+isNameChar :: Char -> Bool 
+isNameChar c = any ($ c) [isLetter, isDigit, isCombiningChar, isExtender, (`elem` ".-_:")]
+
 makeXML :: String -> XMLBuilder -> XML
-makeXML s = uncurry (Element s) . fromBS
+makeXML s = uncurry (Element s) . fromBS . nameCheck s
 
 mwhen :: Monoid a => Bool -> a -> a
 mwhen True  a = a
@@ -149,30 +172,48 @@ mwhen False _ = mempty
 munless :: Monoid a => Bool -> a -> a
 munless = mwhen . not
 
-escapeAttr :: String -> String
-escapeAttr = concatMap f
- where
-   f '<' = "&lt;"
-   f '&' = "&amp;"
-   f '"' = "&quot;"
-   f c   = [c]
-
 fromBuilder :: XMLBuilder -> Maybe Element
 fromBuilder m =
    case fromBS m of
       ([], [Right a]) -> Just a
       _               -> Nothing
 
-escape :: String -> String
-escape = concatMap f
- where
-   f '<'  = "&lt;"
-   f '>'  = "&gt;"
-   f '&'  = "&amp;"
-   f '"'  = "&quot;"
-   f '\'' = "&apos;"
-   f '\n' = "&#10;"
-   f c   = [c]
+-------------------
 
-trim :: String -> String
-trim = dropWhile isSpace . reverse . dropWhile isSpace . reverse
+_runTests :: IO ()
+_runTests = do
+   forM_ [testDataP, testAttrP, testDataB, testAttrB] $ \f -> 
+      pp $ map f tests
+   forM_ [mkPD, mkPA, mkBD, mkBA] $ \f -> 
+      pp $ map (testXML . f) tests
+ where
+   pp = putStrLn . map (\b -> if b then '.' else 'X')
+
+   tests :: [String]
+   tests = 
+      [ "input"
+      , "&lt;&gt;&amp;&quot;&apos;"
+      , "<>&'\""
+      , "p & q' => p"
+      , ""
+      , "   "
+      , "eerste \n\n derde regel"
+      ]
+
+   testDataP, testAttrP, testDataB, testAttrB :: String -> Bool
+   testDataP s = let xml = mkPD s in getData xml == s
+   testAttrP s = let xml = mkPA s in findAttribute "a" xml == Just s
+   testDataB s = let xml = mkBD s in getData xml == s
+   testAttrB s = let xml = mkBA s in findAttribute "a" xml == Just s
+
+   testXML :: XML -> Bool
+   testXML xml = 
+      case parseXML (compactXML xml) of
+         Left msg -> error msg
+         Right a  -> if a == xml then True else error $ show (a, xml)
+
+   mkPD, mkPA, mkBD, mkBA :: String -> XML
+   mkPD s = either error id $ parseXML $ "<a>" ++ escape s ++ "</a>"
+   mkPA s = either error id $ parseXML $ "<t a='" ++ escape s ++ "'/>"
+   mkBD s = makeXML "a" (string s)
+   mkBA s = makeXML "t" ("a".=. s)

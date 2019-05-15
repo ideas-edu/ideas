@@ -464,7 +464,7 @@ htmlDerivation lm = exerciseEncoder $ \ex d ->
        forStep ((r, env1), env2) =
           let showEnv e = munless (noBindings e) $ string $ "," ++ show e in
           container $ marginPos CenterLeft $ mconcat
-             [ unescaped "&#8658; "
+             [ string [chr 8658, ' ']
              , linkToRule lm ex r $ string $ showId r
              , showEnv env1 -- local environment
              , showEnv env2 -- global environment (diff)
@@ -669,7 +669,7 @@ quote s = '"' : s ++ "\""
 
 -- Inject two JavaScript functions for handling the input form
 submitURL :: String -> HTMLBuilder
-submitURL url = tag "script" $
+submitURL _ = mempty {- url = tag "script" $
    ("type" .=. "text/javascript")
    <> unescaped (
       "function getTerm() {\
@@ -687,4 +687,4 @@ submitURL url = tag "script" $
       \}\
       \function submitTerm() {\
       \   document.myform.action = " ++ url ++ ";\
-      \}")
+      \}") -}

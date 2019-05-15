@@ -51,9 +51,9 @@ getOMVs omobj = nub [ x | OMV x <- universe omobj ]
 
 xml2omobj :: XML -> Either String OMOBJ
 xml2omobj xmlTop =
-   case xmlTop of
+   case trimXML xmlTop of
       Element "OMOBJ" _ [Right e] -> rec e
-      _ -> fail $ "expected an OMOBJ tag" ++ show xmlTop
+      _ -> fail $ "expected an OMOBJ tag"
  where
    rec xml =
       case content xml of
@@ -90,7 +90,7 @@ xml2omobj xmlTop =
             y3 <- rec x3
             return (OMBIND y1 y2 y3)
 
-         _ -> fail ("invalid tag " ++ show (name xml))
+         _ -> fail ("invalid tag " ++ name xml)
 
    recOMBVAR xml
       | name xml == "OMBVAR" =

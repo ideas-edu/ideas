@@ -92,7 +92,7 @@ webpage wp = w3css $
       , " "
       ]
 
-   script = tag "script" (unescaped scriptText)
+   script = mempty -- tag "script" (unescaped scriptText)
 
    width | null (sideButtons wp) = "0px"
          | otherwise             = show (sideWidth wp) ++ "px"
@@ -107,7 +107,7 @@ webpage wp = w3css $
       ]
 
    styleText =
-      "html,body,h1,h2,h3,h4,h5,h6 {font-family: \"Roboto\", sans-serif;}\
+      "html,body,h1,h2,h3,h4,h5,h6 {font-family: Roboto, sans-serif;}\
       \.w3-sidebar {\
       \  z-index: 3;\
       \  width: " ++ width ++ ";\

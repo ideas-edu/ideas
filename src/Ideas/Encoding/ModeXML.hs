@@ -37,7 +37,7 @@ processXML options dr txt = do
    resp <- maybe id timedSeconds (maxTime options) (xmlReply options dr req xml)
     `catch` handler
    let showXML | compactOutput req = compactXML
-               | otherwise = show
+               | otherwise = prettyXML
        showHtmlDoc doc = "<!DOCTYPE html>" ++ compactXML doc
    if htmlOutput req
       then return (req, showHtmlDoc resp, "text/html")

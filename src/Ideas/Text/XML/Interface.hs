@@ -27,7 +27,7 @@ module Ideas.Text.XML.Interface
    , emptyContent, decData, decChild, decFirstChild, foldXML
    , ToXML(..), builderXML, fromBuilder
    , InXML(..)
-   , isEmptyBuilder, trimXML, munless, mwhen
+   , isEmptyBuilder, trimXML
    ) where
 
 import Control.Monad
@@ -304,13 +304,6 @@ isNameChar c = any ($ c) [isLetter, isDigit, isCombiningChar, isExtender, (`elem
 
 makeXML :: String -> XMLBuilder -> XML
 makeXML s = uncurry (makeElement s) . fromBS . nameCheck s
-
-mwhen :: Monoid a => Bool -> a -> a
-mwhen True  a = a
-mwhen False _ = mempty
-
-munless :: Monoid a => Bool -> a -> a
-munless = mwhen . not
 
 fromBuilder :: XMLBuilder -> Maybe XML
 fromBuilder m =

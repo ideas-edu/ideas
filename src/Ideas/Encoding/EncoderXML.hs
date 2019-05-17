@@ -33,6 +33,7 @@ import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
+import Ideas.Utils.Prelude (munless)
 import qualified Ideas.Service.FeedbackText as FeedbackText
 import qualified Ideas.Service.ProblemDecomposition as PD
 

@@ -41,6 +41,7 @@ import Ideas.Text.OpenMath.FMP
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
 import Ideas.Utils.TestSuite
+import Ideas.Utils.Prelude (munless, mwhen)
 import System.IO.Unsafe
 import qualified Ideas.Text.HTML.W3CSS as W3
 

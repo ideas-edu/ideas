@@ -20,6 +20,7 @@ import Ideas.Encoding.OpenMathSupport (toOMOBJ)
 import Ideas.Text.OpenMath.FMP
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML hiding (name)
+import Ideas.Utils.Prelude (munless)
 import qualified Data.Map as M
 
 rulesInfoXML :: Exercise a -> (a -> XMLBuilder) -> XMLBuilder

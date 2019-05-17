@@ -24,6 +24,7 @@ module Ideas.Utils.Prelude
    , headM, findIndexM
    , elementAt, changeAt, replaceAt
    , list
+   , mwhen, munless
    ) where
 
 import Data.Char
@@ -133,3 +134,12 @@ replaceAt i = changeAt i . const
 
 list :: b -> ([a] -> b) -> [a] -> b
 list b f xs = if null xs then b else f xs
+
+-- Monoids
+
+mwhen :: Monoid a => Bool -> a -> a
+mwhen True  a = a
+mwhen False _ = mempty
+
+munless :: Monoid a => Bool -> a -> a
+munless = mwhen . not

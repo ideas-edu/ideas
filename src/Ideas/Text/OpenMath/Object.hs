@@ -20,7 +20,6 @@ import Data.List (nub)
 import Data.Maybe
 import Ideas.Text.OpenMath.Symbol
 import Ideas.Text.XML
-import Ideas.Text.XML.Interface
 
 -- internal representation for OpenMath objects
 data OMOBJ = OMI Integer

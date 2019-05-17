@@ -8,13 +8,345 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A datatype, parser, and pretty printer for XML documents. Re-exports
--- functions defined elsewhere.
+-- Collection of common operation on XML documents
 --
 -----------------------------------------------------------------------------
 
 module Ideas.Text.XML
-   ( module Ideas.Text.XML.Interface
+   ( -- * XML types
+     XML, Name, Attributes, Attribute(..)
+     -- * Building/constructing XML
+   , BuildXML(..), XMLBuilder, makeXML
+     -- * Parsing XML
+   , parseXML, parseXMLFile
+     -- * Pretty-printing XML
+   , prettyXML, compactXML
+     -- * Simple queries
+   , name, attributes, findAttribute, children, findChildren, findChild, getData
+     --------------------------------------------
+   , emptyContent, decData, decChild, decFirstChild, foldXML
+   , ToXML(..), builderXML, fromBuilder
+   , InXML(..)
+   , isEmptyBuilder, trimXML
    ) where
 
-import Ideas.Text.XML.Interface
+import Control.Monad
+import Data.Char (chr, ord, isSpace)
+import Data.Foldable (toList)
+import Data.List
+import Data.Maybe
+import Data.Semigroup as Sem
+import Data.String
+import Ideas.Text.XML.Document (escape, Name, prettyElement)
+import Ideas.Text.XML.Parser (document)
+import Ideas.Text.XML.Unicode
+import Ideas.Utils.Parsing (parseSimple)
+import qualified Data.Map as M
+import qualified Data.Sequence as Seq
+import qualified Ideas.Text.XML.Document as D
+import System.IO
+
+data XML = Tag
+   { name       :: Name
+   , attributes :: Attributes
+   , content    :: Content
+   }
+ deriving Eq
+
+instance Show XML where
+   show = compactXML
+
+makeElement :: Name -> Attributes -> Content -> XML
+makeElement = Tag
+
+prettyXML :: XML -> String
+prettyXML = show . prettyElement False . extend
+
+compactXML :: XML -> String
+compactXML = show . prettyElement True . extend
+
+-- invariant: no two adjacent Lefts, no Left with empty string, valid tag/attribute names
+type Content = [Either String XML]
+
+type Attributes = [Attribute]
+
+data Attribute = Name := String
+ deriving Eq
+
+fromXMLDoc :: D.XMLDoc -> XML
+fromXMLDoc doc = fromElement (D.root doc)
+ where
+   fromElement (D.Element n as c) =
+      makeXML n (fromAttributes as <> fromContent c)
+   
+   fromAttributes = mconcat . map fromAttribute
+
+   fromAttribute (n D.:= v) =
+      n .=. concatMap (either return refToString) v
+
+   fromContent :: D.Content -> XMLBuilder
+   fromContent = mconcat . map f
+    where
+      f :: D.XML -> XMLBuilder
+      f (D.Tagged e)    = builder (fromElement e)
+      f (D.CharData s)  = string s
+      f (D.CDATA s)     = string s
+      f (D.Reference r) = fromReference r
+
+   refToString :: D.Reference -> String
+   refToString (D.CharRef i)   = [chr i]
+   refToString (D.EntityRef s) = maybe "" return (lookup s general)
+
+   fromReference :: D.Reference -> XMLBuilder
+   fromReference (D.CharRef i)   = char (chr i)
+   fromReference (D.EntityRef s) = fromMaybe mempty (lookup s entities)
+
+   entities :: [(String, XMLBuilder)]
+   entities =
+      [ (n, fromContent (snd ext)) | (n, ext) <- D.externals doc ] ++
+      -- predefined entities
+      [ (n, char c) | (n, c) <- general ]
+
+   general :: [(String, Char)]
+   general = [("lt",'<'), ("gt",'>'), ("amp",'&'), ("apos",'\''), ("quot",'"')]
+
+extend :: XML -> D.Element
+extend = foldXML make mkAttribute mkString
+ where
+   make n as = D.Element n as . concatMap (either id (return . D.Tagged))
+
+   mkAttribute :: Attribute -> D.Attribute
+   mkAttribute (m := s) = (D.:=) m (map Left s)
+
+   mkString :: String -> [D.XML]
+   mkString [] = []
+   mkString xs@(hd:tl)
+      | null xs1  = D.Reference (D.CharRef (ord hd)) : mkString tl
+      | otherwise = D.CharData xs1 : mkString xs2
+    where
+      (xs1, xs2) = break ((> 127) . ord) xs
+
+-----------------------------------------------------
+
+parseXML :: String -> Either String XML
+parseXML xs = do
+   input <- decoding xs
+   doc   <- parseSimple document input
+   return (fromXMLDoc doc)
+
+-----------------------------------------------------
+
+findAttribute :: Monad m => String -> XML -> m String
+findAttribute s (Tag _ as _) =
+   case [ t | n := t <- as, s==n ] of
+      [hd] -> return hd
+      _    -> fail $ "Invalid attribute: " ++ show s
+
+findChildren :: String -> XML -> [XML]
+findChildren s = filter ((==s) . name) . children
+
+findChild :: Monad m => String -> XML -> m XML
+findChild s e =
+   case findChildren s e of
+      []  -> fail $ "Child not found: " ++ show s
+      [a] -> return a
+      _   -> fail $ "Multiple children found: " ++ show s
+
+children :: XML -> [XML]
+children e = [ c | Right c <- content e ]
+
+getData :: XML -> String
+getData e = concat [ s | Left s <- content e ]
+
+emptyContent :: XML -> Bool
+emptyContent = null . content
+
+foldXML :: (Name -> [a] -> [Either s e] -> e) -> (Attribute -> a) -> (String -> s) -> XML -> e
+foldXML fe fa fs = rec
+ where
+   rec (Tag n as cs) = fe n (map fa as) (map (either (Left . fs) (Right . rec)) cs)
+
+---------------------------------------------------------
+
+decData :: XML -> Either String (String, XML)
+decData xml =
+   case content xml of
+      Left s:rest -> Right (s, xml {content = rest})
+      _           -> Left "Could not find data"
+
+decChild :: Name -> XML -> Either String (XML, XML)
+decChild s xml = 
+   case break p (content xml) of
+      (xs, Right y:ys) -> Right (y, xml { content = xs ++ ys })
+      _ -> Left $ "Could not find child " ++ s
+ where
+   p = either (const False) ((==s) . name)
+
+decFirstChild :: Name -> XML -> Either String (XML, XML)
+decFirstChild s xml = 
+   case content xml of
+      Right y:ys | name y == s -> Right (y, xml { content = ys })
+      _ -> Left $ "Could not find first child " ++ s
+
+----------------------------------------------------------------
+-- Datatype definitions
+
+class ToXML a where
+   toXML     :: a -> XML
+   listToXML :: [a] -> XML
+   -- default definitions
+   listToXML = makeXML "list" . mconcat . map builderXML
+
+instance ToXML () where
+   toXML _ = makeXML "Unit" mempty
+
+instance ToXML a => ToXML (Maybe a) where
+  toXML = maybe (makeXML "Nothing" mempty) toXML
+
+builderXML :: (ToXML a, BuildXML b) => a -> b
+builderXML = builder . toXML
+   
+class ToXML a => InXML a where
+   fromXML     :: Monad m => XML -> m a
+   listFromXML :: Monad m => XML -> m [a]
+   listFromXML xml
+      | name xml == "list" && null (attributes xml) =
+           mapM fromXML (children xml)
+      | otherwise = fail "expecting a list tag"
+
+----------------------------------------------------------------
+-- XML parser (a scanner and a XML tree constructor)
+
+parseXMLFile :: FilePath -> IO XML
+parseXMLFile file =
+   withBinaryFile file ReadMode $
+      hGetContents >=> either fail return . parseXML
+
+trimXML :: XML -> XML
+trimXML = foldXML make fa (string . trim)
+ where
+   fa (n := s) = n .=. trim s
+
+   make :: String -> [XMLBuilder] -> [Either XMLBuilder XML] -> XML
+   make s as = makeXML s . mconcat . (as ++) . map (either id builder)
+
+trim, trimLeft, trimRight :: String -> String
+trim      = trimLeft . trimRight
+trimLeft  = dropWhile isSpace
+trimRight = reverse . trimLeft . reverse
+
+----------------------------------------------------------------
+-- XML builders
+
+infix 7 .=.
+
+class (Sem.Semigroup a, Monoid a) => BuildXML a where
+   (.=.)    :: String -> String -> a   -- attribute
+   string   :: String -> a             -- (escaped) text
+   builder  :: XML -> a                -- (named) xml element
+   tag      :: String -> a -> a        -- tag (with content)
+   -- functions with a default
+   char     :: Char -> a
+   text     :: Show s => s -> a -- escaped text with Show class
+   element  :: String -> [a] -> a
+   emptyTag :: String -> a
+   -- implementations
+   char c     = string [c]
+   text       = string . show
+   element s  = tag s . mconcat
+   emptyTag s = tag s mempty
+
+data XMLBuilder = BS (Seq.Seq Attribute) (Seq.Seq (Either String XML))
+
+isEmptyBuilder :: XMLBuilder -> Bool
+isEmptyBuilder (BS as elts) = Seq.null as && Seq.null elts
+
+-- local helper: merge attributes, but preserve order
+fromBS :: XMLBuilder -> (Attributes, Content)
+fromBS (BS as elts) = (attrList, merge (toList elts))
+ where
+   attrMap = foldr add M.empty as
+   add (k := v) = M.insertWith (\x y -> x ++ " " ++ y) k v
+   attrList = nubBy eqKey (map make (toList as))
+   make (k := _) = k := M.findWithDefault "" k attrMap
+   eqKey (k1 := _) (k2 := _) = k1 == k2
+
+   merge [] = []
+   merge (Left x:Left y:rest)  = merge (Left (x++y):rest)
+   merge (Left x:rest)  = Left x : merge rest
+   merge (Right y:rest) = Right y : merge rest
+
+instance Sem.Semigroup XMLBuilder where
+  BS as1 elts1 <> BS as2 elts2 = BS (as1 <> as2) (elts1 <> elts2)
+
+instance Monoid XMLBuilder where
+   mempty  = BS mempty mempty
+   mappend = (<>)
+
+instance BuildXML XMLBuilder where
+   n .=. s  = nameCheck n $ BS (Seq.singleton (n := s)) mempty
+   string s = BS mempty (if null s then mempty else Seq.singleton (Left s))
+   builder  = BS mempty . Seq.singleton . Right
+   tag n    = builder . uncurry (makeElement n) . fromBS . nameCheck n
+
+instance IsString XMLBuilder where
+   fromString = string
+
+nameCheck :: String -> a -> a
+nameCheck s = if isName s then id else fail $ "Invalid name " ++ s
+
+isName :: String -> Bool
+isName []     = False
+isName (x:xs) = (isLetter x || x `elem` "_:") && all isNameChar xs
+
+isNameChar :: Char -> Bool 
+isNameChar c = any ($ c) [isLetter, isDigit, isCombiningChar, isExtender, (`elem` ".-_:")]
+
+makeXML :: String -> XMLBuilder -> XML
+makeXML s = uncurry (makeElement s) . fromBS . nameCheck s
+
+fromBuilder :: XMLBuilder -> Maybe XML
+fromBuilder m =
+   case fromBS m of
+      ([], [Right a]) -> Just a
+      _               -> Nothing
+
+-------------------
+
+_runTests :: IO ()
+_runTests = do
+   forM_ [testDataP, testAttrP, testDataB, testAttrB] $ \f -> 
+      pp $ map f tests
+   forM_ [mkPD, mkPA, mkBD, mkBA] $ \f -> 
+      pp $ map (testXML . f) tests
+ where
+   pp = putStrLn . map (\b -> if b then '.' else 'X')
+
+   tests :: [String]
+   tests = 
+      [ "input"
+      , "&lt;&gt;&amp;&quot;&apos;"
+      , "<>&'\""
+      , "p & q' => p"
+      , ""
+      , "   "
+      , "eerste \n\n derde regel"
+      ]
+
+   testDataP, testAttrP, testDataB, testAttrB :: String -> Bool
+   testDataP s = let xml = mkPD s in getData xml == s
+   testAttrP s = let xml = mkPA s in findAttribute "a" xml == Just s
+   testDataB s = let xml = mkBD s in getData xml == s
+   testAttrB s = let xml = mkBA s in findAttribute "a" xml == Just s
+
+   testXML :: XML -> Bool
+   testXML xml = 
+      case parseXML (compactXML xml) of
+         Left msg -> error msg
+         Right a  -> if a == xml then True else error $ show (a, xml)
+
+   mkPD, mkPA, mkBD, mkBA :: String -> XML
+   mkPD s = either error id $ parseXML $ "<a>" ++ escape s ++ "</a>"
+   mkPA s = either error id $ parseXML $ "<t a='" ++ escape s ++ "'/>"
+   mkBD s = makeXML "a" (string s)
+   mkBA s = makeXML "t" ("a".=. s)

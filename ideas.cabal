@@ -174,7 +174,6 @@ Library
     Ideas.Text.UTF8
     Ideas.Text.XML
     Ideas.Text.XML.Document
-    Ideas.Text.XML.Interface
     Ideas.Text.XML.Parser
     Ideas.Text.XML.Unicode
     Ideas.Utils.BlackBoxTests

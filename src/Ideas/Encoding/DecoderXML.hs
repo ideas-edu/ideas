@@ -29,7 +29,6 @@ import Ideas.Service.Types
 import Ideas.Text.MathML
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
-import Ideas.Text.XML.Interface
 
 type XMLDecoder a = Decoder a XML
 

@@ -37,28 +37,27 @@ strategyTreeToXML tree = makeXML "label" $
       _ -> strategyTreeBuilder tree
 
 strategyTreeBuilder :: StrategyTree a -> XMLBuilder
-strategyTreeBuilder = fold emptyAlg
+strategyTreeBuilder = builder . fold emptyAlg
    { fNode = \def xs ->
         case xs of
            [x] | isConfigId def
              -> addProperty (show def) x
-           _ -> tag (show def) (mconcat xs)
+           _ -> makeXML (show def) (mconcat (map builder xs))
    , fLeaf = \r ->
-        tag "rule" ("name" .=. show r)
+        makeXML "rule" ("name" .=. show r)
    , fLabel = \l a ->
-        tag "label" (nameAttr l <> a)
+        makeXML "label" (nameAttr l <> builder a)
    , fRec = \n a ->
-        tag "rec" (("var" .=. show n) <> a)
+        makeXML "rec" (("var" .=. show n) <> builder a)
    , fVar = \n ->
-        tag "var" ("var" .=. show n)
+        makeXML "var" ("var" .=. show n)
    }
 
-addProperty :: String -> XMLBuilder -> XMLBuilder
+addProperty :: String -> XML -> XML
 addProperty s a =
-   case fromBuilder a of
-      Just e | name e `elem` ["label", "rule"] ->
-         builder e { attributes = attributes e ++ [s := "true"] }
-      _      -> tag s a
+   if name a `elem` ["label", "rule"]
+   then a { attributes = attributes a ++ [s := "true"] }
+   else a
 
 -----------------------------------------------------------------------
 -- XML to strategy

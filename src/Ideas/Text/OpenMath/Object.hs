@@ -20,6 +20,7 @@ import Data.List (nub)
 import Data.Maybe
 import Ideas.Text.OpenMath.Symbol
 import Ideas.Text.XML
+import Ideas.Text.XML.Interface
 
 -- internal representation for OpenMath objects
 data OMOBJ = OMI Integer
@@ -50,46 +51,49 @@ getOMVs omobj = nub [ x | OMV x <- universe omobj ]
 -- conversion functions: XML <-> OMOBJ
 
 xml2omobj :: XML -> Either String OMOBJ
-xml2omobj xmlTop =
-   case trimXML xmlTop of
-      Element "OMOBJ" _ [Right e] -> rec e
-      _ -> fail $ "expected an OMOBJ tag"
+xml2omobj xmlTop
+   | name xmlTop == "OMOBJ" =
+        case children xmlTop of
+           [x] -> rec x
+           _   -> fail "invalid omobj"
+   | otherwise = fail $ "expected an OMOBJ tag"
  where
    rec xml =
-      case content xml of
-
-         _ | name xml == "OMA" -> do
+      case name xml of
+         "OMA" -> do
             ys <- mapM rec (children xml)
             return (OMA ys)
 
-         [] | name xml == "OMS" -> do
+         "OMS" | emptyContent xml -> do
             let mcd = case findAttribute "cd" xml of
                          Just "unknown" -> Nothing
                          this -> this
             n <- findAttribute "name" xml
             return (OMS (mcd, n))
 
-         [Left s] | name xml == "OMI" ->
-            case readInt s of
+         "OMI" | name xml == "OMI" ->
+            case readInt (getData xml) of
                Just i -> return (OMI (toInteger i))
                _      -> fail "invalid integer in OMI"
 
-         [] | name xml == "OMF" -> do
+         "OMF" | emptyContent xml -> do
             s <- findAttribute "dec" xml
             case readDouble s of
                Just nr -> return (OMF nr)
                _       -> fail "invalid floating-point in OMF"
 
-         [] | name xml == "OMV" -> do
+         "OMV" | emptyContent xml -> do
             s <- findAttribute "name" xml
             return (OMV s)
 
-         [Right x1, Right x2, Right x3] | name xml == "OMBIND" -> do
-            y1 <- rec x1
-            y2 <- recOMBVAR x2
-            y3 <- rec x3
-            return (OMBIND y1 y2 y3)
-
+         "OMBIND" -> 
+            case children xml of
+               [x1, x2, x3] -> do
+                  y1 <- rec x1
+                  y2 <- recOMBVAR x2
+                  y3 <- rec x3
+                  return (OMBIND y1 y2 y3)
+               _ -> fail "invalid ombind"
          _ -> fail ("invalid tag " ++ name xml)
 
    recOMBVAR xml

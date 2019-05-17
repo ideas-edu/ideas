@@ -29,6 +29,7 @@ import Ideas.Service.Types
 import Ideas.Text.MathML
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
+import Ideas.Text.XML.Interface
 
 type XMLDecoder a = Decoder a XML
 
@@ -204,25 +205,13 @@ decodeBinding = decoderFor $ \xml -> do
    termBinding = makeBinding . makeRef
 
 decodeData :: XMLDecoder a String
-decodeData = split $ \xml ->
-   case content xml of
-      Left s:rest -> Right (s, xml {content = rest})
-      _           -> Left "Could not find data"
+decodeData = split decData
 
 decodeChild :: String -> XMLDecoder a b -> XMLDecoder a b
-decodeChild s m = split f >>= (m //)
- where
-   p     = either (const False) ((==s) . name)
-   f xml = case break p (content xml) of
-              (xs, Right y:ys) -> Right (y, xml { content = xs ++ ys })
-              _ -> Left $ "Could not find child " ++ s
+decodeChild s m = split (decChild s) >>= (m //)
 
 decodeFirstChild :: String -> XMLDecoder a b -> XMLDecoder a b
-decodeFirstChild s m = split f >>= (m //)
- where
-   f xml = case content xml of
-              Right y:ys | name y == s -> Right (y, xml { content = ys })
-              _ -> Left $ "Could not find first child " ++ s
+decodeFirstChild s m = split (decFirstChild s) >>= (m //)
 
 decodeAttribute :: String -> XMLDecoder a String
 decodeAttribute s = split $ \xml ->

@@ -19,6 +19,7 @@ module Ideas.Encoding.EncoderXML
    ) where
 
 import Data.Char
+import Data.List
 import Data.Maybe
 import Data.Monoid hiding ((<>))
 import Ideas.Common.Library hiding (exerciseId, alternatives)
@@ -171,7 +172,7 @@ encodeDifficulty = makeEncoder $ \d ->
 
 encodeText :: XMLEncoder a Text
 encodeText = encoderFor $ \txt ->
-   mconcat [ encodeItem // item | item <- textItems txt ]
+   mconcat (intersperse (string " ") [ encodeItem // item | item <- textItems txt ])
  where
    encodeItem = withOpenMath $ \useOM -> exerciseEncoder $ \ex item ->
       case item of

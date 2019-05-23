@@ -15,6 +15,7 @@
 
 module Ideas.Encoding.EncoderHTML (htmlEncoder) where
 
+import Control.Monad.State hiding (State)
 import Data.Char
 import Data.List
 import Data.Maybe
@@ -22,7 +23,7 @@ import Data.Ord
 import Ideas.Common.Examples (isEmpty, size, allRandoms)
 import Ideas.Common.Library hiding (alternatives, isEmpty, left, right, collapse, Medium)
 import Ideas.Common.Strategy.Symbol
-import Ideas.Encoding.Encoder hiding (left, right)
+import Ideas.Encoding.Encoder
 import Ideas.Encoding.LinkManager
 import Ideas.Encoding.Logging
 import Ideas.Encoding.Request
@@ -155,7 +156,7 @@ encodeContext = exerciseEncoder $ \ex ->
    string . prettyPrinterContext ex
 
 encodeIndex :: HTMLEncoder a DomainReasoner
-encodeIndex = makeEncoder $ \dr -> mconcat
+encodeIndex = gets $ \dr -> mconcat
    [ htmlDescription "Domain reasoner" dr
    , panel $ right $ string "Logging: " <> bool logEnabled
    , munless (null $ aliases dr) $
@@ -175,7 +176,7 @@ encodeIndex = makeEncoder $ \dr -> mconcat
    ]
 
 encodeServiceList :: LinkManager -> HTMLEncoder a [Service]
-encodeServiceList lm = makeEncoder $ \srvs ->
+encodeServiceList lm = gets $ \srvs ->
    h1 "Services" <>
    mconcat
       [ h2 (show i ++ ". " ++ s) <> table False (map make xs)
@@ -188,7 +189,7 @@ encodeServiceList lm = makeEncoder $ \srvs ->
             ]
 
 encodeExerciseList :: LinkManager -> HTMLEncoder a [Some Exercise]
-encodeExerciseList lm = makeEncoder $ \exs ->
+encodeExerciseList lm = gets $ \exs ->
    h1 "Exercises" <>
    mconcat
       [ h2 (show i ++ ". " ++ dom) <> table False (map make xs)
@@ -219,7 +220,7 @@ orderedGroupsWith showf get =
    f i xs = (i, showf (get (head xs)), xs)
 
 encodeService :: HTMLEncoder a Service
-encodeService = makeEncoder $ \srv -> mconcat
+encodeService = gets $ \srv -> mconcat
    [ htmlDescription "Service" srv
    , mwhen (serviceDeprecated srv) $
         para $ spanClass "warning" $ string "Warning: this service is deprecated"
@@ -255,7 +256,7 @@ productType tp =
       _          -> [Some tp]
 
 encodeExercise :: LinkManager -> HTMLEncoder a (Exercise a)
-encodeExercise lm = makeEncoder $ \ex -> mconcat
+encodeExercise lm = gets $ \ex -> mconcat
    [ generalInfo ex
    , h2 "Example exercises"
    , ul $ [ para $ linkToExamples lm ex $ string "list of examples"
@@ -474,7 +475,7 @@ htmlDerivation lm = exerciseEncoder $ \ex d ->
    in htmlDerivationWith before forStep forTerm (diffEnvironment d)
 
 htmlState :: LinkManager -> HTMLEncoder a (State a)
-htmlState lm = makeEncoder $ \state ->
+htmlState lm = gets $ \state ->
    para $ container $ background LightGray $ para $
       stateLink lm state
       <> htmlContext True (exercise state) (stateContext state)
@@ -499,7 +500,7 @@ stateLink lm st =
 encodeState :: LinkManager -> DomainReasoner -> HTMLEncoder a (State a)
 encodeState lm dr =
    htmlState lm <>
-   makeEncoder (\state ->
+   gets (\state ->
       let xs = useAllFirsts dr state
           n  = either (const 0) length xs
       in mconcat

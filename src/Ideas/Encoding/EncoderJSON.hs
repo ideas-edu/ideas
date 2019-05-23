@@ -15,7 +15,9 @@
 
 module Ideas.Encoding.EncoderJSON (jsonEncoder) where
 
+import Control.Applicative hiding (Const)
 import Data.Maybe
+import Control.Monad.State hiding (State)
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.Encoder hiding (symbol)
 import Ideas.Service.State
@@ -88,7 +90,7 @@ jsonEncodeConst = encoderFor $ \(val ::: tp) ->
 
 -- legacy representation
 encodeEnvironment :: JSONEncoder a Environment
-encodeEnvironment = makeEncoder $ \env ->
+encodeEnvironment = gets $ \env ->
    let f a = Object [(showId a, String (showValue a))]
    in Array [ f a | a <- bindings env ]
 
@@ -114,7 +116,7 @@ encodeState = encoderFor $ \st ->
    in make <$> (encodeContext // ctx) <*> (encodeStateEnvironment // ctx)
 
 encodeStateEnvironment :: JSONEncoder a (Context a)
-encodeStateEnvironment = makeEncoder $ \ctx ->
+encodeStateEnvironment = gets $ \ctx ->
    let loc = fromLocation (location ctx)
        env = (if null loc then id else insertRef (makeRef "location") loc)
            $ environment ctx

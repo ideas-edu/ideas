@@ -24,13 +24,15 @@ module Ideas.Text.XML
      -- * Simple queries
    , name, attributes, findAttribute, children, findChildren, findChild, getData
      --------------------------------------------
-   , emptyContent, decData, decChild, decFirstChild, foldXML
+   , emptyContent
+   , decodeData, decodeAttribute, decodeChild, decodeFirstChild
+   , foldXML
    , ToXML(..), builderXML, fromBuilder
    , InXML(..)
    , isEmptyBuilder, trimXML
    ) where
 
-import Control.Monad
+import Control.Monad.State
 import Data.Char (chr, ord, isSpace)
 import Data.Foldable (toList)
 import Data.List
@@ -41,6 +43,7 @@ import Ideas.Text.XML.Document (escape, Name, prettyElement)
 import Ideas.Text.XML.Parser (document)
 import Ideas.Text.XML.Unicode
 import Ideas.Utils.Parsing (parseSimple)
+import Ideas.Utils.Decoding
 import qualified Data.Map as M
 import qualified Data.Sequence as Seq
 import qualified Ideas.Text.XML.Document as D
@@ -168,25 +171,41 @@ foldXML fe fa fs = rec
 
 ---------------------------------------------------------
 
-decData :: XML -> Either String (String, XML)
-decData xml =
+decodeData :: Decoder env XML String
+decodeData = get >>= \xml ->
    case content xml of
-      Left s:rest -> Right (s, xml {content = rest})
-      _           -> Left "Could not find data"
+      Left s:rest -> put xml {content = rest} >> return s
+      _           -> fail "Could not find data"
 
-decChild :: Name -> XML -> Either String (XML, XML)
-decChild s xml = 
-   case break p (content xml) of
-      (xs, Right y:ys) -> Right (y, xml { content = xs ++ ys })
-      _ -> Left $ "Could not find child " ++ s
+decodeAttribute :: String -> Decoder env XML String
+decodeAttribute s = get >>= \xml ->
+   case break hasName (attributes xml) of
+      (xs, (_ := val):ys) -> put xml {attributes = xs ++ ys } >> return val
+      _ -> fail $ "Could not find attribute " ++ s
  where
-   p = either (const False) ((==s) . name)
+   hasName (n := _) = n == s
 
-decFirstChild :: Name -> XML -> Either String (XML, XML)
-decFirstChild s xml = 
+decodeChild :: Name -> Decoder env XML a -> Decoder env XML a
+decodeChild s p = get >>= \xml -> 
+   case break hasName (content xml) of
+      (xs, Right y:ys) -> do
+         put y
+         a <- p
+         put xml { content = xs ++ ys }
+         return a
+      _ -> fail $ "Could not find child " ++ s
+ where
+   hasName = either (const False) ((==s) . name)
+
+decodeFirstChild :: Name -> Decoder env XML a -> Decoder env XML a
+decodeFirstChild s p = get >>= \xml -> 
    case content xml of
-      Right y:ys | name y == s -> Right (y, xml { content = ys })
-      _ -> Left $ "Could not find first child " ++ s
+      Right y:ys | name y == s -> do
+         put y
+         a <- p
+         put xml { content = ys }
+         return a
+      _ -> fail $ "Could not find first child " ++ s
 
 ----------------------------------------------------------------
 -- Datatype definitions
@@ -255,6 +274,12 @@ class (Sem.Semigroup a, Monoid a) => BuildXML a where
    text       = string . show
    element s  = tag s . mconcat
    emptyTag s = tag s mempty
+
+instance BuildXML a => BuildXML (Decoder env s a) where
+   n .=. s = pure (n .=. s)
+   string  = pure . string
+   builder = pure . builder
+   tag     = fmap . tag
 
 data XMLBuilder = BS (Seq.Seq Attribute) (Seq.Seq (Either String XML))
 

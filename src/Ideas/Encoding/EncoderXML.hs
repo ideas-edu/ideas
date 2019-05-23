@@ -18,6 +18,7 @@ module Ideas.Encoding.EncoderXML
    , xmlEncoder, encodeState
    ) where
 
+import Control.Monad.State hiding (State)
 import Data.Char
 import Data.List
 import Data.Maybe
@@ -140,7 +141,7 @@ encodeEnvironment = encoderFor $ \env ->
    mconcat [ encodeTypedBinding // b | b <- bindings env ]
 
 encodeTypedBinding :: XMLEncoder a Binding
-encodeTypedBinding = withOpenMath $ \useOM -> makeEncoder $ \tb ->
+encodeTypedBinding = withOpenMath $ \useOM -> gets $ \tb ->
    tag "argument" $
       ("description" .=. showId tb) <>
       case getTermValue tb of
@@ -160,7 +161,7 @@ encodeDerivationText = encoderFor $ \d -> encodeAsList
    ]
 
 ruleShortInfo :: XMLEncoder a (Rule (Context a))
-ruleShortInfo = makeEncoder $ \r -> mconcat
+ruleShortInfo = gets $ \r -> mconcat
    [ "name"        .=. showId r
    , "buggy"       .=. showBool (isBuggy r)
    , "arguments"   .=. show (length (getRefs r))
@@ -168,7 +169,7 @@ ruleShortInfo = makeEncoder $ \r -> mconcat
    ]
 
 encodeDifficulty :: XMLEncoder a Difficulty
-encodeDifficulty = makeEncoder $ \d ->
+encodeDifficulty = gets $ \d ->
    "difficulty" .=. show d
 
 encodeText :: XMLEncoder a Text

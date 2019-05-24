@@ -33,6 +33,7 @@ module Ideas.Text.XML
    ) where
 
 import Control.Monad.State
+import Control.Monad.Reader
 import Data.Char (chr, ord, isSpace)
 import Data.Foldable (toList)
 import Data.List
@@ -276,6 +277,12 @@ class (Sem.Semigroup a, Monoid a) => BuildXML a where
    emptyTag s = tag s mempty
 
 instance BuildXML a => BuildXML (Decoder env s a) where
+   n .=. s = pure (n .=. s)
+   string  = pure . string
+   builder = pure . builder
+   tag     = fmap . tag
+
+instance (BuildXML a, Applicative m) => BuildXML (ReaderT r m a) where
    n .=. s = pure (n .=. s)
    string  = pure . string
    builder = pure . builder

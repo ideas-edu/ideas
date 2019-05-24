@@ -189,7 +189,7 @@ stateRequest s state =
 -- assume nothing goest wrong
 stateToXML :: State a -> XMLBuilder
 stateToXML st = fromMaybe (error "LinkManager: Invalid state") $
-   runDecoder encodeState (exercise st, optionHtml mempty) st
+   runEncoder encodeState (exercise st, optionHtml mempty) st
 
 linkWith :: (a -> String) -> a -> HTMLBuilder -> HTMLBuilder
 linkWith f = link . escapeInURL . f

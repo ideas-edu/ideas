@@ -22,9 +22,8 @@ module Ideas.Encoding.Encoder
    , hasLatexEncoding, latexPrinter, latexPrinterContext
    , latexEncoding, latexEncodingWith
      -- * Encoder datatype
-   , Encoder, TypedEncoder
-   , encoderFor, exerciseEncoder
-   , (<?>), encodeTyped
+   , EncoderX, Encoder, TypedEncoder
+   , (<?>), encodeTyped, runEncoder
      -- * Decoder datatype
    , DecoderX, TypedDecoder
    , symbol
@@ -49,7 +48,7 @@ import qualified Ideas.Text.JSON as JSON
 -- Converter type class
 
 getExercise :: DecoderX a s (Exercise a)
-getExercise = fromExercise id
+getExercise = reader fst
 
 getBaseUrl :: DecoderX a s String
 getBaseUrl = fromOptions (fromMaybe "http://ideas.cs.uu.nl/" . baseUrl)
@@ -164,28 +163,24 @@ latexEncodingWith = setPropertyF latexProperty . F
 -------------------------------------------------------------------
 -- Encoder datatype
 
-type Encoder a s t = DecoderX a s t
+type Encoder env = ReaderT env Error
+type EncoderX a = Encoder (Exercise a, Options)
 
-type TypedEncoder a s = Encoder a (TypedValue (Type a)) s
-
-encoderFor :: (s -> Encoder a s t) -> Encoder a s t
-encoderFor f = get >>= f
-
-exerciseEncoder :: (Exercise a -> s -> t) -> Encoder a s t
-exerciseEncoder f = withExercise $ gets . f
+type TypedEncoder a b = TypedValue (Type a) -> EncoderX a b
 
 infixr 5 <?>
 
-(<?>) :: (Encoder a t b, Type a1 t) -> Encoder a (TypedValue (Type a1)) b
-                                    -> Encoder a (TypedValue (Type a1)) b
-(p, t) <?> q = do
-   val ::: tp <- get
+(<?>) :: (t -> EncoderX a b, Type a t) -> TypedEncoder a b -> TypedEncoder a b
+((p, t) <?> q) tv@(val ::: tp) =
    case equal tp t of
-      Just f -> p // f val
-      Nothing -> q
+      Just f  -> p (f val)
+      Nothing -> q tv
 
-encodeTyped :: Encoder st t b -> Type a t -> Encoder st (TypedValue (Type a)) b
+encodeTyped :: (t -> EncoderX a b) -> Type a t -> TypedEncoder a b
 encodeTyped p t = (p, t) <?> fail "Types do not match"
+
+runEncoder :: Monad m => (c -> Encoder env b) -> env -> c -> m b
+runEncoder enc env tv = runErrorM (runReaderT (enc tv) env)
 
 -------------------------------------------------------------------
 -- Decoder datatype

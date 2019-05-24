@@ -10,7 +10,14 @@ import Control.Monad.State
 import Control.Monad.Reader
 import Data.Semigroup as Sem
 
-newtype Decoder env s a = Dec { runDec :: ReaderT env (StateT s Error) a }
+instance (Sem.Semigroup a, Applicative m) => Sem.Semigroup (ReaderT env m a) where
+   (<>) = liftA2 (<>)
+
+instance (Monoid a, Applicative m) => Monoid (ReaderT env m a) where
+   mempty  = pure mempty
+   mappend = liftA2 mappend
+
+newtype Decoder env s a = Dec { runDec :: StateT s (ReaderT env Error) a }
  deriving (Functor, Applicative, Alternative, Monad, MonadPlus, MonadReader env, MonadState s)
 
 instance Sem.Semigroup a => Sem.Semigroup (Decoder env s a) where
@@ -21,8 +28,7 @@ instance Monoid a => Monoid (Decoder env s a) where
    mappend = liftA2 mappend
 
 runDecoder :: Monad m => Decoder env s a -> env -> s -> m a
-runDecoder p env s = 
-   runErrorM (evalStateT (runReaderT (runDec p) env) s)
+runDecoder p env s = runErrorM (runReaderT (evalStateT (runDec p) s) env)
 
 -------------------------------------------------------------------
 -- Error monad (helper)

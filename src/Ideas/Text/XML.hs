@@ -24,16 +24,15 @@ module Ideas.Text.XML
      -- * Simple queries
    , name, attributes, findAttribute, children, findChildren, findChild, getData
      --------------------------------------------
-   , emptyContent
+   , emptyContent -- remove
    , decodeData, decodeAttribute, decodeChild, decodeFirstChild
    , foldXML
-   , ToXML(..), builderXML, fromBuilder
+   , ToXML(..), builderXML, fromBuilder -- remove fromBuilder
    , InXML(..)
-   , isEmptyBuilder, trimXML
+   , trimXML
    ) where
 
 import Control.Monad.State
-import Control.Monad.Reader
 import Data.Char (chr, ord, isSpace)
 import Data.Foldable (toList)
 import Data.List
@@ -132,11 +131,7 @@ extend = foldXML make mkAttribute mkString
 
 -----------------------------------------------------
 
-parseXML :: String -> Either String XML
-parseXML xs = do
-   input <- decoding xs
-   doc   <- parseSimple document input
-   return (fromXMLDoc doc)
+
 
 -----------------------------------------------------
 
@@ -237,6 +232,12 @@ class ToXML a => InXML a where
 ----------------------------------------------------------------
 -- XML parser (a scanner and a XML tree constructor)
 
+parseXML :: String -> Either String XML
+parseXML xs = do
+   input <- decoding xs
+   doc   <- parseSimple document input
+   return (fromXMLDoc doc)
+
 parseXMLFile :: FilePath -> IO XML
 parseXMLFile file =
    withBinaryFile file ReadMode $
@@ -277,12 +278,6 @@ class (Sem.Semigroup a, Monoid a) => BuildXML a where
    emptyTag s = tag s mempty
 
 instance BuildXML a => BuildXML (Decoder env s a) where
-   n .=. s = pure (n .=. s)
-   string  = pure . string
-   builder = pure . builder
-   tag     = fmap . tag
-
-instance (BuildXML a, Applicative m) => BuildXML (ReaderT r m a) where
    n .=. s = pure (n .=. s)
    string  = pure . string
    builder = pure . builder

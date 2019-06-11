@@ -17,17 +17,13 @@ module Ideas.Encoding.EncoderJSON (jsonEncoder) where
 
 import Control.Applicative hiding (Const)
 import Data.Maybe
-import Control.Monad.State hiding (State)
-import Control.Monad.Reader
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.Encoder hiding (symbol)
 import Ideas.Service.State
-import Ideas.Encoding.Options
 import Ideas.Encoding.Request
 import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
 import Ideas.Utils.Prelude (distinct)
-import Ideas.Utils.Decoding
 import qualified Ideas.Service.Diagnose as Diagnose
 import qualified Ideas.Service.Submit as Submit
 import qualified Ideas.Service.Types as Tp
@@ -49,7 +45,7 @@ jsonEncoder tv@(val ::: tp) =
                      (jsonEncoder (snd val ::: t2))
       List (Const Rule) ->
          return $ Array $ map ruleShortInfo val
-      Tp.Tag s t
+      Tp.Tag s _
          | s == "Result"     -> encodeTyped encodeResult Submit.tResult tv
          | s == "Diagnosis"  -> encodeTyped encodeDiagnosis Diagnose.tDiagnosis tv
          | s == "Derivation" -> ((encodeDerivation, tDerivation (tPair tRule tEnvironment) tContext) <?>
@@ -70,7 +66,7 @@ jsonEncoder tv@(val ::: tp) =
    tupleList (ev ::: (t1 :|: t2)) =
       either (\x -> tupleList (x ::: t1))
              (\x -> tupleList (x ::: t2)) ev
-   tupleList tv = [tv]
+   tupleList a = [a]
 
 jsonEncodeConst :: TypedValue (Const a) -> JSONEncoder a
 jsonEncodeConst (val ::: tp) =
@@ -99,7 +95,7 @@ encodeEnvironment env = return $
    in Array [ f a | a <- bindings env ]
 
 encodeContext :: Context a -> JSONEncoder a
-encodeContext ctx = f <$> reader (useJSONTerm . request . snd) <*> reader fst
+encodeContext ctx = f . useOpenMath <$> getRequest <*> getExercise
  where
    f True  ex = fromMaybe Null $ liftA2 build (hasJSONView ex) $ fromContext ctx
    f False ex = String $ prettyPrinterContext ex ctx

@@ -18,18 +18,14 @@ module Ideas.Encoding.EncoderXML
    , xmlEncoder, encodeState
    ) where
 
-import Control.Monad.Reader
-import Control.Monad.State hiding (State)
 import Data.Char
 import Data.List
 import Data.Maybe
-import Data.Monoid hiding ((<>))
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.OpenMathSupport
 import Ideas.Encoding.RulesInfo (rulesInfoXML)
 import Ideas.Encoding.StrategyInfo
-import Ideas.Encoding.Options
 import Ideas.Service.Diagnose
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Encoding.Request hiding (XML)
@@ -53,7 +49,7 @@ xmlEncoder =
    (encodeDerivationText, tDerivation tString tContext) <?>
    (encodeDifficulty, tDifficulty) <?>
    (encodeMessage, FeedbackText.tMessage) <?>
-   \tv@(val ::: tp) ->
+   \(val ::: tp) ->
    case tp of
       -- meta-information
       Tag "RuleShortInfo" t ->
@@ -61,8 +57,8 @@ xmlEncoder =
             Just f  -> ruleShortInfo (f val)
             Nothing -> fail "rule short info"
       Tag "RulesInfo" _ -> do
-         ex    <- reader fst
-         useOM <- reader (useOpenMath . request . snd)
+         ex    <- getExercise
+         useOM <- useOpenMath <$> getRequest
          return (rulesInfoXML ex (buildExpression useOM ex))
       Tag "elem" t ->
          tag "elem" (xmlEncoder (val ::: t))
@@ -72,7 +68,7 @@ xmlEncoder =
       List t ->
          encodeAsList [ xmlEncoder (a ::: t) | a <- val ]
       -- standard
-      Tag _ t    -> xmlEncoder tv
+      Tag _ t    -> xmlEncoder (val ::: t)
       Iso iso t  -> xmlEncoder (to iso val ::: t)
       Pair t1 t2 -> xmlEncoder (fst val ::: t1) <>
                     xmlEncoder (snd val ::: t2)
@@ -111,8 +107,8 @@ encodeState st = element "state"
 
 encodeContext :: Context a -> XMLEncoder a
 encodeContext ctx = do
-   ex    <- reader fst
-   useOM <- reader (useOpenMath . request . snd)
+   ex    <- getExercise
+   useOM <- useOpenMath <$> getRequest
    maybe (error "encodeContext") (buildExpression useOM ex) (fromContext ctx)
       <>
       let values = bindings (withLoc ctx)
@@ -146,7 +142,7 @@ encodeEnvironment env = mconcat [ encodeTypedBinding b | b <- bindings env ]
 
 encodeTypedBinding :: Binding -> XMLEncoder a
 encodeTypedBinding tb = do
-   useOM <- reader (useOpenMath . request . snd)
+   useOM <- useOpenMath <$> getRequest
    tag "argument" $
       ("description" .=. showId tb) <>
       case getTermValue tb of
@@ -179,8 +175,8 @@ encodeDifficulty d =
 
 encodeText :: Text -> XMLEncoder a
 encodeText txt = do
-   ex    <- reader fst
-   useOM <- reader (useOpenMath . request . snd)
+   ex    <- getExercise
+   useOM <- useOpenMath <$> getRequest
    mconcat (intersperse (string " ") [ encodeItem ex useOM item | item <- textItems txt ])
  where
    encodeItem ex useOM item =

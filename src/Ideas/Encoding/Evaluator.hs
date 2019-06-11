@@ -66,5 +66,5 @@ eval ex opts (Evaluator dec enc) b = rec
             a <- val
             rec (a ::: t)
          _ -> do
-            c <- runEncoder enc (ex, opts) tv
+            c <- runEncoder (enc tv) (ex, opts)
             return $ EvalResult [] tv c

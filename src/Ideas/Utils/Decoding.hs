@@ -1,6 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Ideas.Utils.Decoding 
-   ( Decoder, runDecoder
+   ( Decoder, runDecoder, symbol
+   , Encoder, runEncoder
    , Error, runError, runErrorM
    ) where
 
@@ -10,12 +11,7 @@ import Control.Monad.State
 import Control.Monad.Reader
 import Data.Semigroup as Sem
 
-instance (Sem.Semigroup a, Applicative m) => Sem.Semigroup (ReaderT env m a) where
-   (<>) = liftA2 (<>)
-
-instance (Monoid a, Applicative m) => Monoid (ReaderT env m a) where
-   mempty  = pure mempty
-   mappend = liftA2 mappend
+-------------------------------------------------------------------
 
 newtype Decoder env s a = Dec { runDec :: StateT s (ReaderT env Error) a }
  deriving (Functor, Applicative, Alternative, Monad, MonadPlus, MonadReader env, MonadState s)
@@ -27,8 +23,22 @@ instance Monoid a => Monoid (Decoder env s a) where
    mempty  = pure mempty
    mappend = liftA2 mappend
 
+symbol :: Decoder env [s] s
+symbol = get >>= \list ->
+   case list of
+      []   -> fail "Empty input"
+      x:xs ->
+         put xs >> return x
+
 runDecoder :: Monad m => Decoder env s a -> env -> s -> m a
 runDecoder p env s = runErrorM (runReaderT (evalStateT (runDec p) s) env)
+
+-------------------------------------------------------------------
+
+type Encoder env = Decoder env ()
+
+runEncoder :: Monad m => Encoder env a -> env -> m a
+runEncoder p env = runDecoder p env ()
 
 -------------------------------------------------------------------
 -- Error monad (helper)

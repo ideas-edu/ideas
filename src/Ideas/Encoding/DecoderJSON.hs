@@ -26,6 +26,7 @@ import Ideas.Encoding.Encoder
 import Ideas.Service.State
 import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
+import Ideas.Utils.Decoding (symbol)
 import qualified Ideas.Service.Types as Tp
 
 type JSONDecoder a t = DecoderX a JSON t

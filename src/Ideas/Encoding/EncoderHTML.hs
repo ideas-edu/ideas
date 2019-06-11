@@ -15,8 +15,6 @@
 
 module Ideas.Encoding.EncoderHTML (HTMLEncoder, htmlEncoder) where
 
-import Control.Monad.Reader
-import Control.Monad.State hiding (State)
 import Data.Char
 import Data.List
 import Data.Maybe
@@ -31,7 +29,6 @@ import Ideas.Encoding.Request
 import Ideas.Encoding.RulePresenter
 import Ideas.Encoding.RulesInfo
 import Ideas.Encoding.StrategyInfo
-import Ideas.Encoding.Options
 import Ideas.Service.BasicServices
 import Ideas.Service.Diagnose
 import Ideas.Service.DomainReasoner
@@ -52,12 +49,15 @@ type HTMLEncoder a = EncoderX a HTMLBuilder
 
 htmlEncoder :: DomainReasoner -> TypedEncoder a HTMLPage
 htmlEncoder dr tv = do
-   opts <- reader snd
-   let req  = request opts
-       base = fromMaybe "http://ideas.cs.uu.nl/" (baseUrl opts)
-   let lm = makeLinkManager base (fromMaybe "" (cgiBinary req))
-   ex <- reader fst
-   makePage lm dr ex <$> encodeType lm dr tv
+   lm <- getLinkManager
+   ex <- getExercise
+   makePage lm dr ex <$> encodeType dr tv
+
+getLinkManager :: EncoderX a LinkManager
+getLinkManager = do
+   req  <- getRequest
+   base <- getBaseUrl
+   return $ makeLinkManager base (fromMaybe "" (cgiBinary req))
 
 makePage :: LinkManager -> DomainReasoner -> Exercise a -> HTMLBuilder -> HTMLPage
 makePage lm dr ex body =
@@ -113,49 +113,49 @@ table hasHeader = tableAll . mconcat . zipWith f (hasHeader : repeat False)
 keyValueTable :: BuildXML a => [(String, a)] -> a
 keyValueTable = table False . map (\(s, a) -> [string s, a])
 
-encodeType :: LinkManager -> DomainReasoner -> TypedValue (Type a) -> HTMLEncoder a
-encodeType lm dr =
+encodeType :: DomainReasoner -> TypedValue (Type a) -> HTMLEncoder a
+encodeType dr =
    (encodeIndex, tDomainReasoner) <?>
-   (exerciseHeader . htmlDiagnosis lm dr, tDiagnosis) <?>
-   (exerciseHeader . encodeExampleList lm, tList (tPair tDifficulty tContext)) <?>
-   (exerciseHeader . htmlFirsts lm, tList (tPair tStepInfo tState)) <?>
-   (exerciseHeader . htmlAllApplications lm, tList (tTuple3 tRule tLocation tState)) <?>
-   (exerciseHeader . encodeDerivation lm, tDerivation (tPair tRule tEnvironment) tContext) <?>
-   (exerciseHeader . encodeDerivationList lm, tList (tDerivation (tPair tRule tEnvironment) tContext)) <?>
+   (exerciseHeader . htmlDiagnosis dr, tDiagnosis) <?>
+   (exerciseHeader . encodeExampleList, tList (tPair tDifficulty tContext)) <?>
+   (exerciseHeader . htmlFirsts, tList (tPair tStepInfo tState)) <?>
+   (exerciseHeader . htmlAllApplications, tList (tTuple3 tRule tLocation tState)) <?>
+   (exerciseHeader . encodeDerivation, tDerivation (tPair tRule tEnvironment) tContext) <?>
+   (exerciseHeader . encodeDerivationList, tList (tDerivation (tPair tRule tEnvironment) tContext)) <?>
    \(val ::: tp) ->
         case tp of
-           Iso iso t  -> encodeType lm dr (to iso val ::: t)
-           Tag _ t    -> encodeType lm dr (val ::: t)
-           Pair t1 t2 -> encodeType lm dr (fst val ::: t1) <>
-                         encodeType lm dr (snd val ::: t2)
+           Iso iso t  -> encodeType dr (to iso val ::: t)
+           Tag _ t    -> encodeType dr (val ::: t)
+           Pair t1 t2 -> encodeType dr (fst val ::: t1) <>
+                         encodeType dr (snd val ::: t2)
            t1 :|: t2  -> case val of
-                            Left x  -> encodeType lm dr (x ::: t1)
-                            Right x -> encodeType lm dr (x ::: t2)
-           List (Const Service) -> encodeServiceList lm val
-           List (Const SomeExercise) -> encodeExerciseList lm val
-           List (Const Rule) -> exerciseHeader (encodeRuleList lm val)
-           List t -> ul [ encodeType lm dr (x ::: t) | x <- val ]
-           Const t -> encodeConst lm dr (val ::: t)
+                            Left x  -> encodeType dr (x ::: t1)
+                            Right x -> encodeType dr (x ::: t2)
+           List (Const Service) -> encodeServiceList val
+           List (Const SomeExercise) -> encodeExerciseList val
+           List (Const Rule) -> exerciseHeader (encodeRuleList val)
+           List t -> ul [ encodeType dr (x ::: t) | x <- val ]
+           Const t -> encodeConst dr (val ::: t)
            _ -> string $ "unknown: " ++ show tp
 
-encodeConst :: LinkManager -> DomainReasoner -> TypedValue (Const a) -> HTMLEncoder a
-encodeConst lm dr tv@(val ::: tp) =
+encodeConst :: DomainReasoner -> TypedValue (Const a) -> HTMLEncoder a
+encodeConst dr tv@(val ::: tp) =
    case tp of
       Service     -> encodeService val
-      Exercise    -> exerciseHeader (encodeExercise lm val)
+      Exercise    -> exerciseHeader (encodeExercise val)
       Strategy    -> exerciseHeader (encodeStrategy val)
       Rule        -> encodeRule val
-      State       -> exerciseHeader (encodeState lm dr val)
+      State       -> exerciseHeader (encodeState dr val)
       Location    -> text val
       Environment -> text val
       Term        -> text val
       Context     -> encodeContext val
       String      -> string val
-      Result      -> exerciseHeader (encodeResult lm val) 
+      Result      -> exerciseHeader (encodeResult val) 
       _           -> text tv
 
 encodeContext :: Context a -> HTMLEncoder a
-encodeContext ctx = (\ex -> string (prettyPrinterContext ex ctx)) <$> reader fst
+encodeContext ctx = (\ex -> string (prettyPrinterContext ex ctx)) <$> getExercise
   
 encodeIndex :: DomainReasoner -> HTMLEncoder a
 encodeIndex dr = return $ mconcat
@@ -177,32 +177,36 @@ encodeIndex dr = return $ mconcat
            ])
    ]
 
-encodeServiceList :: LinkManager -> [Service] -> HTMLEncoder a 
-encodeServiceList lm srvs = return $
-   h1 "Services" <>
-   mconcat
-      [ h2 (show i ++ ". " ++ s) <> table False (map make xs)
-      | (i, s, xs) <- groupById srvs
-      ]
+encodeServiceList :: [Service] -> HTMLEncoder a 
+encodeServiceList srvs = do
+   lm <- getLinkManager
+   return $
+      h1 "Services" <>
+      mconcat
+         [ h2 (show i ++ ". " ++ s) <> table False (map (make lm) xs)
+         | (i, s, xs) <- groupById srvs
+         ]
  where
-   make s = [ linkToService lm s (string (showId s)) <>
-              mwhen (serviceDeprecated s) (italic (string " (deprecated)"))
-            , string (description s)
-            ]
+   make lm s = [ linkToService lm s (string (showId s)) <>
+                 mwhen (serviceDeprecated s) (italic (string " (deprecated)"))
+               , string (description s)
+               ]
 
-encodeExerciseList :: LinkManager -> [Some Exercise] -> HTMLEncoder a
-encodeExerciseList lm exs = return $
-   h1 "Exercises" <>
-   mconcat
-      [ h2 (show i ++ ". " ++ dom) <> table False (map make xs)
-      | (i, dom, xs) <- groupsWith f exs
-      ]
+encodeExerciseList :: [Some Exercise] -> HTMLEncoder a
+encodeExerciseList exs = do
+   lm <- getLinkManager
+   return $
+      h1 "Exercises" <>
+      mconcat
+         [ h2 (show i ++ ". " ++ dom) <> table False (map (make lm) xs)
+         | (i, dom, xs) <- groupsWith f exs
+         ]
  where
    f :: Some Exercise -> String
    f (Some ex) = fromMaybe "" (listToMaybe (qualifiers (getId ex)))
 
-   make :: Some Exercise -> [HTMLBuilder]
-   make (Some ex) =
+   make :: LinkManager -> Some Exercise -> [HTMLBuilder]
+   make lm (Some ex) =
       [ linkToExercise lm ex $ string $ showId ex
       , string $ map toLower $ show $ status ex
       , string $ description ex
@@ -257,25 +261,27 @@ productType tp =
       Unit       -> []
       _          -> [Some tp]
 
-encodeExercise :: LinkManager -> Exercise a -> HTMLEncoder a
-encodeExercise lm ex = return $ mconcat
-   [ generalInfo ex
-   , h2 "Example exercises"
-   , ul $ [ para $ linkToExamples lm ex $ string "list of examples"
-          | isEmpty (examples ex)
-          ] ++
-          [ para $ mconcat $
-               string "generate exercise: " :
-               intersperse (string ", ")
-                  [ linkToRandomExample lm ex d $ text d
-                  | d <- [VeryEasy .. VeryDifficult]
-                  ]
-          | not $ null $ allRandoms $ examples ex
-          ] ++
-          [ para $ submitStateInfo lm ex ]
-   ]
+encodeExercise :: Exercise a -> HTMLEncoder a
+encodeExercise ex = do 
+   lm <- getLinkManager 
+   return $ mconcat
+      [ generalInfo lm
+      , h2 "Example exercises"
+      , ul $ [ para $ linkToExamples lm ex $ string "list of examples"
+             | isEmpty (examples ex)
+             ] ++
+             [ para $ mconcat $
+                  string "generate exercise: " :
+                  intersperse (string ", ")
+                     [ linkToRandomExample lm ex d $ text d
+                     | d <- [VeryEasy .. VeryDifficult]
+                     ]
+             | not $ null $ allRandoms $ examples ex
+             ] ++
+             [ para $ submitStateInfo lm ex ]
+      ]
  where
-   generalInfo ex = container $ panel $ left $ keyValueTable
+   generalInfo lm = container $ panel $ left $ keyValueTable
       [ ("Code",   string $ showId ex)
       , ("Status", text $ status ex)
       , ("Strategy", linkToStrategy lm ex $ string (showId $ strategy ex))
@@ -292,16 +298,14 @@ encodeExercise lm ex = return $ mconcat
          mapBoth length (partition isBuggy (ruleset ex))
 
 exerciseHeader :: HTMLEncoder a -> HTMLEncoder a
-exerciseHeader body = do
-   ex <- reader fst
+exerciseHeader body = withExercise $ \ex -> do
    tag "div" $ mconcat
       [ return (htmlDescription "Exercise" ex)
       , body
       ]
 
 encodeStrategy :: Strategy (Context a) -> HTMLEncoder a
-encodeStrategy s = do
-   ex <- reader fst 
+encodeStrategy s = withExercise $ \ex -> do
    return $ mconcat
       [ h2 "Strategy"
       , highlightXML True (strategyToXML s)
@@ -318,8 +322,8 @@ encodeStrategy s = do
 bool :: Bool -> HTMLBuilder
 bool b = string (if b then "yes" else "no")
 
-encodeResult :: BuildXML b => LinkManager -> Result -> b
-encodeResult lm tests = mconcat
+encodeResult :: Result -> HTMLEncoder a
+encodeResult tests = getLinkManager >>= \lm -> mconcat
    [ h2 "Test report"
    , divClass "test-summary" $ mconcat
         [ divClass "test-status" (statusImg lm tests 32)
@@ -336,26 +340,26 @@ encodeResult lm tests = mconcat
              ]
         ]
    , mwhen (isError tests) $
-        mconcat (h2 "Errors" : map makeItem errors)
+        mconcat (h2 "Errors" : map (makeItem lm) errors)
    , mwhen (isWarning tests) $
-        mconcat (h2 "Warnings" : map makeItem warnings)
+        mconcat (h2 "Warnings" : map (makeItem lm) warnings)
    , h2 "Tests"
-   , make tests
+   , make lm tests
    ]
  where
    msgs     = allMessages tests
    errors   = filter (isError . snd) msgs
    warnings = filter (isWarning . snd) msgs
 
-   make t = mconcat $
-      map makeGroup (subResults t) ++
-      map makeItem (topMessages t)
+   make lm t = mconcat $
+      map (makeGroup lm) (subResults t) ++
+      map (makeItem lm) (topMessages t)
 
-   makeGroup (s, t) = divClass "test-group" $
+   makeGroup lm (s, t) = divClass "test-group" $
       divClass "test-title" (string (s ++ " " ++ show t))
-      <> make t
+      <> make lm t
 
-   makeItem (s, m) = divClass "test-item" $
+   makeItem lm (s, m) = divClass "test-item" $
       statusImg lm m 16 <> spaces 3 <> string s <> msg
     where
       msg | isOk m      = mempty
@@ -388,9 +392,9 @@ showRating lm = rec (5::Int)
           | a == 1    = "star_2.png"
           | otherwise = "star_3.png"
 
-encodeRuleList :: LinkManager -> [Rule (Context a)] -> HTMLEncoder a 
-encodeRuleList lm rs = do
-   ex <- reader fst
+encodeRuleList :: [Rule (Context a)] -> HTMLEncoder a 
+encodeRuleList rs = withExercise $ \ex -> do
+   lm <- getLinkManager
    let (rs1, rs2) = partition isBuggy rs
 
        header = [ string "Rule name", string "Args"
@@ -413,8 +417,7 @@ encodeRuleList lm rs = do
          ]
 
 encodeRule :: Rule (Context a) -> HTMLEncoder a
-encodeRule r = do
-   ex <- reader fst
+encodeRule r = withExercise $ \ex -> do
    return $ mconcat
       [ htmlDescription "Rule" r
       , let commas  = string . intercalate ", "
@@ -440,36 +443,36 @@ encodeRule r = do
               ]
       ]
 
-encodeExampleList :: LinkManager -> [(Difficulty, Context a)] -> HTMLEncoder a
-encodeExampleList lm pairs = do
-   ex <- reader fst
+encodeExampleList :: [(Difficulty, Context a)] -> HTMLEncoder a
+encodeExampleList pairs = withExercise $ \ex -> do 
+   lm <- getLinkManager
    return $ mconcat $
       h2 "Examples" :
       [  container . third $
           h3 (s ++ " (" ++ show (length xs) ++ ")")
-          <> W3.ulWith hoverable (map ((fontAwesome "hand-o-right" <>) . padding Small . make ex) xs)
+          <> W3.ulWith hoverable (map ((fontAwesome "hand-o-right" <>) . padding Small . make lm ex) xs)
       | (_, s, xs) <- orderedGroupsWith show fst pairs
       ]
  where
-   make ex (_, x) =
+   make lm ex (_, x) =
       let st = emptyStateContext ex x
       in button (escapeInURL (urlForState lm st)) (htmlContext False ex x)
 
-encodeDerivation :: LinkManager -> Derivation (Rule (Context a), Environment) (Context a) -> HTMLEncoder a
-encodeDerivation lm d =
-   h2 "Derivation" <> htmlDerivation lm d
+encodeDerivation :: Derivation (Rule (Context a), Environment) (Context a) -> HTMLEncoder a
+encodeDerivation d =
+   h2 "Derivation" <> htmlDerivation d
 
-encodeDerivationList :: LinkManager -> [Derivation (Rule (Context a), Environment) (Context a)] -> HTMLEncoder a
-encodeDerivationList lm ds =
+encodeDerivationList :: [Derivation (Rule (Context a), Environment) (Context a)] -> HTMLEncoder a
+encodeDerivationList ds =
    h2 "Derivations"
    <> mconcat
-      [ h3 (show i ++ ".") <> htmlDerivation lm d
+      [ h3 (show i ++ ".") <> htmlDerivation d
       | (i, d) <- zip [1::Int ..] ds
       ]
 
-htmlDerivation :: LinkManager -> Derivation (Rule (Context a), Environment) (Context a) -> HTMLEncoder a
-htmlDerivation lm d = do
-   ex <- reader fst
+htmlDerivation :: Derivation (Rule (Context a), Environment) (Context a) -> HTMLEncoder a
+htmlDerivation d = withExercise $ \ex -> do
+   lm <- getLinkManager
    let before =
           stateLink lm (emptyStateContext ex (firstTerm d))
           <> case fmap (isReady ex) (fromContext (lastTerm d)) of
@@ -486,9 +489,10 @@ htmlDerivation lm d = do
        forTerm = htmlContext True ex
    return $ htmlDerivationWith before forStep forTerm (diffEnvironment d)
 
-htmlState :: LinkManager -> State a -> HTMLEncoder a
-htmlState lm state = return $
-   para $ container $ background LightGray $ para $
+htmlState :: State a -> HTMLEncoder a
+htmlState state = do 
+   lm <- getLinkManager
+   return $ para $ container $ background LightGray $ para $
       stateLink lm state
       <> htmlContext True (exercise state) (stateContext state)
       <> string "ready: " <> bool (finished state)
@@ -509,9 +513,10 @@ stateLink lm st =
    container $ right $ linkToState lm st $
    tag "span" $ textTheme $ fontAwesome "external-link"
 
-encodeState :: LinkManager -> DomainReasoner -> State a -> HTMLEncoder a
-encodeState lm dr state =
-   htmlState lm state <>
+encodeState :: DomainReasoner -> State a -> HTMLEncoder a
+encodeState dr state = do
+   lm <- getLinkManager
+   htmlState state <>
       let xs = useAllFirsts dr state
           n  = either (const 0) length xs
       in return (mconcat
@@ -581,8 +586,8 @@ htmlDerivationWith before forStep forTerm d =
       before : forTerm (firstTerm d) :
          [ forStep s <> forTerm a | (_, s, a) <- triples d ]
 
-htmlFirsts :: LinkManager -> [(StepInfo a, State a)] -> HTMLEncoder a 
-htmlFirsts lm xs = 
+htmlFirsts :: [(StepInfo a, State a)] -> HTMLEncoder a 
+htmlFirsts xs = 
    h2 "Firsts" <>
    ul [ keyValueTable
            [ ("Rule", string $ showId r)
@@ -590,22 +595,22 @@ htmlFirsts lm xs =
            , ("Term", text $ show $ currentTerm (top $ stateContext s) )
            , ("Focus", text $ show $ currentTerm (stateContext s) )
            , ("Environment", text env)
-           ] <> htmlState lm s
+           ] <> htmlState s
       | ((r, loc, env), s) <- xs
       ]
 
-htmlAllApplications :: LinkManager -> [(Rule (Context a), Location, State a)] -> HTMLEncoder a
-htmlAllApplications lm xs =
+htmlAllApplications :: [(Rule (Context a), Location, State a)] -> HTMLEncoder a
+htmlAllApplications xs =
    h2 "All applications" <>
    ul [ keyValueTable
            [ ("Rule", string $ showId r)
            , ("Location", text loc)
-           ] <> (if isBuggy r then mempty else htmlState lm s)
+           ] <> (if isBuggy r then mempty else htmlState s)
       | (r, loc, s) <- xs
       ]
 
-htmlDiagnosis :: LinkManager -> DomainReasoner -> Diagnosis a -> HTMLEncoder a
-htmlDiagnosis lm dr diagnosis =
+htmlDiagnosis :: DomainReasoner -> Diagnosis a -> HTMLEncoder a
+htmlDiagnosis dr diagnosis =
    case diagnosis of
       SyntaxError s ->
          spanClass "error" $ string s
@@ -614,20 +619,20 @@ htmlDiagnosis lm dr diagnosis =
       NotEquivalent s ->
          spanClass "error" $ string $ if null s then "Not equivalent" else s
       Similar _ s ->
-         h2 "Similar term" <> encodeState lm dr s
+         h2 "Similar term" <> encodeState dr s
       WrongRule _ s mr ->
          h2 ("WrongRule " ++ maybe "" showId mr)
-         <> encodeState lm dr s
+         <> encodeState dr s
       Expected _ s r ->
          h2 ("Expected (" ++ show r ++ ")")
-         <> encodeState lm dr s
+         <> encodeState dr s
       Detour _ s _ r ->
          h2 ("Detour (" ++ show r ++ ")")
-         <> encodeState lm dr s
+         <> encodeState dr s
       Correct _ s ->
-         h2 "Correct" <> encodeState lm dr s
+         h2 "Correct" <> encodeState dr s
       Unknown _ s ->
-         h2 "Unknown" <> encodeState lm dr s
+         h2 "Unknown" <> encodeState dr s
 
 htmlDescription :: HasId a => String -> a -> HTMLBuilder
 htmlDescription tp a = munless (null (description a)) $

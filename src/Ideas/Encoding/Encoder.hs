@@ -13,8 +13,9 @@
 
 module Ideas.Encoding.Encoder
    ( -- * Converter type class
-     getExercise, getBaseUrl, getQCGen, getScript, getRequest
-   , withExercise, withOpenMath, withJSONTerm, (//)
+     getExercise, getOptions, getRequest
+   , withExercise, getBaseUrl, getQCGen, getScript
+   , (//), withJSONTerm, withOpenMath
      -- * JSON support
    , hasJSONView, addJSONView, jsonEncoding
    , termToJSON, jsonToTerm
@@ -22,17 +23,15 @@ module Ideas.Encoding.Encoder
    , hasLatexEncoding, latexPrinter, latexPrinterContext
    , latexEncoding, latexEncodingWith
      -- * Encoder datatype
-   , EncoderX, Encoder, TypedEncoder
-   , (<?>), encodeTyped, runEncoder
+   , EncoderX, TypedEncoder
+   , (<?>), encodeTyped
      -- * Decoder datatype
    , DecoderX, TypedDecoder
-   , symbol
    ) where
 
-import Control.Monad.State
 import Control.Monad.Reader
 import Data.Maybe
-import Ideas.Common.Library hiding (exerciseId, symbol)
+import Ideas.Common.Library
 import Ideas.Encoding.Options
 import Ideas.Encoding.Request
 import Ideas.Service.FeedbackScript.Parser (Script)
@@ -50,20 +49,23 @@ import qualified Ideas.Text.JSON as JSON
 getExercise :: DecoderX a s (Exercise a)
 getExercise = reader fst
 
-getBaseUrl :: DecoderX a s String
-getBaseUrl = fromOptions (fromMaybe "http://ideas.cs.uu.nl/" . baseUrl)
-
-getQCGen :: DecoderX a s QCGen
-getQCGen = fromOptions (fromMaybe (mkQCGen 0) . qcGen)
-
-getScript :: DecoderX a s Script
-getScript = fromOptions script
+getOptions :: DecoderX a s Options
+getOptions = reader snd
 
 getRequest :: DecoderX a s Request
-getRequest = fromOptions request
+getRequest = request <$> getOptions
 
 withExercise :: (Exercise a -> DecoderX a s t) -> DecoderX a s t
 withExercise = (getExercise >>=)
+
+getBaseUrl :: DecoderX a s String
+getBaseUrl = fromMaybe "http://ideas.cs.uu.nl/" . baseUrl <$> getOptions
+
+getQCGen :: DecoderX a s QCGen
+getQCGen = fromMaybe (mkQCGen 0) . qcGen <$> getOptions
+
+getScript :: DecoderX a s Script
+getScript = script <$> getOptions
 
 withOpenMath :: (Bool -> DecoderX a s t) -> DecoderX a s t
 withOpenMath = (fmap useOpenMath getRequest >>=)
@@ -163,7 +165,6 @@ latexEncodingWith = setPropertyF latexProperty . F
 -------------------------------------------------------------------
 -- Encoder datatype
 
-type Encoder env = ReaderT env Error
 type EncoderX a = Encoder (Exercise a, Options)
 
 type TypedEncoder a b = TypedValue (Type a) -> EncoderX a b
@@ -179,25 +180,9 @@ infixr 5 <?>
 encodeTyped :: (t -> EncoderX a b) -> Type a t -> TypedEncoder a b
 encodeTyped p t = (p, t) <?> fail "Types do not match"
 
-runEncoder :: Monad m => (c -> Encoder env b) -> env -> c -> m b
-runEncoder enc env tv = runErrorM (runReaderT (enc tv) env)
-
 -------------------------------------------------------------------
 -- Decoder datatype
 
 type DecoderX a = Decoder (Exercise a, Options)
 
 type TypedDecoder a s = forall t . Type a t -> Decoder (Exercise a, Options) s t
-
-fromExercise :: (Exercise a -> t) -> DecoderX a s t
-fromExercise f = reader (f . fst)
-
-fromOptions  :: (Options -> t) -> DecoderX a s t
-fromOptions  f = reader (f . snd)
-
-symbol :: Decoder env [s] s
-symbol = get >>= \list ->
-   case list of
-      []   -> fail "Empty input"
-      x:xs ->
-         put xs >> return x

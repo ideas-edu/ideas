@@ -23,7 +23,7 @@ import Ideas.Common.Library
 import Ideas.Common.Traversal.Navigator
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.OpenMathSupport
-import Ideas.Encoding.Request
+import Ideas.Encoding.Request hiding (XML)
 import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Text.MathML
@@ -80,6 +80,7 @@ xmlDecoder tp =
                               makeDecoder (newId . getData)
             MathML      -> decodeMathML
             String      -> decodeData
+            XML         -> decoderFor return
             _ -> fail $ "No support for argument type in XML: " ++ show tp
       _ -> fail $ "No support for argument type in XML: " ++ show tp
 

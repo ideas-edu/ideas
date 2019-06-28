@@ -31,7 +31,7 @@ module Ideas.Text.XML
      -- * Processing XML
    , foldXML, trimXML
      -- * Deprecated functions
-   , emptyContent, fromBuilder
+   , content, emptyContent, fromBuilder
    ) where
 
 import Control.Monad.State

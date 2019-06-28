@@ -39,7 +39,7 @@ import Ideas.Text.HTML.Templates
 import Ideas.Text.HTML.W3CSS hiding (tag, ul, top, table, content)
 import Ideas.Text.OpenMath.FMP
 import Ideas.Text.OpenMath.Object
-import Ideas.Text.XML
+import Ideas.Text.XML hiding (content)
 import Ideas.Utils.TestSuite
 import Ideas.Utils.Prelude (munless, mwhen)
 import System.IO.Unsafe

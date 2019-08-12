@@ -81,7 +81,7 @@ xmlDecoder tp =
                               gets (newId . getData)
             MathML      -> decodeMathML
             String      -> decodeData
-            XML         -> decoderFor return
+            XML         -> get
             _ -> fail $ "No support for argument type in XML: " ++ show tp
       _ -> fail $ "No support for argument type in XML: " ++ show tp
 

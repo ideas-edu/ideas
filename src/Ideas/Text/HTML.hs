@@ -28,12 +28,11 @@ module Ideas.Text.HTML
    , idA, classA, styleA, titleA
      -- Font style elements
    , tt, italic, bold, big, small
-   , module Data.Monoid
    ) where
 
 import Data.Char
 import Data.List
-import Data.Monoid hiding ((<>))
+import Data.Monoid
 import Ideas.Text.XML
 import Prelude hiding (div)
 import qualified Ideas.Text.XML as XML

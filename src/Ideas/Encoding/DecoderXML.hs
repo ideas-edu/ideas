@@ -17,7 +17,8 @@ module Ideas.Encoding.DecoderXML
    ( XMLDecoder, xmlDecoder
    ) where
 
-import Control.Monad
+import Control.Applicative hiding (Const)
+import Control.Monad.State hiding (State)
 import Data.Char
 import Ideas.Common.Library
 import Ideas.Common.Traversal.Navigator
@@ -30,7 +31,7 @@ import Ideas.Text.MathML
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
 
-type XMLDecoder a = Decoder a XML
+type XMLDecoder a t = DecoderX a XML t
 
 xmlDecoder :: TypedDecoder a XML
 xmlDecoder tp =
@@ -44,7 +45,7 @@ xmlDecoder tp =
               decodeChild "answer" (xmlDecoder t)
          | s == "Difficulty" -> do
               g <- equalM tDifficulty tp
-              a <- decoderFor (findAttribute "difficulty")
+              a <- decodeAttribute "difficulty"
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
          | otherwise ->
               decodeChild s (xmlDecoder t)
@@ -69,7 +70,7 @@ xmlDecoder tp =
             Context     -> decodeContext
             Rule        -> decodeRule
             Environment -> decodeArgEnvironment
-            Term        -> decoderFor (fromXML >=> fromOMOBJ)
+            Term        -> get >>= (fromXML >=> fromOMOBJ)
             Location    -> decodeLocation
             StratCfg    -> decodeConfiguration
             QCGen       -> getQCGen
@@ -77,7 +78,7 @@ xmlDecoder tp =
             Exercise    -> getExercise
             Id          -> -- improve!
                            decodeChild "location" $
-                              makeDecoder (newId . getData)
+                              gets (newId . getData)
             MathML      -> decodeMathML
             String      -> decodeData
             XML         -> decoderFor return
@@ -88,12 +89,12 @@ xmlDecoder tp =
 decodeRule :: XMLDecoder a (Rule (Context a))
 decodeRule = decodeChild "ruleid" $ do
    ex <- getExercise
-   decoderFor (getRule ex . newId . getData)
+   get >>= getRule ex . newId . getData
 
 -- <location>
 decodeLocation :: XMLDecoder a Location
 decodeLocation = decodeChild "location" $
-   makeDecoder (toLocation . read . getData)
+   gets (toLocation . read . getData)
 
 -- <state>
 decodeState :: XMLDecoder a (State a)
@@ -107,7 +108,7 @@ decodeState = decodeChild "state"  $ do
 -- <prefix>
 decodePaths :: XMLDecoder a [Path]
 decodePaths = do
-   prefixText <- makeDecoder (maybe "" getData . findChild "prefix")
+   prefixText <- gets (maybe "" getData . findChild "prefix")
    if all isSpace prefixText
       then return [emptyPath]
       else if prefixText ~= "no prefix"
@@ -137,10 +138,10 @@ decodeExpression = withOpenMath f
    f True  = decodeOMOBJ
    f False = decodeChild "expr" $ do
       ex <- getExercise
-      decoderFor $ either fail return . parser ex . getData
+      get >>= either fail return . parser ex . getData
 
 decodeOMOBJ :: XMLDecoder a a
-decodeOMOBJ = decodeChild "OMOBJ" $ decoderFor $ \xml -> do
+decodeOMOBJ = decodeChild "OMOBJ" $ get >>= \xml -> do
    ex    <- getExercise
    omobj <- fromXML xml
    case fromOpenMath ex omobj of
@@ -148,11 +149,11 @@ decodeOMOBJ = decodeChild "OMOBJ" $ decoderFor $ \xml -> do
       Nothing -> fail "Invalid OpenMath object for this exercise"
 
 decodeMathML :: XMLDecoder a MathML
-decodeMathML = decodeFirstChild "math" $ decoderFor fromXML
+decodeMathML = decodeFirstChild "math" $ get >>= fromXML
 
 decodeEnvironment :: XMLDecoder a Environment
 decodeEnvironment =
-   decodeChild "context" (decoderFor $ foldM add mempty . children)
+   decodeChild "context" (get >>= foldM add mempty . children)
    <|> return mempty
  where
    add env item = do
@@ -175,7 +176,7 @@ decodeEnvironment =
 -- <configuration>
 decodeConfiguration :: XMLDecoder a StrategyCfg
 decodeConfiguration = decodeChild "configuration" $
-   decoderFor $ \xml ->
+   get >>= \xml ->
       mconcat <$> mapM decodeAction (children xml)
  where
    decodeAction item = do
@@ -185,11 +186,11 @@ decodeConfiguration = decodeChild "configuration" $
       return (action `byName` newId cfgloc)
 
 decodeArgEnvironment :: XMLDecoder a Environment
-decodeArgEnvironment = decoderFor $
+decodeArgEnvironment = get >>=
    fmap makeEnvironment . mapM (decodeBinding //) . findChildren "argument"
 
 decodeBinding :: XMLDecoder a Binding
-decodeBinding = decoderFor $ \xml -> do
+decodeBinding = get >>= \xml -> do
    a   <- findAttribute "description" xml
    req <- getRequest
    case findChild "OMOBJ" xml of
@@ -203,32 +204,3 @@ decodeBinding = decoderFor $ \xml -> do
  where
    termBinding :: String -> Term -> Binding
    termBinding = makeBinding . makeRef
-
-decodeData :: XMLDecoder a String
-decodeData = split $ \xml ->
-   case content xml of
-      Left s:rest -> Right (s, xml {content = rest})
-      _           -> Left "Could not find data"
-
-decodeChild :: String -> XMLDecoder a b -> XMLDecoder a b
-decodeChild s m = split f >>= (m //)
- where
-   p     = either (const False) ((==s) . name)
-   f xml = case break p (content xml) of
-              (xs, Right y:ys) -> Right (y, xml { content = xs ++ ys })
-              _ -> Left $ "Could not find child " ++ s
-
-decodeFirstChild :: String -> XMLDecoder a b -> XMLDecoder a b
-decodeFirstChild s m = split f >>= (m //)
- where
-   f xml = case content xml of
-              Right y:ys | name y == s -> Right (y, xml { content = ys })
-              _ -> Left $ "Could not find first child " ++ s
-
-decodeAttribute :: String -> XMLDecoder a String
-decodeAttribute s = split $ \xml ->
-   case break p (attributes xml) of
-      (xs, (_ := val):ys) -> Right (val, xml {attributes = xs ++ ys })
-      _ -> Left $ "Could not find attribute " ++ s
- where
-   p (n := _) = n == s

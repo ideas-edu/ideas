@@ -17,7 +17,7 @@ module Ideas.Encoding.DecoderJSON
    ( JSONDecoder, jsonDecoder
    ) where
 
-import Control.Monad
+import Control.Monad.State (mplus, foldM, get, gets, put)
 import Data.Char
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, symbol)
@@ -26,17 +26,18 @@ import Ideas.Encoding.Encoder
 import Ideas.Service.State
 import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
+import Ideas.Utils.Decoding (symbol)
 import qualified Ideas.Service.Types as Tp
 
-type JSONDecoder a = Decoder a JSON
+type JSONDecoder a t = DecoderX a JSON t
 
 jsonDecoder :: TypedDecoder a JSON
-jsonDecoder tp = decoderFor $ \json ->
+jsonDecoder tp = get >>= \json ->
    case json of
       Array xs -> decodeType tp // xs
       _ -> fail "expecting an array"
 
-decodeType :: Type a t -> Decoder a [JSON] t
+decodeType :: Type a t -> DecoderX a [JSON] t
 decodeType tp =
    case tp of
       Tag _ t -> decodeType t
@@ -62,9 +63,9 @@ decodeConst tp =
       Exercise    -> getExercise
       Environment -> decodeEnvironment
       Location    -> decodeLocation
-      Term        -> decoderFor (return . jsonToTerm)
-      Int         -> decoderFor fromJSON
-      Tp.String   -> decoderFor fromJSON
+      Term        -> gets jsonToTerm
+      Int         -> get >>= fromJSON
+      Tp.String   -> get >>= fromJSON
       Id          -> decodeId
       Rule        -> decodeRule
       _           -> fail $ "No support for argument type: " ++ show tp
@@ -72,19 +73,19 @@ decodeConst tp =
 decodeRule :: JSONDecoder a (Rule (Context a))
 decodeRule = do
    ex <- getExercise
-   decoderFor $ \json ->
+   get >>= \json ->
       case json of
          String s -> getRule ex (newId s)
          _        -> fail "expecting a string for rule"
 
 decodeId :: JSONDecoder a Id
-decodeId = decoderFor $ \json ->
+decodeId = get >>= \json ->
    case json of
       String s -> return (newId s)
       _        -> fail "expecting a string for id"
 
 decodeLocation :: JSONDecoder a Location
-decodeLocation = decoderFor $ \json ->
+decodeLocation = get >>= \json ->
    case json of
       String s -> toLocation <$> readM s
       _        -> fail "expecting a string for a location"
@@ -92,9 +93,9 @@ decodeLocation = decoderFor $ \json ->
 decodeState :: JSONDecoder a (State a)
 decodeState = do
    ex <- getExercise
-   decoderFor $ \json ->
+   get >>= \json ->
       case json of
-         Array [a] -> setInput a >> decodeState
+         Array [a] -> put a >> decodeState
          Array (String _code : pref : term : jsonContext : rest) -> do
             pts  <- decodePaths       // pref
             a    <- decodeExpression  // term
@@ -122,7 +123,7 @@ locRef = makeRef "location"
 
 decodePaths :: JSONDecoder a (LabeledStrategy (Context a) -> Context a -> Prefix (Context a))
 decodePaths =
-   decoderFor $ \json ->
+   get >>= \json ->
       case json of
          String p
             | p ~= "noprefix" -> return (\_ _ -> noPrefix)
@@ -132,7 +133,7 @@ decodePaths =
    x ~= y = filter isAlphaNum (map toLower x) == y
 
 decodeEnvironment :: JSONDecoder a Environment
-decodeEnvironment = decoderFor $ \json ->
+decodeEnvironment = get >>= \json ->
    case json of
       String "" -> return mempty
       Object xs -> foldM (flip add) mempty xs
@@ -148,7 +149,7 @@ decodeContext = do
    inContext ex <$> decodeExpression
 
 decodeExpression :: JSONDecoder a a
-decodeExpression = withJSONTerm $ \b -> getExercise >>= decoderFor . f b
+decodeExpression = withJSONTerm $ \b -> getExercise >>= \ex -> get >>= f b ex
  where
    f True ex json =
       case hasJSONView ex of

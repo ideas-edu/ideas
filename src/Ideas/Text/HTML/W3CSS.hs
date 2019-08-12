@@ -16,6 +16,7 @@
 module Ideas.Text.HTML.W3CSS where
 
 import Data.Char
+import Data.Monoid
 import Ideas.Text.HTML
 import Ideas.Text.XML
 import qualified Ideas.Text.XML as XML

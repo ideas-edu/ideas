@@ -19,6 +19,7 @@ import Ideas.Encoding.Logging
 import Ideas.Encoding.Options
 import Ideas.Service.Diagnose
 import Ideas.Service.Types
+import Ideas.Utils.Decoding
 
 data Evaluator a b c = Evaluator (TypedDecoder a b) (TypedEncoder a c)
 
@@ -57,7 +58,7 @@ eval ex opts (Evaluator dec enc) b = rec
          t1 :-> t2 :-> t3 ->
             rec (uncurry val ::: Pair t1 t2 :-> t3)
          t1 :-> t2 -> do
-            a   <- run (dec t1) ex opts b
+            a   <- runDecoder (dec t1) (ex, opts) b
             res <- rec (val a ::: t2)
             return res { inputValues = (a ::: t1) : inputValues res }
          -- perform IO
@@ -65,5 +66,5 @@ eval ex opts (Evaluator dec enc) b = rec
             a <- val
             rec (a ::: t)
          _ -> do
-            c <- run enc ex opts tv
+            c <- runEncoder (enc tv) (ex, opts)
             return $ EvalResult [] tv c

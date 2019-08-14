@@ -18,7 +18,7 @@ module Ideas.Encoding.EncoderJSON (jsonEncoder) where
 import Control.Applicative hiding (Const)
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
-import Ideas.Encoding.Encoder hiding (symbol)
+import Ideas.Encoding.Encoder
 import Ideas.Service.State
 import Ideas.Encoding.Request
 import Ideas.Service.Types hiding (String)
@@ -113,7 +113,7 @@ encodeState st =
           , env
           ] ++ if isNothing (stateUser st) then [] else
           [ Array [get stateUser, get stateSession, get stateStartTerm] ]
-   in make <$> (encodeContext ctx) <*> (encodeStateEnvironment ctx)
+   in make <$> encodeContext ctx <*> encodeStateEnvironment ctx
 
 encodeStateEnvironment :: Context a -> JSONEncoder a
 encodeStateEnvironment ctx = return $

@@ -267,7 +267,7 @@ instance Arbitrary JSON where
    arbitrary = sized arbJSON
 
 instance Arbitrary Number where
-   arbitrary = oneof [I <$> arbitrary, (D . fromInteger) <$> arbitrary]
+   arbitrary = oneof [ I <$> arbitrary, D . fromInteger <$> arbitrary ]
 
 arbJSON :: Int -> Gen JSON
 arbJSON n

@@ -83,13 +83,13 @@ newDomainReasoner a = mempty {reasonerId  = newId a}
 -- Domain Reasoner functions
 
 exercisesSorted :: DomainReasoner -> [Some Exercise]
-exercisesSorted = sortBy (comparing f) . exercises
+exercisesSorted = sortOn f . exercises
  where
    f :: Some Exercise -> String
    f (Some ex) = showId ex
 
 servicesSorted :: DomainReasoner -> [Service]
-servicesSorted = sortBy (comparing showId) . services
+servicesSorted = sortOn showId . services
 
 findExercise :: Monad m => DomainReasoner -> Id -> m (Some Exercise)
 findExercise dr i =

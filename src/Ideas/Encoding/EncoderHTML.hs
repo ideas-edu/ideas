@@ -220,7 +220,7 @@ groupsWith = orderedGroupsWith id
 
 orderedGroupsWith :: Ord b => (b -> String) -> (a -> b) -> [a] -> [(Int, String, [a])]
 orderedGroupsWith showf get =
-   zipWith f [1..] . groupBy eq . sortBy (comparing get)
+   zipWith f [1..] . groupBy eq . sortOn get
  where
    eq x y = get x == get y
    f i xs = (i, showf (get (head xs)), xs)
@@ -298,14 +298,14 @@ encodeExercise ex = do
          mapBoth length (partition isBuggy (ruleset ex))
 
 exerciseHeader :: HTMLEncoder a -> HTMLEncoder a
-exerciseHeader body = withExercise $ \ex -> do
+exerciseHeader body = withExercise $ \ex ->
    tag "div" $ mconcat
       [ return (htmlDescription "Exercise" ex)
       , body
       ]
 
 encodeStrategy :: Strategy (Context a) -> HTMLEncoder a
-encodeStrategy s = withExercise $ \ex -> do
+encodeStrategy s = withExercise $ \ex ->
    return $ mconcat
       [ h2 "Strategy"
       , highlightXML True (strategyToXML s)
@@ -417,7 +417,7 @@ encodeRuleList rs = withExercise $ \ex -> do
          ]
 
 encodeRule :: Rule (Context a) -> HTMLEncoder a
-encodeRule r = withExercise $ \ex -> do
+encodeRule r = withExercise $ \ex ->
    return $ mconcat
       [ htmlDescription "Rule" r
       , let commas  = string . intercalate ", "

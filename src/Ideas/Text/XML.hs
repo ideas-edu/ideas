@@ -381,7 +381,7 @@ _runTests = do
    testXML xml = 
       case parseXML (compactXML xml) of
          Left msg -> error msg
-         Right a  -> if a == xml then True else error $ show (a, xml)
+         Right a  -> a == xml
 
    mkPD, mkPA, mkBD, mkBA :: String -> XML
    mkPD s = either error id $ parseXML $ "<a>" ++ escape s ++ "</a>"

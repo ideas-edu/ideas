@@ -63,7 +63,7 @@ generators = generator . mconcat
 -- Constructors
 
 arbGen :: Arbitrary b => (b -> a) -> ArbGen a
-arbGen f = newGen 0 ((const . f) <$> arbitrary)
+arbGen f = newGen 0 (const . f <$> arbitrary)
 
 constGen :: a -> ArbGen a
 constGen = pureGen 0 . const

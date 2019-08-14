@@ -43,7 +43,6 @@ import qualified Ideas.Encoding.Logging as Log
 import qualified Ideas.Main.CGI as CGI
 import qualified Ideas.Main.CmdLineOptions as Options
 import qualified Network.Wai as WAI
-import qualified Network.Wai.Internal as WAI
 
 defaultMain :: DomainReasoner -> IO ()
 defaultMain = defaultMainWith mempty
@@ -189,7 +188,7 @@ inputFromRequest req =
       Just s  -> return (Just s)
       Nothing -> do
          -- ... then try request body (for POST requests)
-         body <- WAI.getRequestBodyChunk req
+         body <- WAI.requestBody req
          return (inputFromQuery (parseQuery body))
 
 inputFromQuery :: Query -> Maybe String

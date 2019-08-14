@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification, MultiParamTypeClasses,
+{-# LANGUAGE ExistentialQuantification,
        FunctionalDependencies, FlexibleInstances, UndecidableInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2018, Ideas project team. This file is distributed under the

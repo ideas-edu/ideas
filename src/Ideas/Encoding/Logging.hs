@@ -22,6 +22,7 @@ module Ideas.Encoding.Logging
    , getFilePath
    ) where
 
+import Control.Monad
 import Data.Char
 import Data.IORef
 import Data.Maybe
@@ -132,7 +133,7 @@ disableLogging = flip changeLog (\r -> r {useLogging = False})
 whenLogging :: LogRef -> IO () -> IO ()
 whenLogging logRef m = do
    r <- getRecord logRef
-   if useLogging r then m else return ()
+   when (useLogging r) m
 
 getRecord :: LogRef -> IO Record
 getRecord NoRef          = return record

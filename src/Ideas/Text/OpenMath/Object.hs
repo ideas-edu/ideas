@@ -55,7 +55,7 @@ xml2omobj xmlTop
         case children xmlTop of
            [x] -> rec x
            _   -> fail "invalid omobj"
-   | otherwise = fail $ "expected an OMOBJ tag"
+   | otherwise = fail "expected an OMOBJ tag"
  where
    rec xml =
       case name xml of

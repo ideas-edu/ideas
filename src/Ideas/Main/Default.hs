@@ -38,12 +38,12 @@ import Ideas.Utils.BlackBoxTests
 import Ideas.Utils.Prelude
 import Ideas.Utils.TestSuite
 import Network.HTTP.Types
-import Network.Wai hiding (Request)
 import System.IO
 import qualified Ideas.Encoding.Logging as Log
 import qualified Ideas.Main.CGI as CGI
 import qualified Ideas.Main.CmdLineOptions as Options
-import qualified Network.Wai as CGI
+import qualified Network.Wai as WAI
+import qualified Network.Wai.Internal as WAI
 
 defaultMain :: DomainReasoner -> IO ()
 defaultMain = defaultMainWith mempty
@@ -80,7 +80,7 @@ defaultCGI options dr = CGI.run $ \req respond -> do
    when (useLogging preq) $
       Log.logRecord (logRef options)
    -- write header and output
-   respond $ responseLBS
+   respond $ WAI.responseLBS
       status200
       [ (fromString "Content-Type", fromString ctp)
         -- Cross-Origin Resource Sharing (CORS) prevents browser warnings
@@ -89,7 +89,7 @@ defaultCGI options dr = CGI.run $ \req respond -> do
       ]
       (fromString txt)
 
-inputOrDefault :: CGI.Request -> IO String
+inputOrDefault :: WAI.Request -> IO String
 inputOrDefault req = do
    maybeInput <- inputFromRequest req
    case maybeInput of
@@ -179,23 +179,23 @@ addVersion dr = dr
 
 -- local helper functions
 
-findHeader :: String -> CGI.Request -> Maybe String
-findHeader s = fmap fromByteString . lookup (fromString s) . requestHeaders
+findHeader :: String -> WAI.Request -> Maybe String
+findHeader s = fmap fromByteString . lookup (fromString s) . WAI.requestHeaders
 
-inputFromRequest :: CGI.Request -> IO (Maybe String)
+inputFromRequest :: WAI.Request -> IO (Maybe String)
 inputFromRequest req =
    -- first try query string (for GET requests) ...
-   case inputFromQuery (queryString req) of
+   case inputFromQuery (WAI.queryString req) of
       Just s  -> return (Just s)
       Nothing -> do
          -- ... then try request body (for POST requests)
-         body <- requestBody req
+         body <- WAI.getRequestBodyChunk req
          return (inputFromQuery (parseQuery body))
 
 inputFromQuery :: Query -> Maybe String
 inputFromQuery = fmap fromByteString . join . lookup (fromString "input")
 
-accepts :: CGI.Request -> [String]
+accepts :: WAI.Request -> [String]
 accepts = maybe [] (splitsWithElem ',') . findHeader "Accept"
 
 fromByteString :: ByteString -> String

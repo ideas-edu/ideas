@@ -87,6 +87,7 @@ Library
     Ideas.Common.Predicate
     Ideas.Common.Rewriting
     Ideas.Common.Rewriting.AC
+    Ideas.Common.Rewriting.AutoTerm
     Ideas.Common.Rewriting.Confluence
     Ideas.Common.Rewriting.Difference
     Ideas.Common.Rewriting.RewriteRule

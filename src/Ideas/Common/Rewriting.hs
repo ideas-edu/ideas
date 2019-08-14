@@ -12,5 +12,6 @@
 
 module Ideas.Common.Rewriting (module Export) where
 
+import Ideas.Common.Rewriting.AutoTerm as Export (toTermG, fromTermG)
 import Ideas.Common.Rewriting.RewriteRule as Export
 import Ideas.Common.Rewriting.Term as Export

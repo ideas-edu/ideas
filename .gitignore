@@ -1,6 +1,5 @@
 out/
 dist/
-src/Ideas/Main/Revision.hs
 *.swp
 docs/compile.txt
 .stack-work/

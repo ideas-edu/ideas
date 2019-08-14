@@ -1,4 +1,4 @@
-Copyright 2018 Ideas project team
+Copyright 201 Ideas project team
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ PROJECT
    domain reasoner) for an ITS or learning environment. More information about
    the project can be found on the project's homepage:
    
-       http://ideas.cs.uu.nl/www/
+       http://ideas.cs.uu.nl/
        
 AUTHORS
 
@@ -35,4 +35,5 @@ AUTHORS
 CREDITS
 
    Harrie Passier, Arthur van Leeuwen, Josje Lodder, Hieke Keuning, 
-   Marcell van Geest, Jordy van Dortmont, Jorn van Wijk
+   Marcell van Geest, Jordy van Dortmont, Jorn van Wijk, Alejandro Serrano Mena,
+   Niels Steenbergen, Wink van Zon

@@ -129,6 +129,9 @@ prettyXML compact xml =
       Reference r -> pretty r
 
 prettyElement :: Bool -> Element -> Doc
+prettyElement _ (Element n@"script" as [CharData s]) =
+   -- quick fix for not escaping javascript code in html
+   openTag n as <> text s <> closeTag n
 prettyElement compact (Element n as c)
    | null c    = openCloseTag n as
    | compact   = make (<>)

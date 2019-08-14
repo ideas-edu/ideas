@@ -18,7 +18,6 @@ module Ideas.Encoding.EncoderHTML (HTMLEncoder, htmlEncoder) where
 import Data.Char
 import Data.List
 import Data.Maybe
-import Data.Ord
 import Ideas.Common.Examples (isEmpty, size, allRandoms)
 import Ideas.Common.Library hiding (alternatives, isEmpty, left, right, collapse, Medium)
 import Ideas.Common.Strategy.Symbol
@@ -687,9 +686,9 @@ quote s = '"' : s ++ "\""
 
 -- Inject two JavaScript functions for handling the input form
 submitURL :: String -> HTMLBuilder
-submitURL _ = mempty {- url = tag "script" $
+submitURL url = tag "script" $
    ("type" .=. "text/javascript")
-   <> unescaped (
+   <> string ( -- script is not to be escaped
       "function getTerm() {\
       \   var s = document.myform.myterm.value;\
       \   var result = '';\
@@ -705,4 +704,4 @@ submitURL _ = mempty {- url = tag "script" $
       \}\
       \function submitTerm() {\
       \   document.myform.action = " ++ url ++ ";\
-      \}") -}
+      \}")

@@ -93,7 +93,8 @@ webpage wp = w3css $
       , " "
       ]
 
-   script = mempty -- tag "script" (unescaped scriptText)
+   -- the javascript is not to be escaped
+   script = tag "script" (string scriptText)
 
    width | null (sideButtons wp) = "0px"
          | otherwise             = show (sideWidth wp) ++ "px"

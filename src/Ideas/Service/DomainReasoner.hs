@@ -21,7 +21,6 @@ import Data.List
 import Data.Maybe
 import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
-import Data.Ord
 import Ideas.Common.Library
 import Ideas.Service.FeedbackScript.Parser
 import Ideas.Service.Types

@@ -1,7 +1,7 @@
 name:                   ideas
 version:                1.8
 synopsis:               Feedback services for intelligent tutoring systems
-homepage:               http://ideas.cs.uu.nl/www/
+homepage:               http://ideas.cs.uu.nl/
 description:
 
   Ideas (Interactive Domain-specific Exercise Assistants) is a joint research
@@ -19,7 +19,7 @@ description:
   practicing communication skills (the serious game Communicate!).
 
 category:               Education
-copyright:              (c) 2018
+copyright:              (c) 2019
 license:                Apache-2.0
 license-file:           LICENSE.txt
 author:                 Bastiaan Heeren, Alex Gerdes, Johan Jeuring

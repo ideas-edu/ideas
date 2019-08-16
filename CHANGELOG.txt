@@ -1,3 +1,17 @@
+Changelog ideas-1.7 => ideas-1.8
+
+* support for automatically generated (generic) IsTerm instances
+* introducing Examples data type for exercise records (unifying expr lists/generators)
+* redesigning xml interface (with proper character escaping)
+* adding literal xml to service types
+* introducing ToXML and ToHTML type classes
+* new command-line option for rerunning inputs in database
+* solution service variant with parameterized max number of steps
+* adding instance for IsTerm (a, b, c)
+* extending derivation interface (in Ideas.Common.Derivation)
+* refactoring logging interface and database name
+* new general Decoding module in utils; refactored encoders/decoders
+
 Changelog ideas-1.6 => ideas.1.7
 
 * replacing network.cgi package by WAI

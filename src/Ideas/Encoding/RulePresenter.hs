@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2018, Ideas project team. This file is distributed under the
+-- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -44,12 +44,12 @@ showTerm (Some ex) = string . rec
          TFloat a  -> show a
          TMeta n   -> showMeta ex n
          TCon s xs -> concatMap (either id recp) $
-                      let txt = spaced (Left (show s) : map Right xs)
+                      let txt = withSpaces (Left (show s) : map Right xs)
                       in fromMaybe txt (specialSymbol s xs)
          TList xs  -> "[" ++ intercalate ", " (map rec xs) ++ "]"
 
-   recp term = parIf (isCon term) (rec term)
-   spaced    = intersperse (Left " ")
+   recp term  = parIf (isCon term) (rec term)
+   withSpaces = intersperse (Left " ")
 
    isCon (TCon _ xs) = not (null xs)
    isCon _           = False

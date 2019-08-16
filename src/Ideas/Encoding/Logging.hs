@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP, FlexibleContexts #-}
 -----------------------------------------------------------------------------
--- Copyright 2018, Ideas project team. This file is distributed under the
+-- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -22,6 +22,7 @@ module Ideas.Encoding.Logging
    , getFilePath
    ) where
 
+import Control.Monad
 import Data.Char
 import Data.IORef
 import Data.Maybe
@@ -132,7 +133,7 @@ disableLogging = flip changeLog (\r -> r {useLogging = False})
 whenLogging :: LogRef -> IO () -> IO ()
 whenLogging logRef m = do
    r <- getRecord logRef
-   if useLogging r then m else return ()
+   when (useLogging r) m
 
 getRecord :: LogRef -> IO Record
 getRecord NoRef          = return record

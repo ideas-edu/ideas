@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs, RankNTypes #-}
 -----------------------------------------------------------------------------
--- Copyright 2018, Ideas project team. This file is distributed under the
+-- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -102,8 +102,8 @@ data ContextNavigator a where
 
 liftCN :: Monad m => (forall b . Navigator b => b -> m b)
                   -> Context a -> m (Context a)
-liftCN f (C env (TermNav a)) = (C env . TermNav) <$> f a
-liftCN f (C env (Simple a))  = (C env . Simple)  <$> f a
+liftCN f (C env (TermNav a)) = C env . TermNav <$> f a
+liftCN f (C env (Simple a))  = C env . Simple  <$> f a
 liftCN _ (C _   (NoNav _))   = fail "noNavigator"
 
 navLocation :: ContextNavigator a -> Location
@@ -159,7 +159,7 @@ useC :: (LiftView f, IsTerm a, IsTerm b) => f (Context a) -> f (Context b)
 useC = liftViewIn (makeView f g)
  where
    f old@(C env a) = castT a >>= \b -> return (C env b, old)
-   g (C env a, old) = fromMaybe old (C env <$> castT a)
+   g (C env a, old) = maybe old (C env) (castT a)
 
 currentTerm :: Context a -> Maybe Term
 currentTerm = currentT . getNavigator

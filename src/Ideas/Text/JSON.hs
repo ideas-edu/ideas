@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2018, Ideas project team. This file is distributed under the
+-- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -267,7 +267,7 @@ instance Arbitrary JSON where
    arbitrary = sized arbJSON
 
 instance Arbitrary Number where
-   arbitrary = oneof [I <$> arbitrary, (D . fromInteger) <$> arbitrary]
+   arbitrary = oneof [ I <$> arbitrary, D . fromInteger <$> arbitrary ]
 
 arbJSON :: Int -> Gen JSON
 arbJSON n

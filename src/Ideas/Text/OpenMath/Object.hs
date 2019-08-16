@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2018, Ideas project team. This file is distributed under the
+-- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -55,7 +55,7 @@ xml2omobj xmlTop
         case children xmlTop of
            [x] -> rec x
            _   -> fail "invalid omobj"
-   | otherwise = fail $ "expected an OMOBJ tag"
+   | otherwise = fail "expected an OMOBJ tag"
  where
    rec xml =
       case name xml of

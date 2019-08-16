@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2018, Ideas project team. This file is distributed under the
+-- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -21,7 +21,6 @@ import Data.List
 import Data.Maybe
 import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
-import Data.Ord
 import Ideas.Common.Library
 import Ideas.Service.FeedbackScript.Parser
 import Ideas.Service.Types
@@ -83,13 +82,13 @@ newDomainReasoner a = mempty {reasonerId  = newId a}
 -- Domain Reasoner functions
 
 exercisesSorted :: DomainReasoner -> [Some Exercise]
-exercisesSorted = sortBy (comparing f) . exercises
+exercisesSorted = sortOn f . exercises
  where
    f :: Some Exercise -> String
    f (Some ex) = showId ex
 
 servicesSorted :: DomainReasoner -> [Service]
-servicesSorted = sortBy (comparing showId) . services
+servicesSorted = sortOn showId . services
 
 findExercise :: Monad m => DomainReasoner -> Id -> m (Some Exercise)
 findExercise dr i =

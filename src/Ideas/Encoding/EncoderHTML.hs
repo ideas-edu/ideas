@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs, OverloadedStrings #-}
 -----------------------------------------------------------------------------
--- Copyright 2018, Ideas project team. This file is distributed under the
+-- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
 -- "LICENSE.txt" and "NOTICE.txt", which are included in the distribution.
 -----------------------------------------------------------------------------
@@ -18,7 +18,6 @@ module Ideas.Encoding.EncoderHTML (HTMLEncoder, htmlEncoder) where
 import Data.Char
 import Data.List
 import Data.Maybe
-import Data.Ord
 import Ideas.Common.Examples (isEmpty, size, allRandoms)
 import Ideas.Common.Library hiding (alternatives, isEmpty, left, right, collapse, Medium)
 import Ideas.Common.Strategy.Symbol
@@ -220,7 +219,7 @@ groupsWith = orderedGroupsWith id
 
 orderedGroupsWith :: Ord b => (b -> String) -> (a -> b) -> [a] -> [(Int, String, [a])]
 orderedGroupsWith showf get =
-   zipWith f [1..] . groupBy eq . sortBy (comparing get)
+   zipWith f [1..] . groupBy eq . sortOn get
  where
    eq x y = get x == get y
    f i xs = (i, showf (get (head xs)), xs)
@@ -298,14 +297,14 @@ encodeExercise ex = do
          mapBoth length (partition isBuggy (ruleset ex))
 
 exerciseHeader :: HTMLEncoder a -> HTMLEncoder a
-exerciseHeader body = withExercise $ \ex -> do
+exerciseHeader body = withExercise $ \ex ->
    tag "div" $ mconcat
       [ return (htmlDescription "Exercise" ex)
       , body
       ]
 
 encodeStrategy :: Strategy (Context a) -> HTMLEncoder a
-encodeStrategy s = withExercise $ \ex -> do
+encodeStrategy s = withExercise $ \ex ->
    return $ mconcat
       [ h2 "Strategy"
       , highlightXML True (strategyToXML s)
@@ -417,7 +416,7 @@ encodeRuleList rs = withExercise $ \ex -> do
          ]
 
 encodeRule :: Rule (Context a) -> HTMLEncoder a
-encodeRule r = withExercise $ \ex -> do
+encodeRule r = withExercise $ \ex ->
    return $ mconcat
       [ htmlDescription "Rule" r
       , let commas  = string . intercalate ", "
@@ -687,9 +686,9 @@ quote s = '"' : s ++ "\""
 
 -- Inject two JavaScript functions for handling the input form
 submitURL :: String -> HTMLBuilder
-submitURL _ = mempty {- url = tag "script" $
+submitURL url = tag "script" $
    ("type" .=. "text/javascript")
-   <> unescaped (
+   <> string ( -- script is not to be escaped
       "function getTerm() {\
       \   var s = document.myform.myterm.value;\
       \   var result = '';\
@@ -705,4 +704,4 @@ submitURL _ = mempty {- url = tag "script" $
       \}\
       \function submitTerm() {\
       \   document.myform.action = " ++ url ++ ";\
-      \}") -}
+      \}")

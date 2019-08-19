@@ -24,6 +24,7 @@ import Control.Monad
 import Data.ByteString (ByteString, unpack)
 import Data.Char
 import Data.Maybe
+import Data.Monoid
 import Data.String
 import Ideas.Encoding.ModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)

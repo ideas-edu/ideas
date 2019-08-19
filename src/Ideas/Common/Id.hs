@@ -26,7 +26,7 @@
 -- of this type class typically allow labels to appear at multiple locations
 -- within their structure.
 --
--- The 'Id' datatype implements and re-exports the Monoid interface.
+-- The 'Id' datatype implements the Monoid interface.
 --
 -----------------------------------------------------------------------------
 
@@ -38,15 +38,11 @@ module Ideas.Common.Id
    , describe, description, showId, compareId
      -- * Labeling with identifiers
    , Identify(..)
-     -- re-export
-   , module Data.Monoid
-   , (<>)
    ) where
 
 import Control.Monad
 import Data.Char
 import Data.List
-import Data.Monoid hiding ((<>))
 import Data.Ord
 import Data.Semigroup as Sem
 import Ideas.Common.Classes

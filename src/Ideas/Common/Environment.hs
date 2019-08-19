@@ -28,7 +28,6 @@ module Ideas.Common.Environment
 import Control.Monad
 import Data.Function
 import Data.List
-import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Ideas.Common.Id
 import Ideas.Common.Rewriting.Term

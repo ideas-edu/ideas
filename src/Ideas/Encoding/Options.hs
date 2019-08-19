@@ -18,7 +18,6 @@ module Ideas.Encoding.Options
 
 import Control.Applicative
 import Data.Maybe
-import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Ideas.Encoding.Logging (LogRef)
 import Ideas.Encoding.Request

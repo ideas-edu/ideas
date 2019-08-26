@@ -29,6 +29,7 @@ module Ideas.Encoding.LinkManager
    ) where
 
 import Data.Maybe
+import Data.Monoid
 import Ideas.Common.Library
 import Ideas.Encoding.EncoderXML
 import Ideas.Encoding.Options

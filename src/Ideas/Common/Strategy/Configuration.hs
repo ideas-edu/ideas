@@ -22,7 +22,6 @@ module Ideas.Common.Strategy.Configuration
    ) where
 
 import Data.Char
-import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Ideas.Common.Classes
 import Ideas.Common.Id

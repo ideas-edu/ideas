@@ -14,13 +14,12 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Text.Latex
-   ( Latex, ToLatex(..), (<>)
+   ( Latex, ToLatex(..)
    , array, commas, brackets, parens
    , command
    ) where
 
 import Data.List
-import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Data.String
 

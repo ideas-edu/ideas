@@ -21,7 +21,6 @@ module Ideas.Common.Rewriting.Substitution
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Ideas.Common.Rewriting.Term
 import Ideas.Utils.TestSuite

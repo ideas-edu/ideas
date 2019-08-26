@@ -25,7 +25,6 @@ module Ideas.Utils.QuickCheck
 
 import Control.Arrow
 import Control.Monad
-import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Data.Ratio
 import Test.QuickCheck

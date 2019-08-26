@@ -95,7 +95,7 @@ encodeEnvironment env = return $
    in Array [ f a | a <- bindings env ]
 
 encodeContext :: Context a -> JSONEncoder a
-encodeContext ctx = f . useOpenMath <$> getRequest <*> getExercise
+encodeContext ctx = f . useJSONTerm <$> getRequest <*> getExercise
  where
    f True  ex = fromMaybe Null $ liftA2 build (hasJSONView ex) $ fromContext ctx
    f False ex = String $ prettyPrinterContext ex ctx

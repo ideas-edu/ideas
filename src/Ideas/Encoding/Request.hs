@@ -16,7 +16,6 @@ import Control.Applicative
 import Data.Char
 import Data.List
 import Data.Maybe
-import Data.Monoid hiding ((<>))
 import Data.Semigroup as Sem
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Utils.Prelude

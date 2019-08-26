@@ -20,7 +20,6 @@ import Control.Exception hiding (try)
 import Control.Monad
 import Data.Char
 import Data.List
-import Data.Monoid hiding ((<>))
 import Data.Semigroup
 import Ideas.Common.Id
 import Ideas.Service.FeedbackScript.Syntax

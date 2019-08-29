@@ -45,13 +45,13 @@ jsonEncoder tv@(val ::: tp) =
                      (jsonEncoder (snd val ::: t2))
       List (Const Rule) ->
          return $ Array $ map ruleShortInfo val
-      Tp.Tag s _
+      Tp.Tag s t
          | s == "Result"     -> encodeTyped encodeResult Submit.tResult tv
          | s == "Diagnosis"  -> encodeTyped encodeDiagnosis Diagnose.tDiagnosis tv
          | s == "Derivation" -> ((encodeDerivation, tDerivation (tPair tRule tEnvironment) tContext) <?>
                                 encodeTyped encodeDerivationText (tDerivation tString tContext)) tv
-         | s == "elem"       -> jsonEncoder tv
-         | otherwise -> (\b -> Object [(s, b)]) <$> jsonEncoder tv
+         | s == "elem"       -> jsonEncoder (val ::: t)
+         | otherwise -> (\b -> Object [(s, b)]) <$> jsonEncoder (val ::: t)
       Tp.Unit   -> return Null
       Tp.List t -> Array <$> sequence [ jsonEncoder (x ::: t) | x <- val ]
       Const ctp -> jsonEncodeConst (val ::: ctp)

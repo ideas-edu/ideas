@@ -75,8 +75,7 @@ data Attribute = Name := String
 -- Parsing XML
 
 parseXML :: String -> Either String XML
-parseXML xs = do
-   input <- decoding xs
+parseXML input = do
    doc   <- parseSimple document input
    return (fromXMLDoc doc)
 

@@ -122,7 +122,7 @@ defaultCommandLine options dr cmdLineOptions = do
             processDatabase dr database
          InputFile file ->
             withBinaryFile file ReadMode $ \h -> do
-               input  <- hGetContents h
+               input  <- hGetContents h >>= decoding
                (req, txt, _) <- process options dr input
                putStrLn txt
                when (PrintLog `elem` cmdLineOptions) $ do

@@ -167,7 +167,7 @@ process options dr input = do
 
 makeTestRunner :: DomainReasoner -> String -> IO String
 makeTestRunner dr input = do
-   (_, out, _) <- process mempty dr input
+   (_, out, _) <- decoding input >>= process mempty dr
    return out
 
 addVersion :: DomainReasoner -> DomainReasoner

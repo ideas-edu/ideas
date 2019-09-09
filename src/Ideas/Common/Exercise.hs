@@ -288,7 +288,7 @@ randomTerms :: QCGen -> Exercise a -> Maybe Difficulty -> [a]
 randomTerms rng ex mdif = rec rng
  where
    rec a = maybe id (:) (randomTerm a ex mdif) (rec (snd (next a)))
-    
+
 -- | An exercise generator for testing purposes (including corner cases); first generator only.
 testGenerator :: Exercise a -> Maybe (Gen a)
 testGenerator = listToMaybe . allRandomTests . examples

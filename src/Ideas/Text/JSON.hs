@@ -163,7 +163,7 @@ parseJSON = parseSimple json
       , Boolean True  <$ P.reserved lexer "true"
       , Boolean False <$ P.reserved lexer "false"
       , Number . either I D <$> naturalOrFloat -- redefined in Ideas.Text.Parsing
-      , String . fromMaybe [] . UTF8.decodeM <$> P.stringLiteral lexer
+      , String <$> P.stringLiteral lexer
       , Array  <$> P.brackets lexer (sepBy json (P.comma lexer))
       , Object <$> P.braces lexer (sepBy keyValue (P.comma lexer))
       ]

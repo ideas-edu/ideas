@@ -11,6 +11,7 @@ Changelog ideas-1.7 => ideas-1.8
 * extending derivation interface (in Ideas.Common.Derivation)
 * refactoring logging interface and database name
 * new general Decoding module in utils; refactored encoders/decoders
+* moving unicode decoding from parseXML/parseJSON to Main.Default
 
 Changelog ideas-1.6 => ideas.1.7
 

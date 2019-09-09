@@ -31,7 +31,6 @@ module Ideas.Common.Strategy.Traversal
    ) where
 
 import Data.Monoid hiding ((<>))
-import qualified Data.Semigroup as Sem
 import Data.Semigroup ((<>))
 import Ideas.Common.Classes
 import Ideas.Common.Rule
@@ -39,6 +38,7 @@ import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Combinators
 import Ideas.Common.Traversal.Navigator
 import Prelude hiding (repeat, not, traverse)
+import qualified Data.Semigroup as Sem
 import qualified Prelude
 
 ----------------------------------------------------------------------

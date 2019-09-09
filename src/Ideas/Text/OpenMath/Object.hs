@@ -85,7 +85,7 @@ xml2omobj xmlTop
             s <- findAttribute "name" xml
             return (OMV s)
 
-         "OMBIND" -> 
+         "OMBIND" ->
             case children xml of
                [x1, x2, x3] -> do
                   y1 <- rec x1

@@ -25,11 +25,11 @@ import Data.Monoid
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.OpenMathSupport
+import Ideas.Encoding.Request hiding (XML)
 import Ideas.Encoding.RulesInfo (rulesInfoXML)
 import Ideas.Encoding.StrategyInfo
 import Ideas.Service.Diagnose
 import Ideas.Service.FeedbackScript.Syntax
-import Ideas.Encoding.Request hiding (XML)
 import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Text.OpenMath.Object
@@ -135,7 +135,7 @@ buildExpression useOM ex
  where
    msg s = error ("Error encoding term in OpenMath: " ++ s)
 
-encodeLocation :: Location -> XMLEncoder a 
+encodeLocation :: Location -> XMLEncoder a
 encodeLocation loc = "location" .=. show loc
 
 encodeEnvironment :: HasEnvironment env => env -> XMLEncoder a
@@ -189,7 +189,7 @@ encodeText txt = do
          _ -> text item
 
 encodeMessage :: FeedbackText.Message -> XMLEncoder a
-encodeMessage msg = 
+encodeMessage msg =
    element "message"
       [ case FeedbackText.accept msg of
            Just b  -> "accept" .=. showBool b

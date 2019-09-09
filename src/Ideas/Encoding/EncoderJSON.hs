@@ -19,8 +19,8 @@ import Control.Applicative hiding (Const)
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.Encoder
-import Ideas.Service.State
 import Ideas.Encoding.Request
+import Ideas.Service.State
 import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
 import Ideas.Utils.Prelude (distinct)
@@ -101,7 +101,7 @@ encodeContext ctx = f . useJSONTerm <$> getRequest <*> getExercise
    f False ex = String $ prettyPrinterContext ex ctx
 
 encodeState :: State a -> JSONEncoder a
-encodeState st = 
+encodeState st =
    let ctx   = stateContext st
        get f = String (fromMaybe "" (f st))
        make pp env = Array $

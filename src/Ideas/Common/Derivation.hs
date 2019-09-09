@@ -50,7 +50,7 @@ instance Functor (Derivation s) where
 instance BiFunctor Derivation where
    biMap f g (D a xs) = D (g a) (fmap (biMap f g) xs)
 
-instance (IsTerm s, IsTerm a) => IsTerm (Derivation s a) where 
+instance (IsTerm s, IsTerm a) => IsTerm (Derivation s a) where
    toTerm = TList . derivationToList toTerm toTerm
    fromTerm (TList xs) = derivationFromList fromTerm fromTerm xs
    fromTerm _ = fail "not a derivation"
@@ -75,7 +75,6 @@ mergeBy eq d@(D a xs) (D b ys)
    | eq (lastTerm d) b = Just $ D a (xs <> ys)
    | otherwise = Nothing
 
-
 mergeStep :: Derivation s a -> s -> Derivation s a -> Derivation s a
 mergeStep (D a xs) s (D b ys) = D a (xs <> ((s, b) S.<| ys))
 
@@ -83,7 +82,7 @@ mergeStep (D a xs) s (D b ys) = D a (xs <> ((s, b) S.<| ys))
 -- Conversion to/from list
 
 derivationToList :: (s -> b) -> (a -> b) -> Derivation s a -> [b]
-derivationToList f g d = 
+derivationToList f g d =
    g (firstTerm d) : concat [ [f s, g a] | (_, s, a) <- triples d ]
 
 derivationFromList :: Monad m => (b -> m s) -> (b -> m a) -> [b] -> m (Derivation s a)
@@ -143,7 +142,7 @@ derivationM :: Monad m => (s -> m ()) -> (a -> m ()) -> Derivation s a -> m ()
 derivationM f g (D a xs) = g a >> mapM_ (\(s, b) -> f s >> g b) (F.toList xs)
 
 splitStep :: (s -> Bool) -> Derivation s a -> Maybe (Derivation s a, s, Derivation s a)
-splitStep p (D a xs) = 
+splitStep p (D a xs) =
    case S.viewl xs2 of
       S.EmptyL -> Nothing
       (s, b) S.:< ys -> Just (D a xs1, s, D b ys)

@@ -73,7 +73,7 @@ exerciseTestSuite qcgen ex = suite ("Exercise " ++ show (exerciseId ex)) $
  where
    rs = randomTerms qcgen ex Nothing
    xs | null rs   = examplesAsList ex
-      | otherwise = take 10 rs 
+      | otherwise = take 10 rs
 
 data ShowAs a = S {showS :: a -> String, fromS :: a}
 

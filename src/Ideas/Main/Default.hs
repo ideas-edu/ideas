@@ -35,6 +35,7 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.ServiceList
 import Ideas.Service.Types (Service)
+import Ideas.Text.XML.Unicode (decoding)
 import Ideas.Utils.BlackBoxTests
 import Ideas.Utils.Prelude
 import Ideas.Utils.TestSuite
@@ -65,7 +66,7 @@ defaultCGI options dr = CGI.run $ \req respond -> do
    -- query environment
    let script = fromMaybe "" (findHeader "CGI-Script-Name" req) -- get name of binary
        addr   = fromMaybe "" (findHeader "REMOTE_ADDR" req)     -- the IP address of the remote host
-   input   <- inputOrDefault req
+   input   <- inputOrDefault req >>= decoding
    -- process request
    (preq, txt, ctp) <-
       process (optionCgiBin script options) dr input
@@ -121,7 +122,7 @@ defaultCommandLine options dr cmdLineOptions = do
             processDatabase dr database
          InputFile file ->
             withBinaryFile file ReadMode $ \h -> do
-               input  <- hGetContents h
+               input  <- hGetContents h >>= decoding
                (req, txt, _) <- process options dr input
                putStrLn txt
                when (PrintLog `elem` cmdLineOptions) $ do
@@ -166,7 +167,7 @@ process options dr input = do
 
 makeTestRunner :: DomainReasoner -> String -> IO String
 makeTestRunner dr input = do
-   (_, out, _) <- process mempty dr input
+   (_, out, _) <- decoding input >>= process mempty dr
    return out
 
 addVersion :: DomainReasoner -> DomainReasoner

@@ -44,6 +44,7 @@ import qualified Ideas.Encoding.Logging as Log
 import qualified Ideas.Main.CGI as CGI
 import qualified Ideas.Main.CmdLineOptions as Options
 import qualified Network.Wai as WAI
+import Ideas.Text.XML.Unicode (decoding)
 
 defaultMain :: DomainReasoner -> IO ()
 defaultMain = defaultMainWith mempty
@@ -65,7 +66,7 @@ defaultCGI options dr = CGI.run $ \req respond -> do
    -- query environment
    let script = fromMaybe "" (findHeader "CGI-Script-Name" req) -- get name of binary
        addr   = fromMaybe "" (findHeader "REMOTE_ADDR" req)     -- the IP address of the remote host
-   input   <- inputOrDefault req
+   input   <- inputOrDefault req >>= decoding
    -- process request
    (preq, txt, ctp) <-
       process (optionCgiBin script options) dr input
@@ -121,7 +122,7 @@ defaultCommandLine options dr cmdLineOptions = do
             processDatabase dr database
          InputFile file ->
             withBinaryFile file ReadMode $ \h -> do
-               input  <- hGetContents h
+               input  <- hGetContents h >>= decoding
                (req, txt, _) <- process options dr input
                putStrLn txt
                when (PrintLog `elem` cmdLineOptions) $ do

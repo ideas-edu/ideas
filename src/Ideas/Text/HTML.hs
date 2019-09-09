@@ -35,8 +35,8 @@ import Data.List
 import Data.Monoid
 import Ideas.Text.XML
 import Prelude hiding (div)
-import qualified Ideas.Text.XML as XML
 import qualified Data.Map as M
+import qualified Ideas.Text.XML as XML
 
 type HTMLBuilder = XMLBuilder
 
@@ -60,7 +60,7 @@ instance ToHTML () where
 
 instance (ToHTML a, ToHTML b) => ToHTML (a, b) where
    toHTML (a, b) = toHTML a <#> toHTML b
- 
+
 instance (ToHTML a, ToHTML b, ToHTML c) => ToHTML (a, b, c) where
    toHTML (a, b, c) = toHTML a <#> toHTML b <#> toHTML c
 
@@ -157,13 +157,13 @@ ttText :: BuildXML a => String -> a
 ttText = tt . string
 
 ul :: BuildXML a => [a] -> a
-ul xs 
+ul xs
    | null xs   = mempty
    | otherwise = element "ul" (map (tag "li") xs)
 
 -- | First argument indicates whether the table has a header or not
 table :: BuildXML a => Bool -> [[a]] -> a
-table b rows 
+table b rows
    | null rows = mempty
    | otherwise = element "table" $
         ("border" .=. "1") :
@@ -216,7 +216,7 @@ highlightXML nice
    f []           = mempty
    f ('<':'/':xs) = g "</" [] xs
    f ('<':xs)     = g "<"  [] xs
-   f (x:xs)       = string [x] <> f xs 
+   f (x:xs)       = string [x] <> f xs
 
    -- find >
    g start acc []           = string (start ++ reverse acc)
@@ -239,7 +239,7 @@ highlightXML nice
    orange a = tag "font" ("color" .=. "orange" <> a)
    green a  = tag "font" ("color" .=. "green" <> a)
 
-      {- 
+      {-
 
    f [] = []
    f list@(x:xs)

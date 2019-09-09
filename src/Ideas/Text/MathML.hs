@@ -77,20 +77,20 @@ xml2mathml = rec
        "mtext"      -> return (MText (getData xml))
        "mroot"      -> case children xml of
                           [c, d] -> MRoot <$> rec c <*> rec d
-                          _ -> fail "invalid mroot" 
+                          _ -> fail "invalid mroot"
        "msup"       -> case children xml of
                           [c, d] -> MSup <$> rec c <*> rec d
                           _ -> fail "invalid msup"
        "msub"       -> case children xml of
                           [c, d] -> MSub <$> rec c <*> rec d
                           _ -> fail "invalid msub"
-       "msubsup"    -> case children xml of 
+       "msubsup"    -> case children xml of
                           [c, d, e] -> MSubSup <$> rec c <*> rec d <*> rec e
                           _ -> fail "invalid msubsup"
-       "mfrac"      -> case children xml of 
+       "mfrac"      -> case children xml of
                           [c, d] -> MFrac <$> rec c <*> rec d
                           _ -> fail "invalid mfrac"
-       "mfenced"    -> case children xml of 
+       "mfenced"    -> case children xml of
                           [c] -> MFenced (fromMaybe "(" (findAttribute "open" xml)) (fromMaybe ")" (findAttribute "close" xml)) <$> rec c
                           _ -> fail "invalid mfenced"
        "mspace"     -> return MSpace

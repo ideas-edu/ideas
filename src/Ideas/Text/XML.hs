@@ -44,17 +44,17 @@ import Data.String
 import Ideas.Text.XML.Document (escape, Name, prettyElement)
 import Ideas.Text.XML.Parser (document)
 import Ideas.Text.XML.Unicode
-import Ideas.Utils.Parsing (parseSimple)
 import Ideas.Utils.Decoding
+import Ideas.Utils.Parsing (parseSimple)
+import System.IO
 import qualified Data.Map as M
 import qualified Data.Sequence as Seq
 import qualified Ideas.Text.XML.Document as D
-import System.IO
 
 -------------------------------------------------------------------------------
 -- XML types
 
--- invariants content: no two adjacent Lefts, no Left with empty string, 
+-- invariants content: no two adjacent Lefts, no Left with empty string,
 -- valid tag/attribute names
 data XML = Tag
    { name       :: Name
@@ -89,7 +89,7 @@ fromXMLDoc doc = fromElement (D.root doc)
  where
    fromElement (D.Element n as c) =
       makeXML n (fromAttributes as <> fromContent c)
-   
+
    fromAttributes = mconcat . map fromAttribute
 
    fromAttribute (n D.:= v) =
@@ -176,7 +176,7 @@ isName :: String -> Bool
 isName []     = False
 isName (x:xs) = (isLetter x || x `elem` "_:") && all isNameChar xs
 
-isNameChar :: Char -> Bool 
+isNameChar :: Char -> Bool
 isNameChar c = any ($ c) [isLetter, isDigit, isCombiningChar, isExtender, (`elem` ".-_:")]
 
 -- local helper: merge attributes, but preserve order
@@ -231,7 +231,6 @@ findAttribute s (Tag _ as _) =
 children :: XML -> [XML]
 children e = [ c | Right c <- content e ]
 
-
 findChildren :: String -> XML -> [XML]
 findChildren s = filter ((==s) . name) . children
 
@@ -267,7 +266,7 @@ decodeAttribute s = get >>= \xml ->
    hasName (n := _) = n == s
 
 decodeChild :: Name -> Decoder env XML a -> Decoder env XML a
-decodeChild s p = get >>= \xml -> 
+decodeChild s p = get >>= \xml ->
    case break hasName (content xml) of
       (xs, Right y:ys) -> do
          put y
@@ -279,7 +278,7 @@ decodeChild s p = get >>= \xml ->
    hasName = either (const False) ((==s) . name)
 
 decodeFirstChild :: Name -> Decoder env XML a -> Decoder env XML a
-decodeFirstChild s p = get >>= \xml -> 
+decodeFirstChild s p = get >>= \xml ->
    case content xml of
       Right y:ys | name y == s -> do
          put y
@@ -305,7 +304,7 @@ instance ToXML a => ToXML (Maybe a) where
 
 builderXML :: (ToXML a, BuildXML b) => a -> b
 builderXML = builder . toXML
-   
+
 class ToXML a => InXML a where
    fromXML     :: Monad m => XML -> m a
    listFromXML :: Monad m => XML -> m [a]
@@ -352,15 +351,15 @@ fromBuilder m =
 
 _runTests :: IO ()
 _runTests = do
-   forM_ [testDataP, testAttrP, testDataB, testAttrB] $ \f -> 
+   forM_ [testDataP, testAttrP, testDataB, testAttrB] $ \f ->
       pp $ map f tests
-   forM_ [mkPD, mkPA, mkBD, mkBA] $ \f -> 
+   forM_ [mkPD, mkPA, mkBD, mkBA] $ \f ->
       pp $ map (testXML . f) tests
  where
    pp = putStrLn . map (\b -> if b then '.' else 'X')
 
    tests :: [String]
-   tests = 
+   tests =
       [ "input"
       , "&lt;&gt;&amp;&quot;&apos;"
       , "<>&'\""
@@ -377,7 +376,7 @@ _runTests = do
    testAttrB s = let xml = mkBA s in findAttribute "a" xml == Just s
 
    testXML :: XML -> Bool
-   testXML xml = 
+   testXML xml =
       case parseXML (compactXML xml) of
          Left msg -> error msg
          Right a  -> a == xml

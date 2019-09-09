@@ -18,7 +18,7 @@ import Ideas.Common.Rewriting.Term
 import Ideas.Utils.Prelude (headM)
 
 toTermG :: Data a => a -> Term
-toTermG a = 
+toTermG a =
    case constrRep constr of
       IntConstr n   -> TNum n                  -- for Int and Integer
       FloatConstr r -> TFloat (fromRational r) -- for Double and Float
@@ -30,14 +30,14 @@ toTermG a =
  where
    op (M xs) x = M (xs ++ [toTermG x])
    e _    = M []
-   constr = toConstr a 
+   constr = toConstr a
 
 newtype M a = M [Term]
 
 -- test for list constructors
 makeTerm :: Constr -> M a -> Term
 makeTerm c (M xs) =
-   case xs of 
+   case xs of
       [y, TList ys] | isCons  -> TList (y:ys)
       []            | isNil   -> TList []
       _ -> TCon (constrSymbol c) xs
@@ -45,7 +45,7 @@ makeTerm c (M xs) =
    txt = showConstr c
    isNil   = txt == "[]"
    isCons  = txt == "(:)"
-   
+
 isTuple :: String -> Bool
 isTuple ('(':xs) = rec xs
  where
@@ -56,7 +56,7 @@ isTuple _       = False
 
 ------------------------------------------------------------------------
 
-constrSymbol :: Constr -> Symbol 
+constrSymbol :: Constr -> Symbol
 constrSymbol c
    | txt == "[]"  = nilSymbol
    | txt == "(:)" = consSymbol
@@ -77,7 +77,7 @@ constructors = dataTypeConstrs . dataTypeOf . fromProxy
    fromProxy = error "fromProxy"
 
 findConstr :: (Monad m, Data a) => Proxy a -> Symbol -> m Constr
-findConstr p s = 
+findConstr p s =
    headM [ c | c <- constructors p, s == constrSymbol c ]
 
 fromTermG :: (MonadPlus m, Data a) => Term -> m a
@@ -95,7 +95,7 @@ fromTermG term =
    nil  = symbol nilSymbol
 
 castM :: (Monad m, Typeable a, Typeable b) => a -> m b
-castM = maybe (fail "fromTermG") return . cast 
+castM = maybe (fail "fromTermG") return . cast
 
 doubleToFloat :: Double -> Float
 doubleToFloat = fromRational . toRational

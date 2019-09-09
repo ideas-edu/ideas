@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Utils.Decoding 
+module Ideas.Utils.Decoding
    ( Decoder, runDecoder, symbol
    , Encoder, runEncoder
    , Error, runError, runErrorM
@@ -21,8 +21,8 @@ module Ideas.Utils.Decoding
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.State
 import Control.Monad.Reader
+import Control.Monad.State
 import Data.Semigroup as Sem
 
 -------------------------------------------------------------------

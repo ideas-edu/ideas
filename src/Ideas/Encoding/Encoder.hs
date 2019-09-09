@@ -38,7 +38,7 @@ import Ideas.Service.FeedbackScript.Parser (Script)
 import Ideas.Service.Types
 import Ideas.Text.JSON hiding (String)
 import Ideas.Text.Latex
-import Ideas.Utils.Decoding 
+import Ideas.Utils.Decoding
 import Test.QuickCheck.Random
 import qualified Ideas.Common.Rewriting.Term as Term
 import qualified Ideas.Text.JSON as JSON

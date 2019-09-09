@@ -131,7 +131,7 @@ attValue = doubleQuoted (p "<&\"") <|> singleQuoted (p "<&'")
 -- [11]   	SystemLiteral	   ::=   	('"' [^"]* '"') | ("'" [^']* "'")
 systemLiteral :: Parser String
 systemLiteral = doubleQuoted (p "\"") <|> singleQuoted (p "'")
- where 
+ where
    p :: String -> Parser String
    p s = many (noneOf s)
 

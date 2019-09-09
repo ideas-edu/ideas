@@ -25,8 +25,8 @@ module Ideas.Utils.QuickCheck
 
 import Control.Arrow
 import Control.Monad
-import Data.Semigroup as Sem
 import Data.Ratio
+import Data.Semigroup as Sem
 import Test.QuickCheck
 
 ---------------------------------------------------------

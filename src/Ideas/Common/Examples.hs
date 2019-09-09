@@ -9,27 +9,27 @@
 -- Portability :  portable (depends on ghc)
 --
 -- * This module provides an interface to structure a collection of examples.
--- Examples can be taken from (lists of) concrete values, or from random 
+-- Examples can be taken from (lists of) concrete values, or from random
 -- generators. Both types can be marked as test items. Examples can be assigned
 -- a level of difficulty (ranging from very easy to very difficult). Test items
 -- do not have a difficulty level. Examples can be grouped into sub-collections
--- and assigned an identifier. Use the @Monoid@ operations for combining 
+-- and assigned an identifier. Use the @Monoid@ operations for combining
 -- examples.
--- 
+--
 -----------------------------------------------------------------------------
 
 module Ideas.Common.Examples
-   ( -- * Examples type 
+   ( -- * Examples type
      Examples
-     -- * Constructing examples  
+     -- * Constructing examples
    , example, exampleList, examplesFor, examplesWithDifficulty
    , random, group, forTesting
      -- * Assigning difficulty
    , difficulty, veryEasy, easy, medium, difficult, veryDifficult
-     -- * Transformations and queries 
+     -- * Transformations and queries
    , isEmpty, size, flatten, groups
    , topLevelExamples, topLevelRandoms, topLevelTests, topLevelRandomTests
-   , allExamples, allRandoms, allTests, allRandomTests  
+   , allExamples, allRandoms, allTests, allRandomTests
      -- * Difficulty type
    , Difficulty(..), readDifficulty
    ) where
@@ -112,28 +112,28 @@ forTesting = changeItems f
 
 -- | Top-level examples
 topLevelExamples :: Examples a -> [(Maybe Difficulty, a)]
-topLevelExamples = collectItems f  
+topLevelExamples = collectItems f
  where
    f (Example md a) = Just (md, a)
    f _ = Nothing
 
 -- | Top-level random generators
 topLevelRandoms :: Examples a -> [(Maybe Difficulty, Gen a)]
-topLevelRandoms = collectItems f 
+topLevelRandoms = collectItems f
  where
    f (Random md g) = Just (md, g)
    f _ = Nothing
 
 -- | Top-level test cases
 topLevelTests :: Examples a -> [a]
-topLevelTests = collectItems f 
+topLevelTests = collectItems f
  where
    f (Test a) = Just a
    f _ = Nothing
 
 -- | Top-level test generators
 topLevelRandomTests :: Examples a -> [Gen a]
-topLevelRandomTests = collectItems f 
+topLevelRandomTests = collectItems f
  where
    f (RandomTest g) = Just g
    f _ = Nothing
@@ -217,7 +217,7 @@ readDifficulty s =
  where
    normal = filter isAlpha . map toLower
    p = (== normal s) . normal . show
-   
+
 veryEasy, easy, medium, difficult, veryDifficult :: Examples a -> Examples a
 veryEasy      = difficulty VeryEasy
 easy          = difficulty Easy

@@ -35,6 +35,7 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.ServiceList
 import Ideas.Service.Types (Service)
+import Ideas.Text.XML.Unicode (decoding)
 import Ideas.Utils.BlackBoxTests
 import Ideas.Utils.Prelude
 import Ideas.Utils.TestSuite
@@ -44,7 +45,6 @@ import qualified Ideas.Encoding.Logging as Log
 import qualified Ideas.Main.CGI as CGI
 import qualified Ideas.Main.CmdLineOptions as Options
 import qualified Network.Wai as WAI
-import Ideas.Text.XML.Unicode (decoding)
 
 defaultMain :: DomainReasoner -> IO ()
 defaultMain = defaultMainWith mempty

@@ -40,8 +40,8 @@ import Ideas.Text.HTML.W3CSS hiding (tag, ul, top, table, content)
 import Ideas.Text.OpenMath.FMP
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML hiding (content)
-import Ideas.Utils.TestSuite
 import Ideas.Utils.Prelude (munless, mwhen)
+import Ideas.Utils.TestSuite
 import System.IO.Unsafe
 import qualified Ideas.Text.HTML.W3CSS as W3
 
@@ -151,12 +151,12 @@ encodeConst dr tv@(val ::: tp) =
       Term        -> text val
       Context     -> encodeContext val
       String      -> string val
-      Result      -> exerciseHeader (encodeResult val) 
+      Result      -> exerciseHeader (encodeResult val)
       _           -> text tv
 
 encodeContext :: Context a -> HTMLEncoder a
 encodeContext ctx = (\ex -> string (prettyPrinterContext ex ctx)) <$> getExercise
-  
+
 encodeIndex :: DomainReasoner -> HTMLEncoder a
 encodeIndex dr = return $ mconcat
    [ htmlDescription "Domain reasoner" dr
@@ -177,7 +177,7 @@ encodeIndex dr = return $ mconcat
            ])
    ]
 
-encodeServiceList :: [Service] -> HTMLEncoder a 
+encodeServiceList :: [Service] -> HTMLEncoder a
 encodeServiceList srvs = do
    lm <- getLinkManager
    return $
@@ -262,8 +262,8 @@ productType tp =
       _          -> [Some tp]
 
 encodeExercise :: Exercise a -> HTMLEncoder a
-encodeExercise ex = do 
-   lm <- getLinkManager 
+encodeExercise ex = do
+   lm <- getLinkManager
    return $ mconcat
       [ generalInfo lm
       , h2 "Example exercises"
@@ -392,7 +392,7 @@ showRating lm = rec (5::Int)
           | a == 1    = "star_2.png"
           | otherwise = "star_3.png"
 
-encodeRuleList :: [Rule (Context a)] -> HTMLEncoder a 
+encodeRuleList :: [Rule (Context a)] -> HTMLEncoder a
 encodeRuleList rs = withExercise $ \ex -> do
    lm <- getLinkManager
    let (rs1, rs2) = partition isBuggy rs
@@ -444,7 +444,7 @@ encodeRule r = withExercise $ \ex ->
       ]
 
 encodeExampleList :: [(Difficulty, Context a)] -> HTMLEncoder a
-encodeExampleList pairs = withExercise $ \ex -> do 
+encodeExampleList pairs = withExercise $ \ex -> do
    lm <- getLinkManager
    return $ mconcat $
       h2 "Examples" :
@@ -490,7 +490,7 @@ htmlDerivation d = withExercise $ \ex -> do
    return $ htmlDerivationWith before forStep forTerm (diffEnvironment d)
 
 htmlState :: State a -> HTMLEncoder a
-htmlState state = do 
+htmlState state = do
    lm <- getLinkManager
    return $ para $ container $ background LightGray $ para $
       stateLink lm state
@@ -586,8 +586,8 @@ htmlDerivationWith before forStep forTerm d =
       before : forTerm (firstTerm d) :
          [ forStep s <> forTerm a | (_, s, a) <- triples d ]
 
-htmlFirsts :: [(StepInfo a, State a)] -> HTMLEncoder a 
-htmlFirsts xs = 
+htmlFirsts :: [(StepInfo a, State a)] -> HTMLEncoder a
+htmlFirsts xs =
    h2 "Firsts" <>
    ul [ keyValueTable
            [ ("Rule", string $ showId r)

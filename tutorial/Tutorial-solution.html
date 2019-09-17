@@ -10,198 +10,198 @@
 </head>
 <body>
 <div class="w3-container w3-theme w3-padding">
-<div class="w3-left w3-padding w3-large">Ideas tutorial (version 1.7)</div>
+<div class="w3-left w3-padding w3-large">Ideas tutorial (version 1.8)</div>
 <div class="w3-right w3-padding w3-xlarge"><a href="http://ideas.cs.uu.nl/"><i class="fas fa-home"></i></a></div>
 </div>
 <div class="w3-container w3-margin">
 
 <h1 id="solutions-to-suggested-exercises">Solutions to suggested exercises</h1>
 <p>This document shows a possible solution to the suggested exercises in the tutorial.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">module</span> <span class="dt">Main</span> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">import</span> <span class="dt">Ideas.Common.Library</span></a>
-<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="kw">import</span> <span class="dt">Ideas.Main.Default</span></a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">module</span> <span class="dt">Main</span> <span class="kw">where</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="kw">import</span> <span class="dt">Ideas.Common.Library</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="kw">import</span> <span class="dt">Ideas.Main.Default</span></span></code></pre></div>
 <p>We extend the expression datatype with constructors for multiplication and division. The term instance needs to be extended with new symbols for multiplication and division.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">data</span> <span class="dt">Expr</span>  <span class="fu">=</span>  <span class="dt">Con</span> <span class="dt">Int</span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2">           <span class="fu">|</span>  <span class="dt">Negate</span> <span class="dt">Expr</span> </a>
-<a class="sourceLine" id="cb2-3" data-line-number="3">           <span class="fu">|</span>  <span class="dt">Add</span> <span class="dt">Expr</span> <span class="dt">Expr</span> </a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">           <span class="fu">|</span>  <span class="dt">Mul</span> <span class="dt">Expr</span> <span class="dt">Expr</span> </a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">           <span class="fu">|</span>  <span class="dt">Div</span> <span class="dt">Expr</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">   <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>, <span class="dt">Read</span>)</a>
-<a class="sourceLine" id="cb2-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb2-8" data-line-number="8">negateSymbol, addSymbol, mulSymbol,<span class="ot"> divSymbol ::</span> <span class="dt">Symbol</span></a>
-<a class="sourceLine" id="cb2-9" data-line-number="9">negateSymbol <span class="fu">=</span> newSymbol <span class="st">&quot;negate&quot;</span></a>
-<a class="sourceLine" id="cb2-10" data-line-number="10">addSymbol    <span class="fu">=</span> newSymbol <span class="st">&quot;add&quot;</span></a>
-<a class="sourceLine" id="cb2-11" data-line-number="11">mulSymbol    <span class="fu">=</span> newSymbol <span class="st">&quot;mul&quot;</span></a>
-<a class="sourceLine" id="cb2-12" data-line-number="12">divSymbol    <span class="fu">=</span> newSymbol <span class="st">&quot;div&quot;</span></a>
-<a class="sourceLine" id="cb2-13" data-line-number="13"></a>
-<a class="sourceLine" id="cb2-14" data-line-number="14"><span class="kw">instance</span> <span class="dt">IsTerm</span> <span class="dt">Expr</span> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb2-15" data-line-number="15">   toTerm (<span class="dt">Con</span> x)    <span class="fu">=</span> <span class="dt">TNum</span> (toInteger x)</a>
-<a class="sourceLine" id="cb2-16" data-line-number="16">   toTerm (<span class="dt">Negate</span> x) <span class="fu">=</span> unary negateSymbol (toTerm x)</a>
-<a class="sourceLine" id="cb2-17" data-line-number="17">   toTerm (<span class="dt">Add</span> x y)  <span class="fu">=</span> binary addSymbol (toTerm x) (toTerm y)</a>
-<a class="sourceLine" id="cb2-18" data-line-number="18">   toTerm (<span class="dt">Mul</span> x y)  <span class="fu">=</span> binary mulSymbol (toTerm x) (toTerm y)</a>
-<a class="sourceLine" id="cb2-19" data-line-number="19">   toTerm (<span class="dt">Div</span> x y)  <span class="fu">=</span> binary divSymbol (toTerm x) (toTerm y)</a>
-<a class="sourceLine" id="cb2-20" data-line-number="20">   </a>
-<a class="sourceLine" id="cb2-21" data-line-number="21">   fromTerm (<span class="dt">TNum</span> x) <span class="fu">=</span> return (<span class="dt">Con</span> (fromInteger x))</a>
-<a class="sourceLine" id="cb2-22" data-line-number="22">   fromTerm term     <span class="fu">=</span> fromTermWith f term</a>
-<a class="sourceLine" id="cb2-23" data-line-number="23">    <span class="kw">where</span></a>
-<a class="sourceLine" id="cb2-24" data-line-number="24">      f s [x]    <span class="fu">|</span> s <span class="fu">==</span> negateSymbol <span class="fu">=</span> return (<span class="dt">Negate</span> x)</a>
-<a class="sourceLine" id="cb2-25" data-line-number="25">      f s [x, y] <span class="fu">|</span> s <span class="fu">==</span> addSymbol    <span class="fu">=</span> return (<span class="dt">Add</span> x y)</a>
-<a class="sourceLine" id="cb2-26" data-line-number="26">      f s [x, y] <span class="fu">|</span> s <span class="fu">==</span> mulSymbol    <span class="fu">=</span> return (<span class="dt">Mul</span> x y)</a>
-<a class="sourceLine" id="cb2-27" data-line-number="27">      f s [x, y] <span class="fu">|</span> s <span class="fu">==</span> divSymbol    <span class="fu">=</span> return (<span class="dt">Div</span> x y)</a>
-<a class="sourceLine" id="cb2-28" data-line-number="28">      f _ _ <span class="fu">=</span> fail <span class="st">&quot;invalid expression&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">data</span> <span class="dt">Expr</span>  <span class="ot">=</span>  <span class="dt">Con</span> <span class="dt">Int</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a>           <span class="op">|</span>  <span class="dt">Negate</span> <span class="dt">Expr</span> </span>
+<span id="cb2-3"><a href="#cb2-3"></a>           <span class="op">|</span>  <span class="dt">Add</span> <span class="dt">Expr</span> <span class="dt">Expr</span> </span>
+<span id="cb2-4"><a href="#cb2-4"></a>           <span class="op">|</span>  <span class="dt">Mul</span> <span class="dt">Expr</span> <span class="dt">Expr</span> </span>
+<span id="cb2-5"><a href="#cb2-5"></a>           <span class="op">|</span>  <span class="dt">Div</span> <span class="dt">Expr</span> <span class="dt">Expr</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a>   <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>, <span class="dt">Read</span>)</span>
+<span id="cb2-7"><a href="#cb2-7"></a></span>
+<span id="cb2-8"><a href="#cb2-8"></a>negateSymbol, addSymbol, mulSymbol,<span class="ot"> divSymbol ::</span> <span class="dt">Symbol</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a>negateSymbol <span class="ot">=</span> newSymbol <span class="st">&quot;negate&quot;</span></span>
+<span id="cb2-10"><a href="#cb2-10"></a>addSymbol    <span class="ot">=</span> newSymbol <span class="st">&quot;add&quot;</span></span>
+<span id="cb2-11"><a href="#cb2-11"></a>mulSymbol    <span class="ot">=</span> newSymbol <span class="st">&quot;mul&quot;</span></span>
+<span id="cb2-12"><a href="#cb2-12"></a>divSymbol    <span class="ot">=</span> newSymbol <span class="st">&quot;div&quot;</span></span>
+<span id="cb2-13"><a href="#cb2-13"></a></span>
+<span id="cb2-14"><a href="#cb2-14"></a><span class="kw">instance</span> <span class="dt">IsTerm</span> <span class="dt">Expr</span> <span class="kw">where</span></span>
+<span id="cb2-15"><a href="#cb2-15"></a>   toTerm (<span class="dt">Con</span> x)    <span class="ot">=</span> <span class="dt">TNum</span> (<span class="fu">toInteger</span> x)</span>
+<span id="cb2-16"><a href="#cb2-16"></a>   toTerm (<span class="dt">Negate</span> x) <span class="ot">=</span> unary negateSymbol (toTerm x)</span>
+<span id="cb2-17"><a href="#cb2-17"></a>   toTerm (<span class="dt">Add</span> x y)  <span class="ot">=</span> binary addSymbol (toTerm x) (toTerm y)</span>
+<span id="cb2-18"><a href="#cb2-18"></a>   toTerm (<span class="dt">Mul</span> x y)  <span class="ot">=</span> binary mulSymbol (toTerm x) (toTerm y)</span>
+<span id="cb2-19"><a href="#cb2-19"></a>   toTerm (<span class="dt">Div</span> x y)  <span class="ot">=</span> binary divSymbol (toTerm x) (toTerm y)</span>
+<span id="cb2-20"><a href="#cb2-20"></a>   </span>
+<span id="cb2-21"><a href="#cb2-21"></a>   fromTerm (<span class="dt">TNum</span> x) <span class="ot">=</span> <span class="fu">return</span> (<span class="dt">Con</span> (<span class="fu">fromInteger</span> x))</span>
+<span id="cb2-22"><a href="#cb2-22"></a>   fromTerm term     <span class="ot">=</span> fromTermWith f term</span>
+<span id="cb2-23"><a href="#cb2-23"></a>    <span class="kw">where</span></span>
+<span id="cb2-24"><a href="#cb2-24"></a>      f s [x]    <span class="op">|</span> s <span class="op">==</span> negateSymbol <span class="ot">=</span> <span class="fu">return</span> (<span class="dt">Negate</span> x)</span>
+<span id="cb2-25"><a href="#cb2-25"></a>      f s [x, y] <span class="op">|</span> s <span class="op">==</span> addSymbol    <span class="ot">=</span> <span class="fu">return</span> (<span class="dt">Add</span> x y)</span>
+<span id="cb2-26"><a href="#cb2-26"></a>      f s [x, y] <span class="op">|</span> s <span class="op">==</span> mulSymbol    <span class="ot">=</span> <span class="fu">return</span> (<span class="dt">Mul</span> x y)</span>
+<span id="cb2-27"><a href="#cb2-27"></a>      f s [x, y] <span class="op">|</span> s <span class="op">==</span> divSymbol    <span class="ot">=</span> <span class="fu">return</span> (<span class="dt">Div</span> x y)</span>
+<span id="cb2-28"><a href="#cb2-28"></a>      f _ _ <span class="ot">=</span> <span class="fu">fail</span> <span class="st">&quot;invalid expression&quot;</span></span></code></pre></div>
 <p>We add some examples in which we use multiplication and division.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="co">-- expression </span></a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">expr1, expr2, expr3, expr4, expr5, expr6,<span class="ot"> expr7 ::</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">expr1 <span class="fu">=</span> <span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>))                                      <span class="co">-- 5+(-2)</span></a>
-<a class="sourceLine" id="cb3-4" data-line-number="4">expr2 <span class="fu">=</span> <span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))                        <span class="co">-- (-2)+(3+5)</span></a>
-<a class="sourceLine" id="cb3-5" data-line-number="5">expr3 <span class="fu">=</span> <span class="dt">Mul</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Add</span> (<span class="dt">Mul</span> (<span class="dt">Con</span> <span class="dv">2</span>) (<span class="dt">Con</span> <span class="dv">5</span>)) (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">3</span>)))          <span class="co">-- 3 * (2*5 - 3)</span></a>
-<a class="sourceLine" id="cb3-6" data-line-number="6">expr4 <span class="fu">=</span> <span class="dt">Mul</span> (<span class="dt">Div</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">6</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">1</span>) (<span class="dt">Con</span> <span class="dv">1</span>))                   <span class="co">-- 3/6 * 1+1</span></a>
-<a class="sourceLine" id="cb3-7" data-line-number="7">expr5 <span class="fu">=</span> <span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">7</span>) (<span class="dt">Negate</span> (<span class="dt">Mul</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Negate</span> (<span class="dt">Div</span> (<span class="dt">Con</span> <span class="dv">1</span>) (<span class="dt">Con</span> <span class="dv">2</span>))))) <span class="co">-- 7 + -(5*-(1/2))</span></a>
-<a class="sourceLine" id="cb3-8" data-line-number="8">expr6 <span class="fu">=</span> <span class="dt">Div</span> (<span class="dt">Div</span> (<span class="dt">Con</span> <span class="dv">4</span>) (<span class="dt">Con</span> <span class="dv">5</span>)) (<span class="dt">Div</span> (<span class="dt">Con</span> <span class="dv">9</span>) (<span class="dt">Con</span> <span class="dv">8</span>))                   <span class="co">-- (4/5)/(9/8)</span></a>
-<a class="sourceLine" id="cb3-9" data-line-number="9">expr7 <span class="fu">=</span> <span class="dt">Mul</span> (<span class="dt">Div</span> (<span class="dt">Div</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">4</span>)) (<span class="dt">Con</span> <span class="dv">7</span>)) (<span class="dt">Div</span> (<span class="dt">Con</span> <span class="dv">1</span>) (<span class="dt">Div</span> (<span class="dt">Con</span> <span class="dv">2</span>) (<span class="dt">Con</span> <span class="dv">3</span>))) </a>
-<a class="sourceLine" id="cb3-10" data-line-number="10">                                                                          <span class="co">-- ((3/4)/7)*(1/(2/3)</span></a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1"></a><span class="co">-- expression </span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>expr1, expr2, expr3, expr4, expr5, expr6,<span class="ot"> expr7 ::</span> <span class="dt">Expr</span></span>
+<span id="cb3-3"><a href="#cb3-3"></a>expr1 <span class="ot">=</span> <span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>))                                      <span class="co">-- 5+(-2)</span></span>
+<span id="cb3-4"><a href="#cb3-4"></a>expr2 <span class="ot">=</span> <span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))                        <span class="co">-- (-2)+(3+5)</span></span>
+<span id="cb3-5"><a href="#cb3-5"></a>expr3 <span class="ot">=</span> <span class="dt">Mul</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Add</span> (<span class="dt">Mul</span> (<span class="dt">Con</span> <span class="dv">2</span>) (<span class="dt">Con</span> <span class="dv">5</span>)) (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">3</span>)))          <span class="co">-- 3 * (2*5 - 3)</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a>expr4 <span class="ot">=</span> <span class="dt">Mul</span> (<span class="dt">Div</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">6</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">1</span>) (<span class="dt">Con</span> <span class="dv">1</span>))                   <span class="co">-- 3/6 * 1+1</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a>expr5 <span class="ot">=</span> <span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">7</span>) (<span class="dt">Negate</span> (<span class="dt">Mul</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Negate</span> (<span class="dt">Div</span> (<span class="dt">Con</span> <span class="dv">1</span>) (<span class="dt">Con</span> <span class="dv">2</span>))))) <span class="co">-- 7 + -(5*-(1/2))</span></span>
+<span id="cb3-8"><a href="#cb3-8"></a>expr6 <span class="ot">=</span> <span class="dt">Div</span> (<span class="dt">Div</span> (<span class="dt">Con</span> <span class="dv">4</span>) (<span class="dt">Con</span> <span class="dv">5</span>)) (<span class="dt">Div</span> (<span class="dt">Con</span> <span class="dv">9</span>) (<span class="dt">Con</span> <span class="dv">8</span>))                   <span class="co">-- (4/5)/(9/8)</span></span>
+<span id="cb3-9"><a href="#cb3-9"></a>expr7 <span class="ot">=</span> <span class="dt">Mul</span> (<span class="dt">Div</span> (<span class="dt">Div</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">4</span>)) (<span class="dt">Con</span> <span class="dv">7</span>)) (<span class="dt">Div</span> (<span class="dt">Con</span> <span class="dv">1</span>) (<span class="dt">Div</span> (<span class="dt">Con</span> <span class="dv">2</span>) (<span class="dt">Con</span> <span class="dv">3</span>))) </span>
+<span id="cb3-10"><a href="#cb3-10"></a>                                                                          <span class="co">-- ((3/4)/7)*(1/(2/3)</span></span></code></pre></div>
 <p>We copy the <code>negateRule</code> and <code>addRule</code> from the tutorial,</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="ot">negateRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb4-2" data-line-number="2">negateRule <span class="fu">=</span> describe <span class="st">&quot;Negate number&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;eval.negate&quot;</span> f</a>
-<a class="sourceLine" id="cb4-3" data-line-number="3"> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb4-5" data-line-number="5">   f (<span class="dt">Negate</span> (<span class="dt">Con</span> x))  <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Con</span> (<span class="fu">-</span>x)</a>
-<a class="sourceLine" id="cb4-6" data-line-number="6">   f _                 <span class="fu">=</span>  <span class="dt">Nothing</span></a>
-<a class="sourceLine" id="cb4-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb4-8" data-line-number="8"><span class="ot">addRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb4-9" data-line-number="9">addRule <span class="fu">=</span> describe <span class="st">&quot;Add two numbers&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;eval.add&quot;</span> f</a>
-<a class="sourceLine" id="cb4-10" data-line-number="10"> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb4-11" data-line-number="11"><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb4-12" data-line-number="12">   f (<span class="dt">Add</span> (<span class="dt">Con</span> x) (<span class="dt">Con</span> y))  <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Con</span> (x<span class="fu">+</span>y)</a>
-<a class="sourceLine" id="cb4-13" data-line-number="13">   f _                      <span class="fu">=</span>  <span class="dt">Nothing</span></a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1"></a><span class="ot">negateRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a>negateRule <span class="ot">=</span> describe <span class="st">&quot;Negate number&quot;</span> <span class="op">$</span> makeRule <span class="st">&quot;eval.negate&quot;</span> f</span>
+<span id="cb4-3"><a href="#cb4-3"></a> <span class="kw">where</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></span>
+<span id="cb4-5"><a href="#cb4-5"></a>   f (<span class="dt">Negate</span> (<span class="dt">Con</span> x))  <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Con</span> (<span class="op">-</span>x)</span>
+<span id="cb4-6"><a href="#cb4-6"></a>   f _                 <span class="ot">=</span>  <span class="dt">Nothing</span></span>
+<span id="cb4-7"><a href="#cb4-7"></a></span>
+<span id="cb4-8"><a href="#cb4-8"></a><span class="ot">addRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></span>
+<span id="cb4-9"><a href="#cb4-9"></a>addRule <span class="ot">=</span> describe <span class="st">&quot;Add two numbers&quot;</span> <span class="op">$</span> makeRule <span class="st">&quot;eval.add&quot;</span> f</span>
+<span id="cb4-10"><a href="#cb4-10"></a> <span class="kw">where</span></span>
+<span id="cb4-11"><a href="#cb4-11"></a><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></span>
+<span id="cb4-12"><a href="#cb4-12"></a>   f (<span class="dt">Add</span> (<span class="dt">Con</span> x) (<span class="dt">Con</span> y))  <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Con</span> (x<span class="op">+</span>y)</span>
+<span id="cb4-13"><a href="#cb4-13"></a>   f _                      <span class="ot">=</span>  <span class="dt">Nothing</span></span></code></pre></div>
 <p>and add a rule for multiplication.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="ot">mulRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb5-2" data-line-number="2">mulRule <span class="fu">=</span> describe <span class="st">&quot;Multiply two numbers&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;eval.mul&quot;</span> f</a>
-<a class="sourceLine" id="cb5-3" data-line-number="3"> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb5-5" data-line-number="5">   f (<span class="dt">Mul</span> (<span class="dt">Con</span> x) (<span class="dt">Con</span> y))  <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Con</span> (x<span class="fu">*</span>y)</a>
-<a class="sourceLine" id="cb5-6" data-line-number="6">   f _                      <span class="fu">=</span>  <span class="dt">Nothing</span></a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1"></a><span class="ot">mulRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a>mulRule <span class="ot">=</span> describe <span class="st">&quot;Multiply two numbers&quot;</span> <span class="op">$</span> makeRule <span class="st">&quot;eval.mul&quot;</span> f</span>
+<span id="cb5-3"><a href="#cb5-3"></a> <span class="kw">where</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></span>
+<span id="cb5-5"><a href="#cb5-5"></a>   f (<span class="dt">Mul</span> (<span class="dt">Con</span> x) (<span class="dt">Con</span> y))  <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Con</span> (x<span class="op">*</span>y)</span>
+<span id="cb5-6"><a href="#cb5-6"></a>   f _                      <span class="ot">=</span>  <span class="dt">Nothing</span></span></code></pre></div>
 <p>Multiplication distributes over addition. This can be viewed as pushing multiplications as far as possible downwards in the expression.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="ot">mulAddRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb6-2" data-line-number="2">mulAddRule <span class="fu">=</span> describe <span class="st">&quot;Distribute multiplication over addition&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;eval.dist&quot;</span> f</a>
-<a class="sourceLine" id="cb6-3" data-line-number="3"> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb6-4" data-line-number="4"><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb6-5" data-line-number="5">   f (<span class="dt">Mul</span> x (<span class="dt">Add</span> y z))  <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Add</span> (<span class="dt">Mul</span> x y) (<span class="dt">Mul</span> x z)</a>
-<a class="sourceLine" id="cb6-6" data-line-number="6">   f (<span class="dt">Mul</span> (<span class="dt">Add</span> x y) z)  <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Add</span> (<span class="dt">Mul</span> x z) (<span class="dt">Mul</span> y z)</a>
-<a class="sourceLine" id="cb6-7" data-line-number="7">   f _                  <span class="fu">=</span>  <span class="dt">Nothing</span></a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1"></a><span class="ot">mulAddRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a>mulAddRule <span class="ot">=</span> describe <span class="st">&quot;Distribute multiplication over addition&quot;</span> <span class="op">$</span> makeRule <span class="st">&quot;eval.dist&quot;</span> f</span>
+<span id="cb6-3"><a href="#cb6-3"></a> <span class="kw">where</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a>   f (<span class="dt">Mul</span> x (<span class="dt">Add</span> y z))  <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Add</span> (<span class="dt">Mul</span> x y) (<span class="dt">Mul</span> x z)</span>
+<span id="cb6-6"><a href="#cb6-6"></a>   f (<span class="dt">Mul</span> (<span class="dt">Add</span> x y) z)  <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Add</span> (<span class="dt">Mul</span> x z) (<span class="dt">Mul</span> y z)</span>
+<span id="cb6-7"><a href="#cb6-7"></a>   f _                  <span class="ot">=</span>  <span class="dt">Nothing</span></span></code></pre></div>
 <p>When we evaluate an expression, we no longer return an integer, but an expression in which divisions still may appear. Alternatively, we can use the type <code>Ratio</code> as the result type, but that might look slightly less attractive when there are no divisions in the argument.</p>
 <p>We introduce a number of rules that push divisions as far as possible upwards.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="ot">divNegateRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb7-2" data-line-number="2">divNegateRule <span class="fu">=</span> describe <span class="st">&quot;Push negation through division&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;eval.divNegate&quot;</span> f</a>
-<a class="sourceLine" id="cb7-3" data-line-number="3"> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb7-5" data-line-number="5">   f (<span class="dt">Negate</span> (<span class="dt">Div</span> x y))  <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Div</span> (<span class="dt">Negate</span> x) y</a>
-<a class="sourceLine" id="cb7-6" data-line-number="6">   f _                   <span class="fu">=</span>  <span class="dt">Nothing</span></a>
-<a class="sourceLine" id="cb7-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb7-8" data-line-number="8"><span class="ot">divAddRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb7-9" data-line-number="9">divAddRule <span class="fu">=</span> describe <span class="st">&quot;Push add through divisions&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;eval.divAdd&quot;</span> f</a>
-<a class="sourceLine" id="cb7-10" data-line-number="10"> <span class="kw">where</span> </a>
-<a class="sourceLine" id="cb7-11" data-line-number="11"><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb7-12" data-line-number="12">   f (<span class="dt">Add</span> (<span class="dt">Div</span> x y) (<span class="dt">Div</span> v w))  <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Div</span> (<span class="dt">Add</span> (<span class="dt">Mul</span> x w) (<span class="dt">Mul</span> v y)) (<span class="dt">Mul</span> y w)</a>
-<a class="sourceLine" id="cb7-13" data-line-number="13">   f (<span class="dt">Add</span> (<span class="dt">Div</span> x y) v)          <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Div</span> (<span class="dt">Add</span> x (<span class="dt">Mul</span> v y)) y</a>
-<a class="sourceLine" id="cb7-14" data-line-number="14">   f (<span class="dt">Add</span> x (<span class="dt">Div</span> y v))          <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Div</span> (<span class="dt">Add</span> (<span class="dt">Mul</span> x v) y) v</a>
-<a class="sourceLine" id="cb7-15" data-line-number="15">   f _                          <span class="fu">=</span>  <span class="dt">Nothing</span></a>
-<a class="sourceLine" id="cb7-16" data-line-number="16"></a>
-<a class="sourceLine" id="cb7-17" data-line-number="17"><span class="ot">divMulRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb7-18" data-line-number="18">divMulRule <span class="fu">=</span> describe <span class="st">&quot;Push multiply through divisions&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;eval.divMul&quot;</span> f</a>
-<a class="sourceLine" id="cb7-19" data-line-number="19"> <span class="kw">where</span> </a>
-<a class="sourceLine" id="cb7-20" data-line-number="20"><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb7-21" data-line-number="21">   f (<span class="dt">Mul</span> (<span class="dt">Div</span> x y) (<span class="dt">Div</span> v w))  <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Div</span> (<span class="dt">Mul</span> x v) (<span class="dt">Mul</span> y w)</a>
-<a class="sourceLine" id="cb7-22" data-line-number="22">   f (<span class="dt">Mul</span> (<span class="dt">Div</span> x y) v)          <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Div</span> (<span class="dt">Mul</span> x v) y</a>
-<a class="sourceLine" id="cb7-23" data-line-number="23">   f (<span class="dt">Mul</span> x (<span class="dt">Div</span> v w))          <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Div</span> (<span class="dt">Mul</span> x v) w</a>
-<a class="sourceLine" id="cb7-24" data-line-number="24">   f _                          <span class="fu">=</span>  <span class="dt">Nothing</span></a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1"></a><span class="ot">divNegateRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a>divNegateRule <span class="ot">=</span> describe <span class="st">&quot;Push negation through division&quot;</span> <span class="op">$</span> makeRule <span class="st">&quot;eval.divNegate&quot;</span> f</span>
+<span id="cb7-3"><a href="#cb7-3"></a> <span class="kw">where</span></span>
+<span id="cb7-4"><a href="#cb7-4"></a><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a>   f (<span class="dt">Negate</span> (<span class="dt">Div</span> x y))  <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Div</span> (<span class="dt">Negate</span> x) y</span>
+<span id="cb7-6"><a href="#cb7-6"></a>   f _                   <span class="ot">=</span>  <span class="dt">Nothing</span></span>
+<span id="cb7-7"><a href="#cb7-7"></a></span>
+<span id="cb7-8"><a href="#cb7-8"></a><span class="ot">divAddRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></span>
+<span id="cb7-9"><a href="#cb7-9"></a>divAddRule <span class="ot">=</span> describe <span class="st">&quot;Push add through divisions&quot;</span> <span class="op">$</span> makeRule <span class="st">&quot;eval.divAdd&quot;</span> f</span>
+<span id="cb7-10"><a href="#cb7-10"></a> <span class="kw">where</span> </span>
+<span id="cb7-11"><a href="#cb7-11"></a><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></span>
+<span id="cb7-12"><a href="#cb7-12"></a>   f (<span class="dt">Add</span> (<span class="dt">Div</span> x y) (<span class="dt">Div</span> v w))  <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Div</span> (<span class="dt">Add</span> (<span class="dt">Mul</span> x w) (<span class="dt">Mul</span> v y)) (<span class="dt">Mul</span> y w)</span>
+<span id="cb7-13"><a href="#cb7-13"></a>   f (<span class="dt">Add</span> (<span class="dt">Div</span> x y) v)          <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Div</span> (<span class="dt">Add</span> x (<span class="dt">Mul</span> v y)) y</span>
+<span id="cb7-14"><a href="#cb7-14"></a>   f (<span class="dt">Add</span> x (<span class="dt">Div</span> y v))          <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Div</span> (<span class="dt">Add</span> (<span class="dt">Mul</span> x v) y) v</span>
+<span id="cb7-15"><a href="#cb7-15"></a>   f _                          <span class="ot">=</span>  <span class="dt">Nothing</span></span>
+<span id="cb7-16"><a href="#cb7-16"></a></span>
+<span id="cb7-17"><a href="#cb7-17"></a><span class="ot">divMulRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></span>
+<span id="cb7-18"><a href="#cb7-18"></a>divMulRule <span class="ot">=</span> describe <span class="st">&quot;Push multiply through divisions&quot;</span> <span class="op">$</span> makeRule <span class="st">&quot;eval.divMul&quot;</span> f</span>
+<span id="cb7-19"><a href="#cb7-19"></a> <span class="kw">where</span> </span>
+<span id="cb7-20"><a href="#cb7-20"></a><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></span>
+<span id="cb7-21"><a href="#cb7-21"></a>   f (<span class="dt">Mul</span> (<span class="dt">Div</span> x y) (<span class="dt">Div</span> v w))  <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Div</span> (<span class="dt">Mul</span> x v) (<span class="dt">Mul</span> y w)</span>
+<span id="cb7-22"><a href="#cb7-22"></a>   f (<span class="dt">Mul</span> (<span class="dt">Div</span> x y) v)          <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Div</span> (<span class="dt">Mul</span> x v) y</span>
+<span id="cb7-23"><a href="#cb7-23"></a>   f (<span class="dt">Mul</span> x (<span class="dt">Div</span> v w))          <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Div</span> (<span class="dt">Mul</span> x v) w</span>
+<span id="cb7-24"><a href="#cb7-24"></a>   f _                          <span class="ot">=</span>  <span class="dt">Nothing</span></span></code></pre></div>
 <p>The <code>divDivRule</code> is the only rule where <code>Div</code> is not pushed to top-level. These are the standard rules for calculating divisions of divisions. Since the <code>Mul</code> and <code>Add</code> rules do not produce divisions of divisions, there is no risk for a loop in the final evaluation strategy.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="ot">divDivRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb8-2" data-line-number="2">divDivRule <span class="fu">=</span> describe <span class="st">&quot;Push divisions through divisions&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;eval.divDiv&quot;</span> f</a>
-<a class="sourceLine" id="cb8-3" data-line-number="3"> <span class="kw">where</span> </a>
-<a class="sourceLine" id="cb8-4" data-line-number="4"><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb8-5" data-line-number="5">   f (<span class="dt">Div</span> (<span class="dt">Div</span> x y) (<span class="dt">Div</span> v w))  <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Mul</span> (<span class="dt">Div</span> x y) (<span class="dt">Div</span> w v)</a>
-<a class="sourceLine" id="cb8-6" data-line-number="6">   f (<span class="dt">Div</span> (<span class="dt">Div</span> x y) v)          <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Div</span> x (<span class="dt">Mul</span> y v)</a>
-<a class="sourceLine" id="cb8-7" data-line-number="7">   f (<span class="dt">Div</span> x (<span class="dt">Div</span> v w))          <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Mul</span> x (<span class="dt">Div</span> w v)</a>
-<a class="sourceLine" id="cb8-8" data-line-number="8">   f _                          <span class="fu">=</span>  <span class="dt">Nothing</span></a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1"></a><span class="ot">divDivRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a>divDivRule <span class="ot">=</span> describe <span class="st">&quot;Push divisions through divisions&quot;</span> <span class="op">$</span> makeRule <span class="st">&quot;eval.divDiv&quot;</span> f</span>
+<span id="cb8-3"><a href="#cb8-3"></a> <span class="kw">where</span> </span>
+<span id="cb8-4"><a href="#cb8-4"></a><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></span>
+<span id="cb8-5"><a href="#cb8-5"></a>   f (<span class="dt">Div</span> (<span class="dt">Div</span> x y) (<span class="dt">Div</span> v w))  <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Mul</span> (<span class="dt">Div</span> x y) (<span class="dt">Div</span> w v)</span>
+<span id="cb8-6"><a href="#cb8-6"></a>   f (<span class="dt">Div</span> (<span class="dt">Div</span> x y) v)          <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Div</span> x (<span class="dt">Mul</span> y v)</span>
+<span id="cb8-7"><a href="#cb8-7"></a>   f (<span class="dt">Div</span> x (<span class="dt">Div</span> v w))          <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Mul</span> x (<span class="dt">Div</span> w v)</span>
+<span id="cb8-8"><a href="#cb8-8"></a>   f _                          <span class="ot">=</span>  <span class="dt">Nothing</span></span></code></pre></div>
 <p>I have two simplification rules for divisions; the topHeavyRule splits a division into an addition and a division. I cannot combine the <code>topHeavyRule</code> with the other division rules (in particular: <code>divAdd</code>) since evaluation will loop otherwise.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="ot">divSimplificationRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb9-2" data-line-number="2">divSimplificationRule <span class="fu">=</span> describe <span class="st">&quot;Simplify a division&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;eval.divSimplification&quot;</span> f</a>
-<a class="sourceLine" id="cb9-3" data-line-number="3"> <span class="kw">where</span> </a>
-<a class="sourceLine" id="cb9-4" data-line-number="4"><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb9-5" data-line-number="5">   f (<span class="dt">Div</span> (<span class="dt">Con</span> x) (<span class="dt">Con</span> y)) </a>
-<a class="sourceLine" id="cb9-6" data-line-number="6">     <span class="fu">|</span> x <span class="fu">==</span> <span class="dv">0</span>    <span class="fu">=</span> <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Con</span> <span class="dv">0</span></a>
-<a class="sourceLine" id="cb9-7" data-line-number="7">     <span class="fu">|</span> x <span class="fu">==</span> y    <span class="fu">=</span> <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Con</span> <span class="dv">1</span></a>
-<a class="sourceLine" id="cb9-8" data-line-number="8">     <span class="fu">|</span> g <span class="fu">&gt;</span>  <span class="dv">1</span>    <span class="fu">=</span> <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Div</span> (<span class="dt">Con</span> (div x g)) (<span class="dt">Con</span> (div y g)) </a>
-<a class="sourceLine" id="cb9-9" data-line-number="9">     <span class="kw">where</span> g <span class="fu">=</span> gcd x y</a>
-<a class="sourceLine" id="cb9-10" data-line-number="10">   f _ <span class="fu">=</span> <span class="dt">Nothing</span></a>
-<a class="sourceLine" id="cb9-11" data-line-number="11"></a>
-<a class="sourceLine" id="cb9-12" data-line-number="12"><span class="ot">topHeavyRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb9-13" data-line-number="13">topHeavyRule <span class="fu">=</span> describe <span class="st">&quot;Simplify a top heavy division&quot;</span> <span class="fu">$</span> makeRule <span class="st">&quot;eval.topHeavy&quot;</span> f</a>
-<a class="sourceLine" id="cb9-14" data-line-number="14"> <span class="kw">where</span> </a>
-<a class="sourceLine" id="cb9-15" data-line-number="15"><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb9-16" data-line-number="16">   f (<span class="dt">Div</span> (<span class="dt">Con</span> x) (<span class="dt">Con</span> y)) </a>
-<a class="sourceLine" id="cb9-17" data-line-number="17">     <span class="fu">|</span> x <span class="fu">&gt;</span> y  <span class="fu">=</span>  <span class="dt">Just</span> <span class="fu">$</span> <span class="dt">Add</span> (<span class="dt">Con</span> (div x y)) (<span class="dt">Div</span> (<span class="dt">Con</span> (mod x y)) (<span class="dt">Con</span> y))</a>
-<a class="sourceLine" id="cb9-18" data-line-number="18">   f _ <span class="fu">=</span> <span class="dt">Nothing</span></a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1"></a><span class="ot">divSimplificationRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></span>
+<span id="cb9-2"><a href="#cb9-2"></a>divSimplificationRule <span class="ot">=</span> describe <span class="st">&quot;Simplify a division&quot;</span> <span class="op">$</span> makeRule <span class="st">&quot;eval.divSimplification&quot;</span> f</span>
+<span id="cb9-3"><a href="#cb9-3"></a> <span class="kw">where</span> </span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a>   f (<span class="dt">Div</span> (<span class="dt">Con</span> x) (<span class="dt">Con</span> y)) </span>
+<span id="cb9-6"><a href="#cb9-6"></a>     <span class="op">|</span> x <span class="op">==</span> <span class="dv">0</span>    <span class="ot">=</span> <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Con</span> <span class="dv">0</span></span>
+<span id="cb9-7"><a href="#cb9-7"></a>     <span class="op">|</span> x <span class="op">==</span> y    <span class="ot">=</span> <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Con</span> <span class="dv">1</span></span>
+<span id="cb9-8"><a href="#cb9-8"></a>     <span class="op">|</span> g <span class="op">&gt;</span>  <span class="dv">1</span>    <span class="ot">=</span> <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Div</span> (<span class="dt">Con</span> (<span class="fu">div</span> x g)) (<span class="dt">Con</span> (<span class="fu">div</span> y g)) </span>
+<span id="cb9-9"><a href="#cb9-9"></a>     <span class="kw">where</span> g <span class="ot">=</span> <span class="fu">gcd</span> x y</span>
+<span id="cb9-10"><a href="#cb9-10"></a>   f _ <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb9-11"><a href="#cb9-11"></a></span>
+<span id="cb9-12"><a href="#cb9-12"></a><span class="ot">topHeavyRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></span>
+<span id="cb9-13"><a href="#cb9-13"></a>topHeavyRule <span class="ot">=</span> describe <span class="st">&quot;Simplify a top heavy division&quot;</span> <span class="op">$</span> makeRule <span class="st">&quot;eval.topHeavy&quot;</span> f</span>
+<span id="cb9-14"><a href="#cb9-14"></a> <span class="kw">where</span> </span>
+<span id="cb9-15"><a href="#cb9-15"></a><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></span>
+<span id="cb9-16"><a href="#cb9-16"></a>   f (<span class="dt">Div</span> (<span class="dt">Con</span> x) (<span class="dt">Con</span> y)) </span>
+<span id="cb9-17"><a href="#cb9-17"></a>     <span class="op">|</span> x <span class="op">&gt;</span> y  <span class="ot">=</span>  <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Add</span> (<span class="dt">Con</span> (<span class="fu">div</span> x y)) (<span class="dt">Div</span> (<span class="dt">Con</span> (<span class="fu">mod</span> x y)) (<span class="dt">Con</span> y))</span>
+<span id="cb9-18"><a href="#cb9-18"></a>   f _ <span class="ot">=</span> <span class="dt">Nothing</span></span></code></pre></div>
 <p><code>allEvaluationRules</code> is the strategy that combines all rules that move multiplications downwards, and divisions upwards, and evaluates all expressions with constants. I do not apply <code>divSimplificationRule</code>, but this could be done.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="ot">allEvaluationRules ::</span> <span class="dt">LabeledStrategy</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb10-2" data-line-number="2">allEvaluationRules <span class="fu">=</span> label <span class="st">&quot;all rules&quot;</span> <span class="fu">$</span></a>
-<a class="sourceLine" id="cb10-3" data-line-number="3">   negateRule <span class="fu">.|.</span> addRule <span class="fu">.|.</span> mulRule <span class="fu">.|.</span> mulAddRule <span class="fu">.|.</span> divNegateRule <span class="fu">.|.</span> divAddRule <span class="fu">.|.</span> divMulRule <span class="fu">.|.</span> divDivRule </a>
-<a class="sourceLine" id="cb10-4" data-line-number="4">   <span class="co">-- .|. divSimplificationRule this simplification can also be done during evaluation</span></a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1"></a><span class="ot">allEvaluationRules ::</span> <span class="dt">LabeledStrategy</span> <span class="dt">Expr</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a>allEvaluationRules <span class="ot">=</span> label <span class="st">&quot;all rules&quot;</span> <span class="op">$</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a>   negateRule <span class="op">.|.</span> addRule <span class="op">.|.</span> mulRule <span class="op">.|.</span> mulAddRule <span class="op">.|.</span> divNegateRule <span class="op">.|.</span> divAddRule <span class="op">.|.</span> divMulRule <span class="op">.|.</span> divDivRule </span>
+<span id="cb10-4"><a href="#cb10-4"></a>   <span class="co">-- .|. divSimplificationRule this simplification can also be done during evaluation</span></span></code></pre></div>
 <p><code>allSimplificationRules</code> is the strategy that combines all simplification rules.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="ot">allSimplificationRules ::</span> <span class="dt">LabeledStrategy</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb11-2" data-line-number="2">allSimplificationRules <span class="fu">=</span> label <span class="st">&quot;all rules&quot;</span> <span class="fu">$</span></a>
-<a class="sourceLine" id="cb11-3" data-line-number="3">   topHeavyRule <span class="fu">.|.</span> divSimplificationRule <span class="fu">.|.</span> addRule</a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1"></a><span class="ot">allSimplificationRules ::</span> <span class="dt">LabeledStrategy</span> <span class="dt">Expr</span></span>
+<span id="cb11-2"><a href="#cb11-2"></a>allSimplificationRules <span class="ot">=</span> label <span class="st">&quot;all rules&quot;</span> <span class="op">$</span></span>
+<span id="cb11-3"><a href="#cb11-3"></a>   topHeavyRule <span class="op">.|.</span> divSimplificationRule <span class="op">.|.</span> addRule</span></code></pre></div>
 <p>Evaluation consists of applying <code>allEvaluationRules</code> as often as possible, resulting in pushing divisions up as much as possible, followed by applying <code>allSimplificationRules</code>, which simplifies the divisions, replaces top heavy divisions by additions, and does some additional simplications using the <code>addRule</code> in the resulting expression.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="ot">evalStrategy ::</span> <span class="dt">LabeledStrategy</span> (<span class="dt">Context</span> <span class="dt">Expr</span>)</a>
-<a class="sourceLine" id="cb12-2" data-line-number="2">evalStrategy <span class="fu">=</span> label <span class="st">&quot;eval&quot;</span> <span class="fu">$</span></a>
-<a class="sourceLine" id="cb12-3" data-line-number="3">   repeatS (somewhere (liftToContext allEvaluationRules)) <span class="fu">.*.</span> repeatS (somewhere (liftToContext allSimplificationRules))</a></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1"></a><span class="ot">evalStrategy ::</span> <span class="dt">LabeledStrategy</span> (<span class="dt">Context</span> <span class="dt">Expr</span>)</span>
+<span id="cb12-2"><a href="#cb12-2"></a>evalStrategy <span class="ot">=</span> label <span class="st">&quot;eval&quot;</span> <span class="op">$</span></span>
+<span id="cb12-3"><a href="#cb12-3"></a>   repeatS (somewhere (liftToContext allEvaluationRules)) <span class="op">.*.</span> repeatS (somewhere (liftToContext allSimplificationRules))</span></code></pre></div>
 <p>Evaluation has been extended with a case for <code>Mul</code>, but not for <code>Div</code>.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="ot">eval ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></a>
-<a class="sourceLine" id="cb13-2" data-line-number="2">eval (<span class="dt">Add</span> x y)  <span class="fu">=</span> eval x <span class="fu">+</span> eval y</a>
-<a class="sourceLine" id="cb13-3" data-line-number="3">eval (<span class="dt">Mul</span> x y)  <span class="fu">=</span> eval x <span class="fu">*</span> eval y</a>
-<a class="sourceLine" id="cb13-4" data-line-number="4">eval (<span class="dt">Negate</span> x) <span class="fu">=</span> <span class="fu">-</span>eval x</a>
-<a class="sourceLine" id="cb13-5" data-line-number="5">eval (<span class="dt">Con</span> x)    <span class="fu">=</span> x </a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1"></a><span class="ot">eval ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb13-2"><a href="#cb13-2"></a>eval (<span class="dt">Add</span> x y)  <span class="ot">=</span> eval x <span class="op">+</span> eval y</span>
+<span id="cb13-3"><a href="#cb13-3"></a>eval (<span class="dt">Mul</span> x y)  <span class="ot">=</span> eval x <span class="op">*</span> eval y</span>
+<span id="cb13-4"><a href="#cb13-4"></a>eval (<span class="dt">Negate</span> x) <span class="ot">=</span> <span class="op">-</span>eval x</span>
+<span id="cb13-5"><a href="#cb13-5"></a>eval (<span class="dt">Con</span> x)    <span class="ot">=</span> x </span></code></pre></div>
 <p>An expression is in normal form if it is a <code>Con</code>, a non-top heavy division, or the addition of a constant and a division.</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode literate haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="ot">isConOrAddDivOrDiv                          ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
-<a class="sourceLine" id="cb14-2" data-line-number="2">isConOrAddDivOrDiv (<span class="dt">Con</span> _)                  <span class="fu">=</span>  <span class="dt">True</span></a>
-<a class="sourceLine" id="cb14-3" data-line-number="3">isConOrAddDivOrDiv (<span class="dt">Add</span> (<span class="dt">Con</span> _) (<span class="dt">Div</span> _ _))  <span class="fu">=</span>  <span class="dt">True</span></a>
-<a class="sourceLine" id="cb14-4" data-line-number="4">isConOrAddDivOrDiv (<span class="dt">Div</span> (<span class="dt">Con</span> _) (<span class="dt">Con</span> _))    <span class="fu">=</span>  <span class="dt">True</span></a>
-<a class="sourceLine" id="cb14-5" data-line-number="5">isConOrAddDivOrDiv _                        <span class="fu">=</span>  <span class="dt">False</span></a>
-<a class="sourceLine" id="cb14-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb14-7" data-line-number="7"><span class="ot">evalExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Expr</span></a>
-<a class="sourceLine" id="cb14-8" data-line-number="8">evalExercise <span class="fu">=</span> emptyExercise</a>
-<a class="sourceLine" id="cb14-9" data-line-number="9">   { exerciseId    <span class="fu">=</span> describe <span class="st">&quot;Evaluate an expression (full)&quot;</span> <span class="fu">$</span></a>
-<a class="sourceLine" id="cb14-10" data-line-number="10">                        newId <span class="st">&quot;eval.full&quot;</span></a>
-<a class="sourceLine" id="cb14-11" data-line-number="11">   , status        <span class="fu">=</span> <span class="dt">Experimental</span></a>
-<a class="sourceLine" id="cb14-12" data-line-number="12">   , strategy      <span class="fu">=</span> evalStrategy</a>
-<a class="sourceLine" id="cb14-13" data-line-number="13">   , prettyPrinter <span class="fu">=</span> show</a>
-<a class="sourceLine" id="cb14-14" data-line-number="14">   , navigation    <span class="fu">=</span> termNavigator</a>
-<a class="sourceLine" id="cb14-15" data-line-number="15">   , parser        <span class="fu">=</span> readM</a>
-<a class="sourceLine" id="cb14-16" data-line-number="16">   , equivalence   <span class="fu">=</span> withoutContext eqExpr</a>
-<a class="sourceLine" id="cb14-17" data-line-number="17">   , similarity    <span class="fu">=</span> withoutContext (<span class="fu">==</span>)</a>
-<a class="sourceLine" id="cb14-18" data-line-number="18">   , ready         <span class="fu">=</span> predicate isConOrAddDivOrDiv</a>
-<a class="sourceLine" id="cb14-19" data-line-number="19">   , examples      <span class="fu">=</span> level <span class="dt">Easy</span> [expr1] <span class="fu">++</span> level <span class="dt">Medium</span> [expr2] <span class="fu">++</span> level <span class="dt">Medium</span> [expr3]</a>
-<a class="sourceLine" id="cb14-20" data-line-number="20">   }</a>
-<a class="sourceLine" id="cb14-21" data-line-number="21"></a>
-<a class="sourceLine" id="cb14-22" data-line-number="22"><span class="ot">eqExpr ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
-<a class="sourceLine" id="cb14-23" data-line-number="23">eqExpr x y <span class="fu">=</span> eval x <span class="fu">==</span> eval y</a>
-<a class="sourceLine" id="cb14-24" data-line-number="24"></a>
-<a class="sourceLine" id="cb14-25" data-line-number="25"><span class="ot">dr ::</span> <span class="dt">DomainReasoner</span></a>
-<a class="sourceLine" id="cb14-26" data-line-number="26">dr <span class="fu">=</span> describe <span class="st">&quot;Domain reasoner for tutorial&quot;</span> (newDomainReasoner <span class="st">&quot;eval&quot;</span>) </a>
-<a class="sourceLine" id="cb14-27" data-line-number="27">   { exercises <span class="fu">=</span> [<span class="dt">Some</span> evalExercise]</a>
-<a class="sourceLine" id="cb14-28" data-line-number="28">   , services  <span class="fu">=</span> myServices</a>
-<a class="sourceLine" id="cb14-29" data-line-number="29">   }</a>
-<a class="sourceLine" id="cb14-30" data-line-number="30"></a>
-<a class="sourceLine" id="cb14-31" data-line-number="31"><span class="ot">myServices ::</span> [<span class="dt">Service</span>]</a>
-<a class="sourceLine" id="cb14-32" data-line-number="32">myServices <span class="fu">=</span> metaServiceList dr <span class="fu">++</span> serviceList</a>
-<a class="sourceLine" id="cb14-33" data-line-number="33"></a>
-<a class="sourceLine" id="cb14-34" data-line-number="34"><span class="ot">main ::</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb14-35" data-line-number="35">main <span class="fu">=</span> defaultMain dr</a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1"></a><span class="ot">isConOrAddDivOrDiv                          ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a>isConOrAddDivOrDiv (<span class="dt">Con</span> _)                  <span class="ot">=</span>  <span class="dt">True</span></span>
+<span id="cb14-3"><a href="#cb14-3"></a>isConOrAddDivOrDiv (<span class="dt">Add</span> (<span class="dt">Con</span> _) (<span class="dt">Div</span> _ _))  <span class="ot">=</span>  <span class="dt">True</span></span>
+<span id="cb14-4"><a href="#cb14-4"></a>isConOrAddDivOrDiv (<span class="dt">Div</span> (<span class="dt">Con</span> _) (<span class="dt">Con</span> _))    <span class="ot">=</span>  <span class="dt">True</span></span>
+<span id="cb14-5"><a href="#cb14-5"></a>isConOrAddDivOrDiv _                        <span class="ot">=</span>  <span class="dt">False</span></span>
+<span id="cb14-6"><a href="#cb14-6"></a></span>
+<span id="cb14-7"><a href="#cb14-7"></a><span class="ot">evalExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Expr</span></span>
+<span id="cb14-8"><a href="#cb14-8"></a>evalExercise <span class="ot">=</span> emptyExercise</span>
+<span id="cb14-9"><a href="#cb14-9"></a>   { exerciseId    <span class="ot">=</span> describe <span class="st">&quot;Evaluate an expression (full)&quot;</span> <span class="op">$</span></span>
+<span id="cb14-10"><a href="#cb14-10"></a>                        newId <span class="st">&quot;eval.full&quot;</span></span>
+<span id="cb14-11"><a href="#cb14-11"></a>   , status        <span class="ot">=</span> <span class="dt">Experimental</span></span>
+<span id="cb14-12"><a href="#cb14-12"></a>   , strategy      <span class="ot">=</span> evalStrategy</span>
+<span id="cb14-13"><a href="#cb14-13"></a>   , prettyPrinter <span class="ot">=</span> <span class="fu">show</span></span>
+<span id="cb14-14"><a href="#cb14-14"></a>   , navigation    <span class="ot">=</span> termNavigator</span>
+<span id="cb14-15"><a href="#cb14-15"></a>   , parser        <span class="ot">=</span> readM</span>
+<span id="cb14-16"><a href="#cb14-16"></a>   , equivalence   <span class="ot">=</span> withoutContext eqExpr</span>
+<span id="cb14-17"><a href="#cb14-17"></a>   , similarity    <span class="ot">=</span> withoutContext (<span class="op">==</span>)</span>
+<span id="cb14-18"><a href="#cb14-18"></a>   , ready         <span class="ot">=</span> predicate isConOrAddDivOrDiv</span>
+<span id="cb14-19"><a href="#cb14-19"></a>   , examples      <span class="ot">=</span> examplesFor <span class="dt">Easy</span> [expr1, expr2, expr3]</span>
+<span id="cb14-20"><a href="#cb14-20"></a>   }</span>
+<span id="cb14-21"><a href="#cb14-21"></a></span>
+<span id="cb14-22"><a href="#cb14-22"></a><span class="ot">eqExpr ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb14-23"><a href="#cb14-23"></a>eqExpr x y <span class="ot">=</span> eval x <span class="op">==</span> eval y</span>
+<span id="cb14-24"><a href="#cb14-24"></a></span>
+<span id="cb14-25"><a href="#cb14-25"></a><span class="ot">dr ::</span> <span class="dt">DomainReasoner</span></span>
+<span id="cb14-26"><a href="#cb14-26"></a>dr <span class="ot">=</span> describe <span class="st">&quot;Domain reasoner for tutorial&quot;</span> (newDomainReasoner <span class="st">&quot;eval&quot;</span>) </span>
+<span id="cb14-27"><a href="#cb14-27"></a>   { exercises <span class="ot">=</span> [<span class="dt">Some</span> evalExercise]</span>
+<span id="cb14-28"><a href="#cb14-28"></a>   , services  <span class="ot">=</span> myServices</span>
+<span id="cb14-29"><a href="#cb14-29"></a>   }</span>
+<span id="cb14-30"><a href="#cb14-30"></a></span>
+<span id="cb14-31"><a href="#cb14-31"></a><span class="ot">myServices ::</span> [<span class="dt">Service</span>]</span>
+<span id="cb14-32"><a href="#cb14-32"></a>myServices <span class="ot">=</span> metaServiceList dr <span class="op">++</span> serviceList</span>
+<span id="cb14-33"><a href="#cb14-33"></a></span>
+<span id="cb14-34"><a href="#cb14-34"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb14-35"><a href="#cb14-35"></a>main <span class="ot">=</span> defaultMain dr</span></code></pre></div>
 
 </div>
 <div class="w3-container w3-theme w3-padding">
-<i>This tutorial is based on ideas-1.7. Last changed: May 2018</i>
+<i>This tutorial is based on ideas-1.8. Last changed: September 2019</i>
 </div>
 </body></html>

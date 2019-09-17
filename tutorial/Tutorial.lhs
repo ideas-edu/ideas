@@ -73,7 +73,7 @@ data type is used to indicate that the rule cannot be applied.
 >    f _ = Nothing
 
 Have a look at the type of the `makeRule` function in the 
-[documentation](http://hackage.haskell.org/package/ideas-1.7/docs/Ideas-Common-Rule-Abstract.html#v:makeRule),
+[documentation](http://hackage.haskell.org/package/ideas-1.8/docs/Ideas-Common-Rule-Abstract.html#v:makeRule),
 and observe that the function
 is overloaded in both arguments. The first argument is the rule's identifier,
 which has to be part of the `IsId` type class. The `String` type is an instance
@@ -128,7 +128,7 @@ We can now make a minimal exercise that uses the `addOrNegate` strategy
 for solving: why we need to lift the strategy to a `Context` is explained in 
 step 2 of this tutorial. Exercises should have a unique identifier for 
 identification. We use `show` for pretty-printing expressions. See the 
-[documentation](http://hackage.haskell.org/package/ideas-1.7/docs/Ideas-Common-Exercise.html#t:Exercise) 
+[documentation](http://hackage.haskell.org/package/ideas-1.8/docs/Ideas-Common-Exercise.html#t:Exercise) 
 of the `Exercise` data type for the other components of an 
 exercise: `emptyExercise` provides sensible defaults so we do not have to 
 worry about these fields yet.
@@ -300,7 +300,7 @@ two example expressions (of a certain difficulty).
 >    , equivalence   = withoutContext eqExpr
 >    , similarity    = withoutContext (==)
 >    , ready         = predicate isCon
->    , examples      = level Easy [expr1] ++ level Medium [expr2]
+>    , examples      = examplesFor Easy [expr1, expr2]
 >    }
 
 The `readM` function is
@@ -346,7 +346,7 @@ Running the executable with the `--help` flag gives the options.
 $ Tutorial.exe --help
 IDEAS: Intelligent Domain-specific Exercise Assistants
 Copyright 2018, Open Universiteit Nederland
-version 1.7, revision 40c006.., logging disabled
+version 1.8, revision 26fe80.., logging disabled
 
 Usage: ideas [OPTION]     (by default, CGI protocol)
 
@@ -375,7 +375,7 @@ The result of this request is:
 
 ~~~~ {#mycode .xml}
 $ Tutorial.exe --file=exerciselist.xml                                          
-<reply result="ok" version="1.7 (40c006..)">
+<reply result="ok" version="1.8 (26fe80..)">
   <list>
     <elem exerciseid="eval.basic" description="Evaluate an expression (basic)" status="Experimental"/>
     <elem exerciseid="eval.full" description="Evaluate an expression (full)" status="Experimental"/>
@@ -402,7 +402,7 @@ mathematical objects. The result of this request is:
 
 ~~~~ {#mycode .xml}   
 $ Tutorial.exe --file=solution.xml
-<reply result="ok" version="1.7 (40c006..)">
+<reply result="ok" version="1.8 (26fe80..)">
   <list>
     <elem ruleid="eval.negate">
       <expr>

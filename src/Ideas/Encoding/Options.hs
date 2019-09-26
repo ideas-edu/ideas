@@ -76,4 +76,5 @@ makeOptions dr req = do
       { request = req
       , qcGen   = Just gen
       , script  = scr
+      , maxTime = Just 5
       }

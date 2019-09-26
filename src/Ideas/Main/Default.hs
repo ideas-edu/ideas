@@ -156,7 +156,7 @@ processDatabase dr database = do
 process :: Options -> DomainReasoner -> String -> IO (Request, String, String)
 process options dr input = do
    format <- discoverDataFormat input
-   run format options {maxTime = Just 5} (addVersion dr) input
+   run format options (addVersion dr) input
  `catch` \e -> do
    let msg = "Error: " ++ show (e :: SomeException)
    Log.changeLog (logRef options) (\r -> r { Log.errormsg = msg })

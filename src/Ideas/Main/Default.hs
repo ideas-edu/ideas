@@ -35,6 +35,7 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.ServiceList
 import Ideas.Service.Types (Service)
+import Ideas.Text.UTF8 (decode)
 import Ideas.Text.XML.Unicode (decoding)
 import Ideas.Utils.BlackBoxTests
 import Ideas.Utils.Prelude
@@ -75,7 +76,7 @@ defaultCGI options dr = CGI.run $ \req respond -> do
       { Log.ipaddress = addr
       , Log.version   = shortVersion
       , Log.input     = input
-      , Log.output    = txt
+      , Log.output    = decode txt
       }
    -- log request to database
    when (useLogging preq) $
@@ -130,7 +131,7 @@ defaultCommandLine options dr cmdLineOptions = do
                      { Log.ipaddress = "command-line"
                      , Log.version   = shortVersion
                      , Log.input     = input
-                     , Log.output    = txt
+                     , Log.output    = decode txt
                      }
                   Log.printLog (logRef options)
          -- blackbox tests

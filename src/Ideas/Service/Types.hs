@@ -77,6 +77,7 @@ instance Equal f => Equal (TypeRep f) where
    equal t1         (Iso p b)  = fmap (from p .) (equal t1 b)
    equal (a :-> b)  (c :-> d)  = liftM2 (\f g h -> g . h . f)
                                         (equal c a) (equal b d)
+   equal (IO a) (IO b)         = fmap liftM  (equal a b)
    equal (Pair a b) (Pair c d) = liftM2 (***) (equal a c) (equal b d)
    equal (a :|: b)  (c :|: d)  = liftM2 biMap (equal a c) (equal b d)
    equal (List a)   (List b)   = fmap map (equal a b)

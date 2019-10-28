@@ -60,7 +60,7 @@ Library
      filepath,
      http-types,
      mtl,
-     network,
+     network < 3.0,
      parsec,
      random,
      streaming-commons < 0.2,

@@ -111,5 +111,7 @@ findService dr a
    single _    = fail $ "Ambiguous service " ++ showId a
 
 defaultScript :: DomainReasoner -> Id -> IO Script
-defaultScript dr =
-   maybe (return mempty) parseScriptSafe . (`lookup` scripts dr)
+defaultScript dr n =
+   maybe (return mempty) parseScriptSafe (realName `lookup` scripts dr)
+ where
+   realName = fromMaybe n (lookup n (aliases dr))

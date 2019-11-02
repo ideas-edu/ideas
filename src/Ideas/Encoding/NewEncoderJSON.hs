@@ -60,7 +60,7 @@ tagJSON s a = [(Just s, a)]
 -------------------------------------------------------------
 --
 jsonEncoder :: TypedValue (Type a) -> EncoderX a JSONBuilder
-jsonEncoder (val ::: tp) = 
+jsonEncoder tv@(val ::: tp) = 
    case tp of
       Iso p t    -> jsonEncoder (to p val ::: t)
       t1 :|: t2  -> case val of
@@ -68,7 +68,9 @@ jsonEncoder (val ::: tp) =
                        Right y -> jsonEncoder (y ::: t2)
       Pair t1 t2 -> (++) <$> jsonEncoder (fst val ::: t1) <*> jsonEncoder (snd val ::: t2)
       Tp.List t  -> listJSONBuilder <$> sequence [ jsonEncoder (x ::: t) | x <- val ]
-      Tp.Tag s t -> tagJSONBuilder (map toLower s) <$> jsonEncoder (val ::: t)
+      Tp.Tag s t 
+         | s == "Diagnosis"  -> encodeTyped encodeDiagnosis Diagnose.tDiagnosis tv
+         | otherwise         -> tagJSONBuilder (map toLower s) <$> jsonEncoder (val ::: t)
       Tp.Unit    -> pure []
       Const ctp  -> jsonEncodeConst (val ::: ctp)
       _          -> fail $ "Cannot encode type: " ++ show tp
@@ -160,6 +162,60 @@ encodeState st =
           , (Just "taskid",    get stateStartTerm)
           ]
    in (tagJSONBuilder "state" . make) <$> (encodeContext ctx)
+
+encodeDiagnosis :: Diagnose.Diagnosis a -> EncoderX a JSONBuilder
+encodeDiagnosis diagnosis =
+   case diagnosis of
+      Diagnose.Correct b st ->
+         (\xs ys -> (Just "diagnosetype", toJSON "correct") : xs ++ ys) <$> encodeReady b <*> encodeState st 
+      Diagnose.Similar b st ->
+         (\xs ys -> (Just "diagnosetype", toJSON "similar") : xs ++ ys) <$> encodeReady b <*> encodeState st 
+      Diagnose.NotEquivalent s ->
+         return [(Just "diagnosetype", toJSON "notequiv"), (Just "message", toJSON s)]
+      Diagnose.Expected b st r ->
+         (\xs ys zs -> (Just "diagnosetype", toJSON "expected") : xs ++ ys ++ zs) <$> encodeReady b <*> encodeState st <*> encodeRule r
+      Diagnose.Buggy env r ->
+         (\xs ys -> (Just "diagnosetype", toJSON "buggy") : xs ++ ys) <$> encodeEnvironment env <*> encodeRule r
+      Diagnose.Detour b st env r ->
+          (\xs ys zs vs -> (Just "diagnosetype", toJSON "detour") : xs ++ ys ++ zs ++ vs) <$> encodeReady b <*> encodeState st <*> encodeEnvironment env <*> encodeRule r
+      Diagnose.WrongRule b st mr ->
+         (\xs ys zs -> (Just "diagnosetype", toJSON "wrongrule") : xs ++ ys ++ zs) <$> encodeReady b <*> encodeState st <*> encodeMaybeRule mr
+ where
+  encodeReady b      = return [(Just "ready", toJSON b)]
+  encodeRule r       = return [(Just "rule", toJSON (showId r))]
+  encodeMaybeRule mr = return [(Just "rule", maybe Null (toJSON . showId) mr)]
+
+         -- make "correct" [fromReady b, fromState st]
+      
+    {- 
+      Diagnose.SyntaxError s ->
+         pure $ Object [("syntaxerror", String s)]
+      Diagnose.NotEquivalent s ->
+         if null s then pure (Object [("notequiv", Null)])
+                   else make "notequiv" [fromReason s]
+      Diagnose.Buggy env r ->
+         make "buggy" [fromEnv env, fromRule r]
+      Diagnose.Similar b st ->
+         make "similar" [fromReady b, fromState st]
+      Diagnose.WrongRule b st mr ->
+         make "wrongrule" [fromReady b, fromState st, fromMaybeRule mr]
+      Diagnose.Expected b st r ->
+         make "expected" [fromReady b, fromState st, fromRule r]
+      Diagnose.Detour b st env r ->
+         make "detour" [fromReady b, fromState st, fromEnv env, fromRule r]
+      Diagnose.Correct b st ->
+         make "correct" [fromReady b, fromState st]
+      Diagnose.Unknown b st ->
+         make "unknown" [fromReady b, fromState st]
+ where
+   make s = fmap (\xs -> Object $ ("diagnosis", toJSON s) : xs) . sequence
+   fromEnv env      = fmap (\x -> ("env", x)) $ jsonEncoder // (env ::: tEnvironment)
+   fromRule r       = pure ("rule",       (toJSON (showId r)))
+   fromMaybeRule mr = pure ("mayberule",  (maybe Null (toJSON . showId) mr))
+   fromReady b      = pure ("ready", toJSON b)
+   fromState st     = fmap (\x -> ("state", x)) $ jsonEncoder // (st ::: tState)
+   fromReason s     = pure ("reason",     (Object [("reason", toJSON s)]))
+-}
 
 {-
 {-

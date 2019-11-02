@@ -66,8 +66,8 @@ decodeConst tp =
       --Term        -> gets jsonToTerm
       Int         -> get >>= fromJSON
       Tp.String   -> get >>= fromJSON
-      --Id          -> decodeId
-      --Rule        -> decodeRule
+      Id          -> decodeId
+      Rule        -> decodeRule
       QCGen       -> getQCGen
       _           -> fail $ "No support for argument type: " ++ show tp
 
@@ -197,6 +197,7 @@ decodeContext = do
          val <- decodeValue
          env <- decodeEnvironment
          loc <- decodeLocation
+         put this
          return $ navigateTowards loc $ deleteRef locRef $
                          setEnvironment env $ inContext ex val
       _ -> fail $ "expecting context: " ++ show this 
@@ -222,6 +223,26 @@ decodeLocation = do
    case lookupM "location" this of 
       Just _ -> return (toLocation []) -- TODO
       _ -> fail "Expecting location"
+
+
+
+decodeRule :: JSONDecoder a (Rule (Context a))
+decodeRule = do
+   ex <- getExercise
+   get >>= \json ->
+      case lookupM "rule" json of
+         Just (String s) -> getRule ex (newId s)
+         _        -> fail "expecting a string for rule"
+
+decodeId :: JSONDecoder a Id -- fix me
+decodeId = do
+   get >>= \json ->
+      case lookupM "rule" json of
+         Just (String s) -> return (newId s)
+         _        -> fail "expecting a string for rule"
+
+
+
 
       -- return (toLocation [])
 

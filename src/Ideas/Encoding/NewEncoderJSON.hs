@@ -84,6 +84,7 @@ jsonEncodeConst (val ::: tp) =
       SomeExercise -> case val of
                          Some ex -> pure (exerciseInfo ex)
       Tp.String    -> pure [(Nothing, toJSON val)]
+      Tp.Bool      -> pure [(Nothing, toJSON val)]
       _ -> fail $ "Type " ++ show tp ++ " not supported in JSON"
 
 {-

@@ -51,8 +51,9 @@ jsonEncoder tv@(val ::: tp) =
          | s == "Diagnosis"  -> encodeTyped encodeDiagnosis Diagnose.tDiagnosis tv
          | s == "Derivation" -> ((encodeDerivation, tDerivation tStepInfo tContext) <?>
                                 encodeTyped encodeDerivationText (tDerivation tString tContext)) tv
+         | s == "first"      -> encodeTyped encodeFirst (tPair tStepInfo tState) (val ::: t)
          | s == "elem"       -> jsonEncoder (val ::: t)
-         | s `elem` ["first", "step"] -> jsonEncoder (val ::: t)
+         | s `elem` ["step"] -> jsonEncoder (val ::: t)
          | otherwise -> (\b -> Object [(s, b)]) <$> jsonEncoder (val ::: t)
       Tp.Unit   -> return Null
       Tp.List t -> Array <$> sequence [ jsonEncoder (x ::: t) | x <- val ]
@@ -123,6 +124,14 @@ encodeStateEnvironment ctx = return $
        env = (if null loc then id else insertRef (makeRef "location") loc)
            $ environment ctx
    in Object [ (showId a, String $ showValue a) | a <- bindings env ]
+
+encodeFirst :: (StepInfo a, State a) -> JSONEncoder a
+encodeFirst (step, state) = do
+   x <- jsonEncoder (step  ::: tStepInfo)
+   y <- jsonEncoder (state ::: tState)
+   case x of
+      Array xs -> return $ Array $ xs ++ [y]
+      _        -> return $ Array [x, y]
 
 encodeDerivation :: Derivation (StepInfo a) (Context a) -> JSONEncoder a
 encodeDerivation d =

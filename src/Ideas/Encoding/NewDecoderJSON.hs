@@ -59,7 +59,7 @@ decodeConst :: Const a t -> JSONDecoder a t
 decodeConst tp =
    case tp of
       State       -> decodeState
-      --Context     -> decodeContext
+      Context     -> decodeContext
       Exercise    -> getExercise
       --Environment -> decodeEnvironment
       --Location    -> decodeLocation
@@ -163,6 +163,7 @@ decodeState = do
              uid = searchId "userid"    json
              sid = searchId "sessionid" json
              tid = searchId "taskid"    json
+         put this
          return $ (makeState ex prf ctx)
             { stateUser      = uid
             , stateSession   = sid
@@ -198,7 +199,7 @@ decodeContext = do
          loc <- decodeLocation
          return $ navigateTowards loc $ deleteRef locRef $
                          setEnvironment env $ inContext ex val
-      _ -> fail "expecting context" 
+      _ -> fail $ "expecting context: " ++ show this 
 
 decodeValue :: JSONDecoder a a
 decodeValue = do

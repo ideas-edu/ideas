@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Encoding.ModeJSON (processJSON) where
+module Ideas.Encoding.ModeJSON (processJSON, processJSON') where
 
 import Control.Monad
 import Data.Char
@@ -32,6 +32,10 @@ import Ideas.Utils.Prelude (timedSeconds)
 processJSON :: Options -> DomainReasoner -> String -> IO (Request, String, String)
 processJSON options dr txt = do
    json <- either fail return (parseJSON txt)
+   processJSON' options dr json
+
+processJSON' :: Options -> DomainReasoner -> JSON -> IO (Request, String, String)
+processJSON' options dr json = do
    req  <- jsonRequest options json
    resp <- jsonRPC json $ \fun arg ->
               maybe id timedSeconds (maxTime options) (myHandler options dr req fun arg)

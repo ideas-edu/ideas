@@ -23,6 +23,7 @@ import Ideas.Service.FeedbackScript.Run
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
 import Ideas.Service.Types
+import Ideas.Utils.Prelude
 
 data Message = M { accept :: Maybe Bool, text :: Text }
 
@@ -38,7 +39,7 @@ tMessage = Tag "Message" $ Iso (f <-> g) tp
 
 derivationtext :: Script -> State a -> Either String (Derivation String (Context a))
 derivationtext script state =
-   let f = ruleToString (newEnvironment state Nothing) script . fst
+   let f = ruleToString (newEnvironment state Nothing) script . fst3
    in right (mapFirst f) (solution Nothing state)
 
 onefirsttext :: Script -> State a -> Maybe String -> (Message, Maybe (State a))

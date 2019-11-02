@@ -47,12 +47,12 @@ create rng ex txt userId =
          | otherwise -> Left "Not suitable"
 
 -- TODO: add a location to each step
-solution :: Maybe StrategyCfg -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))
+solution :: Maybe StrategyCfg -> State a -> Either String (Derivation (StepInfo a) (Context a))
 solution = solutionMaxSteps 50
 
-solutionMaxSteps :: Int -> Maybe StrategyCfg -> State a -> Either String (Derivation (Rule (Context a), Environment) (Context a))
+solutionMaxSteps :: Int -> Maybe StrategyCfg -> State a -> Either String (Derivation (StepInfo a) (Context a))
 solutionMaxSteps maxSteps mcfg state =
-   mapSecond (biMap (\(r, _, as) -> (r, as)) stateContext) $
+   mapSecond (fmap stateContext) $
    case mcfg of
       _ | withoutPrefix state -> Left "Prefix is required"
       -- configuration is only allowed beforehand: hence, the prefix
@@ -81,7 +81,7 @@ solutionMaxSteps maxSteps mcfg state =
 type StepInfo a = (Rule (Context a), Location, Environment) -- find a good place
 
 tStepInfo :: Type a (StepInfo a)
-tStepInfo = tTuple3 tRule tLocation tEnvironment
+tStepInfo = Tag "step" (tTuple3 tRule tLocation tEnvironment)
 
 allfirsts :: State a -> Either String [(StepInfo a, State a)]
 allfirsts state
@@ -206,5 +206,5 @@ recognizeRule ex r ca cb = rec (top ca)
     `mplus` -- or there
       concatMap rec (downs x)
 
-exampleDerivations :: Exercise a -> Either String [Derivation (Rule (Context a), Environment) (Context a)]
+exampleDerivations :: Exercise a -> Either String [Derivation (StepInfo a) (Context a)]
 exampleDerivations ex = mapM (solution Nothing . emptyState ex) (examplesAsList ex)

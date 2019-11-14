@@ -28,6 +28,7 @@ import Ideas.Encoding.OpenMathSupport
 import Ideas.Encoding.Request hiding (XML)
 import Ideas.Encoding.RulesInfo (rulesInfoXML)
 import Ideas.Encoding.StrategyInfo
+import Ideas.Service.BasicServices (StepInfo, tStepInfo)
 import Ideas.Service.Diagnose
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
@@ -46,7 +47,9 @@ xmlEncoder :: TypedEncoder a XMLBuilder
 xmlEncoder =
    (encodeDiagnosis, tDiagnosis) <?>
    (encodeDecompositionReply, PD.tReply) <?>
-   (encodeDerivation, tDerivation (tPair tRule tEnvironment) tContext) <?>
+   (encodeDerivation, tDerivation tStepInfo tContext) <?>
+   (encodeFirsts, tList tFirst) <?>
+   (encodeFirst, tFirst) <?>
    (encodeDerivationText, tDerivation tString tContext) <?>
    (encodeDifficulty, tDifficulty) <?>
    (encodeMessage, FeedbackText.tMessage) <?>
@@ -151,9 +154,9 @@ encodeTypedBinding tb = do
             omobj2xml $ toOMOBJ term
          _ -> string (showValue tb)
 
-encodeDerivation :: Derivation (Rule (Context a), Environment) (Context a) -> XMLEncoder a
+encodeDerivation :: Derivation (StepInfo a) (Context a) -> XMLEncoder a
 encodeDerivation d =
-   let xs = [ (s, a) | (_, s, a) <- triples d ]
+   let xs = [ ((r, env), a) | (_, (r, _, env), a) <- triples d ]
    in xmlEncoder (xs ::: tList (tPair (tPair tRule tEnvironment) tContext))
 
 encodeDerivationText :: Derivation String (Context a) -> XMLEncoder a
@@ -161,6 +164,17 @@ encodeDerivationText d = encodeAsList
    [ ("ruletext" .=. s) <> encodeContext a
    | (_, s, a) <- triples d
    ]
+
+tFirst :: Type a (StepInfo a, State a)
+tFirst = Tag "first" (tPair tStepInfo tState)
+
+encodeFirst :: (StepInfo a, State a) -> XMLEncoder a
+encodeFirst (step, st) = 
+   tag "elem" (xmlEncoder (step ::: tStepInfo) <> encodeState st)
+
+encodeFirsts :: [(StepInfo a, State a)] -> XMLEncoder a
+encodeFirsts = 
+   element "list" . map encodeFirst
 
 ruleShortInfo :: Rule (Context a) -> XMLEncoder a
 ruleShortInfo r = mconcat

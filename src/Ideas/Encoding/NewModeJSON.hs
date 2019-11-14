@@ -55,7 +55,7 @@ jsonRPC2 dr serviceName input rpc = do
    handler :: SomeException -> IO JSON
    handler e =
       let msg = maybe (show e) ioeGetErrorString (fromException e)
-      in return $ errorResponse (toJSON msg)
+      in return $ errorResponse dr (toJSON msg)
 
 okResponse :: DomainReasoner -> String -> JSON -> JSON
 okResponse dr serviceName result = Object
@@ -63,18 +63,11 @@ okResponse dr serviceName result = Object
    , ("version", String (version dr))
    ]
 
- {- Response
-   { responseResult = result
-   , responseError  = Null
-   , responseId     = y
-   } -}
-
-errorResponse :: JSON -> JSON
-errorResponse msg = msg {- Response
-   { responseResult = Null
-   , responseError  = msg
-   , responseId     = y
-   } -}
+errorResponse :: DomainReasoner -> JSON -> JSON
+errorResponse dr msg = Object 
+   [ ("error", msg)
+   , ("version", String (version dr))
+   ]
 
 -- TODO: Clean-up code
 extractExerciseId :: MonadPlus m => JSON -> m Id
@@ -84,18 +77,6 @@ extractExerciseId json = f <$> (
  where
    f (String s) = newId s
    f _          = error "expecting an exercise id"
-
-
-   {-
-   case json of
-      String s -> return (newId s)
-      Array [String _, String _, a@(Array _)] -> extractExerciseId a
-      Array [String _, String _, _, a@(Array _)] -> extractExerciseId a
-      Array (String s:tl) | any p s -> extractExerciseId (Array tl)
-      Array (hd:_) -> extractExerciseId hd
-      _ -> fail "no code"
- where
-   p c = not (isAlphaNum c || isSpace c || c `elem` ".-_") -}
 
 addVersion :: String -> JSON -> JSON
 addVersion str json =

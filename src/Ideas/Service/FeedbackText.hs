@@ -28,9 +28,9 @@ import Ideas.Utils.Prelude
 data Message = M { accept :: Maybe Bool, text :: Text }
 
 tMessage :: Type a Message
-tMessage = Tag "Message" $ Iso (f <-> g) tp
+tMessage = Iso (f <-> g) tp
  where
-   tp  = tPair tBool tText :|: tText
+   tp  = tPair (Tag "accept" tBool) (Tag "message" tText) :|: (Tag "message" tText)
    f   = either (\(b, t) -> M (Just b) t) (M Nothing)
    g m = maybe (Right (text m)) (\b -> Left (b, text m)) (accept m)
 

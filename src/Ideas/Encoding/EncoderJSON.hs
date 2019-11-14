@@ -53,7 +53,7 @@ jsonEncoder tv@(val ::: tp) =
                                 encodeTyped encodeDerivationText (tDerivation tString tContext)) tv
          | s == "first"      -> encodeTyped encodeFirst (tPair tStepInfo tState) (val ::: t)
          | s == "elem"       -> jsonEncoder (val ::: t)
-         | s `elem` ["step"] -> jsonEncoder (val ::: t)
+         | s `elem` ["step", "accept", "message"] -> jsonEncoder (val ::: t)
          | otherwise -> (\b -> Object [(s, b)]) <$> jsonEncoder (val ::: t)
       Tp.Unit   -> return Null
       Tp.List t -> Array <$> sequence [ jsonEncoder (x ::: t) | x <- val ]

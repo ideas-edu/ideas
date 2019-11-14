@@ -64,6 +64,7 @@ decodeConst tp =
       --Environment -> decodeEnvironment
       --Location    -> decodeLocation
       --Term        -> gets jsonToTerm
+      Script      -> getScript
       Int         -> get >>= fromJSON
       Tp.String   -> get >>= fromJSON
       Id          -> decodeId

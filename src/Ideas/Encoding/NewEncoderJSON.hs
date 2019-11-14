@@ -85,7 +85,9 @@ jsonEncodeConst (val ::: tp) =
       State        -> encodeState val
       SomeExercise -> case val of
                          Some ex -> pure (exerciseInfo ex)
+      Text         -> pure [(Nothing, toJSON (show val))]
       Tp.String    -> pure [(Nothing, toJSON val)]
+      Tp.Int       -> pure [(Nothing, toJSON val)]
       Tp.Bool      -> pure [(Nothing, toJSON val)]
       _ -> fail $ "Type " ++ show tp ++ " not supported in JSON"
 
@@ -180,6 +182,8 @@ encodeDiagnosis diagnosis =
           (\xs ys zs vs -> (Just "diagnosetype", toJSON "detour") : xs ++ ys ++ zs ++ vs) <$> encodeReady b <*> encodeState st <*> encodeEnvironment env <*> encodeRule r
       Diagnose.WrongRule b st mr ->
          (\xs ys zs -> (Just "diagnosetype", toJSON "wrongrule") : xs ++ ys ++ zs) <$> encodeReady b <*> encodeState st <*> encodeMaybeRule mr
+      Diagnose.SyntaxError msg -> 
+          pure [(Just "diagnosetype", toJSON "syntaxerror")]
  where
   encodeReady b      = return [(Just "ready", toJSON b)]
   encodeRule r       = return [(Just "rule", toJSON (showId r))]

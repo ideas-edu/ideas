@@ -15,15 +15,15 @@
 
 module Ideas.Text.HTML
    ( ToHTML(..), HTMLPage, HTMLBuilder
-   , addCSS, addScript, addStyle, showHTML
+   , addCSS, addScript, addStyle, changeBody, showHTML
    , string, text
    , htmlPage, link
    , h1, h2, h3, h4, h5, h6
    , preText, ul, table, keyValueTable
-   , image, space, spaces, (<#>), spaced
+   , image, space, spaces, (<#>), (<##>), (<###>), spaced, spacedBy
    , highlightXML
-   , para, ttText, hr, br, pre, bullet
-   , divClass, spanClass
+   , para, paras, ttText, hr, br, pre, bullet
+   , dv, divClass, spanClass
      -- HTML generic attributes
    , idA, classA, styleA, titleA
      -- Font style elements
@@ -34,7 +34,6 @@ import Data.Char
 import Data.List
 import Data.Monoid
 import Ideas.Text.XML
-import Prelude hiding (div)
 import qualified Data.Map as M
 import qualified Ideas.Text.XML as XML
 
@@ -84,7 +83,7 @@ data HTMLPage = HTMLPage
    , styleSheets :: [FilePath]
    , scripts     :: [FilePath]
    , styleTxts   :: [String]
-   , htmlContent :: HTMLBuilder
+   , htmlBody    :: HTMLBuilder
    }
 
 instance ToXML HTMLPage where
@@ -108,7 +107,7 @@ instance ToXML HTMLPage where
               | js <- scripts page
               ]
          ]
-      <> tag "body" (htmlContent page)
+      <> tag "body" (htmlBody page)
 
 showHTML :: HTMLPage -> String
 showHTML = compactXML . toXML
@@ -121,6 +120,9 @@ addScript js page = page { scripts = js : scripts page }
 
 addStyle :: String -> HTMLPage -> HTMLPage
 addStyle txt page = page { styleTxts = txt : styleTxts page }
+
+changeBody :: (HTMLBuilder -> HTMLBuilder) -> HTMLPage -> HTMLPage
+changeBody f p = p { htmlBody = f (htmlBody p) }
 
 -- html helper functions
 htmlPage :: String -> HTMLBuilder -> HTMLPage
@@ -193,14 +195,29 @@ bullet = XML.string [chr 8226]
 (<#>) :: BuildXML a => a -> a -> a
 x <#> y = x <> space <> y
 
+(<##>) :: BuildXML a => a -> a -> a
+x <##> y = x <> spaces 2 <> y
+
+(<###>) :: BuildXML a => a -> a -> a
+x <###> y = x <> spaces 3 <> y
+
 spaced :: BuildXML a => [a] -> a
-spaced = mconcat . intersperse space
+spaced = spacedBy 1
+
+spacedBy :: BuildXML a => Int -> [a] -> a
+spacedBy n = mconcat . intersperse (spaces n)
+
+paras :: BuildXML a => [a] -> a
+paras = mconcat . map para
 
 image :: BuildXML a => String -> a
 image n = tag "img" ("src" .=. n)
 
+dv :: BuildXML a => a -> a
+dv = tag "div"
+
 divClass :: BuildXML a =>  String -> a -> a
-divClass n a = tag "div" (classA n <> a)
+divClass n a = dv (classA n <> a)
 
 spanClass :: BuildXML a =>  String -> a -> a
 spanClass n a = tag "span" (classA n <> a)

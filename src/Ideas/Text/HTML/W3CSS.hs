@@ -132,6 +132,13 @@ hoverable = w3class "w3-hoverable"
 responsive :: BuildXML a => a -> a
 responsive = w3class "w3-responsive"
 
+alignTable :: String -> [[HTMLBuilder]] -> [[HTMLBuilder]]
+alignTable s = map (zipWith f (s ++ repeat 'l'))
+ where
+   f 'c' = center
+   f 'r' = rightAlign
+   f _   = id
+
 --------------------------------------------------------------------------------
 -- * Card Classes
 

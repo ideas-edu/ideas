@@ -202,7 +202,7 @@ diagnoseS = makeService "basic.diagnose"
 diagnoseStringS :: Service
 diagnoseStringS = makeService "basic.diagnose-string"
    "See diagnose service, but also returns a SyntaxError for invalid input." $
-   diagnoseString ::: tState .-> tString .-> tMaybe tId .-> Diagnose.tDiagnosis
+   diagnoseString ::: tState .-> Tag "term" tString .-> tMaybe tId .-> Diagnose.tDiagnosis
 
 diagnoseString :: State a -> String -> Maybe Id -> Diagnose.Diagnosis a
 diagnoseString st s mot =

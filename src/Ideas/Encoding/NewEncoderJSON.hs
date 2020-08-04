@@ -183,7 +183,7 @@ encodeDiagnosis diagnosis =
       Diagnose.WrongRule b st mr ->
          (\xs ys zs -> (Just "diagnosetype", toJSON "wrongrule") : xs ++ ys ++ zs) <$> encodeReady b <*> encodeState st <*> encodeMaybeRule mr
       Diagnose.SyntaxError msg -> 
-          pure [(Just "diagnosetype", toJSON "syntaxerror")]
+          pure [(Just "diagnosetype", toJSON "syntaxerror"), (Just "message", toJSON msg)]
  where
   encodeReady b      = return [(Just "ready", toJSON b)]
   encodeRule r       = return [(Just "rule", toJSON (showId r))]

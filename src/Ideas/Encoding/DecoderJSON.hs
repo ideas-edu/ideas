@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, FlexibleContexts #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -141,7 +141,7 @@ decodeEnvironment = get >>= \json ->
  where
    add (k, String s) = return . insertRef (makeRef k) s
    add (k, Number n) = return . insertRef (makeRef k) (show n)
-   add _             = fail "invalid item in context"
+   add _             = error "invalid item in context"
 
 decodeContext :: JSONDecoder a (Context a)
 decodeContext = do

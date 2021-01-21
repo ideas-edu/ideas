@@ -42,7 +42,7 @@ processJSON options dr txt = do
    return (req, f out, "application/json")
 
 -- TODO: Clean-up code
-extractExerciseId :: Monad m => JSON -> m Id
+extractExerciseId :: (Monad m, MonadFail m) => JSON -> m Id
 extractExerciseId json =
    case json of
       String s -> return (newId s)
@@ -62,7 +62,7 @@ addVersion str json =
  where
    info = ("version", String str)
 
-jsonRequest :: Monad m => Options -> JSON -> m Request
+jsonRequest :: (Monad m, MonadFail m) => Options -> JSON -> m Request
 jsonRequest options json = do
    let exId = lookupM "params" json >>= extractExerciseId
    srv  <- stringOption  "method"      json newId
@@ -89,10 +89,10 @@ defaultSeed options
    | isJust (cgiBin options) = Nothing
    | otherwise = Just 2805 -- magic number
 
-stringOption :: Monad m => String -> JSON -> (String -> a) -> m (Maybe a)
+stringOption :: (Monad m, MonadFail m) => String -> JSON -> (String -> a) -> m (Maybe a)
 stringOption attr json f = stringOptionM attr json Nothing (return . Just . f)
 
-stringOptionM :: Monad m => String -> JSON -> a -> (String -> m a) -> m a
+stringOptionM :: (Monad m, MonadFail m) => String -> JSON -> a -> (String -> m a) -> m a
 stringOptionM attr json a f =
    case lookupM attr json of
       Just (String s) -> f s

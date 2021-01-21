@@ -89,7 +89,7 @@ exercisesSorted = sortOn f . exercises
 servicesSorted :: DomainReasoner -> [Service]
 servicesSorted = sortOn showId . services
 
-findExercise :: Monad m => DomainReasoner -> Id -> m (Some Exercise)
+findExercise :: (Monad m, MonadFail m) => DomainReasoner -> Id -> m (Some Exercise)
 findExercise dr i =
    case [ a | a@(Some ex) <- exercises dr, getId ex == realName ] of
       [this] -> return this
@@ -97,7 +97,7 @@ findExercise dr i =
  where
    realName = fromMaybe i (lookup i (aliases dr))
 
-findService :: Monad m => DomainReasoner -> Id -> m Service
+findService :: (Monad m, MonadFail m) => DomainReasoner -> Id -> m Service
 findService dr a
    | null (qualifiers a) = -- search for unqualified string
         findWith (\s -> unqualified s == unqualified a)

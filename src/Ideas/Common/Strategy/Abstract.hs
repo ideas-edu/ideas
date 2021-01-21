@@ -163,7 +163,7 @@ replayPaths paths s a = mconcat
 
 -- | Construct a prefix for a path and a labeled strategy. The third argument
 -- is the initial term.
-replayStrategy :: (Monad m, IsStrategy f) => Path -> f a -> a -> m (a, Prefix a)
+replayStrategy :: (Monad m, MonadFail m, IsStrategy f) => Path -> f a -> a -> m (a, Prefix a)
 replayStrategy path s a =
    let (xs, f) = replayProcess path (getProcess s)
    in case applyList xs a of

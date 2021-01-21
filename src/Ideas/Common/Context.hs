@@ -47,14 +47,14 @@ data Context a = C
    , getNavigator   :: ContextNavigator a
    }
 
-fromContext :: Monad m => Context a -> m a
+fromContext :: (Monad m, MonadFail m) => Context a -> m a
 fromContext = maybe (fail "fromContext") return .
    currentNavigator . getNavigator . top
 
-fromContextWith :: Monad m => (a -> b) -> Context a -> m b
+fromContextWith :: (Monad m, MonadFail m) => (a -> b) -> Context a -> m b
 fromContextWith f = fmap f . fromContext
 
-fromContextWith2 :: Monad m => (a -> b -> c) -> Context a -> Context b -> m c
+fromContextWith2 :: (Monad m, MonadFail m) => (a -> b -> c) -> Context a -> Context b -> m c
 fromContextWith2 f a b = f <$> fromContext a <*> fromContext b
 
 instance Eq a => Eq (Context a) where
@@ -100,8 +100,8 @@ data ContextNavigator a where
    Simple  :: Uniplate a => UniplateNavigator a -> ContextNavigator a
    NoNav   :: a -> ContextNavigator a
 
-liftCN :: Monad m => (forall b . Navigator b => b -> m b)
-                  -> Context a -> m (Context a)
+liftCN :: (Monad m, MonadFail m) => (forall b . Navigator b => b -> m b)
+                                 -> Context a -> m (Context a)
 liftCN f (C env (TermNav a)) = C env . TermNav <$> f a
 liftCN f (C env (Simple a))  = C env . Simple  <$> f a
 liftCN _ (C _   (NoNav _))   = fail "noNavigator"

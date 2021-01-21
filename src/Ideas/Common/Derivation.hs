@@ -85,7 +85,7 @@ derivationToList :: (s -> b) -> (a -> b) -> Derivation s a -> [b]
 derivationToList f g d =
    g (firstTerm d) : concat [ [f s, g a] | (_, s, a) <- triples d ]
 
-derivationFromList :: Monad m => (b -> m s) -> (b -> m a) -> [b] -> m (Derivation s a)
+derivationFromList :: (Monad m, MonadFail m) => (b -> m s) -> (b -> m a) -> [b] -> m (Derivation s a)
 derivationFromList f g = rec
  where
    rec []  = fail "derivationFromList"

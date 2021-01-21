@@ -170,7 +170,7 @@ makeXML :: String -> XMLBuilder -> XML
 makeXML s = uncurry (Tag s) . fromBS . nameCheck s
 
 nameCheck :: String -> a -> a
-nameCheck s = if isName s then id else fail $ "Invalid name " ++ s
+nameCheck s = if isName s then id else error $ "Invalid name " ++ s
 
 isName :: String -> Bool
 isName []     = False
@@ -222,7 +222,7 @@ toElement = foldXML make mkAttribute mkString
 -------------------------------------------------------------------------------
 -- Simple decoding queries
 
-findAttribute :: Monad m => String -> XML -> m String
+findAttribute :: (Monad m, MonadFail m) => String -> XML -> m String
 findAttribute s (Tag _ as _) =
    case [ t | n := t <- as, s==n ] of
       [hd] -> return hd
@@ -234,7 +234,7 @@ children e = [ c | Right c <- content e ]
 findChildren :: String -> XML -> [XML]
 findChildren s = filter ((==s) . name) . children
 
-findChild :: Monad m => String -> XML -> m XML
+findChild :: (Monad m, MonadFail m) => String -> XML -> m XML
 findChild s e =
    case findChildren s e of
       []  -> fail $ "Child not found: " ++ show s
@@ -244,7 +244,7 @@ findChild s e =
 getData :: XML -> String
 getData e = concat [ s | Left s <- content e ]
 
-expecting :: Monad m => String -> XML -> m ()
+expecting :: (Monad m, MonadFail m) => String -> XML -> m ()
 expecting s xml =
    unless (name xml == s) $ fail $ "Expecting element " ++ s ++ ", but found " ++ name xml
 
@@ -306,8 +306,8 @@ builderXML :: (ToXML a, BuildXML b) => a -> b
 builderXML = builder . toXML
 
 class ToXML a => InXML a where
-   fromXML     :: Monad m => XML -> m a
-   listFromXML :: Monad m => XML -> m [a]
+   fromXML     :: (Monad m, MonadFail m) => XML -> m a
+   listFromXML :: (Monad m, MonadFail m) => XML -> m [a]
    listFromXML xml
       | name xml == "list" && null (attributes xml) =
            mapM fromXML (children xml)

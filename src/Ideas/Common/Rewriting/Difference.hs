@@ -49,7 +49,7 @@ diffTerm p q =
               [one] -> Just one
               _     -> here
 
-getFunctionA :: (Monad m, WithFunctions a) => a -> m (Symbol, [a])
+getFunctionA :: (Monad m, MonadFail m, WithFunctions a) => a -> m (Symbol, [a])
 getFunctionA a = f <$> getFunction a
  where
    f (s, xs) = (s, if isAssociative s then collectSym s a else xs)

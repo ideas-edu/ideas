@@ -28,7 +28,7 @@ import Data.Semigroup as Sem
 -------------------------------------------------------------------
 
 newtype Decoder env s a = Dec { runDec :: StateT s (ReaderT env Error) a }
- deriving (Functor, Applicative, Alternative, Monad, MonadPlus, MonadReader env, MonadState s)
+ deriving (Functor, Applicative, Alternative, Monad, MonadFail, MonadPlus, MonadReader env, MonadState s)
 
 instance Sem.Semigroup a => Sem.Semigroup (Decoder env s a) where
    (<>) = liftA2 (<>)
@@ -44,14 +44,14 @@ symbol = get >>= \list ->
       x:xs ->
          put xs >> return x
 
-runDecoder :: Monad m => Decoder env s a -> env -> s -> m a
+runDecoder :: (Monad m, MonadFail m) => Decoder env s a -> env -> s -> m a
 runDecoder p env s = runErrorM (runReaderT (evalStateT (runDec p) s) env)
 
 -------------------------------------------------------------------
 
 type Encoder env = Decoder env ()
 
-runEncoder :: Monad m => Encoder env a -> env -> m a
+runEncoder :: (Monad m, MonadFail m) => Encoder env a -> env -> m a
 runEncoder p env = runDecoder p env ()
 
 -------------------------------------------------------------------
@@ -79,13 +79,15 @@ instance Alternative Error where
          (Left s, _)  -> Left s
 
 instance Monad Error where
-   fail    = Error . Left
    return  = pure
    m >>= f = Error $ either Left (runError . f) (runError m)
+
+instance MonadFail Error where
+   fail    = Error . Left
 
 instance MonadPlus Error where
    mzero = fail "mzero"
    mplus = (<|>)
 
-runErrorM :: Monad m => Error a -> m a
+runErrorM :: (Monad m, MonadFail m) => Error a -> m a
 runErrorM = either fail return . runError

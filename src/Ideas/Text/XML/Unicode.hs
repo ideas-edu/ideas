@@ -170,7 +170,7 @@ extenderMap = intpairs [f '\x00B7' , f '\x02D0' ,
    f '\x02D1' , f '\x0387' , f '\x0640' , f '\x0E46' , f '\x0EC6' , f '\x3005' , ('\x3031','\x3035')
    , ('\x309D','\x309E'), ('\x30FC','\x30FE') ]
 
-decoding :: Monad m => String -> m String
+decoding :: (Monad m, MonadFail m) => String -> m String
 decoding xs
    | "\255\254" `isPrefixOf` xs =
         return (decode16 $ drop 2 xs)

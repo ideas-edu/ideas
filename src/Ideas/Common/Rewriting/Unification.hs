@@ -51,7 +51,7 @@ unify term1 term2 =
       return (s2 @@ s1)
    rec _ _ = fail "match: no unifier"
 
-match :: MonadPlus m => Term -> Term -> m Substitution
+match :: (MonadFail m, MonadPlus m) => Term -> Term -> m Substitution
 match term1 term2 =
    case (term1, term2) of
       (TMeta i, TMeta j) | i == j ->

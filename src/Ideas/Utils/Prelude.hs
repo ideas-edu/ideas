@@ -49,7 +49,7 @@ readInt xs
    | any (not . isDigit) xs = Nothing
    | otherwise              = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
 
-readM :: (Monad m, Read a) => String -> m a
+readM :: (Monad m, MonadFail m, Read a) => String -> m a
 readM s = case reads s of
              [(a, xs)] | all isSpace xs -> return a
              _ -> fail ("no read: " ++ s)
@@ -113,23 +113,23 @@ thd3 :: (a, b, c) -> c
 thd3 (_, _, x) = x
 
 -- generalized list functions (results in monad)
-headM :: Monad m => [a] -> m a
+headM :: (Monad m, MonadFail m) => [a] -> m a
 headM (a:_) = return a
 headM _     = fail "headM"
 
-findIndexM :: Monad m => (a -> Bool) -> [a] -> m Int
+findIndexM :: (Monad m, MonadFail m) => (a -> Bool) -> [a] -> m Int
 findIndexM p = maybe (fail "findIndexM") return . findIndex p
 
-elementAt :: Monad m => Int -> [a] -> m a
+elementAt :: (Monad m, MonadFail m) => Int -> [a] -> m a
 elementAt i = headM . drop i
 
-changeAt :: Monad m => Int -> (a -> a) -> [a] -> m [a]
+changeAt :: (Monad m, MonadFail m) => Int -> (a -> a) -> [a] -> m [a]
 changeAt i f as =
    case splitAt i as of
       (xs, y:ys) -> return (xs ++ f y : ys)
       _          -> fail "changeAt"
 
-replaceAt :: Monad m => Int -> a -> [a] -> m [a]
+replaceAt :: (Monad m, MonadFail m) => Int -> a -> [a] -> m [a]
 replaceAt i = changeAt i . const
 
 list :: b -> ([a] -> b) -> [a] -> b

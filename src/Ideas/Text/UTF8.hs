@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -34,11 +35,11 @@ decode :: String -> String
 decode = either error id . decodeM
 
 -- | Encode a string to UTF8 format (monadic)
-encodeM :: Monad m => String -> m String
+encodeM :: (Monad m, MonadFail m) => String -> m String
 encodeM = fmap (map chr . concat) . mapM (toUTF8 . ord)
 
 -- | Decode an UTF8 format string to unicode points (monadic)
-decodeM :: Monad m => String -> m String
+decodeM :: (Monad m, MonadFail m) => String -> m String
 decodeM = fmap (map chr) . fromUTF8 . map ord
 
 -- | Test whether the argument is a proper UTF8 string
@@ -49,10 +50,13 @@ isUTF8 = isJust . decodeM
 allBytes :: String -> Bool
 allBytes = all ((`between` (0, 255)) . ord)
 
+instance MonadFail (Either String) where
+   fail = Left
+
 ------------------------------------------------------------------
 -- Helper functions
 
-toUTF8 :: Monad m => Int -> m [Int]
+toUTF8 :: (Monad m, MonadFail m) => Int -> m [Int]
 toUTF8 n
    | n < 128 = -- one byte
         return [n]
@@ -71,7 +75,7 @@ toUTF8 n
    | otherwise =
         fail "invalid character in UTF8"
 
-fromUTF8 :: Monad m => [Int] -> m [Int]
+fromUTF8 :: (Monad m, MonadFail m) => [Int] -> m [Int]
 fromUTF8 xs
    | null xs   = return []
    | otherwise = do

@@ -98,8 +98,8 @@ escape = concatMap f . fromMaybe "invalid UTF8 string" . UTF8.encodeM
 class InJSON a where
    toJSON       :: a -> JSON
    listToJSON   :: [a] -> JSON
-   fromJSON     :: Monad m => JSON -> m a
-   listFromJSON :: Monad m => JSON -> m [a]
+   fromJSON     :: (Monad m, MonadFail m) => JSON -> m a
+   listFromJSON :: (Monad m, MonadFail m) => JSON -> m [a]
    -- default definitions
    listToJSON   = Array . map toJSON
    listFromJSON (Array xs) = mapM fromJSON xs
@@ -237,7 +237,7 @@ errorResponse x y = Response
    , responseId     = y
    }
 
-lookupM :: Monad m => String -> JSON -> m JSON
+lookupM :: (Monad m, MonadFail m) => String -> JSON -> m JSON
 lookupM x (Object xs) = maybe (fail $ "field " ++ x ++ " not found") return (lookup x xs)
 lookupM _ _ = fail "expecting a JSON object"
 

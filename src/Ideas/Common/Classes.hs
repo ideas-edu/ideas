@@ -55,7 +55,7 @@ applyD :: Apply t => t a -> a -> a
 applyD ta a = fromMaybe a (apply ta a)
 
 -- | Same as apply, except that the result (at most one) is returned in some monad
-applyM :: (Apply t, Monad m) => t a -> a -> m a
+applyM :: (Apply t, Monad m, MonadFail m) => t a -> a -> m a
 applyM ta = maybe (fail "applyM") return . apply ta
 
 applyList :: Apply t => [t a] -> a -> Maybe a

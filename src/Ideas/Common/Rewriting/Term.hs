@@ -97,8 +97,8 @@ instance Uniplate Term where
 class IsTerm a where
    toTerm       :: a -> Term
    toTermList   :: [a] -> Term
-   fromTerm     :: MonadPlus m => Term -> m a
-   fromTermList :: MonadPlus m => Term -> m [a]
+   fromTerm     :: (MonadFail m, MonadPlus m) => Term -> m a
+   fromTermList :: (MonadFail m, MonadPlus m) => Term -> m [a]
    -- default implementation
    toTermList   = TList . map toTerm
    fromTermList (TList xs) = mapM fromTerm xs
@@ -184,10 +184,10 @@ instance IsTerm a => IsTerm (Maybe a) where
    fromTerm (TCon s []) | s == nothingSymbol = return Nothing
    fromTerm t = fmap Just (fromTerm t)
 
-fromTermM :: (Monad m, IsTerm a) => Term -> m a
+fromTermM :: (Monad m, MonadFail m, IsTerm a) => Term -> m a
 fromTermM = maybe (fail "fromTermM") return . fromTerm
 
-fromTermWith :: (Monad m, IsTerm a) => (Symbol -> [a] -> m a) -> Term -> m a
+fromTermWith :: (Monad m, MonadFail m, IsTerm a) => (Symbol -> [a] -> m a) -> Term -> m a
 fromTermWith f a = do
    (s, xs) <- getFunction a
    ys      <- mapM fromTermM xs
@@ -201,8 +201,8 @@ class WithFunctions a where
    symbol   :: Symbol -> a
    function :: Symbol -> [a] -> a
    -- matching
-   getSymbol   :: Monad m => a -> m Symbol
-   getFunction :: Monad m => a -> m (Symbol, [a])
+   getSymbol   :: (Monad m, MonadFail m) => a -> m Symbol
+   getFunction :: (Monad m, MonadFail m) => a -> m (Symbol, [a])
    -- default definition
    symbol s = function s []
    getSymbol a =
@@ -218,7 +218,7 @@ instance WithFunctions Term where
 isSymbol :: WithFunctions a => Symbol -> a -> Bool
 isSymbol s = (== Just s) . getSymbol
 
-isFunction :: (WithFunctions a, Monad m) => Symbol -> a -> m [a]
+isFunction :: (WithFunctions a, Monad m, MonadFail m) => Symbol -> a -> m [a]
 isFunction s a =
    case getFunction a of
       Just (t, as) | s == t -> return as
@@ -233,13 +233,13 @@ binary s a b = function s [a, b]
 ternary :: WithFunctions a => Symbol -> a -> a -> a -> a
 ternary s a b c = function s [a, b, c]
 
-isUnary :: (WithFunctions a, Monad m) => Symbol -> a -> m a
+isUnary :: (WithFunctions a, Monad m, MonadFail m) => Symbol -> a -> m a
 isUnary s a =
    case isFunction s a of
       Just [x] -> return x
       _        -> fail "Ideas.Common.Term.isUnary"
 
-isBinary :: (WithFunctions a, Monad m) => Symbol -> a -> m (a, a)
+isBinary :: (WithFunctions a, Monad m, MonadFail m) => Symbol -> a -> m (a, a)
 isBinary s a =
    case isFunction s a of
       Just [x, y] -> return (x, y)
@@ -250,7 +250,7 @@ isBinary s a =
 
 class WithVars a where
    variable     :: String -> a
-   getVariable  :: Monad m => a -> m String
+   getVariable  :: (Monad m, MonadFail m) => a -> m String
 
 instance WithVars Term where
    variable = TVar
@@ -286,7 +286,7 @@ variableView = makeView getVariable variable
 
 class WithMetaVars a where
    metaVar    :: Int -> a
-   getMetaVar :: Monad m => a -> m Int
+   getMetaVar :: (Monad m, MonadFail m) => a -> m Int
 
 instance WithMetaVars Term where
    metaVar = TMeta

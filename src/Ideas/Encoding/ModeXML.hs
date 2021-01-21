@@ -56,7 +56,7 @@ addVersion s xml =
    let info = [ "version" := s ]
    in xml { attributes = attributes xml ++ info }
 
-xmlRequest :: Monad m => Maybe String -> XML -> m Request
+xmlRequest :: (Monad m, MonadFail m) => Maybe String -> XML -> m Request
 xmlRequest ms xml = do
    unless (name xml == "request") $
       fail "expected xml tag request"
@@ -101,7 +101,7 @@ xmlReply opt1 dr request xml = do
       -- xml evaluator
       else resultOk <$> evalService ex options xmlEvaluator srv xml
 
-extractExerciseId :: Monad m => XML -> m Id
+extractExerciseId :: (Monad m, MonadFail m) => XML -> m Id
 extractExerciseId = fmap newId . findAttribute "exerciseid"
 
 resultOk :: XMLBuilder -> XML

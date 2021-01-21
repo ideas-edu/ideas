@@ -31,12 +31,12 @@ import qualified Ideas.Text.OpenMath.Symbol as OM
 -----------------------------------------------------------------------------
 -- Utility functions for conversion to/from OpenMath
 
-toOpenMath :: Monad m => Exercise a -> a -> m OMOBJ
+toOpenMath :: (Monad m, MonadFail m) => Exercise a -> a -> m OMOBJ
 toOpenMath ex a = do
    v <- hasTermViewM ex
    return (toOMOBJ (build v a))
 
-fromOpenMath :: MonadPlus m => Exercise a -> OMOBJ -> m a
+fromOpenMath :: (MonadFail m, MonadPlus m) => Exercise a -> OMOBJ -> m a
 fromOpenMath ex omobj = do
    v <- hasTermViewM ex
    a <- fromOMOBJ omobj
@@ -60,7 +60,7 @@ toOMOBJ = rec . toTerm
       OMBIND (OMS s) [x] body
    make xs = OMA xs
 
-fromOMOBJ :: (MonadPlus m, IsTerm a) => OMOBJ -> m a
+fromOMOBJ :: (MonadFail m, MonadPlus m, IsTerm a) => OMOBJ -> m a
 fromOMOBJ = (>>= fromTerm) . rec
  where
    rec omobj =
@@ -95,7 +95,7 @@ idToSymbol a
    | otherwise =
         OM.makeSymbol (qualification a) (unqualified a)
 
-hasTermViewM  :: Monad m => Exercise a -> m (View Term a)
+hasTermViewM  :: (Monad m, MonadFail m) => Exercise a -> m (View Term a)
 hasTermViewM = maybe (fail "No support for terms") return . hasTermView
 
 mfSymbol :: OM.Symbol

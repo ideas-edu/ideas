@@ -196,8 +196,8 @@ instance Show Path where
 emptyPath :: Path
 emptyPath = Path []
 
-readPath :: Monad m => String -> m Path
+readPath :: (Monad m, MonadFail m) => String -> m Path
 readPath = fmap Path . readM
 
-readPaths :: Monad m => String -> m [Path]
+readPaths :: (Monad m, MonadFail m) => String -> m [Path]
 readPaths = mapM readPath . splitsWithElem ';'

@@ -54,8 +54,8 @@ xml2omobj xmlTop
    | name xmlTop == "OMOBJ" =
         case children xmlTop of
            [x] -> rec x
-           _   -> fail "invalid omobj"
-   | otherwise = fail "expected an OMOBJ tag"
+           _   -> Left "invalid omobj"
+   | otherwise = Left "expected an OMOBJ tag"
  where
    rec xml =
       case name xml of
@@ -73,13 +73,13 @@ xml2omobj xmlTop
          "OMI" | name xml == "OMI" ->
             case readInt (getData xml) of
                Just i -> return (OMI (toInteger i))
-               _      -> fail "invalid integer in OMI"
+               _      -> Left "invalid integer in OMI"
 
          "OMF" | emptyContent xml -> do
             s <- findAttribute "dec" xml
             case readDouble s of
                Just nr -> return (OMF nr)
-               _       -> fail "invalid floating-point in OMF"
+               _       -> Left "invalid floating-point in OMF"
 
          "OMV" | emptyContent xml -> do
             s <- findAttribute "name" xml
@@ -92,16 +92,16 @@ xml2omobj xmlTop
                   y2 <- recOMBVAR x2
                   y3 <- rec x3
                   return (OMBIND y1 y2 y3)
-               _ -> fail "invalid ombind"
-         _ -> fail ("invalid tag " ++ name xml)
+               _ -> Left "invalid ombind"
+         _ -> Left ("invalid tag " ++ name xml)
 
    recOMBVAR xml
       | name xml == "OMBVAR" =
            let f (Right (OMV s)) = return s
-               f this = fail $ "expected tag OMV in OMBVAR, but found " ++ show this
+               f this = Left $ "expected tag OMV in OMBVAR, but found " ++ show this
            in mapM (f . rec) (children xml)
       | otherwise =
-           fail ("expected tag OMVAR, but found " ++ show (name xml))
+           Left ("expected tag OMVAR, but found " ++ show (name xml))
 
 omobj2xml :: OMOBJ -> XML
 omobj2xml object = makeXML "OMOBJ" $ mconcat

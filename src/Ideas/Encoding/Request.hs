@@ -56,7 +56,7 @@ instance Monoid Request where
 
 data Schema = V1 | V2 | NoLogging deriving (Show, Eq)
 
-readSchema :: Monad m => String -> m Schema
+readSchema :: (Monad m, MonadFail m) => String -> m Schema
 readSchema s0
    | s == "v1" = return V1
    | s == "v2" = return V2
@@ -112,14 +112,14 @@ useJSONTerm r =
 useLogging :: Request -> Bool
 useLogging r = EncHTML `notElem` encoding r && logSchema r /= Just NoLogging
 
-discoverDataFormat :: Monad m => String -> m DataFormat
+discoverDataFormat :: (Monad m, MonadFail m) => String -> m DataFormat
 discoverDataFormat xs =
    case dropWhile isSpace xs of
       '<':_ -> return XML
       '{':_ -> return JSON
       _     -> fail "Unknown data format"
 
-readEncoding :: Monad m => String -> m [Encoding]
+readEncoding :: (Monad m, MonadFail m) => String -> m [Encoding]
 readEncoding = mapM (f . map toLower) . splitsWithElem '+'
  where
    f "html"     = return EncHTML

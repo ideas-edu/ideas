@@ -204,7 +204,7 @@ ruleset ex = nub (sortBy (ruleOrdering ex) list)
    list = extraRules ex ++ rulesInStrategy (strategy ex)
 
 -- | Finds a rule of an exercise based on its identifier.
-getRule :: Monad m => Exercise a -> Id -> m (Rule (Context a))
+getRule :: (Monad m, MonadFail m) => Exercise a -> Id -> m (Rule (Context a))
 getRule ex a =
    case filter ((a ==) . getId) (ruleset ex) of
       [hd] -> return hd

@@ -26,7 +26,7 @@ import Data.Char
 import Data.Maybe
 import Data.Monoid
 import Data.String
-import Ideas.Encoding.ModeJSON (processJSON)
+import Ideas.Encoding.NewModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
 import Ideas.Encoding.Options (Options, maxTime, optionCgiBin, logRef)
 import Ideas.Encoding.Request
@@ -35,6 +35,7 @@ import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.ServiceList
 import Ideas.Service.Types (Service)
+import Ideas.Text.UTF8 (decode)
 import Ideas.Text.XML.Unicode (decoding)
 import Ideas.Utils.BlackBoxTests
 import Ideas.Utils.Prelude
@@ -75,7 +76,7 @@ defaultCGI options dr = CGI.run $ \req respond -> do
       { Log.ipaddress = addr
       , Log.version   = shortVersion
       , Log.input     = input
-      , Log.output    = txt
+      , Log.output    = decode txt
       }
    -- log request to database
    when (useLogging preq) $
@@ -130,7 +131,7 @@ defaultCommandLine options dr cmdLineOptions = do
                      { Log.ipaddress = "command-line"
                      , Log.version   = shortVersion
                      , Log.input     = input
-                     , Log.output    = txt
+                     , Log.output    = decode txt
                      }
                   Log.printLog (logRef options)
          -- blackbox tests
@@ -156,7 +157,7 @@ processDatabase dr database = do
 process :: Options -> DomainReasoner -> String -> IO (Request, String, String)
 process options dr input = do
    format <- discoverDataFormat input
-   run format options {maxTime = Just 5} (addVersion dr) input
+   run format options (addVersion dr) input
  `catch` \e -> do
    let msg = "Error: " ++ show (e :: SomeException)
    Log.changeLog (logRef options) (\r -> r { Log.errormsg = msg })

@@ -1,5 +1,5 @@
 name:                   ideas
-version:                1.8
+version:                1.8.1
 synopsis:               Feedback services for intelligent tutoring systems
 homepage:               http://ideas.cs.uu.nl/
 description:
@@ -60,7 +60,7 @@ Library
      filepath,
      http-types,
      mtl,
-     network,
+     network < 3.0,
      parsec,
      random,
      streaming-commons < 0.2,
@@ -130,6 +130,9 @@ Library
     Ideas.Encoding.Logging
     Ideas.Encoding.ModeJSON
     Ideas.Encoding.ModeXML
+    Ideas.Encoding.NewModeJSON
+    Ideas.Encoding.NewEncoderJSON
+    Ideas.Encoding.NewDecoderJSON
     Ideas.Encoding.OpenMathSupport
     Ideas.Encoding.Options
     Ideas.Encoding.Request

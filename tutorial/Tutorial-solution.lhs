@@ -206,7 +206,7 @@ An expression is in normal form if it is a `Con`, a non-top heavy division, or t
 >    , equivalence   = withoutContext eqExpr
 >    , similarity    = withoutContext (==)
 >    , ready         = predicate isConOrAddDivOrDiv
->    , examples      = level Easy [expr1] ++ level Medium [expr2] ++ level Medium [expr3]
+>    , examples      = examplesFor Easy [expr1, expr2, expr3]
 >    }
 >
 > eqExpr :: Expr -> Expr -> Bool

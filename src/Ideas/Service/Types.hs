@@ -77,6 +77,7 @@ instance Equal f => Equal (TypeRep f) where
    equal t1         (Iso p b)  = fmap (from p .) (equal t1 b)
    equal (a :-> b)  (c :-> d)  = liftM2 (\f g h -> g . h . f)
                                         (equal c a) (equal b d)
+   equal (IO a) (IO b)         = fmap liftM  (equal a b)
    equal (Pair a b) (Pair c d) = liftM2 (***) (equal a c) (equal b d)
    equal (a :|: b)  (c :|: d)  = liftM2 biMap (equal a c) (equal b d)
    equal (List a)   (List b)   = fmap map (equal a b)
@@ -270,7 +271,8 @@ tError = (:|:) tString
 tDerivation :: Type a t1 -> Type a t2 -> Type a (Derivation t1 t2)
 tDerivation t1 t2 = Tag "Derivation" $ Iso (f <-> g) tp
  where
-   tp = tPair t2 (tList (tPair t1 t2))
+   tp = tPair t2 (Tag "derivationsteps" (tList (tPair t1 t2)))
+
    f (a, xs) = foldl extend (emptyDerivation a) xs
    g d = (firstTerm d, [ (s, a) | (_, s, a) <- triples d ])
 

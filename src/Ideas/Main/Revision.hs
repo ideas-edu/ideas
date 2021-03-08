@@ -2,10 +2,10 @@
 module Ideas.Main.Revision where
 
 ideasVersion :: String
-ideasVersion = "1.8"
+ideasVersion = "1.8.1"
 
 ideasRevision :: String
-ideasRevision = "6ed63bb8d0f08b17fcedc033b06da0d3fc2018a1"
+ideasRevision = "27a352d26571dad5913f9786c09ce5cda3021793"
 
 ideasLastChanged :: String
-ideasLastChanged = "Wed Aug 14 14:52:07 2019 +0200"
+ideasLastChanged = "Thu Sep 26 13:14:08 2019 +0200"

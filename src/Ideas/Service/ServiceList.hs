@@ -150,7 +150,7 @@ createS :: Service
 createS = makeService "basic.create"
     "Given an expression, this service \
     \returns an initial state with the original given expression." $
-    create ::: tQCGen .-> tExercise .-> tString .-> tMaybe tUserId .-> tError tState
+    create ::: tQCGen .-> tExercise .-> Tag "term" tString .-> tMaybe tUserId .-> tError tState
 
 examplesS :: Service
 examplesS = makeService "basic.examples"

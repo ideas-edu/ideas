@@ -618,8 +618,8 @@ htmlDiagnosis dr diagnosis =
          spanClass "error" $ string $ "Not equivalent: buggy rule " ++ show r
       NotEquivalent s ->
          spanClass "error" $ string $ if null s then "Not equivalent" else s
-      Similar _ s ->
-         h2 "Similar term" <> encodeState dr s
+      Similar _ s mr ->
+         h2 ("Similar term " ++ maybe "" showId mr) <> encodeState dr s
       WrongRule _ s mr ->
          h2 ("WrongRule " ++ maybe "" showId mr)
          <> encodeState dr s

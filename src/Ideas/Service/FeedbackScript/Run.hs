@@ -128,7 +128,7 @@ feedbackDiagnosis diagnosis env =
       NotEquivalent s  -> makeNotEq s "noteq"   env
       Expected _ _ r   -> makeOk    "ok"        env {recognized = Just r}
       WrongRule _ _ mr -> makeWrong "wrongrule" env {recognized = mr}
-      Similar _ _      -> makeOk    "same"      env
+      Similar _ _ mr   -> makeOk    "same"      env {recognized = mr}
       Detour _ _ _ r   -> makeOk    "detour"    env {recognized = Just r}
       Correct _ _      -> makeOk    "correct"   env
       Unknown _ _      -> makeOk    "unknown"   env

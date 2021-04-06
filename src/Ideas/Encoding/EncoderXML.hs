@@ -220,8 +220,9 @@ encodeDiagnosis diagnosis =
       NotEquivalent s ->
           if null s then emptyTag "notequiv"
                     else element "notequiv" [ "reason" .=.  s ]
-      Similar b st -> element "similar"
-         ["ready" .=. showBool b, encodeState st]
+      Similar b st mr -> element "similar" $
+         ["ready" .=. showBool b, encodeState st] ++
+         maybe [] (\r -> ["ruleid" .=. showId r]) mr
       WrongRule b st mr -> element "wrongrule" $
          [ "ready" .=. showBool b, encodeState st ] ++
          maybe [] (\r -> ["ruleid" .=. showId r]) mr

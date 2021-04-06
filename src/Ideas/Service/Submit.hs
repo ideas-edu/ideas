@@ -46,7 +46,7 @@ fromDiagnose diagnosis =
       Diagnose.SyntaxError s    -> NotEquivalent s -- should not happen
       Diagnose.Buggy _ r        -> Buggy [r]
       Diagnose.NotEquivalent s  -> NotEquivalent s
-      Diagnose.Similar _ s      -> Ok [] s
+      Diagnose.Similar _ s _    -> Ok [] s
       Diagnose.Expected _ s r   -> Ok [r] s
       Diagnose.WrongRule _ s mr -> Ok (maybeToList mr) s
       Diagnose.Detour _ s _ r   -> Detour [r] s

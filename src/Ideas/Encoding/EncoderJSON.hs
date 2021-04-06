@@ -184,8 +184,8 @@ encodeDiagnosis diagnosis =
                    else make "notequiv" [fromReason s]
       Diagnose.Buggy env r ->
          make "buggy" [fromEnv env, fromRule r]
-      Diagnose.Similar b st ->
-         make "similar" [fromReady b, fromState st]
+      Diagnose.Similar b st mr ->
+         make "similar" [fromReady b, fromState st, fromMaybeRule mr]
       Diagnose.WrongRule b st mr ->
          make "wrongrule" [fromReady b, fromState st, fromMaybeRule mr]
       Diagnose.Expected b st r ->

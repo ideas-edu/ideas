@@ -170,8 +170,8 @@ encodeDiagnosis diagnosis =
    case diagnosis of
       Diagnose.Correct b st ->
          (\xs ys -> (Just "diagnosetype", toJSON "correct") : xs ++ ys) <$> encodeReady b <*> encodeState st 
-      Diagnose.Similar b st ->
-         (\xs ys -> (Just "diagnosetype", toJSON "similar") : xs ++ ys) <$> encodeReady b <*> encodeState st 
+      Diagnose.Similar b st mr ->
+         (\xs ys zs -> (Just "diagnosetype", toJSON "similar") : xs ++ ys ++ zs) <$> encodeReady b <*> encodeState st <*> encodeMaybeRule mr
       Diagnose.NotEquivalent s ->
          return [(Just "diagnosetype", toJSON "notequiv"), (Just "message", toJSON s)]
       Diagnose.Expected b st r ->

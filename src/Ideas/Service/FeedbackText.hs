@@ -81,7 +81,7 @@ feedbacktext script old new motivationId =
       NotEquivalent _ -> (msg False, old)
       Expected _ s _  -> (msg True, s)
       WrongRule _ s _ -> (msg True, s)
-      Similar _ s     -> (msg True, s)
+      Similar _ s _   -> (msg True, s)
       Detour _ s _ _  -> (msg True, s)
       Correct _ s     -> (msg False, s)
       Unknown _ s     -> (msg False, s)

@@ -83,16 +83,16 @@ diagnose state new motivationId
    -- Is the submitted term equivalent?
    | not (equivalence ex (stateContext state) new) =
         -- Is the rule used discoverable by trying all known buggy rules?
-        case discovered True False Nothing of
+        case discovered isBuggy of
            Just (r, as) -> Buggy as r -- report the buggy rule
            Nothing      -> NotEquivalent "" -- compareParts state new
 
    -- Is the used rule that is submitted applied correctly?
-   | isJust motivationId && isNothing (discovered False False motivationId) =
-        case discovered False False Nothing of -- search for a "sound" rule
+   | maybe False (isNothing . discovered . isRuleId) motivationId =
+        case discovered (not . isBuggy) of -- search for a "sound" rule
            Just (r, _) -> WrongRule (finished state) state (Just r)
            Nothing ->
-              case discovered True False Nothing of -- search for buggy rule
+              case discovered isBuggy of -- search for buggy rule
                  Just (r, as) ->
                     Buggy as r -- report the buggy rule
                  Nothing ->
@@ -108,7 +108,7 @@ diagnose state new motivationId
    -- (this check is performed after "expected by strategy". TODO: fix
    -- granularity of some math rules)
    | similar = 
-        case discovered False True Nothing of
+        case discovered (isMinor <&&> (not . isBuggy)) of
            Just (r, _) ->
               Similar (finished state) state (Just r)
            Nothing ->
@@ -116,7 +116,7 @@ diagnose state new motivationId
 
    -- Is the rule used discoverable by trying all known rules?
    | otherwise =
-        case discovered False False Nothing of
+        case discovered (const True) of
            Just (r, as) ->  -- If yes, report the found rule as a detour
               Detour (finished restarted) restarted as r
            Nothing -> -- If not, we give up
@@ -131,12 +131,12 @@ diagnose state new motivationId
           p (_, ns) = similarity ex new (stateContext ns) -- use rule recognizer?
       listToMaybe (filter p xs)
 
-   discovered searchForBuggy searchForMinor searchForRule = listToMaybe
+   isRuleId n r = n `elem` getId r : ruleSiblings r 
+
+   discovered condition = listToMaybe
       [ (r, env)
       | r <- sortBy (ruleOrdering ex) (ruleset ex)
-      , isBuggy r == searchForBuggy
-      , isMinor r == searchForMinor
-      , maybe True (`elem` getId r:ruleSiblings r) searchForRule
+      , condition r
       , (_, env) <- recognizeRule ex r sub1 sub2
       ]
     where

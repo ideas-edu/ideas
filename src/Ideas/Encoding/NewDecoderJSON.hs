@@ -61,8 +61,8 @@ decodeConst tp =
       State       -> decodeState
       Context     -> decodeContext
       Exercise    -> getExercise
-      --Environment -> decodeEnvironment
-      --Location    -> decodeLocation
+      Environment -> decodeEnvironment
+      Location    -> decodeLocation
       --Term        -> gets jsonToTerm
       Script      -> getScript
       Int         -> get >>= fromJSON
@@ -207,25 +207,31 @@ decodeValue :: JSONDecoder a a
 decodeValue = do
    this <- get
    ex   <- getExercise
-   case lookupM "term" this of 
-      Just (String s) -> either fail return (parser ex s)
-      _ -> fail "expecting value"
+   case (lookupM "term" this, hasJSONView ex) of 
+      (Just json, Just jv) -> matchM jv json 
+      (Just (String s), _) -> either fail return (parser ex s)
+      _ -> fail "Expecting term"
 
 decodeEnvironment :: JSONDecoder a Environment
 decodeEnvironment = do
    this <- get
    case lookupM "environment" this of 
-      Just _  -> return mempty                   -- TODO
-      Nothing -> fail "Expecting environment"
+      Just (Object xs) -> foldM (flip add) mempty xs
+      _ -> fail "Expecting environment"
+ where
+   add (k, String s) = return . insertRef (makeRef k) s
+   add (k, Number n) = return . insertRef (makeRef k) (show n)
+   add _             = fail "invalid item in context"
 
 decodeLocation :: JSONDecoder a Location
 decodeLocation = do
    this <- get
    case lookupM "location" this of 
-      Just _ -> return (toLocation []) -- TODO
+      Just (Array xs) -> toLocation <$> mapM f xs
       _ -> fail "Expecting location"
-
-
+ where
+   f (Number (I n)) = return (fromInteger n)
+   f _ = fail "invalid int in location"
 
 decodeRule :: JSONDecoder a (Rule (Context a))
 decodeRule = do

@@ -139,10 +139,16 @@ encodeContext ctx =
    in (\xs ys zs -> tagJSONBuilder "context" $ xs ++ ys ++ zs) <$> encValue <*> encEnv <*> encLoc
 
 encodeTerm :: a -> EncoderX a JSONBuilder
-encodeTerm a = f <$> (fmap useJSONTerm getRequest) <*> getExercise <*> pure a
+encodeTerm a = (tagJSON "term" . f) <$> getExercise
  where
-   f True  ex = tagJSON "term" . fromMaybe Null . liftA2 build (hasJSONView ex) . return
-   f False ex = tagJSON "term" . String . prettyPrinter ex
+   f ex = 
+      case hasJSONView ex of
+         Just jv -> build jv a
+         Nothing -> String (prettyPrinter ex a)
+
+
+  -- True  ex = tagJSON "term" . fromMaybe Null . liftA2 build (hasJSONView ex) . return
+  -- f False ex = tagJSON "term" . String . prettyPrinter ex
 
 encodeLocation :: Location -> EncoderX a JSONBuilder
 encodeLocation loc = pure (tagJSON "location" (toJSON (fromLocation loc)))

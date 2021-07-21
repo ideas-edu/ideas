@@ -19,7 +19,7 @@ module Ideas.Service.Diagnose
    , difference
    ) where
 
-import Data.List (intercalate, sortBy)
+import Data.List (find, intercalate, sortBy)
 import Data.Maybe
 import Ideas.Common.Library hiding (ready)
 import Ideas.Service.BasicServices hiding (apply)
@@ -91,12 +91,15 @@ diagnose state new motivationId
    | maybe False (isNothing . discovered . isRuleId) motivationId =
         case discovered (not . isBuggy) of -- search for a "sound" rule
            Just (r, _) -> WrongRule (finished state) state (Just r)
-           Nothing ->
+           _ ->
               case discovered isBuggy of -- search for buggy rule
                  Just (r, as) ->
                     Buggy as r -- report the buggy rule
-                 Nothing ->
-                    WrongRule (finished state) state Nothing
+                 Nothing 
+                    | similar && maybe False isMinor motivationRule ->
+                         Similar (finished state) state motivationRule
+                    | otherwise ->
+                         WrongRule (finished state) state Nothing
 
    -- Was the submitted term expected by the strategy?
    | isJust expected =
@@ -125,6 +128,8 @@ diagnose state new motivationId
    ex        = exercise state
    restarted = restart state {stateContext = new}
    similar   = similarity ex (stateContext state) new
+
+   motivationRule = find ((== motivationId) . Just . getId) $ ruleset ex
 
    expected = do
       let xs = either (const []) id $ allfirsts state

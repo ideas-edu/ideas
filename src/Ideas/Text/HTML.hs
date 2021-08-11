@@ -32,7 +32,6 @@ module Ideas.Text.HTML
 
 import Data.Char
 import Data.List
-import Data.Monoid
 import Ideas.Text.XML
 import qualified Data.Map as M
 import qualified Ideas.Text.XML as XML

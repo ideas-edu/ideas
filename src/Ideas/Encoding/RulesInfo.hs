@@ -15,7 +15,6 @@ module Ideas.Encoding.RulesInfo
    ) where
 
 import Data.Char
-import Data.Monoid
 import Ideas.Common.Library
 import Ideas.Encoding.OpenMathSupport (toOMOBJ)
 import Ideas.Text.OpenMath.FMP

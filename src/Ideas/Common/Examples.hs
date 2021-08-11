@@ -36,7 +36,6 @@ module Ideas.Common.Examples
 
 import Data.Char
 import Data.Maybe
-import Data.Semigroup
 import Ideas.Common.Id
 import Test.QuickCheck
 

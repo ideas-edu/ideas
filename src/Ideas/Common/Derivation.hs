@@ -28,7 +28,6 @@ module Ideas.Common.Derivation
    ) where
 
 import Data.Maybe
-import Data.Monoid
 import Ideas.Common.Classes
 import Ideas.Common.Rewriting
 import qualified Data.Foldable as F

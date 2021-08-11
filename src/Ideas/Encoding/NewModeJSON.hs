@@ -18,7 +18,6 @@ import Control.Applicative
 import Control.Exception
 import Control.Monad
 import System.IO.Error
-import Data.Char
 import Data.Maybe
 import Data.Semigroup ((<>))
 import Ideas.Common.Library hiding (exerciseId)
@@ -26,8 +25,7 @@ import qualified Ideas.Encoding.ModeJSON as Legacy
 import Ideas.Encoding.NewDecoderJSON
 import Ideas.Encoding.NewEncoderJSON
 import Ideas.Encoding.Evaluator
-import Ideas.Encoding.Logging (changeLog, errormsg)
-import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin, logRef)
+import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin)
 import Ideas.Encoding.Request
 import Ideas.Service.DomainReasoner
 import Ideas.Text.JSON
@@ -47,9 +45,8 @@ processJSON options dr txt = do
       return (req, f resp, "application/json")
 
 jsonRPC2 :: DomainReasoner -> String -> JSON -> RPCHandler -> IO JSON
-jsonRPC2 dr serviceName input rpc = do
-   json <- rpc serviceName input
-   return (okResponse dr serviceName json)
+jsonRPC2 dr serviceName json rpc = do
+   okResponse dr serviceName <$> rpc serviceName json
  `catch` handler
  where
    handler :: SomeException -> IO JSON
@@ -77,14 +74,6 @@ extractExerciseId json = f <$> (
  where
    f (String s) = newId s
    f _          = error "expecting an exercise id"
-
-addVersion :: String -> JSON -> JSON
-addVersion str json =
-   case json of
-      Object xs -> Object (xs ++ [info])
-      _         -> json
- where
-   info = ("version", String str)
 
 jsonRequest :: Monad m => Options -> JSON -> m Request
 jsonRequest options json = do

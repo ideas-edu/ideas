@@ -21,7 +21,6 @@ module Ideas.Encoding.EncoderXML
 import Data.Char
 import Data.List
 import Data.Maybe
-import Data.Monoid
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.OpenMathSupport

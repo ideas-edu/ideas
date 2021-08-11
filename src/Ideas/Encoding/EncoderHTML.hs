@@ -18,7 +18,6 @@ module Ideas.Encoding.EncoderHTML (HTMLEncoder, htmlEncoder) where
 import Data.Char
 import Data.List
 import Data.Maybe
-import Data.Monoid
 import Ideas.Common.Examples (isEmpty, size, allRandoms)
 import Ideas.Common.Library hiding (alternatives, isEmpty, left, right, collapse, Medium)
 import Ideas.Common.Strategy.Symbol

@@ -14,7 +14,6 @@
 
 module Ideas.Encoding.StrategyInfo (strategyToXML) where
 
-import Data.Monoid
 import Ideas.Common.Id
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Configuration

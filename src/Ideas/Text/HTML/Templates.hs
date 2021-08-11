@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Text.HTML.Templates
-   ( webpage, WebPage(..), Button(..), Style
+   ( webpage, WebPage(..), Button(..), emptyWebPage, emptyButton, Style
    , fontAwesome
    ) where
 
@@ -39,6 +39,22 @@ data WebPage = WebPage
    , footerStyle    :: Style
    }
 
+emptyWebPage :: WebPage
+emptyWebPage = WebPage
+   { title          = "title"
+   , menuButtons    = []
+   , menuStyle      = id
+   , iconBarsStyle  = id
+   , sideWidth      = 600
+   , sideHeader     = mempty
+   , sideButtons    = []
+   , sideStyle      = id
+   , iconCloseStyle = id
+   , content        = mempty
+   , footer         = mempty
+   , footerStyle    = id
+   }
+
 type Style = HTMLBuilder -> HTMLBuilder
 
 data Button = Button
@@ -46,6 +62,9 @@ data Button = Button
    , buttonStyle :: HTMLBuilder -> HTMLBuilder
    , buttonText  :: HTMLBuilder
    }
+
+emptyButton :: Button
+emptyButton = Button "" id mempty
 
 fromButtons :: [Button] -> HTMLBuilder
 fromButtons = mconcat . map fromButton

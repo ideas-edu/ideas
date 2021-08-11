@@ -181,11 +181,13 @@ columnsInTable :: Schema -> Record -> [SqlValue]
 columnsInTable V1 = values_v1
 columnsInTable _  = values_v2
 
+-- Do not store ip addresses in database
+
 values_v1 :: Record -> [SqlValue]
 values_v1 r =
    let get f = toSql (f r)
    in [ get service, get exerciseid, get source, get dataformat, get encoding
-      , get input, get output, get ipaddress, get time, get responsetime
+      , get input, get output, SqlNull {- get ipaddress -}, get time, get responsetime
       ]
 
 values_v2 :: Record -> [SqlValue]
@@ -193,7 +195,7 @@ values_v2 r =
    let get f = toSql (f r)
    in [ get service, get exerciseid, get source, get script, get requestinfo
       , get dataformat, get encoding, get userid, get sessionid, get taskid
-      , get time, get responsetime, get ipaddress, get binary, get version
+      , get time, get responsetime, SqlNull {- get ipaddress -}, get binary, get version
       , get errormsg, get serviceinfo, get ruleid, get input, get output
       ]
 

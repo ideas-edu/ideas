@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS -Wno-deprecations #-}
 -- Original source: https://hackage.haskell.org/package/wai-extra-3.0.20.0/docs/Network-Wai-Handler-CGI.html
 module Ideas.Main.CGI (run) where
 

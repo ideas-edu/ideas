@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-deprecations #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -27,7 +28,7 @@ import Data.Maybe
 import Data.String
 import Ideas.Encoding.NewModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
-import Ideas.Encoding.Options (Options, maxTime, optionCgiBin, logRef)
+import Ideas.Encoding.Options (Options, optionCgiBin, logRef)
 import Ideas.Encoding.Request
 import Ideas.Main.CmdLineOptions hiding (fullVersion)
 import Ideas.Service.DomainReasoner

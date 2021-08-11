@@ -59,7 +59,7 @@ withExercise :: (Exercise a -> DecoderX a s t) -> DecoderX a s t
 withExercise = (getExercise >>=)
 
 getBaseUrl :: DecoderX a s String
-getBaseUrl = fromMaybe "http://ideas.cs.uu.nl/" . baseUrl <$> getOptions
+getBaseUrl = fromMaybe "https://ideas.science.uu.nl/" . baseUrl <$> getOptions
 
 getQCGen :: DecoderX a s QCGen
 getQCGen = fromMaybe (mkQCGen 0) . qcGen <$> getOptions

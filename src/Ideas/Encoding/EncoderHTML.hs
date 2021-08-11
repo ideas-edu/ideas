@@ -62,7 +62,6 @@ getLinkManager = do
 makePage :: LinkManager -> DomainReasoner -> Exercise a -> HTMLBuilder -> HTMLPage
 makePage lm dr ex body =
    (if hasLatexEncoding ex then addScript mathJaxUrl else id) $
-   -- addCSS "http://ideas.cs.uu.nl/css/2007-chili-pepper.css" $
    addCSS (urlForCSS lm "2007-chili-pepper.css") $
    webpage myWebPage
  where
@@ -72,7 +71,7 @@ makePage lm dr ex body =
    myWebPage = WebPage
       { title       = "Ideas: documentation pages"
       , menuButtons =
-           [ Button "http://ideas.cs.uu.nl/ " (theme L1) (fontAwesome "lightbulb-o" <> tag "span" (fontSize Large " I") <> tag "span" (fontSize Medium "DEAS"))
+           [ Button "https://ideas.science.uu.nl/" (theme L1) (fontAwesome "lightbulb-o" <> tag "span" (fontSize Large " I") <> tag "span" (fontSize Medium "DEAS"))
            , Button (urlForIndex lm)     (hover White) "Index"
            , Button (urlForExercises lm) (hover White) $ "Exercises " <> nrBadge (length (exercises dr))
            , Button (urlForServices lm)  (hover White) $ "Services " <> nrBadge (length (services dr))
@@ -618,8 +617,8 @@ htmlDiagnosis dr diagnosis =
          spanClass "error" $ string $ "Not equivalent: buggy rule " ++ show r
       NotEquivalent s ->
          spanClass "error" $ string $ if null s then "Not equivalent" else s
-      Similar _ s ->
-         h2 "Similar term" <> encodeState dr s
+      Similar _ s mr ->
+         h2 ("Similar term " ++ maybe "" showId mr) <> encodeState dr s
       WrongRule _ s mr ->
          h2 ("WrongRule " ++ maybe "" showId mr)
          <> encodeState dr s

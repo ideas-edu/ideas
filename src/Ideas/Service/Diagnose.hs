@@ -19,7 +19,7 @@ module Ideas.Service.Diagnose
    , difference
    ) where
 
-import Data.List (intercalate, sortBy)
+import Data.List (find, intercalate, sortBy)
 import Data.Maybe
 import Ideas.Common.Library hiding (ready)
 import Ideas.Service.BasicServices hiding (apply)
@@ -34,7 +34,7 @@ data Diagnosis a
    = SyntaxError    String
    | Buggy          Environment (Rule (Context a))
    | NotEquivalent  String
-   | Similar        Bool (State a)
+   | Similar        Bool (State a) (Maybe (Rule (Context a)))
    | WrongRule      Bool (State a) (Maybe (Rule (Context a)))
    | Expected       Bool (State a) (Rule (Context a))
    | Detour         Bool (State a) Environment (Rule (Context a))
@@ -48,7 +48,7 @@ instance Show (Diagnosis a) where
          SyntaxError s    -> f "SyntaxError" [s]
          Buggy _ r        -> f "Buggy" [show r]
          NotEquivalent s  -> f "NotEquivalent" [ s | not (null s) ]
-         Similar _ _      -> "Similar"
+         Similar _ _ _    -> "Similar"
          WrongRule _ _ mr -> f "WrongRule" [ show r | r <- maybeToList mr ]
          Expected _ _ r   -> f "Expected" [show r]
          Detour _ _ _ r   -> f "Detour" [show r]
@@ -68,7 +68,7 @@ getStateAndReady d =
       SyntaxError _    -> Nothing
       Buggy _ _        -> Nothing
       NotEquivalent _  -> Nothing
-      Similar b s      -> Just (s, b)
+      Similar b s _    -> Just (s, b)
       WrongRule b s _  -> Just (s, b)
       Expected b s _   -> Just (s, b)
       Detour b s _  _  -> Just (s, b)
@@ -83,20 +83,23 @@ diagnose state new motivationId
    -- Is the submitted term equivalent?
    | not (equivalence ex (stateContext state) new) =
         -- Is the rule used discoverable by trying all known buggy rules?
-        case discovered True Nothing of
+        case discovered isBuggy of
            Just (r, as) -> Buggy as r -- report the buggy rule
            Nothing      -> NotEquivalent "" -- compareParts state new
 
    -- Is the used rule that is submitted applied correctly?
-   | isJust motivationId && isNothing (discovered False motivationId) =
-        case discovered False Nothing of -- search for a "sound" rule
+   | maybe False (isNothing . discovered . isRuleId) motivationId =
+        case discovered (not . isBuggy) of -- search for a "sound" rule
            Just (r, _) -> WrongRule (finished state) state (Just r)
-           Nothing ->
-              case discovered True  Nothing of -- search for buggy rule
+           _ ->
+              case discovered isBuggy of -- search for buggy rule
                  Just (r, as) ->
                     Buggy as r -- report the buggy rule
-                 Nothing ->
-                    WrongRule (finished state) state Nothing
+                 Nothing 
+                    | similar && maybe False isMinor motivationRule ->
+                         Similar (finished state) state motivationRule
+                    | otherwise ->
+                         WrongRule (finished state) state Nothing
 
    -- Was the submitted term expected by the strategy?
    | isJust expected =
@@ -107,11 +110,16 @@ diagnose state new motivationId
    -- Is the submitted term (very) similar to the previous one?
    -- (this check is performed after "expected by strategy". TODO: fix
    -- granularity of some math rules)
-   | similar = Similar (finished state) state
+   | similar = 
+        case discovered (isMinor <&&> (not . isBuggy)) of
+           Just (r, _) ->
+              Similar (finished state) state (Just r)
+           Nothing ->
+              Similar (finished state) state Nothing
 
    -- Is the rule used discoverable by trying all known rules?
    | otherwise =
-        case discovered False Nothing of
+        case discovered (const True) of
            Just (r, as) ->  -- If yes, report the found rule as a detour
               Detour (finished restarted) restarted as r
            Nothing -> -- If not, we give up
@@ -121,16 +129,19 @@ diagnose state new motivationId
    restarted = restart state {stateContext = new}
    similar   = similarity ex (stateContext state) new
 
+   motivationRule = find ((== motivationId) . Just . getId) $ ruleset ex
+
    expected = do
       let xs = either (const []) id $ allfirsts state
           p (_, ns) = similarity ex new (stateContext ns) -- use rule recognizer?
       listToMaybe (filter p xs)
 
-   discovered searchForBuggy searchForRule = listToMaybe
+   isRuleId n r = n `elem` getId r : ruleSiblings r 
+
+   discovered condition = listToMaybe
       [ (r, env)
       | r <- sortBy (ruleOrdering ex) (ruleset ex)
-      , isBuggy r == searchForBuggy
-      , maybe True (`elem` getId r:ruleSiblings r) searchForRule
+      , condition r
       , (_, env) <- recognizeRule ex r sub1 sub2
       ]
     where
@@ -146,14 +157,14 @@ tDiagnosis :: Type a (Diagnosis a)
 tDiagnosis = Tag "Diagnosis" $ Iso (f <-> g) tp
     where
       tp = (tString :|: tPair tEnvironment tRule :|: (tString :|: tTuple3 tBool tState (tMaybe tRule)))
-         :|: tPair tBool tState :|: tTuple3 tBool tState tRule
+         :|: tTuple3 tBool tState (tMaybe tRule) :|: tTuple3 tBool tState tRule
          :|: tTuple4 tBool tState tEnvironment tRule :|: tPair tBool tState :|: tPair tBool tState
 
       f (Left (Left s)) = SyntaxError s
       f (Left (Right (Left (as, r)))) = Buggy as r
       f (Left (Right (Right (Left s)))) = NotEquivalent s
       f (Left (Right (Right (Right (b, s, mr))))) = WrongRule b s mr
-      f (Right (Left (b, s))) = Similar b s
+      f (Right (Left (b, s, mr))) = Similar b s mr
       f (Right (Right (Left (b, s, r)))) = Expected b s r
       f (Right (Right (Right (Left (b, s, as, r))))) = Detour b s as r
       f (Right (Right (Right (Right (Left (b, s)))))) = Correct b s
@@ -163,7 +174,7 @@ tDiagnosis = Tag "Diagnosis" $ Iso (f <-> g) tp
       g (Buggy as r)       = Left (Right (Left (as, r)))
       g (NotEquivalent s)  = Left (Right (Right (Left s)))
       g (WrongRule b s mr) = Left (Right (Right (Right (b, s, mr))))
-      g (Similar b s)      = Right (Left (b, s))
+      g (Similar b s mr)   = Right (Left (b, s, mr))
       g (Expected b s r)   = Right (Right (Left (b, s, r)))
       g (Detour b s as r)  = Right (Right (Right (Left (b, s, as, r))))
       g (Correct b s)      = Right (Right (Right (Right (Left (b, s)))))

@@ -59,7 +59,7 @@ withExercise :: (Exercise a -> DecoderX a s t) -> DecoderX a s t
 withExercise = (getExercise >>=)
 
 getBaseUrl :: DecoderX a s String
-getBaseUrl = fromMaybe "http://ideas.cs.uu.nl/" . baseUrl <$> getOptions
+getBaseUrl = fromMaybe "https://ideas.science.uu.nl/" . baseUrl <$> getOptions
 
 getQCGen :: DecoderX a s QCGen
 getQCGen = fromMaybe (mkQCGen 0) . qcGen <$> getOptions
@@ -178,7 +178,7 @@ infixr 5 <?>
       Nothing -> q tv
 
 encodeTyped :: (t -> EncoderX a b) -> Type a t -> TypedEncoder a b
-encodeTyped p t = (p, t) <?> fail "Types do not match"
+encodeTyped p t1 tv@(_ ::: t2) = ((p, t1) <?> fail ("Types do not match: " ++ show t1 ++ " and " ++ show t2)) tv
 
 -------------------------------------------------------------------
 -- Decoder datatype

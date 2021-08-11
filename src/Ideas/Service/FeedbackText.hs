@@ -23,13 +23,14 @@ import Ideas.Service.FeedbackScript.Run
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
 import Ideas.Service.Types
+import Ideas.Utils.Prelude
 
 data Message = M { accept :: Maybe Bool, text :: Text }
 
 tMessage :: Type a Message
-tMessage = Tag "Message" $ Iso (f <-> g) tp
+tMessage = Iso (f <-> g) tp
  where
-   tp  = tPair tBool tText :|: tText
+   tp  = tPair (Tag "accept" tBool) (Tag "message" tText) :|: (Tag "message" tText)
    f   = either (\(b, t) -> M (Just b) t) (M Nothing)
    g m = maybe (Right (text m)) (\b -> Left (b, text m)) (accept m)
 
@@ -38,7 +39,7 @@ tMessage = Tag "Message" $ Iso (f <-> g) tp
 
 derivationtext :: Script -> State a -> Either String (Derivation String (Context a))
 derivationtext script state =
-   let f = ruleToString (newEnvironment state Nothing) script . fst
+   let f = ruleToString (newEnvironment state Nothing) script . fst3
    in right (mapFirst f) (solution Nothing state)
 
 onefirsttext :: Script -> State a -> Maybe String -> (Message, Maybe (State a))
@@ -80,7 +81,7 @@ feedbacktext script old new motivationId =
       NotEquivalent _ -> (msg False, old)
       Expected _ s _  -> (msg True, s)
       WrongRule _ s _ -> (msg True, s)
-      Similar _ s     -> (msg True, s)
+      Similar _ s _   -> (msg True, s)
       Detour _ s _ _  -> (msg True, s)
       Correct _ s     -> (msg False, s)
       Unknown _ s     -> (msg False, s)

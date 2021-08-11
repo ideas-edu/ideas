@@ -45,10 +45,11 @@ instance Read ShowString where
 
 readInt :: String -> Maybe Int
 readInt xs
-   | null xs                = Nothing
-   | any (not . isDigit) xs = Nothing
-   | otherwise              = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
+   | null xs              = Nothing
+   | not (all isDigit xs) = Nothing
+   | otherwise            = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
 
+{-# INLINE readM #-}
 readM :: (Monad m, Read a) => String -> m a
 readM s = case reads s of
              [(a, xs)] | all isSpace xs -> return a

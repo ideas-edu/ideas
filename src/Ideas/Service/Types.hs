@@ -271,7 +271,8 @@ tError = (:|:) tString
 tDerivation :: Type a t1 -> Type a t2 -> Type a (Derivation t1 t2)
 tDerivation t1 t2 = Tag "Derivation" $ Iso (f <-> g) tp
  where
-   tp = tPair t2 (tList (tPair t1 t2))
+   tp = tPair t2 (Tag "derivationsteps" (tList (tPair t1 t2)))
+
    f (a, xs) = foldl extend (emptyDerivation a) xs
    g d = (firstTerm d, [ (s, a) | (_, s, a) <- triples d ])
 

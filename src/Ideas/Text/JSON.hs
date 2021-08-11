@@ -18,7 +18,7 @@ module Ideas.Text.JSON
    , InJSON(..)                           -- type class
    , lookupM
    , parseJSON, compactJSON               -- parser and pretty-printers
-   , jsonRPC, RPCHandler, RPCResponse(..)
+   , jsonRPC, RPCHandler, RPCRequest(..), RPCResponse(..)
    , propEncoding
    ) where
 

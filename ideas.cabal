@@ -130,6 +130,9 @@ Library
     Ideas.Encoding.Logging
     Ideas.Encoding.ModeJSON
     Ideas.Encoding.ModeXML
+    Ideas.Encoding.NewModeJSON
+    Ideas.Encoding.NewEncoderJSON
+    Ideas.Encoding.NewDecoderJSON
     Ideas.Encoding.OpenMathSupport
     Ideas.Encoding.Options
     Ideas.Encoding.Request

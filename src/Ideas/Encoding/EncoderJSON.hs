@@ -21,6 +21,7 @@ import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.Request
 import Ideas.Service.State
+import Ideas.Service.BasicServices
 import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
 import Ideas.Utils.Prelude (distinct)
@@ -48,9 +49,11 @@ jsonEncoder tv@(val ::: tp) =
       Tp.Tag s t
          | s == "Result"     -> encodeTyped encodeResult Submit.tResult tv
          | s == "Diagnosis"  -> encodeTyped encodeDiagnosis Diagnose.tDiagnosis tv
-         | s == "Derivation" -> ((encodeDerivation, tDerivation (tPair tRule tEnvironment) tContext) <?>
+         | s == "Derivation" -> ((encodeDerivation, tDerivation tStepInfo tContext) <?>
                                 encodeTyped encodeDerivationText (tDerivation tString tContext)) tv
+         | s == "first"      -> encodeTyped encodeFirst (tPair tStepInfo tState) (val ::: t)
          | s == "elem"       -> jsonEncoder (val ::: t)
+         | s `elem` ["step", "accept", "message"] -> jsonEncoder (val ::: t)
          | otherwise -> (\b -> Object [(s, b)]) <$> jsonEncoder (val ::: t)
       Tp.Unit   -> return Null
       Tp.List t -> Array <$> sequence [ jsonEncoder (x ::: t) | x <- val ]
@@ -122,9 +125,17 @@ encodeStateEnvironment ctx = return $
            $ environment ctx
    in Object [ (showId a, String $ showValue a) | a <- bindings env ]
 
-encodeDerivation :: Derivation (Rule (Context a), Environment) (Context a) -> JSONEncoder a
+encodeFirst :: (StepInfo a, State a) -> JSONEncoder a
+encodeFirst (step, state) = do
+   x <- jsonEncoder (step  ::: tStepInfo)
+   y <- jsonEncoder (state ::: tState)
+   case x of
+      Array xs -> return $ Array $ xs ++ [y]
+      _        -> return $ Array [x, y]
+
+encodeDerivation :: Derivation (StepInfo a) (Context a) -> JSONEncoder a
 encodeDerivation d =
-   let xs = [ (s, a) | (_, s, a) <- triples d ]
+   let xs = [ ((r, env), ctx) | (_, (r, _, env), ctx) <- triples d ]
    in jsonEncoder (xs ::: tList (tPair (tPair tRule tEnvironment) tContext))
 
 encodeDerivationText :: Derivation String (Context a) -> JSONEncoder a
@@ -173,8 +184,8 @@ encodeDiagnosis diagnosis =
                    else make "notequiv" [fromReason s]
       Diagnose.Buggy env r ->
          make "buggy" [fromEnv env, fromRule r]
-      Diagnose.Similar b st ->
-         make "similar" [fromReady b, fromState st]
+      Diagnose.Similar b st mr ->
+         make "similar" [fromReady b, fromState st, fromMaybeRule mr]
       Diagnose.WrongRule b st mr ->
          make "wrongrule" [fromReady b, fromState st, fromMaybeRule mr]
       Diagnose.Expected b st r ->

@@ -26,7 +26,7 @@ import Data.Char
 import Data.Maybe
 import Data.Monoid
 import Data.String
-import Ideas.Encoding.ModeJSON (processJSON)
+import Ideas.Encoding.NewModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
 import Ideas.Encoding.Options (Options, maxTime, optionCgiBin, logRef)
 import Ideas.Encoding.Request
@@ -66,7 +66,7 @@ defaultCGI :: Options -> DomainReasoner -> IO ()
 defaultCGI options dr = CGI.run $ \req respond -> do
    -- query environment
    let script = fromMaybe "" (findHeader "CGI-Script-Name" req) -- get name of binary
-       addr   = fromMaybe "" (findHeader "REMOTE_ADDR" req)     -- the IP address of the remote host
+       addr   = ""                                              -- no IP address of the remote host (GDPR)
    input   <- inputOrDefault req >>= decoding
    -- process request
    (preq, txt, ctp) <-

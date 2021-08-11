@@ -58,7 +58,7 @@ solutionS = makeService "basic.solution"
    \current expression. The first optional argument lets you configure the \
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $
-   solution ::: tMaybe tStrategyCfg .-> tState .-> tError (tDerivation (tPair tRule tEnvironment) tContext)
+   solution ::: tMaybe tStrategyCfg .-> tState .-> tError (tDerivation tStepInfo tContext)
 
 derivationS :: Service
 derivationS = deprecate $ makeService "basic.derivation"
@@ -71,7 +71,7 @@ allfirstsS = makeService "basic.allfirsts"
    \onefirst service to get only one suggestion. For each suggestion, a new \
    \state, the rule used, and the location where the rule was applied are \
    \returned." $
-   allfirsts ::: tState .-> tError (tList (tPair tStepInfo tState))
+   allfirsts ::: tState .-> tError (tList (Tag "first" (tPair tStepInfo tState)))
 
 onefirstS :: Service
 onefirstS = makeService "basic.onefirst"
@@ -79,7 +79,7 @@ onefirstS = makeService "basic.onefirst"
    \service to get all possible steps that are allowed by the strategy. In \
    \addition to a new state, the rule used and the location where to apply \
    \this rule are returned." $
-   onefirst ::: tState .-> tString :|: Tag "elem" (tPair tStepInfo tState)
+   onefirst ::: tState .-> tString :|: Tag "first" (tPair tStepInfo tState)
    -- special tag for (legacy) xml encoding
 
 onefinalS :: Service
@@ -150,7 +150,7 @@ createS :: Service
 createS = makeService "basic.create"
     "Given an expression, this service \
     \returns an initial state with the original given expression." $
-    create ::: tQCGen .-> tExercise .-> tString .-> tMaybe tUserId .-> tError tState
+    create ::: tQCGen .-> tExercise .-> Tag "term" tString .-> tMaybe tUserId .-> tError tState
 
 examplesS :: Service
 examplesS = makeService "basic.examples"
@@ -166,7 +166,7 @@ exampleS = makeService "basic.example"
    \with an exercise. These are the examples that appear at the page generated \
    \for each exercise. Also see the generate service, which returns a random \
    \start term." $
-   f ::: tQCGen .-> tExercise .-> tInt .-> tMaybe tUserId .-> tError tState
+   f ::: tQCGen .-> tExercise .-> Tag "nr" tInt .-> tMaybe tUserId .-> tError tState
  where
    f rng ex nr userId =
       case drop nr (examplesAsList ex) of
@@ -202,7 +202,7 @@ diagnoseS = makeService "basic.diagnose"
 diagnoseStringS :: Service
 diagnoseStringS = makeService "basic.diagnose-string"
    "See diagnose service, but also returns a SyntaxError for invalid input." $
-   diagnoseString ::: tState .-> tString .-> tMaybe tId .-> Diagnose.tDiagnosis
+   diagnoseString ::: tState .-> Tag "term" tString .-> tMaybe tId .-> Diagnose.tDiagnosis
 
 diagnoseString :: State a -> String -> Maybe Id -> Diagnose.Diagnosis a
 diagnoseString st s mot =
@@ -325,7 +325,7 @@ microstepsS = makeService "meta.microsteps" "Next (minor) steps." $
 examplederivationsS :: Service
 examplederivationsS = makeService "meta.examplederivations"
    "Show example derivations" $
-   exampleDerivations ::: tExercise .-> tError (tList (tDerivation (tPair tRule tEnvironment) tContext))
+   exampleDerivations ::: tExercise .-> tError (tList (tDerivation tStepInfo tContext))
 
 testreportS :: Service
 testreportS = makeService "meta.testreport"

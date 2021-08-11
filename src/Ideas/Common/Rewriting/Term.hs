@@ -162,6 +162,10 @@ instance IsTerm Bool where
       | s == falseSymbol = return False
    fromTerm _ = fail "fromTerm: not a Bool"
 
+instance IsTerm Id where
+   toTerm   = toTerm . show
+   fromTerm = fmap (newId :: String -> Id) . fromTerm
+
 instance IsTerm a => IsTerm [a] where
    toTerm = toTermList
    fromTerm = fromTermList

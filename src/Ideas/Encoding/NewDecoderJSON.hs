@@ -17,16 +17,14 @@ module Ideas.Encoding.NewDecoderJSON
    ( JSONDecoder, jsonDecoder
    ) where
 
-import Control.Monad.State (mplus, foldM, get, gets, put)
+import Control.Monad.State (mplus, foldM, get, put)
 import Data.Char
-import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, symbol)
 import Ideas.Common.Traversal.Navigator
 import Ideas.Encoding.Encoder
 import Ideas.Service.State
 import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
-import Ideas.Utils.Decoding (symbol)
 import qualified Ideas.Service.Types as Tp
 
 type JSONDecoder a t = DecoderX a JSON t
@@ -172,8 +170,8 @@ decodeState = do
             }
 
 searchId :: String -> JSON -> Maybe String
-searchId s json =
-   case lookupM s json of 
+searchId str json =
+   case lookupM str json of 
       Just (String s) -> Just s
       _ -> Nothing
 

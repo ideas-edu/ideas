@@ -21,6 +21,7 @@ import Ideas.Encoding.Encoder
 import Ideas.Service.State
 import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
+import qualified Ideas.Service.Apply as Apply
 import qualified Ideas.Service.Diagnose as Diagnose
 import qualified Ideas.Service.Types as Tp
 
@@ -57,8 +58,9 @@ jsonEncoder tv@(val ::: tp) =
       Pair t1 t2 -> (++) <$> jsonEncoder (fst val ::: t1) <*> jsonEncoder (snd val ::: t2)
       Tp.List t  -> listJSONBuilder <$> sequence [ jsonEncoder (x ::: t) | x <- val ]
       Tp.Tag s t 
-         | s == "Diagnosis"  -> encodeTyped encodeDiagnosis Diagnose.tDiagnosis tv
-         | otherwise         -> tagJSONBuilder (map toLower s) <$> jsonEncoder (val ::: t)
+         | s == "Diagnosis"   -> encodeTyped encodeDiagnosis Diagnose.tDiagnosis tv
+         | s == "ApplyResult" -> encodeTyped encodeApplyResult Apply.tApplyResult tv
+         | otherwise          -> tagJSONBuilder (map toLower s) <$> jsonEncoder (val ::: t)
       Tp.Unit    -> pure []
       Const ctp  -> jsonEncodeConst (val ::: ctp)
       _          -> fail $ "Cannot encode type: " ++ show tp
@@ -146,6 +148,23 @@ encodeDiagnosis diagnosis =
           pure [(Just "diagnosetype", toJSON "syntaxerror"), (Just "message", toJSON msg)]
       Diagnose.Unknown b st ->
          (\xs ys -> (Just "diagnosetype", toJSON "unknown") : xs ++ ys) <$> mkReady b <*> encodeState st 
+ where
+  mkReady b      = return [(Just "ready", toJSON b)]
+  mkRule         = mkMaybeRule . Just
+  mkMaybeRule mr = return [(Just "rule", maybe Null (toJSON . showId) mr)]
+
+encodeApplyResult :: Apply.ApplyResult a -> EncoderX a JSONBuilder
+encodeApplyResult result = 
+   case result of
+      Apply.Correct b st ->
+         (\xs ys -> (Just "diagnosetype", toJSON "correct") : xs ++ ys) <$> mkReady b <*> encodeState st 
+      Apply.SyntaxError msg -> 
+         pure [(Just "diagnosetype", toJSON "syntaxerror"), (Just "message", toJSON msg)]
+      Apply.Buggy env r ->
+         (\xs ys -> (Just "diagnosetype", toJSON "buggy") : xs ++ ys) <$> encodeEnvironment env <*> mkRule r
+      Apply.Incorrect ->
+         pure [(Just "diagnosetype", toJSON "incorrect")]
+
  where
   mkReady b      = return [(Just "ready", toJSON b)]
   mkRule         = mkMaybeRule . Just

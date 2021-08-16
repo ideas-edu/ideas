@@ -139,7 +139,7 @@ applyS = makeService "basic.apply"
    "Apply a rule at a certain location to the current expression. If this rule \
    \was not expected by the strategy, we deviate from it. If the rule cannot \
    \be applied, this service call results in an error." $
-   Apply.apply ::: tRule .-> tLocation .-> tEnvironment .-> tState .-> tError tState
+   Apply.apply ::: tRule .-> tLocation .-> tEnvironment .-> tState .-> Apply.tApplyResult
 
 generateS :: Service
 generateS = makeService "basic.generate"

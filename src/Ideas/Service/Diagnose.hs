@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -22,7 +21,7 @@ module Ideas.Service.Diagnose
 import Data.List (find, intercalate, sortBy)
 import Data.Maybe
 import Ideas.Common.Library hiding (ready)
-import Ideas.Service.BasicServices hiding (apply)
+import Ideas.Service.BasicServices
 import Ideas.Service.State
 import Ideas.Service.Types
 import qualified Ideas.Common.Rewriting.Difference as Diff

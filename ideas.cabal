@@ -143,6 +143,7 @@ Library
     Ideas.Main.CmdLineOptions
     Ideas.Main.Default
     Ideas.Main.Revision
+    Ideas.Service.Apply
     Ideas.Service.BasicServices
     Ideas.Service.Diagnose
     Ideas.Service.DomainReasoner

@@ -13,21 +13,19 @@
 module Ideas.Service.BasicServices
    ( -- * Basic Services
      stepsremaining, findbuggyrules, allfirsts, solution, solutionMaxSteps
-   , onefirst, onefinal, applicable, allapplications, apply, generate, create
+   , onefirst, onefinal, applicable, allapplications, generate, create
    , StepInfo, tStepInfo, exampleDerivations, recognizeRule
    ) where
 
 import Control.Monad
 import Data.List
-import Data.Maybe
 import Ideas.Common.Examples
 import Ideas.Common.Library hiding (applicable, apply, ready)
-import Ideas.Common.Traversal.Navigator (downs, navigateTo)
+import Ideas.Common.Traversal.Navigator (downs)
 import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Utils.Prelude (fst3)
 import Test.QuickCheck.Random
-import qualified Data.Set as S
 import qualified Ideas.Common.Classes as Apply
 import qualified Ideas.Common.Library as Library
 
@@ -132,55 +130,6 @@ allapplications state = sortBy cmp (xs ++ ys)
       case ruleOrdering ex r1 r2 of
          EQ   -> loc1 `compare` loc2
          this -> this
-
--- local helper
-setLocation :: Location -> Context a -> Context a
-setLocation loc c0 = fromMaybe c0 (navigateTo loc c0)
-
--- Two possible scenarios: either I have a prefix and I can return a new one (i.e., still following the
--- strategy), or I return a new term without a prefix. A final scenario is that the rule cannot be applied
--- to the current term at the given location, in which case the request is invalid.
-apply :: Rule (Context a) -> Location -> Environment -> State a -> Either String (State a)
-apply r loc env state
-   | withoutPrefix state = applyOff
-   | otherwise           = applyOn
- where
-   applyOn = -- scenario 1: on-strategy
-      maybe applyOff Right $ listToMaybe
-      [ s1 | Right xs <- [allfirsts state], ((r1, loc1, env1), s1) <- xs, r==r1, loc==loc1, noBindings env || env==env1 ]
-
-   ca = setLocation loc (stateContext state)
-   applyOff  = -- scenario 2: off-strategy
-      case transApplyWith env (transformation r) ca of
-         (new, _):_ -> Right (restart (state {stateContext = new, statePrefix = noPrefix}))
-         [] ->
-            -- first check the environment (exercise-specific property)
-            case environmentCheck of
-               Just msg ->
-                  Left msg
-               Nothing ->
-                  -- try to find a buggy rule
-                  case siblingsFirst [ (br, envOut) | br <- ruleset (exercise state), isBuggy br,  (_, envOut) <- transApplyWith env (transformation br) ca ] of
-                     []  -> Left ("Cannot apply " ++ show r)
-                     brs -> Left ("Buggy rule " ++ intercalate "+" (map pp brs))
-    where
-      pp (br, envOut)
-         | noBindings envOut = show br
-         | otherwise         = show br ++ " {" ++ show envOut ++ "}"
-
-   siblingsFirst xs = ys ++ zs
-    where
-      (ys, zs) = partition (siblingInCommon r . fst) xs
-
-   environmentCheck :: Maybe String
-   environmentCheck = do
-      p <- getProperty "environment-check" (exercise state)
-      p env
-
-siblingInCommon :: Rule a -> Rule a -> Bool
-siblingInCommon r1 r2 = not (S.null (getSiblings r1 `S.intersection` getSiblings r2))
- where
-   getSiblings r = S.fromList (getId r : ruleSiblings r)
 
 stepsremaining :: State a -> Either String Int
 stepsremaining = mapSecond derivationLength . solution Nothing

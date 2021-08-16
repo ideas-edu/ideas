@@ -27,6 +27,7 @@ module Ideas.Common.Context
    , liftToContext, contextView
    , use, useC, applyTop
    , currentTerm, changeTerm, replaceInContext, currentInContext, changeInContext
+   , setLocation
    ) where
 
 import Data.Maybe
@@ -177,3 +178,6 @@ changeInContext f (C env a) = C env (changeNavigator f a)
 
 replaceInContext :: a -> Context a -> Context a
 replaceInContext = changeInContext . const
+
+setLocation :: Location -> Context a -> Context a
+setLocation loc c = fromMaybe c (navigateTo loc c)

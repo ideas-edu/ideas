@@ -35,14 +35,14 @@ generate rng ex md userId =
       Just a  -> Right $ startState rng ex userId a
       Nothing -> Left "No random term"
 
-create :: QCGen -> Exercise a -> String -> Maybe String -> Either String (State a)
-create rng ex txt userId =
-   case parser ex txt of
-      Left err -> Left err
-      Right a
-         | evalPredicate (Library.ready ex) a -> Left "Is ready"
-         | evalPredicate (Library.suitable ex) a -> Right $ startState rng ex userId a
+create :: QCGen -> Exercise a -> Context a -> Maybe String -> Either String (State a)
+create rng ex ctx userId =
+   case fromContext ctx of
+      Just a 
+         | evalPredicate (Library.ready ex) a    -> Left "Is ready"
+         | evalPredicate (Library.suitable ex) a -> Right $ startStateContext rng ex userId ctx
          | otherwise -> Left "Not suitable"
+      Nothing -> Left "Invalid value"
 
 -- TODO: add a location to each step
 solution :: Maybe StrategyCfg -> State a -> Either String (Derivation (StepInfo a) (Context a))

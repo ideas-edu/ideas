@@ -205,9 +205,18 @@ decodeValue :: JSONDecoder a a
 decodeValue = do
    this <- get
    ex   <- getExercise
-   case (lookupM "term" this, hasJSONView ex) of 
-      (Just json, Just jv) -> matchM jv json 
-      (Just (String s), _) -> either fail return (parser ex s)
+   case lookupM "term" this of
+      Just json@(String s) ->
+         case parser ex s of
+            Left msg -> 
+               case hasJSONView ex of 
+                  Just jv -> matchM jv json 
+                  Nothing -> fail msg
+            Right a  -> return a
+      Just json -> 
+         case hasJSONView ex of 
+            Just jv -> matchM jv json 
+            Nothing -> fail "No JSON decoder for term"
       _ -> fail "Expecting term"
 
 decodeEnvironment :: JSONDecoder a Environment

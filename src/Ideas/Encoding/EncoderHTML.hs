@@ -116,7 +116,7 @@ encodeType dr =
    (encodeIndex, tDomainReasoner) <?>
    (exerciseHeader . htmlDiagnosis dr, tDiagnosis) <?>
    (exerciseHeader . encodeExampleList, tList (tPair tDifficulty tContext)) <?>
-   (exerciseHeader . htmlFirsts, tList (tPair tStepInfo tState)) <?>
+   (exerciseHeader . htmlFirsts, tList (Tag "first" (tPair tStepInfo tState))) <?>
    (exerciseHeader . htmlAllApplications, tList (tTuple3 tRule tLocation tState)) <?>
    (exerciseHeader . encodeDerivation, tDerivation tStepInfo tContext) <?>
    (exerciseHeader . encodeDerivationList, tList (tDerivation tStepInfo tContext)) <?>
@@ -520,7 +520,7 @@ encodeState dr state = do
       in return (mconcat
          [ h2 "Feedback"
          , submitDiagnose lm state
-         , tag "p" $ padding Small  $ mconcat [ case xs of
+         , tag "p" $ padding Small  $ spaced [ case xs of
                    Right (hd:_) -> linkToState lm (snd hd) $ serviceButton $ string "onefirst"
                    _ -> string "(no onefirst)"
               , linkToFirsts lm state $ serviceButton $ string $ "allfirsts (" ++ show n ++ ")"
@@ -545,7 +545,7 @@ useAllFirstsIO dr st = do
    srv <- findService dr (newId ("allfirsts" :: String))
    case serviceFunction srv of
       f ::: tp -> do
-         conv <- equalM tp (tState .-> tError (tList (tPair tStepInfo tState)))
+         conv <- equalM tp (tState .-> tError (tList (Tag "first" (tPair tStepInfo tState))))
          return (conv f st)
 
 encodePrefix :: State a -> Prefix (Context a) -> HTMLBuilder

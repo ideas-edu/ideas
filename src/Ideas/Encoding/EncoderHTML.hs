@@ -118,8 +118,8 @@ encodeType dr =
    (exerciseHeader . encodeExampleList, tList (tPair tDifficulty tContext)) <?>
    (exerciseHeader . htmlFirsts, tList (tPair tStepInfo tState)) <?>
    (exerciseHeader . htmlAllApplications, tList (tTuple3 tRule tLocation tState)) <?>
-   (exerciseHeader . encodeDerivation, tDerivation (tPair tRule tEnvironment) tContext) <?>
-   (exerciseHeader . encodeDerivationList, tList (tDerivation (tPair tRule tEnvironment) tContext)) <?>
+   (exerciseHeader . encodeDerivation, tDerivation tStepInfo tContext) <?>
+   (exerciseHeader . encodeDerivationList, tList (tDerivation tStepInfo tContext)) <?>
    \(val ::: tp) ->
         case tp of
            Iso iso t  -> encodeType dr (to iso val ::: t)
@@ -456,11 +456,11 @@ encodeExampleList pairs = withExercise $ \ex -> do
       let st = emptyStateContext ex x
       in button (escapeInURL (urlForState lm st)) (htmlContext False ex x)
 
-encodeDerivation :: Derivation (Rule (Context a), Environment) (Context a) -> HTMLEncoder a
+encodeDerivation :: Derivation (StepInfo a) (Context a) -> HTMLEncoder a
 encodeDerivation d =
    h2 "Derivation" <> htmlDerivation d
 
-encodeDerivationList :: [Derivation (Rule (Context a), Environment) (Context a)] -> HTMLEncoder a
+encodeDerivationList :: [Derivation (StepInfo a) (Context a)] -> HTMLEncoder a
 encodeDerivationList ds =
    h2 "Derivations"
    <> mconcat
@@ -468,7 +468,7 @@ encodeDerivationList ds =
       | (i, d) <- zip [1::Int ..] ds
       ]
 
-htmlDerivation :: Derivation (Rule (Context a), Environment) (Context a) -> HTMLEncoder a
+htmlDerivation :: Derivation (StepInfo a) (Context a) -> HTMLEncoder a
 htmlDerivation d = withExercise $ \ex -> do
    lm <- getLinkManager
    let before =
@@ -476,7 +476,7 @@ htmlDerivation d = withExercise $ \ex -> do
           <> case fmap (isReady ex) (fromContext (lastTerm d)) of
                 Just True -> mempty
                 _ -> spanClass "error" (string "Final term is not finished")
-       forStep ((r, env1), env2) =
+       forStep ((r, _, env1), env2) =
           let showEnv e = munless (noBindings e) $ string $ "," ++ show e in
           container $ marginPos CenterLeft $ mconcat
              [ string [chr 8658, ' ']

@@ -21,6 +21,8 @@ module Ideas.Common.Derivation
    , merge, mergeBy, mergeStep
      -- * Conversion to/from list
    , derivationToList, derivationFromList
+     -- * Equality
+   , eqDerivationBy
      -- * Querying a derivation
    , isEmpty, derivationLength, terms, steps, triples
    , firstTerm, lastTerm, lastStep, withoutLast
@@ -90,6 +92,13 @@ derivationFromList f g = rec
    rec []  = fail "derivationFromList"
    rec [b] = emptyDerivation <$> g b
    rec (b1:b2:bs) = curry prepend <$> g b1 <*> f b2 <*> rec bs
+
+-----------------------------------------------------------------------------
+-- Equality
+
+eqDerivationBy :: Eq s => (a -> a -> Bool) -> Derivation s a -> Derivation s a -> Bool
+eqDerivationBy f d1 d2 =
+   and (zipWith f (terms d1) (terms d2)) && steps d1 == steps d2
 
 -----------------------------------------------------------------------------
 -- Querying a derivation

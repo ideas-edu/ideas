@@ -16,10 +16,12 @@ module Ideas.Common.Constraint
   ( Constraint, makeConstraint
   , isRelevant, isSatisfied, isViolated, getResult
   , Result(..), relevance
+  , subConstraints
   ) where
 
 import Control.Applicative
 import Control.Monad
+import Data.List
 import Ideas.Common.Id
 import Ideas.Common.View
 
@@ -112,3 +114,20 @@ instance MonadPlus Result where
 relevance :: Result a -> Result a
 relevance (Error _) = Irrelevant
 relevance r = r
+
+-- to do:
+-- * alle errors teruggeven
+-- * locatie van error bijhouden
+subConstraints :: IsId n => (b -> [(String, a)]) -> n -> Constraint a -> Constraint b
+subConstraints f n c = makeConstraint n $ \p -> do
+   let results = [ (loc, getResult c a) | (loc, a) <- f p ]
+   case filter isError results of
+      [] | any isOk results -> Ok ()
+         | otherwise        -> Irrelevant
+      errs -> Error $ intercalate "," [ showId c ++ "." ++ loc ++ ":" ++ msg | (loc, Error msg) <- errs ]
+ where
+   isError (_, Error _) = True
+   isError _ = False
+
+   isOk (_, Ok _) = True
+   isOk _ = False

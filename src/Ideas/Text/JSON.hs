@@ -19,6 +19,7 @@ module Ideas.Text.JSON
    , lookupM
    , parseJSON, compactJSON               -- parser and pretty-printers
    , jsonRPC, RPCHandler, RPCRequest(..), RPCResponse(..)
+   , JSONBuilder, arrayBuilder, (.=), tagJSON, builder
    , propEncoding
    ) where
 
@@ -26,6 +27,7 @@ import Control.Exception
 import Control.Monad
 import Data.List (intersperse)
 import Data.Maybe
+import Data.String
 import Ideas.Utils.Parsing hiding (string, char)
 import System.IO.Error
 import Test.QuickCheck
@@ -52,6 +54,9 @@ instance Show Number where
 
 instance Show JSON where
    show = show . prettyJSON False
+
+instance IsString JSON where
+   fromString = String
 
 compactJSON :: JSON -> String
 compactJSON = show . prettyJSON True
@@ -150,6 +155,10 @@ instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
    toJSON (a, b, c, d)           = Array [toJSON a, toJSON b, toJSON c, toJSON d]
    fromJSON (Array [a, b, c, d]) = (,,,) <$> fromJSON a <*> fromJSON b <*> fromJSON c <*> fromJSON d
    fromJSON _                    = fail "expecting an array with 4 elements"
+
+instance InJSON JSON where
+   toJSON   = id
+   fromJSON = return
 
 --------------------------------------------------------
 -- Parser
@@ -259,6 +268,46 @@ jsonRPC input rpc =
    handler req e =
       let msg = maybe (show e) ioeGetErrorString (fromException e)
       in return $ errorResponse (toJSON msg) (requestId req)
+
+--------------------------------------------------------
+-- JSON builder
+
+newtype JSONBuilder = JB [(Maybe Key, JSON)]
+
+instance InJSON JSONBuilder where
+   toJSON   = builderToJSON
+   fromJSON = return . builder
+
+instance Semigroup JSONBuilder where
+   JB xs <> JB ys = JB (xs <> ys)
+
+instance Monoid JSONBuilder where
+   mempty = JB []
+
+arrayBuilder :: [JSONBuilder] -> JSONBuilder
+arrayBuilder = builder . Array . map builderToJSON
+
+infix 7 .=
+
+(.=) :: InJSON a => String -> a -> JSONBuilder
+s .= a = JB [(Just s, toJSON a)]
+
+tagJSON :: InJSON a => String -> a -> JSONBuilder
+tagJSON = (.=)
+
+builder :: InJSON a => a -> JSONBuilder
+builder a = JB [(Nothing, toJSON a)]
+
+-- local helper
+builderToJSON :: JSONBuilder -> JSON
+builderToJSON (JB [(Nothing, x)]) = x
+builderToJSON (JB xs) = 
+   case mapM fst xs of
+      Just ks -> Object (zip ks (map snd xs))
+      Nothing -> Array (map f xs)
+ where
+    f (Nothing, a) = a
+    f (Just k, a)  = Object [(k, a)]
 
 --------------------------------------------------------
 -- Testing parser/pretty-printer

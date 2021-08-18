@@ -9,8 +9,6 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Extensions to the QuickCheck library
---
 -----------------------------------------------------------------------------
 
 module Ideas.Utils.Decoding

@@ -38,7 +38,7 @@ processJSON options dr txt = do
    if legacy then Legacy.processJSON' options dr json else do
       req  <- jsonRequest options json
       resp <- jsonRPC2 dr (maybe "result" show $ serviceId req) json $ \fun arg ->
-                 maybe id timedSeconds (maxTime options) (builderToJSON <$> myHandler options dr req fun arg)
+                 maybe id timedSeconds (maxTime options) (toJSON <$> myHandler options dr req fun arg)
       --unless (responseError resp == Null) $ !!!!!!!!!!!!!! 
       --   changeLog (logRef options) (\r -> r {errormsg = show (responseError resp)})
       let f   = if compactOutput req then compactJSON else show

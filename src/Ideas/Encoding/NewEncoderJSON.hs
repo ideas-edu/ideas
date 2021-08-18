@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Encoding.NewEncoderJSON (JSONBuilder, builderToJSON, jsonEncoder) where
+module Ideas.Encoding.NewEncoderJSON (jsonEncoder) where
 
 import Data.Char
 import Ideas.Common.Library hiding (exerciseId)
@@ -25,29 +25,8 @@ import qualified Ideas.Service.Apply as Apply
 import qualified Ideas.Service.Diagnose as Diagnose
 import qualified Ideas.Service.Types as Tp
 
-type JSONBuilder = [(Maybe Key, JSON)]
-
-listJSONBuilder :: [JSONBuilder] -> JSONBuilder
-listJSONBuilder xs = [(Nothing, Array (map builderToJSON xs))]
-
-builderToJSON :: JSONBuilder -> JSON
-builderToJSON [(Nothing, x)] = x
-builderToJSON xs = 
-   case mapM fst xs of
-      Just ks -> Object (zip ks (map snd xs))
-      Nothing -> Array (map f xs)
- where
-    f (Nothing, a) = a
-    f (Just k, a)  = Object [(k, a)]
-
-tagJSONBuilder :: String -> JSONBuilder -> JSONBuilder
-tagJSONBuilder s = tagJSON (map toLower s) . builderToJSON
-
-tagJSON :: String -> JSON -> JSONBuilder
-tagJSON s a = [(Just s, a)] 
-
 -------------------------------------------------------------
---
+
 jsonEncoder :: TypedValue (Type a) -> EncoderX a JSONBuilder
 jsonEncoder tv@(val ::: tp) = 
    case tp of
@@ -55,13 +34,13 @@ jsonEncoder tv@(val ::: tp) =
       t1 :|: t2  -> case val of
                        Left  x -> jsonEncoder (x ::: t1)
                        Right y -> jsonEncoder (y ::: t2)
-      Pair t1 t2 -> (++) <$> jsonEncoder (fst val ::: t1) <*> jsonEncoder (snd val ::: t2)
-      Tp.List t  -> listJSONBuilder <$> sequence [ jsonEncoder (x ::: t) | x <- val ]
+      Pair t1 t2 -> (<>) <$> jsonEncoder (fst val ::: t1) <*> jsonEncoder (snd val ::: t2)
+      Tp.List t  -> arrayBuilder <$> sequence [ jsonEncoder (x ::: t) | x <- val ]
       Tp.Tag s t 
          | s == "Diagnosis"   -> encodeTyped encodeDiagnosis Diagnose.tDiagnosis tv
          | s == "ApplyResult" -> encodeTyped encodeApplyResult Apply.tApplyResult tv
-         | otherwise          -> tagJSONBuilder (map toLower s) <$> jsonEncoder (val ::: t)
-      Tp.Unit    -> pure []
+         | otherwise          -> tagJSON (map toLower s) <$> jsonEncoder (val ::: t)
+      Tp.Unit    -> pure mempty
       Const ctp  -> jsonEncodeConst (val ::: ctp)
       _          -> fail $ "Cannot encode type: " ++ show tp
 
@@ -75,31 +54,31 @@ jsonEncodeConst (val ::: tp) =
       State        -> encodeState val
       SomeExercise -> case val of
                          Some ex -> pure (exerciseInfo ex)
-      Text         -> pure [(Nothing, toJSON (show val))]
-      Tp.String    -> pure [(Nothing, toJSON val)]
-      Tp.Int       -> pure [(Nothing, toJSON val)]
-      Tp.Bool      -> pure [(Nothing, toJSON val)]
+      Text         -> pure $ builder (show val)
+      Tp.String    -> pure $ builder val
+      Tp.Int       -> pure $ builder val
+      Tp.Bool      -> pure $ builder val
       _ -> fail $ "Type " ++ show tp ++ " not supported in JSON"
 
 encodeRule :: Rule (Context a) -> EncoderX a JSONBuilder
-encodeRule r = pure (tagJSON "rule" (toJSON (showId r)))
+encodeRule r = pure $ "rule" .= showId r
 
 encodeEnvironment :: Environment -> EncoderX a JSONBuilder
 encodeEnvironment env =
    let f a = (showId a, String (showValue a))
-   in pure $ tagJSON "environment" $ Object [ f a | a <- bindings env ]
+   in pure $ "environment" .= Object [ f a | a <- bindings env ]
 
 encodeContext :: Context a -> EncoderX a JSONBuilder
 encodeContext ctx = 
    let encValue = case fromContext ctx of
                      Just a  -> encodeTerm a
-                     Nothing -> pure $ tagJSON "term" Null -- todo: merge with encodeTerm
+                     Nothing -> pure $ "term" .= Null -- todo: merge with encodeTerm
        encEnv = encodeEnvironment (environment ctx)
        encLoc = encodeLocation (location ctx)
-   in (\xs ys zs -> tagJSONBuilder "context" $ xs ++ ys ++ zs) <$> encValue <*> encEnv <*> encLoc
+   in (\xs ys zs -> "context" .= (xs <> ys <> zs)) <$> encValue <*> encEnv <*> encLoc
 
 encodeTerm :: a -> EncoderX a JSONBuilder
-encodeTerm a = (tagJSON "term" . f) <$> getExercise
+encodeTerm a = tagJSON "term" . f <$> getExercise
  where
    f ex = 
       case hasJSONView ex of
@@ -107,72 +86,70 @@ encodeTerm a = (tagJSON "term" . f) <$> getExercise
          Nothing -> String (prettyPrinter ex a)
 
 encodeLocation :: Location -> EncoderX a JSONBuilder
-encodeLocation loc = pure (tagJSON "location" (toJSON (fromLocation loc)))
+encodeLocation loc = pure $ "location" .= fromLocation loc
 
 encodeState :: State a -> EncoderX a JSONBuilder
 encodeState st =
    let ctx   = stateContext st
        get f = maybe Null String (f st)
-       make ppCtx =
-          [ (Just "exerciseid",  String $ showId (exercise st))
-          , (Just "prefix",      if withoutPrefix st
-                                 then Null
-                                 else String (show (statePrefix st))
-            )
-          ] ++
-          ppCtx ++
-          [ (Just "userid",    get stateUser)
-          , (Just "sessionid", get stateSession)
-          , (Just "taskid",    get stateStartTerm)
+       make ppCtx = mconcat
+          [ "exerciseid" .= showId (exercise st)
+          , "prefix"     .= if withoutPrefix st
+                            then Null
+                            else String (show (statePrefix st))
+          , ppCtx
+          , "userid"    .= get stateUser
+          , "sessionid" .= get stateSession
+          , "taskid"    .= get stateStartTerm
           ]
-   in (tagJSONBuilder "state" . make) <$> (encodeContext ctx)
+   in (tagJSON "state" . make) <$> (encodeContext ctx)
 
 encodeDiagnosis :: Diagnose.Diagnosis a -> EncoderX a JSONBuilder
 encodeDiagnosis diagnosis =
    case diagnosis of
       Diagnose.Correct b st ->
-         (\xs ys -> (Just "diagnosetype", toJSON "correct") : xs ++ ys) <$> mkReady b <*> encodeState st 
+         (\xs ys -> "diagnosetype" .= "correct" <> xs <> ys) <$> mkReady b <*> encodeState st 
       Diagnose.Similar b st mr ->
-         (\xs ys zs -> (Just "diagnosetype", toJSON "similar") : xs ++ ys ++ zs) <$> mkReady b <*> encodeState st <*> mkMaybeRule mr
+         (\xs ys zs -> "diagnosetype" .= "similar" <> xs <> ys <> zs) <$> mkReady b <*> encodeState st <*> mkMaybeRule mr
       Diagnose.NotEquivalent s ->
-         return [(Just "diagnosetype", toJSON "notequiv"), (Just "message", toJSON s)]
+         pure $ "diagnosetype" .= "notequiv" <> "message" .= s
       Diagnose.Expected b st r ->
-         (\xs ys zs -> (Just "diagnosetype", toJSON "expected") : xs ++ ys ++ zs) <$> mkReady b <*> encodeState st <*> mkRule r
+         (\xs ys zs -> "diagnosetype" .= "expected" <> xs <> ys <> zs) <$> mkReady b <*> encodeState st <*> mkRule r
       Diagnose.Buggy env r ->
-         (\xs ys -> (Just "diagnosetype", toJSON "buggy") : xs ++ ys) <$> encodeEnvironment env <*> mkRule r
+         (\xs ys -> "diagnosetype" .= "buggy" <> xs <> ys) <$> encodeEnvironment env <*> mkRule r
       Diagnose.Detour b st env r ->
-          (\xs ys zs vs -> (Just "diagnosetype", toJSON "detour") : xs ++ ys ++ zs ++ vs) <$> mkReady b <*> encodeState st <*> encodeEnvironment env <*> mkRule r
+          (\xs ys zs vs -> "diagnosetype" .= "detour" <> xs <> ys <> zs <> vs) <$> mkReady b <*> encodeState st <*> encodeEnvironment env <*> mkRule r
       Diagnose.WrongRule b st mr ->
-         (\xs ys zs -> (Just "diagnosetype", toJSON "wrongrule") : xs ++ ys ++ zs) <$> mkReady b <*> encodeState st <*> mkMaybeRule mr
+         (\xs ys zs -> "diagnosetype" .= "wrongrule" <> xs <> ys <> zs) <$> mkReady b <*> encodeState st <*> mkMaybeRule mr
       Diagnose.SyntaxError msg -> 
-          pure [(Just "diagnosetype", toJSON "syntaxerror"), (Just "message", toJSON msg)]
+          pure $ "diagnosetype" .= "syntaxerror" <> "message" .= msg
       Diagnose.Unknown b st ->
-         (\xs ys -> (Just "diagnosetype", toJSON "unknown") : xs ++ ys) <$> mkReady b <*> encodeState st 
+         (\xs ys -> "diagnosetype" .= "unknown" <> xs <> ys) <$> mkReady b <*> encodeState st 
  where
-  mkReady b      = return [(Just "ready", toJSON b)]
+  mkReady b      = pure $ "ready" .= b
   mkRule         = mkMaybeRule . Just
-  mkMaybeRule mr = return [(Just "rule", maybe Null (toJSON . showId) mr)]
+  mkMaybeRule mr = pure $ "rule" .= maybe Null (toJSON . showId) mr
 
 encodeApplyResult :: Apply.ApplyResult a -> EncoderX a JSONBuilder
 encodeApplyResult result = 
    case result of
       Apply.Correct b st ->
-         (\xs ys -> (Just "diagnosetype", toJSON "correct") : xs ++ ys) <$> mkReady b <*> encodeState st 
+         (\xs ys -> "diagnosetype" .= "correct" <> xs <> ys) <$> mkReady b <*> encodeState st 
       Apply.SyntaxError msg -> 
-         pure [(Just "diagnosetype", toJSON "syntaxerror"), (Just "message", toJSON msg)]
+         pure $ "diagnosetype" .= "syntaxerror" <> "message" .= msg
       Apply.Buggy env r ->
-         (\xs ys -> (Just "diagnosetype", toJSON "buggy") : xs ++ ys) <$> encodeEnvironment env <*> mkRule r
+         (\xs ys -> "diagnosetype" .= "buggy" <> xs <> ys) <$> encodeEnvironment env <*> mkRule r
       Apply.Incorrect ->
-         pure [(Just "diagnosetype", toJSON "incorrect")]
+         pure $ "diagnosetype" .= "incorrect"
 
  where
-  mkReady b      = return [(Just "ready", toJSON b)]
+  mkReady b      = pure $ "ready" .= b
   mkRule         = mkMaybeRule . Just
-  mkMaybeRule mr = return [(Just "rule", maybe Null (toJSON . showId) mr)]
+  mkMaybeRule mr = pure $ "rule" .= maybe Null (toJSON . showId) mr
 
 exerciseInfo :: Exercise a -> JSONBuilder
-exerciseInfo ex = tagJSON "exercise" $ Object  
-   [ ("exerciseid", toJSON (showId ex))
-   , ("description", toJSON (description ex))
-   , ("status", toJSON (show (status ex)))
+exerciseInfo ex = "exercise" .= mconcat
+   [ "exerciseid"  .= showId ex
+   , "description" .= description ex
+   , "status"      .= show (status ex)
    ]

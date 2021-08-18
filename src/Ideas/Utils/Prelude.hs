@@ -18,6 +18,7 @@ module Ideas.Utils.Prelude
    , subsets, isSubsetOf
    , cartesian, distinct, allsame
    , fixpoint
+   , split, split3, split4
    , splitAtElem, splitsWithElem
    , timedSeconds, getDiffTime
    , fst3, snd3, thd3
@@ -80,6 +81,24 @@ fixpoint f = rec . iterate f
    rec (x:xs)
       | x == head xs = x
       | otherwise    = rec xs
+
+split :: [a] -> [([a], [a])]
+split xs = map (`splitAt` xs) [0 .. length xs]  
+
+split3 :: [a] -> [([a], [a], [a])]
+split3 as = 
+   [ (xs, ys1, ys2)
+   | (xs, ys) <- split as
+   , (ys1, ys2) <- split ys
+   ]
+
+split4 :: [a] -> [([a], [a], [a], [a])]
+split4 as =
+   [ (xs1, xs2, ys1, ys2) 
+   | (xs, ys) <- split as
+   , (xs1, xs2) <- split xs
+   , (ys1, ys2) <- split ys
+   ]
 
 splitAtElem :: Eq a => a -> [a] -> Maybe ([a], [a])
 splitAtElem c s =

@@ -24,7 +24,8 @@ module Ideas.Text.JSON.Decoder
    ) where
 
 import Control.Monad
-import Ideas.Text.JSON
+import Ideas.Text.JSON.Builder
+import Ideas.Text.JSON.Data
 import Ideas.Utils.Decoding
 import Data.List
 import Data.String

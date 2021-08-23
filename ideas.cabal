@@ -161,6 +161,7 @@ Library
     Ideas.Text.HTML.Templates
     Ideas.Text.HTML.W3CSS
     Ideas.Text.JSON
+    Ideas.Text.JSON.Decoder
     Ideas.Text.Latex
     Ideas.Text.MathML
     Ideas.Text.OpenMath.Dictionary.Arith1

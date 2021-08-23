@@ -14,8 +14,8 @@
 module Ideas.Utils.Decoding
    ( Decoder, runDecoder, symbol
    , Encoder, runEncoder
-   , Error, runError
-   , throwError
+     -- re-exports
+   , Alternative(..), MonadReader(..), MonadState(..), MonadError(..)
    ) where
 
 import Control.Applicative
@@ -27,7 +27,7 @@ import Data.String
 
 -------------------------------------------------------------------
 
-newtype Decoder env err s a = Dec { runDec :: StateT s (ReaderT env (Error err)) a }
+newtype Decoder env err s a = Dec { runDec :: StateT s (ReaderT env (Except err)) a }
  deriving (Functor, Applicative, Alternative, MonadPlus, MonadReader env, MonadState s, MonadError err)
 
 instance Semigroup a => Semigroup (Decoder env err s a) where
@@ -50,7 +50,7 @@ symbol = get >>= \list ->
          put xs >> return x
 
 runDecoder :: Decoder env err s a -> env -> s -> Either err a
-runDecoder p env s = runError (runReaderT (evalStateT (runDec p) s) env)
+runDecoder p env s = runExcept (runReaderT (evalStateT (runDec p) s) env)
 
 -------------------------------------------------------------------
 
@@ -58,11 +58,3 @@ type Encoder env err = Decoder env err ()
 
 runEncoder :: Encoder env err a -> env -> Either err a
 runEncoder p env = runDecoder p env ()
-
--------------------------------------------------------------------
--- Error monad (helper)
-
-type Error err = Except err
-
-runError :: Error err a -> Either err a
-runError = runExcept 

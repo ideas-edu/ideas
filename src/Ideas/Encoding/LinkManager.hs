@@ -182,8 +182,8 @@ exerciseRequestWith s ex rest =
    makeRequest s (("exerciseid" .=. showId ex) <> rest)
 
 stateRequest :: String -> State a -> XML
-stateRequest s state =
-   exerciseRequestWith s (exercise state) (stateToXML state)
+stateRequest s st =
+   exerciseRequestWith s (exercise st) (stateToXML st)
 
 -- assume nothing goest wrong
 stateToXML :: State a -> XMLBuilder

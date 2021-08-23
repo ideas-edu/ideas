@@ -142,7 +142,7 @@ class (Sem.Semigroup a, Monoid a) => BuildXML a where
    element s  = tag s . mconcat
    emptyTag s = tag s mempty
 
-instance BuildXML a => BuildXML (Decoder env s a) where
+instance BuildXML a => BuildXML (Decoder env err s a) where
    n .=. s = pure (n .=. s)
    string  = pure . string
    builder = pure . builder
@@ -251,13 +251,13 @@ expecting s xml =
 -------------------------------------------------------------------------------
 -- Decoding XML
 
-decodeData :: Decoder env XML String
+decodeData :: IsString err => Decoder env err XML String
 decodeData = get >>= \xml ->
    case content xml of
       Left s:rest -> put xml {content = rest} >> return s
       _           -> fail "Could not find data"
 
-decodeAttribute :: String -> Decoder env XML String
+decodeAttribute :: IsString err => String -> Decoder env err XML String
 decodeAttribute s = get >>= \xml ->
    case break hasName (attributes xml) of
       (xs, (_ := val):ys) -> put xml {attributes = xs ++ ys } >> return val
@@ -265,7 +265,7 @@ decodeAttribute s = get >>= \xml ->
  where
    hasName (n := _) = n == s
 
-decodeChild :: Name -> Decoder env XML a -> Decoder env XML a
+decodeChild :: IsString err => Name -> Decoder env err XML a -> Decoder env err XML a
 decodeChild s p = get >>= \xml ->
    case break hasName (content xml) of
       (xs, Right y:ys) -> do
@@ -277,7 +277,7 @@ decodeChild s p = get >>= \xml ->
  where
    hasName = either (const False) ((==s) . name)
 
-decodeFirstChild :: Name -> Decoder env XML a -> Decoder env XML a
+decodeFirstChild :: IsString err => Name -> Decoder env err XML a -> Decoder env err XML a
 decodeFirstChild s p = get >>= \xml ->
    case content xml of
       Right y:ys | name y == s -> do

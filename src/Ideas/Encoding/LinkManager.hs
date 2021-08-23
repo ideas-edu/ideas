@@ -28,7 +28,7 @@ module Ideas.Encoding.LinkManager
    , escapeInURL
    ) where
 
-import Data.Maybe
+import Data.Either
 import Ideas.Common.Library
 import Ideas.Encoding.EncoderXML
 import Ideas.Encoding.Options
@@ -187,7 +187,7 @@ stateRequest s state =
 
 -- assume nothing goest wrong
 stateToXML :: State a -> XMLBuilder
-stateToXML st = fromMaybe (error "LinkManager: Invalid state") $
+stateToXML st = fromRight (error "LinkManager: Invalid state") $ 
    runEncoder (encodeState st) (exercise st, optionHtml mempty)
 
 linkWith :: (a -> String) -> a -> HTMLBuilder -> HTMLBuilder

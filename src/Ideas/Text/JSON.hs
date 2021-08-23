@@ -20,7 +20,8 @@ module Ideas.Text.JSON
    , parseJSON, compactJSON               -- parser and pretty-printers
    , jsonRPC, RPCHandler, RPCRequest(..), RPCResponse(..)
    , JSONBuilder, arrayBuilder, (.=), tagJSON, builder
-   , propEncoding
+   , builderList, builderObject, isEmptyBuilder
+   , extractFirst, extractKey, extractKeyAndValues
    ) where
 
 import Control.Exception
@@ -297,6 +298,28 @@ tagJSON = (.=)
 
 builder :: InJSON a => a -> JSONBuilder
 builder a = JB [(Nothing, toJSON a)]
+
+builderList :: InJSON a => [a] -> JSONBuilder
+builderList = mconcat . map builder
+
+builderObject :: InJSON a => [(Key, a)] -> JSONBuilder
+builderObject = mconcat . map (uncurry (.=))
+
+isEmptyBuilder :: JSONBuilder -> Bool
+isEmptyBuilder (JB xs) = null xs
+
+extractFirst :: JSONBuilder -> Maybe (JSON, JSONBuilder)
+extractFirst (JB ((Nothing, a):rest)) = Just (a, JB rest)
+extractFirst _ = Nothing
+
+extractKey :: Key -> JSONBuilder -> Maybe (JSON, JSONBuilder)
+extractKey k (JB xs) =
+   case break (maybe False (== k) . fst) xs of
+      (xs1, (_, v):xs2) -> Just (v, JB (xs1 ++ xs2))
+      _ -> Nothing
+
+extractKeyAndValues :: JSONBuilder -> [(Key, JSON)]
+extractKeyAndValues (JB xs) =  [ (k, a) | (mk, a) <- xs, k <- maybeToList mk ]
 
 -- local helper
 builderToJSON :: JSONBuilder -> JSON

@@ -73,10 +73,10 @@ withOpenMath = (fmap useOpenMath getRequest >>=)
 withJSONTerm :: (Bool -> DecoderX a s t) -> DecoderX a s t
 withJSONTerm = (fmap useJSONTerm getRequest >>=)
 
-(//) :: Decoder env s a -> s -> Decoder env s2 a
+(//) :: Decoder env String s a -> s -> Decoder env String s2 a
 p // a = do
    env  <- ask
-   runDecoder p env a
+   either throwError return (runDecoder p env a)
 
 -------------------------------------------------------------------
 -- JSON terms
@@ -165,7 +165,7 @@ latexEncodingWith = setPropertyF latexProperty . F
 -------------------------------------------------------------------
 -- Encoder datatype
 
-type EncoderX a = Encoder (Exercise a, Options)
+type EncoderX a = Encoder (Exercise a, Options) String
 
 type TypedEncoder a b = TypedValue (Type a) -> EncoderX a b
 
@@ -183,6 +183,6 @@ encodeTyped p t1 tv@(_ ::: t2) = ((p, t1) <?> fail ("Types do not match: " ++ sh
 -------------------------------------------------------------------
 -- Decoder datatype
 
-type DecoderX a = Decoder (Exercise a, Options)
+type DecoderX a = Decoder (Exercise a, Options) String
 
-type TypedDecoder a s = forall t . Type a t -> Decoder (Exercise a, Options) s t
+type TypedDecoder a s = forall t . Type a t -> Decoder (Exercise a, Options) String s t

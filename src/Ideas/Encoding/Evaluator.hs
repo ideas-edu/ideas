@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, RankNTypes #-}
+{-# LANGUAGE GADTs, RankNTypes, ScopedTypeVariables #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -46,10 +46,13 @@ evalService ex opts f srv b = do
    logType opts res tDiagnosis $ \d r -> r {serviceinfo = show d}
    return (evalResult res)
 
-eval :: Exercise a -> Options -> Evaluator a b c -> b -> TypedValue (Type a) -> IO (EvalResult a c)
+eval :: forall a b c. Exercise a -> Options -> Evaluator a b c -> b -> TypedValue (Type a) -> IO (EvalResult a c)
 eval ex opts (Evaluator dec enc) b = rec
  where
-   rec tv@(val ::: tp) =
+   env = (ex, opts)
+
+   rec :: TypedValue (Type a) -> IO (EvalResult a c)
+   rec tv@(val ::: tp)  = 
       case tp of
          -- handle exceptions
          Const String :|: t ->
@@ -57,14 +60,16 @@ eval ex opts (Evaluator dec enc) b = rec
          -- uncurry function if possible
          t1 :-> t2 :-> t3 ->
             rec (uncurry val ::: Pair t1 t2 :-> t3)
-         t1 :-> t2 -> do
-            a   <- runDecoder (dec t1) (ex, opts) b
-            res <- rec (val a ::: t2)
-            return res { inputValues = (a ::: t1) : inputValues res }
+         -- functions
+         t1 :-> t2 ->
+            case runDecoder (dec t1) env b of
+               Left msg -> fail msg
+               Right a -> do 
+                  res <- rec (val a ::: t2)
+                  return res { inputValues = (a ::: t1) : inputValues res }
          -- perform IO
          IO t -> do
             a <- val
             rec (a ::: t)
-         _ -> do
-            c <- runEncoder (enc tv) (ex, opts)
-            return $ EvalResult [] tv c
+         _ ->
+            either fail (return . EvalResult [] tv) (runEncoder (enc tv) env)

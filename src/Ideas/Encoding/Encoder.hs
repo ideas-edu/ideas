@@ -105,9 +105,9 @@ termToJSON term =
          | s == objectSymbol -> Object (f ts)
          | otherwise -> Object [("_apply", Array (JSON.String (show s):map termToJSON ts))]
       TList xs  -> Array (map termToJSON xs)
-      TNum n    -> Number (I n)
-      TFloat d  -> Number (D d)
-      TMeta n   -> Object [("_meta", Number (I (toInteger n)))]
+      TNum n    -> Integer n
+      TFloat d  -> Double d
+      TMeta n   -> Object [("_meta", Integer (toInteger n))]
  where
    f [] = []
    f (TVar s:x:xs) = (s, termToJSON x) : f xs
@@ -116,12 +116,12 @@ termToJSON term =
 jsonToTerm :: JSON -> Term
 jsonToTerm json =
    case json of
-      Number (I n)  -> TNum n
-      Number (D d)  -> TFloat d
+      Integer n     -> TNum n
+      Double d      -> TFloat d
       JSON.String s -> TVar s
       Boolean b     -> Term.symbol  (if b then trueSymbol else falseSymbol)
       Array xs      -> TList (map jsonToTerm xs)
-      Object [("_meta", Number (I n))] -> TMeta (fromInteger n)
+      Object [("_meta", Integer n)] -> TMeta (fromInteger n)
       Object [("_apply", Array (JSON.String s:xs))] -> TCon (newSymbol s) (map jsonToTerm xs)
       Object xs     -> TCon objectSymbol (concatMap f xs)
       Null          -> Term.symbol nullSymbol

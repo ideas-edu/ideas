@@ -101,7 +101,7 @@ jBool = jFirst $ \loc a ->
 jInteger :: GDecoderJSON env Integer
 jInteger = jFirst $ \loc a ->
    case a of
-      Just (Number (I i)) -> return i
+      Just (Integer i) -> return i
       _ -> errorJSON NotAnInteger loc a
 
 jInt :: GDecoderJSON env Int
@@ -110,7 +110,7 @@ jInt = fromInteger <$> jInteger
 jDouble :: GDecoderJSON env Double
 jDouble = jFirst $ \loc a ->
    case a of
-      Just (Number (D d)) -> return d
+      Just (Double d) -> return d
       _ -> errorJSON NotADouble loc a
 
 jFloat :: GDecoderJSON env Float

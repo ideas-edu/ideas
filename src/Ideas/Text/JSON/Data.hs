@@ -11,9 +11,9 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Text.JSON.Data
-   ( JSON(..), Key, Number(..)            -- types
+   ( JSON(..), Key            -- types
    , lookupM
-   , parseJSON, compactJSON               -- parser and pretty-printers
+   , parseJSON, compactJSON   -- parser and pretty-printers
    ) where
 
 import Control.Monad
@@ -27,7 +27,8 @@ import qualified Ideas.Text.UTF8 as UTF8
 import qualified Text.ParserCombinators.Parsec.Token as P
 
 data JSON
-   = Number  Number        -- integer, real, or floating point
+   = Integer Integer       -- integer, ... 
+   | Double  Double        --   ... real, or floating point
    | String  String        -- double-quoted Unicode with backslash escapement
    | Boolean Bool          -- true and false
    | Array   [JSON]        -- ordered sequence (comma-separated, square brackets)
@@ -36,12 +37,6 @@ data JSON
  deriving Eq
 
 type Key = String
-
-data Number = I Integer | D Double deriving Eq
-
-instance Show Number where
-   show (I n) = show n
-   show (D d) = show d
 
 instance Show JSON where
    show = show . prettyJSON False
@@ -57,7 +52,8 @@ prettyJSON compact = rec
  where
    rec json =
       case json of
-         Number n  -> text (show n)
+         Integer n -> text (show n)
+         Double d  -> text (show d)
          String s  -> str (escape s)
          Boolean b -> text (if b then "true" else "false")
          Null      -> text "null"
@@ -102,7 +98,7 @@ parseJSON = parseSimple json
       [ Null          <$ P.reserved lexer "null"
       , Boolean True  <$ P.reserved lexer "true"
       , Boolean False <$ P.reserved lexer "false"
-      , Number . either I D <$> naturalOrFloat -- redefined in Ideas.Text.Parsing
+      , either Integer Double <$> naturalOrFloat -- redefined in Ideas.Text.Parsing
       , String <$> P.stringLiteral lexer
       , Array  <$> P.brackets lexer (sepBy json (P.comma lexer))
       , Object <$> P.braces lexer (sepBy keyValue (P.comma lexer))
@@ -125,13 +121,11 @@ lookupM _ _ = fail "expecting a JSON object"
 instance Arbitrary JSON where
    arbitrary = sized arbJSON
 
-instance Arbitrary Number where
-   arbitrary = oneof [ I <$> arbitrary, D . fromInteger <$> arbitrary ]
-
 arbJSON :: Int -> Gen JSON
 arbJSON n
    | n == 0 = oneof
-        [ Number <$> arbitrary, String <$> myStringGen
+        [ Integer <$> arbitrary, Double . fromInteger <$> arbitrary 
+        , String <$> myStringGen
         , Boolean <$> arbitrary, return Null
         ]
    | otherwise = oneof

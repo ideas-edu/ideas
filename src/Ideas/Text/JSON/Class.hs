@@ -49,11 +49,11 @@ instance InJSON Int where
    jsonDecoder = jInt
 
 instance InJSON Integer where
-   toJSON      = Number . I
+   toJSON      = Integer
    jsonDecoder = jInteger
 
 instance InJSON Double where
-   toJSON = Number . D
+   toJSON = Double
    jsonDecoder = jDouble
 
 instance InJSON Char where

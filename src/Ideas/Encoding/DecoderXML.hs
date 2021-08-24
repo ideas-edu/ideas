@@ -31,7 +31,7 @@ import Ideas.Text.MathML
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
 
-type XMLDecoder a t = DecoderX a XML t
+type XMLDecoder a t = DecoderX a String XML t
 
 xmlDecoder :: TypedDecoder a XML
 xmlDecoder tp =

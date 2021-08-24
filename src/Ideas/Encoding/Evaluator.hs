@@ -62,7 +62,7 @@ eval ex opts (Evaluator dec enc) b = rec
             rec (uncurry val ::: Pair t1 t2 :-> t3)
          -- functions
          t1 :-> t2 ->
-            case runDecoder (dec t1) env b of
+            case evalDecoder (dec t1) env b of
                Left msg -> fail msg
                Right a -> do 
                   res <- rec (val a ::: t2)

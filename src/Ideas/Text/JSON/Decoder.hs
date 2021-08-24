@@ -1,4 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -12,15 +11,16 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Text.JSON.Decoder
-   ( EnvDecoderJSON, runEnvDecoderJSON, fromEnvDecoderJSON
-   , DecoderJSON, runDecoderJSON
-   , ErrorJSON
-   , jObject, jKey, jWithObject
-   , jArray, jWithArray
+   ( GDecoderJSON, evalGDecoderJSON
+   , DecoderJSON, evalDecoderJSON
+   , ErrorJSON, errorStr
+   , jObject, jKey, jWithKeys, jObjectWithKeys
+   , jArray, jArrayOf, jArray0, jArray1, jArray2, jArray3
    , jString, jBool, jInteger, jInt, jDouble, jFloat
-   , jNull, jEmpty
+   , jNull, jEmpty, jSkip
+   , jNext
      -- re-exports
-   , Alternative(..), MonadReader(..)
+   , Alternative(..), MonadReader(..), throwError
    ) where
 
 import Control.Monad
@@ -30,96 +30,111 @@ import Ideas.Utils.Decoding
 import Data.List
 import Data.String
 
-newtype EnvDecoderJSON env a = DJ { fromEnvDecoderJSON :: Decoder env ErrorJSON (Loc, JSONBuilder) a }
- deriving (Functor, Applicative, Alternative, Monad, MonadReader env)
+type GDecoderJSON env = Decoder env ErrorJSON (Loc, JSONBuilder)
 
-runEnvDecoderJSON :: EnvDecoderJSON env a -> env -> JSON -> Either ErrorJSON a
-runEnvDecoderJSON p env json = runDecoder (fromEnvDecoderJSON p) env (Root 0, builder json)
+evalGDecoderJSON :: GDecoderJSON env a -> env -> JSON -> Either ErrorJSON a
+evalGDecoderJSON p env json = evalDecoder p env (Root 0, builder json)
 
-type DecoderJSON = EnvDecoderJSON ()
+type DecoderJSON = GDecoderJSON ()
 
-runDecoderJSON :: DecoderJSON a -> JSON -> Either ErrorJSON a
-runDecoderJSON p = runEnvDecoderJSON p ()
+evalDecoderJSON :: DecoderJSON a -> JSON -> Either ErrorJSON a
+evalDecoderJSON p = evalGDecoderJSON p ()
 
-jObject :: EnvDecoderJSON env a -> EnvDecoderJSON env a
-jObject p = jNext $ \loc a -> 
+jObject :: GDecoderJSON env a -> GDecoderJSON env a
+jObject p = jFirst $ \loc a -> 
    case a of 
-      Just (Object xs) -> putDJ (loc, builderObject xs) >> p
+      Just (Object xs) -> put (loc, builderObject xs) >> p
       _ -> errorJSON NotAnObject loc a
 
-jKey :: Key -> EnvDecoderJSON env a -> EnvDecoderJSON env a
-jKey k p = getDJ >>= \(loc, xs) -> 
+jKey :: Key -> GDecoderJSON env a -> GDecoderJSON env a
+jKey k p = get >>= \(loc, xs) -> 
    case extractKey k xs of
-      Just (v, rest) -> putDJ (LocKey 0 k loc, builder v) *> p <* putDJ (loc, rest)
+      Just (v, rest) -> put (LocKey 0 k loc, builder v) *> p <* put (loc, rest)
       _ -> errorJSON (KeyNotFound k) loc (Just (toJSON xs))
 
-jWithObject :: (Key -> EnvDecoderJSON env a) -> EnvDecoderJSON env [a]
-jWithObject g = jObject $ getDJ >>= \(loc, xs) -> 
-   mapM (\(k, v) -> putDJ (LocKey 0 k loc, builder v) >> g k) (extractKeyAndValues xs)
+jWithKeys :: (Key -> GDecoderJSON env a) -> GDecoderJSON env [a]
+jWithKeys f = get >>= \(loc, xs) -> 
+   mapM (\(k, v) -> put (LocKey 0 k loc, builder v) >> f k) (extractKeyAndValues xs)
 
-jArray :: EnvDecoderJSON env a -> EnvDecoderJSON env a
-jArray p = jNext $ \loc a -> 
+jObjectWithKeys :: (Key -> GDecoderJSON env a) -> GDecoderJSON env [a]
+jObjectWithKeys = jObject . jWithKeys
+
+jArray :: GDecoderJSON env a -> GDecoderJSON env a
+jArray p = jFirst $ \loc a -> 
    case a of 
-      Just (Array xs) -> putDJ (LocArray 0 loc, builderList xs) >> p
+      Just (Array xs) -> put (LocArray 0 loc, builderList xs) >> p
       _ -> errorJSON NotAnArray loc a
 
-jWithArray :: EnvDecoderJSON env a -> EnvDecoderJSON env [a]
-jWithArray p = jArray (many p <* jEmpty)
+jArrayOf :: GDecoderJSON env a -> GDecoderJSON env [a]
+jArrayOf p = jArray $ many p <* jEmpty
 
-jString :: EnvDecoderJSON env String
-jString = jNext $ \loc a ->
+jArray0 :: GDecoderJSON env ()
+jArray0 = jArray jEmpty
+
+jArray1 :: GDecoderJSON env a -> GDecoderJSON env a
+jArray1 p = jArray $ p <* jEmpty
+
+jArray2 :: (a -> b -> c) -> GDecoderJSON env a -> GDecoderJSON env b -> GDecoderJSON env c
+jArray2 f p q = jArray $ f <$> p <*> q <* jEmpty
+
+jArray3 :: (a -> b -> c -> d) -> GDecoderJSON env a -> GDecoderJSON env b -> GDecoderJSON env c -> GDecoderJSON env d
+jArray3 f p q r = jArray $ f <$> p <*> q <*> r <* jEmpty
+
+jString :: GDecoderJSON env String
+jString = jFirst $ \loc a ->
    case a of
       Just (String s) -> return s
       _ -> errorJSON NotAString loc a
 
-jBool :: EnvDecoderJSON env Bool
-jBool = jNext $ \loc a ->
+jBool :: GDecoderJSON env Bool
+jBool = jFirst $ \loc a ->
    case a of
       Just (Boolean b) -> return b
       _ -> errorJSON NotABoolean loc a
 
-jInteger :: EnvDecoderJSON env Integer
-jInteger = jNext $ \loc a ->
+jInteger :: GDecoderJSON env Integer
+jInteger = jFirst $ \loc a ->
    case a of
       Just (Number (I i)) -> return i
       _ -> errorJSON NotAnInteger loc a
 
-jInt :: EnvDecoderJSON env Int
+jInt :: GDecoderJSON env Int
 jInt = fromInteger <$> jInteger
 
-jDouble :: EnvDecoderJSON env Double
-jDouble = jNext $ \loc a ->
+jDouble :: GDecoderJSON env Double
+jDouble = jFirst $ \loc a ->
    case a of
       Just (Number (D d)) -> return d
       _ -> errorJSON NotADouble loc a
 
-jFloat :: EnvDecoderJSON env Float
+jFloat :: GDecoderJSON env Float
 jFloat = realToFrac <$> jDouble
 
-jNull :: EnvDecoderJSON env ()
-jNull = jNext $ \loc a ->
+jNull :: GDecoderJSON env ()
+jNull = jFirst $ \loc a ->
    case a of
       Just (Null) -> return ()
       _ -> errorJSON NotNull loc a
 
-jEmpty :: EnvDecoderJSON env ()
-jEmpty = getDJ >>= \(loc, xs) -> 
+jEmpty :: GDecoderJSON env ()
+jEmpty = get >>= \(loc, xs) ->
    unless (isEmptyBuilder xs) (errorJSON NotEmpty loc (Just (toJSON xs)))
 
+jSkip :: GDecoderJSON env ()
+jSkip = jNext $ const $ return ()
+
+jNext :: (JSON -> Either String a) -> GDecoderJSON env a
+jNext f = jFirst $ \loc mjson -> 
+   case fmap f mjson of
+      Just res -> either errorStr return res
+      Nothing  -> errorJSON NoNextElement loc Nothing
+
 -- local helper: not exported
-jNext :: (Loc -> Maybe JSON -> EnvDecoderJSON env a) -> EnvDecoderJSON env a
-jNext f = getDJ >>= \(loc, xs) ->
+jFirst :: (Loc -> Maybe JSON -> GDecoderJSON env a) -> GDecoderJSON env a
+jFirst f = get >>= \(loc, xs) ->
    case extractFirst xs of
-      Just (json, rest) -> f loc (Just json) <* putDJ (nextLoc loc, rest)
+      Just (json, rest) -> f loc (Just json) <* put (nextLoc loc, rest)
       _ -> f loc Nothing
-
--- local helper: not exported
-getDJ :: EnvDecoderJSON env (Loc, JSONBuilder)
-getDJ = DJ get
-
--- local helper: not exported
-putDJ :: (Loc, JSONBuilder) -> EnvDecoderJSON env ()
-putDJ = DJ . put
 
 --------------------------------------------------------------------------------
 -- Errors
@@ -140,7 +155,7 @@ instance Show ErrorJSON where
 
 data ErrorType 
    = NotAnObject | NotAnArray | NotAString | NotABoolean | NotAnInteger | NotADouble
-   | NotNull | NotEmpty | KeyNotFound Key
+   | NotNull | NotEmpty | KeyNotFound Key | NoNextElement
 
 instance Show ErrorType where
    show NotAnObject     = "not an object"
@@ -151,7 +166,8 @@ instance Show ErrorType where
    show NotADouble      = "not a double"
    show NotNull         = "not null"
    show NotEmpty        = "not empty"
-   show (KeyNotFound k) = "key '" ++ k ++ "'not found"
+   show (KeyNotFound k) = "key '" ++ k ++ "' not found"
+   show NoNextElement   = "no next element"
 
 instance IsString ErrorJSON where
    fromString s = E [Left s]
@@ -180,5 +196,8 @@ nextLoc (Root n)       = Root (n+1)
 nextLoc (LocArray n l) = LocArray (n+1) l
 nextLoc (LocKey n k l) = LocKey (n+1) k l
 
-errorJSON :: ErrorType -> Loc -> Maybe JSON -> EnvDecoderJSON env a
-errorJSON tp loc a = DJ $ throwError $ E [Right (tp, loc, a)]
+errorStr :: String -> GDecoderJSON env a
+errorStr = throwError . fromString
+
+errorJSON :: ErrorType -> Loc -> Maybe JSON -> GDecoderJSON env a
+errorJSON tp loc a = throwError $ E [Right (tp, loc, a)]

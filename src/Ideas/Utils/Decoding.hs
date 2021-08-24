@@ -12,7 +12,7 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Utils.Decoding
-   ( Decoder, runDecoder, symbol
+   ( Decoder, evalDecoder, runDecoder, mapError
    , Encoder, runEncoder
      -- re-exports
    , Alternative(..), MonadReader(..), MonadState(..), MonadError(..)
@@ -27,7 +27,7 @@ import Data.String
 
 -------------------------------------------------------------------
 
-newtype Decoder env err s a = Dec { runDec :: StateT s (ReaderT env (Except err)) a }
+newtype Decoder env err s a = Dec { fromDec :: StateT s (ReaderT env (Except err)) a }
  deriving (Functor, Applicative, Alternative, MonadPlus, MonadReader env, MonadState s, MonadError err)
 
 instance Semigroup a => Semigroup (Decoder env err s a) where
@@ -39,22 +39,26 @@ instance Monoid a => Monoid (Decoder env err s a) where
 
 instance IsString err => Monad (Decoder env err s) where
    return a    = Dec (return a)
-   Dec m >>= f = Dec $ m >>= \a -> runDec (f a)
+   Dec m >>= f = Dec $ m >>= fromDec . f
    fail s      = Dec $ throwError (fromString s) -- ! needed for backwards compatibility
 
-symbol :: IsString err => Decoder env err [s] s
-symbol = get >>= \list ->
-   case list of
-      []   -> fail "Empty input"
-      x:xs ->
-         put xs >> return x
+runDecoder :: Decoder env err s a -> env -> s -> Either err (a, s)
+runDecoder p env s = runExcept (runReaderT (runStateT (fromDec p) s) env)
 
-runDecoder :: Decoder env err s a -> env -> s -> Either err a
-runDecoder p env s = runExcept (runReaderT (evalStateT (runDec p) s) env)
+evalDecoder :: Decoder env err s a -> env -> s -> Either err a
+evalDecoder p env = fmap fst . runDecoder p env
+
+mapError :: IsString err2 => (err1 -> err2) -> Decoder env err1 s a -> Decoder env err2 s a
+mapError f p = do
+   env <- reader id
+   s1  <- get
+   case runDecoder p env s1 of
+      Left e1 -> throwError (f e1)
+      Right (a, s2) -> put s2 >> return a
 
 -------------------------------------------------------------------
 
 type Encoder env err = Decoder env err ()
 
 runEncoder :: Encoder env err a -> env -> Either err a
-runEncoder p env = runDecoder p env ()
+runEncoder p env = evalDecoder p env ()

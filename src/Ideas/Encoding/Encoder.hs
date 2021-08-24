@@ -31,6 +31,7 @@ module Ideas.Encoding.Encoder
 
 import Control.Monad.Reader
 import Data.Maybe
+import Data.String
 import Ideas.Common.Library
 import Ideas.Encoding.Options
 import Ideas.Encoding.Request
@@ -46,37 +47,37 @@ import qualified Ideas.Text.JSON as JSON
 -------------------------------------------------------------------
 -- Converter type class
 
-getExercise :: DecoderX a s (Exercise a)
+getExercise :: IsString err => DecoderX a err s (Exercise a)
 getExercise = reader fst
 
-getOptions :: DecoderX a s Options
+getOptions :: IsString err => DecoderX a err s Options
 getOptions = reader snd
 
-getRequest :: DecoderX a s Request
+getRequest :: IsString err => DecoderX a err s Request
 getRequest = request <$> getOptions
 
-withExercise :: (Exercise a -> DecoderX a s t) -> DecoderX a s t
+withExercise :: IsString err => (Exercise a -> DecoderX a err s t) -> DecoderX a err s t
 withExercise = (getExercise >>=)
 
-getBaseUrl :: DecoderX a s String
+getBaseUrl :: IsString err => DecoderX a err s String
 getBaseUrl = fromMaybe "https://ideas.science.uu.nl/" . baseUrl <$> getOptions
 
-getQCGen :: DecoderX a s QCGen
+getQCGen :: IsString err => DecoderX a err s QCGen
 getQCGen = fromMaybe (mkQCGen 0) . qcGen <$> getOptions
 
-getScript :: DecoderX a s Script
+getScript :: IsString err => DecoderX a err s Script
 getScript = script <$> getOptions
 
-withOpenMath :: (Bool -> DecoderX a s t) -> DecoderX a s t
+withOpenMath :: IsString err => (Bool -> DecoderX a err s t) -> DecoderX a err s t
 withOpenMath = (fmap useOpenMath getRequest >>=)
 
-withJSONTerm :: (Bool -> DecoderX a s t) -> DecoderX a s t
+withJSONTerm :: IsString err => (Bool -> DecoderX a err s t) -> DecoderX a err s t
 withJSONTerm = (fmap useJSONTerm getRequest >>=)
 
-(//) :: Decoder env String s a -> s -> Decoder env String s2 a
+(//) :: IsString err => Decoder env err s a -> s -> Decoder env err s2 a
 p // a = do
    env  <- ask
-   either throwError return (runDecoder p env a)
+   either throwError return (evalDecoder p env a)
 
 -------------------------------------------------------------------
 -- JSON terms
@@ -183,6 +184,6 @@ encodeTyped p t1 tv@(_ ::: t2) = ((p, t1) <?> fail ("Types do not match: " ++ sh
 -------------------------------------------------------------------
 -- Decoder datatype
 
-type DecoderX a = Decoder (Exercise a, Options) String
+type DecoderX a = Decoder (Exercise a, Options)
 
-type TypedDecoder a s = forall t . Type a t -> Decoder (Exercise a, Options) String s t
+type TypedDecoder a s = forall t . Type a t -> DecoderX a String s t

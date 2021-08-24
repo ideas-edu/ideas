@@ -17,27 +17,29 @@ module Ideas.Encoding.DecoderJSON
    ( JSONDecoder, jsonDecoder
    ) where
 
-import Control.Monad.State (mplus, foldM, get, gets, put)
+import Control.Monad.State (get, gets)
 import Data.Char
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId, symbol)
 import Ideas.Common.Traversal.Navigator
 import Ideas.Encoding.Encoder
+import Ideas.Encoding.Options
 import Ideas.Service.State
 import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
-import Ideas.Utils.Decoding (symbol)
 import qualified Ideas.Service.Types as Tp
 
-type JSONDecoder a t = DecoderX a JSON t
+type JSONDecoder a = GDecoderJSON (Exercise a, Options)
 
 jsonDecoder :: TypedDecoder a JSON
-jsonDecoder tp = get >>= \json ->
-   case json of
-      Array xs -> decodeType tp // xs
-      _ -> fail "expecting an array"
+jsonDecoder tp = do
+   env  <- reader id
+   json <- get
+   case evalGDecoderJSON (jArray (decodeType tp)) env json of 
+      Left err -> throwError (show err)
+      Right a  -> return a
 
-decodeType :: Type a t -> DecoderX a [JSON] t
+decodeType :: Type a t -> JSONDecoder a t
 decodeType tp =
    case tp of
       Tag _ t -> decodeType t
@@ -47,73 +49,70 @@ decodeType tp =
          b <- decodeType t2
          return (a, b)
       t1 :|: t2 ->
-         (Left  <$> decodeType t1) `mplus`
-         (Right <$> decodeType t2)
+         Left  <$> decodeType t1 <|>
+         Right <$> decodeType t2
       Unit         -> return ()
       Const QCGen  -> getQCGen
       Const Script -> getScript
-      Const t      -> symbol >>= \a -> decodeConst t // a
-      _ -> fail $ "No support for argument type: " ++ show tp
+      Const t      -> decodeConst t
+      _ -> errorStr $ "No support for argument type: " ++ show tp
 
 decodeConst :: Const a t -> JSONDecoder a t
 decodeConst tp =
    case tp of
       State       -> decodeState
       Context     -> decodeContext
-      Exercise    -> getExercise
+      Exercise    -> getExercise <* jSkip
       Environment -> decodeEnvironment
       Location    -> decodeLocation
-      Term        -> gets jsonToTerm
-      Int         -> get >>= fromJSON
-      Tp.String   -> get >>= fromJSON
+      Term        -> gets (jsonToTerm . toJSON . snd)
+      Int         -> jInt
+      Tp.String   -> jString
       Id          -> decodeId
       Rule        -> decodeRule
-      _           -> fail $ "No support for argument type: " ++ show tp
+      _           -> errorStr $ "No support for argument type: " ++ show tp
 
 decodeRule :: JSONDecoder a (Rule (Context a))
 decodeRule = do
-   ex <- getExercise
-   get >>= \json ->
-      case json of
-         String s -> getRule ex (newId s)
-         _        -> fail "expecting a string for rule"
+   ex  <- getExercise
+   rid <- newId <$> jString
+   case getRule ex rid of
+      Just r  -> return r
+      Nothing -> errorStr ("unknown rule " ++ show rid) 
 
 decodeId :: JSONDecoder a Id
-decodeId = get >>= \json ->
-   case json of
-      String s -> return (newId s)
-      _        -> fail "expecting a string for id"
+decodeId = newId <$> jString
 
 decodeLocation :: JSONDecoder a Location
-decodeLocation = get >>= \json ->
-   case json of
-      String s -> toLocation <$> readM s
-      _        -> fail "expecting a string for a location"
+decodeLocation = jString >>= \s -> 
+   case readM s of
+      Just is -> return (toLocation is)
+      Nothing -> errorStr "invalid location"
 
 decodeState :: JSONDecoder a (State a)
-decodeState = do
-   ex <- getExercise
-   get >>= \json ->
-      case json of
-         Array [a] -> put a >> decodeState
-         Array (String _code : pref : term : jsonContext : rest) -> do
-            pts  <- decodePaths       // pref
-            a    <- decodeExpression  // term
-            env  <- decodeEnvironment // jsonContext
-            let loc = envToLoc env
-                ctx = navigateTowards loc $ deleteRef locRef $
-                         setEnvironment env $ inContext ex a
-                prfx = pts (strategy ex) ctx
-            case rest of
-               [] -> return $ makeState ex prfx ctx
-               [Array [String user, String session, String startterm]] ->
-                  return (makeState ex prfx ctx)
-                     { stateUser      = Just user
-                     , stateSession   = Just session
-                     , stateStartTerm = Just startterm
-                     }
-               _  -> fail $ "invalid state" ++ show json
-         _ -> fail $ "invalid state" ++ show json
+decodeState = jArray1 decodeState <|> jArray content
+ where
+   content = do
+      ex  <- getExercise
+      _   <- jString -- exercise id
+      pts <- decodePaths
+      a   <- decodeExpression
+      env <- decodeEnvironment
+      let loc = envToLoc env
+          ctx = navigateTowards loc $ deleteRef locRef $
+                   setEnvironment env $ inContext ex a
+          prfx = pts (strategy ex) ctx
+          defState = makeState ex prfx ctx
+      
+      (extra <|> id <$ jEmpty) <*> pure defState
+
+   extra = jArray3 f jString jString jString
+    where
+      f user session startterm st = st
+         { stateUser      = Just user
+         , stateSession   = Just session
+         , stateStartTerm = Just startterm
+         }
 
 envToLoc :: Environment -> Location
 envToLoc env = toLocation $ fromMaybe [] $ locRef ? env >>= readM
@@ -122,40 +121,32 @@ locRef :: Ref String
 locRef = makeRef "location"
 
 decodePaths :: JSONDecoder a (LabeledStrategy (Context a) -> Context a -> Prefix (Context a))
-decodePaths =
-   get >>= \json ->
-      case json of
-         String p
-            | p ~= "noprefix" -> return (\_ _ -> noPrefix)
-            | otherwise       -> replayPaths <$> readPaths p
-         _ -> fail "invalid prefixes"
+decodePaths = do
+   s <- jString
+   if (s ~= "noprefix")
+      then return (\_ _ -> noPrefix)
+      else replayPaths <$> readPaths s
  where
    x ~= y = filter isAlphaNum (map toLower x) == y
 
 decodeEnvironment :: JSONDecoder a Environment
-decodeEnvironment = get >>= \json ->
-   case json of
-      String "" -> return mempty
-      Object xs -> foldM (flip add) mempty xs
-      _         -> fail $ "invalid context: " ++ show json
+decodeEnvironment = foldr ($) mempty <$> jObjectWithKeys f <|> mempty <$ jString {- only accept "" -} 
  where
-   add (k, String s) = return . insertRef (makeRef k) s
-   add (k, Number n) = return . insertRef (makeRef k) (show n)
-   add _             = fail "invalid item in context"
+   f k = g <$> jString <|> g . show <$> jInt
+    where
+      g = insertRef (makeRef k)
 
 decodeContext :: JSONDecoder a (Context a)
-decodeContext = do
-   ex <- getExercise
-   inContext ex <$> decodeExpression
+decodeContext = inContext <$> getExercise <*> decodeExpression
 
 decodeExpression :: JSONDecoder a a
-decodeExpression = withJSONTerm $ \b -> getExercise >>= \ex -> get >>= f b ex
- where
-   f True ex json =
-      case hasJSONView ex of
-         Just v  -> matchM v json
-         Nothing -> fail "JSON encoding not supported by exercise"
-   f False ex json =
-      case json of
-         String s -> either fail return (parser ex s)
-         _ -> fail "Expecting a string when reading a term"
+decodeExpression = withJSONTerm $ \b -> 
+   if b
+   then do
+      mv <- hasJSONView <$> getExercise
+      case mv of 
+         Just v  -> jNext (matchM v)
+         Nothing -> errorStr "JSON encoding not supported by exercise"
+   else do
+      ex <- getExercise
+      jString >>= either errorStr return . parser ex

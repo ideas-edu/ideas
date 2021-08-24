@@ -31,7 +31,6 @@ module Ideas.Encoding.Encoder
 
 import Control.Monad.Reader
 import Data.Maybe
-import Data.String
 import Ideas.Common.Library
 import Ideas.Encoding.Options
 import Ideas.Encoding.Request
@@ -47,34 +46,34 @@ import qualified Ideas.Text.JSON as JSON
 -------------------------------------------------------------------
 -- Converter type class
 
-getExercise :: IsString err => DecoderX a err s (Exercise a)
+getExercise :: DecoderX a err s (Exercise a)
 getExercise = reader fst
 
-getOptions :: IsString err => DecoderX a err s Options
+getOptions :: DecoderX a err s Options
 getOptions = reader snd
 
-getRequest :: IsString err => DecoderX a err s Request
+getRequest :: DecoderX a err s Request
 getRequest = request <$> getOptions
 
-withExercise :: IsString err => (Exercise a -> DecoderX a err s t) -> DecoderX a err s t
+withExercise :: (Exercise a -> DecoderX a err s t) -> DecoderX a err s t
 withExercise = (getExercise >>=)
 
-getBaseUrl :: IsString err => DecoderX a err s String
+getBaseUrl :: DecoderX a err s String
 getBaseUrl = fromMaybe "https://ideas.science.uu.nl/" . baseUrl <$> getOptions
 
-getQCGen :: IsString err => DecoderX a err s QCGen
+getQCGen :: DecoderX a err s QCGen
 getQCGen = fromMaybe (mkQCGen 0) . qcGen <$> getOptions
 
-getScript :: IsString err => DecoderX a err s Script
+getScript :: DecoderX a err s Script
 getScript = script <$> getOptions
 
-withOpenMath :: IsString err => (Bool -> DecoderX a err s t) -> DecoderX a err s t
+withOpenMath :: (Bool -> DecoderX a err s t) -> DecoderX a err s t
 withOpenMath = (fmap useOpenMath getRequest >>=)
 
-withJSONTerm :: IsString err => (Bool -> DecoderX a err s t) -> DecoderX a err s t
+withJSONTerm :: (Bool -> DecoderX a err s t) -> DecoderX a err s t
 withJSONTerm = (fmap useJSONTerm getRequest >>=)
 
-(//) :: IsString err => Decoder env err s a -> s -> Decoder env err s2 a
+(//) :: Decoder env err s a -> s -> Decoder env err s2 a
 p // a = do
    env  <- ask
    either throwError return (evalDecoder p env a)

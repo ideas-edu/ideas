@@ -23,7 +23,6 @@ import Control.Monad
 import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.State
-import Data.String
 
 -------------------------------------------------------------------
 
@@ -37,10 +36,9 @@ instance Monoid a => Monoid (Decoder env err s a) where
    mempty  = pure mempty
    mappend = liftA2 mappend
 
-instance IsString err => Monad (Decoder env err s) where
+instance Monad (Decoder env err s) where
    return a    = Dec (return a)
    Dec m >>= f = Dec $ m >>= fromDec . f
-   fail s      = Dec $ throwError (fromString s) -- ! needed for backwards compatibility
 
 runDecoder :: Decoder env err s a -> env -> s -> Either err (a, s)
 runDecoder p env s = runExcept (runReaderT (runStateT (fromDec p) s) env)
@@ -48,7 +46,7 @@ runDecoder p env s = runExcept (runReaderT (runStateT (fromDec p) s) env)
 evalDecoder :: Decoder env err s a -> env -> s -> Either err a
 evalDecoder p env = fmap fst . runDecoder p env
 
-mapError :: IsString err2 => (err1 -> err2) -> Decoder env err1 s a -> Decoder env err2 s a
+mapError ::  (err1 -> err2) -> Decoder env err1 s a -> Decoder env err2 s a
 mapError f p = do
    env <- reader id
    s1  <- get

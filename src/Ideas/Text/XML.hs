@@ -251,21 +251,21 @@ expecting s xml =
 -------------------------------------------------------------------------------
 -- Decoding XML
 
-decodeData :: IsString err => Decoder env err XML String
+decodeData :: Decoder env String XML String
 decodeData = get >>= \xml ->
    case content xml of
       Left s:rest -> put xml {content = rest} >> return s
-      _           -> fail "Could not find data"
+      _           -> throwError "Could not find data"
 
-decodeAttribute :: IsString err => String -> Decoder env err XML String
+decodeAttribute :: String -> Decoder env String XML String
 decodeAttribute s = get >>= \xml ->
    case break hasName (attributes xml) of
       (xs, (_ := val):ys) -> put xml {attributes = xs ++ ys } >> return val
-      _ -> fail $ "Could not find attribute " ++ s
+      _ -> throwError $ "Could not find attribute " ++ s
  where
    hasName (n := _) = n == s
 
-decodeChild :: IsString err => Name -> Decoder env err XML a -> Decoder env err XML a
+decodeChild :: Name -> Decoder env String XML a -> Decoder env String XML a
 decodeChild s p = get >>= \xml ->
    case break hasName (content xml) of
       (xs, Right y:ys) -> do
@@ -273,11 +273,11 @@ decodeChild s p = get >>= \xml ->
          a <- p
          put xml { content = xs ++ ys }
          return a
-      _ -> fail $ "Could not find child " ++ s
+      _ -> throwError $ "Could not find child " ++ s
  where
    hasName = either (const False) ((==s) . name)
 
-decodeFirstChild :: IsString err => Name -> Decoder env err XML a -> Decoder env err XML a
+decodeFirstChild :: Name -> Decoder env String XML a -> Decoder env String XML a
 decodeFirstChild s p = get >>= \xml ->
    case content xml of
       Right y:ys | name y == s -> do
@@ -285,7 +285,7 @@ decodeFirstChild s p = get >>= \xml ->
          a <- p
          put xml { content = ys }
          return a
-      _ -> fail $ "Could not find first child " ++ s
+      _ -> throwError $ "Could not find first child " ++ s
 
 -------------------------------------------------------------------------------
 -- Type classes for converting to/from XML

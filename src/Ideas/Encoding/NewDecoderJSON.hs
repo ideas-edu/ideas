@@ -90,12 +90,10 @@ searchKey :: String -> JSONDecoder a (Maybe String)
 searchKey k = Just <$> jKey k jString <|> return Nothing
 
 decodePaths :: JSONDecoder a (Maybe [Path])
-decodePaths = do
-   s <- jKey "prefix" jString
-   if s ~= "noprefix"
-      then return Nothing
-      else Just <$> readPaths s
+decodePaths = f <$> jKey "prefix" jString
  where
+   f s | s ~= "noprefix" = Nothing
+       | otherwise       = readPaths s
    x ~= y = filter isAlphaNum (map toLower x) == y
 
 decodeContext :: JSONDecoder a (Context a)

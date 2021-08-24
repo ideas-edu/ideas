@@ -121,11 +121,12 @@ locRef :: Ref String
 locRef = makeRef "location"
 
 decodePaths :: JSONDecoder a (LabeledStrategy (Context a) -> Context a -> Prefix (Context a))
-decodePaths = do
-   s <- jString
-   if (s ~= "noprefix")
-      then return (\_ _ -> noPrefix)
-      else replayPaths <$> readPaths s
+decodePaths = jString >>= \s -> 
+   case readPaths s of
+      _ | s ~= "noprefix" 
+              -> return (\_ _ -> noPrefix)
+      Just ps -> return (replayPaths ps)
+      Nothing -> errorStr "invalid path"
  where
    x ~= y = filter isAlphaNum (map toLower x) == y
 

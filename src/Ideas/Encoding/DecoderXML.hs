@@ -113,7 +113,7 @@ decodePaths = do
       then return [emptyPath]
       else if prefixText ~= "no prefix"
       then return []
-      else readPaths prefixText
+      else maybe (fail "invalid paths") return (readPaths prefixText)
  where
    a ~= b = g a == g b
    g = map toLower . filter (not . isSpace)
@@ -181,7 +181,7 @@ decodeConfiguration = decodeChild "configuration" $
  where
    decodeAction item = do
       guard (null (children item))
-      action <- readM (name item)
+      action <- maybe (fail "invalid action") return $ readM (name item)
       cfgloc <- findAttribute "name" item
       return (action `byName` newId cfgloc)
 

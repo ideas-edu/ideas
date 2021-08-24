@@ -51,10 +51,10 @@ readInt xs
    | otherwise            = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
 
 {-# INLINE readM #-}
-readM :: (Monad m, Read a) => String -> m a
+readM :: Read a => String -> Maybe a
 readM s = case reads s of
-             [(a, xs)] | all isSpace xs -> return a
-             _ -> fail ("no read: " ++ s)
+             [(a, xs)] | all isSpace xs -> Just a
+             _ -> Nothing
 
 subsets :: [a] -> [[a]]
 subsets = foldr op [[]]

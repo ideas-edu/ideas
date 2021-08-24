@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Encoding.NewDecoderJSON
-   ( JSONDecoder, jsonDecoder
+   ( JSONDecoder, jsonTypeDecoder
    ) where
 
 import Control.Monad.State (get)
@@ -30,8 +30,8 @@ import qualified Ideas.Service.Types as Tp
 
 type JSONDecoder a = GDecoderJSON (Exercise a, Options)
 
-jsonDecoder :: Type a t -> DecoderX a String JSON t
-jsonDecoder tp = do
+jsonTypeDecoder :: Type a t -> DecoderX a String JSON t
+jsonTypeDecoder tp = do
     env  <- reader id
     json <- get
     case evalGDecoderJSON (jObject $ decodeType tp) env json of

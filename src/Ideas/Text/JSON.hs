@@ -17,8 +17,12 @@ module Ideas.Text.JSON
    ( module Ideas.Text.JSON.Data
    , module Ideas.Text.JSON.Builder
    , module Ideas.Text.JSON.Decoder
+   , module Ideas.Text.JSON.Class
+   , module Ideas.Text.JSON.RPC
    ) where
 
 import Ideas.Text.JSON.Builder
 import Ideas.Text.JSON.Data
 import Ideas.Text.JSON.Decoder
+import Ideas.Text.JSON.Class
+import Ideas.Text.JSON.RPC

@@ -11,8 +11,8 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Text.JSON.Builder
-   ( JSONBuilder, arrayBuilder, (.=), tagJSON, builder
-   , builderList, builderObject, isEmptyBuilder
+   ( JSONBuilder, arrayBuilder, jsonToBuilder, tagJSON, builderToJSON
+   , isEmptyBuilder
    , extractFirst, extractKey, extractKeyAndValues
    ) where
 
@@ -24,35 +24,20 @@ import Ideas.Text.JSON.Data
 
 newtype JSONBuilder = JB [(Maybe Key, JSON)]
 
-instance InJSON JSONBuilder where
-   toJSON   = builderToJSON
-   fromJSON = return . builder
-
 instance Semigroup JSONBuilder where
    JB xs <> JB ys = JB (xs <> ys)
 
 instance Monoid JSONBuilder where
    mempty = JB []
 
+jsonToBuilder :: JSON -> JSONBuilder
+jsonToBuilder a = JB [(Nothing, a)]
+
+tagJSON :: String -> JSON -> JSONBuilder
+tagJSON s a = JB [(Just s, a)]
+
 arrayBuilder :: [JSONBuilder] -> JSONBuilder
-arrayBuilder = builder . Array . map builderToJSON
-
-infix 7 .=
-
-(.=) :: InJSON a => String -> a -> JSONBuilder
-s .= a = JB [(Just s, toJSON a)]
-
-tagJSON :: InJSON a => String -> a -> JSONBuilder
-tagJSON = (.=)
-
-builder :: InJSON a => a -> JSONBuilder
-builder a = JB [(Nothing, toJSON a)]
-
-builderList :: InJSON a => [a] -> JSONBuilder
-builderList = mconcat . map builder
-
-builderObject :: InJSON a => [(Key, a)] -> JSONBuilder
-builderObject = mconcat . map (uncurry (.=))
+arrayBuilder = jsonToBuilder . Array . map builderToJSON
 
 isEmptyBuilder :: JSONBuilder -> Bool
 isEmptyBuilder (JB xs) = null xs
@@ -70,7 +55,6 @@ extractKey k (JB xs) =
 extractKeyAndValues :: JSONBuilder -> [(Key, JSON)]
 extractKeyAndValues (JB xs) =  [ (k, a) | (mk, a) <- xs, k <- maybeToList mk ]
 
--- local helper
 builderToJSON :: JSONBuilder -> JSON
 builderToJSON (JB [(Nothing, x)]) = x
 builderToJSON (JB xs) = 

@@ -16,7 +16,7 @@ module Ideas.Text.JSON.Decoder
    , ErrorJSON, errorStr
    , jObject, jKey, jWithKeys, jObjectWithKeys
    , jArray, jArrayOf, jArray0, jArray1, jArray2, jArray3
-   , jString, jBool, jInteger, jInt, jDouble, jFloat
+   , jString, jChar, jBool, jInteger, jInt, jDouble, jFloat
    , jNull, jEmpty, jSkip
    , jNext
      -- re-exports
@@ -33,7 +33,7 @@ import Data.String
 type GDecoderJSON env = Decoder env ErrorJSON (Loc, JSONBuilder)
 
 evalGDecoderJSON :: GDecoderJSON env a -> env -> JSON -> Either ErrorJSON a
-evalGDecoderJSON p env json = evalDecoder p env (Root 0, builder json)
+evalGDecoderJSON p env json = evalDecoder p env (Root 0, jsonToBuilder json)
 
 type DecoderJSON = GDecoderJSON ()
 
@@ -43,18 +43,18 @@ evalDecoderJSON p = evalGDecoderJSON p ()
 jObject :: GDecoderJSON env a -> GDecoderJSON env a
 jObject p = jFirst $ \loc a -> 
    case a of 
-      Just (Object xs) -> put (loc, builderObject xs) >> p
+      Just (Object xs) -> put (loc, mconcat $ map (uncurry tagJSON) xs) >> p
       _ -> errorJSON NotAnObject loc a
 
 jKey :: Key -> GDecoderJSON env a -> GDecoderJSON env a
 jKey k p = get >>= \(loc, xs) -> 
    case extractKey k xs of
-      Just (v, rest) -> put (LocKey 0 k loc, builder v) *> p <* put (loc, rest)
-      _ -> errorJSON (KeyNotFound k) loc (Just (toJSON xs))
+      Just (v, rest) -> put (LocKey 0 k loc, jsonToBuilder v) *> p <* put (loc, rest)
+      _ -> errorJSON (KeyNotFound k) loc (Just (builderToJSON xs))
 
 jWithKeys :: (Key -> GDecoderJSON env a) -> GDecoderJSON env [a]
 jWithKeys f = get >>= \(loc, xs) -> 
-   mapM (\(k, v) -> put (LocKey 0 k loc, builder v) >> f k) (extractKeyAndValues xs)
+   mapM (\(k, v) -> put (LocKey 0 k loc, jsonToBuilder v) >> f k) (extractKeyAndValues xs)
 
 jObjectWithKeys :: (Key -> GDecoderJSON env a) -> GDecoderJSON env [a]
 jObjectWithKeys = jObject . jWithKeys
@@ -62,7 +62,7 @@ jObjectWithKeys = jObject . jWithKeys
 jArray :: GDecoderJSON env a -> GDecoderJSON env a
 jArray p = jFirst $ \loc a -> 
    case a of 
-      Just (Array xs) -> put (LocArray 0 loc, builderList xs) >> p
+      Just (Array xs) -> put (LocArray 0 loc, mconcat $ map jsonToBuilder xs) >> p
       _ -> errorJSON NotAnArray loc a
 
 jArrayOf :: GDecoderJSON env a -> GDecoderJSON env [a]
@@ -85,6 +85,12 @@ jString = jFirst $ \loc a ->
    case a of
       Just (String s) -> return s
       _ -> errorJSON NotAString loc a
+
+jChar :: GDecoderJSON env Char
+jChar = jFirst $ \loc a ->
+   case a of
+      Just (String [c]) -> return c
+      _ -> errorJSON NotAChar loc a
 
 jBool :: GDecoderJSON env Bool
 jBool = jFirst $ \loc a ->
@@ -118,7 +124,7 @@ jNull = jFirst $ \loc a ->
 
 jEmpty :: GDecoderJSON env ()
 jEmpty = get >>= \(loc, xs) ->
-   unless (isEmptyBuilder xs) (errorJSON NotEmpty loc (Just (toJSON xs)))
+   unless (isEmptyBuilder xs) (errorJSON NotEmpty loc (Just (builderToJSON xs)))
 
 jSkip :: GDecoderJSON env ()
 jSkip = jNext $ const $ return ()
@@ -154,13 +160,14 @@ instance Show ErrorJSON where
          ]
 
 data ErrorType 
-   = NotAnObject | NotAnArray | NotAString | NotABoolean | NotAnInteger | NotADouble
+   = NotAnObject | NotAnArray | NotAString | NotAChar | NotABoolean | NotAnInteger | NotADouble
    | NotNull | NotEmpty | KeyNotFound Key | NoNextElement
 
 instance Show ErrorType where
    show NotAnObject     = "not an object"
    show NotAnArray      = "not an array"
    show NotAString      = "not a string"
+   show NotAChar        = "not a char"
    show NotABoolean     = "not a boolean"
    show NotAnInteger    = "not an integer"
    show NotADouble      = "not a double"

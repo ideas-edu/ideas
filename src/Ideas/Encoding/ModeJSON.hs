@@ -114,4 +114,4 @@ myHandler opt1 dr request fun json = do
    evalService ex options jsonEvaluator srv json
 
 jsonEvaluator :: Evaluator a JSON JSON
-jsonEvaluator = Evaluator jsonDecoder jsonEncoder
+jsonEvaluator = Evaluator jsonTypeDecoder jsonEncoder

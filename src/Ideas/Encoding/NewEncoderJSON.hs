@@ -39,7 +39,7 @@ jsonEncoder tv@(val ::: tp) =
       Tp.Tag s t 
          | s == "Diagnosis"   -> encodeTyped encodeDiagnosis Diagnose.tDiagnosis tv
          | s == "ApplyResult" -> encodeTyped encodeApplyResult Apply.tApplyResult tv
-         | otherwise          -> tagJSON (map toLower s) <$> jsonEncoder (val ::: t)
+         | otherwise          -> (map toLower s .=) <$> jsonEncoder (val ::: t)
       Tp.Unit    -> pure mempty
       Const ctp  -> jsonEncodeConst (val ::: ctp)
       _          -> fail $ "Cannot encode type: " ++ show tp
@@ -54,10 +54,10 @@ jsonEncodeConst (val ::: tp) =
       State        -> encodeState val
       SomeExercise -> case val of
                          Some ex -> pure (exerciseInfo ex)
-      Text         -> pure $ builder (show val)
-      Tp.String    -> pure $ builder val
-      Tp.Int       -> pure $ builder val
-      Tp.Bool      -> pure $ builder val
+      Text         -> pure $ jsonBuilder (show val)
+      Tp.String    -> pure $ jsonBuilder val
+      Tp.Int       -> pure $ jsonBuilder val
+      Tp.Bool      -> pure $ jsonBuilder val
       _ -> fail $ "Type " ++ show tp ++ " not supported in JSON"
 
 encodeRule :: Rule (Context a) -> EncoderX a JSONBuilder
@@ -102,7 +102,7 @@ encodeState st =
           , "sessionid" .= get stateSession
           , "taskid"    .= get stateStartTerm
           ]
-   in (tagJSON "state" . make) <$> (encodeContext ctx)
+   in ("state" .=) . make <$> encodeContext ctx
 
 encodeDiagnosis :: Diagnose.Diagnosis a -> EncoderX a JSONBuilder
 encodeDiagnosis diagnosis =

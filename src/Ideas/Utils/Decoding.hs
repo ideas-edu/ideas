@@ -16,6 +16,7 @@ module Ideas.Utils.Decoding
    , Encoder, runEncoder
      -- re-exports
    , Alternative(..), MonadReader(..), MonadState(..), MonadError(..)
+   , gets
    ) where
 
 import Control.Applicative

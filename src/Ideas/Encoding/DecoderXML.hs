@@ -37,9 +37,7 @@ xmlDecoder :: TypedDecoder a XML
 xmlDecoder tp =
    case tp of
       Tag s (Const String) ->
-         decodeChild s decodeData
-       `mplus`
-         decodeAttribute s
+         decodeChild s decodeData <|> decodeAttribute s
       Tag s t
          | s == "answer" ->
               decodeChild "answer" (xmlDecoder t)
@@ -54,15 +52,14 @@ xmlDecoder tp =
          x  <- xmlDecoder t
          xs <- xmlDecoder (List t)
          return (x:xs)
-       `mplus`
+       <|>
          return []
       Pair t1 t2 -> do
          x <- xmlDecoder t1
          y <- xmlDecoder t2
          return (x, y)
       t1 :|: t2 ->
-         (Left  <$> xmlDecoder t1) `mplus`
-         (Right <$> xmlDecoder t2)
+         Left  <$> xmlDecoder t1 <|> Right <$> xmlDecoder t2
       Unit -> return ()
       Const ctp ->
          case ctp of

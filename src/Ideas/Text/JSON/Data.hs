@@ -12,19 +12,15 @@
 
 module Ideas.Text.JSON.Data
    ( JSON(..), Key, Number(..)            -- types
-   , InJSON(..)                           -- type class
    , lookupM
    , parseJSON, compactJSON               -- parser and pretty-printers
-   , jsonRPC, RPCHandler, RPCRequest(..), RPCResponse(..)
    ) where
 
-import Control.Exception
 import Control.Monad
 import Data.List (intersperse)
 import Data.Maybe
 import Data.String
 import Ideas.Utils.Parsing hiding (string, char)
-import System.IO.Error
 import Test.QuickCheck
 import Text.PrettyPrint.Leijen hiding ((<$>))
 import qualified Ideas.Text.UTF8 as UTF8
@@ -95,66 +91,6 @@ escape = concatMap f . fromMaybe "invalid UTF8 string" . UTF8.encodeM
    f '\\' = "\\\\"
    f c    = [c]
 
-class InJSON a where
-   toJSON       :: a -> JSON
-   listToJSON   :: [a] -> JSON
-   fromJSON     :: Monad m => JSON -> m a
-   listFromJSON :: Monad m => JSON -> m [a]
-   -- default definitions
-   listToJSON   = Array . map toJSON
-   listFromJSON (Array xs) = mapM fromJSON xs
-   listFromJSON _          = fail "expecting an array"
-
-instance InJSON Int where
-   toJSON   = toJSON . toInteger
-   fromJSON = fmap fromInteger . fromJSON
-
-instance InJSON Integer where
-   toJSON                  = Number . I
-   fromJSON (Number (I n)) = return n
-   fromJSON _              = fail "expecting a number"
-
-instance InJSON Double where
-   toJSON = Number . D
-   fromJSON (Number (D n)) = return n
-   fromJSON _              = fail "expecting a number"
-
-instance InJSON Char where
-   toJSON c   = String [c]
-   listToJSON = String
-   fromJSON (String [c]) = return c
-   fromJSON _ = fail "expecting a string"
-   listFromJSON (String s) = return s
-   listFromJSON _ = fail "expecting a string"
-
-instance InJSON Bool where
-   toJSON = Boolean
-   fromJSON (Boolean b) = return b
-   fromJSON _           = fail "expecting a boolean"
-
-instance InJSON a => InJSON [a] where
-   toJSON   = listToJSON
-   fromJSON = listFromJSON
-
-instance (InJSON a, InJSON b) => InJSON (a, b) where
-   toJSON (a, b)           = Array [toJSON a, toJSON b]
-   fromJSON (Array [a, b]) = (,) <$> fromJSON a <*> fromJSON b
-   fromJSON _              = fail "expecting an array with 2 elements"
-
-instance (InJSON a, InJSON b, InJSON c) => InJSON (a, b, c) where
-   toJSON (a, b, c)           = Array [toJSON a, toJSON b, toJSON c]
-   fromJSON (Array [a, b, c]) = (,,) <$> fromJSON a <*> fromJSON b <*> fromJSON c
-   fromJSON _                 = fail "expecting an array with 3 elements"
-
-instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
-   toJSON (a, b, c, d)           = Array [toJSON a, toJSON b, toJSON c, toJSON d]
-   fromJSON (Array [a, b, c, d]) = (,,,) <$> fromJSON a <*> fromJSON b <*> fromJSON c <*> fromJSON d
-   fromJSON _                    = fail "expecting an array with 4 elements"
-
-instance InJSON JSON where
-   toJSON   = id
-   fromJSON = return
-
 --------------------------------------------------------
 -- Parser
 
@@ -179,90 +115,9 @@ parseJSON = parseSimple json
    lexer = P.makeTokenParser $ emptyDef
       { reservedNames = ["true", "false", "null"] }
 
---------------------------------------------------------
--- JSON-RPC
-
-data RPCRequest = Request
-   { requestMethod :: String
-   , requestParams :: JSON
-   , requestId     :: JSON
-   }
-
-data RPCResponse = Response
-   { responseResult :: JSON
-   , responseError  :: JSON
-   , responseId     :: JSON
-   }
-
-instance Show RPCRequest where
-   show = show . toJSON
-
-instance Show RPCResponse where
-   show = show . toJSON
-
-instance InJSON RPCRequest where
-   toJSON req = Object
-      [ ("method", String $ requestMethod req)
-      , ("params", requestParams req)
-      , ("id"    , requestId req)
-      ]
-   fromJSON json =
-      case lookupM "method" json of
-         Just (String s) ->
-            let pj = fromMaybe Null (lookupM "params" json)
-                ij = fromMaybe Null (lookupM "id" json)
-            in return (Request s pj ij)
-         Just _  -> fail "expecting a string as method"
-         Nothing -> fail "no method specified"
-
-instance InJSON RPCResponse where
-   toJSON resp = Object
-      [ ("result", responseResult resp)
-      , ("error" , responseError resp)
-      , ("id"    , responseId resp)
-      ]
-   fromJSON obj = do
-      rj <- lookupM "result" obj
-      ej <- lookupM "error"  obj
-      ij <- lookupM "id"     obj
-      return (Response rj ej ij)
-
-okResponse :: JSON -> JSON -> RPCResponse
-okResponse x y = Response
-   { responseResult = x
-   , responseError  = Null
-   , responseId     = y
-   }
-
-errorResponse :: JSON -> JSON -> RPCResponse
-errorResponse x y = Response
-   { responseResult = Null
-   , responseError  = x
-   , responseId     = y
-   }
-
 lookupM :: Monad m => String -> JSON -> m JSON
 lookupM x (Object xs) = maybe (fail $ "field " ++ x ++ " not found") return (lookup x xs)
 lookupM _ _ = fail "expecting a JSON object"
-
---------------------------------------------------------
--- JSON-RPC over HTTP
-
-type RPCHandler = String -> JSON -> IO JSON
-
-jsonRPC :: JSON -> RPCHandler -> IO RPCResponse
-jsonRPC input rpc =
-   case fromJSON input of
-      Nothing  -> return (errorResponse (String "Invalid request") Null)
-      Just req -> do
-         json <- rpc (requestMethod req) (requestParams req)
-         return (okResponse json (requestId req))
-       `catch` handler req
- where
-   handler :: RPCRequest -> SomeException -> IO RPCResponse
-   handler req e =
-      let msg = maybe (show e) ioeGetErrorString (fromException e)
-      in return $ errorResponse (toJSON msg) (requestId req)
 
 --------------------------------------------------------
 -- Testing parser/pretty-printer

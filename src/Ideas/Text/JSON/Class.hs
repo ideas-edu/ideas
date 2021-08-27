@@ -20,10 +20,9 @@ import Ideas.Text.JSON.Decoder
 class InJSON a where
    toJSON          :: a -> JSON
    listToJSON      :: [a] -> JSON
+   fromJSON        :: JSON -> Maybe a
    jsonBuilder     :: a -> JSONBuilder
    jsonListBuilder :: [a] -> JSONBuilder
-   fromJSON        :: Monad m => JSON -> m a
-   listFromJSON    :: Monad m => JSON -> m [a]
    jsonDecoder     :: DecoderJSON a
    jsonListDecoder :: DecoderJSON [a]
 
@@ -32,16 +31,10 @@ class InJSON a where
    -- default definitions
    toJSON     = builderToJSON . jsonBuilder
    listToJSON = Array . map toJSON
+   fromJSON   = either (fail . show) return . evalDecoderJSON jsonDecoder
 
    jsonBuilder     = jsonToBuilder . toJSON
-   jsonListBuilder = mconcat . map jsonBuilder
-
-   fromJSON = either (fail . show) return . evalDecoderJSON jsonDecoder
-
-   listFromJSON (Array xs) = mapM fromJSON xs
-   listFromJSON _          = fail "expecting an array"
-
-   jsonDecoder = gets snd >>= either throwError return . fromJSON . builderToJSON
+   jsonListBuilder = mconcat . map jsonBuilder  
    jsonListDecoder = jArrayOf jsonDecoder
 
 instance InJSON Int where
@@ -57,14 +50,10 @@ instance InJSON Double where
    jsonDecoder = jDouble
 
 instance InJSON Char where
-   toJSON c   = String [c]
-   listToJSON = String
+   toJSON c        = String [c]
+   listToJSON      = String
    jsonListBuilder = jsonToBuilder . String 
-   fromJSON (String [c]) = return c
-   fromJSON _ = fail "expecting a string"
-   listFromJSON (String s) = return s
-   listFromJSON _ = fail "expecting a string"
-   jsonDecoder = jChar
+   jsonDecoder     = jChar
    jsonListDecoder = jString
 
 instance InJSON Bool where
@@ -74,7 +63,6 @@ instance InJSON Bool where
 instance InJSON a => InJSON [a] where
    toJSON      = listToJSON
    jsonBuilder = jsonListBuilder
-   fromJSON    = listFromJSON
    jsonDecoder = jsonListDecoder
 
 instance InJSON () where

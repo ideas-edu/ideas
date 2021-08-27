@@ -14,7 +14,7 @@
 
 module Ideas.Common.Classes
    ( -- * Type class Apply
-     Apply(applyAll), apply, applicable, applyD, applyM, applyList
+     Apply(applyAll), apply, applicable, applyD, applyList
      -- * Type class Container
    , Container(singleton, getSingleton)
      -- * Type class BiArrow
@@ -54,12 +54,8 @@ applicable ta = isJust . apply ta
 applyD :: Apply t => t a -> a -> a
 applyD ta a = fromMaybe a (apply ta a)
 
--- | Same as apply, except that the result (at most one) is returned in some monad
-applyM :: (Apply t, Monad m) => t a -> a -> m a
-applyM ta = maybe (fail "applyM") return . apply ta
-
 applyList :: Apply t => [t a] -> a -> Maybe a
-applyList xs a = foldl (\m r -> m >>= applyM r) (Just a) xs
+applyList xs a = foldl (\m r -> m >>= apply r) (Just a) xs
 
 -----------------------------------------------------------
 -- Type class Container

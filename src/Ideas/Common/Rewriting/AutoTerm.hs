@@ -15,7 +15,6 @@ module Ideas.Common.Rewriting.AutoTerm (toTermG, fromTermG, testTermFor) where
 import Control.Monad.State
 import Data.Data
 import Ideas.Common.Rewriting.Term
-import Ideas.Utils.Prelude (headM)
 
 toTermG :: Data a => a -> Term
 toTermG a =
@@ -78,7 +77,10 @@ constructors = dataTypeConstrs . dataTypeOf . fromProxy
 
 findConstr :: (Monad m, Data a) => Proxy a -> Symbol -> m Constr
 findConstr p s =
-   headM [ c | c <- constructors p, s == constrSymbol c ]
+   case [ c | c <- constructors p, s == constrSymbol c ] of
+      []   -> fail "Autoterm.findConstr"
+      hd:_ -> return hd
+
 
 fromTermG :: (MonadPlus m, Data a) => Term -> m a
 fromTermG term =

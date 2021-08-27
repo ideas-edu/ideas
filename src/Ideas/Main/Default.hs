@@ -148,8 +148,7 @@ processDatabase :: DomainReasoner -> FilePath -> IO ()
 processDatabase dr database = do
    (n, time) <- getDiffTime $ do
       rows <- Log.selectFrom database "requests" ["input"] $ \row -> do
-         txt <- headM row
-         (_, out, _) <- process mempty dr txt
+         (_, out, _) <- process mempty dr (head row)
          putStrLn out
       return (length rows)
    putStrLn $ "processed " ++ show n ++ " requests in " ++ show time

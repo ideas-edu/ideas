@@ -54,7 +54,7 @@ naturalOrFloat = do
             '-':xs -> return (Left (negate (readInt xs)))
             xs     -> return (Left (readInt xs))
       [(d, [])] -> return (Right d)
-      _         -> fail "not a float"
+      _         -> unexpected "not a float"
  where
    nat = many1 digit
    num = maybe id (:) <$> optionMaybe (char '-') <*> nat
@@ -68,7 +68,7 @@ float = do
    c <- option "" ((:) <$> oneOf "eE" <*> num)
    case reads (a++b++c) of
       [(d, [])] -> return d
-      _         -> fail "not a float"
+      _         -> unexpected "not a float"
  where
    nat = many1 digit
    num = (:) <$> char '-' <*> nat

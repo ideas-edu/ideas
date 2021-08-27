@@ -85,8 +85,9 @@ xmlDecoder tp =
 -- <ruleid>
 decodeRule :: XMLDecoder a (Rule (Context a))
 decodeRule = decodeChild "ruleid" $ do
-   ex <- getExercise
-   get >>= getRule ex . newId . getData
+   ex  <- getExercise
+   xml <- get
+   maybe (fail "invalid rule") return . getRule ex . newId . getData $ xml
 
 -- <location>
 decodeLocation :: XMLDecoder a Location

@@ -204,12 +204,11 @@ ruleset ex = nub (sortBy (ruleOrdering ex) list)
    list = extraRules ex ++ rulesInStrategy (strategy ex)
 
 -- | Finds a rule of an exercise based on its identifier.
-getRule :: Monad m => Exercise a -> Id -> m (Rule (Context a))
+getRule :: Exercise a -> Id -> Maybe (Rule (Context a))
 getRule ex a =
    case filter ((a ==) . getId) (ruleset ex) of
-      [hd] -> return hd
-      []   -> fail $ "Could not find ruleid " ++ showId a
-      _    -> fail $ "Ambiguous ruleid " ++ showId a
+      [hd] -> Just hd
+      _    -> Nothing
 
 -- | Makes a rule ordering based on a list of values with identifiers (e.g.,
 -- a list of rules). Rules with identifiers that are not in the list are

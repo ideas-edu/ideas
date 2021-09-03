@@ -67,7 +67,7 @@ xmlDecoder tp =
             Context     -> decodeContext
             Rule        -> decodeRule
             Environment -> decodeArgEnvironment
-            Term        -> get >>= (fromXML >=> fromOMOBJ)
+            Term        -> get >>= (fromXML >=> maybe (fail "invalid OpenMath") return . fromOMOBJ)
             Location    -> decodeLocation
             StratCfg    -> decodeConfiguration
             QCGen       -> getQCGen
@@ -162,10 +162,12 @@ decodeEnvironment =
       case findChild "OMOBJ" item of
          -- OpenMath object found inside item tag
          Just this | useOpenMath req ->
-            case xml2omobj this >>= fromOMOBJ of
+            case xml2omobj this of
                Left err -> fail err
-               Right term ->
-                  return $ insertRef (makeRef n) (term :: Term) env
+               Right omobj ->
+                  case fromOMOBJ omobj of
+                     Just term -> return $ insertRef (makeRef n) (term :: Term) env
+                     Nothing -> fail "invalid openmath"
          -- Simple value in attribute
          _ -> do
             value <- findAttribute "value" item
@@ -194,9 +196,12 @@ decodeBinding = get >>= \xml -> do
    case findChild "OMOBJ" xml of
       -- OpenMath object found inside tag
       Just this | useOpenMath req ->
-         case xml2omobj this >>= fromOMOBJ of
+         case xml2omobj this of
             Left err   -> fail err
-            Right term -> return (termBinding a term)
+            Right omobj -> 
+               case fromOMOBJ omobj of
+                  Just term -> return (termBinding a term)
+                  Nothing -> fail "invalid openmath"
       -- Simple value
       _ -> return (makeBinding (makeRef a) (getData xml))
  where

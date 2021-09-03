@@ -93,6 +93,9 @@ Library
     Ideas.Common.Rewriting.RewriteRule
     Ideas.Common.Rewriting.Substitution
     Ideas.Common.Rewriting.Term
+    Ideas.Common.Rewriting.Term.Class
+    Ideas.Common.Rewriting.Term.Data
+    Ideas.Common.Rewriting.Term.Decoder
     Ideas.Common.Rewriting.Unification
     Ideas.Common.Rule
     Ideas.Common.Rule.Abstract

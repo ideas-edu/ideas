@@ -40,6 +40,7 @@ instance Monoid a => Monoid (Decoder env err s a) where
 instance Monad (Decoder env err s) where
    return a    = Dec (return a)
    Dec m >>= f = Dec $ m >>= fromDec . f
+   fail msg = error $ "fail in Decoder: " ++ msg
 
 runDecoder :: Decoder env err s a -> env -> s -> Either err (a, s)
 runDecoder p env s = runExcept (runReaderT (runStateT (fromDec p) s) env)

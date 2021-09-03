@@ -21,7 +21,7 @@ module Ideas.Encoding.EncoderXML
 import Data.Char
 import Data.List
 import Data.Maybe
-import Ideas.Common.Library hiding (exerciseId)
+import Ideas.Common.Library hiding (exerciseId, tFirst)
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.OpenMathSupport
 import Ideas.Encoding.Request hiding (XML)
@@ -132,10 +132,10 @@ encodeContext ctx = do
 
 buildExpression :: BuildXML b => Bool -> Exercise a -> a -> b
 buildExpression useOM ex
-   | useOM     = either msg builderXML . toOpenMath ex
+   | useOM     = maybe msg builderXML . toOpenMath ex
    | otherwise = tag "expr" . string . prettyPrinter ex
  where
-   msg s = error ("Error encoding term in OpenMath: " ++ s)
+   msg = error "Error encoding term in OpenMath"
 
 encodeLocation :: Location -> XMLEncoder a
 encodeLocation loc = "location" .=. show loc

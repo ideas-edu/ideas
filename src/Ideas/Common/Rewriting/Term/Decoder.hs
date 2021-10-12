@@ -14,7 +14,7 @@
 
 module Ideas.Common.Rewriting.Term.Decoder
    ( TermDecoder
-   , tCon, tCon0, tCon1, tCon2, tConOf, tInteger, tDouble, tVar, tListOf, tConWithSymbol
+   , tCon, tCon0, tCon1, tCon2, tCon3, tConOf, tInteger, tDouble, tVar, tListOf, tConWithSymbol
    , tList2, tList3, tChar, tFirst
      -- re-exports
    , Alternative(..), MonadReader(..), throwError
@@ -82,6 +82,9 @@ tCon1 s f p = tCon s (f <$> p)
 
 tCon2 :: Symbol -> (a -> b -> c) -> TermDecoder a -> TermDecoder b -> TermDecoder c
 tCon2 s f p q = tCon s (f <$> p <*> q)
+
+tCon3 :: Symbol -> (a -> b -> c -> d) -> TermDecoder a -> TermDecoder b -> TermDecoder c -> TermDecoder d
+tCon3 s f p q r = tCon s (f <$> p <*> q <*> r)
 
 tConOf :: Symbol -> TermDecoder a -> TermDecoder [a]
 tConOf s p = tCon s (many p)

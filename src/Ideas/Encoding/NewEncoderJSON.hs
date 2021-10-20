@@ -48,6 +48,7 @@ jsonEncodeConst :: TypedValue (Const a) -> EncoderX a JSONBuilder
 jsonEncodeConst (val ::: tp) = 
    case tp of
       Rule         -> encodeRule val
+      Constraint   -> encodeConstraint val
       Location     -> encodeLocation val
       Environment  -> encodeEnvironment val
       Context      -> encodeContext val
@@ -62,6 +63,9 @@ jsonEncodeConst (val ::: tp) =
 
 encodeRule :: Rule (Context a) -> EncoderX a JSONBuilder
 encodeRule r = pure $ "rule" .= showId r
+
+encodeConstraint :: Constraint (Context a) -> EncoderX a JSONBuilder
+encodeConstraint c = pure $ "constraint" .= showId c
 
 encodeEnvironment :: Environment -> EncoderX a JSONBuilder
 encodeEnvironment env =

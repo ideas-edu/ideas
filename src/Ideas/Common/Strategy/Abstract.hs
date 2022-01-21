@@ -192,11 +192,11 @@ rulesInStrategy s = concatMap f (toList (toStrategyTree s))
    f (LeafRule r) | isMajor r = [r]
    f _ = []
 
-instance LiftView LabeledStrategy where
-   liftViewIn v (LS n s) = LS n (liftViewIn v s)
+instance Lift LabeledStrategy where
+   liftWithM f (LS n s) = LS n (liftWithM f s)
 
-instance LiftView Strategy where
-   liftViewIn v = S . fmap (liftViewIn v) . toStrategyTree
+instance Lift Strategy where
+   liftWithM f = S . fmap (liftWithM f) . toStrategyTree
 
 -- | Apply a function to all the rules that make up a labeled strategy
 mapRules :: (Rule a -> Rule a) -> LabeledStrategy a -> LabeledStrategy a

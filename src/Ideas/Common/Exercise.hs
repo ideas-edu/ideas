@@ -397,7 +397,7 @@ showThisDerivation d ex = show (present der) ++ extra
          Just b | isReady ex b -> ""
                 | otherwise    -> "<<not ready>>"
    present = biMap (ShowString . f) (ShowString . prettyPrinterContext ex)
-   f ((r, local), global) = showId r ++ part local ++ part global
+   f ((r, localEnv), globalEnv) = showId r ++ part localEnv ++ part globalEnv
     where
       newl = "\n      "
       part env | noBindings env = ""

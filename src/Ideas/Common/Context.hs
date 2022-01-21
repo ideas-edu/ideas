@@ -142,7 +142,7 @@ contextView = "views.contextView" @> makeView f g
    g     = uncurry replaceInContext
 
 -- | Lift a rule to operate on a term in a context
-liftToContext :: LiftView f => f a -> f (Context a)
+liftToContext :: Lift f => f a -> f (Context a)
 liftToContext = liftViewIn contextView
 
 -- | Apply a function at top-level. Afterwards, try to return the focus
@@ -151,10 +151,10 @@ applyTop :: (a -> a) -> Context a -> Context a
 applyTop f c =
    navigateTowards (location c) (changeInContext f (top c))
 
-use :: (LiftView f, IsTerm a, IsTerm b) => f a -> f (Context b)
+use :: (Lift f, IsTerm a, IsTerm b) => f a -> f (Context b)
 use = useC . liftToContext
 
-useC :: (LiftView f, IsTerm a, IsTerm b) => f (Context a) -> f (Context b)
+useC :: (Lift f, IsTerm a, IsTerm b) => f (Context a) -> f (Context b)
 useC = liftViewIn (makeView f g)
  where
    f old@(C env a) = castT a >>= \b -> return (C env b, old)

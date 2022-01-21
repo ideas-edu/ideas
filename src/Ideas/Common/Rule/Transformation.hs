@@ -25,7 +25,7 @@ module Ideas.Common.Rule.Transformation
    , writeRef, writeRef_, writeRefMaybe
      -- * Lifting transformations
    , transUseEnvironment
-   , transLiftView, transLiftViewIn
+   , transLiftView, transLiftViewIn, transLift
    , transLiftContext, transLiftContextIn
      -- * Using transformations
    , transApply, transApplyWith
@@ -162,6 +162,9 @@ transLiftView v = transLiftViewIn (v &&& identity)
 
 transLiftViewIn :: View a (b, c) -> Transformation b -> Transformation a
 transLiftViewIn v f = makeTrans (match v) >>> first f >>^ build v
+
+transLift :: (a -> Maybe (b, b -> a)) -> Transformation b -> Transformation a
+transLift f t = makeTrans f >>> first t >>^ (\(x, g) -> g x)
 
 transLiftContext :: Transformation a -> Transformation (Context a)
 transLiftContext = transLiftContextIn . transUseEnvironment

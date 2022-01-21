@@ -38,10 +38,10 @@ class Recognizable f where
 
 newtype Recognizer a = R { unR :: Trans (a, a) () }
 
-instance LiftView Recognizer where
-   liftViewIn v r =
-      let f = fmap fst . match v
-      in R $ makeTrans f *** makeTrans f >>> unR r
+instance Lift Recognizer where
+   liftWithM f r =
+      let t = makeTrans (fmap fst . f)
+      in R (t *** t >>> unR r)
 
 instance Sem.Semigroup (Recognizer a) where
    f <> g = R $ unR f `mappend` unR g

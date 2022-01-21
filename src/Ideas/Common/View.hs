@@ -29,7 +29,7 @@ module Ideas.Common.View
      -- * Isomorphisms
    , Isomorphism, from, to, inverse
      -- * Lifting with views
-   , LiftView(..)
+   , Lift(..), liftView, liftViewIn
      -- * Some combinators
    , swapView, listView, traverseView, ($<)
      -- * Packaging a view
@@ -236,11 +236,17 @@ inverse f = to f <-> from f
 ----------------------------------------------------------------------------------
 -- Type class for lifting with Views
 
-class LiftView f where
-   liftView   :: View a b -> f b -> f a
-   liftViewIn :: View a (b, c) -> f b -> f a
-   -- default definition
-   liftView v = liftViewIn (v &&& identity)
+liftView :: Lift f => View a b -> f b -> f a
+liftView v = liftWithM $ fmap (\b -> (b, build v)) . match v
+
+liftViewIn :: Lift f => View a (b, c) -> f b -> f a
+liftViewIn v = liftWithM $ fmap (\(b, c) -> (b, \x -> build v (x, c))) . match v
+
+class Lift f where
+   liftWith  :: (a -> (b, b -> a)) -> f b -> f a
+   liftWithM :: (a -> Maybe (b, b -> a)) -> f b -> f a
+   -- default
+   liftWith f = liftWithM (Just . f)
 
 ----------------------------------------------------------------------------------
 -- Some combinators

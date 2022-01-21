@@ -46,8 +46,8 @@ instance HasId (Constraint a) where
   getId        = constraintId
   changeId f r = r { constraintId = f (constraintId r) }
 
-instance LiftView Constraint where
-   liftViewIn v (C n f) = C n (maybe Irrelevant (f . fst) . match v)
+instance Lift Constraint where
+   liftWithM f (C n p) = C n (maybe Irrelevant (p . fst) . f)
 
 makeConstraint :: IsId n => n -> (a -> Result ()) -> Constraint a
 makeConstraint = C . newId

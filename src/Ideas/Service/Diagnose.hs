@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Service.Diagnose
-   ( Diagnosis(..), tDiagnosis, diagnose
+   ( Diagnosis(..), tDiagnosis, diagnose, diagnoseOption
    , getState, getStateAndReady
    , difference
    ) where
@@ -78,7 +78,10 @@ getStateAndReady d =
 -- The diagnose service
 
 diagnose :: State a -> Context a -> Maybe Id -> Diagnosis a
-diagnose state new motivationId
+diagnose = diagnoseOption False
+
+diagnoseOption :: Bool -> State a -> Context a -> Maybe Id -> Diagnosis a
+diagnoseOption keepUserTerm state new motivationId
    -- Is the submitted term equivalent?
    | not (equivalence ex (stateContext state) new) =
         -- Is the rule used discoverable by trying all known buggy rules?
@@ -103,8 +106,10 @@ diagnose state new motivationId
    -- Was the submitted term expected by the strategy?
    | isJust expected =
         -- If yes, return new state and rule
-        let ((r, _, _), ns) = fromJust expected
-        in Expected (finished ns) ns r
+        let ((r, _, _), st) = fromJust expected
+            newState | keepUserTerm = st { stateContext = new }
+                     | otherwise    = st
+        in Expected (finished newState) newState r
 
    -- Is the submitted term (very) similar to the previous one?
    -- (this check is performed after "expected by strategy". TODO: fix

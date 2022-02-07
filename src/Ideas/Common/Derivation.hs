@@ -26,6 +26,7 @@ module Ideas.Common.Derivation
      -- * Querying a derivation
    , isEmpty, derivationLength, terms, steps, triples
    , firstTerm, lastTerm, lastStep, withoutLast
+   , updateFirstTerm, updateLastTerm
    , updateSteps, derivationM, splitStep
    ) where
 
@@ -138,6 +139,15 @@ withoutLast d@(D a xs) =
    case S.viewr xs of
       S.EmptyR  -> d
       ys S.:> _ -> D a ys
+
+updateFirstTerm :: (a -> a) -> Derivation s a -> Derivation s a
+updateFirstTerm f (D a xs) = D (f a) xs
+
+updateLastTerm :: (a -> a) -> Derivation s a -> Derivation s a
+updateLastTerm f (D a xs) = 
+   case S.viewr xs of
+      S.EmptyR -> D (f a) S.empty
+      ys S.:> (s, b) -> D a (ys S.|> (s, f b))
 
 updateSteps :: (a -> s -> a -> t) -> Derivation s a -> Derivation t a
 updateSteps f d =

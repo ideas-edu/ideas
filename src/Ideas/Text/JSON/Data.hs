@@ -78,7 +78,7 @@ prettyJSON compact = rec
 
 -- Escape double quote and backslash, and convert to UTF8 encoding
 escape :: String -> String
-escape = concatMap f . fromMaybe "invalid UTF8 string" . UTF8.encodeM
+escape = concatMap f . fromMaybe "invalid UTF8 string" . UTF8.encode
  where
    f '\n' = "\\n"
    f '\r' = ""      -- carriage return (DOS files)

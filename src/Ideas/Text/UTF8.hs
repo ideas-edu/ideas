@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Text.UTF8
-   ( encode, encodeM, decode, decodeM
+   ( encode, decode
    , isUTF8, allBytes, propEncoding
    ) where
 
@@ -26,24 +26,16 @@ import Test.QuickCheck
 -- Interface
 
 -- | Encode a string to UTF8 format
-encode :: String -> String
-encode = either error id . encodeM
+encode :: String -> Maybe String
+encode = fmap (map chr . concat) . mapM (toUTF8 . ord)
 
 -- | Decode an UTF8 format string to unicode points
-decode :: String -> String
-decode = either error id . decodeM
-
--- | Encode a string to UTF8 format (monadic)
-encodeM :: Monad m => String -> m String
-encodeM = fmap (map chr . concat) . mapM (toUTF8 . ord)
-
--- | Decode an UTF8 format string to unicode points (monadic)
-decodeM :: Monad m => String -> m String
-decodeM = fmap (map chr) . fromUTF8 . map ord
+decode :: String -> Maybe String
+decode = fmap (map chr) . fromUTF8 . map ord
 
 -- | Test whether the argument is a proper UTF8 string
 isUTF8 :: String -> Bool
-isUTF8 = isJust . decodeM
+isUTF8 = isJust . decode
 
 -- | Test whether all characters are in the range 0-255
 allBytes :: String -> Bool
@@ -52,7 +44,7 @@ allBytes = all ((`between` (0, 255)) . ord)
 ------------------------------------------------------------------
 -- Helper functions
 
-toUTF8 :: Monad m => Int -> m [Int]
+toUTF8 :: Int -> Maybe [Int]
 toUTF8 n
    | n < 128 = -- one byte
         return [n]
@@ -71,7 +63,7 @@ toUTF8 n
    | otherwise =
         fail "invalid character in UTF8"
 
-fromUTF8 :: Monad m => [Int] -> m [Int]
+fromUTF8 :: [Int] -> Maybe [Int]
 fromUTF8 xs
    | null xs   = return []
    | otherwise = do
@@ -119,6 +111,6 @@ propEncoding = forAll (sized gen) valid
 
 valid :: String -> Bool
 valid xs = fromMaybe False $
-   do us <- encodeM xs
-      bs <- decodeM us
+   do us <- encode xs
+      bs <- decode us
       return (xs == bs)

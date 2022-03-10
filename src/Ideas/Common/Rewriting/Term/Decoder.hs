@@ -15,7 +15,7 @@
 module Ideas.Common.Rewriting.Term.Decoder
    ( TermDecoder
    , tCon, tCon0, tCon1, tCon2, tCon3, tConOf, tInteger, tDouble, tVar, tListOf, tConWithSymbol
-   , tList2, tList3, tChar, tFirst
+   , tListWith, tList2, tList3, tChar, tFirst
      -- re-exports
    , Alternative(..), MonadReader(..), throwError
    ) where
@@ -59,8 +59,9 @@ tDouble = tFirst $ \mt ->
       Just (TFloat f) -> return f
       _ -> throwError "not a double"
 
-tList :: TermDecoder a -> TermDecoder a
-tList p = tFirst $ \mt ->
+-- name tList clashes with service type
+tListWith :: TermDecoder a -> TermDecoder a
+tListWith p = tFirst $ \mt ->
    case mt of 
       Just (TList xs) -> put xs *> p <* tEmpty
       _ -> throwError "not a list"
@@ -96,10 +97,10 @@ tConWithSymbol f p = tFirst $ \mt ->
       _ -> throwError $ "not a con"
 
 tList2 :: (a -> b -> c) -> TermDecoder a -> TermDecoder b -> TermDecoder c
-tList2 f p q = tList $ f <$> p <*> q
+tList2 f p q = tListWith $ f <$> p <*> q
 
 tList3 :: (a -> b -> c -> d) -> TermDecoder a -> TermDecoder b -> TermDecoder c -> TermDecoder d
-tList3 f p q r = tList $ f <$> p <*> q <*> r
+tList3 f p q r = tListWith $ f <$> p <*> q <*> r
 
 tListOf :: TermDecoder a -> TermDecoder [a]
-tListOf p = tList $ many p
+tListOf p = tListWith $ many p

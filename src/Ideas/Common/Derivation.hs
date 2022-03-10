@@ -20,7 +20,7 @@ module Ideas.Common.Derivation
    , emptyDerivation, prepend, extend
    , merge, mergeBy, mergeStep
      -- * Conversion to/from list
-   , derivationToList, derivationFromList
+   , derivationToList, derivationFromList, derivationDecoder
      -- * Equality
    , eqDerivationBy
      -- * Querying a derivation
@@ -30,6 +30,7 @@ module Ideas.Common.Derivation
    , updateSteps, derivationM, splitStep
    ) where
 
+import Control.Applicative
 import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Rewriting
@@ -54,8 +55,7 @@ instance BiFunctor Derivation where
 
 instance (IsTerm s, IsTerm a) => IsTerm (Derivation s a) where
    toTerm = TList . derivationToList toTerm toTerm
-   fromTerm (TList xs) = derivationFromList fromTerm fromTerm xs
-   fromTerm _ = fail "not a derivation"
+   termDecoder = tListWith (derivationDecoder termDecoder termDecoder)
 
 -----------------------------------------------------------------------------
 -- Constructing a derivation
@@ -87,12 +87,18 @@ derivationToList :: (s -> b) -> (a -> b) -> Derivation s a -> [b]
 derivationToList f g d =
    g (firstTerm d) : concat [ [f s, g a] | (_, s, a) <- triples d ]
 
-derivationFromList :: Monad m => (b -> m s) -> (b -> m a) -> [b] -> m (Derivation s a)
+derivationFromList :: (b -> Maybe s) -> (b -> Maybe a) -> [b] -> Maybe (Derivation s a)
 derivationFromList f g = rec
  where
-   rec []  = fail "derivationFromList"
+   rec []  = Nothing
    rec [b] = emptyDerivation <$> g b
    rec (b1:b2:bs) = curry prepend <$> g b1 <*> f b2 <*> rec bs
+
+derivationDecoder :: Alternative f => f s -> f a -> f (Derivation s a)
+derivationDecoder tStep tTerm = f <$> tTerm <*> tSteps
+ where
+   f = foldl extend . emptyDerivation
+   tSteps = many ((,) <$> tStep <*> tTerm)
 
 -----------------------------------------------------------------------------
 -- Equality

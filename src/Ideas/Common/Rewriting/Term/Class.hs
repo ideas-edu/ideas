@@ -57,15 +57,6 @@ class IsTerm a where
    fromTerm t = either (const Nothing) Just (evalDecoder termDecoder () [t])
    termListDecoder = tListOf termDecoder
 
-   -- temporary
-   termDecoder = get >>= \xs ->
-      case xs of
-         [] -> throwError "termDecoder"
-         t:rest -> 
-            case fromTerm t of
-               Just a  -> put rest >> return a
-               Nothing -> throwError "nothing in fromTerm"
-
 termView :: IsTerm a => View Term a
 termView = makeView fromTerm toTerm
 

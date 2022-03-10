@@ -28,6 +28,7 @@ import Ideas.Encoding.Request hiding (XML)
 import Ideas.Encoding.RulesInfo (rulesInfoXML)
 import Ideas.Encoding.StrategyInfo
 import Ideas.Service.BasicServices (StepInfo, tStepInfo)
+import qualified Ideas.Service.Apply as Apply
 import Ideas.Service.Diagnose
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
@@ -45,6 +46,7 @@ type XMLEncoder a = EncoderX a XMLBuilder
 xmlEncoder :: TypedEncoder a XMLBuilder
 xmlEncoder =
    (encodeDiagnosis, tDiagnosis) <?>
+   (encodeApplyResult, Apply.tApplyResult) <?>
    (encodeDecompositionReply, PD.tReply) <?>
    (encodeDerivation, tDerivation tStepInfo tContext) <?>
    (encodeFirsts, tList tFirst) <?>
@@ -209,6 +211,14 @@ encodeMessage msg =
            Nothing -> mempty
       , encodeText (FeedbackText.text msg)
       ]
+
+encodeApplyResult :: Apply.ApplyResult a -> XMLEncoder a
+encodeApplyResult result = 
+   case result of 
+      Apply.SyntaxError msg -> "error" .=. msg
+      Apply.Correct _ st    -> encodeState st
+      Apply.Buggy _ r       -> "ruleid" .=. show r
+      Apply.Incorrect       -> "error" .=. "incorrect"
 
 encodeDiagnosis :: Diagnosis a -> XMLEncoder a
 encodeDiagnosis diagnosis =

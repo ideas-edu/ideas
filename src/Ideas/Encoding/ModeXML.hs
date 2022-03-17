@@ -118,7 +118,7 @@ resultError options msg = do
 ------------------------------------------------------------
 
 xmlEvaluator :: Evaluator a XML XMLBuilder
-xmlEvaluator = Evaluator xmlDecoder xmlEncoder
+xmlEvaluator = Evaluator xmlTypeDecoder xmlEncoder
 
 htmlEvaluator :: DomainReasoner -> Evaluator a XML HTMLPage
-htmlEvaluator dr = Evaluator xmlDecoder (htmlEncoder dr)
+htmlEvaluator dr = Evaluator xmlTypeDecoder (htmlEncoder dr)

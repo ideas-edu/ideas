@@ -27,53 +27,53 @@ import Ideas.Utils.Decoding
 -----------------------------------------------------------
 -- * Type class for conversion to/from terms
 
-type TermDecoder = Decoder () String [Term]
+type TermDecoder = Decoder () (Error Term) [Term]
 
 tFirst :: (Maybe Term -> TermDecoder a) -> TermDecoder a
 tFirst f = get >>= \xs ->
    case xs of
-      t:rest -> f (Just t) <* put rest
+      t:rest -> f (Just t) <* changeLoc nextLoc <* put rest
       _ -> f Nothing
 
 tVar :: TermDecoder String
 tVar = tFirst $ \mt ->
    case mt of 
       Just (TVar s) -> return s
-      _ -> throwError "not a var"
+      _ -> raiseError "not a var" mt
 
 tChar :: TermDecoder Char
 tChar = tFirst $ \mt ->
    case mt of 
       Just (TVar [c]) -> return c
-      _ -> throwError "not a char"
+      _ -> raiseError "not a char" mt
 
 tInteger :: TermDecoder Integer
 tInteger = tFirst $ \mt ->
    case mt of 
       Just (TNum i) -> return i
-      _ -> throwError "not an integer"
+      _ -> raiseError "not an integer" mt
 
 tDouble :: TermDecoder Double
 tDouble = tFirst $ \mt ->
    case mt of 
       Just (TFloat f) -> return f
-      _ -> throwError "not a double"
+      _ -> raiseError "not a double" mt
 
 -- name tList clashes with service type
 tListWith :: TermDecoder a -> TermDecoder a
 tListWith p = tFirst $ \mt ->
    case mt of 
-      Just (TList xs) -> put xs *> p <* tEmpty
-      _ -> throwError "not a list"
+      Just (TList xs) -> changeLoc (LocByPos 0) >> put xs *> p <* tEmpty
+      _ -> raiseError "not a list" mt
 
 tCon :: Symbol -> TermDecoder a -> TermDecoder a
 tCon s1 p = tFirst $ \mt ->
    case mt of 
-      Just (TCon s2 xs) | s1 == s2 -> put xs *> p <* tEmpty
-      _ -> throwError $ "not con " ++ show s1
+      Just (TCon s2 xs) | s1 == s2 -> changeLoc (LocByPos 0) >> put xs *> p <* tEmpty
+      _ -> raiseError ("not con '" ++ show s1 ++ "'") mt
 
 tEmpty :: TermDecoder ()
-tEmpty = get >>= \xs -> unless (null xs) (throwError "not empty") 
+tEmpty = get >>= \xs -> unless (null xs) (errorStr "not empty") 
 
 tCon0 :: Symbol -> TermDecoder ()
 tCon0 s = tCon s (return ())
@@ -93,8 +93,8 @@ tConOf s p = tCon s (many p)
 tConWithSymbol :: (Symbol -> [a] -> b) -> TermDecoder a -> TermDecoder b
 tConWithSymbol f p = tFirst $ \mt ->
    case mt of 
-      Just (TCon s xs) -> f s <$ put xs <*> many p <* tEmpty
-      _ -> throwError $ "not a con"
+      Just (TCon s xs) -> f s <$ changeLoc (LocByPos 0) <* put xs <*> many p <* tEmpty
+      _ -> raiseError "not a con" mt
 
 tList2 :: (a -> b -> c) -> TermDecoder a -> TermDecoder b -> TermDecoder c
 tList2 f p q = tListWith $ f <$> p <*> q

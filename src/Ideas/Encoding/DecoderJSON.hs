@@ -65,7 +65,7 @@ decodeConst tp =
       Exercise    -> getExercise <* jSkip
       Environment -> decodeEnvironment
       Location    -> decodeLocation
-      Term        -> gets (jsonToTerm . toJSON . snd)
+      Term        -> gets (jsonToTerm . toJSON)
       Int         -> jInt
       Tp.String   -> jString
       Id          -> decodeId

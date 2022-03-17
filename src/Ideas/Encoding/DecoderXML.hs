@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Encoding.DecoderXML
-   ( XMLDecoder, xmlDecoder
+   ( XMLDecoder, xmlTypeDecoder
    ) where
 
 import Control.Applicative hiding (Const)
@@ -33,33 +33,33 @@ import Ideas.Text.XML
 
 type XMLDecoder a t = DecoderX a String XML t
 
-xmlDecoder :: TypedDecoder a XML
-xmlDecoder tp =
+xmlTypeDecoder :: TypedDecoder a XML
+xmlTypeDecoder tp =
    case tp of
       Tag s (Const String) ->
          decodeChild s decodeData <|> decodeAttribute s
       Tag s t
          | s == "answer" ->
-              decodeChild "answer" (xmlDecoder t)
+              decodeChild "answer" (xmlTypeDecoder t)
          | s == "Difficulty" -> do
               g <- equalM tDifficulty tp
               a <- decodeAttribute "difficulty"
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
          | otherwise ->
-              decodeChild s (xmlDecoder t)
-      Iso p t  -> from p <$> xmlDecoder t
+              decodeChild s (xmlTypeDecoder t)
+      Iso p t  -> from p <$> xmlTypeDecoder t
       List t -> do
-         x  <- xmlDecoder t
-         xs <- xmlDecoder (List t)
+         x  <- xmlTypeDecoder t
+         xs <- xmlTypeDecoder (List t)
          return (x:xs)
        <|>
          return []
       Pair t1 t2 -> do
-         x <- xmlDecoder t1
-         y <- xmlDecoder t2
+         x <- xmlTypeDecoder t1
+         y <- xmlTypeDecoder t2
          return (x, y)
       t1 :|: t2 ->
-         Left  <$> xmlDecoder t1 <|> Right <$> xmlDecoder t2
+         Left  <$> xmlTypeDecoder t1 <|> Right <$> xmlTypeDecoder t2
       Unit -> return ()
       Const ctp ->
          case ctp of
@@ -67,7 +67,7 @@ xmlDecoder tp =
             Context     -> decodeContext
             Rule        -> decodeRule
             Environment -> decodeArgEnvironment
-            Term        -> get >>= (fromXML >=> maybe (fail "invalid OpenMath") return . fromOMOBJ)
+            Term        -> get >>= (fromXML' >=> maybe (fail "invalid OpenMath") return . fromOMOBJ)
             Location    -> decodeLocation
             StratCfg    -> decodeConfiguration
             QCGen       -> getQCGen
@@ -141,13 +141,13 @@ decodeExpression = withOpenMath f
 decodeOMOBJ :: XMLDecoder a a
 decodeOMOBJ = decodeChild "OMOBJ" $ get >>= \xml -> do
    ex    <- getExercise
-   omobj <- fromXML xml
+   omobj <- fromXML' xml
    case fromOpenMath ex omobj of
       Just a  -> return a
       Nothing -> fail "Invalid OpenMath object for this exercise"
 
 decodeMathML :: XMLDecoder a MathML
-decodeMathML = decodeFirstChild "math" $ get >>= fromXML
+decodeMathML = decodeFirstChild "math" $ get >>= fromXML'
 
 decodeEnvironment :: XMLDecoder a Environment
 decodeEnvironment =
@@ -207,3 +207,6 @@ decodeBinding = get >>= \xml -> do
  where
    termBinding :: String -> Term -> Binding
    termBinding = makeBinding . makeRef
+
+fromXML' :: (Monad m, InXML a) => XML -> m a
+fromXML' = maybe (fail "fromXML'") return . fromXML

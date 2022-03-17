@@ -62,7 +62,7 @@ termView = makeView fromTerm toTerm
 
 instance IsTerm Term where
    toTerm = id
-   termDecoder = tFirst $ maybe (throwError "not a term") return
+   termDecoder = tFirst $ maybe (errorStr "not a term") return
 
 instance IsTerm ShowString where
    toTerm = TVar . fromShowString

@@ -83,11 +83,11 @@ instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
 
 instance InJSON JSON where
    toJSON      = id
-   jsonDecoder = gets (builderToJSON . snd)
+   jsonDecoder = gets builderToJSON
 
 instance InJSON JSONBuilder where
    jsonBuilder = id
-   jsonDecoder = gets snd
+   jsonDecoder = get
 
 infix 7 .=
 

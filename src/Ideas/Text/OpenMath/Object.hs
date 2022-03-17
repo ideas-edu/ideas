@@ -19,7 +19,9 @@ import Data.Generics.Uniplate.Direct hiding (children)
 import Data.List (nub)
 import Data.Maybe
 import Ideas.Text.OpenMath.Symbol
+import Ideas.Text.XML.Decoder
 import Ideas.Text.XML
+import Ideas.Utils.Decoding
 
 -- internal representation for OpenMath objects
 data OMOBJ = OMI Integer
@@ -33,9 +35,25 @@ data OMOBJ = OMI Integer
 instance ToXML OMOBJ where
    toXML = omobj2xml
 
-instance InXML OMOBJ where
-   fromXML = either fail return . xml2omobj
+-- maf = fromXML (toXML (OMA [OMS (Nothing, "fac"), OMS (Just "arith", "plus"), OMV "f", OMBIND (OMI 13) ["x","y"] (OMI 14), OMF 42])) :: Maybe OMOBJ
 
+instance InXML OMOBJ where
+--   fromXML = either fail return . xml2omobj
+
+   xmlDecoder = xTag "OMOBJ" rec
+    where
+      rec  =  xTag "OMA" (OMA <$> many rec)
+          <|> xTag "OMS" (makeOMS <$> optional (xAttr "cd") <*> xAttr "name")
+          <|> xTag "OMI" (OMI . fromJust . readInt <$> xString)
+          <|> xTag "OMF" (OMF . fromJust . readDouble <$> xAttr "dec")
+          <|> xTag "OMV" (OMV <$> xAttr "name")
+          <|> xTag "OMBIND" (OMBIND <$> rec <*> recOMBVar <*> rec)
+
+      recOMBVar = xTag "OMBVAR" (many (xTag "OMV" (xAttr "name")))
+
+      makeOMS (Just "unknown") a = OMS (Nothing, a)
+      makeOMS cd a = OMS (cd, a)
+   
 instance Uniplate OMOBJ where
    uniplate omobj =
       case omobj of
@@ -50,58 +68,7 @@ getOMVs omobj = nub [ x | OMV x <- universe omobj ]
 -- conversion functions: XML <-> OMOBJ
 
 xml2omobj :: XML -> Either String OMOBJ
-xml2omobj xmlTop
-   | name xmlTop == "OMOBJ" =
-        case children xmlTop of
-           [x] -> rec x
-           _   -> fail "invalid omobj"
-   | otherwise = fail "expected an OMOBJ tag"
- where
-   rec xml =
-      case name xml of
-         "OMA" -> do
-            ys <- mapM rec (children xml)
-            return (OMA ys)
-
-         "OMS" | emptyContent xml -> do
-            let mcd = case findAttribute "cd" xml of
-                         Just "unknown" -> Nothing
-                         this -> this
-            n <- findAttribute "name" xml
-            return (OMS (mcd, n))
-
-         "OMI" | name xml == "OMI" ->
-            case readInt (getData xml) of
-               Just i -> return (OMI (toInteger i))
-               _      -> fail "invalid integer in OMI"
-
-         "OMF" | emptyContent xml -> do
-            s <- findAttribute "dec" xml
-            case readDouble s of
-               Just nr -> return (OMF nr)
-               _       -> fail "invalid floating-point in OMF"
-
-         "OMV" | emptyContent xml -> do
-            s <- findAttribute "name" xml
-            return (OMV s)
-
-         "OMBIND" ->
-            case children xml of
-               [x1, x2, x3] -> do
-                  y1 <- rec x1
-                  y2 <- recOMBVAR x2
-                  y3 <- rec x3
-                  return (OMBIND y1 y2 y3)
-               _ -> fail "invalid ombind"
-         _ -> fail ("invalid tag " ++ name xml)
-
-   recOMBVAR xml
-      | name xml == "OMBVAR" =
-           let f (Right (OMV s)) = return s
-               f this = fail $ "expected tag OMV in OMBVAR, but found " ++ show this
-           in mapM (f . rec) (children xml)
-      | otherwise =
-           fail ("expected tag OMVAR, but found " ++ show (name xml))
+xml2omobj = either (Left . show) (Right . fst) . runDecoder xmlDecoder () . builder
 
 omobj2xml :: OMOBJ -> XML
 omobj2xml object = makeXML "OMOBJ" $ mconcat

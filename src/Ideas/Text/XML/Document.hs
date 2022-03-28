@@ -13,7 +13,8 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Text.XML.Document
-   ( Name, Attributes, Attribute(..), Reference(..), Parameter(..)
+   ( Name, uncheckedName, fromString
+   , Attributes, Attribute(..), Reference(..), Parameter(..)
    , XMLDoc(..), XML(..), Element(..), Content, DTD(..), DocTypeDecl(..)
    , ContentSpec(..), CP(..), AttType(..), DefaultDecl(..), AttDef
    , EntityDef, AttValue, EntityValue, ExternalID(..), PublicID
@@ -21,25 +22,51 @@ module Ideas.Text.XML.Document
    , prettyXML, prettyElement, escape
    ) where
 
+import Data.String
 import Prelude hiding ((<$>))
-
+import Ideas.Text.XML.Unicode
 import Text.PrettyPrint.Leijen
 
-type Name = String
+------------------------------------------------------------------
+-- (checked) names
+
+newtype Name = N String
+ deriving (Eq, Ord)
+
+instance Show Name where
+   show (N s) = s
+
+instance IsString Name where
+   fromString s 
+      | validName s = N s
+      | otherwise   = error $ "Invalid XML name: " ++ s
+
+uncheckedName :: String -> Name
+uncheckedName = N
+
+validName :: String -> Bool
+validName []     = False
+validName (x:xs) = (isLetter x || x `elem` "_:") && all validNameChar xs
+
+validNameChar :: Char -> Bool
+validNameChar c = any ($ c) [isLetter, isDigit, isCombiningChar, isExtender, (`elem` ".-_:")]
+
+------------------------------------------------------------------
+-- (checked) names
 
 type Attributes = [Attribute]
 data Attribute  = Name := AttValue
 
-data Reference = CharRef Int | EntityRef String
+data Reference = CharRef Int | EntityRef Name
 
-newtype Parameter = Parameter String
+newtype Parameter = Parameter Name
 
 data XMLDoc = XMLDoc
    { versionInfo :: Maybe String
    , encoding    :: Maybe String
    , standalone  :: Maybe Bool
    , dtd         :: Maybe DTD
-   , externals   :: [(String, External)]
+   , externals   :: [(Name, External)]
    , root        :: Element
    }
 
@@ -71,12 +98,12 @@ data ContentSpec = Empty | Any | Mixed Bool [Name] | Children CP
 data CP = Choice [CP] | Sequence [CP] | QuestionMark CP | Star CP | Plus CP | CPName Name
 
 data AttType = IdType | IdRefType | IdRefsType | EntityType | EntitiesType | NmTokenType | NmTokensType
-             | StringType | EnumerationType [String] | NotationType [String]
+             | StringType | EnumerationType [String] | NotationType [Name]
 
 data DefaultDecl = Required | Implied | Value AttValue | Fixed AttValue
 
 type AttDef = (Name, AttType, DefaultDecl)
-type EntityDef = Either EntityValue (ExternalID, Maybe String)
+type EntityDef = Either EntityValue (ExternalID, Maybe Name)
 type AttValue    = [Either Char Reference]
 type EntityValue = [Either Char (Either Parameter Reference)]
 
@@ -102,17 +129,20 @@ instance Show Element   where show = show . pretty
 ------------------------------------------------------------------
 -- Pretty printing
 
-instance Pretty Attribute  where
-   pretty (n := v) = text n <> char '=' <> prettyAttValue v
+instance Pretty Name where
+   pretty = text . show
+
+instance Pretty Attribute where
+   pretty (n := v) = pretty n <> char '=' <> prettyAttValue v
 
 instance Pretty Reference where
    pretty ref =
       case ref of
          CharRef n   -> text "&#" <> int n <> char ';'
-         EntityRef s -> char '&' <> text s <> char ';'
+         EntityRef s -> char '&' <> pretty s <> char ';'
 
 instance Pretty Parameter where
-   pretty (Parameter s) = text "%" <> text s <> text ";"
+   pretty (Parameter s) = text "%" <> pretty s <> text ";"
 
 instance Pretty XML where
    pretty = prettyXML False
@@ -129,7 +159,7 @@ prettyXML compact xml =
       Reference r -> pretty r
 
 prettyElement :: Bool -> Element -> Doc
-prettyElement _ (Element n@"script" as [CharData s]) =
+prettyElement _ (Element n as [CharData s]) | show n == "script" =
    -- quick fix for not escaping javascript code in html
    openTag n as <> text s <> closeTag n
 prettyElement compact (Element n as c)
@@ -151,7 +181,7 @@ closeTag :: Name -> Doc
 closeTag n = prettyTag (text "</") (char '>') n []
 
 prettyTag :: Doc -> Doc -> Name -> Attributes -> Doc
-prettyTag open close n as = open <> hsep (text n:map pretty as) <> close
+prettyTag open close n as = open <> hsep (pretty n:map pretty as) <> close
 
 prettyAttValue :: AttValue -> Doc
 prettyAttValue = dquotes . hcat . map (either (text . escapeChar) pretty)

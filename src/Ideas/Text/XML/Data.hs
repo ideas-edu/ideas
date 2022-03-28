@@ -14,8 +14,11 @@
 
 module Ideas.Text.XML.Data 
    ( -- types
-     XML(..), Attributes, Attribute(..)
-   , D.Name, validName
+     XML(..)
+   , Attributes, Attribute(..)
+   , Name, uncheckedName
+   , Content, toContent, fromContent, xmlToContent
+   , HasContent(..), contentIsEmpty, headIsString, headIsXML
      -- pretty-printing
    , prettyXML, compactXML
      -- processing
@@ -23,8 +26,9 @@ module Ideas.Text.XML.Data
    ) where
 
 import Data.Char (isSpace, ord)
+import Data.String
+import Ideas.Text.XML.Document (Name, uncheckedName)
 import qualified Ideas.Text.XML.Document as D
-import Ideas.Text.XML.Unicode
 
 -------------------------------------------------------------------------------
 -- XML types
@@ -32,9 +36,9 @@ import Ideas.Text.XML.Unicode
 -- invariants content: no two adjacent Lefts, no Left with empty string,
 -- valid tag/attribute names
 data XML = Tag
-   { name       :: D.Name
+   { name       :: Name
    , attributes :: Attributes
-   , content    :: [Either String XML]
+   , content    :: Content
    }
  deriving Eq
 
@@ -43,15 +47,93 @@ instance Show XML where
 
 type Attributes = [Attribute]
 
-data Attribute = D.Name := String
+data Attribute = Name := String
  deriving Eq
 
-validName :: String -> Bool
-validName []     = False
-validName (x:xs) = (isLetter x || x `elem` "_:") && all validNameChar xs
+data Content = Empty
+             | CData String
+             | Cons XML Content 
+             | Mixed String XML Content
+ deriving Eq
 
-validNameChar :: Char -> Bool
-validNameChar c = any ($ c) [isLetter, isDigit, isCombiningChar, isExtender, (`elem` ".-_:")]
+instance Show Content where
+   showsPrec _ = rec
+    where
+      rec Empty         = id
+      rec (CData s)     = (s ++)
+      rec (Cons x c)    = (show x ++) . rec c 
+      rec (Mixed s x c) = (s ++) . (show x ++) . rec c 
+
+instance Semigroup Content where
+   Empty       <> rest        = rest
+   CData s     <> Empty       = CData s
+   CData s     <> CData t     = CData (s ++ t)
+   CData s     <> Cons x c    = Mixed s x c
+   CData s     <> Mixed t x c = Mixed (s ++ t) x c  
+   Cons x c    <> rest        = Cons x (c <> rest)
+   Mixed s x c <> rest        = Mixed s x (c <> rest)   
+
+instance Monoid Content where
+   mempty = Empty
+
+instance IsString Content where
+   fromString s = if null s then Empty else CData s
+
+class HasContent a where
+   getContent    :: a -> Content
+   setContent    :: Content -> a -> a
+   changeContent :: (Content -> Content) -> a -> a
+   updateContent :: a -> (Content, Content -> a)
+   
+   {-# MINIMAL (getContent, changeContent) | updateContent #-}
+
+   -- default definitions
+   getContent      = fst . updateContent
+   setContent      = changeContent . const
+   changeContent f = (\(c, g) -> g (f c)) . updateContent
+   updateContent a = (getContent a, (`setContent` a))
+
+instance HasContent Content where
+   updateContent a = (a, id)
+
+instance HasContent XML where
+   updateContent xml = (content xml, \new -> xml {content = new})
+
+contentIsEmpty :: HasContent a => a -> Bool
+contentIsEmpty a =
+   case getContent a of
+      Empty -> True
+      _     -> False
+
+headIsString :: HasContent a => a -> Maybe (String, a)
+headIsString a =
+   case updateContent a of
+      (CData s, f)     -> Just (s, f Empty)
+      (Mixed s x c, f) -> Just (s, f (Cons x c))
+      _                -> Nothing
+
+headIsXML :: HasContent a => a -> Maybe (XML, a)
+headIsXML a =
+   case updateContent a of
+      (Cons x c, f) -> Just (x, f c)
+      _             -> Nothing
+
+xmlToContent :: XML -> Content
+xmlToContent = (`Cons` Empty)
+
+toContent :: [Either String XML] -> Content
+toContent []                    = Empty
+toContent (Right x:rest)        = Cons x (toContent rest)
+toContent (Left s:Left t:rest)  = toContent (Left (s ++ t) : rest)
+toContent (Left []:rest)        = toContent rest
+toContent (Left s:[])           = CData s
+toContent (Left s:Right x:rest) = Mixed s x (toContent rest) 
+
+fromContent :: Content -> [Either String XML]
+fromContent Empty         = []
+fromContent (CData s)     = [Left s]
+fromContent (Cons x c)    = Right x : fromContent c 
+fromContent (Mixed s x c) = Left s : Right x : fromContent c
 
 -------------------------------------------------------------------------------
 -- Pretty-printing XML
@@ -81,13 +163,13 @@ toElement = foldXML make mkAttribute mkString
 -------------------------------------------------------------------------------
 -- Processing XML
 
-foldXML :: (D.Name -> [a] -> [Either s e] -> e) -> (Attribute -> a) -> (String -> s) -> XML -> e
+foldXML :: (Name -> [a] -> [Either s e] -> e) -> (Attribute -> a) -> (String -> s) -> XML -> e
 foldXML fe fa fs = rec
  where
-   rec (Tag n as cs) = fe n (map fa as) (map (either (Left . fs) (Right . rec)) cs)
+   rec (Tag n as cs) = fe n (map fa as) (map (either (Left . fs) (Right . rec)) (fromContent cs))
 
 trimXML :: XML -> XML
-trimXML = foldXML Tag f trim
+trimXML = foldXML (\n as -> Tag n as . toContent) f trim
  where
    f (n := s) = n := trim s
 

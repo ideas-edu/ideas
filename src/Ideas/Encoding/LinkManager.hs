@@ -169,7 +169,7 @@ simpleRequest :: String -> XML
 simpleRequest s = makeRequest s mempty
 
 makeRequest :: String -> XMLBuilder -> XML
-makeRequest s rest = makeXML "request" $
+makeRequest s rest = makeXML (fromString "request") $
    ("service"  .=. s) <>
    ("encoding" .=. "html") <>
    rest

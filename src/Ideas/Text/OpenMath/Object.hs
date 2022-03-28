@@ -35,11 +35,7 @@ data OMOBJ = OMI Integer
 instance ToXML OMOBJ where
    toXML = omobj2xml
 
--- maf = fromXML (toXML (OMA [OMS (Nothing, "fac"), OMS (Just "arith", "plus"), OMV "f", OMBIND (OMI 13) ["x","y"] (OMI 14), OMF 42])) :: Maybe OMOBJ
-
 instance InXML OMOBJ where
---   fromXML = either fail return . xml2omobj
-
    xmlDecoder = xTag "OMOBJ" rec
     where
       rec  =  xTag "OMA" (OMA <$> many rec)
@@ -71,7 +67,7 @@ xml2omobj :: XML -> Either String OMOBJ
 xml2omobj = either (Left . show) (Right . fst) . runDecoder xmlDecoder () . builder
 
 omobj2xml :: OMOBJ -> XML
-omobj2xml object = makeXML "OMOBJ" $ mconcat
+omobj2xml object = makeXML (fromString "OMOBJ") $ mconcat
    [ "xmlns"   .=. "http://www.openmath.org/OpenMath"
    , "version" .=. "2.0"
    , "cdbase"  .=. "http://www.openmath.org/cd"

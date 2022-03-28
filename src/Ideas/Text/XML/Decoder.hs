@@ -28,45 +28,31 @@ evalDecoderXML :: DecoderXML a -> XML -> Either (Error XML) a
 evalDecoderXML p = evalDecoder p () . builder
 
 xTag :: String -> DecoderXML a -> DecoderXML a
-xTag s p = do
-   xml <- get
-   case fromBS xml of 
-      (as, Right hd:rest) | name hd == s -> do
-         put (conv (attributes hd) (content hd))
+xTag s p = get >>= \xml -> 
+   case headIsXML xml of 
+      Just (hd, rest) | show (name hd) == s -> do
+         put (xmlToBuilder hd)
          a <- p
          xEnd
-         put (conv as rest)
+         put rest
          return a
       _ -> errorStr "xTag"
 
 xString :: DecoderXML String
 xString = do
    xml <- get
-   case fromBS xml of 
-      (as, Left s:rest) -> do
-         put (conv as rest)
-         return s
-      _ -> errorStr "xString"
+   case headIsString xml of 
+      Just (s, rest) -> put rest >> return s
+      Nothing        -> errorStr "xString"
 
 xAttr :: String -> DecoderXML String
-xAttr s = do
-   xml <- get
-   let (as, _) = fromBS xml
-   case filter (\(n := _) -> n == s) as of
+xAttr s = get >>= \xml -> 
+   case filter (\(n := _) -> show n == s) (builderAttributes xml) of
       [_ := v] -> return v
       _ -> errorStr "xAttr"
 
 xEnd :: DecoderXML ()
-xEnd = do
-   xml <- get
-   case fromBS xml of
-      (_, []) -> do
-         return ()
-      _ -> errorStr "xEnd"
-
-conv :: Attributes -> [Either String XML] -> XMLBuilder
-conv as xs = mconcat (map f as ++ map g xs)
- where
-   f (n := s)  = n .=. s
-   g (Left s)  = string s
-   g (Right a) = builder a  
+xEnd = get >>= \xml -> 
+   if contentIsEmpty xml 
+   then return () 
+   else errorStr "xEnd"

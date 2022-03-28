@@ -86,7 +86,7 @@ data HTMLPage = HTMLPage
    }
 
 instance ToXML HTMLPage where
-   toXML page = makeXML "html" $
+   toXML page = makeXML (fromString "html") $
       element "head"
          [ tag "title" (string (title page))
          , mconcat

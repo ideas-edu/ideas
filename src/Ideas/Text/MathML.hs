@@ -14,9 +14,10 @@ module Ideas.Text.MathML
    ( MathML(..), xml2mathml, mathml2xml
    ) where
 
-import Data.Maybe
 import Ideas.Text.XML
+import Ideas.Text.XML.Decoder
 import Ideas.Utils.Uniplate hiding (children)
+import Ideas.Utils.Decoding
 
 data MathML = MRow [MathML]
             | MId String
@@ -54,71 +55,55 @@ instance ToXML MathML where
    toXML = mathml2xml
 
 instance InXML MathML where
-   fromXML = either fail return . xml2mathml
+   xmlDecoder = rec 
+    where
+      rec  =  xTag "mrow" (MRow <$> many rec)
+          <|> xTag "msqrt" (MSqrt <$> impliedRow)
+          <|> xTag "math" impliedRow
+          <|> xTag "mi" (MId <$> xString)
+          <|> xTag "mn" (MNumber <$> xString)
+          <|> xTag "mo" (MOperator <$> xString)
+          <|> xTag "ms" (MString <$> xString)
+          <|> xTag "mtext" (MText <$> xString)
+          <|> xTag "mroot" (MRoot <$> rec <*> rec)
+          <|> xTag "msup" (MSup <$> rec <*> rec)
+          <|> xTag "msub" (MSub <$> rec <*> rec)
+          <|> xTag "msubsup" (MSubSup <$> rec <*> rec <*> rec)
+          <|> xTag "mfrac" (MFrac <$> rec <*> rec)
+          <|> xTag "mfenced" (MFenced <$> xAttr "open" <*> xAttr "close" <*> rec)
+          <|> xTag "mspace" (return MSpace)
+          <|> xTag "mstyle" (return MStyle)
+          <|> xTag "mpadded" (return MPadded)
+          <|> xTag "mphantom" (return MPhantom)
+          <|> xTag "merror" (return MError)
+          <|> xTag "menclose" (return MEnclose)
+          <|> xTag "munder" (return MUnder)
+          <|> xTag "mover" (return MOver)
+          <|> xTag "munderover" (return MUnderOver)
+          <|> xTag "mtable" (return MTable)
+          <|> xTag "mtr" (return MTableRow)
+          <|> xTag "mlabeledtr" (return MLabeledTableRow)
+          <|> xTag "mtd" (return MTableData)
+
+      impliedRow = f <$> many rec
+
+      f [x] = x
+      f xs  = MRow xs
 
 instance Uniplate MathML where
    uniplate math =
       case math of
-         MRow xs       -> plate MRow ||* xs
-         _             -> plate math
+         MRow xs -> plate MRow ||* xs
+         _       -> plate math
 
 ----------------------------------------------------------
 -- conversion functions: XML <-> MathML
 
 xml2mathml :: XML -> Either String MathML
-xml2mathml = rec
- where
-   rec xml = case name xml of
-       "mrow"       -> MRow <$> mapM rec (children xml)
-       "mi"         -> return (MId (getData xml))
-       "mn"         -> return (MNumber (getData xml))
-       "mo"         -> return (MOperator (getData xml))
-       "ms"         -> return (MString (getData xml))
-       "mtext"      -> return (MText (getData xml))
-       "mroot"      -> case children xml of
-                          [c, d] -> MRoot <$> rec c <*> rec d
-                          _ -> fail "invalid mroot"
-       "msup"       -> case children xml of
-                          [c, d] -> MSup <$> rec c <*> rec d
-                          _ -> fail "invalid msup"
-       "msub"       -> case children xml of
-                          [c, d] -> MSub <$> rec c <*> rec d
-                          _ -> fail "invalid msub"
-       "msubsup"    -> case children xml of
-                          [c, d, e] -> MSubSup <$> rec c <*> rec d <*> rec e
-                          _ -> fail "invalid msubsup"
-       "mfrac"      -> case children xml of
-                          [c, d] -> MFrac <$> rec c <*> rec d
-                          _ -> fail "invalid mfrac"
-       "mfenced"    -> case children xml of
-                          [c] -> MFenced (fromMaybe "(" (findAttribute "open" xml)) (fromMaybe ")" (findAttribute "close" xml)) <$> rec c
-                          _ -> fail "invalid mfenced"
-       "mspace"     -> return MSpace
-       "mtable"     -> return MTable
-       "mtr"        -> return MTableRow
-       "mlabeledtr" -> return MLabeledTableRow
-       "munder"     -> return MUnder
-       "mover"      -> return MOver
-       "munderover" -> return MUnderOver
-       -- below are cases that have 1* arguments, when none-one an mrow is implied.
-       "math"       -> impliedMRow xml
-       "msqrt"      -> MSqrt <$> impliedMRow xml
-       "mphantom"   -> return MPhantom
-       "mpadded"    -> return MPadded
-       "mstyle"     -> return MStyle
-       "merror"     -> return MError
-       "mtd"        -> return MTableData
-       "menclose"   -> return MEnclose
-       _ -> fail ("unsupported MathML: " ++ show xml)
-
-   impliedMRow :: XML -> Either String MathML
-   impliedMRow xml =
-      case children xml of
-         [x] -> rec x
-         xs  -> MRow <$> mapM rec xs
+xml2mathml = either (Left . show) (Right . fst) . runDecoder xmlDecoder () . builder
 
 mathml2xml :: MathML -> XML
-mathml2xml = makeXML "math" . rec
+mathml2xml = makeXML (fromString "math") . rec
  where
    rec :: MathML -> XMLBuilder
    rec math =

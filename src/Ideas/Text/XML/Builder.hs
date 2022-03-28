@@ -14,13 +14,12 @@
 
 module Ideas.Text.XML.Builder 
    ( BuildXML(..)
-   , XMLBuilder, makeXML, fromBS
+   , XMLBuilder, makeXML, builderAttributes, xmlToBuilder, fromBS
    ) where
 
 import Data.List (nubBy)
 import Data.Foldable (toList)
 import Data.String
-import qualified Data.Sequence as Seq
 import qualified Data.Map as M
 import Ideas.Text.XML.Data
 import Ideas.Utils.Decoding
@@ -51,7 +50,7 @@ instance BuildXML a => BuildXML (Decoder env err s a) where
 
 -------------------------------------------------------------------
 
-data XMLBuilder = BS (Seq.Seq Attribute) (Seq.Seq (Either String XML))
+data XMLBuilder = BS Attributes Content
 
 instance Semigroup XMLBuilder where
   BS as1 elts1 <> BS as2 elts2 = BS (as1 <> as2) (elts1 <> elts2)
@@ -61,31 +60,34 @@ instance Monoid XMLBuilder where
    mappend = (<>)
 
 instance BuildXML XMLBuilder where
-   n .=. s  = nameCheck n $ BS (Seq.singleton (n := s)) mempty
-   string s = BS mempty (if null s then mempty else Seq.singleton (Left s))
-   builder  = BS mempty . Seq.singleton . Right
-   tag n    = builder . uncurry (Tag n) . fromBS . nameCheck n
+   n .=. s  = BS [fromString n := s] mempty
+   string s = BS mempty (if null s then mempty else fromString s)
+   builder  = BS mempty . xmlToContent
+   tag n    = builder . makeXML (fromString n)
 
 instance IsString XMLBuilder where
    fromString = string
 
-makeXML :: String -> XMLBuilder -> XML
-makeXML s = uncurry (Tag s) . fromBS . nameCheck s
+instance HasContent XMLBuilder where
+   updateContent (BS as c) = (c, BS as)
 
-nameCheck :: String -> a -> a
-nameCheck s = if validName s then id else error $ "Invalid name for xml tag: " ++ s
+xmlToBuilder :: XML -> XMLBuilder -- is not builder??? -- !!! fix me
+xmlToBuilder xml = BS (attributes xml) (content xml)
+
+makeXML :: Name -> XMLBuilder -> XML
+makeXML n (BS as c) = Tag n (mergeAttributes as) c
+
+builderAttributes :: XMLBuilder -> Attributes
+builderAttributes (BS as _) = as
 
 -- local helper: merge attributes, but preserve order
 fromBS :: XMLBuilder -> (Attributes, [Either String XML])
-fromBS (BS as elts) = (attrList, merge (toList elts))
+fromBS (BS as cont) = (mergeAttributes as, fromContent cont)
+
+mergeAttributes :: Attributes -> Attributes
+mergeAttributes as = nubBy eqKey (map make as)
  where
    attrMap = foldr add M.empty as
    add (k := v) = M.insertWith (\x y -> x ++ " " ++ y) k v
-   attrList = nubBy eqKey (map make (toList as))
    make (k := _) = k := M.findWithDefault "" k attrMap
    eqKey (k1 := _) (k2 := _) = k1 == k2
-
-   merge [] = []
-   merge (Left x:Left y:rest)  = merge (Left (x++y):rest)
-   merge (Left x:rest)  = Left x : merge rest
-   merge (Right y:rest) = Right y : merge rest

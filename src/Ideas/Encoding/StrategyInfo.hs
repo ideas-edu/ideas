@@ -14,6 +14,7 @@
 
 module Ideas.Encoding.StrategyInfo (strategyToXML) where
 
+import Data.String
 import Ideas.Common.Id
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Configuration
@@ -31,7 +32,7 @@ nameAttr :: Id -> XMLBuilder
 nameAttr info = "name" .=. showId info
 
 strategyTreeToXML :: StrategyTree a -> XML
-strategyTreeToXML tree = makeXML "label" $
+strategyTreeToXML tree = makeXML (fromString "label") $
    case isLabel tree of
       Just (l, a) -> nameAttr l <> strategyTreeBuilder a
       _ -> strategyTreeBuilder tree
@@ -42,21 +43,21 @@ strategyTreeBuilder = builder . fold emptyAlg
         case xs of
            [x] | isConfigId def
              -> addProperty (show def) x
-           _ -> makeXML (show def) (mconcat (map builder xs))
+           _ -> makeXML (fromString (show def)) (mconcat (map builder xs))
    , fLeaf = \r ->
-        makeXML "rule" ("name" .=. show r)
+        makeXML (fromString "rule") ("name" .=. show r)
    , fLabel = \l a ->
-        makeXML "label" (nameAttr l <> builder a)
+        makeXML (fromString "label") (nameAttr l <> builder a)
    , fRec = \n a ->
-        makeXML "rec" (("var" .=. show n) <> builder a)
+        makeXML (fromString "rec") (("var" .=. show n) <> builder a)
    , fVar = \n ->
-        makeXML "var" ("var" .=. show n)
+        makeXML (fromString "var") ("var" .=. show n)
    }
 
 addProperty :: String -> XML -> XML
 addProperty s a =
-   if name a `elem` ["label", "rule"]
-   then a { attributes = attributes a ++ [s := "true"] }
+   if show (name a) `elem` ["label", "rule"]
+   then a { attributes = attributes a ++ [fromString s := "true"] }
    else a
 
 -----------------------------------------------------------------------

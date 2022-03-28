@@ -155,8 +155,8 @@ decodeEnvironment =
    <|> return mempty
  where
    add env item = do
-      unless (name item == "item") $
-         fail $ "expecting item tag, found " ++ name item
+      unless (show (name item) == "item") $
+         fail $ "expecting item tag, found " ++ show (name item)
       n   <- findAttribute "name"  item
       req <- getRequest
       case findChild "OMOBJ" item of
@@ -181,7 +181,7 @@ decodeConfiguration = decodeChild "configuration" $
  where
    decodeAction item = do
       guard (null (children item))
-      action <- maybe (fail "invalid action") return $ readM (name item)
+      action <- maybe (fail "invalid action") return $ readM (show (name item))
       cfgloc <- findAttribute "name" item
       return (action `byName` newId cfgloc)
 

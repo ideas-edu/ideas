@@ -16,6 +16,7 @@ module Ideas.Encoding.ModeXML (processXML) where
 
 import Control.Exception
 import Control.Monad
+import Data.String
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.DecoderXML
 import Ideas.Encoding.EncoderHTML
@@ -52,12 +53,12 @@ processXML options dr txt = do
 
 addVersion :: String -> XML -> XML
 addVersion s xml =
-   let info = [ "version" := s ]
+   let info = [ fromString "version" := s ]
    in xml { attributes = attributes xml ++ info }
 
 xmlRequest :: Monad m => Maybe String -> XML -> m Request
 xmlRequest ms xml = do
-   unless (name xml == "request") $
+   unless (show (name xml) == "request") $
       fail "expected xml tag request"
    enc  <- case findAttribute "encoding" xml of
               Just s  -> readEncoding s
@@ -104,14 +105,14 @@ extractExerciseId :: Monad m => XML -> m Id
 extractExerciseId = fmap newId . findAttribute "exerciseid"
 
 resultOk :: XMLBuilder -> XML
-resultOk body = makeXML "reply" $
+resultOk body = makeXML (fromString "reply") $
    ("result" .=. "ok")
    <> body
 
 resultError :: Options -> String -> IO XML
 resultError options msg = do
    changeLog (logRef options) (\r -> r {errormsg = msg})
-   return $ makeXML "reply" $
+   return $ makeXML (fromString "reply") $
       ("result" .=. "error")
       <> tag "message" (string msg)
 

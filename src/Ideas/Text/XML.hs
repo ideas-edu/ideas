@@ -163,15 +163,29 @@ decodeAttribute s = get >>= \xml ->
 
 decodeChild :: String -> Decoder env String XML a -> Decoder env String XML a
 decodeChild s p = get >>= \xml ->
-   case break hasName (fromContent (content xml)) of
-      (xs, Right y:ys) -> do
+   case extractChild (fromString s) (content xml) of
+      Just (y, rest) -> do
          put y
          a <- p
-         put xml { content = toContent (xs ++ ys) }
+         put xml { content = rest }
          return a
       _ -> throwError $ "Could not find child " ++ s
+
+-- local helper
+extractChild :: Name -> Content -> Maybe (XML, Content)
+extractChild n = rec
  where
-   hasName = either (const False) ((==s) . show . name)
+   rec a = 
+      case headIsXML a of
+         Just (xml, rest) 
+            | n == name xml -> Just (xml, rest)
+            | otherwise -> add (xmlToContent xml) (rec rest)
+         Nothing ->
+            case headIsString a of
+               Just (s, rest) -> add (fromString s) (rec rest)
+               Nothing -> Nothing
+
+   add a = fmap (fmap (a <>))
 
 decodeFirstChild :: String -> Decoder env String XML a -> Decoder env String XML a
 decodeFirstChild s p = get >>= \xml ->

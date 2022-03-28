@@ -10,15 +10,12 @@
 --
 -----------------------------------------------------------------------------
 
--- to do: hide local function fromBS
-
 module Ideas.Text.XML.Builder 
    ( BuildXML(..)
-   , XMLBuilder, makeXML, builderAttributes, xmlToBuilder, fromBS
+   , XMLBuilder, makeXML, builderAttributes, xmlToBuilder
    ) where
 
 import Data.List (nubBy)
-import Data.Foldable (toList)
 import Data.String
 import qualified Data.Map as M
 import Ideas.Text.XML.Data
@@ -79,10 +76,6 @@ makeXML n (BS as c) = Tag n (mergeAttributes as) c
 
 builderAttributes :: XMLBuilder -> Attributes
 builderAttributes (BS as _) = as
-
--- local helper: merge attributes, but preserve order
-fromBS :: XMLBuilder -> (Attributes, [Either String XML])
-fromBS (BS as cont) = (mergeAttributes as, fromContent cont)
 
 mergeAttributes :: Attributes -> Attributes
 mergeAttributes as = nubBy eqKey (map make as)

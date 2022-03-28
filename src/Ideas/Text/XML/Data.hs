@@ -17,7 +17,7 @@ module Ideas.Text.XML.Data
      XML(..)
    , Attributes, Attribute(..)
    , Name, uncheckedName
-   , Content, toContent, fromContent, xmlToContent
+   , Content, xmlToContent
    , HasContent(..), contentIsEmpty, headIsString, headIsXML
      -- pretty-printing
    , prettyXML, compactXML
@@ -121,20 +121,6 @@ headIsXML a =
 xmlToContent :: XML -> Content
 xmlToContent = (`Cons` Empty)
 
-toContent :: [Either String XML] -> Content
-toContent []                    = Empty
-toContent (Right x:rest)        = Cons x (toContent rest)
-toContent (Left s:Left t:rest)  = toContent (Left (s ++ t) : rest)
-toContent (Left []:rest)        = toContent rest
-toContent (Left s:[])           = CData s
-toContent (Left s:Right x:rest) = Mixed s x (toContent rest) 
-
-fromContent :: Content -> [Either String XML]
-fromContent Empty         = []
-fromContent (CData s)     = [Left s]
-fromContent (Cons x c)    = Right x : fromContent c 
-fromContent (Mixed s x c) = Left s : Right x : fromContent c
-
 -------------------------------------------------------------------------------
 -- Pretty-printing XML
 
@@ -145,10 +131,8 @@ compactXML :: XML -> String
 compactXML = show . D.prettyElement True . toElement
 
 toElement :: XML -> D.Element
-toElement = foldXML make mkAttribute mkString
+toElement = foldXML D.Element mkAttribute mkString (return . D.Tagged)
  where
-   make n as = D.Element n as . concatMap (either id (return . D.Tagged))
-
    mkAttribute :: Attribute -> D.Attribute
    mkAttribute (m := s) = (D.:=) m (map Left s)
 
@@ -163,13 +147,18 @@ toElement = foldXML make mkAttribute mkString
 -------------------------------------------------------------------------------
 -- Processing XML
 
-foldXML :: (Name -> [a] -> [Either s e] -> e) -> (Attribute -> a) -> (String -> s) -> XML -> e
-foldXML fe fa fs = rec
+foldXML :: Monoid c => (Name -> [a] -> c -> e) -> (Attribute -> a) -> (String -> c) -> (e -> c) -> XML -> e
+foldXML f fa fs fc = rec
  where
-   rec (Tag n as cs) = fe n (map fa as) (map (either (Left . fs) (Right . rec)) (fromContent cs))
+   rec (Tag n as cs) = f n (map fa as) (recContent cs)
+
+   recContent Empty         = mempty
+   recContent (CData s)     = fs s
+   recContent (Cons x c)    = fc (rec x) <> recContent c
+   recContent (Mixed s x c) = fs s <> fc (rec x) <> recContent c
 
 trimXML :: XML -> XML
-trimXML = foldXML (\n as -> Tag n as . toContent) f trim
+trimXML = foldXML Tag f (fromString . trim) xmlToContent
  where
    f (n := s) = n := trim s
 

@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Text.XML.Document
-   ( Name, uncheckedName, fromString
+   ( Name, toName, uncheckedName
    , Attributes, Attribute(..), Reference(..), Parameter(..)
    , XMLDoc(..), XML(..), Element(..), Content, DTD(..), DocTypeDecl(..)
    , ContentSpec(..), CP(..), AttType(..), DefaultDecl(..), AttDef
@@ -37,9 +37,12 @@ instance Show Name where
    show (N s) = s
 
 instance IsString Name where
-   fromString s 
-      | validName s = N s
-      | otherwise   = error $ "Invalid XML name: " ++ s
+   fromString = toName
+
+toName :: String -> Name
+toName s 
+   | validName s = N s
+   | otherwise   = error $ "Invalid XML name: " ++ s
 
 uncheckedName :: String -> Name
 uncheckedName = N

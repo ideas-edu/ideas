@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE OverloadedStrings, GADTs #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -122,7 +122,7 @@ decodeContext = do
    expr <- decodeExpression
    env  <- decodeEnvironment
    let ctx    = setEnvironment env (inContext ex expr)
-       locRef = makeRef "location"
+       locRef = makeRef ("location" :: String)
    case locRef ? env of
       Just s  -> maybe (fail "invalid location") return $ do
          loc <- toLocation <$> readM s
@@ -155,8 +155,8 @@ decodeEnvironment =
    <|> return mempty
  where
    add env item = do
-      unless (show (name item) == "item") $
-         fail $ "expecting item tag, found " ++ show (name item)
+      unless (getName item == "item") $
+         fail $ "expecting item tag, found " ++ show (getName item)
       n   <- findAttribute "name"  item
       req <- getRequest
       case findChild "OMOBJ" item of
@@ -181,7 +181,7 @@ decodeConfiguration = decodeChild "configuration" $
  where
    decodeAction item = do
       guard (null (children item))
-      action <- maybe (fail "invalid action") return $ readM (show (name item))
+      action <- maybe (fail "invalid action") return $ readM (show (getName item))
       cfgloc <- findAttribute "name" item
       return (action `byName` newId cfgloc)
 

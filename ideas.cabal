@@ -187,6 +187,7 @@ Library
     Ideas.Text.OpenMath.Tests
     Ideas.Text.UTF8
     Ideas.Text.XML
+    Ideas.Text.XML.Attributes
     Ideas.Text.XML.Builder
     Ideas.Text.XML.Data
     Ideas.Text.XML.Decoder

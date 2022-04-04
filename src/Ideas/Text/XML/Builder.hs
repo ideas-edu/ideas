@@ -12,27 +12,27 @@
 
 module Ideas.Text.XML.Builder 
    ( BuildXML(..)
-   , XMLBuilder, makeXML, builderAttributes, xmlToBuilder
+   , XMLBuilder, makeXML, makeXMLBuilder
    ) where
 
-import Data.List (nubBy)
 import Data.String
-import qualified Data.Map as M
 import Ideas.Text.XML.Data
+import Ideas.Text.XML.Document (Name)
+import Ideas.Text.XML.Attributes
 import Ideas.Utils.Decoding
 
 infix 7 .=.
 
 class (Semigroup a, Monoid a) => BuildXML a where
-   (.=.)    :: String -> String -> a   -- attribute
-   string   :: String -> a             -- (escaped) text
-   builder  :: XML -> a                -- (named) xml element
-   tag      :: String -> a -> a        -- tag (with content)
+   (.=.)    :: Name -> String -> a   -- attribute
+   string   :: String -> a           -- (escaped) text
+   builder  :: XML -> a              -- (named) xml element
+   tag      :: Name -> a -> a        -- tag (with content)
    -- functions with a default
    char     :: Char -> a
-   text     :: Show s => s -> a -- escaped text with Show class
-   element  :: String -> [a] -> a
-   emptyTag :: String -> a
+   text     :: Show s => s -> a      -- escaped text with Show class
+   element  :: Name -> [a] -> a
+   emptyTag :: Name -> a
    -- implementations
    char c     = string [c]
    text       = string . show
@@ -47,40 +47,32 @@ instance BuildXML a => BuildXML (Decoder env err s a) where
 
 -------------------------------------------------------------------
 
-data XMLBuilder = BS Attributes Content
+data XMLBuilder = B Attributes Content
 
 instance Semigroup XMLBuilder where
-  BS as1 elts1 <> BS as2 elts2 = BS (as1 <> as2) (elts1 <> elts2)
+  B as1 elts1 <> B as2 elts2 = B (as1 <> as2) (elts1 <> elts2)
 
 instance Monoid XMLBuilder where
-   mempty  = BS mempty mempty
+   mempty  = B mempty mempty
    mappend = (<>)
 
 instance BuildXML XMLBuilder where
-   n .=. s  = BS [fromString n := s] mempty
-   string s = BS mempty (if null s then mempty else fromString s)
-   builder  = BS mempty . xmlToContent
-   tag n    = builder . makeXML (fromString n)
+   n .=. s  = B (attribute n s) mempty
+   string s = B mempty (if null s then mempty else fromString s)
+   builder  = B mempty . xmlToContent
+   tag n    = builder . makeXML n
 
 instance IsString XMLBuilder where
    fromString = string
 
 instance HasContent XMLBuilder where
-   updateContent (BS as c) = (c, BS as)
+   updateContent (B as c) = (c, B as)
 
-xmlToBuilder :: XML -> XMLBuilder -- is not builder??? -- !!! fix me
-xmlToBuilder xml = BS (attributes xml) (content xml)
+instance HasAttributes XMLBuilder where
+   updateAttributes (B as c) = (as, \bs -> B bs c)
+
+makeXMLBuilder :: Attributes -> Content -> XMLBuilder
+makeXMLBuilder = B
 
 makeXML :: Name -> XMLBuilder -> XML
-makeXML n (BS as c) = Tag n (mergeAttributes as) c
-
-builderAttributes :: XMLBuilder -> Attributes
-builderAttributes (BS as _) = as
-
-mergeAttributes :: Attributes -> Attributes
-mergeAttributes as = nubBy eqKey (map make as)
- where
-   attrMap = foldr add M.empty as
-   add (k := v) = M.insertWith (\x y -> x ++ " " ++ y) k v
-   make (k := _) = k := M.findWithDefault "" k attrMap
-   eqKey (k1 := _) (k2 := _) = k1 == k2
+makeXML n (B as c) = xmlRoot n as c

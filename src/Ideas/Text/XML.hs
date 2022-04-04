@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -13,48 +14,44 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Text.XML
-   ( -- * XML types
-     XML, Name, fromString, Attributes, Attribute(..)
+   ( Name, toName, uncheckedName
+   , module Ideas.Text.XML.Attributes
+   , module Ideas.Text.XML.Data
+   , module Ideas.Text.XML.Builder
+   , module Ideas.Text.XML.Decoder
      -- * Parsing XML
    , parseXML, parseXMLFile
-     -- * Building/constructing XML
-   , BuildXML(..), XMLBuilder, makeXML
-     -- * Pretty-printing XML
-   , prettyXML, compactXML
      -- * Simple decoding queries
-   , name, attributes, findAttribute, children, findChildren, findChild
-   , getData, expecting
+   , findAttribute, children, findChildren, findChild
+   , getData
      -- * Decoding XML
    , decodeData, decodeAttribute, decodeChild, decodeFirstChild
      -- * Type classes for converting to/from XML
-   , ToXML(..), builderXML, InXML(..), DecoderXML
-     -- * Processing XML
-   , foldXML, trimXML
+   , ToXML(..), builderXML, InXML(..)
      -- * Deprecated functions
-   , content, emptyContent, fromBuilder
+   , fromBuilder
    ) where
 
-import Control.Arrow
 import Control.Monad.State
 import Data.Char (chr)
 import Data.Maybe
 import Data.String
+import Ideas.Text.XML.Attributes
 import Ideas.Text.XML.Builder
+import Ideas.Text.XML.Decoder
 import Ideas.Text.XML.Data
-import Ideas.Text.XML.Document (escape, Name)
 import Ideas.Text.XML.Parser (document)
 import Ideas.Utils.Decoding
 import Ideas.Utils.Parsing (parseSimple)
 import System.IO
 import qualified Ideas.Text.XML.Document as D
+import Ideas.Text.XML.Document (Name, toName, uncheckedName)
 
 -------------------------------------------------------------------------------
 -- Parsing XML
 
 parseXML :: String -> Either String XML
-parseXML input = do
-   doc   <- parseSimple document input
-   return (fromXMLDoc doc)
+parseXML input = fromXMLDoc <$> parseSimple document input
 
 parseXMLFile :: FilePath -> IO XML
 parseXMLFile file =
@@ -70,7 +67,7 @@ fromXMLDoc doc = fromElement (D.root doc)
    fromAttributes = mconcat . map fromAttribute
 
    fromAttribute (n D.:= v) =
-      show n .=. concatMap (either return refToString) v
+      n .=. concatMap (either return refToString) v
 
    fromContent :: D.Content -> XMLBuilder
    fromContent = mconcat . map f
@@ -96,16 +93,15 @@ fromXMLDoc doc = fromElement (D.root doc)
       [ (n, char c) | (n, c) <- general ]
 
    general :: [(Name, Char)]
-   general = map (first fromString) 
-      [("lt",'<'), ("gt",'>'), ("amp",'&'), ("apos",'\''), ("quot",'"')]
+   general = [("lt",'<'), ("gt",'>'), ("amp",'&'), ("apos",'\''), ("quot",'"')]
 
 -------------------------------------------------------------------------------
 -- Simple decoding queries
 
 findAttribute :: Monad m => String -> XML -> m String
-findAttribute s (Tag _ as _) =
-   case [ t | n := t <- as, s == show n ] of
-      [hd] -> return hd
+findAttribute s xml =
+   case lookupAttribute (toName s) (getAttributes xml) of
+      Just hd -> return hd
       _    -> fail $ "Invalid attribute: " ++ show s
 
 children :: HasContent a => a -> [XML]
@@ -120,7 +116,7 @@ children = rec . getContent
                Nothing -> []
 
 findChildren :: String -> XML -> [XML]
-findChildren s = filter ((==s) . show . name) . children
+findChildren s = filter ((==s) . show . getName) . children
 
 findChild :: Monad m => String -> XML -> m XML
 findChild s e =
@@ -140,10 +136,6 @@ getData = rec . getContent
                Just (_, rest) -> rec rest
                Nothing -> []
 
-expecting :: Monad m => String -> XML -> m ()
-expecting s xml =
-   unless (show (name xml) == s) $ fail $ "Expecting element " ++ s ++ ", but found " ++ show (name xml)
-
 -------------------------------------------------------------------------------
 -- Decoding XML
 
@@ -155,19 +147,17 @@ decodeData = get >>= \xml ->
 
 decodeAttribute :: String -> Decoder env String XML String
 decodeAttribute s = get >>= \xml ->
-   case break hasName (attributes xml) of
-      (xs, (_ := val):ys) -> put xml {attributes = xs ++ ys } >> return val
+   case lookupAttribute (toName s) (getAttributes xml) of
+      Just val -> return val
       _ -> throwError $ "Could not find attribute " ++ s
- where
-   hasName (n := _) = show n == s
 
 decodeChild :: String -> Decoder env String XML a -> Decoder env String XML a
 decodeChild s p = get >>= \xml ->
-   case extractChild (fromString s) (content xml) of
+   case extractChild (toName s) (getContent xml) of
       Just (y, rest) -> do
          put y
          a <- p
-         put xml { content = rest }
+         put (setContent rest xml)
          return a
       _ -> throwError $ "Could not find child " ++ s
 
@@ -178,7 +168,7 @@ extractChild n = rec
    rec a = 
       case headIsXML a of
          Just (xml, rest) 
-            | n == name xml -> Just (xml, rest)
+            | n == getName xml -> Just (xml, rest)
             | otherwise -> add (xmlToContent xml) (rec rest)
          Nothing ->
             case headIsString a of
@@ -190,7 +180,7 @@ extractChild n = rec
 decodeFirstChild :: String -> Decoder env String XML a -> Decoder env String XML a
 decodeFirstChild s p = get >>= \xml ->
    case headIsXML xml of
-      Just (y, rest) | show (name y) == s -> do
+      Just (y, rest) | show (getName y) == s -> do
          put y
          a <- p
          put rest
@@ -204,18 +194,16 @@ class ToXML a where
    toXML     :: a -> XML
    listToXML :: [a] -> XML
    -- default definitions
-   listToXML = makeXML (fromString "list") . mconcat . map builderXML
+   listToXML = makeXML (toName "list") . mconcat . map builderXML
 
 instance ToXML () where
-   toXML _ = makeXML (fromString "Unit") mempty
+   toXML _ = makeXML (toName "Unit") mempty
 
 instance ToXML a => ToXML (Maybe a) where
-  toXML = maybe (makeXML (fromString "Nothing") mempty) toXML
+  toXML = maybe (makeXML (toName "Nothing") mempty) toXML
 
 builderXML :: (ToXML a, BuildXML b) => a -> b
 builderXML = builder . toXML
-
-type DecoderXML = Decoder () (Error XML) XMLBuilder
 
 class ToXML a => InXML a where
    fromXML :: XML -> Maybe a
@@ -239,13 +227,10 @@ class ToXML a => InXML a where
 -------------------------------------------------------------------------------
 -- Deprecated functions
 
-emptyContent :: XML -> Bool
-emptyContent = contentIsEmpty
-
 fromBuilder :: XMLBuilder -> Maybe XML
 fromBuilder m =
    case headIsXML m of
-      Just (a, rest) | null (builderAttributes m) && contentIsEmpty rest 
+      Just (a, rest) | noAttributes (getAttributes m) && contentIsEmpty rest 
           -> Just a
       _   -> Nothing
 
@@ -285,7 +270,7 @@ _runTests = do
          Right a  -> a == xml
 
    mkPD, mkPA, mkBD, mkBA :: String -> XML
-   mkPD s = either error id $ parseXML $ "<a>" ++ escape s ++ "</a>"
-   mkPA s = either error id $ parseXML $ "<t a='" ++ escape s ++ "'/>"
-   mkBD s = makeXML (fromString "a") (string s)
-   mkBA s = makeXML (fromString "t") ("a".=. s)
+   mkPD s = either error id $ parseXML $ "<a>" ++ D.escape s ++ "</a>"
+   mkPA s = either error id $ parseXML $ "<t a='" ++ D.escape s ++ "'/>"
+   mkBD s = makeXML "a" (string s)
+   mkBA s = makeXML "t" ("a".=. s)

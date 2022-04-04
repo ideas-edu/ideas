@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE OverloadedStrings, RankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -169,7 +169,7 @@ simpleRequest :: String -> XML
 simpleRequest s = makeRequest s mempty
 
 makeRequest :: String -> XMLBuilder -> XML
-makeRequest s rest = makeXML (fromString "request") $
+makeRequest s rest = makeXML "request" $
    ("service"  .=. s) <>
    ("encoding" .=. "html") <>
    rest

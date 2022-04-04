@@ -12,47 +12,47 @@
 
 module Ideas.Text.XML.Decoder
    ( DecoderXML, evalDecoderXML
-   , Error, errorStr
-   , xTag, xString, xAttr, xEnd
-     -- re-exports
-   , Alternative(..), MonadReader(..), throwError
+   , xmlTag, xmlString, xmlAttr, xmlEnd
    ) where
 
+import Data.String
 import Ideas.Utils.Decoding
+import Ideas.Text.XML.Attributes
 import Ideas.Text.XML.Data
 import Ideas.Text.XML.Builder
+import Ideas.Text.XML.Document (Name)
 
 type DecoderXML = Decoder () (Error XML) XMLBuilder
 
 evalDecoderXML :: DecoderXML a -> XML -> Either (Error XML) a
 evalDecoderXML p = evalDecoder p () . builder
 
-xTag :: String -> DecoderXML a -> DecoderXML a
-xTag s p = get >>= \xml -> 
+xmlTag :: Name -> DecoderXML a -> DecoderXML a
+xmlTag n p = get >>= \xml -> 
    case headIsXML xml of 
-      Just (hd, rest) | show (name hd) == s -> do
-         put (xmlToBuilder hd)
+      Just (hd, rest) | getName hd == n -> do
+         put (makeXMLBuilder (getAttributes hd) (getContent hd))
          a <- p
-         xEnd
+         xmlEnd
          put rest
          return a
       _ -> errorStr "xTag"
 
-xString :: DecoderXML String
-xString = do
+xmlString :: DecoderXML String
+xmlString = do
    xml <- get
    case headIsString xml of 
       Just (s, rest) -> put rest >> return s
       Nothing        -> errorStr "xString"
 
-xAttr :: String -> DecoderXML String
-xAttr s = get >>= \xml -> 
-   case filter (\(n := _) -> show n == s) (builderAttributes xml) of
-      [_ := v] -> return v
+xmlAttr :: String -> DecoderXML String
+xmlAttr s = get >>= \xml -> 
+   case lookupAttribute (fromString s) (getAttributes xml) of
+      Just v -> return v
       _ -> errorStr "xAttr"
 
-xEnd :: DecoderXML ()
-xEnd = get >>= \xml -> 
+xmlEnd :: DecoderXML ()
+xmlEnd = get >>= \xml -> 
    if contentIsEmpty xml 
    then return () 
    else errorStr "xEnd"

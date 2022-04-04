@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -36,16 +37,16 @@ instance ToXML OMOBJ where
    toXML = omobj2xml
 
 instance InXML OMOBJ where
-   xmlDecoder = xTag "OMOBJ" rec
+   xmlDecoder = xmlTag "OMOBJ" rec
     where
-      rec  =  xTag "OMA" (OMA <$> many rec)
-          <|> xTag "OMS" (makeOMS <$> optional (xAttr "cd") <*> xAttr "name")
-          <|> xTag "OMI" (OMI . fromJust . readInt <$> xString)
-          <|> xTag "OMF" (OMF . fromJust . readDouble <$> xAttr "dec")
-          <|> xTag "OMV" (OMV <$> xAttr "name")
-          <|> xTag "OMBIND" (OMBIND <$> rec <*> recOMBVar <*> rec)
+      rec  =  xmlTag "OMA" (OMA <$> many rec)
+          <|> xmlTag "OMS" (makeOMS <$> optional (xmlAttr "cd") <*> xmlAttr "name")
+          <|> xmlTag "OMI" (OMI . fromJust . readInt <$> xmlString)
+          <|> xmlTag "OMF" (OMF . fromJust . readDouble <$> xmlAttr "dec")
+          <|> xmlTag "OMV" (OMV <$> xmlAttr "name")
+          <|> xmlTag "OMBIND" (OMBIND <$> rec <*> recOMBVar <*> rec)
 
-      recOMBVar = xTag "OMBVAR" (many (xTag "OMV" (xAttr "name")))
+      recOMBVar = xmlTag "OMBVAR" (many (xmlTag "OMV" (xmlAttr "name")))
 
       makeOMS (Just "unknown") a = OMS (Nothing, a)
       makeOMS cd a = OMS (cd, a)
@@ -67,7 +68,7 @@ xml2omobj :: XML -> Either String OMOBJ
 xml2omobj = either (Left . show) (Right . fst) . runDecoder xmlDecoder () . builder
 
 omobj2xml :: OMOBJ -> XML
-omobj2xml object = makeXML (fromString "OMOBJ") $ mconcat
+omobj2xml object = makeXML "OMOBJ" $ mconcat
    [ "xmlns"   .=. "http://www.openmath.org/OpenMath"
    , "version" .=. "2.0"
    , "cdbase"  .=. "http://www.openmath.org/cd"

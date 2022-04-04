@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE OverloadedStrings, GADTs #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -120,7 +120,7 @@ encodeContext ctx = do
           loc    = fromLocation (location ctx)
           withLoc
              | null loc  = id
-             | otherwise = insertRef (makeRef "location") loc
+             | otherwise = insertRef (makeRef ("location" :: String)) loc
       in munless (null values) $ element "context"
             [  element "item"
                   [ "name"  .=. showId tb

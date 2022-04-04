@@ -10,13 +10,9 @@
 --
 -----------------------------------------------------------------------------
 
--- to do: protect constructor Tag and invariant
-
 module Ideas.Text.XML.Data 
    ( -- types
-     XML(..)
-   , Attributes, Attribute(..)
-   , Name, uncheckedName
+     XML, xmlRoot, getName
    , Content, xmlToContent
    , HasContent(..), contentIsEmpty, headIsString, headIsXML
      -- pretty-printing
@@ -27,28 +23,18 @@ module Ideas.Text.XML.Data
 
 import Data.Char (isSpace, ord)
 import Data.String
-import Ideas.Text.XML.Document (Name, uncheckedName)
+import Ideas.Text.XML.Attributes
+import Ideas.Text.XML.Document (Name)
 import qualified Ideas.Text.XML.Document as D
 
 -------------------------------------------------------------------------------
 -- XML types
 
--- invariants content: no two adjacent Lefts, no Left with empty string,
--- valid tag/attribute names
-data XML = Tag
-   { name       :: Name
-   , attributes :: Attributes
-   , content    :: Content
-   }
+data XML = Root Name Attributes Content
  deriving Eq
 
 instance Show XML where
    show = compactXML
-
-type Attributes = [Attribute]
-
-data Attribute = Name := String
- deriving Eq
 
 data Content = Empty
              | CData String
@@ -97,7 +83,16 @@ instance HasContent Content where
    updateContent a = (a, id)
 
 instance HasContent XML where
-   updateContent xml = (content xml, \new -> xml {content = new})
+   updateContent (Root n as c) = (c, xmlRoot n as)
+
+instance HasAttributes XML where
+   updateAttributes (Root n as c) = (as, \bs -> xmlRoot n bs c)
+
+xmlRoot :: Name -> Attributes -> Content -> XML
+xmlRoot = Root
+
+getName :: XML -> Name
+getName (Root n _ _) = n
 
 contentIsEmpty :: HasContent a => a -> Bool
 contentIsEmpty a =
@@ -133,8 +128,8 @@ compactXML = show . D.prettyElement True . toElement
 toElement :: XML -> D.Element
 toElement = foldXML D.Element mkAttribute mkString (return . D.Tagged)
  where
-   mkAttribute :: Attribute -> D.Attribute
-   mkAttribute (m := s) = (D.:=) m (map Left s)
+   mkAttribute :: Name -> String -> D.Attributes
+   mkAttribute m s = [(D.:=) m (map Left s)]
 
    mkString :: String -> [D.XML]
    mkString [] = []
@@ -147,10 +142,10 @@ toElement = foldXML D.Element mkAttribute mkString (return . D.Tagged)
 -------------------------------------------------------------------------------
 -- Processing XML
 
-foldXML :: Monoid c => (Name -> [a] -> c -> e) -> (Attribute -> a) -> (String -> c) -> (e -> c) -> XML -> e
+foldXML :: (Monoid a, Monoid c) => (Name -> a -> c -> e) -> (Name -> String -> a) -> (String -> c) -> (e -> c) -> XML -> e
 foldXML f fa fs fc = rec
  where
-   rec (Tag n as cs) = f n (map fa as) (recContent cs)
+   rec (Root n as cs) = f n (foldAttributes fa as) (recContent cs)
 
    recContent Empty         = mempty
    recContent (CData s)     = fs s
@@ -158,9 +153,9 @@ foldXML f fa fs fc = rec
    recContent (Mixed s x c) = fs s <> fc (rec x) <> recContent c
 
 trimXML :: XML -> XML
-trimXML = foldXML Tag f (fromString . trim) xmlToContent
+trimXML = foldXML xmlRoot f (fromString . trim) xmlToContent
  where
-   f (n := s) = n := trim s
+   f n = attribute n . trim
 
 trim, trimLeft, trimRight :: String -> String
 trim      = trimLeft . trimRight

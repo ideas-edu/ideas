@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -15,7 +16,6 @@ module Ideas.Text.MathML
    ) where
 
 import Ideas.Text.XML
-import Ideas.Text.XML.Decoder
 import Ideas.Utils.Uniplate hiding (children)
 import Ideas.Utils.Decoding
 
@@ -57,33 +57,33 @@ instance ToXML MathML where
 instance InXML MathML where
    xmlDecoder = rec 
     where
-      rec  =  xTag "mrow" (MRow <$> many rec)
-          <|> xTag "msqrt" (MSqrt <$> impliedRow)
-          <|> xTag "math" impliedRow
-          <|> xTag "mi" (MId <$> xString)
-          <|> xTag "mn" (MNumber <$> xString)
-          <|> xTag "mo" (MOperator <$> xString)
-          <|> xTag "ms" (MString <$> xString)
-          <|> xTag "mtext" (MText <$> xString)
-          <|> xTag "mroot" (MRoot <$> rec <*> rec)
-          <|> xTag "msup" (MSup <$> rec <*> rec)
-          <|> xTag "msub" (MSub <$> rec <*> rec)
-          <|> xTag "msubsup" (MSubSup <$> rec <*> rec <*> rec)
-          <|> xTag "mfrac" (MFrac <$> rec <*> rec)
-          <|> xTag "mfenced" (MFenced <$> xAttr "open" <*> xAttr "close" <*> rec)
-          <|> xTag "mspace" (return MSpace)
-          <|> xTag "mstyle" (return MStyle)
-          <|> xTag "mpadded" (return MPadded)
-          <|> xTag "mphantom" (return MPhantom)
-          <|> xTag "merror" (return MError)
-          <|> xTag "menclose" (return MEnclose)
-          <|> xTag "munder" (return MUnder)
-          <|> xTag "mover" (return MOver)
-          <|> xTag "munderover" (return MUnderOver)
-          <|> xTag "mtable" (return MTable)
-          <|> xTag "mtr" (return MTableRow)
-          <|> xTag "mlabeledtr" (return MLabeledTableRow)
-          <|> xTag "mtd" (return MTableData)
+      rec  =  xmlTag "mrow" (MRow <$> many rec)
+          <|> xmlTag "msqrt" (MSqrt <$> impliedRow)
+          <|> xmlTag "math" impliedRow
+          <|> xmlTag "mi" (MId <$> xmlString)
+          <|> xmlTag "mn" (MNumber <$> xmlString)
+          <|> xmlTag "mo" (MOperator <$> xmlString)
+          <|> xmlTag "ms" (MString <$> xmlString)
+          <|> xmlTag "mtext" (MText <$> xmlString)
+          <|> xmlTag "mroot" (MRoot <$> rec <*> rec)
+          <|> xmlTag "msup" (MSup <$> rec <*> rec)
+          <|> xmlTag "msub" (MSub <$> rec <*> rec)
+          <|> xmlTag "msubsup" (MSubSup <$> rec <*> rec <*> rec)
+          <|> xmlTag "mfrac" (MFrac <$> rec <*> rec)
+          <|> xmlTag "mfenced" (MFenced <$> xmlAttr "open" <*> xmlAttr "close" <*> rec)
+          <|> xmlTag "mspace" (return MSpace)
+          <|> xmlTag "mstyle" (return MStyle)
+          <|> xmlTag "mpadded" (return MPadded)
+          <|> xmlTag "mphantom" (return MPhantom)
+          <|> xmlTag "merror" (return MError)
+          <|> xmlTag "menclose" (return MEnclose)
+          <|> xmlTag "munder" (return MUnder)
+          <|> xmlTag "mover" (return MOver)
+          <|> xmlTag "munderover" (return MUnderOver)
+          <|> xmlTag "mtable" (return MTable)
+          <|> xmlTag "mtr" (return MTableRow)
+          <|> xmlTag "mlabeledtr" (return MLabeledTableRow)
+          <|> xmlTag "mtd" (return MTableData)
 
       impliedRow = f <$> many rec
 
@@ -103,7 +103,7 @@ xml2mathml :: XML -> Either String MathML
 xml2mathml = either (Left . show) (Right . fst) . runDecoder xmlDecoder () . builder
 
 mathml2xml :: MathML -> XML
-mathml2xml = makeXML (fromString "math") . rec
+mathml2xml = makeXML "math" . rec
  where
    rec :: MathML -> XMLBuilder
    rec math =

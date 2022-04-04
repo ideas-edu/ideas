@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -52,13 +53,11 @@ processXML options dr txt = do
          Nothing  -> show e
 
 addVersion :: String -> XML -> XML
-addVersion s xml =
-   let info = [ fromString "version" := s ]
-   in xml { attributes = attributes xml ++ info }
+addVersion s = changeAttributes (<> attribute "version" s)
 
 xmlRequest :: Monad m => Maybe String -> XML -> m Request
 xmlRequest ms xml = do
-   unless (show (name xml) == "request") $
+   unless (getName xml == "request") $
       fail "expected xml tag request"
    enc  <- case findAttribute "encoding" xml of
               Just s  -> readEncoding s

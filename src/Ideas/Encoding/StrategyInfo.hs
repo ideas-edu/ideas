@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -32,7 +33,7 @@ nameAttr :: Id -> XMLBuilder
 nameAttr info = "name" .=. showId info
 
 strategyTreeToXML :: StrategyTree a -> XML
-strategyTreeToXML tree = makeXML (fromString "label") $
+strategyTreeToXML tree = makeXML "label" $
    case isLabel tree of
       Just (l, a) -> nameAttr l <> strategyTreeBuilder a
       _ -> strategyTreeBuilder tree
@@ -42,22 +43,22 @@ strategyTreeBuilder = builder . fold emptyAlg
    { fNode = \def xs ->
         case xs of
            [x] | isConfigId def
-             -> addProperty (show def) x
+             -> addProperty (fromString (show def)) x
            _ -> makeXML (fromString (show def)) (mconcat (map builder xs))
    , fLeaf = \r ->
-        makeXML (fromString "rule") ("name" .=. show r)
+        makeXML "rule" ("name" .=. show r)
    , fLabel = \l a ->
-        makeXML (fromString "label") (nameAttr l <> builder a)
+        makeXML "label" (nameAttr l <> builder a)
    , fRec = \n a ->
-        makeXML (fromString "rec") (("var" .=. show n) <> builder a)
+        makeXML "rec" (("var" .=. show n) <> builder a)
    , fVar = \n ->
-        makeXML (fromString "var") ("var" .=. show n)
+        makeXML "var" ("var" .=. show n)
    }
 
-addProperty :: String -> XML -> XML
-addProperty s a =
-   if show (name a) `elem` ["label", "rule"]
-   then a { attributes = attributes a ++ [fromString s := "true"] }
+addProperty :: Name -> XML -> XML
+addProperty n a =
+   if getName a `elem` ["label", "rule"]
+   then changeAttributes (<> attribute n "true") a
    else a
 
 -----------------------------------------------------------------------

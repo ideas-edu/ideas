@@ -10,10 +10,12 @@
 --
 -----------------------------------------------------------------------------
 
-module Ideas.Utils.BlackBoxTests (blackBoxTests, TestRunner) where
+module Ideas.Utils.BlackBoxTests 
+   (blackBoxTests, TestRunner, Mode(..)) where
 
 import Control.Monad
 import Data.Char
+import Data.IORef
 import Data.List
 import Ideas.Utils.TestSuite
 import System.Directory
@@ -22,9 +24,16 @@ import qualified Data.Algorithm.Diff as Diff
 
 type TestRunner = String -> IO String
 
+data Mode = Interactive | Report | Replace
+
 -- Returns the number of tests performed
-blackBoxTests :: TestRunner -> [String] -> String -> IO TestSuite
-blackBoxTests runner exts = rec
+blackBoxTests :: TestRunner -> Mode -> [String] -> String -> IO TestSuite
+blackBoxTests runner mode exts path = do
+   ref <- newIORef mode
+   blackBoxTestsInMode ref runner exts path
+
+blackBoxTestsInMode :: IORef Mode -> TestRunner -> [String] -> String -> IO TestSuite
+blackBoxTestsInMode ref runner exts = rec
  where
     rec path = do
       -- analyse content
@@ -35,12 +44,12 @@ blackBoxTests runner exts = rec
       subs <- filterM doesDirectoryExist xs2
       rest <- mapM rec subs
       return $ suite ("Directory " ++ simplerDirectory path) $
-         [ doBlackBoxTest runner (path </> x)
+         [ doBlackBoxTest ref runner (path </> x)
          | x <- files
          ] ++ rest
 
-doBlackBoxTest :: TestRunner -> FilePath -> TestSuite
-doBlackBoxTest runner path =
+doBlackBoxTest :: IORef Mode -> TestRunner -> FilePath -> TestSuite
+doBlackBoxTest ref runner path =
    assertMessageIO (stripDirectoryPart path) $
       -- Comparing output with expected output
       withFile path ReadMode $ \h1 -> do
@@ -57,10 +66,29 @@ doBlackBoxTest runner path =
                 msg   = unlines (path : diffs list1 list2)
             if list1 == list2 then return mempty else do
                force msg -- force evaluation of message before closing files
-               return (message msg)
+               return $ addPostHook (postHook out) $ message msg
  where
    expPath = baseOf path ++ ".exp"
    baseOf  = reverse . drop 1 . dropWhile (/= '.') . reverse
+
+   postHook out status = do
+      mode <- readIORef ref
+      case mode of 
+         _ | isOk status -> return ()
+         Report -> return ()
+         Replace -> replaceExpected
+         Interactive  -> do
+            putStrLn "Replace expected file: (y)es, (s)kip, (a)lways, or (n)ever?"
+            putStr "? "
+            answer <- getLine
+            case map toLower answer of
+               "y" -> replaceExpected
+               "s" -> return () 
+               "a" -> replaceExpected >> writeIORef ref Replace 
+               "n" -> writeIORef ref Report
+               _   -> postHook out status
+    where
+      replaceExpected = writeFile expPath out
 
 elemExts :: FilePath -> [String] -> Bool
 elemExts s = any (\xs -> ('.':xs)  `isSuffixOf` s)
@@ -97,14 +125,3 @@ stripDirectoryPart = reverse . takeWhile (/= '/') . reverse
 
 (</>) :: FilePath -> FilePath -> FilePath
 x </> y = x ++ "/" ++ y
-
-{-
-logicConfluence :: IO ()
-logicConfluence = reportTest "logic rules" (isConfluent f rs)
- where
-   f    = normalizeWith ops . normalFormWith ops rs
-   ops  = map makeCommutative Logic.logicOperators
-   rwrs = Logic.logicRules \\ [Logic.ruleOrOverAnd, Logic.ruleCommOr, Logic.ruleCommAnd]
-   rs   = [ r | RewriteRule r <- concatMap transformations rwrs ]
-   -- eqs  = bothWays [ r | RewriteRule r <- concatMap transformations Logic.logicRules ]
--}

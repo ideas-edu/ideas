@@ -37,7 +37,7 @@ import Ideas.Service.ServiceList
 import Ideas.Service.Types (Service)
 import qualified Ideas.Text.UTF8 as UTF8
 import Ideas.Text.XML.Unicode (decoding)
-import Ideas.Utils.BlackBoxTests
+import qualified Ideas.Utils.BlackBoxTests as BB
 import Ideas.Utils.Prelude
 import Ideas.Utils.TestSuite
 import Network.HTTP.Types
@@ -136,13 +136,14 @@ defaultCommandLine options dr cmdLineOptions = do
                   Log.printLog (logRef options)
          -- blackbox tests
          Test dir -> do
-            tests  <- blackBoxTests (makeTestRunner dr) ["xml", "json"] dir
+            let mode = if Interactive `elem` cmdLineOptions then BB.Interactive else BB.Report
+            tests  <- BB.blackBoxTests (makeTestRunner dr) mode ["xml", "json"] dir
             result <- runTestSuiteResult True tests
             printSummary result
          -- feedback scripts
          MakeScriptFor s    -> makeScriptFor dr s
          AnalyzeScript file -> parseAndAnalyzeScript dr file
-         PrintLog           -> return ()
+         _                  -> return ()
 
 processDatabase :: DomainReasoner -> FilePath -> IO ()
 processDatabase dr database = do

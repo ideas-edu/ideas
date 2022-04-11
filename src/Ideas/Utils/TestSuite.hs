@@ -30,7 +30,7 @@ module Ideas.Utils.TestSuite
    , nrOfTests, nrOfErrors, nrOfWarnings
    , timeInterval, makeSummary, printSummary
      -- * Message
-   , Message, message, warning, messageLines
+   , Message, message, warning, messageLines, addPostHook
      -- * Status
    , Status, HasStatus(..)
    , isError, isWarning, isOk
@@ -193,6 +193,7 @@ runner ref chattyIO = runTS
             newlineIndent ref
             print msg
             reset ref
+      messagePostHook msg
       returnStrict (caseResult (s, msg))
     where
       handler :: SomeException -> IO Message
@@ -343,11 +344,11 @@ makeSummary result = unlines $
 -- Message
 
 data Message = M
-   { messageStatus :: !Status
-   , messageRating :: !Rating
-   , messageLines  :: [String]
+   { messageStatus   :: !Status
+   , messageRating   :: !Rating
+   , messageLines    :: [String]
+   , messagePostHook :: IO () 
    }
- deriving Eq
 
 instance Show Message where
    show a = st ++ sep ++ msg
@@ -360,11 +361,14 @@ instance Show Message where
          | otherwise             = ""
 
 instance Sem.Semigroup Message where
-   M s r xs <> M t q ys = M (s <> t) (r <> q) (xs <> ys)
+   M s r xs ph1 <> M t q ys ph2 = M (s <> t) (r <> q) (xs <> ys) (ph1 <> ph2)
 
 instance Monoid Message where
-   mempty  = M mempty mempty mempty
+   mempty  = M mempty mempty mempty (return ())
    mappend = (<>)
+
+instance HasStatus Status where
+   getStatus = id
 
 instance HasStatus Message where
    getStatus = messageStatus
@@ -374,16 +378,19 @@ instance HasRating Message where
    rate n a = a {messageRating = Rating n}
 
 message :: String -> Message
-message = M Error (Rating 0) . return
+message s = M Error (Rating 0) [s] (return ())
 
 warning :: String -> Message
-warning = M Warning mempty . return
+warning s = M Warning mempty [s] (return ())
+
+addPostHook :: (Status -> IO ()) -> Message -> Message
+addPostHook postHook m = m { messagePostHook = messagePostHook m <> postHook (messageStatus m) }
 
 -----------------------------------------------------
 -- Status
 
 data Status = Ok | Warning | Error
-   deriving (Eq, Ord)
+   deriving (Show, Eq, Ord)
 
 instance Sem.Semigroup Status where
    (<>) = max

@@ -88,7 +88,8 @@ doBlackBoxTest ref runner path =
                "n" -> writeIORef ref Report
                _   -> postHook out status
     where
-      replaceExpected = writeFile expPath out
+      replaceExpected = withFile expPath WriteMode $ \h ->
+         hSetBinaryMode h True >> hPutStr h out
 
 elemExts :: FilePath -> [String] -> Bool
 elemExts s = any (\xs -> ('.':xs)  `isSuffixOf` s)

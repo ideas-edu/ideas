@@ -98,7 +98,7 @@ fromXMLDoc doc = fromElement (D.root doc)
 -------------------------------------------------------------------------------
 -- Simple decoding queries
 
-findAttribute :: Monad m => String -> XML -> m String
+findAttribute :: MonadFail m => String -> XML -> m String
 findAttribute s xml =
    case lookupAttribute (toName s) (getAttributes xml) of
       Just hd -> return hd
@@ -118,7 +118,7 @@ children = rec . getContent
 findChildren :: String -> XML -> [XML]
 findChildren s = filter ((==s) . show . getName) . children
 
-findChild :: Monad m => String -> XML -> m XML
+findChild :: MonadFail m => String -> XML -> m XML
 findChild s e =
    case findChildren s e of
       []  -> fail $ "Child not found: " ++ show s

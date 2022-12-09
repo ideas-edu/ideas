@@ -178,7 +178,7 @@ infixr 5 <?>
       Nothing -> q tv
 
 encodeTyped :: (t -> EncoderX a b) -> Type a t -> TypedEncoder a b
-encodeTyped p t1 tv@(_ ::: t2) = ((p, t1) <?> fail ("Types do not match: " ++ show t1 ++ " and " ++ show t2)) tv
+encodeTyped p t1 tv@(_ ::: t2) = ((p, t1) <?> (\_ -> fail ("Types do not match: " ++ show t1 ++ " and " ++ show t2))) tv
 
 -------------------------------------------------------------------
 -- Decoder datatype

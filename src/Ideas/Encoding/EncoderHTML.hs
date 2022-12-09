@@ -542,7 +542,7 @@ useAllFirsts dr = unsafePerformIO . useAllFirstsIO dr
 
 useAllFirstsIO :: DomainReasoner -> State a -> IO (Either String [(StepInfo a, State a)])
 useAllFirstsIO dr st = do
-   srv <- findService dr (newId ("allfirsts" :: String))
+   srv <- findServiceM dr (newId ("allfirsts" :: String))
    case serviceFunction srv of
       f ::: tp -> do
          conv <- equalM tp (tState .-> tError (tList (Tag "first" (tPair tStepInfo tState))))

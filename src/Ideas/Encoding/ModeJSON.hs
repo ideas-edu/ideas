@@ -46,7 +46,7 @@ processJSON' options dr json = do
    return (req, f out, "application/json")
 
 -- TODO: Clean-up code
-extractExerciseId :: Monad m => JSON -> m Id
+extractExerciseId :: MonadFail m => JSON -> m Id
 extractExerciseId json =
    case json of
       String s -> return (newId s)
@@ -66,7 +66,7 @@ addVersion str json =
  where
    info = ("version", String str)
 
-jsonRequest :: Monad m => Options -> JSON -> m Request
+jsonRequest :: MonadFail m => Options -> JSON -> m Request
 jsonRequest options json = do
    let exId = lookupM "params" json >>= extractExerciseId
    srv  <- stringOption  "method"      json newId
@@ -93,10 +93,10 @@ defaultSeed options
    | isJust (cgiBin options) = Nothing
    | otherwise = Just 2805 -- magic number
 
-stringOption :: Monad m => String -> JSON -> (String -> a) -> m (Maybe a)
+stringOption :: MonadFail m => String -> JSON -> (String -> a) -> m (Maybe a)
 stringOption attr json f = stringOptionM attr json Nothing (return . Just . f)
 
-stringOptionM :: Monad m => String -> JSON -> a -> (String -> m a) -> m a
+stringOptionM :: MonadFail m => String -> JSON -> a -> (String -> m a) -> m a
 stringOptionM attr json a f =
    case lookupM attr json of
       Just (String s) -> f s
@@ -105,7 +105,7 @@ stringOptionM attr json a f =
 
 myHandler :: Options -> DomainReasoner -> Request -> RPCHandler
 myHandler opt1 dr request fun json = do
-   srv <- findService dr (newId fun)
+   srv <- findServiceM dr (newId fun)
    Some ex <- case exerciseId request of
                  Just a  -> findExercise dr a
                  Nothing -> return (Some emptyExercise)

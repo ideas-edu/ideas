@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, FlexibleInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -28,6 +28,9 @@ import Ideas.Service.State
 import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
 import qualified Ideas.Service.Types as Tp
+
+--instance MonadFail (Either String) where
+--   fail = Left
 
 type JSONDecoder a = GDecoderJSON (Exercise a, Options)
 
@@ -146,7 +149,7 @@ decodeExpression = withJSONTerm $ \b ->
    then do
       mv <- hasJSONView <$> getExercise
       case mv of 
-         Just v  -> jNext (matchM v)
+         Just v  -> jNext (maybe (Left "cannot decode expression from JSON") Right . matchM v)
          Nothing -> errorStr "JSON encoding not supported by exercise"
    else do
       ex <- getExercise

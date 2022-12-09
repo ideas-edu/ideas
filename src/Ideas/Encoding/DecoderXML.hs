@@ -208,5 +208,5 @@ decodeBinding = get >>= \xml -> do
    termBinding :: String -> Term -> Binding
    termBinding = makeBinding . makeRef
 
-fromXML' :: (Monad m, InXML a) => XML -> m a
+fromXML' :: (MonadFail m, InXML a) => XML -> m a
 fromXML' = maybe (fail "fromXML'") return . fromXML

@@ -57,7 +57,7 @@ class IsMatcher f where
    matcher = makeMatcher . match
 
 -- |generalized monadic variant of @match@
-matchM :: (Monad m, IsMatcher f) => f a b -> a -> m b
+matchM :: (MonadFail m, IsMatcher f) => f a b -> a -> m b
 matchM v = maybe (fail "no match") return . match v
 
 belongsTo :: IsMatcher f => a -> f a b -> Bool

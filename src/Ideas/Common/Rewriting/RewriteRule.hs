@@ -214,5 +214,5 @@ renumberRewriteRule n r = r {ruleSpecTerm = fmap f (ruleSpecTerm r)}
 toTermRR :: RewriteRule a -> a -> Term
 toTermRR = build . ruleTermView
 
-fromTermRR :: Monad m => RewriteRule a -> Term -> m a
+fromTermRR :: MonadFail m => RewriteRule a -> Term -> m a
 fromTermRR = matchM . ruleTermView

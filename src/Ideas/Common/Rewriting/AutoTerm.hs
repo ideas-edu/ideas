@@ -75,14 +75,14 @@ constructors = dataTypeConstrs . dataTypeOf . fromProxy
    fromProxy :: Proxy a -> a
    fromProxy = error "fromProxy"
 
-findConstr :: (Monad m, Data a) => Proxy a -> Symbol -> m Constr
+findConstr :: (MonadFail m, Data a) => Proxy a -> Symbol -> m Constr
 findConstr p s =
    case [ c | c <- constructors p, s == constrSymbol c ] of
       []   -> fail "Autoterm.findConstr"
       hd:_ -> return hd
 
 
-fromTermG :: (MonadPlus m, Data a) => Term -> m a
+fromTermG :: (MonadPlus m, MonadFail m, Data a) => Term -> m a
 fromTermG term =
    case term of
       TCon s xs -> fromTermTConG Proxy s xs
@@ -96,13 +96,13 @@ fromTermG term =
    cons = binary consSymbol
    nil  = symbol nilSymbol
 
-castM :: (Monad m, Typeable a, Typeable b) => a -> m b
+castM :: (MonadFail m, Typeable a, Typeable b) => a -> m b
 castM = maybe (fail "fromTermG") return . cast
 
 doubleToFloat :: Double -> Float
 doubleToFloat = fromRational . toRational
 
-fromTermTConG :: (MonadPlus m, Data a) => Proxy a -> Symbol -> [Term] -> m a
+fromTermTConG :: (MonadPlus m, MonadFail m, Data a) => Proxy a -> Symbol -> [Term] -> m a
 fromTermTConG p s xs = do
    c <- findConstr p s
    evalStateT (gunfold op return c) xs
@@ -113,7 +113,7 @@ fromTermTConG p s xs = do
       a <- lift (fromTermG t)
       return (f a)
 
-pop :: Monad m => StateT [a] m a
+pop :: MonadFail m => StateT [a] m a
 pop = do
    ts <- get
    case ts of

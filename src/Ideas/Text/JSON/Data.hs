@@ -111,7 +111,7 @@ parseJSON = parseSimple json
    lexer = P.makeTokenParser $ emptyDef
       { reservedNames = ["true", "false", "null"] }
 
-lookupM :: Monad m => String -> JSON -> m JSON
+lookupM :: MonadFail m => String -> JSON -> m JSON
 lookupM x (Object xs) = maybe (fail $ "field " ++ x ++ " not found") return (lookup x xs)
 lookupM _ _ = fail "expecting a JSON object"
 

@@ -101,10 +101,12 @@ instance Alternative Result where
 
 instance Monad Result where
    return = Ok
-   fail   = Error
    Irrelevant >>= _ = Irrelevant
    Error msg  >>= _ = Error msg
    Ok a       >>= f = f a
+
+instance MonadFail Result where
+   fail = Error
 
 instance MonadPlus Result where
    mzero = empty

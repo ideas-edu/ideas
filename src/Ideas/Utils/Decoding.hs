@@ -44,6 +44,8 @@ instance Monoid a => Monoid (Decoder env err s a) where
 instance Monad (Decoder env err s) where
    return a    = Dec (return a)
    Dec m >>= f = Dec $ m >>= fromDec . f
+   
+instance MonadFail (Decoder env err s) where
    fail msg = error $ "fail in Decoder: " ++ msg
 
 instance MonadState s (Decoder env err s) where

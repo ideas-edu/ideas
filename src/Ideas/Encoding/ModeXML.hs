@@ -55,7 +55,7 @@ processXML options dr txt = do
 addVersion :: String -> XML -> XML
 addVersion s = changeAttributes (<> attribute "version" s)
 
-xmlRequest :: Monad m => Maybe String -> XML -> m Request
+xmlRequest :: MonadFail m => Maybe String -> XML -> m Request
 xmlRequest ms xml = do
    unless (getName xml == "request") $
       fail "expected xml tag request"
@@ -84,7 +84,7 @@ defaultSeed _ m = m
 xmlReply :: Options -> DomainReasoner -> Request -> XML -> IO XML
 xmlReply opt1 dr request xml = do
    srv <- case serviceId request of
-             Just a  -> findService dr a
+             Just a  -> findServiceM dr a
              Nothing -> fail "No service"
 
    Some ex <- case exerciseId request of
@@ -100,7 +100,7 @@ xmlReply opt1 dr request xml = do
       -- xml evaluator
       else resultOk <$> evalService ex options xmlEvaluator srv xml
 
-extractExerciseId :: Monad m => XML -> m Id
+extractExerciseId :: MonadFail m => XML -> m Id
 extractExerciseId = fmap newId . findAttribute "exerciseid"
 
 resultOk :: XMLBuilder -> XML

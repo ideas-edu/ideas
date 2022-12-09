@@ -13,7 +13,7 @@
 module Ideas.Service.DomainReasoner
    ( DomainReasoner(..), tDomainReasoner, newDomainReasoner
    , exercisesSorted, servicesSorted
-   , findExercise, findService
+   , findExercise, findService, findServiceM
    , defaultScript
    ) where
 
@@ -89,7 +89,7 @@ exercisesSorted = sortOn f . exercises
 servicesSorted :: DomainReasoner -> [Service]
 servicesSorted = sortOn showId . services
 
-findExercise :: Monad m => DomainReasoner -> Id -> m (Some Exercise)
+findExercise :: MonadFail m => DomainReasoner -> Id -> m (Some Exercise)
 findExercise dr i =
    case [ a | a@(Some ex) <- exercises dr, getId ex == realName ] of
       [this] -> return this
@@ -97,7 +97,10 @@ findExercise dr i =
  where
    realName = fromMaybe i (lookup i (aliases dr))
 
-findService :: Monad m => DomainReasoner -> Id -> m Service
+findServiceM :: MonadFail m => DomainReasoner -> Id -> m Service
+findServiceM dr = either fail return . findService dr
+
+findService :: DomainReasoner -> Id -> Either String Service
 findService dr a
    | null (qualifiers a) = -- search for unqualified string
         findWith (\s -> unqualified s == unqualified a)
@@ -106,9 +109,9 @@ findService dr a
  where
    findWith p  = single $ filter p $ services dr
 
-   single []   = fail $ "No service " ++ showId a
-   single [hd] = return hd
-   single _    = fail $ "Ambiguous service " ++ showId a
+   single []   = Left $ "No service " ++ showId a
+   single [hd] = Right hd
+   single _    = Left $ "Ambiguous service " ++ showId a
 
 defaultScript :: DomainReasoner -> Id -> IO Script
 defaultScript dr n =

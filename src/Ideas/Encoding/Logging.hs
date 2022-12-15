@@ -26,7 +26,6 @@ import Control.Monad
 import Data.Char
 import Data.IORef
 import Data.Maybe
-import Data.Semigroup (Semigroup(..))
 import Data.Time
 import Ideas.Encoding.Request (Request, Schema(..))
 import Ideas.Service.State

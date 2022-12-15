@@ -39,6 +39,7 @@ module Ideas.Common.View
    ) where
 
 import Control.Arrow
+import Control.Monad.Fail (MonadFail)
 import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Id

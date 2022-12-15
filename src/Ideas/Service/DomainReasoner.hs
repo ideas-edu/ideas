@@ -17,6 +17,7 @@ module Ideas.Service.DomainReasoner
    , defaultScript
    ) where
 
+import Control.Monad.Fail (MonadFail)
 import Data.List
 import Data.Maybe
 import Data.Semigroup as Sem

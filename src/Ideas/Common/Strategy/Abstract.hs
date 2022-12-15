@@ -32,6 +32,7 @@ module Ideas.Common.Strategy.Abstract
    , useDecl, decl0, decl1, decl2, declN
    ) where
 
+import Control.Monad.Fail (MonadFail)
 import Data.Foldable (toList)
 import Data.Maybe
 import Ideas.Common.Classes

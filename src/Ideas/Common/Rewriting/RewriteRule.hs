@@ -25,6 +25,7 @@ module Ideas.Common.Rewriting.RewriteRule
    , symbolMatcher, symbolBuilder
    ) where
 
+import Control.Monad.Fail (MonadFail)
 import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Environment

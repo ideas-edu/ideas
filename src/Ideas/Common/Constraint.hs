@@ -20,6 +20,7 @@ module Ideas.Common.Constraint
   ) where
 
 import Control.Applicative
+import qualified Control.Monad.Fail as Fail
 import Control.Monad
 import Data.List
 import Ideas.Common.Id
@@ -100,12 +101,13 @@ instance Alternative Result where
    Ok a       <|> _       = Ok a
 
 instance Monad Result where
-   return = Ok
    Irrelevant >>= _ = Irrelevant
    Error msg  >>= _ = Error msg
    Ok a       >>= f = f a
 
-instance MonadFail Result where
+   fail = Fail.fail
+
+instance Fail.MonadFail Result where
    fail = Error
 
 instance MonadPlus Result where

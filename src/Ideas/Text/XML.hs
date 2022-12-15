@@ -32,6 +32,7 @@ module Ideas.Text.XML
    , fromBuilder
    ) where
 
+import Control.Monad.Fail (MonadFail)
 import Control.Monad.State
 import Data.Char (chr)
 import Data.Maybe

@@ -17,6 +17,7 @@ module Ideas.Encoding.ModeXML (processXML) where
 
 import Control.Exception
 import Control.Monad
+import Control.Monad.Fail (MonadFail)
 import Data.String
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.DecoderXML

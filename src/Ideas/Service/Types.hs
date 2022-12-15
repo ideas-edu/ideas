@@ -30,6 +30,7 @@ module Ideas.Service.Types
    ) where
 
 import Control.Monad
+import Control.Monad.Fail (MonadFail)
 import Data.Char
 import Data.List
 import Data.Maybe

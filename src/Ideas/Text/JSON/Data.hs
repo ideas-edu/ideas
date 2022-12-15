@@ -17,6 +17,7 @@ module Ideas.Text.JSON.Data
    ) where
 
 import Control.Monad
+import Control.Monad.Fail (MonadFail)
 import Data.List (intersperse)
 import Data.Maybe
 import Data.String

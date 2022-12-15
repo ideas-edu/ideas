@@ -17,6 +17,7 @@ module Ideas.Common.Rewriting.Unification
    ) where
 
 import Control.Monad
+import Control.Monad.Fail (MonadFail)
 import Data.Maybe
 import Ideas.Common.Rewriting.AC (pairingsMatchA)
 import Ideas.Common.Rewriting.Substitution

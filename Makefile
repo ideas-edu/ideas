@@ -27,7 +27,7 @@ HS-SOURCES = $(wildcard $(SRCDIR)/*/*.hs $(SRCDIR)/*/*/*.hs $(SRCDIR)/*/*/*/*.hs
 ghci:
 	$(GHCI) -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
 
-ideas: revision
+ideas: # revision
 	$(GHC) -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN) $(HS-SOURCES) 2>&1 | tee $(DOCSDIR)/compile.txt
 
 #---------------------------------------------------------------------------------------

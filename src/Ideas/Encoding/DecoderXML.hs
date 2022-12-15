@@ -19,6 +19,7 @@ module Ideas.Encoding.DecoderXML
 
 import Control.Applicative hiding (Const)
 import Control.Monad.State hiding (State)
+import Control.Monad.Fail (MonadFail)
 import Data.Char
 import Ideas.Common.Library
 import Ideas.Common.Traversal.Navigator

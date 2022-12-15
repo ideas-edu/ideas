@@ -17,9 +17,9 @@ module Ideas.Encoding.NewModeJSON (processJSON) where
 import Control.Applicative
 import Control.Exception
 import Control.Monad
+import Control.Monad.Fail (MonadFail)
 import System.IO.Error
 import Data.Maybe
-import Data.Semigroup ((<>))
 import Ideas.Common.Library hiding (exerciseId)
 import qualified Ideas.Encoding.ModeJSON as Legacy
 import Ideas.Encoding.NewDecoderJSON

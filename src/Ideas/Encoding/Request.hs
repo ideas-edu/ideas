@@ -12,6 +12,7 @@
 
 module Ideas.Encoding.Request where
 
+import Control.Monad.Fail (MonadFail)
 import Control.Applicative
 import Data.Char
 import Data.List

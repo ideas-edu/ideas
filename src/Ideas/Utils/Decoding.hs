@@ -26,6 +26,7 @@ import Control.Monad
 import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.State
+import qualified Control.Monad.Fail as Fail
 import Data.List
 import Data.String
 
@@ -39,13 +40,12 @@ instance Semigroup a => Semigroup (Decoder env err s a) where
 
 instance Monoid a => Monoid (Decoder env err s a) where
    mempty  = pure mempty
-   mappend = liftA2 mappend
 
 instance Monad (Decoder env err s) where
-   return a    = Dec (return a)
    Dec m >>= f = Dec $ m >>= fromDec . f
-   
-instance MonadFail (Decoder env err s) where
+   fail = Fail.fail
+
+instance Fail.MonadFail (Decoder env err s) where
    fail msg = error $ "fail in Decoder: " ++ msg
 
 instance MonadState s (Decoder env err s) where

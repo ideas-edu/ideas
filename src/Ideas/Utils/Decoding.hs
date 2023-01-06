@@ -26,7 +26,6 @@ import Control.Monad
 import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.State
-import qualified Control.Monad.Fail as Fail
 import Data.List
 import Data.String
 
@@ -43,10 +42,6 @@ instance Monoid a => Monoid (Decoder env err s a) where
 
 instance Monad (Decoder env err s) where
    Dec m >>= f = Dec $ m >>= fromDec . f
-   fail = Fail.fail
-
-instance Fail.MonadFail (Decoder env err s) where
-   fail msg = error $ "fail in Decoder: " ++ msg
 
 instance MonadState s (Decoder env err s) where
    state f = Dec $ state $ \(loc, s) -> let (a, s') = f s in (a, (loc, s'))

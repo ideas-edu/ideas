@@ -32,7 +32,6 @@ module Ideas.Text.XML
    , fromBuilder
    ) where
 
-import Control.Monad.Fail (MonadFail)
 import Control.Monad.State
 import Data.Char (chr)
 import Data.Maybe
@@ -99,11 +98,11 @@ fromXMLDoc doc = fromElement (D.root doc)
 -------------------------------------------------------------------------------
 -- Simple decoding queries
 
-findAttribute :: MonadFail m => String -> XML -> m String
+findAttribute :: String -> XML -> Either String String
 findAttribute s xml =
    case lookupAttribute (toName s) (getAttributes xml) of
-      Just hd -> return hd
-      _    -> fail $ "Invalid attribute: " ++ show s
+      Just hd -> Right hd
+      _    -> Left $ "Invalid attribute: " ++ show s
 
 children :: HasContent a => a -> [XML]
 children = rec . getContent 
@@ -119,12 +118,12 @@ children = rec . getContent
 findChildren :: String -> XML -> [XML]
 findChildren s = filter ((==s) . show . getName) . children
 
-findChild :: MonadFail m => String -> XML -> m XML
+findChild :: String -> XML -> Either String XML
 findChild s e =
    case findChildren s e of
-      []  -> fail $ "Child not found: " ++ show s
-      [a] -> return a
-      _   -> fail $ "Multiple children found: " ++ show s
+      []  -> Left $ "Child not found: " ++ show s
+      [a] -> Right a
+      _   -> Left $ "Multiple children found: " ++ show s
 
 getData :: HasContent a => a -> String
 getData = rec . getContent
@@ -260,9 +259,9 @@ _runTests = do
 
    testDataP, testAttrP, testDataB, testAttrB :: String -> Bool
    testDataP s = let xml = mkPD s in getData xml == s
-   testAttrP s = let xml = mkPA s in findAttribute "a" xml == Just s
+   testAttrP s = let xml = mkPA s in findAttribute "a" xml == Right s
    testDataB s = let xml = mkBD s in getData xml == s
-   testAttrB s = let xml = mkBA s in findAttribute "a" xml == Just s
+   testAttrB s = let xml = mkBA s in findAttribute "a" xml == Right s
 
    testXML :: XML -> Bool
    testXML xml =

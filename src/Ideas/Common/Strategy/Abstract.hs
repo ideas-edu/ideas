@@ -32,7 +32,6 @@ module Ideas.Common.Strategy.Abstract
    , useDecl, decl0, decl1, decl2, declN
    ) where
 
-import Control.Monad.Fail (MonadFail)
 import Data.Foldable (toList)
 import Data.Maybe
 import Ideas.Common.Classes
@@ -164,12 +163,11 @@ replayPaths paths s a = mconcat
 
 -- | Construct a prefix for a path and a labeled strategy. The third argument
 -- is the initial term.
-replayStrategy :: (MonadFail m, IsStrategy f) => Path -> f a -> a -> m (a, Prefix a)
-replayStrategy path s a =
+replayStrategy :: IsStrategy f => Path -> f a -> a -> Maybe (a, Prefix a)
+replayStrategy path s a = do
    let (xs, f) = replayProcess path (getProcess s)
-   in case applyList xs a of
-         Just b  -> return (b, f b)
-         Nothing -> fail "Cannot replay strategy"
+   b <- applyList xs a
+   return (b, f b)
 
 -----------------------------------------------------------
 --- Remaining functions

@@ -12,9 +12,9 @@
 
 module Ideas.Common.Rewriting.AutoTerm (toTermG, fromTermG, testTermFor) where
 
-import Control.Monad.Fail (MonadFail)
 import Control.Monad.State
 import Data.Data
+import Data.List
 import Ideas.Common.Rewriting.Term
 
 toTermG :: Data a => a -> Term
@@ -76,34 +76,27 @@ constructors = dataTypeConstrs . dataTypeOf . fromProxy
    fromProxy :: Proxy a -> a
    fromProxy = error "fromProxy"
 
-findConstr :: (MonadFail m, Data a) => Proxy a -> Symbol -> m Constr
-findConstr p s =
-   case [ c | c <- constructors p, s == constrSymbol c ] of
-      []   -> fail "Autoterm.findConstr"
-      hd:_ -> return hd
+findConstr :: Data a => Proxy a -> Symbol -> Maybe Constr
+findConstr p s = find (\c -> s == constrSymbol c) (constructors p)
 
-
-fromTermG :: (MonadPlus m, MonadFail m, Data a) => Term -> m a
+fromTermG :: Data a => Term -> Maybe a
 fromTermG term =
    case term of
       TCon s xs -> fromTermTConG Proxy s xs
-      TVar [c]  -> castM c `mplus` castM [c]
-      TVar s    -> castM s
+      TVar [c]  -> cast c `mplus` cast [c]
+      TVar s    -> cast s
       TList xs  -> fromTermG (foldr cons nil xs)
-      TNum n    -> castM n `mplus` castM (fromInteger n :: Int)
-      TFloat d  -> castM d `mplus` castM (doubleToFloat d)
-      TMeta _   -> fail "fromTermG: found TMeta"
+      TNum n    -> cast n `mplus` cast (fromInteger n :: Int)
+      TFloat d  -> cast d `mplus` cast (doubleToFloat d)
+      TMeta _   -> Nothing
  where
    cons = binary consSymbol
    nil  = symbol nilSymbol
 
-castM :: (MonadFail m, Typeable a, Typeable b) => a -> m b
-castM = maybe (fail "fromTermG") return . cast
-
 doubleToFloat :: Double -> Float
 doubleToFloat = fromRational . toRational
 
-fromTermTConG :: (MonadPlus m, MonadFail m, Data a) => Proxy a -> Symbol -> [Term] -> m a
+fromTermTConG :: Data a => Proxy a -> Symbol -> [Term] -> Maybe a
 fromTermTConG p s xs = do
    c <- findConstr p s
    evalStateT (gunfold op return c) xs
@@ -114,7 +107,7 @@ fromTermTConG p s xs = do
       a <- lift (fromTermG t)
       return (f a)
 
-pop :: MonadFail m => StateT [a] m a
+pop :: StateT [a] Maybe a
 pop = do
    ts <- get
    case ts of

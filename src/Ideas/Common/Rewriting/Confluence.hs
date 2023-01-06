@@ -41,7 +41,7 @@ rewriteTerm :: RewriteRule a -> Term -> [Term]
 rewriteTerm r t = do
    let lhs :~> rhs = ruleSpecTerm $
           renumberRewriteRule (nextMetaVar t) r
-   sub <- match lhs t
+   sub <- maybeToList (match lhs t)
    return (sub |-> rhs)
 
 -- uniplate-like helper-functions

@@ -16,9 +16,8 @@ module Ideas.Encoding.NewModeJSON (processJSON) where
 
 import Control.Applicative
 import Control.Exception
-import Control.Monad
-import Control.Monad.Fail (MonadFail)
 import System.IO.Error
+import Data.Either
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
 import qualified Ideas.Encoding.ModeJSON as Legacy
@@ -34,7 +33,7 @@ import Ideas.Utils.Prelude (timedSeconds)
 processJSON :: Options -> DomainReasoner -> String -> IO (Request, String, String)
 processJSON options dr txt = do
    json <- either fail return (parseJSON txt)
-   let legacy = isJust $ lookupM "params" json
+   let legacy = isRight $ lookupM "params" json
    if legacy then Legacy.processJSON' options dr json else do
       req  <- jsonRequest options json
       resp <- jsonRPC2 dr (maybe "result" show $ serviceId req) json $ \fun arg ->
@@ -67,15 +66,17 @@ errorResponse dr msg = Object
    ]
 
 -- TODO: Clean-up code
-extractExerciseId :: (MonadPlus m, MonadFail m) => JSON -> m Id
+extractExerciseId :: JSON -> Maybe Id
 extractExerciseId json = f <$> (
-   lookupM "exerciseid" json <|>
-   (lookupM "state" json >>= lookupM "exerciseid"))
+   get "exerciseid" json <|>
+   (get "state" json >>= get "exerciseid"))
  where
    f (String s) = newId s
    f _          = error "expecting an exercise id"
 
-jsonRequest :: MonadFail m => Options -> JSON -> m Request
+   get s = either (const Nothing) Just . lookupM s 
+
+jsonRequest :: Options -> JSON -> IO Request
 jsonRequest options json = do
    let exId = extractExerciseId json
    srv  <- stringOption  "service"     json newId
@@ -83,7 +84,7 @@ jsonRequest options json = do
    rinf <- stringOption  "requestinfo" json id
    seed <- stringOptionM "randomseed"  json (defaultSeed options) (return . readM)
    enc  <- stringOptionM "encoding"    json [] readEncoding
-   sch  <- stringOptionM "logging"     json Nothing (fmap Just . readSchema)
+   sch  <- stringOptionM "logging"     json Nothing (maybe (fail "invalid logging scheme") (return . Just) . readSchema)
    return mempty
       { serviceId   = srv
       , exerciseId  = exId
@@ -102,21 +103,21 @@ defaultSeed options
    | isJust (cgiBin options) = Nothing
    | otherwise = Just 2805 -- magic number
 
-stringOption :: MonadFail m => String -> JSON -> (String -> a) -> m (Maybe a)
+stringOption :: String -> JSON -> (String -> a) -> IO (Maybe a)
 stringOption attr json f = stringOptionM attr json Nothing (return . Just . f)
 
-stringOptionM :: MonadFail m => String -> JSON -> a -> (String -> m a) -> m a
+stringOptionM :: String -> JSON -> a -> (String -> IO a) -> IO a
 stringOptionM attr json a f =
    case lookupM attr json of
-      Just (String s) -> f s
-      Just _  -> fail $ "Invalid value for " ++ attr ++ " (expecting string)"
-      Nothing -> return a
+      Right (String s) -> f s
+      Right _ -> fail $ "Invalid value for " ++ attr ++ " (expecting string)"
+      Left _  -> return a
 
 myHandler :: Options -> DomainReasoner -> Request -> String -> JSON -> IO JSONBuilder
 myHandler opt1 dr request fun json = do
-   srv <- findServiceM dr (newId fun)
+   srv <- either fail return $ findService dr (newId fun)
    Some ex <- case exerciseId request of
-                 Just a  -> findExercise dr a
+                 Just a  -> either fail return $ findExercise dr a
                  Nothing -> return (Some emptyExercise)
    opt2 <- makeOptions dr request
    let options = opt1 <> opt2

@@ -42,7 +42,7 @@ jsonEncoder tv@(val ::: tp) =
          | otherwise          -> (map toLower s .=) <$> jsonEncoder (val ::: t)
       Tp.Unit    -> pure mempty
       Const ctp  -> jsonEncodeConst (val ::: ctp)
-      _          -> fail $ "Cannot encode type: " ++ show tp
+      _          -> errorStr $ "Cannot encode type: " ++ show tp
 
 jsonEncodeConst :: TypedValue (Const a) -> EncoderX a JSONBuilder
 jsonEncodeConst (val ::: tp) = 
@@ -59,7 +59,7 @@ jsonEncodeConst (val ::: tp) =
       Tp.String    -> pure $ jsonBuilder val
       Tp.Int       -> pure $ jsonBuilder val
       Tp.Bool      -> pure $ jsonBuilder val
-      _ -> fail $ "Type " ++ show tp ++ " not supported in JSON"
+      _ -> errorStr $ "Type " ++ show tp ++ " not supported in JSON"
 
 encodeRule :: Rule (Context a) -> EncoderX a JSONBuilder
 encodeRule r = pure $ "rule" .= showId r

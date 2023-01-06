@@ -29,9 +29,6 @@ import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
 import qualified Ideas.Service.Types as Tp
 
---instance MonadFail (Either String) where
---   fail = Left
-
 type JSONDecoder a = GDecoderJSON (Exercise a, Options)
 
 jsonTypeDecoder :: TypedDecoder a JSON
@@ -149,7 +146,7 @@ decodeExpression = withJSONTerm $ \b ->
    then do
       mv <- hasJSONView <$> getExercise
       case mv of 
-         Just v  -> jNext (maybe (Left "cannot decode expression from JSON") Right . matchM v)
+         Just v  -> jNext (maybe (Left "cannot decode expression from JSON") Right . match v)
          Nothing -> errorStr "JSON encoding not supported by exercise"
    else do
       ex <- getExercise

@@ -19,7 +19,7 @@ module Ideas.Common.View
    , Control.Arrow.ArrowZero(..), Control.Arrow.ArrowPlus(..)
    , (>>>), (<<<)
      -- * @IsMatch@ type class
-   , IsMatcher(..), matchM, belongsTo, viewEquivalent, viewEquivalentWith
+   , IsMatcher(..), belongsTo, viewEquivalent, viewEquivalentWith
    , Matcher, makeMatcher
      -- * @IsView@ type class
    , IsView(..), simplify, simplifyWith, simplifyWithM
@@ -39,7 +39,6 @@ module Ideas.Common.View
    ) where
 
 import Control.Arrow
-import Control.Monad.Fail (MonadFail)
 import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Id
@@ -56,10 +55,6 @@ class IsMatcher f where
    -- default definitions
    match   = runKleisli . unM . matcher
    matcher = makeMatcher . match
-
--- |generalized monadic variant of @match@
-matchM :: (MonadFail m, IsMatcher f) => f a b -> a -> m b
-matchM v = maybe (fail "no match") return . match v
 
 belongsTo :: IsMatcher f => a -> f a b -> Bool
 belongsTo a view = isJust (match view a)

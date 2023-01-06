@@ -39,7 +39,7 @@ fromOpenMath :: Exercise a -> OMOBJ -> Maybe a
 fromOpenMath ex omobj = do
    v <- hasTermView ex
    a <- fromOMOBJ omobj
-   matchM v a
+   match v a
 
 toOMOBJ :: IsTerm a => a -> OMOBJ
 toOMOBJ = rec . toTerm

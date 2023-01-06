@@ -17,7 +17,6 @@ module Ideas.Common.Rewriting.Unification
    ) where
 
 import Control.Monad
-import Control.Monad.Fail (MonadFail)
 import Data.Maybe
 import Ideas.Common.Rewriting.AC (pairingsMatchA)
 import Ideas.Common.Rewriting.Substitution
@@ -52,30 +51,30 @@ unify term1 term2 =
       return (s2 @@ s1)
    rec _ _ = fail "match: no unifier"
 
-match :: (MonadPlus m, MonadFail m) => Term -> Term -> m Substitution
+match :: Term -> Term -> Maybe Substitution
 match term1 term2 =
    case (term1, term2) of
       (TMeta i, TMeta j) | i == j ->
-         return emptySubst
+         Just emptySubst
       (TMeta i, _) | not (i `hasMetaVar` term2) ->
-         return (singletonSubst i term2)
+         Just (singletonSubst i term2)
       (_, TMeta _) ->
-         fail "match: no unifier"
+         Nothing
       (TCon s xs, TCon t ys) | s == t ->
          rec xs ys
       (TList xs, TList ys) ->
          rec xs ys
       _ | term1 == term2 ->
-         return emptySubst
-      _ -> fail "match: no unifier"
+         Just emptySubst
+      _ -> Nothing
  where
-   rec [] [] = return emptySubst
+   rec [] [] = Just emptySubst
    rec (x:xs) (y:ys) = do
       s1 <- match x y
       s2 <- rec (map (s1 |->) xs) ys
       guard (composable s1 s2)
-      return (s1 @@ s2)
-   rec _ _ = fail "match: no unifier"
+      Just (s1 @@ s2)
+   rec _ _ = Nothing
 
 -----------------------------------------------------------
 -- Matching (or: one-way unification)

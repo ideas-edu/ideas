@@ -17,7 +17,6 @@ module Ideas.Encoding.ModeXML (processXML) where
 
 import Control.Exception
 import Control.Monad
-import Control.Monad.Fail (MonadFail)
 import Data.String
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.DecoderXML
@@ -56,23 +55,23 @@ processXML options dr txt = do
 addVersion :: String -> XML -> XML
 addVersion s = changeAttributes (<> attribute "version" s)
 
-xmlRequest :: MonadFail m => Maybe String -> XML -> m Request
+xmlRequest :: Maybe String -> XML -> IO Request
 xmlRequest ms xml = do
    unless (getName xml == "request") $
       fail "expected xml tag request"
-   enc  <- case findAttribute "encoding" xml of
+   enc  <- case findAttribute' "encoding" xml of
               Just s  -> readEncoding s
               Nothing -> return []
    return mempty
-      { serviceId      = newId <$> findAttribute "service" xml
+      { serviceId      = newId <$> findAttribute' "service" xml
       , exerciseId     = extractExerciseId xml
-      , source         = findAttribute "source" xml
+      , source         = findAttribute' "source" xml
       , cgiBinary      = ms
-      , requestInfo    = findAttribute "requestinfo" xml
-      , logSchema      = findAttribute "logging" xml >>= readSchema
-      , feedbackScript = findAttribute "script" xml
+      , requestInfo    = findAttribute' "requestinfo" xml
+      , logSchema      = findAttribute' "logging" xml >>= readSchema
+      , feedbackScript = findAttribute' "script" xml
       , randomSeed     = defaultSeed ms $
-                            findAttribute "randomseed" xml >>= readM
+                            findAttribute' "randomseed" xml >>= readM
       , dataformat     = Just XML
       , encoding       = enc
       }
@@ -85,11 +84,11 @@ defaultSeed _ m = m
 xmlReply :: Options -> DomainReasoner -> Request -> XML -> IO XML
 xmlReply opt1 dr request xml = do
    srv <- case serviceId request of
-             Just a  -> findServiceM dr a
+             Just a  -> either fail return $ findService dr a
              Nothing -> fail "No service"
 
    Some ex <- case exerciseId request of
-                 Just a  -> findExercise dr a
+                 Just a  -> either fail return $ findExercise dr a
                  Nothing -> return (Some emptyExercise)
 
    opt2 <- makeOptions dr request
@@ -101,8 +100,8 @@ xmlReply opt1 dr request xml = do
       -- xml evaluator
       else resultOk <$> evalService ex options xmlEvaluator srv xml
 
-extractExerciseId :: MonadFail m => XML -> m Id
-extractExerciseId = fmap newId . findAttribute "exerciseid"
+extractExerciseId :: XML -> Maybe Id
+extractExerciseId = either (const Nothing) (return . newId) . findAttribute "exerciseid"
 
 resultOk :: XMLBuilder -> XML
 resultOk body = makeXML (fromString "reply") $
@@ -115,6 +114,9 @@ resultError options msg = do
    return $ makeXML (fromString "reply") $
       ("result" .=. "error")
       <> tag "message" (string msg)
+
+findAttribute' :: String -> XML -> Maybe String
+findAttribute' a = either (const Nothing) Just . findAttribute a
 
 ------------------------------------------------------------
 

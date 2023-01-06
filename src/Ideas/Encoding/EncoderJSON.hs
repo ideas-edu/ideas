@@ -60,7 +60,7 @@ jsonEncoder tv@(val ::: tp) =
       Tp.Unit   -> return Null
       Tp.List t -> Array <$> sequence [ jsonEncoder (x ::: t) | x <- val ]
       Const ctp -> jsonEncodeConst (val ::: ctp)
-      _ -> fail $ "Cannot encode type: " ++ show tp
+      _ -> errorStr $ "Cannot encode type: " ++ show tp
  where
    tupleList :: TypedValue (TypeRep f) -> [TypedValue (TypeRep f)]
    tupleList (x ::: Tp.Iso p t)   = tupleList (to p x ::: t)
@@ -89,7 +89,7 @@ jsonEncodeConst (val ::: tp) =
       Int          -> return (toJSON val)
       Bool         -> return (toJSON val)
       Tp.String    -> return (toJSON val)
-      _ -> fail $ "Type " ++ show tp ++ " not supported in JSON"
+      _ -> errorStr $ "Type " ++ show tp ++ " not supported in JSON"
 
 --------------------------
 

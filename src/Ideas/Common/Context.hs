@@ -111,7 +111,7 @@ navLocation (Simple a)  = location a
 navLocation (NoNav _)   = mempty
 
 currentNavigator :: ContextNavigator a -> Maybe a
-currentNavigator (TermNav a) = matchM termView (current a)
+currentNavigator (TermNav a) = match termView (current a)
 currentNavigator (Simple a)  = Just (current a)
 currentNavigator (NoNav a)   = Just a
 

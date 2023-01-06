@@ -12,7 +12,6 @@
 
 module Ideas.Encoding.Request where
 
-import Control.Monad.Fail (MonadFail)
 import Control.Applicative
 import Data.Char
 import Data.List
@@ -57,12 +56,12 @@ instance Monoid Request where
 
 data Schema = V1 | V2 | NoLogging deriving (Show, Eq)
 
-readSchema :: MonadFail m => String -> m Schema
+readSchema :: String -> Maybe Schema
 readSchema s0
-   | s == "v1" = return V1
-   | s == "v2" = return V2
-   | s `elem` ["false", "no"] = return NoLogging
-   | otherwise = fail "Unknown schema"
+   | s == "v1" = Just V1
+   | s == "v2" = Just V2
+   | s `elem` ["false", "no"] = Just NoLogging
+   | otherwise = Nothing
  where
    s = map toLower (filter isAlphaNum s0)
 
@@ -113,14 +112,14 @@ useJSONTerm r =
 useLogging :: Request -> Bool
 useLogging r = EncHTML `notElem` encoding r && logSchema r /= Just NoLogging
 
-discoverDataFormat :: MonadFail m => String -> m DataFormat
+discoverDataFormat :: String -> IO DataFormat
 discoverDataFormat xs =
    case dropWhile isSpace xs of
       '<':_ -> return XML
       '{':_ -> return JSON
       _     -> fail "Unknown data format"
 
-readEncoding :: MonadFail m => String -> m [Encoding]
+readEncoding :: String -> IO [Encoding]
 readEncoding = mapM (f . map toLower) . splitsWithElem '+'
  where
    f "html"     = return EncHTML

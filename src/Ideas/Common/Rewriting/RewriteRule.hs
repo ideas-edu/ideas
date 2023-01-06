@@ -25,15 +25,14 @@ module Ideas.Common.Rewriting.RewriteRule
    , symbolMatcher, symbolBuilder
    ) where
 
-import Control.Monad.Fail (MonadFail)
 import Data.Maybe
 import Ideas.Common.Classes
 import Ideas.Common.Environment
 import Ideas.Common.Id
 import Ideas.Common.Rewriting.Substitution
 import Ideas.Common.Rewriting.Term
-import Ideas.Common.Rewriting.Unification
-import Ideas.Common.View hiding (match)
+import Ideas.Common.Rewriting.Unification hiding (match)
+import Ideas.Common.View
 import Ideas.Utils.Uniplate (descend)
 import qualified Data.IntSet as IS
 import qualified Data.Map as M
@@ -182,7 +181,7 @@ applyRewriteRule r a = do
    (out, xs) <- builder term
    let env    = mconcat (zipWith make xs [1::Int ..])
        make t = flip singleBinding t . makeRef . show
-   b <- fromTermRR r out
+   b <- maybeToList (fromTermRR r out)
    return (b, env)
 
 -----------------------------------------------------------
@@ -215,5 +214,5 @@ renumberRewriteRule n r = r {ruleSpecTerm = fmap f (ruleSpecTerm r)}
 toTermRR :: RewriteRule a -> a -> Term
 toTermRR = build . ruleTermView
 
-fromTermRR :: MonadFail m => RewriteRule a -> Term -> m a
-fromTermRR = matchM . ruleTermView
+fromTermRR :: RewriteRule a -> Term -> Maybe a
+fromTermRR = match . ruleTermView

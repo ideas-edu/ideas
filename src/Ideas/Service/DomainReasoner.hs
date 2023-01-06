@@ -13,11 +13,10 @@
 module Ideas.Service.DomainReasoner
    ( DomainReasoner(..), tDomainReasoner, newDomainReasoner
    , exercisesSorted, servicesSorted
-   , findExercise, findService, findServiceM
+   , findExercise, findService
    , defaultScript
    ) where
 
-import Control.Monad.Fail (MonadFail)
 import Data.List
 import Data.Maybe
 import Data.Semigroup as Sem
@@ -90,16 +89,14 @@ exercisesSorted = sortOn f . exercises
 servicesSorted :: DomainReasoner -> [Service]
 servicesSorted = sortOn showId . services
 
-findExercise :: MonadFail m => DomainReasoner -> Id -> m (Some Exercise)
+findExercise :: DomainReasoner -> Id -> Either String (Some Exercise)
 findExercise dr i =
    case [ a | a@(Some ex) <- exercises dr, getId ex == realName ] of
-      [this] -> return this
-      _      -> fail $ "Exercise " ++ show i ++ " not found"
+      []     -> Left $ "Exercise " ++ show i ++ " not found"
+      [this] -> Right this
+      _      -> Left $ "Ambiguous exercise " ++ show i
  where
    realName = fromMaybe i (lookup i (aliases dr))
-
-findServiceM :: MonadFail m => DomainReasoner -> Id -> m Service
-findServiceM dr = either fail return . findService dr
 
 findService :: DomainReasoner -> Id -> Either String Service
 findService dr a

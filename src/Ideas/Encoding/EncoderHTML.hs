@@ -542,11 +542,12 @@ useAllFirsts dr = unsafePerformIO . useAllFirstsIO dr
 
 useAllFirstsIO :: DomainReasoner -> State a -> IO (Either String [(StepInfo a, State a)])
 useAllFirstsIO dr st = do
-   srv <- findServiceM dr (newId ("allfirsts" :: String))
+   srv <- either fail return $ findService dr (newId ("allfirsts" :: String))
    case serviceFunction srv of
-      f ::: tp -> do
-         conv <- equalM tp (tState .-> tError (tList (Tag "first" (tPair tStepInfo tState))))
-         return (conv f st)
+      f ::: tp ->
+         case equalM tp (tState .-> tError (tList (Tag "first" (tPair tStepInfo tState)))) of
+            Left msg   -> fail msg
+            Right conv -> return (conv f st)
 
 encodePrefix :: State a -> Prefix (Context a) -> HTMLBuilder
 encodePrefix st =

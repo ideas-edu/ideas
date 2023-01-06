@@ -17,7 +17,6 @@ module Ideas.Text.JSON.Data
    ) where
 
 import Control.Monad
-import Control.Monad.Fail (MonadFail)
 import Data.List (intersperse)
 import Data.Maybe
 import Data.String
@@ -112,9 +111,9 @@ parseJSON = parseSimple json
    lexer = P.makeTokenParser $ emptyDef
       { reservedNames = ["true", "false", "null"] }
 
-lookupM :: MonadFail m => String -> JSON -> m JSON
-lookupM x (Object xs) = maybe (fail $ "field " ++ x ++ " not found") return (lookup x xs)
-lookupM _ _ = fail "expecting a JSON object"
+lookupM :: String -> JSON -> Either String JSON
+lookupM x (Object xs) = maybe (Left $ "field " ++ x ++ " not found") Right (lookup x xs)
+lookupM _ _ = Left "expecting a JSON object"
 
 --------------------------------------------------------
 -- Testing parser/pretty-printer

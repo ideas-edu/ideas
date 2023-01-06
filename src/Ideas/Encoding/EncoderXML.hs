@@ -35,6 +35,7 @@ import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
+import Ideas.Utils.Decoding
 import Ideas.Utils.Prelude (munless)
 import qualified Ideas.Service.FeedbackText as FeedbackText
 import qualified Ideas.Service.ProblemDecomposition as PD
@@ -60,7 +61,7 @@ xmlEncoder =
       Tag "RuleShortInfo" t ->
          case equal t (Const Rule) of
             Just f  -> ruleShortInfo (f val)
-            Nothing -> fail "rule short info"
+            Nothing -> errorStr "rule short info"
       Tag "RulesInfo" _ -> do
          ex    <- getExercise
          useOM <- useOpenMath <$> getRequest
@@ -82,7 +83,7 @@ xmlEncoder =
                        Right b -> xmlEncoder (b ::: t2)
       Unit       -> mempty
       Const t    -> xmlEncoderConst (val ::: t)
-      _ -> fail $ show tp
+      _ -> errorStr $ show tp
 
 xmlEncoderConst :: TypedValue (Const a) -> XMLEncoder a
 xmlEncoderConst tv@(val ::: tp) =

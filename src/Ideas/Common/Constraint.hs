@@ -15,13 +15,10 @@
 module Ideas.Common.Constraint
   ( Constraint, makeConstraint
   , isRelevant, isSatisfied, isViolated, getResult
-  , Result(..), relevance
+  , Result(..), violation, relevance
   , subConstraints
   ) where
 
-import Control.Applicative
-import qualified Control.Monad.Fail as Fail
-import Control.Monad
 import Data.List
 import Ideas.Common.Id
 import Ideas.Common.View
@@ -71,52 +68,39 @@ isSatisfied p a =
 isViolated :: Constraint a -> a -> Maybe String
 isViolated p a =
    case getResult p a of
-      Error s -> Just s
-      _       -> Nothing
+      Violation s -> Just s
+      _           -> Nothing
 
 ---------------------------------------------------------------------------
 -- Result
 
-data Result a = Irrelevant | Error String | Ok a
+data Result a = Irrelevant | Violation String | Ok a
    deriving Show
 
 instance Functor Result where
-   fmap _ Irrelevant  = Irrelevant
-   fmap _ (Error msg) = Error msg
-   fmap f (Ok a)      = Ok (f a)
+   fmap _ Irrelevant      = Irrelevant
+   fmap _ (Violation msg) = Violation msg
+   fmap f (Ok a)          = Ok (f a)
 
 instance Applicative Result where
    pure = Ok
-   Irrelevant <*> _          = Irrelevant
-   Error msg  <*> _          = Error msg
-   Ok _       <*> Irrelevant = Irrelevant
-   Ok _       <*> Error msg  = Error msg
-   Ok f       <*> Ok a       = Ok (f a)
-
-instance Alternative Result where
-   empty = Error ""
-   Irrelevant <|> r       = r
-   Error msg  <|> Error _ = Error msg -- left-biased
-   Error _    <|> r       = r
-   Ok a       <|> _       = Ok a
+   Irrelevant     <*> _             = Irrelevant
+   Violation msg  <*> _             = Violation msg
+   Ok _           <*> Irrelevant    = Irrelevant
+   Ok _           <*> Violation msg = Violation msg
+   Ok f           <*> Ok a          = Ok (f a)
 
 instance Monad Result where
-   Irrelevant >>= _ = Irrelevant
-   Error msg  >>= _ = Error msg
-   Ok a       >>= f = f a
+   Irrelevant    >>= _ = Irrelevant
+   Violation msg >>= _ = Violation msg
+   Ok a          >>= f = f a
 
-   fail = Fail.fail
-
-instance Fail.MonadFail Result where
-   fail = Error
-
-instance MonadPlus Result where
-   mzero = empty
-   mplus = (<|>)
+violation :: String -> Result a
+violation = Violation
 
 -- | Turn errors into irrelevant results
 relevance :: Result a -> Result a
-relevance (Error _) = Irrelevant
+relevance (Violation _) = Irrelevant
 relevance r = r
 
 -- to do:
@@ -128,9 +112,9 @@ subConstraints f n c = makeConstraint n $ \p -> do
    case filter isError results of
       [] | any isOk results -> Ok ()
          | otherwise        -> Irrelevant
-      errs -> Error $ intercalate "," [ showId c ++ "." ++ loc ++ ":" ++ msg | (loc, Error msg) <- errs ]
+      errs -> violation $ intercalate "," [ showId c ++ "." ++ loc ++ ":" ++ msg | (loc, Violation msg) <- errs ]
  where
-   isError (_, Error _) = True
+   isError (_, Violation _) = True
    isError _ = False
 
    isOk (_, Ok _) = True

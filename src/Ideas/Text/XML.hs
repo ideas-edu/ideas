@@ -32,6 +32,7 @@ module Ideas.Text.XML
    , fromBuilder
    ) where
 
+import Control.Monad (forM_, (>=>))
 import Control.Monad.State
 import Data.Char (chr)
 import Data.Maybe

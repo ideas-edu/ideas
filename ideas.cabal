@@ -49,7 +49,7 @@ Library
   ghc-options:       -Wall
   hs-source-dirs:    src
   Build-Depends:
-     base < 4.17,
+     base < 4.19,
      blaze-builder,
      bytestring,
      case-insensitive,

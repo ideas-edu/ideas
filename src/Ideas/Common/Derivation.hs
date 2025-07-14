@@ -162,10 +162,11 @@ updateLastTerm f (D a xs) =
       ys S.:> (s, b) -> D a (ys S.|> (s, f b))
 
 updateSteps :: (a -> s -> a -> t) -> Derivation s a -> Derivation t a
-updateSteps f d =
-   let ts   = [ f a b c | (a, b, c) <- triples d ]
-       x:xs = terms d
-   in D x (S.fromList (zip ts xs))
+updateSteps f d = case terms d of
+  []   -> error "Derivation.hs: the impossible has happened"
+  x:xs -> D x (S.fromList (zip ts xs))
+ where
+  ts = [ f a b c | (a, b, c) <- triples d ]
 
 -- | Apply a monadic function to each term, and to each step
 derivationM :: Monad m => (s -> m ()) -> (a -> m ()) -> Derivation s a -> m ()

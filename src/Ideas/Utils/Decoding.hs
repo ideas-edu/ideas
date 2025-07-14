@@ -23,7 +23,7 @@ module Ideas.Utils.Decoding
 import Control.Arrow
 import Control.Applicative
 import Control.Monad
-import Control.Monad.Except
+import Control.Monad.Except hiding (mapError)
 import Control.Monad.Reader
 import Control.Monad.State
 import Data.List

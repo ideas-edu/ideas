@@ -18,6 +18,7 @@ module Ideas.Encoding.DecoderXML
    ) where
 
 import Control.Applicative hiding (Const)
+import Control.Monad ((>=>), foldM, guard, unless)
 import Control.Monad.State hiding (State)
 import Data.Char
 import Ideas.Common.Library

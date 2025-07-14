@@ -15,7 +15,6 @@
 
 module Ideas.Encoding.EncoderJSON (jsonEncoder) where
 
-import Control.Applicative hiding (Const)
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.Encoder

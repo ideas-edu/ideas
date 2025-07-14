@@ -12,6 +12,7 @@
 
 module Ideas.Common.Rewriting.AutoTerm (toTermG, fromTermG, testTermFor) where
 
+import Control.Monad (mplus)
 import Control.Monad.State
 import Data.Data
 import Data.List

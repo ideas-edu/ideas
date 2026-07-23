@@ -1,22 +1,21 @@
-default: Tutorial.html Tutorial-solution.html Tutorial.exe
+default: tutorial Tutorial.html Tutorial-solution.html
 
-IDEASDIR   = ..
-SRCDIR     = $(IDEASDIR)/src
-OUTDIR     = $(IDEASDIR)/out
-INSTALLDIR = /var/www/tutorial
+tutorial:
+	cabal install --installdir=. --overwrite-policy=always
 
-ghci:
-	ghci -i$(SRCDIR) -odir$(OUTDIR) -hidir$(OUTDIR) -Wall -fwarn-tabs
-
-install:
-	cp Tutorial.html $(INSTALLDIR)/index.html
-	cp Tutorial-solution.html $(INSTALLDIR)/Tutorial-solution.html
-	cp Tutorial.css $(INSTALLDIR)
-	cp ideas.png $(INSTALLDIR)
-	cp ounl.png $(INSTALLDIR)
-
-%.html: %.lhs
+%.html: %.lhs 
 	pandoc --from markdown+lhs --to html --template=template.html -o $@ $<
 
-Tutorial.exe:
-	ghc --make -i../src -hidir ../out -odir ../out Tutorial.lhs -o Tutorial.exe
+ghci:
+	cabal repl	
+
+docker:
+	docker build -t ideas-tutorial:latest .
+	
+server:
+	docker run --rm -it -p 8080:80 ideas-tutorial:latest
+
+clean:
+	cabal clean
+	rm -f Tutorial.html Tutorial-solution.html tutorial
+	docker rmi ideas-tutorial:latest

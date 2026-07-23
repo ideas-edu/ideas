@@ -1,0 +1,6 @@
+packages: *.cabal
+
+source-repository-package
+  type: git
+  location: https://github.com/ideas-edu/ideas
+  tag: 79453dd2ad3d5fc00d4edf0b4511b4abaff5613a

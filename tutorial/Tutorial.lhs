@@ -5,10 +5,10 @@ This tutorial shows how to make a simple domain reasoner with the Ideas framewor
 We start by defining a minimal exercise and show how this can be compiled into an 
 application that can handle feedback requests. Make sure you have installed a 
 Haskell compiler and the cabal package manager 
-(see [Haskell Platform](http://www.haskell.org/platform/)): we advise
-to use one of the following versions of ghc to work with our software: ghc 7.10 
-(or Haskell Platform 7.10.3), ghc 8.0.2, ghc 8.2.2, or ghc 8.4.2.
-Get the latest version of the [ideas package](http://hackage.haskell.org/package/ideas) 
+(see [Haskell Platform](http://www.haskell.org/platform/)): this version of the
+tutorial works with version 9.6.7, and possibly with later versions.
+The tutorial uses Cabal and is tied to a specific version of the [ideas package](http://hackage.haskell.org/package/ideas).
+
 from Hackage and install the library with the following command:
 
 ~~~~~~~~
@@ -22,6 +22,7 @@ Ideas package.
 
 > module Main where
 > 
+> import Control.Applicative
 > import Ideas.Common.Library
 > import Ideas.Main.Default
 
@@ -182,11 +183,18 @@ These symbols are used for the `IsTerm` instance: we have to make sure that
 >    toTerm (Con x)    = TNum (toInteger x)
 >    
 >    fromTerm (TNum x) = return (Con (fromInteger x))
->    fromTerm term     = fromTermWith f term
->     where
->       f s [x]    | s == negateSymbol = return (Negate x)
->       f s [x, y] | s == addSymbol    = return (Add x y)
->       f _ _ = fail "invalid expression"
+>    fromTerm term
+>      | isSymbol addSymbol term    = do
+>          (xt, yt) <- isBinary addSymbol term
+>          x        <- fromTerm xt
+>          y        <- fromTerm yt
+>          return (Add x y)
+>      | isSymbol negateSymbol term = Negate <$> (isUnary negateSymbol term >>= fromTerm)
+>      | otherwise                  = fail "invalid expression"
+
+>    termDecoder =  Con . fromInteger <$> tInteger
+>               <|> Negate <$> termDecoder
+>               <|> tList2 Add termDecoder termDecoder
 
 We can now define an improved strategy that applies `addOrNegate` somewhere: 
 the traversal combinators can only be used on strategies (or rules) that are 
@@ -296,7 +304,7 @@ two example expressions (of a certain difficulty).
 >    , strategy      = evalStrategy
 >    , prettyPrinter = show
 >    , navigation    = termNavigator
->    , parser        = readM
+>    , parser        = maybe (Left "No parse") Right . readM
 >    , equivalence   = withoutContext eqExpr
 >    , similarity    = withoutContext (==)
 >    , ready         = predicate isCon

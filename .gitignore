@@ -10,3 +10,4 @@ report.html
 cabal.project.local
 dist-newstyle/
 tags
+/tutorial/tutorial

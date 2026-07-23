@@ -5,7 +5,9 @@ This document shows a possible solution to the suggested exercises in the tutori
 
 > module Main where
 > 
+> import Control.Applicative ((<|>))
 > import Ideas.Common.Library
+> import Ideas.Service.State (State, makeState, stateContext, exercise)
 > import Ideas.Main.Default
 
 We extend the expression datatype with constructors for multiplication and division.
@@ -31,14 +33,11 @@ The term instance needs to be extended with new symbols for multiplication and d
 >    toTerm (Mul x y)  = binary mulSymbol (toTerm x) (toTerm y)
 >    toTerm (Div x y)  = binary divSymbol (toTerm x) (toTerm y)
 >    
->    fromTerm (TNum x) = return (Con (fromInteger x))
->    fromTerm term     = fromTermWith f term
->     where
->       f s [x]    | s == negateSymbol = return (Negate x)
->       f s [x, y] | s == addSymbol    = return (Add x y)
->       f s [x, y] | s == mulSymbol    = return (Mul x y)
->       f s [x, y] | s == divSymbol    = return (Div x y)
->       f _ _ = fail "invalid expression"
+>    termDecoder =  Con . fromInteger <$> tInteger
+>               <|> tCon1 negateSymbol Negate termDecoder
+>               <|> tCon2 addSymbol    Add    termDecoder termDecoder
+>               <|> tCon2 mulSymbol    Mul    termDecoder termDecoder
+>               <|> tCon2 divSymbol    Div    termDecoder termDecoder
 
 We add some examples in which we use multiplication and division.
 
@@ -162,7 +161,7 @@ I do not apply `divSimplificationRule`, but this could be done.
 
 > allEvaluationRules :: LabeledStrategy Expr
 > allEvaluationRules = label "all rules" $
->    negateRule .|. addRule .|. mulRule .|. mulAddRule .|. divNegateRule .|. divAddRule .|. divMulRule .|. divDivRule 
+>    negateRule .|. addRule .|. mulRule .|. mulAddRule .|. divNegateRule .|. divAddRule .|. divMulRule .|. divDivRule .|. madRule .|. twiceRule
 >    -- .|. divSimplificationRule this simplification can also be done during evaluation
 
 `allSimplificationRules` is the strategy that combines all simplification rules.
@@ -202,7 +201,7 @@ An expression is in normal form if it is a `Con`, a non-top heavy division, or t
 >    , strategy      = evalStrategy
 >    , prettyPrinter = show
 >    , navigation    = termNavigator
->    , parser        = readM
+>    , parser        = maybe (Left "No parse") Right . readM
 >    , equivalence   = withoutContext eqExpr
 >    , similarity    = withoutContext (==)
 >    , ready         = predicate isConOrAddDivOrDiv
@@ -223,3 +222,31 @@ An expression is in normal form if it is a `Con`, a non-top heavy division, or t
 >
 > main :: IO ()
 > main = defaultMain dr
+
+> readState :: Exercise a -> String -> String -> Maybe (State a)
+> readState ex term path = do
+>   p          <- readPath path
+>   x          <- either (const Nothing) return (parser ex term)
+>   (ctx, pfx) <- replayStrategy p (strategy ex) (inContext ex x)
+>   return (makeState ex pfx ctx)
+
+> setTerm :: a -> State a -> State a
+> setTerm t s = s { stateContext = inContext ex t }
+>  where
+>   ex = exercise s 
+
+> madRule :: Rule Expr
+> madRule = makeRule "eval.mad" f
+>  where
+>   f (Mul (Add a b) (Add c d)) = [ Add (Add (Mul a c) (Mul a d))
+>                                       (Add (Mul b c) (Mul b d))
+>                                 , Add (Add (Mul a d) (Mul a c))
+>                                       (Add (Mul b d) (Mul b c))
+>                                 ]
+>   f _ = []
+
+> twiceRule :: Rule Expr
+> twiceRule = makeRule "eval.twice" f
+>  where
+>   f (Add x y) | x == y = [ Mul (Con 2) x ] --, Mul x (Con 2) ]
+>   f _                  = []

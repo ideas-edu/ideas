@@ -16,189 +16,340 @@
 <div class="w3-container w3-margin">
 
 <h1 id="making-a-domain-reasoner">Making a domain reasoner</h1>
-<p>This tutorial shows how to make a simple domain reasoner with the Ideas framework. We start by defining a minimal exercise and show how this can be compiled into an application that can handle feedback requests. Make sure you have installed a Haskell compiler and the cabal package manager (see <a href="http://www.haskell.org/platform/">Haskell Platform</a>): we advise to use one of the following versions of ghc to work with our software: ghc 7.10 (or Haskell Platform 7.10.3), ghc 8.0.2, ghc 8.2.2, or ghc 8.4.2. Get the latest version of the <a href="http://hackage.haskell.org/package/ideas">ideas package</a> from Hackage and install the library with the following command:</p>
+<p>This tutorial shows how to make a simple domain reasoner with the
+Ideas framework. We start by defining a minimal exercise and show how
+this can be compiled into an application that can handle feedback
+requests. Make sure you have installed a Haskell compiler and the cabal
+package manager (see <a href="http://www.haskell.org/platform/">Haskell
+Platform</a>): this version of the tutorial works with version 9.6.7,
+and possibly with later versions. The tutorial uses Cabal and is tied to
+a specific version of the <a
+href="http://hackage.haskell.org/package/ideas">ideas package</a>.</p>
+<p>from Hackage and install the library with the following command:</p>
 <pre><code>cabal install ideas -f -logging</code></pre>
-<p>The <code>-logging</code> flag installs the package without support for logging: enabling logging would require installing <code>sqlite3</code> for HDBC. We can now start writing a new Haskell module and import some modules from the Ideas package.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">module</span> <span class="dt">Main</span> <span class="kw">where</span></span>
-<span id="cb2-2"><a href="#cb2-2"></a></span>
-<span id="cb2-3"><a href="#cb2-3"></a><span class="kw">import</span> <span class="dt">Ideas.Common.Library</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a><span class="kw">import</span> <span class="dt">Ideas.Main.Default</span></span></code></pre></div>
-<p>This will import basic functionality (<code>Ideas.Common.Library</code>) for defining your own exercise. The other import (<code>Ideas.Main.Default</code>) is needed for step 4 of this tutorial.</p>
-<p>In this tutorial we will develop a domain reasoner for a simple arithmetic expression language. The goal of the domain reasoner is to evaluate expressions. We define a data type for expressions with addition, (unary) negation, and integer constants.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">data</span> <span class="dt">Expr</span> <span class="ot">=</span> <span class="dt">Add</span> <span class="dt">Expr</span> <span class="dt">Expr</span> <span class="op">|</span> <span class="dt">Negate</span> <span class="dt">Expr</span> <span class="op">|</span> <span class="dt">Con</span> <span class="dt">Int</span></span>
-<span id="cb3-2"><a href="#cb3-2"></a>   <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>, <span class="dt">Read</span>)</span></code></pre></div>
-<p>For now we will use derived instances for testing equality, showing, and reading expressions. We define two examples of expressions in this data type.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1"></a><span class="co">-- expression 5+(-2)</span></span>
-<span id="cb4-2"><a href="#cb4-2"></a><span class="ot">expr1 ::</span> <span class="dt">Expr</span></span>
-<span id="cb4-3"><a href="#cb4-3"></a>expr1 <span class="ot">=</span> <span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>))</span>
-<span id="cb4-4"><a href="#cb4-4"></a></span>
-<span id="cb4-5"><a href="#cb4-5"></a><span class="co">-- expression (-2)+(3+5)</span></span>
-<span id="cb4-6"><a href="#cb4-6"></a><span class="ot">expr2 ::</span> <span class="dt">Expr</span></span>
-<span id="cb4-7"><a href="#cb4-7"></a>expr2 <span class="ot">=</span> <span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))</span></code></pre></div>
+<p>The <code>-logging</code> flag installs the package without support
+for logging: enabling logging would require installing
+<code>sqlite3</code> for HDBC. We can now start writing a new Haskell
+module and import some modules from the Ideas package.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Main</span> <span class="kw">where</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Applicative</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Ideas.Common.Library</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Ideas.Main.Default</span></span></code></pre></div>
+<p>This will import basic functionality
+(<code>Ideas.Common.Library</code>) for defining your own exercise. The
+other import (<code>Ideas.Main.Default</code>) is needed for step 4 of
+this tutorial.</p>
+<p>In this tutorial we will develop a domain reasoner for a simple
+arithmetic expression language. The goal of the domain reasoner is to
+evaluate expressions. We define a data type for expressions with
+addition, (unary) negation, and integer constants.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Expr</span> <span class="ot">=</span> <span class="dt">Add</span> <span class="dt">Expr</span> <span class="dt">Expr</span> <span class="op">|</span> <span class="dt">Negate</span> <span class="dt">Expr</span> <span class="op">|</span> <span class="dt">Con</span> <span class="dt">Int</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>   <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>, <span class="dt">Read</span>)</span></code></pre></div>
+<p>For now we will use derived instances for testing equality, showing,
+and reading expressions. We define two examples of expressions in this
+data type.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- expression 5+(-2)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ot">expr1 ::</span> <span class="dt">Expr</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>expr1 <span class="ot">=</span> <span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- expression (-2)+(3+5)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="ot">expr2 ::</span> <span class="dt">Expr</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>expr2 <span class="ot">=</span> <span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))</span></code></pre></div>
 <h2 id="step-1-defining-an-exercise">Step 1: defining an exercise</h2>
-<p>We define rules to calculate the addition of two constants and to negate a constant. The <code>Rule</code> data type is parameterized over the values that are transformed (which is in our case the <code>Expr</code> data type). The function <code>makeRule</code> takes a name for the rule (an identifier) and a function of type <code>a -&gt; Maybe a</code> as its arguments. Constructor <code>Nothing</code> of the <code>Maybe</code> data type is used to indicate that the rule cannot be applied.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1"></a><span class="ot">addRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></span>
-<span id="cb5-2"><a href="#cb5-2"></a>addRule <span class="ot">=</span> describe <span class="st">&quot;Add two numbers&quot;</span> <span class="op">$</span> makeRule <span class="st">&quot;eval.add&quot;</span> f</span>
-<span id="cb5-3"><a href="#cb5-3"></a> <span class="kw">where</span></span>
-<span id="cb5-4"><a href="#cb5-4"></a><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></span>
-<span id="cb5-5"><a href="#cb5-5"></a>   f (<span class="dt">Add</span> (<span class="dt">Con</span> x) (<span class="dt">Con</span> y)) <span class="ot">=</span> <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Con</span> (x<span class="op">+</span>y)</span>
-<span id="cb5-6"><a href="#cb5-6"></a>   f _ <span class="ot">=</span> <span class="dt">Nothing</span></span>
-<span id="cb5-7"><a href="#cb5-7"></a></span>
-<span id="cb5-8"><a href="#cb5-8"></a><span class="ot">negateRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></span>
-<span id="cb5-9"><a href="#cb5-9"></a>negateRule <span class="ot">=</span> describe <span class="st">&quot;Negate number&quot;</span> <span class="op">$</span> makeRule <span class="st">&quot;eval.negate&quot;</span> f</span>
-<span id="cb5-10"><a href="#cb5-10"></a> <span class="kw">where</span></span>
-<span id="cb5-11"><a href="#cb5-11"></a><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></span>
-<span id="cb5-12"><a href="#cb5-12"></a>   f (<span class="dt">Negate</span> (<span class="dt">Con</span> x)) <span class="ot">=</span> <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Con</span> (<span class="op">-</span>x)</span>
-<span id="cb5-13"><a href="#cb5-13"></a>   f _ <span class="ot">=</span> <span class="dt">Nothing</span></span></code></pre></div>
-<p>Have a look at the type of the <code>makeRule</code> function in the <a href="http://hackage.haskell.org/package/ideas-1.8/docs/Ideas-Common-Rule-Abstract.html#v:makeRule">documentation</a>, and observe that the function is overloaded in both arguments. The first argument is the rule’s identifier, which has to be part of the <code>IsId</code> type class. The <code>String</code> type is an instance of this class as can be seen from the example. This type class helps in creating identifiers for concepts. The <code>Rule</code> data type carries an identifier of type <code>Id</code>; later we will see that many other concepts also have an identifier (including <code>Strategy</code> and <code>Exercise</code>). Identifiers should have a unique name, and this name can be hierarchical. Hierarchical names can be created with the <code>'.'</code> character in the name, or by using the <code>(#)</code> combinator. Values that carry an identifier can be given a more elaborate description with the <code>describe</code> function.</p>
-<p>The transformations in the rules above use a function of type <code>a -&gt; Maybe a</code>, but sometimes you want a rule to return multiple results. In these situations you can use a function of type <code>a -&gt; [a]</code>. The <code>MakeTrans</code> type class that is part of <code>makeRule</code>’s type generalizes over the type of a transformation function, and has <code>Maybe</code> and <code>[]</code> as instances.</p>
-<p>We first test the rules we defined in a Haskell interpreter by applying the rules to some expressions. For this, we use function <code>apply</code> from the <code>Apply</code> type class.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1"></a><span class="dt">Main</span><span class="op">&gt;</span> apply addRule (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>))</span>
-<span id="cb6-2"><a href="#cb6-2"></a><span class="dt">Just</span> (<span class="dt">Con</span> <span class="dv">8</span>)</span>
-<span id="cb6-3"><a href="#cb6-3"></a></span>
-<span id="cb6-4"><a href="#cb6-4"></a><span class="dt">Main</span><span class="op">&gt;</span> apply negateRule (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">5</span>))</span>
-<span id="cb6-5"><a href="#cb6-5"></a><span class="dt">Just</span> (<span class="dt">Con</span> (<span class="op">-</span><span class="dv">5</span>))</span>
-<span id="cb6-6"><a href="#cb6-6"></a></span>
-<span id="cb6-7"><a href="#cb6-7"></a><span class="dt">Main</span><span class="op">&gt;</span> apply addRule expr1</span>
-<span id="cb6-8"><a href="#cb6-8"></a><span class="dt">Nothing</span></span>
-<span id="cb6-9"><a href="#cb6-9"></a></span>
-<span id="cb6-10"><a href="#cb6-10"></a><span class="dt">Main</span><span class="op">&gt;</span> apply negateRule expr2</span>
-<span id="cb6-11"><a href="#cb6-11"></a><span class="dt">Nothing</span></span></code></pre></div>
-<p>The last example shows that rules are only applied at top-level, and not automatically to some arbitrary sub-expression. The rules can be combined into a strategy: the strategy combinator <code>.|.</code> denotes choice. We <code>label</code> the strategy with an identifier.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1"></a><span class="ot">addOrNegate ::</span> <span class="dt">LabeledStrategy</span> <span class="dt">Expr</span></span>
-<span id="cb7-2"><a href="#cb7-2"></a>addOrNegate <span class="ot">=</span> label <span class="st">&quot;add-or-negate&quot;</span> <span class="op">$</span></span>
-<span id="cb7-3"><a href="#cb7-3"></a>   addRule <span class="op">.|.</span> negateRule</span></code></pre></div>
+<p>We define rules to calculate the addition of two constants and to
+negate a constant. The <code>Rule</code> data type is parameterized over
+the values that are transformed (which is in our case the
+<code>Expr</code> data type). The function <code>makeRule</code> takes a
+name for the rule (an identifier) and a function of type
+<code>a -&gt; Maybe a</code> as its arguments. Constructor
+<code>Nothing</code> of the <code>Maybe</code> data type is used to
+indicate that the rule cannot be applied.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">addRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>addRule <span class="ot">=</span> describe <span class="st">&quot;Add two numbers&quot;</span> <span class="op">$</span> makeRule <span class="st">&quot;eval.add&quot;</span> f</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>   f (<span class="dt">Add</span> (<span class="dt">Con</span> x) (<span class="dt">Con</span> y)) <span class="ot">=</span> <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Con</span> (x<span class="op">+</span>y)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>   f _ <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="ot">negateRule ::</span> <span class="dt">Rule</span> <span class="dt">Expr</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>negateRule <span class="ot">=</span> describe <span class="st">&quot;Negate number&quot;</span> <span class="op">$</span> makeRule <span class="st">&quot;eval.negate&quot;</span> f</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="ot">   f ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Expr</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>   f (<span class="dt">Negate</span> (<span class="dt">Con</span> x)) <span class="ot">=</span> <span class="dt">Just</span> <span class="op">$</span> <span class="dt">Con</span> (<span class="op">-</span>x)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>   f _ <span class="ot">=</span> <span class="dt">Nothing</span></span></code></pre></div>
+<p>Have a look at the type of the <code>makeRule</code> function in the
+<a
+href="http://hackage.haskell.org/package/ideas-1.8/docs/Ideas-Common-Rule-Abstract.html#v:makeRule">documentation</a>,
+and observe that the function is overloaded in both arguments. The first
+argument is the rule’s identifier, which has to be part of the
+<code>IsId</code> type class. The <code>String</code> type is an
+instance of this class as can be seen from the example. This type class
+helps in creating identifiers for concepts. The <code>Rule</code> data
+type carries an identifier of type <code>Id</code>; later we will see
+that many other concepts also have an identifier (including
+<code>Strategy</code> and <code>Exercise</code>). Identifiers should
+have a unique name, and this name can be hierarchical. Hierarchical
+names can be created with the <code>'.'</code> character in the name, or
+by using the <code>(#)</code> combinator. Values that carry an
+identifier can be given a more elaborate description with the
+<code>describe</code> function.</p>
+<p>The transformations in the rules above use a function of type
+<code>a -&gt; Maybe a</code>, but sometimes you want a rule to return
+multiple results. In these situations you can use a function of type
+<code>a -&gt; [a]</code>. The <code>MakeTrans</code> type class that is
+part of <code>makeRule</code>’s type generalizes over the type of a
+transformation function, and has <code>Maybe</code> and <code>[]</code>
+as instances.</p>
+<p>We first test the rules we defined in a Haskell interpreter by
+applying the rules to some expressions. For this, we use function
+<code>apply</code> from the <code>Apply</code> type class.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Main</span><span class="op">&gt;</span> apply addRule (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>))</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Just</span> (<span class="dt">Con</span> <span class="dv">8</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Main</span><span class="op">&gt;</span> apply negateRule (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">5</span>))</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="dt">Just</span> (<span class="dt">Con</span> (<span class="op">-</span><span class="dv">5</span>))</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="dt">Main</span><span class="op">&gt;</span> apply addRule expr1</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="dt">Nothing</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="dt">Main</span><span class="op">&gt;</span> apply negateRule expr2</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="dt">Nothing</span></span></code></pre></div>
+<p>The last example shows that rules are only applied at top-level, and
+not automatically to some arbitrary sub-expression. The rules can be
+combined into a strategy: the strategy combinator <code>.|.</code>
+denotes choice. We <code>label</code> the strategy with an
+identifier.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">addOrNegate ::</span> <span class="dt">LabeledStrategy</span> <span class="dt">Expr</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>addOrNegate <span class="ot">=</span> label <span class="st">&quot;add-or-negate&quot;</span> <span class="op">$</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>   addRule <span class="op">.|.</span> negateRule</span></code></pre></div>
 <p>Also strategies can be applied to a term.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1"></a><span class="dt">Main</span><span class="op">&gt;</span> apply addOrNegate (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>))</span>
-<span id="cb8-2"><a href="#cb8-2"></a><span class="dt">Just</span> (<span class="dt">Con</span> <span class="dv">8</span>)</span>
-<span id="cb8-3"><a href="#cb8-3"></a></span>
-<span id="cb8-4"><a href="#cb8-4"></a><span class="dt">Main</span><span class="op">&gt;</span> apply addOrNegate expr1</span>
-<span id="cb8-5"><a href="#cb8-5"></a><span class="dt">Nothing</span></span></code></pre></div>
-<p>We can now make a minimal exercise that uses the <code>addOrNegate</code> strategy for solving: why we need to lift the strategy to a <code>Context</code> is explained in step 2 of this tutorial. Exercises should have a unique identifier for identification. We use <code>show</code> for pretty-printing expressions. See the <a href="http://hackage.haskell.org/package/ideas-1.8/docs/Ideas-Common-Exercise.html#t:Exercise">documentation</a> of the <code>Exercise</code> data type for the other components of an exercise: <code>emptyExercise</code> provides sensible defaults so we do not have to worry about these fields yet.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1"></a><span class="ot">minimalExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Expr</span></span>
-<span id="cb9-2"><a href="#cb9-2"></a>minimalExercise <span class="ot">=</span> emptyExercise</span>
-<span id="cb9-3"><a href="#cb9-3"></a>   { exerciseId    <span class="ot">=</span> describe <span class="st">&quot;Evaluate an expression (minimal)&quot;</span> <span class="op">$</span></span>
-<span id="cb9-4"><a href="#cb9-4"></a>                        newId <span class="st">&quot;eval.minimal&quot;</span></span>
-<span id="cb9-5"><a href="#cb9-5"></a>   , strategy      <span class="ot">=</span> liftToContext addOrNegate</span>
-<span id="cb9-6"><a href="#cb9-6"></a>   , prettyPrinter <span class="ot">=</span> <span class="fu">show</span></span>
-<span id="cb9-7"><a href="#cb9-7"></a>   }</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Main</span><span class="op">&gt;</span> apply addOrNegate (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>))</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Just</span> (<span class="dt">Con</span> <span class="dv">8</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Main</span><span class="op">&gt;</span> apply addOrNegate expr1</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="dt">Nothing</span></span></code></pre></div>
+<p>We can now make a minimal exercise that uses the
+<code>addOrNegate</code> strategy for solving: why we need to lift the
+strategy to a <code>Context</code> is explained in step 2 of this
+tutorial. Exercises should have a unique identifier for identification.
+We use <code>show</code> for pretty-printing expressions. See the <a
+href="http://hackage.haskell.org/package/ideas-1.8/docs/Ideas-Common-Exercise.html#t:Exercise">documentation</a>
+of the <code>Exercise</code> data type for the other components of an
+exercise: <code>emptyExercise</code> provides sensible defaults so we do
+not have to worry about these fields yet.</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ot">minimalExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Expr</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>minimalExercise <span class="ot">=</span> emptyExercise</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>   { exerciseId    <span class="ot">=</span> describe <span class="st">&quot;Evaluate an expression (minimal)&quot;</span> <span class="op">$</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                        newId <span class="st">&quot;eval.minimal&quot;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>   , strategy      <span class="ot">=</span> liftToContext addOrNegate</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>   , prettyPrinter <span class="ot">=</span> <span class="fu">show</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>   }</span></code></pre></div>
 <p>Again, we can apply an exercise to a given expression:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1"></a><span class="dt">Main</span><span class="op">&gt;</span> apply minimalExercise (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>))</span>
-<span id="cb10-2"><a href="#cb10-2"></a><span class="dt">Just</span> (<span class="dt">Con</span> <span class="dv">8</span>)</span></code></pre></div>
-<p>For an <code>Exercise</code>, however, function <code>printDerivation</code> is more interesting because it shows a worked-out example and not just the final answer.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1"></a><span class="dt">Main</span><span class="op">&gt;</span> printDerivation minimalExercise (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>))</span>
-<span id="cb11-2"><a href="#cb11-2"></a><span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>)</span>
-<span id="cb11-3"><a href="#cb11-3"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span>add</span>
-<span id="cb11-4"><a href="#cb11-4"></a><span class="dt">Con</span> <span class="dv">8</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Main</span><span class="op">&gt;</span> apply minimalExercise (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>))</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Just</span> (<span class="dt">Con</span> <span class="dv">8</span>)</span></code></pre></div>
+<p>For an <code>Exercise</code>, however, function
+<code>printDerivation</code> is more interesting because it shows a
+worked-out example and not just the final answer.</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Main</span><span class="op">&gt;</span> printDerivation minimalExercise (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>))</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> <span class="dv">3</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span>add</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Con</span> <span class="dv">8</span></span></code></pre></div>
 <h2 id="step-2-adding-traversals">Step 2: adding traversals</h2>
-<p>For arithmetic expressions we want to apply the rules <code>somewhere</code>, i.e., possibly also to the sub-expressions. We want to use traversal functions such as <code>somewhere</code> in our strategy definitions, but this is only possible if we know the structure of the terms we want to traverse. We use a zipper data structure for keeping a point of focus. Instead of defining a zipper on the <code>Expr</code> data type, we define a translation to the <code>Term</code> data type in the Ideas library and use a zipper on <code>Term</code>s. Besides the zipper, some more untyped, generic functions are offered for the <code>Term</code> data type.</p>
-<p>Two symbols are defined for the two constructors of <code>Expr</code>.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1"></a>addSymbol,<span class="ot"> negateSymbol ::</span> <span class="dt">Symbol</span></span>
-<span id="cb12-2"><a href="#cb12-2"></a>addSymbol    <span class="ot">=</span> newSymbol <span class="st">&quot;add&quot;</span></span>
-<span id="cb12-3"><a href="#cb12-3"></a>negateSymbol <span class="ot">=</span> newSymbol <span class="st">&quot;negate&quot;</span></span></code></pre></div>
-<p>These symbols are used for the <code>IsTerm</code> instance: we have to make sure that <code>fromTerm</code> after <code>toTerm</code> is the identity function.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1"></a><span class="kw">instance</span> <span class="dt">IsTerm</span> <span class="dt">Expr</span> <span class="kw">where</span></span>
-<span id="cb13-2"><a href="#cb13-2"></a>   toTerm (<span class="dt">Add</span> x y)  <span class="ot">=</span> binary addSymbol (toTerm x) (toTerm y)</span>
-<span id="cb13-3"><a href="#cb13-3"></a>   toTerm (<span class="dt">Negate</span> x) <span class="ot">=</span> unary negateSymbol (toTerm x)</span>
-<span id="cb13-4"><a href="#cb13-4"></a>   toTerm (<span class="dt">Con</span> x)    <span class="ot">=</span> <span class="dt">TNum</span> (<span class="fu">toInteger</span> x)</span>
-<span id="cb13-5"><a href="#cb13-5"></a>   </span>
-<span id="cb13-6"><a href="#cb13-6"></a>   fromTerm (<span class="dt">TNum</span> x) <span class="ot">=</span> <span class="fu">return</span> (<span class="dt">Con</span> (<span class="fu">fromInteger</span> x))</span>
-<span id="cb13-7"><a href="#cb13-7"></a>   fromTerm term     <span class="ot">=</span> fromTermWith f term</span>
-<span id="cb13-8"><a href="#cb13-8"></a>    <span class="kw">where</span></span>
-<span id="cb13-9"><a href="#cb13-9"></a>      f s [x]    <span class="op">|</span> s <span class="op">==</span> negateSymbol <span class="ot">=</span> <span class="fu">return</span> (<span class="dt">Negate</span> x)</span>
-<span id="cb13-10"><a href="#cb13-10"></a>      f s [x, y] <span class="op">|</span> s <span class="op">==</span> addSymbol    <span class="ot">=</span> <span class="fu">return</span> (<span class="dt">Add</span> x y)</span>
-<span id="cb13-11"><a href="#cb13-11"></a>      f _ _ <span class="ot">=</span> <span class="fu">fail</span> <span class="st">&quot;invalid expression&quot;</span></span></code></pre></div>
-<p>We can now define an improved strategy that applies <code>addOrNegate</code> somewhere: the traversal combinators can only be used on strategies (or rules) that are lifted to a <code>Context</code> (or some other data type with a zipper). Therefore we have to lift the <code>addOrNegate</code> strategy to a <code>Context</code> before using <code>somewhere</code>. We repeat the strategy until it can no longer be applied. Observe that the <code>evalStrategy</code> works on <code>Context Expr</code>s.</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1"></a><span class="ot">evalStrategy ::</span> <span class="dt">LabeledStrategy</span> (<span class="dt">Context</span> <span class="dt">Expr</span>)</span>
-<span id="cb14-2"><a href="#cb14-2"></a>evalStrategy <span class="ot">=</span> label <span class="st">&quot;eval&quot;</span> <span class="op">$</span></span>
-<span id="cb14-3"><a href="#cb14-3"></a>   repeatS (somewhere (liftToContext addOrNegate))</span></code></pre></div>
-<p>Testing this strategy is more involved because we first have to put an <code>Expr</code> into a <code>Context</code>: for this context we use the <code>termNavigator</code>.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1"></a><span class="dt">Main</span><span class="op">&gt;</span> apply evalStrategy <span class="op">$</span> newContext <span class="op">$</span> termNavigator expr1</span>
-<span id="cb15-2"><a href="#cb15-2"></a><span class="dt">Just</span> <span class="dt">Con</span> <span class="dv">3</span> <span class="op">@</span> []</span></code></pre></div>
-<p>In the output, <code>@ []</code> prints the current focus of the zipper, which is here the top-level node of the expression. For <code>expr2</code>, the strategy can start evaluating sub-expression <code>Negate (Con 2)</code> or sub-expression <code>Add (Con 3) (Con 5)</code>. Therefore, evaluating this expression gives two solution paths (with the same result). This can be inspected by using <code>applyAll</code>, which returns all results of application in a list.</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1"></a><span class="dt">Main</span><span class="op">&gt;</span> applyAll evalStrategy <span class="op">$</span> newContext <span class="op">$</span> termNavigator expr2</span>
-<span id="cb16-2"><a href="#cb16-2"></a>[<span class="dt">Con</span> <span class="dv">6</span> <span class="op">@</span> [],<span class="dt">Con</span> <span class="dv">6</span> <span class="op">@</span> []]</span></code></pre></div>
-<p>We define an extended exercise that is based on <code>evalStrategy</code>. In the exercise definition, we have to declare that navigation is based on the <code>termNavigator</code>.</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1"></a><span class="ot">basicExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Expr</span></span>
-<span id="cb17-2"><a href="#cb17-2"></a>basicExercise <span class="ot">=</span> emptyExercise</span>
-<span id="cb17-3"><a href="#cb17-3"></a>   { exerciseId    <span class="ot">=</span> describe <span class="st">&quot;Evaluate an expression (basic)&quot;</span> <span class="op">$</span></span>
-<span id="cb17-4"><a href="#cb17-4"></a>                        newId <span class="st">&quot;eval.basic&quot;</span></span>
-<span id="cb17-5"><a href="#cb17-5"></a>   , strategy      <span class="ot">=</span> evalStrategy</span>
-<span id="cb17-6"><a href="#cb17-6"></a>   , navigation    <span class="ot">=</span> termNavigator</span>
-<span id="cb17-7"><a href="#cb17-7"></a>   , prettyPrinter <span class="ot">=</span> <span class="fu">show</span></span>
-<span id="cb17-8"><a href="#cb17-8"></a>   }</span></code></pre></div>
-<p>We can now print worked-out solutions for <code>expr1</code> and <code>expr2</code>. Note that <code>printDerivations</code> prints all solutions (and <code>printDerivation</code> only shows one).</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1"></a><span class="dt">Main</span><span class="op">&gt;</span> printDerivations basicExercise expr1</span>
-<span id="cb18-2"><a href="#cb18-2"></a><span class="dt">Derivation</span> <span class="op">#</span><span class="dv">1</span></span>
-<span id="cb18-3"><a href="#cb18-3"></a><span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>))</span>
-<span id="cb18-4"><a href="#cb18-4"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span><span class="fu">negate</span></span>
-<span id="cb18-5"><a href="#cb18-5"></a><span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> (<span class="op">-</span><span class="dv">2</span>))</span>
-<span id="cb18-6"><a href="#cb18-6"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span>add</span>
-<span id="cb18-7"><a href="#cb18-7"></a><span class="dt">Con</span> <span class="dv">3</span></span>
-<span id="cb18-8"><a href="#cb18-8"></a></span>
-<span id="cb18-9"><a href="#cb18-9"></a><span class="dt">Main</span><span class="op">&gt;</span> printDerivations basicExercise expr2</span>
-<span id="cb18-10"><a href="#cb18-10"></a><span class="dt">Derivation</span> <span class="op">#</span><span class="dv">1</span></span>
-<span id="cb18-11"><a href="#cb18-11"></a><span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))</span>
-<span id="cb18-12"><a href="#cb18-12"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span>add</span>
-<span id="cb18-13"><a href="#cb18-13"></a><span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Con</span> <span class="dv">8</span>)</span>
-<span id="cb18-14"><a href="#cb18-14"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span><span class="fu">negate</span></span>
-<span id="cb18-15"><a href="#cb18-15"></a><span class="dt">Add</span> (<span class="dt">Con</span> (<span class="op">-</span><span class="dv">2</span>)) (<span class="dt">Con</span> <span class="dv">8</span>)</span>
-<span id="cb18-16"><a href="#cb18-16"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span>add</span>
-<span id="cb18-17"><a href="#cb18-17"></a><span class="dt">Con</span> <span class="dv">6</span></span>
-<span id="cb18-18"><a href="#cb18-18"></a></span>
-<span id="cb18-19"><a href="#cb18-19"></a><span class="dt">Derivation</span> <span class="op">#</span><span class="dv">2</span></span>
-<span id="cb18-20"><a href="#cb18-20"></a><span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))</span>
-<span id="cb18-21"><a href="#cb18-21"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span><span class="fu">negate</span></span>
-<span id="cb18-22"><a href="#cb18-22"></a><span class="dt">Add</span> (<span class="dt">Con</span> (<span class="op">-</span><span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))</span>
-<span id="cb18-23"><a href="#cb18-23"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span>add</span>
-<span id="cb18-24"><a href="#cb18-24"></a><span class="dt">Add</span> (<span class="dt">Con</span> (<span class="op">-</span><span class="dv">2</span>)) (<span class="dt">Con</span> <span class="dv">8</span>)</span>
-<span id="cb18-25"><a href="#cb18-25"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span>add</span>
-<span id="cb18-26"><a href="#cb18-26"></a><span class="dt">Con</span> <span class="dv">6</span></span></code></pre></div>
-<h2 id="step-3-equivalence-similarity-and-ready">Step 3: equivalence, similarity and ready</h2>
-<p>For diagnosing a student step, we have to define which expressions are semantically equivalent (have the same value after evaluation), and which expressions are similar (syntactically equal, or slightly more flexible, for example taking commutativity of <code>Add</code> into account). When left undefined in an exercise, all expressions are equivalent and similar, which is not very helpful. For the <code>Expr</code> data type, we specify that two values are equivalent when they evaluate to the same <code>Int</code> value.</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1"></a><span class="ot">eqExpr ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
-<span id="cb19-2"><a href="#cb19-2"></a>eqExpr x y <span class="ot">=</span> eval x <span class="op">==</span> eval y</span>
-<span id="cb19-3"><a href="#cb19-3"></a></span>
-<span id="cb19-4"><a href="#cb19-4"></a><span class="ot">eval ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb19-5"><a href="#cb19-5"></a>eval (<span class="dt">Add</span> x y)  <span class="ot">=</span> eval x <span class="op">+</span> eval y</span>
-<span id="cb19-6"><a href="#cb19-6"></a>eval (<span class="dt">Negate</span> x) <span class="ot">=</span> <span class="op">-</span>eval x</span>
-<span id="cb19-7"><a href="#cb19-7"></a>eval (<span class="dt">Con</span> x)    <span class="ot">=</span> x </span></code></pre></div>
-<p>We also want to define the goal of an exercise: we are ready rewriting an expression when we have reached a constant value.</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1"></a><span class="ot">isCon ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
-<span id="cb20-2"><a href="#cb20-2"></a>isCon (<span class="dt">Con</span> _) <span class="ot">=</span> <span class="dt">True</span></span>
-<span id="cb20-3"><a href="#cb20-3"></a>isCon _       <span class="ot">=</span> <span class="dt">False</span></span></code></pre></div>
-<p>We give an extended definition for the exercise with <code>equivalence</code> and <code>ready</code>. We also specify its <code>status</code>, the <code>parser</code> for expressions, and two example expressions (of a certain difficulty).</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1"></a><span class="ot">evalExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Expr</span></span>
-<span id="cb21-2"><a href="#cb21-2"></a>evalExercise <span class="ot">=</span> emptyExercise</span>
-<span id="cb21-3"><a href="#cb21-3"></a>   { exerciseId    <span class="ot">=</span> describe <span class="st">&quot;Evaluate an expression (full)&quot;</span> <span class="op">$</span></span>
-<span id="cb21-4"><a href="#cb21-4"></a>                        newId <span class="st">&quot;eval.full&quot;</span></span>
-<span id="cb21-5"><a href="#cb21-5"></a>   , status        <span class="ot">=</span> <span class="dt">Experimental</span></span>
-<span id="cb21-6"><a href="#cb21-6"></a>   , strategy      <span class="ot">=</span> evalStrategy</span>
-<span id="cb21-7"><a href="#cb21-7"></a>   , prettyPrinter <span class="ot">=</span> <span class="fu">show</span></span>
-<span id="cb21-8"><a href="#cb21-8"></a>   , navigation    <span class="ot">=</span> termNavigator</span>
-<span id="cb21-9"><a href="#cb21-9"></a>   , parser        <span class="ot">=</span> readM</span>
-<span id="cb21-10"><a href="#cb21-10"></a>   , equivalence   <span class="ot">=</span> withoutContext eqExpr</span>
-<span id="cb21-11"><a href="#cb21-11"></a>   , similarity    <span class="ot">=</span> withoutContext (<span class="op">==</span>)</span>
-<span id="cb21-12"><a href="#cb21-12"></a>   , ready         <span class="ot">=</span> predicate isCon</span>
-<span id="cb21-13"><a href="#cb21-13"></a>   , examples      <span class="ot">=</span> examplesFor <span class="dt">Easy</span> [expr1, expr2]</span>
-<span id="cb21-14"><a href="#cb21-14"></a>   }</span></code></pre></div>
-<p>The <code>readM</code> function is defined in the Ideas library and provides a simple parser for values (here: a parser for <code>Expr</code>s) based on an instance for the <code>Read</code> type class. We now have a somewhat simple, but fully functional exercise for evaluating expressions.</p>
-<h2 id="step-4-making-a-cgi-webservice">Step 4: making a CGI-webservice</h2>
-<p>An exercise can be used by external tools by turning it into a domain reasoner: such a reasoner supports some exercises, and provides a number of (standard) feedback services. We use the three exercises we have defined so far, together with the standard set of services.</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1"></a><span class="ot">dr ::</span> <span class="dt">DomainReasoner</span></span>
-<span id="cb22-2"><a href="#cb22-2"></a>dr <span class="ot">=</span> describe <span class="st">&quot;Domain reasoner for tutorial&quot;</span> (newDomainReasoner <span class="st">&quot;eval&quot;</span>) </span>
-<span id="cb22-3"><a href="#cb22-3"></a>   { exercises <span class="ot">=</span> [<span class="dt">Some</span> minimalExercise, <span class="dt">Some</span> basicExercise, <span class="dt">Some</span> evalExercise]</span>
-<span id="cb22-4"><a href="#cb22-4"></a>   , services  <span class="ot">=</span> myServices</span>
-<span id="cb22-5"><a href="#cb22-5"></a>   }</span>
-<span id="cb22-6"><a href="#cb22-6"></a></span>
-<span id="cb22-7"><a href="#cb22-7"></a><span class="ot">myServices ::</span> [<span class="dt">Service</span>]</span>
-<span id="cb22-8"><a href="#cb22-8"></a>myServices <span class="ot">=</span> metaServiceList dr <span class="op">++</span> serviceList</span></code></pre></div>
+<p>For arithmetic expressions we want to apply the rules
+<code>somewhere</code>, i.e., possibly also to the sub-expressions. We
+want to use traversal functions such as <code>somewhere</code> in our
+strategy definitions, but this is only possible if we know the structure
+of the terms we want to traverse. We use a zipper data structure for
+keeping a point of focus. Instead of defining a zipper on the
+<code>Expr</code> data type, we define a translation to the
+<code>Term</code> data type in the Ideas library and use a zipper on
+<code>Term</code>s. Besides the zipper, some more untyped, generic
+functions are offered for the <code>Term</code> data type.</p>
+<p>Two symbols are defined for the two constructors of
+<code>Expr</code>.</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>addSymbol,<span class="ot"> negateSymbol ::</span> <span class="dt">Symbol</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>addSymbol    <span class="ot">=</span> newSymbol <span class="st">&quot;add&quot;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>negateSymbol <span class="ot">=</span> newSymbol <span class="st">&quot;negate&quot;</span></span></code></pre></div>
+<p>These symbols are used for the <code>IsTerm</code> instance: we have
+to make sure that <code>fromTerm</code> after <code>toTerm</code> is the
+identity function.</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IsTerm</span> <span class="dt">Expr</span> <span class="kw">where</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>   toTerm (<span class="dt">Add</span> x y)  <span class="ot">=</span> binary addSymbol (toTerm x) (toTerm y)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>   toTerm (<span class="dt">Negate</span> x) <span class="ot">=</span> unary negateSymbol (toTerm x)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>   toTerm (<span class="dt">Con</span> x)    <span class="ot">=</span> <span class="dt">TNum</span> (<span class="fu">toInteger</span> x)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>   fromTerm (<span class="dt">TNum</span> x) <span class="ot">=</span> <span class="fu">return</span> (<span class="dt">Con</span> (<span class="fu">fromInteger</span> x))</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>   fromTerm term</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>     <span class="op">|</span> isSymbol addSymbol term    <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>         (xt, yt) <span class="ot">&lt;-</span> isBinary addSymbol term</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>         x        <span class="ot">&lt;-</span> fromTerm xt</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>         y        <span class="ot">&lt;-</span> fromTerm yt</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>         <span class="fu">return</span> (<span class="dt">Add</span> x y)</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>     <span class="op">|</span> isSymbol negateSymbol term <span class="ot">=</span> <span class="dt">Negate</span> <span class="op">&lt;$&gt;</span> (isUnary negateSymbol term <span class="op">&gt;&gt;=</span> fromTerm)</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>     <span class="op">|</span> <span class="fu">otherwise</span>                  <span class="ot">=</span> <span class="fu">fail</span> <span class="st">&quot;invalid expression&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>   termDecoder <span class="ot">=</span>  <span class="dt">Con</span> <span class="op">.</span> <span class="fu">fromInteger</span> <span class="op">&lt;$&gt;</span> tInteger</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;|&gt;</span> <span class="dt">Negate</span> <span class="op">&lt;$&gt;</span> termDecoder</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;|&gt;</span> tList2 <span class="dt">Add</span> termDecoder termDecoder</span></code></pre></div>
+<p>We can now define an improved strategy that applies
+<code>addOrNegate</code> somewhere: the traversal combinators can only
+be used on strategies (or rules) that are lifted to a
+<code>Context</code> (or some other data type with a zipper). Therefore
+we have to lift the <code>addOrNegate</code> strategy to a
+<code>Context</code> before using <code>somewhere</code>. We repeat the
+strategy until it can no longer be applied. Observe that the
+<code>evalStrategy</code> works on <code>Context Expr</code>s.</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ot">evalStrategy ::</span> <span class="dt">LabeledStrategy</span> (<span class="dt">Context</span> <span class="dt">Expr</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>evalStrategy <span class="ot">=</span> label <span class="st">&quot;eval&quot;</span> <span class="op">$</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>   repeatS (somewhere (liftToContext addOrNegate))</span></code></pre></div>
+<p>Testing this strategy is more involved because we first have to put
+an <code>Expr</code> into a <code>Context</code>: for this context we
+use the <code>termNavigator</code>.</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Main</span><span class="op">&gt;</span> apply evalStrategy <span class="op">$</span> newContext <span class="op">$</span> termNavigator expr1</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Just</span> <span class="dt">Con</span> <span class="dv">3</span> <span class="op">@</span> []</span></code></pre></div>
+<p>In the output, <code>@ []</code> prints the current focus of the
+zipper, which is here the top-level node of the expression. For
+<code>expr2</code>, the strategy can start evaluating sub-expression
+<code>Negate (Con 2)</code> or sub-expression
+<code>Add (Con 3) (Con 5)</code>. Therefore, evaluating this expression
+gives two solution paths (with the same result). This can be inspected
+by using <code>applyAll</code>, which returns all results of application
+in a list.</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Main</span><span class="op">&gt;</span> applyAll evalStrategy <span class="op">$</span> newContext <span class="op">$</span> termNavigator expr2</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>[<span class="dt">Con</span> <span class="dv">6</span> <span class="op">@</span> [],<span class="dt">Con</span> <span class="dv">6</span> <span class="op">@</span> []]</span></code></pre></div>
+<p>We define an extended exercise that is based on
+<code>evalStrategy</code>. In the exercise definition, we have to
+declare that navigation is based on the <code>termNavigator</code>.</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ot">basicExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Expr</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>basicExercise <span class="ot">=</span> emptyExercise</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>   { exerciseId    <span class="ot">=</span> describe <span class="st">&quot;Evaluate an expression (basic)&quot;</span> <span class="op">$</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>                        newId <span class="st">&quot;eval.basic&quot;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>   , strategy      <span class="ot">=</span> evalStrategy</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>   , navigation    <span class="ot">=</span> termNavigator</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>   , prettyPrinter <span class="ot">=</span> <span class="fu">show</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>   }</span></code></pre></div>
+<p>We can now print worked-out solutions for <code>expr1</code> and
+<code>expr2</code>. Note that <code>printDerivations</code> prints all
+solutions (and <code>printDerivation</code> only shows one).</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dt">Main</span><span class="op">&gt;</span> printDerivations basicExercise expr1</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Derivation</span> <span class="op">#</span><span class="dv">1</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>))</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span><span class="fu">negate</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">5</span>) (<span class="dt">Con</span> (<span class="op">-</span><span class="dv">2</span>))</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span>add</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="dt">Con</span> <span class="dv">3</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="dt">Main</span><span class="op">&gt;</span> printDerivations basicExercise expr2</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="dt">Derivation</span> <span class="op">#</span><span class="dv">1</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span>add</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Con</span> <span class="dv">8</span>)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span><span class="fu">negate</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a><span class="dt">Add</span> (<span class="dt">Con</span> (<span class="op">-</span><span class="dv">2</span>)) (<span class="dt">Con</span> <span class="dv">8</span>)</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span>add</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a><span class="dt">Con</span> <span class="dv">6</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="dt">Derivation</span> <span class="op">#</span><span class="dv">2</span></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="dt">Add</span> (<span class="dt">Negate</span> (<span class="dt">Con</span> <span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span><span class="fu">negate</span></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a><span class="dt">Add</span> (<span class="dt">Con</span> (<span class="op">-</span><span class="dv">2</span>)) (<span class="dt">Add</span> (<span class="dt">Con</span> <span class="dv">3</span>) (<span class="dt">Con</span> <span class="dv">5</span>))</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span>add</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a><span class="dt">Add</span> (<span class="dt">Con</span> (<span class="op">-</span><span class="dv">2</span>)) (<span class="dt">Con</span> <span class="dv">8</span>)</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>   <span class="ot">=&gt;</span> eval<span class="op">.</span>add</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a><span class="dt">Con</span> <span class="dv">6</span></span></code></pre></div>
+<h2 id="step-3-equivalence-similarity-and-ready">Step 3: equivalence,
+similarity and ready</h2>
+<p>For diagnosing a student step, we have to define which expressions
+are semantically equivalent (have the same value after evaluation), and
+which expressions are similar (syntactically equal, or slightly more
+flexible, for example taking commutativity of <code>Add</code> into
+account). When left undefined in an exercise, all expressions are
+equivalent and similar, which is not very helpful. For the
+<code>Expr</code> data type, we specify that two values are equivalent
+when they evaluate to the same <code>Int</code> value.</p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ot">eqExpr ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>eqExpr x y <span class="ot">=</span> eval x <span class="op">==</span> eval y</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="ot">eval ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>eval (<span class="dt">Add</span> x y)  <span class="ot">=</span> eval x <span class="op">+</span> eval y</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>eval (<span class="dt">Negate</span> x) <span class="ot">=</span> <span class="op">-</span>eval x</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>eval (<span class="dt">Con</span> x)    <span class="ot">=</span> x </span></code></pre></div>
+<p>We also want to define the goal of an exercise: we are ready
+rewriting an expression when we have reached a constant value.</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ot">isCon ::</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>isCon (<span class="dt">Con</span> _) <span class="ot">=</span> <span class="dt">True</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>isCon _       <span class="ot">=</span> <span class="dt">False</span></span></code></pre></div>
+<p>We give an extended definition for the exercise with
+<code>equivalence</code> and <code>ready</code>. We also specify its
+<code>status</code>, the <code>parser</code> for expressions, and two
+example expressions (of a certain difficulty).</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ot">evalExercise ::</span> <span class="dt">Exercise</span> <span class="dt">Expr</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>evalExercise <span class="ot">=</span> emptyExercise</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>   { exerciseId    <span class="ot">=</span> describe <span class="st">&quot;Evaluate an expression (full)&quot;</span> <span class="op">$</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>                        newId <span class="st">&quot;eval.full&quot;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>   , status        <span class="ot">=</span> <span class="dt">Experimental</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>   , strategy      <span class="ot">=</span> evalStrategy</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>   , prettyPrinter <span class="ot">=</span> <span class="fu">show</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>   , navigation    <span class="ot">=</span> termNavigator</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>   , parser        <span class="ot">=</span> <span class="fu">maybe</span> (<span class="dt">Left</span> <span class="st">&quot;No parse&quot;</span>) <span class="dt">Right</span> <span class="op">.</span> readM</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>   , equivalence   <span class="ot">=</span> withoutContext eqExpr</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>   , similarity    <span class="ot">=</span> withoutContext (<span class="op">==</span>)</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>   , ready         <span class="ot">=</span> predicate isCon</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>   , examples      <span class="ot">=</span> examplesFor <span class="dt">Easy</span> [expr1, expr2]</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>   }</span></code></pre></div>
+<p>The <code>readM</code> function is defined in the Ideas library and
+provides a simple parser for values (here: a parser for
+<code>Expr</code>s) based on an instance for the <code>Read</code> type
+class. We now have a somewhat simple, but fully functional exercise for
+evaluating expressions.</p>
+<h2 id="step-4-making-a-cgi-webservice">Step 4: making a
+CGI-webservice</h2>
+<p>An exercise can be used by external tools by turning it into a domain
+reasoner: such a reasoner supports some exercises, and provides a number
+of (standard) feedback services. We use the three exercises we have
+defined so far, together with the standard set of services.</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ot">dr ::</span> <span class="dt">DomainReasoner</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>dr <span class="ot">=</span> describe <span class="st">&quot;Domain reasoner for tutorial&quot;</span> (newDomainReasoner <span class="st">&quot;eval&quot;</span>) </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>   { exercises <span class="ot">=</span> [<span class="dt">Some</span> minimalExercise, <span class="dt">Some</span> basicExercise, <span class="dt">Some</span> evalExercise]</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>   , services  <span class="ot">=</span> myServices</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>   }</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="ot">myServices ::</span> [<span class="dt">Service</span>]</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>myServices <span class="ot">=</span> metaServiceList dr <span class="op">++</span> serviceList</span></code></pre></div>
 <p>A default main function is provided by the Ideas framework.</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb23-1"><a href="#cb23-1"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
-<span id="cb23-2"><a href="#cb23-2"></a>main <span class="ot">=</span> defaultMain dr</span></code></pre></div>
-<p>Compile the module to get an executable. In this tutorial we assume that the code is placed in a file called <code>Tutorial.hs</code>, and the result of compilation is an executable <code>Tutorial.exe</code> (on Windows). The software, however, is portable and can also be compiled for other platforms (including Mac OS and Linux).</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> defaultMain dr</span></code></pre></div>
+<p>Compile the module to get an executable. In this tutorial we assume
+that the code is placed in a file called <code>Tutorial.hs</code>, and
+the result of compilation is an executable <code>Tutorial.exe</code> (on
+Windows). The software, however, is portable and can also be compiled
+for other platforms (including Mac OS and Linux).</p>
 <pre><code>$ ghc --make Tutorial.hs</code></pre>
-<p>Running the executable with the <code>--help</code> flag gives the options.</p>
+<p>Running the executable with the <code>--help</code> flag gives the
+options.</p>
 <pre><code>$ Tutorial.exe --help
 IDEAS: Intelligent Domain-specific Exercise Assistants
 Copyright 2018, Open Universiteit Nederland
@@ -214,61 +365,89 @@ Options:
            --test[=DIR]           run tests on directory (default: &#39;test&#39;)
            --make-script=ID       generate feedback script for exercise
            --analyze-script=FILE  analyze feedback script and report errors</code></pre>
-<p>The application handles requests: one way is to place the request in a file and to pass the file name to the application. In the example requests we use XML, but also other encodings are supported. If we want to know the list of supported exercises, we place the following request in a file <code>exerciselist.xml</code></p>
-<div class="sourceCode" id="mycode"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="mycode-1"><a href="#mycode-1"></a><span class="kw">&lt;request</span><span class="ot"> service=</span><span class="st">&quot;exerciselist&quot;</span><span class="ot"> source=</span><span class="st">&quot;tutorial&quot;</span><span class="kw">/&gt;</span></span></code></pre></div>
-<p>It is a good custom to always include the source of the request to let the domain reasoner know where the request came from. The result of this request is:</p>
-<div class="sourceCode" id="mycode"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="mycode-1"><a href="#mycode-1"></a>$ Tutorial.exe --file=exerciselist.xml                                          </span>
-<span id="mycode-2"><a href="#mycode-2"></a><span class="kw">&lt;reply</span><span class="ot"> result=</span><span class="st">&quot;ok&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.8 (26fe80..)&quot;</span><span class="kw">&gt;</span></span>
-<span id="mycode-3"><a href="#mycode-3"></a>  <span class="kw">&lt;list&gt;</span></span>
-<span id="mycode-4"><a href="#mycode-4"></a>    <span class="kw">&lt;elem</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.basic&quot;</span><span class="ot"> description=</span><span class="st">&quot;Evaluate an expression (basic)&quot;</span><span class="ot"> status=</span><span class="st">&quot;Experimental&quot;</span><span class="kw">/&gt;</span></span>
-<span id="mycode-5"><a href="#mycode-5"></a>    <span class="kw">&lt;elem</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.full&quot;</span><span class="ot"> description=</span><span class="st">&quot;Evaluate an expression (full)&quot;</span><span class="ot"> status=</span><span class="st">&quot;Experimental&quot;</span><span class="kw">/&gt;</span></span>
-<span id="mycode-6"><a href="#mycode-6"></a>    <span class="kw">&lt;elem</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.minimal&quot;</span><span class="ot"> description=</span><span class="st">&quot;Evaluate an expression (minimal)&quot;</span><span class="ot"> status=</span><span class="st">&quot;Experimental&quot;</span><span class="kw">/&gt;</span></span>
-<span id="mycode-7"><a href="#mycode-7"></a>  <span class="kw">&lt;/list&gt;</span></span>
-<span id="mycode-8"><a href="#mycode-8"></a><span class="kw">&lt;/reply&gt;</span>                                         </span></code></pre></div>
-<p>Or we request a worked-out solution for <code>Add (Con 5) (Negate (Con 2))</code>.</p>
-<div class="sourceCode" id="mycode"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="mycode-1"><a href="#mycode-1"></a><span class="kw">&lt;request</span><span class="ot"> exerciseid=</span><span class="st">&quot;eval.full&quot;</span><span class="ot"> service=</span><span class="st">&quot;derivation&quot;</span><span class="ot"> encoding=</span><span class="st">&quot;string&quot;</span><span class="ot"> source=</span><span class="st">&quot;tutorial&quot;</span><span class="kw">&gt;</span></span>
-<span id="mycode-2"><a href="#mycode-2"></a>    <span class="kw">&lt;state&gt;</span>                </span>
-<span id="mycode-3"><a href="#mycode-3"></a>        <span class="kw">&lt;expr&gt;</span>Add (Con 5) (Negate (Con 2))<span class="kw">&lt;/expr&gt;</span></span>
-<span id="mycode-4"><a href="#mycode-4"></a>    <span class="kw">&lt;/state&gt;</span></span>
-<span id="mycode-5"><a href="#mycode-5"></a><span class="kw">&lt;/request&gt;</span></span></code></pre></div>
-<p>In this request we have to specify that the encoding of expressions is a plain string and that we want to use the parser/pretty-printer defined for the exercise. The default encoding follows the <a href="http://www.openmath.org/standard/">OpenMath standard</a> for representing mathematical objects. The result of this request is:</p>
-<div class="sourceCode" id="mycode"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="mycode-1"><a href="#mycode-1"></a>$ Tutorial.exe --file=solution.xml</span>
-<span id="mycode-2"><a href="#mycode-2"></a><span class="kw">&lt;reply</span><span class="ot"> result=</span><span class="st">&quot;ok&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.8 (26fe80..)&quot;</span><span class="kw">&gt;</span></span>
-<span id="mycode-3"><a href="#mycode-3"></a>  <span class="kw">&lt;list&gt;</span></span>
-<span id="mycode-4"><a href="#mycode-4"></a>    <span class="kw">&lt;elem</span><span class="ot"> ruleid=</span><span class="st">&quot;eval.negate&quot;</span><span class="kw">&gt;</span></span>
-<span id="mycode-5"><a href="#mycode-5"></a>      <span class="kw">&lt;expr&gt;</span></span>
-<span id="mycode-6"><a href="#mycode-6"></a>        Add (Con 5) (Con (-2))</span>
-<span id="mycode-7"><a href="#mycode-7"></a>      <span class="kw">&lt;/expr&gt;</span></span>
-<span id="mycode-8"><a href="#mycode-8"></a>      <span class="kw">&lt;context&gt;</span></span>
-<span id="mycode-9"><a href="#mycode-9"></a>        <span class="kw">&lt;item</span><span class="ot"> name=</span><span class="st">&quot;location&quot;</span><span class="ot"> value=</span><span class="st">&quot;[1]&quot;</span><span class="kw">/&gt;</span></span>
-<span id="mycode-10"><a href="#mycode-10"></a>      <span class="kw">&lt;/context&gt;</span></span>
-<span id="mycode-11"><a href="#mycode-11"></a>    <span class="kw">&lt;/elem&gt;</span></span>
-<span id="mycode-12"><a href="#mycode-12"></a>    <span class="kw">&lt;elem</span><span class="ot"> ruleid=</span><span class="st">&quot;eval.add&quot;</span><span class="kw">&gt;</span></span>
-<span id="mycode-13"><a href="#mycode-13"></a>      <span class="kw">&lt;expr&gt;</span></span>
-<span id="mycode-14"><a href="#mycode-14"></a>        Con 3</span>
-<span id="mycode-15"><a href="#mycode-15"></a>      <span class="kw">&lt;/expr&gt;</span></span>
-<span id="mycode-16"><a href="#mycode-16"></a>    <span class="kw">&lt;/elem&gt;</span></span>
-<span id="mycode-17"><a href="#mycode-17"></a>  <span class="kw">&lt;/list&gt;</span></span>
-<span id="mycode-18"><a href="#mycode-18"></a><span class="kw">&lt;/reply&gt;</span></span></code></pre></div>
-<p>The executable <code>Tutorial.exe</code> is also a cgi-binary that can be deployed on a web-server. Because there is support for generating HTML as output, it is possible to interactively explore the domain reasoner with a browser and a local server.</p>
+<p>The application handles requests: one way is to place the request in
+a file and to pass the file name to the application. In the example
+requests we use XML, but also other encodings are supported. If we want
+to know the list of supported exercises, we place the following request
+in a file <code>exerciselist.xml</code></p>
+<div class="sourceCode" id="mycode"><pre
+class="sourceCode xml"><code class="sourceCode xml"><span id="mycode-1"><a href="#mycode-1" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">request</span> <span class="ot">service=</span><span class="st">&quot;exerciselist&quot;</span> <span class="ot">source=</span><span class="st">&quot;tutorial&quot;</span>/&gt;</span></code></pre></div>
+<p>It is a good custom to always include the source of the request to
+let the domain reasoner know where the request came from. The result of
+this request is:</p>
+<div class="sourceCode" id="mycode"><pre
+class="sourceCode xml"><code class="sourceCode xml"><span id="mycode-1"><a href="#mycode-1" aria-hidden="true" tabindex="-1"></a>$ Tutorial.exe --file=exerciselist.xml                                          </span>
+<span id="mycode-2"><a href="#mycode-2" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">reply</span> <span class="ot">result=</span><span class="st">&quot;ok&quot;</span> <span class="ot">version=</span><span class="st">&quot;1.8 (26fe80..)&quot;</span>&gt;</span>
+<span id="mycode-3"><a href="#mycode-3" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">list</span>&gt;</span>
+<span id="mycode-4"><a href="#mycode-4" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">elem</span> <span class="ot">exerciseid=</span><span class="st">&quot;eval.basic&quot;</span> <span class="ot">description=</span><span class="st">&quot;Evaluate an expression (basic)&quot;</span> <span class="ot">status=</span><span class="st">&quot;Experimental&quot;</span>/&gt;</span>
+<span id="mycode-5"><a href="#mycode-5" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">elem</span> <span class="ot">exerciseid=</span><span class="st">&quot;eval.full&quot;</span> <span class="ot">description=</span><span class="st">&quot;Evaluate an expression (full)&quot;</span> <span class="ot">status=</span><span class="st">&quot;Experimental&quot;</span>/&gt;</span>
+<span id="mycode-6"><a href="#mycode-6" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">elem</span> <span class="ot">exerciseid=</span><span class="st">&quot;eval.minimal&quot;</span> <span class="ot">description=</span><span class="st">&quot;Evaluate an expression (minimal)&quot;</span> <span class="ot">status=</span><span class="st">&quot;Experimental&quot;</span>/&gt;</span>
+<span id="mycode-7"><a href="#mycode-7" aria-hidden="true" tabindex="-1"></a>  &lt;/<span class="kw">list</span>&gt;</span>
+<span id="mycode-8"><a href="#mycode-8" aria-hidden="true" tabindex="-1"></a>&lt;/<span class="kw">reply</span>&gt;                                         </span></code></pre></div>
+<p>Or we request a worked-out solution for
+<code>Add (Con 5) (Negate (Con 2))</code>.</p>
+<div class="sourceCode" id="mycode"><pre
+class="sourceCode xml"><code class="sourceCode xml"><span id="mycode-1"><a href="#mycode-1" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">request</span> <span class="ot">exerciseid=</span><span class="st">&quot;eval.full&quot;</span> <span class="ot">service=</span><span class="st">&quot;derivation&quot;</span> <span class="ot">encoding=</span><span class="st">&quot;string&quot;</span> <span class="ot">source=</span><span class="st">&quot;tutorial&quot;</span>&gt;</span>
+<span id="mycode-2"><a href="#mycode-2" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">state</span>&gt;                </span>
+<span id="mycode-3"><a href="#mycode-3" aria-hidden="true" tabindex="-1"></a>        &lt;<span class="kw">expr</span>&gt;Add (Con 5) (Negate (Con 2))&lt;/<span class="kw">expr</span>&gt;</span>
+<span id="mycode-4"><a href="#mycode-4" aria-hidden="true" tabindex="-1"></a>    &lt;/<span class="kw">state</span>&gt;</span>
+<span id="mycode-5"><a href="#mycode-5" aria-hidden="true" tabindex="-1"></a>&lt;/<span class="kw">request</span>&gt;</span></code></pre></div>
+<p>In this request we have to specify that the encoding of expressions
+is a plain string and that we want to use the parser/pretty-printer
+defined for the exercise. The default encoding follows the <a
+href="http://www.openmath.org/standard/">OpenMath standard</a> for
+representing mathematical objects. The result of this request is:</p>
+<div class="sourceCode" id="mycode"><pre
+class="sourceCode xml"><code class="sourceCode xml"><span id="mycode-1"><a href="#mycode-1" aria-hidden="true" tabindex="-1"></a>$ Tutorial.exe --file=solution.xml</span>
+<span id="mycode-2"><a href="#mycode-2" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">reply</span> <span class="ot">result=</span><span class="st">&quot;ok&quot;</span> <span class="ot">version=</span><span class="st">&quot;1.8 (26fe80..)&quot;</span>&gt;</span>
+<span id="mycode-3"><a href="#mycode-3" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">list</span>&gt;</span>
+<span id="mycode-4"><a href="#mycode-4" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">elem</span> <span class="ot">ruleid=</span><span class="st">&quot;eval.negate&quot;</span>&gt;</span>
+<span id="mycode-5"><a href="#mycode-5" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">expr</span>&gt;</span>
+<span id="mycode-6"><a href="#mycode-6" aria-hidden="true" tabindex="-1"></a>        Add (Con 5) (Con (-2))</span>
+<span id="mycode-7"><a href="#mycode-7" aria-hidden="true" tabindex="-1"></a>      &lt;/<span class="kw">expr</span>&gt;</span>
+<span id="mycode-8"><a href="#mycode-8" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">context</span>&gt;</span>
+<span id="mycode-9"><a href="#mycode-9" aria-hidden="true" tabindex="-1"></a>        &lt;<span class="kw">item</span> <span class="ot">name=</span><span class="st">&quot;location&quot;</span> <span class="ot">value=</span><span class="st">&quot;[1]&quot;</span>/&gt;</span>
+<span id="mycode-10"><a href="#mycode-10" aria-hidden="true" tabindex="-1"></a>      &lt;/<span class="kw">context</span>&gt;</span>
+<span id="mycode-11"><a href="#mycode-11" aria-hidden="true" tabindex="-1"></a>    &lt;/<span class="kw">elem</span>&gt;</span>
+<span id="mycode-12"><a href="#mycode-12" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">elem</span> <span class="ot">ruleid=</span><span class="st">&quot;eval.add&quot;</span>&gt;</span>
+<span id="mycode-13"><a href="#mycode-13" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">expr</span>&gt;</span>
+<span id="mycode-14"><a href="#mycode-14" aria-hidden="true" tabindex="-1"></a>        Con 3</span>
+<span id="mycode-15"><a href="#mycode-15" aria-hidden="true" tabindex="-1"></a>      &lt;/<span class="kw">expr</span>&gt;</span>
+<span id="mycode-16"><a href="#mycode-16" aria-hidden="true" tabindex="-1"></a>    &lt;/<span class="kw">elem</span>&gt;</span>
+<span id="mycode-17"><a href="#mycode-17" aria-hidden="true" tabindex="-1"></a>  &lt;/<span class="kw">list</span>&gt;</span>
+<span id="mycode-18"><a href="#mycode-18" aria-hidden="true" tabindex="-1"></a>&lt;/<span class="kw">reply</span>&gt;</span></code></pre></div>
+<p>The executable <code>Tutorial.exe</code> is also a cgi-binary that
+can be deployed on a web-server. Because there is support for generating
+HTML as output, it is possible to interactively explore the domain
+reasoner with a browser and a local server.</p>
 <ul>
-<li>Install a webserver, such as <a href="http://www.wampserver.com/">WampServer</a> for Windows.</li>
-<li>Make sure you enable the execution of CGI scripts (in <code>httpd.conf</code>)</li>
-<li>Rename the executable to <code>Tutorial.cgi</code> and place it in the directory for cgi scripts</li>
-<li>Start a browser and type in the URL <code>http://localhost/Tutorial.cgi</code></li>
+<li>Install a webserver, such as <a
+href="http://www.wampserver.com/">WampServer</a> for Windows.</li>
+<li>Make sure you enable the execution of CGI scripts (in
+<code>httpd.conf</code>)</li>
+<li>Rename the executable to <code>Tutorial.cgi</code> and place it in
+the directory for cgi scripts</li>
+<li>Start a browser and type in the URL
+<code>http://localhost/Tutorial.cgi</code></li>
 </ul>
-<p>You can now start exploring the supported exercises and feedback services. For instance, go to the exercise <code>eval.full</code> and click on <code>derivations</code> in the yellow box to see the worked-out solutions for two examples.</p>
+<p>You can now start exploring the supported exercises and feedback
+services. For instance, go to the exercise <code>eval.full</code> and
+click on <code>derivations</code> in the yellow box to see the
+worked-out solutions for two examples.</p>
 <h2 id="suggested-exercises">Suggested exercises</h2>
 <ul>
-<li>Add multiplication to the expression language (and extend the evaluation strategy)</li>
+<li>Add multiplication to the expression language (and extend the
+evaluation strategy)</li>
 <li>Add distribution rules to the strategy</li>
 <li>Add support for calculating with fractions (e.g. 5/7 + 1/2)
 <ul>
 <li>Find the least common multiple of the denominators</li>
-<li>Rewrite top-heavy fractions to mixed fractions (e.g. 17/14 becomes 1+3/14)</li>
+<li>Rewrite top-heavy fractions to mixed fractions (e.g. 17/14 becomes
+1+3/14)</li>
 </ul></li>
 </ul>
-<p>We have developed <a href="Tutorial-solution.html">our own solution</a> to these exercises.</p>
+<p>We have developed <a href="Tutorial-solution.html">our own
+solution</a> to these exercises.</p>
 
 </div>
 <div class="w3-container w3-theme w3-padding">

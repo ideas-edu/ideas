@@ -1,0 +1,5 @@
+<request exerciseid="eval.full" service="derivation" encoding="string" source="tutorial">
+    <state>                
+        <expr>Add (Con 5) (Negate (Con 2))</expr>
+    </state>
+</request>

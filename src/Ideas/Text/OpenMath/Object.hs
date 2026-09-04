@@ -65,7 +65,14 @@ getOMVs omobj = nub [ x | OMV x <- universe omobj ]
 -- conversion functions: XML <-> OMOBJ
 
 xml2omobj :: XML -> Either String OMOBJ
-xml2omobj = either (Left . show) (Right . fst) . runDecoder xmlDecoder () . builder
+xml2omobj = either (Left . show) (Right . fst) . runDecoder xmlDecoder () . builder . removeLayout
+
+removeLayout :: XML -> XML
+removeLayout = foldXML (\n as cs -> makeXML n (as <> cs)) (.=.) keepText builder
+ where
+   keepText s
+      | all isSpace s = mempty
+      | otherwise     = string s
 
 omobj2xml :: OMOBJ -> XML
 omobj2xml object = makeXML "OMOBJ" $ mconcat

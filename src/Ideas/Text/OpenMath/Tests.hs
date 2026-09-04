@@ -24,6 +24,7 @@ import Ideas.Text.OpenMath.Dictionary.Quant1
 import Ideas.Text.OpenMath.Dictionary.Relation1
 import Ideas.Text.OpenMath.Dictionary.Transc1
 import Ideas.Text.OpenMath.Object
+import Ideas.Text.XML
 import Test.QuickCheck
 
 arbOMOBJ :: Gen OMOBJ
@@ -48,4 +49,10 @@ arbOMOBJ = sized rec
       f = rec (n `div` 2)
 
 propEncoding :: Property
-propEncoding = forAll arbOMOBJ $ \x -> xml2omobj (omobj2xml x) == Right x
+propEncoding = forAll arbOMOBJ $ \x ->
+   let expected = Right x
+       parsed = parseXML (prettyXML (omobj2xml x)) >>= xml2omobj
+   in conjoin
+      [ xml2omobj (omobj2xml x) === expected
+      , parsed === expected
+      ]

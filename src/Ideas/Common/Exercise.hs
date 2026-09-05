@@ -331,7 +331,7 @@ randomTerm rng ex mdif =
 randomTerms :: QCGen -> Exercise a -> Maybe Difficulty -> [a]
 randomTerms rng ex mdif = rec rng
  where
-  rec a = maybe id (:) (randomTerm a ex mdif) (rec (snd (splitGen a)))
+  rec a = maybe id (:) (randomTerm a ex mdif) (rec (snd (split a)))
 
 -- | An exercise generator for testing purposes (including corner cases); first generator only.
 testGenerator :: Exercise a -> Maybe (Gen a)

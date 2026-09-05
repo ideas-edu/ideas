@@ -43,7 +43,8 @@ flag logging
 Library
   if flag(logging) {
     cpp-options:     -DDB
-    Build-Depends:   HDBC, HDBC-sqlite3
+    Build-Depends:   HDBC >= 2.4 && < 2.5,
+                     HDBC-sqlite3 >= 2.3 && < 2.4
   }
 
   ghc-options:       -Wall
@@ -51,24 +52,24 @@ Library
   hs-source-dirs:    src
   Build-Depends:
       base < 4.22,
-     blaze-builder,
-     bytestring,
-     case-insensitive,
-     QuickCheck,
-     Diff,
-     containers,
-     directory,
-     filepath,
-     http-types,
-     mtl,
-     network,
-     parsec,
-     random >= 1.3,
-     streaming-commons,
-     time,
-     uniplate, 
-     wai,
-     wl-pprint
+     blaze-builder >= 0.4 && < 0.5,
+     bytestring >= 0.11 && < 0.13,
+     case-insensitive >= 1.2 && < 1.3,
+     QuickCheck >= 2.14 && < 2.19,
+     Diff >= 0.4 && < 0.6,
+     containers >= 0.6 && < 0.8,
+     directory >= 1.3 && < 1.4,
+     filepath >= 1.4 && < 1.6,
+     http-types >= 0.12 && < 0.13,
+     mtl >= 2.3 && < 2.4,
+     network >= 3.1 && < 3.3,
+     parsec >= 3.1 && < 3.2,
+     random >= 1.3 && < 1.4,
+     streaming-commons >= 0.2 && < 0.3,
+     time >= 1.12 && < 1.15,
+     uniplate >= 1.6 && < 1.7,
+     wai >= 3.2 && < 3.3,
+     wl-pprint >= 1.2 && < 1.3
 
   if !impl(ghc >= 8.0)
     Build-Depends: semigroups == 0.18.*

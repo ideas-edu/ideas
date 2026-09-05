@@ -15,7 +15,6 @@
 
 module Ideas.Encoding.EncoderJSON (jsonEncoder) where
 
-import Control.Applicative hiding (Const)
 import Data.Maybe
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.Encoder
@@ -26,6 +25,7 @@ import Ideas.Service.Types hiding (String)
 import Ideas.Text.JSON
 import Ideas.Utils.Prelude (distinct)
 import qualified Ideas.Service.Diagnose as Diagnose
+import qualified Ideas.Service.Apply as Apply
 import qualified Ideas.Service.Submit as Submit
 import qualified Ideas.Service.Types as Tp
 
@@ -47,18 +47,19 @@ jsonEncoder tv@(val ::: tp) =
       List (Const Rule) ->
          return $ Array $ map ruleShortInfo val
       Tp.Tag s t
-         | s == "Result"     -> encodeTyped encodeResult Submit.tResult tv
-         | s == "Diagnosis"  -> encodeTyped encodeDiagnosis Diagnose.tDiagnosis tv
-         | s == "Derivation" -> ((encodeDerivation, tDerivation tStepInfo tContext) <?>
-                                encodeTyped encodeDerivationText (tDerivation tString tContext)) tv
-         | s == "first"      -> encodeTyped encodeFirst (tPair tStepInfo tState) (val ::: t)
-         | s == "elem"       -> jsonEncoder (val ::: t)
+         | s == "Result"      -> encodeTyped encodeResult Submit.tResult tv
+         | s == "Diagnosis"   -> encodeTyped encodeDiagnosis Diagnose.tDiagnosis tv
+         | s == "ApplyResult" -> encodeTyped encodeApplyResult Apply.tApplyResult tv
+         | s == "Derivation"  -> ((encodeDerivation, tDerivation tStepInfo tContext) <?>
+                                 encodeTyped encodeDerivationText (tDerivation tString tContext)) tv
+         | s == "first"       -> encodeTyped encodeFirst (tPair tStepInfo tState) (val ::: t)
+         | s == "elem"        -> jsonEncoder (val ::: t)
          | s `elem` ["step", "accept", "message"] -> jsonEncoder (val ::: t)
          | otherwise -> (\b -> Object [(s, b)]) <$> jsonEncoder (val ::: t)
       Tp.Unit   -> return Null
       Tp.List t -> Array <$> sequence [ jsonEncoder (x ::: t) | x <- val ]
       Const ctp -> jsonEncodeConst (val ::: ctp)
-      _ -> fail $ "Cannot encode type: " ++ show tp
+      _ -> errorStr $ "Cannot encode type: " ++ show tp
  where
    tupleList :: TypedValue (TypeRep f) -> [TypedValue (TypeRep f)]
    tupleList (x ::: Tp.Iso p t)   = tupleList (to p x ::: t)
@@ -87,7 +88,7 @@ jsonEncodeConst (val ::: tp) =
       Int          -> return (toJSON val)
       Bool         -> return (toJSON val)
       Tp.String    -> return (toJSON val)
-      _ -> fail $ "Type " ++ show tp ++ " not supported in JSON"
+      _ -> errorStr $ "Type " ++ show tp ++ " not supported in JSON"
 
 --------------------------
 
@@ -204,6 +205,18 @@ encodeDiagnosis diagnosis =
    fromReady b      = return (Object [("ready", toJSON b)])
    fromState st     = jsonEncoder (st ::: tState)
    fromReason s     = return (Object [("reason", toJSON s)])
+
+-- legacy encoder
+encodeApplyResult :: Apply.ApplyResult a -> JSONEncoder a
+encodeApplyResult result = 
+    jsonEncoder (f result ::: tError tState)
+ where
+   f :: Apply.ApplyResult a -> Either String (State a)   
+   f (Apply.SyntaxError msg) = Left $ "Syntax error: " ++ msg
+   f (Apply.Correct _ st)    = Right st
+   f (Apply.Buggy _ r)       = Left $ "Buggy rule: " ++ show r
+   f Apply.Incorrect         = Left $ "Cannot apply rule"
+
 
 jsonTuple :: [JSON] -> JSON
 jsonTuple xs =

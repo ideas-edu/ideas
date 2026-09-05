@@ -18,12 +18,10 @@ module Ideas.Utils.Prelude
    , subsets, isSubsetOf
    , cartesian, distinct, allsame
    , fixpoint
+   , split, split3, split4
    , splitAtElem, splitsWithElem
    , timedSeconds, getDiffTime
    , fst3, snd3, thd3
-   , headM, findIndexM
-   , elementAt, changeAt, replaceAt
-   , list
    , mwhen, munless
    ) where
 
@@ -50,10 +48,10 @@ readInt xs
    | otherwise            = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
 
 {-# INLINE readM #-}
-readM :: (Monad m, Read a) => String -> m a
+readM :: Read a => String -> Maybe a
 readM s = case reads s of
-             [(a, xs)] | all isSpace xs -> return a
-             _ -> fail ("no read: " ++ s)
+             [(a, xs)] | all isSpace xs -> Just a
+             _ -> Nothing
 
 subsets :: [a] -> [[a]]
 subsets = foldr op [[]]
@@ -80,6 +78,24 @@ fixpoint f = rec . iterate f
    rec (x:xs)
       | x == head xs = x
       | otherwise    = rec xs
+
+split :: [a] -> [([a], [a])]
+split xs = map (`splitAt` xs) [0 .. length xs]  
+
+split3 :: [a] -> [([a], [a], [a])]
+split3 as = 
+   [ (xs, ys1, ys2)
+   | (xs, ys) <- split as
+   , (ys1, ys2) <- split ys
+   ]
+
+split4 :: [a] -> [([a], [a], [a], [a])]
+split4 as =
+   [ (xs1, xs2, ys1, ys2) 
+   | (xs, ys) <- split as
+   , (xs1, xs2) <- split xs
+   , (ys1, ys2) <- split ys
+   ]
 
 splitAtElem :: Eq a => a -> [a] -> Maybe ([a], [a])
 splitAtElem c s =
@@ -112,29 +128,6 @@ snd3 (_, x, _) = x
 
 thd3 :: (a, b, c) -> c
 thd3 (_, _, x) = x
-
--- generalized list functions (results in monad)
-headM :: Monad m => [a] -> m a
-headM (a:_) = return a
-headM _     = fail "headM"
-
-findIndexM :: Monad m => (a -> Bool) -> [a] -> m Int
-findIndexM p = maybe (fail "findIndexM") return . findIndex p
-
-elementAt :: Monad m => Int -> [a] -> m a
-elementAt i = headM . drop i
-
-changeAt :: Monad m => Int -> (a -> a) -> [a] -> m [a]
-changeAt i f as =
-   case splitAt i as of
-      (xs, y:ys) -> return (xs ++ f y : ys)
-      _          -> fail "changeAt"
-
-replaceAt :: Monad m => Int -> a -> [a] -> m [a]
-replaceAt i = changeAt i . const
-
-list :: b -> ([a] -> b) -> [a] -> b
-list b f xs = if null xs then b else f xs
 
 -- Monoids
 

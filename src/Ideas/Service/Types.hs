@@ -68,8 +68,8 @@ deprecate s = s { serviceDeprecated = True }
 class Equal f where
    equal :: f a -> f b -> Maybe (a -> b)
 
-equalM :: Monad m => Type a t1 -> Type a t2 -> m (t1 -> t2)
-equalM t1 t2 = maybe (fail msg) return (equal t1 t2)
+equalM :: Type a t1 -> Type a t2 -> Either String (t1 -> t2)
+equalM t1 t2 = maybe (Left msg) Right (equal t1 t2)
  where msg = "Types not equal: " ++ show t1 ++ " and " ++ show t2
 
 instance Equal f => Equal (TypeRep f) where

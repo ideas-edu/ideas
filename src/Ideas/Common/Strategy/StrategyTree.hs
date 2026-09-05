@@ -79,9 +79,9 @@ instance Apply Leaf where
    applyAll (LeafRule r) a    = applyAll r a
    applyAll (LeafDyn d) a = applyAll d a
 
-instance LiftView Leaf where
-   liftViewIn v (LeafRule r) = LeafRule (liftViewIn v r)
-   liftViewIn v (LeafDyn d)  = LeafDyn  (liftViewIn v d)
+instance Lift Leaf where
+   liftWithM f (LeafRule r) = LeafRule (liftWithM f r)
+   liftWithM f (LeafDyn d)  = LeafDyn  (liftWithM f d)
 
 treeToProcess :: StrategyTree a -> Process (Leaf a)
 treeToProcess = foldUnwind emptyAlg
@@ -128,10 +128,10 @@ instance HasId (Dynamic a) where
 instance Apply Dynamic where
    applyAll d a = maybe [] ((`runProcess` a) . treeToProcess) (dynamicTree d a)
 
-instance LiftView Dynamic where
-   liftViewIn v d = d
-      { dynamicToTerm   = fmap fst . match v >=> dynamicToTerm d
-      , dynamicFromTerm = fmap (fmap (liftViewIn v)) . dynamicFromTerm d
+instance Lift Dynamic where
+   liftWithM f d = d
+      { dynamicToTerm   = fmap fst . f >=> dynamicToTerm d
+      , dynamicFromTerm = fmap (fmap (liftWithM f)) . dynamicFromTerm d
       }
 
 makeDynamic :: (IsId n, IsTerm a) => n -> (a -> StrategyTree a) -> Dynamic a

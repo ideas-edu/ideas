@@ -20,15 +20,18 @@ module Ideas.Common.Derivation
    , emptyDerivation, prepend, extend
    , merge, mergeBy, mergeStep
      -- * Conversion to/from list
-   , derivationToList, derivationFromList
+   , derivationToList, derivationFromList, derivationDecoder
+     -- * Equality
+   , eqDerivationBy
      -- * Querying a derivation
    , isEmpty, derivationLength, terms, steps, triples
    , firstTerm, lastTerm, lastStep, withoutLast
+   , updateFirstTerm, updateLastTerm
    , updateSteps, derivationM, splitStep
    ) where
 
+import Control.Applicative
 import Data.Maybe
-import Data.Monoid
 import Ideas.Common.Classes
 import Ideas.Common.Rewriting
 import qualified Data.Foldable as F
@@ -52,8 +55,7 @@ instance BiFunctor Derivation where
 
 instance (IsTerm s, IsTerm a) => IsTerm (Derivation s a) where
    toTerm = TList . derivationToList toTerm toTerm
-   fromTerm (TList xs) = derivationFromList fromTerm fromTerm xs
-   fromTerm _ = fail "not a derivation"
+   termDecoder = tListWith (derivationDecoder termDecoder termDecoder)
 
 -----------------------------------------------------------------------------
 -- Constructing a derivation
@@ -68,12 +70,18 @@ extend :: Derivation s a -> (s, a) -> Derivation s a
 extend (D a xs) p = D a (xs S.|> p)
 
 merge :: Eq a => Derivation s a -> Derivation s a -> Maybe (Derivation s a)
-merge = mergeBy (==)
+merge = mergeBy True (==)
 
-mergeBy :: (a -> a -> Bool) -> Derivation s a -> Derivation s a -> Maybe (Derivation s a)
-mergeBy eq d@(D a xs) (D b ys)
-   | eq (lastTerm d) b = Just $ D a (xs <> ys)
-   | otherwise = Nothing
+-- the 'keepUpper' boolean indicates whether to keep the upper term in the middle (or the lower term)
+mergeBy :: Bool -> (a -> a -> Bool) -> Derivation s a -> Derivation s a -> Maybe (Derivation s a)
+mergeBy keepUpper eq d@(D a xs) d2@(D b ys)
+   | not (eq (lastTerm d) b) = Nothing
+   | keepUpper =  Just $ D a (xs <> ys)
+   | otherwise = Just $
+        case S.viewr xs of 
+           S.EmptyR -> d2
+           xs' S.:> (s, _) -> mergeStep (D a xs') s d2
+   
 
 mergeStep :: Derivation s a -> s -> Derivation s a -> Derivation s a
 mergeStep (D a xs) s (D b ys) = D a (xs <> ((s, b) S.<| ys))
@@ -85,12 +93,25 @@ derivationToList :: (s -> b) -> (a -> b) -> Derivation s a -> [b]
 derivationToList f g d =
    g (firstTerm d) : concat [ [f s, g a] | (_, s, a) <- triples d ]
 
-derivationFromList :: Monad m => (b -> m s) -> (b -> m a) -> [b] -> m (Derivation s a)
+derivationFromList :: (b -> Maybe s) -> (b -> Maybe a) -> [b] -> Maybe (Derivation s a)
 derivationFromList f g = rec
  where
-   rec []  = fail "derivationFromList"
+   rec []  = Nothing
    rec [b] = emptyDerivation <$> g b
    rec (b1:b2:bs) = curry prepend <$> g b1 <*> f b2 <*> rec bs
+
+derivationDecoder :: Alternative f => f s -> f a -> f (Derivation s a)
+derivationDecoder tStep tTerm = f <$> tTerm <*> tSteps
+ where
+   f = foldl extend . emptyDerivation
+   tSteps = many ((,) <$> tStep <*> tTerm)
+
+-----------------------------------------------------------------------------
+-- Equality
+
+eqDerivationBy :: Eq s => (a -> a -> Bool) -> Derivation s a -> Derivation s a -> Bool
+eqDerivationBy f d1 d2 =
+   and (zipWith f (terms d1) (terms d2)) && steps d1 == steps d2
 
 -----------------------------------------------------------------------------
 -- Querying a derivation
@@ -131,11 +152,21 @@ withoutLast d@(D a xs) =
       S.EmptyR  -> d
       ys S.:> _ -> D a ys
 
+updateFirstTerm :: (a -> a) -> Derivation s a -> Derivation s a
+updateFirstTerm f (D a xs) = D (f a) xs
+
+updateLastTerm :: (a -> a) -> Derivation s a -> Derivation s a
+updateLastTerm f (D a xs) = 
+   case S.viewr xs of
+      S.EmptyR -> D (f a) S.empty
+      ys S.:> (s, b) -> D a (ys S.|> (s, f b))
+
 updateSteps :: (a -> s -> a -> t) -> Derivation s a -> Derivation t a
-updateSteps f d =
-   let ts   = [ f a b c | (a, b, c) <- triples d ]
-       x:xs = terms d
-   in D x (S.fromList (zip ts xs))
+updateSteps f d = case terms d of
+  []   -> error "Derivation.hs: the impossible has happened"
+  x:xs -> D x (S.fromList (zip ts xs))
+ where
+  ts = [ f a b c | (a, b, c) <- triples d ]
 
 -- | Apply a monadic function to each term, and to each step
 derivationM :: Monad m => (s -> m ()) -> (a -> m ()) -> Derivation s a -> m ()

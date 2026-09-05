@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -15,12 +16,11 @@ module Ideas.Encoding.RulesInfo
    ) where
 
 import Data.Char
-import Data.Monoid
 import Ideas.Common.Library
 import Ideas.Encoding.OpenMathSupport (toOMOBJ)
 import Ideas.Text.OpenMath.FMP
 import Ideas.Text.OpenMath.Object
-import Ideas.Text.XML hiding (name)
+import Ideas.Text.XML
 import Ideas.Utils.Prelude (munless)
 import qualified Data.Map as M
 

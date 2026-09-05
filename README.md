@@ -1,6 +1,6 @@
 # IDEAS
 
-[![Build Status](https://travis-ci.org/ideas-edu/ideas.svg?branch=master)](https://travis-ci.org/ideas-edu/ideas)
+[![CI](https://github.com/ideas-edu/ideas/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/ideas-edu/ideas/actions/workflows/ci.yml)
 
 ## Feedback services for intelligent tutoring systems
 

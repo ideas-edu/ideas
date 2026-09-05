@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE OverloadedStrings, RankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -28,8 +28,7 @@ module Ideas.Encoding.LinkManager
    , escapeInURL
    ) where
 
-import Data.Maybe
-import Data.Monoid
+import Data.Either
 import Ideas.Common.Library
 import Ideas.Encoding.EncoderXML
 import Ideas.Encoding.Options
@@ -183,12 +182,12 @@ exerciseRequestWith s ex rest =
    makeRequest s (("exerciseid" .=. showId ex) <> rest)
 
 stateRequest :: String -> State a -> XML
-stateRequest s state =
-   exerciseRequestWith s (exercise state) (stateToXML state)
+stateRequest s st =
+   exerciseRequestWith s (exercise st) (stateToXML st)
 
 -- assume nothing goest wrong
 stateToXML :: State a -> XMLBuilder
-stateToXML st = fromMaybe (error "LinkManager: Invalid state") $
+stateToXML st = fromRight (error "LinkManager: Invalid state") $ 
    runEncoder (encodeState st) (exercise st, optionHtml mempty)
 
 linkWith :: (a -> String) -> a -> HTMLBuilder -> HTMLBuilder

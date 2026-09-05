@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -32,7 +33,6 @@ module Ideas.Text.HTML
 
 import Data.Char
 import Data.List
-import Data.Monoid
 import Ideas.Text.XML
 import qualified Data.Map as M
 import qualified Ideas.Text.XML as XML
@@ -87,7 +87,7 @@ data HTMLPage = HTMLPage
    }
 
 instance ToXML HTMLPage where
-   toXML page = makeXML "html" $
+   toXML page = makeXML (toName "html") $
       element "head"
          [ tag "title" (string (title page))
          , mconcat

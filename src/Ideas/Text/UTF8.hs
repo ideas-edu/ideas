@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 
 module Ideas.Text.UTF8
-   ( encode, encodeM, decode, decodeM
+   ( encode, decode
    , isUTF8, allBytes, propEncoding
    ) where
 
@@ -26,24 +26,16 @@ import Test.QuickCheck
 -- Interface
 
 -- | Encode a string to UTF8 format
-encode :: String -> String
-encode = either error id . encodeM
+encode :: String -> Maybe String
+encode = fmap (map chr . concat) . mapM (toUTF8 . ord)
 
 -- | Decode an UTF8 format string to unicode points
-decode :: String -> String
-decode = either error id . decodeM
-
--- | Encode a string to UTF8 format (monadic)
-encodeM :: Monad m => String -> m String
-encodeM = fmap (map chr . concat) . mapM (toUTF8 . ord)
-
--- | Decode an UTF8 format string to unicode points (monadic)
-decodeM :: Monad m => String -> m String
-decodeM = fmap (map chr) . fromUTF8 . map ord
+decode :: String -> Maybe String
+decode = fmap (map chr) . fromUTF8 . map ord
 
 -- | Test whether the argument is a proper UTF8 string
 isUTF8 :: String -> Bool
-isUTF8 = isJust . decodeM
+isUTF8 = isJust . decode
 
 -- | Test whether all characters are in the range 0-255
 allBytes :: String -> Bool
@@ -52,26 +44,26 @@ allBytes = all ((`between` (0, 255)) . ord)
 ------------------------------------------------------------------
 -- Helper functions
 
-toUTF8 :: Monad m => Int -> m [Int]
+toUTF8 :: Int -> Maybe [Int]
 toUTF8 n
    | n < 128 = -- one byte
-        return [n]
+        Just [n]
    | n < 2048 = -- two bytes
         let (a, d) = n `divMod` 64
-        in return [a+192, d+128]
+        in Just [a+192, d+128]
    | n < 65536 = -- three bytes
         let (a, d1) = n  `divMod` 4096
             (b, d2) = d1 `divMod` 64
-        in return [a+224, b+128, d2+128]
+        in Just [a+224, b+128, d2+128]
    | n < 1114112 = -- four bytes
         let (a, d1) = n  `divMod` 262144
             (b, d2) = d1 `divMod` 4096
             (c, d3) = d2 `divMod` 64
-        in return [a+240, b+128, c+128, d3+128]
+        in Just [a+240, b+128, c+128, d3+128]
    | otherwise =
-        fail "invalid character in UTF8"
+        Nothing
 
-fromUTF8 :: Monad m => [Int] -> m [Int]
+fromUTF8 :: [Int] -> Maybe [Int]
 fromUTF8 xs
    | null xs   = return []
    | otherwise = do
@@ -80,21 +72,20 @@ fromUTF8 xs
         return (i:is)
  where
    f (a:rest) | a < 128 = -- one byte
-      return (a, rest)
-   f (a:b:rest) | a `between` (192, 223) = do -- two bytes
-      unless (isHigh b) $
-         fail "invalid UTF8 character (two bytes)"
-      return ((a-192)*64 + b-128, rest)
-   f (a:b:c:rest) | a `between` (224, 239) = do -- three bytes
-      unless (isHigh b && isHigh c) $
-         fail "invalid UTF8 character (three bytes)"
-      return ((a-224)*4096 + (b-128)*64 + c-128, rest)
-   f (a:b:c:d:rest) | a >= 240 && a < 248 = do -- four bytes
+      Just (a, rest)
+   f (a:b:rest) | a `between` (192, 223) = -- two bytes
+      checked (isHigh b)
+         ((a-192)*64 + b-128, rest)
+   f (a:b:c:rest) | a `between` (224, 239) = -- three bytes
+      checked (isHigh b && isHigh c)
+         ((a-224)*4096 + (b-128)*64 + c-128, rest)
+   f (a:b:c:d:rest) | a >= 240 && a < 248 = -- four bytes
       let value = (a-240)*262144 + (b-128)*4096 + (c-128)*64 + d-128
-      unless (isHigh b && isHigh c && isHigh d && value <= 1114111) $
-         fail "invalid UTF8 character (four bytes)"
-      return (value, rest)
-   f _ = fail "invalid character in UTF8"
+      in checked (isHigh b && isHigh c && isHigh d && value <= 1114111) (value, rest)
+   f _ = Nothing
+
+checked :: Bool -> a -> Maybe a
+checked b a = if b then Just a else Nothing
 
 isHigh :: Int -> Bool
 isHigh i = i `between` (128, 191)
@@ -119,6 +110,6 @@ propEncoding = forAll (sized gen) valid
 
 valid :: String -> Bool
 valid xs = fromMaybe False $
-   do us <- encodeM xs
-      bs <- decodeM us
+   do us <- encode xs
+      bs <- decode us
       return (xs == bs)

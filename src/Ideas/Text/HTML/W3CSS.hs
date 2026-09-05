@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -16,7 +17,6 @@
 module Ideas.Text.HTML.W3CSS where
 
 import Data.Char
-import Data.Monoid
 import Ideas.Text.HTML
 import Ideas.Text.XML
 import qualified Ideas.Text.XML as XML

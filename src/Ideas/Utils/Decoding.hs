@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleInstances, MultiParamTypeClasses #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -9,83 +9,123 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Extensions to the QuickCheck library
---
 -----------------------------------------------------------------------------
 
 module Ideas.Utils.Decoding
-   ( Decoder, runDecoder, symbol
+   ( Decoder, evalDecoder, runDecoder, mapError, getLoc, putLoc, changeLoc
    , Encoder, runEncoder
-   , Error, runError, runErrorM
+   , Error, ErrorType, Loc(..), nextLoc, raiseError, errorStr
+     -- re-exports
+   , Alternative(..), optional, MonadReader(..), MonadState(..), MonadError(..)
+   , gets
    ) where
 
+import Control.Arrow
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Except hiding (mapError)
 import Control.Monad.Reader
 import Control.Monad.State
-import Data.Semigroup as Sem
+import Data.List
+import Data.String
 
 -------------------------------------------------------------------
 
-newtype Decoder env s a = Dec { runDec :: StateT s (ReaderT env Error) a }
- deriving (Functor, Applicative, Alternative, Monad, MonadPlus, MonadReader env, MonadState s)
+newtype Decoder env err s a = Dec { fromDec :: StateT (Loc, s) (ReaderT env (Except err)) a }
+ deriving (Functor, Applicative, Alternative, MonadPlus, MonadReader env, MonadError err)
 
-instance Sem.Semigroup a => Sem.Semigroup (Decoder env s a) where
+instance Semigroup a => Semigroup (Decoder env err s a) where
    (<>) = liftA2 (<>)
 
-instance Monoid a => Monoid (Decoder env s a) where
+instance Monoid a => Monoid (Decoder env err s a) where
    mempty  = pure mempty
-   mappend = liftA2 mappend
 
-symbol :: Decoder env [s] s
-symbol = get >>= \list ->
-   case list of
-      []   -> fail "Empty input"
-      x:xs ->
-         put xs >> return x
+instance Monad (Decoder env err s) where
+   Dec m >>= f = Dec $ m >>= fromDec . f
 
-runDecoder :: Monad m => Decoder env s a -> env -> s -> m a
-runDecoder p env s = runErrorM (runReaderT (evalStateT (runDec p) s) env)
+instance MonadState s (Decoder env err s) where
+   state f = Dec $ state $ \(loc, s) -> let (a, s') = f s in (a, (loc, s'))
+
+runDecoder :: Decoder env err s a -> env -> s -> Either err (a, s)
+runDecoder p env s = fmap snd <$> runExcept (runReaderT (runStateT (fromDec p) (Root 0, s)) env)
+
+evalDecoder :: Decoder env err s a -> env -> s -> Either err a
+evalDecoder p env = fmap fst . runDecoder p env
+
+mapError ::  (err1 -> err2) -> Decoder env err1 s a -> Decoder env err2 s a
+mapError f p = do
+   env <- reader id
+   s1  <- get
+   case runDecoder p env s1 of
+      Left e1 -> throwError (f e1)
+      Right (a, s2) -> put s2 >> return a
+
+getLoc :: Decoder env err s Loc
+getLoc = Dec $ gets fst
+
+putLoc :: Loc -> Decoder env err s ()
+putLoc = changeLoc . const 
+
+changeLoc :: (Loc -> Loc) -> Decoder env err s ()
+changeLoc = Dec . modify . first
 
 -------------------------------------------------------------------
 
-type Encoder env = Decoder env ()
+type Encoder env err = Decoder env err ()
 
-runEncoder :: Monad m => Encoder env a -> env -> m a
-runEncoder p env = runDecoder p env ()
+runEncoder :: Encoder env err a -> env -> Either err a
+runEncoder p env = evalDecoder p env ()
 
--------------------------------------------------------------------
--- Error monad (helper)
+--------------------------------------------------------------------------------
+-- Errors
 
-newtype Error a = Error { runError :: Either String a }
+newtype Error a = E [Either String (ErrorType, Loc, Maybe a)]
 
-instance Functor Error where
-   fmap f = Error . fmap f . runError
+type ErrorType = String 
 
-instance Applicative Error where
-   pure    = Error . Right
-   p <*> q = Error $
-      case (runError p, runError q) of
-         (Left s, _)  -> Left s
-         (_, Left s)  -> Left s
-         (Right f, Right x) -> Right (f x)
+instance Show a => Show (Error a) where
+   show (E xs)
+      | null xs   = "Parse error"
+      | otherwise = unlines (map (either id f) xs)
+    where
+      
+      f (tp, loc, ma) = unlines
+         [ "Parse error: " ++ tp
+         , "  * Location: " ++ show loc
+         , "  * Found: " ++ maybe "" show ma
+         ]
 
-instance Alternative Error where
-   empty   = Error (Left "empty")
-   p <|> q = Error $
-      case (runError p, runError q) of
-         (Right a, _) -> Right a
-         (_, Right a) -> Right a
-         (Left s, _)  -> Left s
+instance IsString (Error a) where
+   fromString s = E [Left s]
 
-instance Monad Error where
-   fail    = Error . Left
-   return  = pure
-   m >>= f = Error $ either Left (runError . f) (runError m)
+instance Semigroup (Error a) where
+   E xs <> E ys = E (xs <> ys)
 
-instance MonadPlus Error where
-   mzero = fail "mzero"
-   mplus = (<|>)
+instance Monoid (Error a) where
+   mempty = E []
 
-runErrorM :: Monad m => Error a -> m a
-runErrorM = either fail return . runError
+data Loc = Root Int | LocByPos Int Loc | LocByKey Int String Loc
+
+instance Show Loc where
+   show loc
+      | null parts = "root"
+      | otherwise  = intercalate "." parts
+    where
+      parts = collect loc
+
+      collect (Root n)         = [ "root+" ++ show n | n > 0 ]
+      collect (LocByPos n l)   = collect l ++ [show n]
+      collect (LocByKey n k l) = collect l ++ [k ++ if n==0 then "" else "+" ++ show n]
+
+nextLoc :: Loc -> Loc
+nextLoc (Root n)         = Root (n+1)
+nextLoc (LocByPos n l)   = LocByPos (n+1) l
+nextLoc (LocByKey n k l) = LocByKey (n+1) k l
+
+errorStr :: IsString err => String -> Decoder env err s a
+errorStr = throwError . fromString
+
+raiseError :: ErrorType -> Maybe a -> Decoder env (Error a) s b
+raiseError tp a = do
+   loc <- getLoc
+   throwError $ E [Right (tp, loc, a)]

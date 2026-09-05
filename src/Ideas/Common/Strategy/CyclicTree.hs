@@ -61,8 +61,7 @@ instance Applicative (CyclicTree d) where
    p <*> q = fold idAlg {fLeaf = (<$> q)} p
 
 instance Monad (CyclicTree d) where
-   return = leaf
-   (>>=)  = flip replaceLeaf
+   (>>=) = flip replaceLeaf
 
 instance Foldable (CyclicTree d) where
    foldMap f = fold monoidAlg {fLeaf = f}

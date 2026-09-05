@@ -26,14 +26,14 @@ import System.Exit
 
 data CmdLineOption
    = Version | Help | PrintLog
-   | InputFile String | Rerun String | Test FilePath
+   | InputFile String | Rerun String | Test FilePath | Interactive
    | MakeScriptFor String | AnalyzeScript FilePath
  deriving Eq
 
 header :: String
 header =
    "IDEAS: Intelligent Domain-specific Exercise Assistants\n" ++
-   "Copyright 2019, Open Universiteit Nederland\n" ++
+   "Copyright 2022, Open Universiteit\n" ++
    versionText ++
    "\n\nUsage: ideas [OPTION]     (by default, CGI protocol)\n" ++
    "\nOptions:"
@@ -55,14 +55,15 @@ shortVersion = ideasVersion ++ " (" ++ ideasRevision ++ ")"
 
 options :: [OptDescr CmdLineOption]
 options =
-   [ Option []  ["version"]        (NoArg Version)  "show version number"
-   , Option "?" ["help"]           (NoArg Help)     "show options"
-   , Option ""  ["print-log"]      (NoArg PrintLog) "print log information (for debugging)"
-   , Option "f" ["file"]           fileArg          "use input FILE as request"
-   , Option ""  ["rerun"]          rerunArg         "rerun inputs from database"
-   , Option ""  ["test"]           testArg          "run tests on directory (default: 'test')"
-   , Option ""  ["make-script"]    makeScrArg       "generate feedback script for exercise"
-   , Option ""  ["analyze-script"] analyzeScrArg    "analyze feedback script and report errors"
+   [ Option []  ["version"]        (NoArg Version)     "show version number"
+   , Option "?" ["help"]           (NoArg Help)        "show options"
+   , Option ""  ["print-log"]      (NoArg PrintLog)    "print log information (for debugging)"
+   , Option "f" ["file"]           fileArg             "use input FILE as request"
+   , Option ""  ["rerun"]          rerunArg            "rerun inputs from database"
+   , Option ""  ["test"]           testArg             "run tests on directory (default: 'test')"
+   , Option "i" ["interactive"]    (NoArg Interactive) "test in interactive mode" 
+   , Option ""  ["make-script"]    makeScrArg          "generate feedback script for exercise"
+   , Option ""  ["analyze-script"] analyzeScrArg       "analyze feedback script and report errors"
    ]
 
 fileArg, rerunArg, testArg, makeScrArg, analyzeScrArg :: ArgDescr CmdLineOption

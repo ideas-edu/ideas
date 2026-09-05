@@ -19,7 +19,7 @@ module Ideas.Common.View
    , Control.Arrow.ArrowZero(..), Control.Arrow.ArrowPlus(..)
    , (>>>), (<<<)
      -- * @IsMatch@ type class
-   , IsMatcher(..), matchM, belongsTo, viewEquivalent, viewEquivalentWith
+   , IsMatcher(..), belongsTo, viewEquivalent, viewEquivalentWith
    , Matcher, makeMatcher
      -- * @IsView@ type class
    , IsView(..), simplify, simplifyWith, simplifyWithM
@@ -29,7 +29,7 @@ module Ideas.Common.View
      -- * Isomorphisms
    , Isomorphism, from, to, inverse
      -- * Lifting with views
-   , LiftView(..)
+   , Lift(..), liftView, liftViewIn
      -- * Some combinators
    , swapView, listView, traverseView, ($<)
      -- * Packaging a view
@@ -55,10 +55,6 @@ class IsMatcher f where
    -- default definitions
    match   = runKleisli . unM . matcher
    matcher = makeMatcher . match
-
--- |generalized monadic variant of @match@
-matchM :: (Monad m, IsMatcher f) => f a b -> a -> m b
-matchM v = maybe (fail "no match") return . match v
 
 belongsTo :: IsMatcher f => a -> f a b -> Bool
 belongsTo a view = isJust (match view a)
@@ -236,11 +232,17 @@ inverse f = to f <-> from f
 ----------------------------------------------------------------------------------
 -- Type class for lifting with Views
 
-class LiftView f where
-   liftView   :: View a b -> f b -> f a
-   liftViewIn :: View a (b, c) -> f b -> f a
-   -- default definition
-   liftView v = liftViewIn (v &&& identity)
+liftView :: Lift f => View a b -> f b -> f a
+liftView v = liftWithM $ fmap (\b -> (b, build v)) . match v
+
+liftViewIn :: Lift f => View a (b, c) -> f b -> f a
+liftViewIn v = liftWithM $ fmap (\(b, c) -> (b, \x -> build v (x, c))) . match v
+
+class Lift f where
+   liftWith  :: (a -> (b, b -> a)) -> f b -> f a
+   liftWithM :: (a -> Maybe (b, b -> a)) -> f b -> f a
+   -- default
+   liftWith f = liftWithM (Just . f)
 
 ----------------------------------------------------------------------------------
 -- Some combinators

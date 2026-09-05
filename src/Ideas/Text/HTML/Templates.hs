@@ -18,10 +18,9 @@ module Ideas.Text.HTML.Templates
    , fontAwesome
    ) where
 
-import Data.Monoid
 import Ideas.Text.HTML
 import Ideas.Text.HTML.W3CSS hiding (tag, ul, top, table, content)
-import Ideas.Text.XML hiding (content)
+import Ideas.Text.XML
 import qualified Ideas.Text.HTML.W3CSS as W3
 
 data WebPage = WebPage

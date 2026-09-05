@@ -30,7 +30,7 @@ import Ideas.Utils.Uniplate
 
 makeScriptFor :: IsId a => DomainReasoner -> a -> IO ()
 makeScriptFor dr exId = do
-   Some ex <- findExercise dr (newId exId)
+   Some ex <- either fail return $ findExercise dr (newId exId)
    let (brs, nrs) = partition isBuggy (ruleset ex)
    print $ makeScript $
       Supports [getId ex] :
@@ -42,7 +42,7 @@ parseAndAnalyzeScript :: DomainReasoner -> FilePath -> IO ()
 parseAndAnalyzeScript dr file = do
    putStrLn $ "Parsing " ++ show file
    script <- parseScript file
-   let exs = [ maybe unknown Right (findExercise dr a)
+   let exs = [ either (const unknown) Right (findExercise dr a)
               | Supports as <- scriptDecls script
               , a <- as
               , let unknown = Left (UnknownExercise a)

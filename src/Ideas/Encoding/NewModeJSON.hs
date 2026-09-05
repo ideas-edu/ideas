@@ -16,18 +16,15 @@ module Ideas.Encoding.NewModeJSON (processJSON) where
 
 import Control.Applicative
 import Control.Exception
-import Control.Monad
 import System.IO.Error
-import Data.Char
+import Data.Either
 import Data.Maybe
-import Data.Semigroup ((<>))
 import Ideas.Common.Library hiding (exerciseId)
 import qualified Ideas.Encoding.ModeJSON as Legacy
 import Ideas.Encoding.NewDecoderJSON
 import Ideas.Encoding.NewEncoderJSON
 import Ideas.Encoding.Evaluator
-import Ideas.Encoding.Logging (changeLog, errormsg)
-import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin, logRef)
+import Ideas.Encoding.Options (Options, makeOptions, maxTime, cgiBin)
 import Ideas.Encoding.Request
 import Ideas.Service.DomainReasoner
 import Ideas.Text.JSON
@@ -36,20 +33,19 @@ import Ideas.Utils.Prelude (timedSeconds)
 processJSON :: Options -> DomainReasoner -> String -> IO (Request, String, String)
 processJSON options dr txt = do
    json <- either fail return (parseJSON txt)
-   let legacy = isJust $ lookupM "params" json
+   let legacy = isRight $ lookupM "params" json
    if legacy then Legacy.processJSON' options dr json else do
       req  <- jsonRequest options json
       resp <- jsonRPC2 dr (maybe "result" show $ serviceId req) json $ \fun arg ->
-                 maybe id timedSeconds (maxTime options) (builderToJSON <$> myHandler options dr req fun arg)
+                 maybe id timedSeconds (maxTime options) (toJSON <$> myHandler options dr req fun arg)
       --unless (responseError resp == Null) $ !!!!!!!!!!!!!! 
       --   changeLog (logRef options) (\r -> r {errormsg = show (responseError resp)})
       let f   = if compactOutput req then compactJSON else show
       return (req, f resp, "application/json")
 
 jsonRPC2 :: DomainReasoner -> String -> JSON -> RPCHandler -> IO JSON
-jsonRPC2 dr serviceName input rpc = do
-   json <- rpc serviceName input
-   return (okResponse dr serviceName json)
+jsonRPC2 dr serviceName json rpc = do
+   okResponse dr serviceName <$> rpc serviceName json
  `catch` handler
  where
    handler :: SomeException -> IO JSON
@@ -70,23 +66,17 @@ errorResponse dr msg = Object
    ]
 
 -- TODO: Clean-up code
-extractExerciseId :: MonadPlus m => JSON -> m Id
+extractExerciseId :: JSON -> Maybe Id
 extractExerciseId json = f <$> (
-   lookupM "exerciseid" json <|>
-   (lookupM "state" json >>= lookupM "exerciseid"))
+   get "exerciseid" json <|>
+   (get "state" json >>= get "exerciseid"))
  where
    f (String s) = newId s
    f _          = error "expecting an exercise id"
 
-addVersion :: String -> JSON -> JSON
-addVersion str json =
-   case json of
-      Object xs -> Object (xs ++ [info])
-      _         -> json
- where
-   info = ("version", String str)
+   get s = either (const Nothing) Just . lookupM s 
 
-jsonRequest :: Monad m => Options -> JSON -> m Request
+jsonRequest :: Options -> JSON -> IO Request
 jsonRequest options json = do
    let exId = extractExerciseId json
    srv  <- stringOption  "service"     json newId
@@ -94,7 +84,7 @@ jsonRequest options json = do
    rinf <- stringOption  "requestinfo" json id
    seed <- stringOptionM "randomseed"  json (defaultSeed options) (return . readM)
    enc  <- stringOptionM "encoding"    json [] readEncoding
-   sch  <- stringOptionM "logging"     json Nothing (fmap Just . readSchema)
+   sch  <- stringOptionM "logging"     json Nothing (maybe (fail "invalid logging scheme") (return . Just) . readSchema)
    return mempty
       { serviceId   = srv
       , exerciseId  = exId
@@ -113,25 +103,25 @@ defaultSeed options
    | isJust (cgiBin options) = Nothing
    | otherwise = Just 2805 -- magic number
 
-stringOption :: Monad m => String -> JSON -> (String -> a) -> m (Maybe a)
+stringOption :: String -> JSON -> (String -> a) -> IO (Maybe a)
 stringOption attr json f = stringOptionM attr json Nothing (return . Just . f)
 
-stringOptionM :: Monad m => String -> JSON -> a -> (String -> m a) -> m a
+stringOptionM :: String -> JSON -> a -> (String -> IO a) -> IO a
 stringOptionM attr json a f =
    case lookupM attr json of
-      Just (String s) -> f s
-      Just _  -> fail $ "Invalid value for " ++ attr ++ " (expecting string)"
-      Nothing -> return a
+      Right (String s) -> f s
+      Right _ -> fail $ "Invalid value for " ++ attr ++ " (expecting string)"
+      Left _  -> return a
 
 myHandler :: Options -> DomainReasoner -> Request -> String -> JSON -> IO JSONBuilder
 myHandler opt1 dr request fun json = do
-   srv <- findService dr (newId fun)
+   srv <- either fail return $ findService dr (newId fun)
    Some ex <- case exerciseId request of
-                 Just a  -> findExercise dr a
+                 Just a  -> either fail return $ findExercise dr a
                  Nothing -> return (Some emptyExercise)
    opt2 <- makeOptions dr request
    let options = opt1 <> opt2
    evalService ex options jsonEvaluator srv json
 
 jsonEvaluator :: Evaluator a JSON JSONBuilder
-jsonEvaluator = Evaluator jsonDecoder jsonEncoder
+jsonEvaluator = Evaluator jsonTypeDecoder jsonEncoder

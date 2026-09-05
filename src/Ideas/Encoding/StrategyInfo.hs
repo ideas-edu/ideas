@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -14,7 +15,7 @@
 
 module Ideas.Encoding.StrategyInfo (strategyToXML) where
 
-import Data.Monoid
+import Data.String
 import Ideas.Common.Id
 import Ideas.Common.Strategy.Abstract
 import Ideas.Common.Strategy.Configuration
@@ -42,8 +43,8 @@ strategyTreeBuilder = builder . fold emptyAlg
    { fNode = \def xs ->
         case xs of
            [x] | isConfigId def
-             -> addProperty (show def) x
-           _ -> makeXML (show def) (mconcat (map builder xs))
+             -> addProperty (fromString (show def)) x
+           _ -> makeXML (fromString (show def)) (mconcat (map builder xs))
    , fLeaf = \r ->
         makeXML "rule" ("name" .=. show r)
    , fLabel = \l a ->
@@ -54,10 +55,10 @@ strategyTreeBuilder = builder . fold emptyAlg
         makeXML "var" ("var" .=. show n)
    }
 
-addProperty :: String -> XML -> XML
-addProperty s a =
-   if name a `elem` ["label", "rule"]
-   then a { attributes = attributes a ++ [s := "true"] }
+addProperty :: Name -> XML -> XML
+addProperty n a =
+   if getName a `elem` ["label", "rule"]
+   then changeAttributes (<> attribute n "true") a
    else a
 
 -----------------------------------------------------------------------

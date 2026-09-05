@@ -89,13 +89,13 @@ nameChar :: Parser Char
 nameChar = letter <|> digit <|> combiningChar <|> extender <|> oneOf ".-_:"
 
 -- [5]   	Name	   ::=   	(Letter | '_' | ':') (NameChar)*
-name :: Parser String
+name :: Parser Name
 name = do
    c  <- letter <|> oneOf "_:"
    cs <- many nameChar
-   return (c:cs)
+   return (uncheckedName (c:cs))
 
-spacedName :: Parser String
+spacedName :: Parser Name
 spacedName = space *> name <* space
 
 {-
@@ -173,11 +173,10 @@ pInstr = between (string "<?") (string "?>") p
    p = piTarget >> option "" (space >> stopOn ["?>"])
 
 -- [17]   	PITarget	   ::=   	 Name - (('X' | 'x') ('M' | 'm') ('L' | 'l'))
-piTarget :: Parser String
+piTarget :: Parser ()
 piTarget = do
    n <- name
-   when (map toUpper n == "XML") $ fail "XML in piTarget"
-   return n
+   when (map toUpper (show n) == "XML") $ fail "XML in piTarget"
 
 --------------------------------------------------
 -- ** 2.7 CDATA Sections
@@ -636,7 +635,7 @@ externalID =  (string "SYSTEM" >> space >> fmap System systemLiteral) <|> do
    return (Public x y)
 
 -- [76]   	NDataDecl	   ::=   	 S 'NDATA' S Name
-nDataDecl :: Parser String
+nDataDecl :: Parser Name
 nDataDecl = space >> string "NDATA" >> space >> name
 
 --------------------------------------------------

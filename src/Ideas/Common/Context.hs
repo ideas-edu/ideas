@@ -27,6 +27,7 @@ module Ideas.Common.Context
    , liftToContext, contextView
    , use, useC, applyTop
    , currentTerm, changeTerm, replaceInContext, currentInContext, changeInContext
+   , setLocation
    ) where
 
 import Data.Maybe
@@ -47,14 +48,13 @@ data Context a = C
    , getNavigator   :: ContextNavigator a
    }
 
-fromContext :: Monad m => Context a -> m a
-fromContext = maybe (fail "fromContext") return .
-   currentNavigator . getNavigator . top
+fromContext :: Context a -> Maybe a
+fromContext = currentNavigator . getNavigator . top
 
-fromContextWith :: Monad m => (a -> b) -> Context a -> m b
+fromContextWith :: (a -> b) -> Context a -> Maybe b
 fromContextWith f = fmap f . fromContext
 
-fromContextWith2 :: Monad m => (a -> b -> c) -> Context a -> Context b -> m c
+fromContextWith2 :: (a -> b -> c) -> Context a -> Context b -> Maybe c
 fromContextWith2 f a b = f <$> fromContext a <*> fromContext b
 
 instance Eq a => Eq (Context a) where
@@ -100,8 +100,7 @@ data ContextNavigator a where
    Simple  :: Uniplate a => UniplateNavigator a -> ContextNavigator a
    NoNav   :: a -> ContextNavigator a
 
-liftCN :: Monad m => (forall b . Navigator b => b -> m b)
-                  -> Context a -> m (Context a)
+liftCN :: (forall b . Navigator b => b -> Maybe b) -> Context a -> Maybe (Context a)
 liftCN f (C env (TermNav a)) = C env . TermNav <$> f a
 liftCN f (C env (Simple a))  = C env . Simple  <$> f a
 liftCN _ (C _   (NoNav _))   = fail "noNavigator"
@@ -112,7 +111,7 @@ navLocation (Simple a)  = location a
 navLocation (NoNav _)   = mempty
 
 currentNavigator :: ContextNavigator a -> Maybe a
-currentNavigator (TermNav a) = matchM termView (current a)
+currentNavigator (TermNav a) = match termView (current a)
 currentNavigator (Simple a)  = Just (current a)
 currentNavigator (NoNav a)   = Just a
 
@@ -143,7 +142,7 @@ contextView = "views.contextView" @> makeView f g
    g     = uncurry replaceInContext
 
 -- | Lift a rule to operate on a term in a context
-liftToContext :: LiftView f => f a -> f (Context a)
+liftToContext :: Lift f => f a -> f (Context a)
 liftToContext = liftViewIn contextView
 
 -- | Apply a function at top-level. Afterwards, try to return the focus
@@ -152,10 +151,10 @@ applyTop :: (a -> a) -> Context a -> Context a
 applyTop f c =
    navigateTowards (location c) (changeInContext f (top c))
 
-use :: (LiftView f, IsTerm a, IsTerm b) => f a -> f (Context b)
+use :: (Lift f, IsTerm a, IsTerm b) => f a -> f (Context b)
 use = useC . liftToContext
 
-useC :: (LiftView f, IsTerm a, IsTerm b) => f (Context a) -> f (Context b)
+useC :: (Lift f, IsTerm a, IsTerm b) => f (Context a) -> f (Context b)
 useC = liftViewIn (makeView f g)
  where
    f old@(C env a) = castT a >>= \b -> return (C env b, old)
@@ -177,3 +176,6 @@ changeInContext f (C env a) = C env (changeNavigator f a)
 
 replaceInContext :: a -> Context a -> Context a
 replaceInContext = changeInContext . const
+
+setLocation :: Location -> Context a -> Context a
+setLocation loc c = fromMaybe c (navigateTo loc c)

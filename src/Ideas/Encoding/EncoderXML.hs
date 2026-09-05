@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE OverloadedStrings, GADTs #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -21,20 +21,21 @@ module Ideas.Encoding.EncoderXML
 import Data.Char
 import Data.List
 import Data.Maybe
-import Data.Monoid
-import Ideas.Common.Library hiding (exerciseId)
+import Ideas.Common.Library hiding (exerciseId, tFirst)
 import Ideas.Encoding.Encoder
 import Ideas.Encoding.OpenMathSupport
 import Ideas.Encoding.Request hiding (XML)
 import Ideas.Encoding.RulesInfo (rulesInfoXML)
 import Ideas.Encoding.StrategyInfo
 import Ideas.Service.BasicServices (StepInfo, tStepInfo)
+import qualified Ideas.Service.Apply as Apply
 import Ideas.Service.Diagnose
 import Ideas.Service.FeedbackScript.Syntax
 import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Text.OpenMath.Object
 import Ideas.Text.XML
+import Ideas.Utils.Decoding
 import Ideas.Utils.Prelude (munless)
 import qualified Ideas.Service.FeedbackText as FeedbackText
 import qualified Ideas.Service.ProblemDecomposition as PD
@@ -46,6 +47,7 @@ type XMLEncoder a = EncoderX a XMLBuilder
 xmlEncoder :: TypedEncoder a XMLBuilder
 xmlEncoder =
    (encodeDiagnosis, tDiagnosis) <?>
+   (encodeApplyResult, Apply.tApplyResult) <?>
    (encodeDecompositionReply, PD.tReply) <?>
    (encodeDerivation, tDerivation tStepInfo tContext) <?>
    (encodeFirsts, tList tFirst) <?>
@@ -59,7 +61,7 @@ xmlEncoder =
       Tag "RuleShortInfo" t ->
          case equal t (Const Rule) of
             Just f  -> ruleShortInfo (f val)
-            Nothing -> fail "rule short info"
+            Nothing -> errorStr "rule short info"
       Tag "RulesInfo" _ -> do
          ex    <- getExercise
          useOM <- useOpenMath <$> getRequest
@@ -81,7 +83,7 @@ xmlEncoder =
                        Right b -> xmlEncoder (b ::: t2)
       Unit       -> mempty
       Const t    -> xmlEncoderConst (val ::: t)
-      _ -> fail $ show tp
+      _ -> errorStr $ show tp
 
 xmlEncoderConst :: TypedValue (Const a) -> XMLEncoder a
 xmlEncoderConst tv@(val ::: tp) =
@@ -119,7 +121,7 @@ encodeContext ctx = do
           loc    = fromLocation (location ctx)
           withLoc
              | null loc  = id
-             | otherwise = insertRef (makeRef "location") loc
+             | otherwise = insertRef (makeRef ("location" :: String)) loc
       in munless (null values) $ element "context"
             [  element "item"
                   [ "name"  .=. showId tb
@@ -133,10 +135,10 @@ encodeContext ctx = do
 
 buildExpression :: BuildXML b => Bool -> Exercise a -> a -> b
 buildExpression useOM ex
-   | useOM     = either msg builderXML . toOpenMath ex
+   | useOM     = maybe msg builderXML . toOpenMath ex
    | otherwise = tag "expr" . string . prettyPrinter ex
  where
-   msg s = error ("Error encoding term in OpenMath: " ++ s)
+   msg = error "Error encoding term in OpenMath"
 
 encodeLocation :: Location -> XMLEncoder a
 encodeLocation loc = "location" .=. show loc
@@ -210,6 +212,14 @@ encodeMessage msg =
            Nothing -> mempty
       , encodeText (FeedbackText.text msg)
       ]
+
+encodeApplyResult :: Apply.ApplyResult a -> XMLEncoder a
+encodeApplyResult result = 
+   case result of 
+      Apply.SyntaxError msg -> "error" .=. msg
+      Apply.Correct _ st    -> encodeState st
+      Apply.Buggy _ r       -> "ruleid" .=. show r
+      Apply.Incorrect       -> "error" .=. "incorrect"
 
 encodeDiagnosis :: Diagnosis a -> XMLEncoder a
 encodeDiagnosis diagnosis =

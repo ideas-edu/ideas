@@ -16,7 +16,7 @@
 
 module Ideas.Service.State
    ( -- * Exercise state
-     State, startState, makeState, makeNoState, emptyStateContext, emptyState
+     State, startState, startStateContext, makeState, makeNoState, emptyStateContext, emptyState
    , exercise, statePrefix, stateContext, stateTerm
    , stateUser, stateSession, stateStartTerm, restart
    , withoutPrefix, stateLabels, suitable, finished, firsts, microsteps
@@ -97,13 +97,16 @@ emptyState :: Exercise a -> a -> State a
 emptyState ex = emptyStateContext ex . inContext ex
 
 startState :: QCGen -> Exercise a -> Maybe String -> a -> State a
-startState gen ex userId a = st
+startState gen ex userId = startStateContext gen ex userId . inContext ex
+
+startStateContext :: QCGen -> Exercise a -> Maybe String -> Context a -> State a
+startStateContext gen ex userId ctx = st
    { stateUser      = userId
    , stateSession   = Just sid
-   , stateStartTerm = Just (prettyPrinter ex a)
+   , stateStartTerm = fmap (prettyPrinter ex) (fromContext ctx)
    }
  where
-   st  = emptyStateContext ex (inContext ex a)
+   st  = emptyStateContext ex ctx
    sid = newSessionId gen
 
 -- Restart the strategy: make sure that the new state has a prefix

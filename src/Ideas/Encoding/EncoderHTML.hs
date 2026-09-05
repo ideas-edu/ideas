@@ -18,7 +18,6 @@ module Ideas.Encoding.EncoderHTML (HTMLEncoder, htmlEncoder) where
 import Data.Char
 import Data.List
 import Data.Maybe
-import Data.Monoid
 import Ideas.Common.Examples (isEmpty, size, allRandoms)
 import Ideas.Common.Library hiding (alternatives, isEmpty, left, right, collapse, Medium)
 import Ideas.Common.Strategy.Symbol
@@ -39,7 +38,7 @@ import Ideas.Text.HTML.Templates
 import Ideas.Text.HTML.W3CSS hiding (tag, ul, top, table, content)
 import Ideas.Text.OpenMath.FMP
 import Ideas.Text.OpenMath.Object
-import Ideas.Text.XML hiding (content)
+import Ideas.Text.XML
 import Ideas.Utils.Prelude (munless, mwhen)
 import Ideas.Utils.TestSuite
 import System.IO.Unsafe
@@ -117,10 +116,10 @@ encodeType dr =
    (encodeIndex, tDomainReasoner) <?>
    (exerciseHeader . htmlDiagnosis dr, tDiagnosis) <?>
    (exerciseHeader . encodeExampleList, tList (tPair tDifficulty tContext)) <?>
-   (exerciseHeader . htmlFirsts, tList (tPair tStepInfo tState)) <?>
+   (exerciseHeader . htmlFirsts, tList (Tag "first" (tPair tStepInfo tState))) <?>
    (exerciseHeader . htmlAllApplications, tList (tTuple3 tRule tLocation tState)) <?>
-   (exerciseHeader . encodeDerivation, tDerivation (tPair tRule tEnvironment) tContext) <?>
-   (exerciseHeader . encodeDerivationList, tList (tDerivation (tPair tRule tEnvironment) tContext)) <?>
+   (exerciseHeader . encodeDerivation, tDerivation tStepInfo tContext) <?>
+   (exerciseHeader . encodeDerivationList, tList (tDerivation tStepInfo tContext)) <?>
    \(val ::: tp) ->
         case tp of
            Iso iso t  -> encodeType dr (to iso val ::: t)
@@ -457,11 +456,11 @@ encodeExampleList pairs = withExercise $ \ex -> do
       let st = emptyStateContext ex x
       in button (escapeInURL (urlForState lm st)) (htmlContext False ex x)
 
-encodeDerivation :: Derivation (Rule (Context a), Environment) (Context a) -> HTMLEncoder a
+encodeDerivation :: Derivation (StepInfo a) (Context a) -> HTMLEncoder a
 encodeDerivation d =
    h2 "Derivation" <> htmlDerivation d
 
-encodeDerivationList :: [Derivation (Rule (Context a), Environment) (Context a)] -> HTMLEncoder a
+encodeDerivationList :: [Derivation (StepInfo a) (Context a)] -> HTMLEncoder a
 encodeDerivationList ds =
    h2 "Derivations"
    <> mconcat
@@ -469,7 +468,7 @@ encodeDerivationList ds =
       | (i, d) <- zip [1::Int ..] ds
       ]
 
-htmlDerivation :: Derivation (Rule (Context a), Environment) (Context a) -> HTMLEncoder a
+htmlDerivation :: Derivation (StepInfo a) (Context a) -> HTMLEncoder a
 htmlDerivation d = withExercise $ \ex -> do
    lm <- getLinkManager
    let before =
@@ -477,7 +476,7 @@ htmlDerivation d = withExercise $ \ex -> do
           <> case fmap (isReady ex) (fromContext (lastTerm d)) of
                 Just True -> mempty
                 _ -> spanClass "error" (string "Final term is not finished")
-       forStep ((r, env1), env2) =
+       forStep ((r, _, env1), env2) =
           let showEnv e = munless (noBindings e) $ string $ "," ++ show e in
           container $ marginPos CenterLeft $ mconcat
              [ string [chr 8658, ' ']
@@ -521,7 +520,7 @@ encodeState dr state = do
       in return (mconcat
          [ h2 "Feedback"
          , submitDiagnose lm state
-         , tag "p" $ padding Small  $ mconcat [ case xs of
+         , tag "p" $ padding Small  $ spaced [ case xs of
                    Right (hd:_) -> linkToState lm (snd hd) $ serviceButton $ string "onefirst"
                    _ -> string "(no onefirst)"
               , linkToFirsts lm state $ serviceButton $ string $ "allfirsts (" ++ show n ++ ")"
@@ -543,11 +542,12 @@ useAllFirsts dr = unsafePerformIO . useAllFirstsIO dr
 
 useAllFirstsIO :: DomainReasoner -> State a -> IO (Either String [(StepInfo a, State a)])
 useAllFirstsIO dr st = do
-   srv <- findService dr (newId ("allfirsts" :: String))
+   srv <- either fail return $ findService dr (newId ("allfirsts" :: String))
    case serviceFunction srv of
-      f ::: tp -> do
-         conv <- equalM tp (tState .-> tError (tList (tPair tStepInfo tState)))
-         return (conv f st)
+      f ::: tp ->
+         case equalM tp (tState .-> tError (tList (Tag "first" (tPair tStepInfo tState)))) of
+            Left msg   -> fail msg
+            Right conv -> return (conv f st)
 
 encodePrefix :: State a -> Prefix (Context a) -> HTMLBuilder
 encodePrefix st =

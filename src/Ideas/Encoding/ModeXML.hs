@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -16,7 +17,7 @@ module Ideas.Encoding.ModeXML (processXML) where
 
 import Control.Exception
 import Control.Monad
-import Data.Monoid
+import Data.String
 import Ideas.Common.Library hiding (exerciseId)
 import Ideas.Encoding.DecoderXML
 import Ideas.Encoding.EncoderHTML
@@ -52,27 +53,25 @@ processXML options dr txt = do
          Nothing  -> show e
 
 addVersion :: String -> XML -> XML
-addVersion s xml =
-   let info = [ "version" := s ]
-   in xml { attributes = attributes xml ++ info }
+addVersion s = changeAttributes (<> attribute "version" s)
 
-xmlRequest :: Monad m => Maybe String -> XML -> m Request
+xmlRequest :: Maybe String -> XML -> IO Request
 xmlRequest ms xml = do
-   unless (name xml == "request") $
+   unless (getName xml == "request") $
       fail "expected xml tag request"
-   enc  <- case findAttribute "encoding" xml of
+   enc  <- case findAttribute' "encoding" xml of
               Just s  -> readEncoding s
               Nothing -> return []
    return mempty
-      { serviceId      = newId <$> findAttribute "service" xml
+      { serviceId      = newId <$> findAttribute' "service" xml
       , exerciseId     = extractExerciseId xml
-      , source         = findAttribute "source" xml
+      , source         = findAttribute' "source" xml
       , cgiBinary      = ms
-      , requestInfo    = findAttribute "requestinfo" xml
-      , logSchema      = findAttribute "logging" xml >>= readSchema
-      , feedbackScript = findAttribute "script" xml
+      , requestInfo    = findAttribute' "requestinfo" xml
+      , logSchema      = findAttribute' "logging" xml >>= readSchema
+      , feedbackScript = findAttribute' "script" xml
       , randomSeed     = defaultSeed ms $
-                            findAttribute "randomseed" xml >>= readM
+                            findAttribute' "randomseed" xml >>= readM
       , dataformat     = Just XML
       , encoding       = enc
       }
@@ -85,11 +84,11 @@ defaultSeed _ m = m
 xmlReply :: Options -> DomainReasoner -> Request -> XML -> IO XML
 xmlReply opt1 dr request xml = do
    srv <- case serviceId request of
-             Just a  -> findService dr a
+             Just a  -> either fail return $ findService dr a
              Nothing -> fail "No service"
 
    Some ex <- case exerciseId request of
-                 Just a  -> findExercise dr a
+                 Just a  -> either fail return $ findExercise dr a
                  Nothing -> return (Some emptyExercise)
 
    opt2 <- makeOptions dr request
@@ -101,25 +100,28 @@ xmlReply opt1 dr request xml = do
       -- xml evaluator
       else resultOk <$> evalService ex options xmlEvaluator srv xml
 
-extractExerciseId :: Monad m => XML -> m Id
-extractExerciseId = fmap newId . findAttribute "exerciseid"
+extractExerciseId :: XML -> Maybe Id
+extractExerciseId = either (const Nothing) (return . newId) . findAttribute "exerciseid"
 
 resultOk :: XMLBuilder -> XML
-resultOk body = makeXML "reply" $
+resultOk body = makeXML (fromString "reply") $
    ("result" .=. "ok")
    <> body
 
 resultError :: Options -> String -> IO XML
 resultError options msg = do
    changeLog (logRef options) (\r -> r {errormsg = msg})
-   return $ makeXML "reply" $
+   return $ makeXML (fromString "reply") $
       ("result" .=. "error")
       <> tag "message" (string msg)
+
+findAttribute' :: String -> XML -> Maybe String
+findAttribute' a = either (const Nothing) Just . findAttribute a
 
 ------------------------------------------------------------
 
 xmlEvaluator :: Evaluator a XML XMLBuilder
-xmlEvaluator = Evaluator xmlDecoder xmlEncoder
+xmlEvaluator = Evaluator xmlTypeDecoder xmlEncoder
 
 htmlEvaluator :: DomainReasoner -> Evaluator a XML HTMLPage
-htmlEvaluator dr = Evaluator xmlDecoder (htmlEncoder dr)
+htmlEvaluator dr = Evaluator xmlTypeDecoder (htmlEncoder dr)

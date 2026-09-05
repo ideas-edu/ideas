@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-deprecations #-}
 -----------------------------------------------------------------------------
 -- Copyright 2019, Ideas project team. This file is distributed under the
 -- terms of the Apache License 2.0. For more information, see the files
@@ -24,20 +25,19 @@ import Control.Monad
 import Data.ByteString (ByteString, unpack)
 import Data.Char
 import Data.Maybe
-import Data.Monoid
 import Data.String
 import Ideas.Encoding.NewModeJSON (processJSON)
 import Ideas.Encoding.ModeXML (processXML)
-import Ideas.Encoding.Options (Options, maxTime, optionCgiBin, logRef)
+import Ideas.Encoding.Options (Options, optionCgiBin, logRef)
 import Ideas.Encoding.Request
 import Ideas.Main.CmdLineOptions hiding (fullVersion)
 import Ideas.Service.DomainReasoner
 import Ideas.Service.FeedbackScript.Analysis
 import Ideas.Service.ServiceList
 import Ideas.Service.Types (Service)
-import Ideas.Text.UTF8 (decode)
+import qualified Ideas.Text.UTF8 as UTF8
 import Ideas.Text.XML.Unicode (decoding)
-import Ideas.Utils.BlackBoxTests
+import qualified Ideas.Utils.BlackBoxTests as BB
 import Ideas.Utils.Prelude
 import Ideas.Utils.TestSuite
 import Network.HTTP.Types
@@ -67,7 +67,7 @@ defaultCGI options dr = CGI.run $ \req respond -> do
    -- query environment
    let script = fromMaybe "" (findHeader "CGI-Script-Name" req) -- get name of binary
        addr   = ""                                              -- no IP address of the remote host (GDPR)
-   input   <- inputOrDefault req >>= decoding
+   input   <- inputOrDefault req >>= decodingIO
    -- process request
    (preq, txt, ctp) <-
       process (optionCgiBin script options) dr input
@@ -76,7 +76,7 @@ defaultCGI options dr = CGI.run $ \req respond -> do
       { Log.ipaddress = addr
       , Log.version   = shortVersion
       , Log.input     = input
-      , Log.output    = decode txt
+      , Log.output    = fromMaybe txt (UTF8.decode txt)
       }
    -- log request to database
    when (useLogging preq) $
@@ -123,7 +123,7 @@ defaultCommandLine options dr cmdLineOptions = do
             processDatabase dr database
          InputFile file ->
             withBinaryFile file ReadMode $ \h -> do
-               input  <- hGetContents h >>= decoding
+               input  <- hGetContents h >>= decodingIO
                (req, txt, _) <- process options dr input
                putStrLn txt
                when (PrintLog `elem` cmdLineOptions) $ do
@@ -131,25 +131,25 @@ defaultCommandLine options dr cmdLineOptions = do
                      { Log.ipaddress = "command-line"
                      , Log.version   = shortVersion
                      , Log.input     = input
-                     , Log.output    = decode txt
+                     , Log.output    = fromMaybe txt (UTF8.decode txt)
                      }
                   Log.printLog (logRef options)
          -- blackbox tests
          Test dir -> do
-            tests  <- blackBoxTests (makeTestRunner dr) ["xml", "json"] dir
+            let mode = if Interactive `elem` cmdLineOptions then BB.Interactive else BB.Report
+            tests  <- BB.blackBoxTests (makeTestRunner dr) mode ["xml", "json"] dir
             result <- runTestSuiteResult True tests
             printSummary result
          -- feedback scripts
          MakeScriptFor s    -> makeScriptFor dr s
          AnalyzeScript file -> parseAndAnalyzeScript dr file
-         PrintLog           -> return ()
+         _                  -> return ()
 
 processDatabase :: DomainReasoner -> FilePath -> IO ()
 processDatabase dr database = do
    (n, time) <- getDiffTime $ do
       rows <- Log.selectFrom database "requests" ["input"] $ \row -> do
-         txt <- headM row
-         (_, out, _) <- process mempty dr txt
+         (_, out, _) <- process mempty dr (head row)
          putStrLn out
       return (length rows)
    putStrLn $ "processed " ++ show n ++ " requests in " ++ show time
@@ -167,9 +167,10 @@ process options dr input = do
    run JSON = processJSON
 
 makeTestRunner :: DomainReasoner -> String -> IO String
-makeTestRunner dr input = do
-   (_, out, _) <- decoding input >>= process mempty dr
-   return out
+makeTestRunner dr = decodingIO >=> fmap snd3 . process mempty dr
+
+decodingIO :: String -> IO String
+decodingIO = maybe (fail "unicode decoding failed") return . decoding
 
 addVersion :: DomainReasoner -> DomainReasoner
 addVersion dr = dr

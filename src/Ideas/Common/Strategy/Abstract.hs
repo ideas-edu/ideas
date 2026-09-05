@@ -163,12 +163,11 @@ replayPaths paths s a = mconcat
 
 -- | Construct a prefix for a path and a labeled strategy. The third argument
 -- is the initial term.
-replayStrategy :: (Monad m, IsStrategy f) => Path -> f a -> a -> m (a, Prefix a)
-replayStrategy path s a =
+replayStrategy :: IsStrategy f => Path -> f a -> a -> Maybe (a, Prefix a)
+replayStrategy path s a = do
    let (xs, f) = replayProcess path (getProcess s)
-   in case applyList xs a of
-         Just b  -> return (b, f b)
-         Nothing -> fail "Cannot replay strategy"
+   b <- applyList xs a
+   return (b, f b)
 
 -----------------------------------------------------------
 --- Remaining functions
@@ -192,11 +191,11 @@ rulesInStrategy s = concatMap f (toList (toStrategyTree s))
    f (LeafRule r) | isMajor r = [r]
    f _ = []
 
-instance LiftView LabeledStrategy where
-   liftViewIn v (LS n s) = LS n (liftViewIn v s)
+instance Lift LabeledStrategy where
+   liftWithM f (LS n s) = LS n (liftWithM f s)
 
-instance LiftView Strategy where
-   liftViewIn v = S . fmap (liftViewIn v) . toStrategyTree
+instance Lift Strategy where
+   liftWithM f = S . fmap (liftWithM f) . toStrategyTree
 
 -- | Apply a function to all the rules that make up a labeled strategy
 mapRules :: (Rule a -> Rule a) -> LabeledStrategy a -> LabeledStrategy a

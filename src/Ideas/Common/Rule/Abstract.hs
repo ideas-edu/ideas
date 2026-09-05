@@ -70,10 +70,10 @@ instance HasId (Rule a) where
    getId        = ruleId
    changeId f r = r { ruleId = f (ruleId r) }
 
-instance LiftView Rule where
-   liftViewIn v r = r
-      { getTrans      = transLiftViewIn v (getTrans r)
-      , getRecognizer = liftViewIn v (getRecognizer r)
+instance Lift Rule where
+   liftWithM l r = r
+      { getTrans      = transLift l (getTrans r)
+      , getRecognizer = liftWithM l (getRecognizer r)
       }
 
 instance Recognizable Rule where

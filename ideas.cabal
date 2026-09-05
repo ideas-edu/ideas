@@ -28,7 +28,7 @@ stability:              provisional
 extra-source-files:     NOTICE.txt, CHANGELOG.txt
 build-type:             Simple
 cabal-version:          >= 1.8.0.2
-tested-with:            GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.2
+tested-with:            GHC == 9.6.7, GHC == 9.10.3, GHC == 9.12.4
 
 source-repository head
   type:     git
@@ -49,21 +49,21 @@ Library
   ghc-options:       -Wall
   hs-source-dirs:    src
   Build-Depends:
-     base >= 4.8 && < 5,
-     blaze-builder >= 0.4,
+      base < 4.22,
+     blaze-builder,
      bytestring,
      case-insensitive,
-     QuickCheck >= 2.8 && < 2.12,
+     QuickCheck,
      Diff,
      containers,
      directory,
      filepath,
      http-types,
      mtl,
-     network < 3.0,
+     network,
      parsec,
-     random,
-     streaming-commons < 0.2,
+     random >= 1.3,
+     streaming-commons,
      time,
      uniplate, 
      wai,
@@ -93,6 +93,9 @@ Library
     Ideas.Common.Rewriting.RewriteRule
     Ideas.Common.Rewriting.Substitution
     Ideas.Common.Rewriting.Term
+    Ideas.Common.Rewriting.Term.Class
+    Ideas.Common.Rewriting.Term.Data
+    Ideas.Common.Rewriting.Term.Decoder
     Ideas.Common.Rewriting.Unification
     Ideas.Common.Rule
     Ideas.Common.Rule.Abstract
@@ -143,6 +146,7 @@ Library
     Ideas.Main.CmdLineOptions
     Ideas.Main.Default
     Ideas.Main.Revision
+    Ideas.Service.Apply
     Ideas.Service.BasicServices
     Ideas.Service.Diagnose
     Ideas.Service.DomainReasoner
@@ -160,6 +164,11 @@ Library
     Ideas.Text.HTML.Templates
     Ideas.Text.HTML.W3CSS
     Ideas.Text.JSON
+    Ideas.Text.JSON.Builder
+    Ideas.Text.JSON.Class
+    Ideas.Text.JSON.Data
+    Ideas.Text.JSON.Decoder
+    Ideas.Text.JSON.RPC
     Ideas.Text.Latex
     Ideas.Text.MathML
     Ideas.Text.OpenMath.Dictionary.Arith1
@@ -178,6 +187,10 @@ Library
     Ideas.Text.OpenMath.Tests
     Ideas.Text.UTF8
     Ideas.Text.XML
+    Ideas.Text.XML.Attributes
+    Ideas.Text.XML.Builder
+    Ideas.Text.XML.Data
+    Ideas.Text.XML.Decoder
     Ideas.Text.XML.Document
     Ideas.Text.XML.Parser
     Ideas.Text.XML.Unicode

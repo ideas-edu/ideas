@@ -46,37 +46,37 @@ import qualified Ideas.Text.JSON as JSON
 -------------------------------------------------------------------
 -- Converter type class
 
-getExercise :: DecoderX a s (Exercise a)
+getExercise :: DecoderX a err s (Exercise a)
 getExercise = reader fst
 
-getOptions :: DecoderX a s Options
+getOptions :: DecoderX a err s Options
 getOptions = reader snd
 
-getRequest :: DecoderX a s Request
+getRequest :: DecoderX a err s Request
 getRequest = request <$> getOptions
 
-withExercise :: (Exercise a -> DecoderX a s t) -> DecoderX a s t
+withExercise :: (Exercise a -> DecoderX a err s t) -> DecoderX a err s t
 withExercise = (getExercise >>=)
 
-getBaseUrl :: DecoderX a s String
+getBaseUrl :: DecoderX a err s String
 getBaseUrl = fromMaybe "https://ideas.science.uu.nl/" . baseUrl <$> getOptions
 
-getQCGen :: DecoderX a s QCGen
+getQCGen :: DecoderX a err s QCGen
 getQCGen = fromMaybe (mkQCGen 0) . qcGen <$> getOptions
 
-getScript :: DecoderX a s Script
+getScript :: DecoderX a err s Script
 getScript = script <$> getOptions
 
-withOpenMath :: (Bool -> DecoderX a s t) -> DecoderX a s t
+withOpenMath :: (Bool -> DecoderX a err s t) -> DecoderX a err s t
 withOpenMath = (fmap useOpenMath getRequest >>=)
 
-withJSONTerm :: (Bool -> DecoderX a s t) -> DecoderX a s t
+withJSONTerm :: (Bool -> DecoderX a err s t) -> DecoderX a err s t
 withJSONTerm = (fmap useJSONTerm getRequest >>=)
 
-(//) :: Decoder env s a -> s -> Decoder env s2 a
+(//) :: Decoder env err s a -> s -> Decoder env err s2 a
 p // a = do
    env  <- ask
-   runDecoder p env a
+   either throwError return (evalDecoder p env a)
 
 -------------------------------------------------------------------
 -- JSON terms
@@ -105,9 +105,9 @@ termToJSON term =
          | s == objectSymbol -> Object (f ts)
          | otherwise -> Object [("_apply", Array (JSON.String (show s):map termToJSON ts))]
       TList xs  -> Array (map termToJSON xs)
-      TNum n    -> Number (I n)
-      TFloat d  -> Number (D d)
-      TMeta n   -> Object [("_meta", Number (I (toInteger n)))]
+      TNum n    -> Integer n
+      TFloat d  -> Double d
+      TMeta n   -> Object [("_meta", Integer (toInteger n))]
  where
    f [] = []
    f (TVar s:x:xs) = (s, termToJSON x) : f xs
@@ -116,12 +116,12 @@ termToJSON term =
 jsonToTerm :: JSON -> Term
 jsonToTerm json =
    case json of
-      Number (I n)  -> TNum n
-      Number (D d)  -> TFloat d
+      Integer n     -> TNum n
+      Double d      -> TFloat d
       JSON.String s -> TVar s
       Boolean b     -> Term.symbol  (if b then trueSymbol else falseSymbol)
       Array xs      -> TList (map jsonToTerm xs)
-      Object [("_meta", Number (I n))] -> TMeta (fromInteger n)
+      Object [("_meta", Integer n)] -> TMeta (fromInteger n)
       Object [("_apply", Array (JSON.String s:xs))] -> TCon (newSymbol s) (map jsonToTerm xs)
       Object xs     -> TCon objectSymbol (concatMap f xs)
       Null          -> Term.symbol nullSymbol
@@ -165,7 +165,7 @@ latexEncodingWith = setPropertyF latexProperty . F
 -------------------------------------------------------------------
 -- Encoder datatype
 
-type EncoderX a = Encoder (Exercise a, Options)
+type EncoderX a = Encoder (Exercise a, Options) String
 
 type TypedEncoder a b = TypedValue (Type a) -> EncoderX a b
 
@@ -178,11 +178,11 @@ infixr 5 <?>
       Nothing -> q tv
 
 encodeTyped :: (t -> EncoderX a b) -> Type a t -> TypedEncoder a b
-encodeTyped p t1 tv@(_ ::: t2) = ((p, t1) <?> fail ("Types do not match: " ++ show t1 ++ " and " ++ show t2)) tv
+encodeTyped p t1 tv@(_ ::: t2) = ((p, t1) <?> (\_ -> errorStr ("Types do not match: " ++ show t1 ++ " and " ++ show t2))) tv
 
 -------------------------------------------------------------------
 -- Decoder datatype
 
 type DecoderX a = Decoder (Exercise a, Options)
 
-type TypedDecoder a s = forall t . Type a t -> Decoder (Exercise a, Options) s t
+type TypedDecoder a s = forall t . Type a t -> DecoderX a String s t

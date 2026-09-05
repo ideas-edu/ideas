@@ -7,3 +7,7 @@ tutorial/Tutorial.hi
 tutorial/Tutorial.exe
 tutorial/Tutorial.o
 report.html
+cabal.project.local
+dist-newstyle/
+tags
+/tutorial/tutorial

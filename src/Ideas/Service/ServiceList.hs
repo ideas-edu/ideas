@@ -22,6 +22,7 @@ import Ideas.Service.State
 import Ideas.Service.Types
 import Ideas.Utils.TestSuite hiding (Message)
 import qualified Ideas.Service.Diagnose as Diagnose
+import qualified Ideas.Service.Apply as Apply
 import qualified Ideas.Service.ProblemDecomposition as ProblemDecomposition
 import qualified Ideas.Service.Submit as Submit
 
@@ -138,7 +139,7 @@ applyS = makeService "basic.apply"
    "Apply a rule at a certain location to the current expression. If this rule \
    \was not expected by the strategy, we deviate from it. If the rule cannot \
    \be applied, this service call results in an error." $
-   apply ::: tRule .-> tLocation .-> tEnvironment .-> tState .-> tError tState
+   Apply.apply ::: tRule .-> tLocation .-> tEnvironment .-> tState .-> Apply.tApplyResult
 
 generateS :: Service
 generateS = makeService "basic.generate"
@@ -150,7 +151,7 @@ createS :: Service
 createS = makeService "basic.create"
     "Given an expression, this service \
     \returns an initial state with the original given expression." $
-    create ::: tQCGen .-> tExercise .-> Tag "term" tString .-> tMaybe tUserId .-> tError tState
+    create ::: tQCGen .-> tExercise .-> tContext .-> tMaybe tUserId .-> tError tState
 
 examplesS :: Service
 examplesS = makeService "basic.examples"
@@ -318,7 +319,7 @@ stateinfoS = makeService "meta.stateinfo"
 
 microstepsS :: Service
 microstepsS = makeService "meta.microsteps" "Next (minor) steps." $
-   (map f . microsteps) ::: tState .-> tList (tPair (tTuple3 tRule tLocation tEnvironment) tState)
+   (map f . microsteps) ::: tState .-> tList (Tag "first" (tPair tStepInfo tState))
  where
    f ((s, ctx, env), st) = ((s, location ctx, env), st)
 

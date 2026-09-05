@@ -2,6 +2,7 @@ out/
 dist/
 *.swp
 docs/compile.txt
+docs/haddock/
 .stack-work/
 tutorial/Tutorial.hi
 tutorial/Tutorial.exe

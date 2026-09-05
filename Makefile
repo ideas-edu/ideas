@@ -52,7 +52,7 @@ $(SRCDIR)/Ideas/Main/Revision.hs:
 # Documentation
 
 haddock:
-	$(HADDOCK) --html -o $(HADDOCKDIR) --prologue=$(DOCSDIR)/prologue --title="Ideas: feedback services for intelligent tutoring systems" $(HS-SOURCES)
+	$(CABAL) haddock --haddock-html --haddock-hyperlink-source --haddock-output-dir=$(HADDOCKDIR)
 	
 hlint:
 	$(HLINT) --report=$(DOCSDIR)/hlint.html $(HS-SOURCES)

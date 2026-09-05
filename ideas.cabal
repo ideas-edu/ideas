@@ -22,8 +22,8 @@ category:               Education
 copyright:              (c) 2019
 license:                Apache-2.0
 license-file:           LICENSE.txt
-author:                 Bastiaan Heeren, Alex Gerdes, Johan Jeuring
-maintainer:             bastiaan.heeren@ou.nl
+author:                 Bastiaan Heeren †, Alex Gerdes, Johan Jeuring
+maintainer:             alexg@chalmers.se
 stability:              provisional
 extra-source-files:     NOTICE.txt, CHANGELOG.txt
 build-type:             Simple

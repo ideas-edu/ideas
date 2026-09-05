@@ -1,4 +1,12 @@
-Changelog ideas-1.7 => ideas-1.8
+Changelog ideas-1.8 => ideas-1.9
+
+* build and test with GHC 9.6.7, 9.10.3, and 9.12.4
+* replacing Travis CI with GitHub Actions
+* reorganizing JSON, XML, OpenMath, and term decoding modules
+* adding the Apply feedback service
+* converting the tutorial build to Cabal and adding Docker support
+* removing the obsolete Stack configuration
+* fixing OpenMath decoding of formatted XML
 
 * support for automatically generated (generic) IsTerm instances
 * introducing Examples data type for exercise records (unifying expr lists/generators)
